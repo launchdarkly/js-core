@@ -1,0 +1,11 @@
+{
+  "name": "js-server-sdk",
+  "workspaces": [
+    "common",
+    "platform-node"
+  ],
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc --build"
+  }
+}
