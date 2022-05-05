@@ -1,7 +1,8 @@
 {
   "name": "js-server-sdk",
   "workspaces": [
-    "common",
+    "sdk-common",
+    "server-sdk-common",
     "platform-node"
   ],
   "scripts": {
