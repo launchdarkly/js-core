@@ -3,7 +3,7 @@
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "description": "LaunchDarkly Server-Side SDK for JavaScript",
+  "description": "LaunchDarkly SDK for JavaScript - common code",
   "files": [
     "/dist"
   ],

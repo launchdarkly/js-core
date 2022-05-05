@@ -1,5 +1,5 @@
 {
-  "name": "js-server-sdk",
+  "name": "@launchdarkly/js-server-sdk",
   "workspaces": [
     "sdk-common",
     "server-sdk-common",

@@ -1,5 +1,5 @@
 {
-  "name": "js-server-sdk-platform-node",
+  "name": "@launchdarkly/js-server-sdk-platform-node",
   "version": "1.0.0",
   "description": "Node platform for the JS Server SDK",
   "type": "commonjs",
