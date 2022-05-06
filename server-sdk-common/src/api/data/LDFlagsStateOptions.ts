@@ -7,11 +7,13 @@ export interface LDFlagsStateOptions {
    * client-side SDK. By default, all flags are included.
    */
   clientSideOnly?: boolean;
+
   /**
    * True if evaluation reason data should be captured in the state object (see
    * LDClient.variationDetail). By default, it is not.
    */
   withReasons?: boolean;
+
   /**
    * True if any flag metadata that is normally only used for event generation-- such as flag
    * versions and evaluation reasons-- should be omitted for any flag that does not have event
