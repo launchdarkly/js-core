@@ -1,9 +1,9 @@
-  /**
+/**
    * Describes the reason that a flag evaluation produced a particular value. This is
    * part of the [[LDEvaluationDetail]] object returned by [[LDClient.variationDetail]].
    */
-   export interface LDEvaluationReason {
-    /**
+export interface LDEvaluationReason {
+  /**
      * The general category of the reason:
      *
      * - `'OFF'`: The flag was off and therefore returned its configured off value.
@@ -15,37 +15,37 @@
      * - `'ERROR'`: The flag could not be evaluated, e.g. because it does not exist or due
      *   to an unexpected error.
      */
-    kind: string;
+  kind: string;
 
-    /**
+  /**
      * A further description of the error condition, if the kind was `'ERROR'`.
      */
-    errorKind?: string;
+  errorKind?: string;
 
-    /**
+  /**
      * The index of the matched rule (0 for the first), if the kind was `'RULE_MATCH'`.
      */
-    ruleIndex?: number;
+  ruleIndex?: number;
 
-    /**
+  /**
      * The unique identifier of the matched rule, if the kind was `'RULE_MATCH'`.
      */
-    ruleId?: string;
+  ruleId?: string;
 
-    /**
+  /**
      * The key of the failed prerequisite flag, if the kind was `'PREREQUISITE_FAILED'`.
      */
-    prerequisiteKey?: string;
+  prerequisiteKey?: string;
 
-    /**
+  /**
      * Whether the evaluation was part of an experiment.
      *
      * This is true if the evaluation resulted in an experiment rollout and served one of
      * the variations in the experiment. Otherwise it is false or undefined.
      */
-    inExperiment?: boolean;
+  inExperiment?: boolean;
 
-    /**
+  /**
      * Describes the validity of Big Segment information, if and only if the flag evaluation
      * required querying at least one Big Segment.
      *
@@ -58,5 +58,5 @@
      * - `'STORE_ERROR'`: The Big Segment query involved in the flag evaluation failed, for
      *   instance due to a database error.
      */
-    bigSegmentsStatus?: "HEALTHY" | "STALE" | "NOT_CONFIGURED" | "STORE_ERROR";
-  }
+  bigSegmentsStatus?: 'HEALTHY' | 'STALE' | 'NOT_CONFIGURED' | 'STORE_ERROR';
+}

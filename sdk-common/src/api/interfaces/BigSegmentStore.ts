@@ -1,5 +1,5 @@
-import { BigSegmentStoreMembership } from "./BigSegmentStoreMembership";
-import { BigSegmentStoreMetadata } from "./BigSegmentStoreMetadata";
+import { BigSegmentStoreMembership } from './BigSegmentStoreMembership';
+import { BigSegmentStoreMetadata } from './BigSegmentStoreMetadata';
 
 /**
  * A read-only data store that allows querying of user membership in Big Segments.

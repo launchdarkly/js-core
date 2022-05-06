@@ -1,4 +1,4 @@
-import { TestDataRuleBuilder } from "./TestDataRuleBuilder";
+import { TestDataRuleBuilder } from './TestDataRuleBuilder';
 
 /**
  * A builder for feature flag configurations to be used with [[TestData]].

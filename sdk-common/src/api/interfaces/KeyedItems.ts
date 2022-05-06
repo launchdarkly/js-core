@@ -3,5 +3,4 @@
  * or user segments. The string key for each item is the same as the item's `key` property.
  */
 
-
 export type KeyedItems<T> = Record<string, T>;

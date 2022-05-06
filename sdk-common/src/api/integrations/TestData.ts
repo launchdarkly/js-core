@@ -1,4 +1,4 @@
-import { TestDataFlagBuilder } from "./TestDataFlagBuilder";
+import { TestDataFlagBuilder } from './TestDataFlagBuilder';
 
 /**
  * A mechanism for providing dynamically updatable feature flag state in a simplified form to an SDK

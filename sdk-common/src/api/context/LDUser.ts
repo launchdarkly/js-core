@@ -1,7 +1,6 @@
 /**
  * A LaunchDarkly user object.
  */
-
 export interface LDUser {
   /**
    * A unique string identifying a user.

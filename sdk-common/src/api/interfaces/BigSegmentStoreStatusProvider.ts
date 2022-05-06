@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { BigSegmentStoreStatus } from "./BigSegmentStoreStatus";
+import { BigSegmentStoreStatus } from './BigSegmentStoreStatus';
 
 /**
  * An interface for querying the status of a Big Segment store.

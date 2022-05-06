@@ -1,7 +1,7 @@
-import { LDEvaluationReason } from "./LDEvaluationReason";
-import { LDFlagValue } from "./LDFlagValue";
+import { LDEvaluationReason } from './LDEvaluationReason';
+import { LDFlagValue } from './LDFlagValue';
 
-  /**
+/**
    * An object that combines the result of a feature flag evaluation with information about
    * how it was calculated.
    *
@@ -9,21 +9,21 @@ import { LDFlagValue } from "./LDFlagValue";
    *
    * For more information, see the [SDK reference guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
    */
-   export interface LDEvaluationDetail {
-    /**
+export interface LDEvaluationDetail {
+  /**
      * The result of the flag evaluation. This will be either one of the flag's variations or
      * the default value that was passed to [[LDClient.variationDetail]].
      */
-    value: LDFlagValue;
+  value: LDFlagValue;
 
-    /**
+  /**
      * The index of the returned value within the flag's list of variations, e.g. 0 for the
      * first variation-- or `null` if the default value was returned.
      */
-    variationIndex?: number;
+  variationIndex?: number;
 
-    /**
+  /**
      * An object describing the main factor that influenced the flag evaluation value.
      */
-    reason: LDEvaluationReason;
-  }
+  reason: LDEvaluationReason;
+}

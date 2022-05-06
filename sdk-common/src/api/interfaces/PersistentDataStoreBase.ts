@@ -1,6 +1,6 @@
-import { DataKind } from "./DataKind";
-import { KeyedItems } from "./KeyedItems";
-import { VersionedData } from "./VersionedData";
+import { DataKind } from './DataKind';
+import { KeyedItems } from './KeyedItems';
+import { VersionedData } from './VersionedData';
 
 /**
  * Base interface for a simplified subset of the functionality of `LDFeatureStore`, to be used in
@@ -9,7 +9,6 @@ import { VersionedData } from "./VersionedData";
  * @see [[PersistentDataStore]]
  * @see [[PersistentDataStoreNonAtomic]]
  */
-
 
 export interface PersistentDataStoreBase {
   /**

@@ -1,9 +1,8 @@
-import { LDLogger } from "../LDLogger";
+import { LDLogger } from '../LDLogger';
 
 /**
  * Configuration for [[FileDataSource]].
  */
-
 
 export interface FileDataSourceOptions {
   /**

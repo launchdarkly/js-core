@@ -1,4 +1,4 @@
-import { TestDataFlagBuilder } from "./TestDataFlagBuilder";
+import { TestDataFlagBuilder } from './TestDataFlagBuilder';
 
 /**
  * A builder for feature flag rules to be used with [[TestDataFlagBuilder]].
@@ -13,7 +13,6 @@ import { TestDataFlagBuilder } from "./TestDataFlagBuilder";
  * you may add more clauses with the rule builder's methods such as `andMatch`.
  * Finally, call `thenReturn` to finish defining the rule.
  */
-
 
 export interface TestDataRuleBuilder {
   /**

@@ -5,7 +5,6 @@
  * Meta attributes are used to control behavioral aspects of the Context.
  * They cannot be addressed in targetting rules.
  */
-
 export interface LDContextMeta {
   /**
    * If true, the context will _not_ appear on the Contexts page in the LaunchDarkly dashboard.

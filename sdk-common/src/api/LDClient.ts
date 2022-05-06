@@ -280,22 +280,22 @@ export interface LDClient extends EventEmitter {
    */
   on(event: string | symbol, listener: (...args: any[]) => void): this;
 
-    // The following are symbols that LDClient inherits from EventEmitter, which we are declaring
-    // again here only so that we can use @ignore to exclude them from the generated docs.
-    // Unfortunately it does not seem possible to exclude these inherited methods en masse without
-    // using a Typedoc plugin.
-    /** @ignore */ addListener(event: string | symbol, listener: (...args: any[]) => void): this;
-    /** @ignore */ emit(event: string | symbol, ...args: any[]): boolean;
-    /** @ignore */ eventNames(): Array<string | symbol>;
-    /** @ignore */ getMaxListeners(): number;
-    /** @ignore */ listenerCount(type: string | symbol): number;
-    /** @ignore */ listeners(event: string | symbol): Function[];
-    /** @ignore */ prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-    /** @ignore */ prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
-    /** @ignore */ rawListeners(event: string | symbol): Function[];
-    /** @ignore */ removeAllListeners(event?: string | symbol): this;
-    /** @ignore */ removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
-    /** @ignore */ setMaxListeners(n: number): this;
-    /** @ignore */ once(event: string | symbol, listener: (...args: any[]) => void): this;
-    /** @ignore */ off(event: string | symbol, listener: (...args: any[]) => void): this;
+  // The following are symbols that LDClient inherits from EventEmitter, which we are declaring
+  // again here only so that we can use @ignore to exclude them from the generated docs.
+  // Unfortunately it does not seem possible to exclude these inherited methods en masse without
+  // using a Typedoc plugin.
+  /** @ignore */ addListener(event: string | symbol, listener: (...args: any[]) => void): this;
+  /** @ignore */ emit(event: string | symbol, ...args: any[]): boolean;
+  /** @ignore */ eventNames(): Array<string | symbol>;
+  /** @ignore */ getMaxListeners(): number;
+  /** @ignore */ listenerCount(type: string | symbol): number;
+  /** @ignore */ listeners(event: string | symbol): Function[];
+  /** @ignore */ prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
+  /** @ignore */ prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+  /** @ignore */ rawListeners(event: string | symbol): Function[];
+  /** @ignore */ removeAllListeners(event?: string | symbol): this;
+  /** @ignore */ removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+  /** @ignore */ setMaxListeners(n: number): this;
+  /** @ignore */ once(event: string | symbol, listener: (...args: any[]) => void): this;
+  /** @ignore */ off(event: string | symbol, listener: (...args: any[]) => void): this;
 }

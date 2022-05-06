@@ -1,4 +1,4 @@
-import { LDFlagValue } from "./LDFlagValue";
+import { LDFlagValue } from './LDFlagValue';
 
 /**
  * A map of feature flags from their keys to their values.

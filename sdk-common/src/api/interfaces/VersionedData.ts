@@ -6,7 +6,6 @@
  * to a flag or segment item. Those methods still use the `object` type for backward compatibility.
  */
 
-
 export interface VersionedData {
   /**
    * The item's unique key, such as a feature flag key.

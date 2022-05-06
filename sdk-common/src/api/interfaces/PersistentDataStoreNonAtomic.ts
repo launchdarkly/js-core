@@ -1,5 +1,5 @@
-import { DataCollection } from "./DataCollection";
-import { VersionedData } from "./VersionedData";
+import { DataCollection } from './DataCollection';
+import { VersionedData } from './VersionedData';
 
 /**
  * Interface for a simplified subset of the functionality of `LDFeatureStore`, to be used in
@@ -10,7 +10,6 @@ import { VersionedData } from "./VersionedData";
  *
  * @see [[PersistentDataStore]]
  */
-
 
 export interface PersistentDataStoreNonAtomic {
   /**

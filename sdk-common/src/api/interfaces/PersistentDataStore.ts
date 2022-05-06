@@ -1,6 +1,6 @@
-import { FullDataSet } from "./FullDataSet";
-import { PersistentDataStoreBase } from "./PersistentDataStoreBase";
-import { VersionedData } from "./VersionedData";
+import { FullDataSet } from './FullDataSet';
+import { PersistentDataStoreBase } from './PersistentDataStoreBase';
+import { VersionedData } from './VersionedData';
 
 /**
  * Interface for a simplified subset of the functionality of `LDFeatureStore`, to be used in
@@ -8,7 +8,6 @@ import { VersionedData } from "./VersionedData";
  *
  * @see [[PersistentDataStoreNonAtomic]]
  */
-
 
 export interface PersistentDataStore extends PersistentDataStoreBase {
   /**

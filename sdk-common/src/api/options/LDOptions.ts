@@ -1,7 +1,7 @@
 import { LDFeatureStore } from '../LDFeatureStore';
 import { LDLogger } from '../LDLogger';
-import { LDTLSOptions } from "./LDTLSOptions";
-import { LDBigSegmentsOptions } from "./LDBigSegmentsOptions";
+import { LDTLSOptions } from './LDTLSOptions';
+import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 
 /**
  * Creates an instance of the LaunchDarkly client.
@@ -10,9 +10,6 @@ import { LDBigSegmentsOptions } from "./LDBigSegmentsOptions";
  * The client will begin attempting to connect to LaunchDarkly as soon as it is created. To
  * determine when it is ready to use, call [[LDClient.waitForInitialization]], or register an
  * event listener for the `"ready"` event using [[LDClient.on]].
- *
- * **Important:** Do **not** try to instantiate `LDClient` with its constructor (`new LDClient()`); the SDK
- * does not currently support this.
  *
  * @param key
  *   The SDK key.
@@ -208,26 +205,6 @@ export interface LDOptions {
    * Defaults to 300.
    */
   contextKeysFlushInterval?: number;
-
-  /**
-   * The number of user keys that the event processor can remember at any one time,
-   * so that duplicate user details will not be sent in analytics events.
-   *
-   * Defaults to 1000.
-   *
-   * @deprecated Use contextKeysCapacity instead.
-   */
-  userKeysCapacity?: number;
-
-  /**
-   * The interval (in seconds) at which the event processor will reset its set of
-   * known user keys.
-   *
-   * Defaults to 300.
-   *
-   * @deprecated Use contextKeysFlushInterval instead.
-   */
-  userKeysFlushInterval?: number;
 
   /**
    * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any

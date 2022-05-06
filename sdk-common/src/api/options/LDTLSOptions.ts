@@ -4,7 +4,6 @@
  *
  * For more information, see the Node documentation for `https.request()` and `tls.connect()`.
  */
-
 export interface LDTLSOptions {
   ca?: string | string[] | Buffer | Buffer[];
   cert?: string | string[] | Buffer | Buffer[];
