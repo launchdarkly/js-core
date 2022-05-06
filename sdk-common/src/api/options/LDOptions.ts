@@ -1,7 +1,6 @@
 import { LDFeatureStore } from '../LDFeatureStore';
 import { LDLogger } from '../LDLogger';
 import { LDTLSOptions } from './LDTLSOptions';
-import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 
 /**
  * Creates an instance of the LaunchDarkly client.
@@ -217,11 +216,11 @@ export interface LDOptions {
   /**
    * Set to true to opt out of sending diagnostics data.
    *
-   * Unless the `diagnosticOptOut` field is set to true, the client will send some diagnostics data to the
-   * LaunchDarkly servers in order to assist in the development of future SDK improvements. These diagnostics
-   * consist of an initial payload containing some details of SDK in use, the SDK's configuration, and the platform
-   * the SDK is being run on, as well as payloads sent periodically with information on irregular occurrences such
-   * as dropped events.
+   * Unless the `diagnosticOptOut` field is set to true, the client will send some diagnostics data
+   * to the LaunchDarkly servers in order to assist in the development of future SDK improvements.
+   * These diagnostics consist of an initial payload containing some details of SDK in use, the
+   * SDK's configuration, and the platform the SDK is being run on, as well as payloads sent
+   * periodically with information on irregular occurrences such as dropped events.
    */
   diagnosticOptOut?: boolean;
 
@@ -235,16 +234,17 @@ export interface LDOptions {
   /**
    * For use by wrapper libraries to set an identifying name for the wrapper being used.
    *
-   * This will be sent in User-Agent headers during requests to the LaunchDarkly servers to allow recording
-   * metrics on the usage of these wrapper libraries.
+   * This will be sent in User-Agent headers during requests to the LaunchDarkly servers to allow
+   * recording metrics on the usage of these wrapper libraries.
    */
   wrapperName?: string;
 
   /**
    * For use by wrapper libraries to report the version of the library in use.
    *
-   * If `wrapperName` is not set, this field will be ignored. Otherwise the version string will be included in
-   * the User-Agent headers along with the `wrapperName` during requests to the LaunchDarkly servers.
+   * If `wrapperName` is not set, this field will be ignored. Otherwise the version string will be
+   * included in the User-Agent headers along with the `wrapperName` during requests to the
+   * LaunchDarkly servers.
    */
   wrapperVersion?: string;
 
@@ -255,18 +255,21 @@ export interface LDOptions {
     /**
      * A unique identifier representing the application where the LaunchDarkly SDK is running.
      *
-     * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
-     * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
+     * This can be specified as any string value as long as it only uses the following characters:
+     * ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+     * characters will be ignored.
      *
      * Example: `authentication-service`
      */
     id?: string;
 
     /**
-     * A unique identifier representing the version of the application where the LaunchDarkly SDK is running.
+     * A unique identifier representing the version of the application where the LaunchDarkly SDK is
+     * running.
      *
-     * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
-     * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
+     * This can be specified as any string value as long as it only uses the following characters:
+     * ASCII letters, ASCII digits, period, hyphen, underscore. A string containing any other
+     * characters will be ignored.
      *
      * Example: `1.0.0` (standard version string) or `abcdef` (sha prefix)
      */

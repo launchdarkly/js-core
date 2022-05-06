@@ -1,5 +1,6 @@
 /**
- * Information about the status of a Big Segment store, provided by {@link BigSegmentStoreStatusProvider}.
+ * Information about the status of a Big Segment store, provided by
+ * {@link BigSegmentStoreStatusProvider}.
  *
  * Big Segments are a specific type of user segments. For more information, read the LaunchDarkly
  * documentation: https://docs.launchdarkly.com/home/users/big-segments

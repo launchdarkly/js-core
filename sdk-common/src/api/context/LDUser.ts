@@ -10,9 +10,11 @@ export interface LDUser {
   /**
    * An optional secondary key for a user.
    *
-   * This affects [feature flag targeting](https://docs.launchdarkly.com/home/flags/targeting-users#targeting-rules-based-on-user-attributes)
-   * as follows: if you have chosen to bucket users by a specific attribute, the secondary key (if set)
-   * is used to further distinguish between users who are otherwise identical according to that attribute.
+   * This affects [feature flag
+   * targeting](https://docs.launchdarkly.com/home/flags/targeting-users#targeting-rules-based-on-user-attributes)
+   * as follows: if you have chosen to bucket users by a specific attribute, the secondary key (if
+   * set) is used to further distinguish between users who are otherwise identical according to that
+   * attribute.
    */
   secondary?: string;
 

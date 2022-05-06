@@ -1,6 +1,3 @@
-import { BigSegmentStore } from '../interfaces/BigSegmentStore';
-import { LDOptions } from './LDOptions';
-
 /**
  * Additional parameters for configuring the SDK's Big Segments behavior.
  *
@@ -19,15 +16,19 @@ export interface LDBigSegmentsOptions {
    * database implementation that matches how the LaunchDarkly Relay Proxy is configured, since the
    * Relay Proxy manages the Big Segment data.
    */
-  store: (options: LDOptions) => BigSegmentStore;
+
+  // TODO: This creates a cycle.
+  // store: (options: LDOptions) => BigSegmentStore;
 
   /**
-   * The maximum number of users whose Big Segment state will be cached by the SDK at any given time.
+   * The maximum number of users whose Big Segment state will be cached by the SDK at any given
+   * time.
    *
-   * To reduce database traffic, the SDK maintains a least-recently-used cache by user key. When a feature
-   * flag that references a Big Segment is evaluated for some user who is not currently in the cache, the
-   * SDK queries the database for all Big Segment memberships of that user, and stores them together in a
-   * single cache entry. If the cache is full, the oldest entry is dropped.
+   * To reduce database traffic, the SDK maintains a least-recently-used cache by user key. When a
+   * feature flag that references a Big Segment is evaluated for some user who is not currently in
+   * the cache, the SDK queries the database for all Big Segment memberships of that user, and
+   * stores them together in a single cache entry. If the cache is full, the oldest entry is
+   * dropped.
    *
    * A higher value for `userCacheSize` means that database queries for Big Segments will be done
    * less often for recently-referenced users, if the application has many users, at the cost of
@@ -63,18 +64,21 @@ export interface LDBigSegmentsOptions {
    * The maximum length of time between updates of the Big Segments data before the data is
    * considered out of date, in seconds.
    *
-   * Normally, the LaunchDarkly Relay Proxy updates a timestamp in the Big Segment store at intervals to
-   * confirm that it is still in sync with the LaunchDarkly data, even if there have been no changes to the
-   * If the timestamp falls behind the current time by the amount specified in `staleAfter`, the SDK
-   * assumes that something is not working correctly in this process and that the data may not be accurate.
+   * Normally, the LaunchDarkly Relay Proxy updates a timestamp in the Big Segment store at
+   * intervals to confirm that it is still in sync with the LaunchDarkly data, even if there have
+   * been no changes to the store.
+   * If the timestamp falls behind the current time by the amount specified in `staleAfter`, the
+   * SDK assumes that something is not working correctly in this process and that the data may not
+   * be accurate.
    *
-   * While in a stale state, the SDK will still continue using the last known data, but the status from
+   * While in a stale state, the SDK will still continue using the last known data, but the status
+   * from
    * {@link interfaces.BigSegmentStoreStatusProvider.getStatus} will have `stale: true`, and any
-   * {@link LDEvaluationReason} generated from a feature flag that references a Big Segment will have a
-   * `bigSegmentsStatus` of `"STALE"`.
+   * {@link LDEvaluationReason} generated from a feature flag that references a Big Segment will
+   * have a `bigSegmentsStatus` of `"STALE"`.
    *
-   * If not specified, the default value is 120 (two minutes). Zero or negative values are changed to
-   * the default.
+   * If not specified, the default value is 120 (two minutes). Zero or negative values are changed
+   * to the default.
    */
   staleAfter?: number;
 }

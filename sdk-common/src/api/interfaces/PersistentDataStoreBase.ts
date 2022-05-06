@@ -55,7 +55,8 @@ export interface PersistentDataStoreBase {
    * @param callback
    *   Will be called after the upsert operation is complete.
    */
-  upsertInternal(kind: DataKind, item: VersionedData, callback: (err: Error, finalItem: VersionedData) => void): void;
+  upsertInternal(kind: DataKind, item: VersionedData, callback:
+  (err: Error, finalItem: VersionedData) => void): void;
 
   /**
    * Tests whether the store is initialized.

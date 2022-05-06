@@ -2,8 +2,8 @@
  *
  * TODO: U2C We will need some uniform description for this.
  *
- * Meta attributes are used to control behavioral aspects of the Context.
- * They cannot be addressed in targetting rules.
+ * Meta attributes are used to control behavioral aspects of the Context. They
+ * cannot be addressed in targetting rules.
  */
 export interface LDContextMeta {
   /**
@@ -17,8 +17,9 @@ export interface LDContextMeta {
    * TODO: U2C Update with new URL when available.
    *
    * This affects [feature flag targeting](https://docs.launchdarkly.com/home/flags/targeting-users#targeting-rules-based-on-user-attributes)
-   * as follows: if you have chosen to bucket context by a specific attribute, the secondary key (if set)
-   * is used to further distinguish between contexts which are otherwise identical according to that attribute.
+   * as follows: if you have chosen to bucket context by a specific attribute, the secondary key (if
+   * set) is used to further distinguish between contexts which are otherwise identical according to
+   * that attribute.
    */
   secondary?: string;
 

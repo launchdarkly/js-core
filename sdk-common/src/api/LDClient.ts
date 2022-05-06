@@ -9,13 +9,15 @@ import { LDFlagValue } from './LDFlagValue';
 /**
  * The LaunchDarkly SDK client object.
  *
- * Create this object with [[init]]. Applications should configure the client at startup time and continue
- * to use it throughout the lifetime of the application, rather than creating instances on the fly.
+ * Create this object with [[init]]. Applications should configure the client at startup time and
+ * continue to use it throughout the lifetime of the application, rather than creating instances on
+ * the fly.
  *
- * Note that `LDClient` inherits from `EventEmitter`, so you can use the standard `on()`, `once()`, and
- * `off()` methods to receive events. The standard `EventEmitter` methods are not documented here; see the
- * {@link https://nodejs.org/api/events.html#events_class_eventemitter|Node API documentation}. For a
- * description of events you can listen for, see [[on]].
+ * Note that `LDClient` inherits from `EventEmitter`, so you can use the standard `on()`, `once()`,
+ * and `off()` methods to receive events. The standard `EventEmitter` methods are not documented
+ * here; see the
+ * {@link https://nodejs.org/api/events.html#events_class_eventemitter|Node API documentation}. For
+ * a description of events you can listen for, see [[on]].
  *
  * @see {@link https://docs.launchdarkly.com/sdk/server-side/node-js|SDK Reference Guide}
  */
@@ -24,10 +26,10 @@ export interface LDClient extends EventEmitter {
   /**
    * Tests whether the client has completed initialization.
    *
-   * If this returns false, it means that the client has not yet successfully connected to LaunchDarkly.
-   * It might still be in the process of starting up, or it might be attempting to reconnect after an
-   * unsuccessful attempt, or it might have received an unrecoverable error (such as an invalid SDK key)
-   * and given up.
+   * If this returns false, it means that the client has not yet successfully connected to
+   * LaunchDarkly. It might still be in the process of starting up, or it might be attempting to
+   * reconnect after an unsuccessful attempt, or it might have received an unrecoverable error (such
+   * as an invalid SDK key) and given up.
    *
    * @returns
    *   True if the client has successfully initialized.
@@ -38,9 +40,10 @@ export interface LDClient extends EventEmitter {
    * Returns a Promise that tracks the client's initialization state.
    *
    * The Promise will be resolved if the client successfully initializes, or rejected if client
-   * initialization has failed unrecoverably (for instance, if it detects that the SDK key is invalid).
-   * Keep in mind that unhandled Promise rejections can be fatal in Node, so if you call this method,
-   * be sure to attach a rejection handler to it (or, if using `async`/`await`, a catch block).
+   * initialization has failed unrecoverably (for instance, if it detects that the SDK key is
+   * invalid). Keep in mind that unhandled Promise rejections can be fatal in Node, so if you call
+   * this method, be sure to attach a rejection handler to it (or, if using `async`/`await`, a catch
+   * block).
    *
    * Note that you can also use event listeners ([[on]]) for the same purpose: the event `"ready"`
    * indicates success, and `"failed"` indicates failure.
@@ -48,9 +51,9 @@ export interface LDClient extends EventEmitter {
    * There is no built-in timeout for this method. If you want your code to stop waiting on the
    * Promise after some amount of time, you could use
    * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race|`Promise.race()`}
-   * or one of the several NPM helper packages that provides a standard mechanism for this. Regardless
-   * of whether you continue to wait, the SDK will still retry all connection failures indefinitely
-   * unless it gets an unrecoverable error as described above.
+   * or one of the several NPM helper packages that provides a standard mechanism for this.
+   * Regardless of whether you continue to wait, the SDK will still retry all connection failures
+   * indefinitely unless it gets an unrecoverable error as described above.
    *
    * @returns
    *   A Promise that will be resolved if the client initializes successfully, or rejected if it
@@ -82,18 +85,16 @@ export interface LDClient extends EventEmitter {
   /**
    * Determines the variation of a feature flag for a context.
    *
-   * @param key
-   *   The unique key of the feature flag.
-   * @param context
-   *   The context requesting the flag. The client will generate an analytics event to register
-   *   this context with LaunchDarkly if the context does not already exist.
-   * @param defaultValue
-   *   The default value of the flag, to be used if the value is not available from LaunchDarkly.
-   * @param callback
-   *   A Node-style callback to receive the result value. If omitted, you will receive a Promise instead.
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param callback A Node-style callback to receive the result value. If omitted, you will receive
+   *   a Promise instead.
    * @returns
-   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved
-   *   with the result value.
+   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
+   *   the result value.
    */
   variation(
     key: string,
@@ -103,27 +104,25 @@ export interface LDClient extends EventEmitter {
   ): Promise<LDFlagValue>;
 
   /**
-   * Determines the variation of a feature flag for a context, along with information about how it was
-   * calculated.
+   * Determines the variation of a feature flag for a context, along with information about how it
+   * was calculated.
    *
    * The `reason` property of the result will also be included in analytics events, if you are
    * capturing detailed event data for this flag.
    *
-   * For more information, see the [SDK reference guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
    *
-   * @param key
-   *   The unique key of the feature flag.
-   * @param context
-   *   The context requesting the flag. The client will generate an analytics event to register
-   *   this context with LaunchDarkly if the context does not already exist.
-   * @param defaultValue
-   *   The default value of the flag, to be used if the value is not available from LaunchDarkly.
-   * @param callback
-   *   A Node-style callback to receive the result (as an [[LDEvaluationDetail]]). If omitted, you
-   *   will receive a Promise instead.
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param callback A Node-style callback to receive the result (as an [[LDEvaluationDetail]]). If
+   *   omitted, you will receive a Promise instead.
    * @returns
-   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved
-   *   with the result (as an [[LDEvaluationDetail]]).
+   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
+   *   the result (as an [[LDEvaluationDetail]]).
    */
   variationDetail(
     key: string,
@@ -190,25 +189,22 @@ export interface LDClient extends EventEmitter {
   /**
    * Tracks that a context performed an event.
    *
-   * LaunchDarkly automatically tracks pageviews and clicks that are specified in the Goals
-   * section of the dashboard. This can be used to track custom goals or other events that do
-   * not currently have goals.
+   * LaunchDarkly automatically tracks pageviews and clicks that are specified in the Goals section
+   * of the dashboard. This can be used to track custom goals or other events that do not currently
+   * have goals.
    *
    * Note that event delivery is asynchronous, so the event may not actually be sent until later;
    * see [[flush]].
    *
-   * If the context is omitted or has no key, the client will log a warning and will not send an event.
+   * If the context is omitted or has no key, the client will log a warning and will not send an
+   * event.
    *
-   * @param key
-   *   The name of the event, which may correspond to a goal in A/B tests.
-   * @param context
-   *   The context to track.
-   * @param data
-   *   Optional additional information to associate with the event.
-   * @param metricValue
-   *   A numeric value used by the LaunchDarkly experimentation feature in numeric custom metrics. Can
-   *   be omitted if this event is used by only non-numeric metrics. This field will also be returned
-   *   as part of the custom event for Data Export.
+   * @param key The name of the event, which may correspond to a goal in A/B tests.
+   * @param context The context to track.
+   * @param data Optional additional information to associate with the event.
+   * @param metricValue A numeric value used by the LaunchDarkly experimentation feature in numeric
+   *   custom metrics. Can be omitted if this event is used by only non-numeric metrics. This field
+   *   will also be returned as part of the custom event for Data Export.
    */
   track(key: string, context: LDContext, data?: any, metricValue?: number): void;
 
@@ -260,20 +256,21 @@ export interface LDClient extends EventEmitter {
    *
    * This is the standard `on` method inherited from Node's `EventEmitter`; see the
    * {@link https://nodejs.org/api/events.html#events_class_eventemitter|Node API docs} for more
-   * details on how to manage event listeners. Here is a description of the event types defined
-   * by `LDClient`.
+   * details on how to manage event listeners. Here is a description of the event types defined by
+   * `LDClient`.
    *
    * - `"ready"`: Sent only once, when the client has successfully connected to LaunchDarkly.
-   * Alternately, you can detect this with [[waitForInitialization]].
+   *   Alternately, you can detect this with [[waitForInitialization]].
    * - `"failed"`: Sent only once, if the client has permanently failed to connect to LaunchDarkly.
-   * Alternately, you can detect this with [[waitForInitialization]].
-   * - `"error"`: Contains an error object describing some abnormal condition that the client has detected
-   * (such as a network error).
-   * - `"update"`: The client has received a change to a feature flag. The event parameter is an object
-   * containing a single property, `key`, the flag key. Note that this does not necessarily mean the flag's
-   * value has changed for any particular context, only that some part of the flag configuration was changed.
-   * - `"update:KEY"`: The client has received a change to the feature flag whose key is KEY. This is the
-   * same as `"update"` but allows you to listen for a specific flag.
+   *   Alternately, you can detect this with [[waitForInitialization]].
+   * - `"error"`: Contains an error object describing some abnormal condition that the client has
+   *   detected (such as a network error).
+   * - `"update"`: The client has received a change to a feature flag. The event parameter is an
+   *   object containing a single property, `key`, the flag key. Note that this does not necessarily
+   *   mean the flag's value has changed for any particular context, only that some part of the flag
+   *   configuration was changed.
+   * - `"update:KEY"`: The client has received a change to the feature flag whose key is KEY. This
+   *   is the same as `"update"` but allows you to listen for a specific flag.
    *
    * @param event the name of the event to listen for
    * @param listener the function to call when the event happens
@@ -291,7 +288,8 @@ export interface LDClient extends EventEmitter {
   /** @ignore */ listenerCount(type: string | symbol): number;
   /** @ignore */ listeners(event: string | symbol): Function[];
   /** @ignore */ prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-  /** @ignore */ prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+  /** @ignore */ prependOnceListener(event: string | symbol, listener:
+  (...args: any[]) => void): this;
   /** @ignore */ rawListeners(event: string | symbol): Function[];
   /** @ignore */ removeAllListeners(event?: string | symbol): this;
   /** @ignore */ removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
