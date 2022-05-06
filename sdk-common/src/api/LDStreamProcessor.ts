@@ -5,7 +5,6 @@
  *
  * @ignore
  */
-
 export interface LDStreamProcessor {
   start: (fn?: (err?: any) => void) => void;
   stop: () => void;

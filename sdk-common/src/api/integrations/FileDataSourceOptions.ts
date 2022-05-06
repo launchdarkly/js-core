@@ -3,7 +3,6 @@ import { LDLogger } from '../LDLogger';
 /**
  * Configuration for [[FileDataSource]].
  */
-
 export interface FileDataSourceOptions {
   /**
    * The path(s) of the file(s) that FileDataSource will read.

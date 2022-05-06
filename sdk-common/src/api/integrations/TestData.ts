@@ -29,7 +29,6 @@
  *
  * @see [[FileDataSource]]
  */
-
 export interface TestData {
   /**
    * Creates or copies a [[TestDataFlagBuilder]] for building a test flag configuration.

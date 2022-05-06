@@ -8,7 +8,6 @@ import { VersionedData } from './VersionedData';
  *
  * @see [[PersistentDataStoreNonAtomic]]
  */
-
 export interface PersistentDataStore extends PersistentDataStoreBase {
   /**
    * Initialize the store, overwriting any existing data.

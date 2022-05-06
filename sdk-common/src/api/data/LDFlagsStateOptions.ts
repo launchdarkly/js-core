@@ -1,7 +1,6 @@
 /**
  * Optional settings that can be passed to [[LDClient.allFlagsState]].
  */
-
 export interface LDFlagsStateOptions {
   /**
    * True if the state should include only flags that have been marked for use with the

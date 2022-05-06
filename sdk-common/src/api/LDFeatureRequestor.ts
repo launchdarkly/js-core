@@ -5,7 +5,6 @@
  *
  * @ignore
  */
-
 export interface LDFeatureRequestor {
   requestObject: (
     kind: any,

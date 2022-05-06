@@ -6,7 +6,6 @@
  *
  * @see {@link LDOptions.bigSegments}
  */
-
 export interface LDBigSegmentsOptions {
   /**
    * Specifies the storage component that provides Big Segments data.

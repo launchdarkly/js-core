@@ -14,7 +14,6 @@
  * If you do not provide a logger object, the SDK uses the [[basicLogger]]
  * implementation with a minimum level of `info`.
  */
-
 export interface LDLogger {
   /**
    * The error logger.

@@ -5,5 +5,4 @@ import { KeyedItems } from './KeyedItems';
  * flags and user segments. The string key for each item is the `namespace` property of a
  * [[DataKind]].
  */
-
 export type FullDataSet<T> = Record<string, KeyedItems<T>>;

@@ -5,7 +5,6 @@
  * This object may be cached by the SDK, so it should not be modified after it is created. It
  * is a snapshot of the segment membership state at one point in time.
  */
-
 export interface BigSegmentStoreMembership {
   /**
    * Each property key in this object is a "segment reference", which is how segments are

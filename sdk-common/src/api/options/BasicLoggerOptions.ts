@@ -3,7 +3,6 @@ import { LDLogLevel } from '../LDLogLevel';
 /**
  * Configuration for [[basicLogger]].
  */
-
 export interface BasicLoggerOptions {
   /**
    * The lowest level of log message to enable.

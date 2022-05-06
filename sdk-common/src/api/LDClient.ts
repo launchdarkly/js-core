@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events';
 import { LDContext } from './context/LDContext';
 import { BigSegmentStoreStatusProvider } from './interfaces/BigSegmentStoreStatusProvider';
-import { LDEvaluationDetail } from './LDEvaluationDetail';
-import { LDFlagsState } from './LDFlagsState';
-import { LDFlagsStateOptions } from './LDFlagsStateOptions';
-import { LDFlagValue } from './LDFlagValue';
+import { LDEvaluationDetail } from './data/LDEvaluationDetail';
+import { LDFlagsState } from './data/LDFlagsState';
+import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
+import { LDFlagValue } from './data/LDFlagValue';
 
 /**
  * The LaunchDarkly SDK client object.
@@ -21,7 +21,6 @@ import { LDFlagValue } from './LDFlagValue';
  *
  * @see {@link https://docs.launchdarkly.com/sdk/server-side/node-js|SDK Reference Guide}
  */
-
 export interface LDClient extends EventEmitter {
   /**
    * Tests whether the client has completed initialization.

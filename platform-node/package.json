@@ -16,7 +16,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "js-server-sdk-common": "@launchdarkly/js-server-sdk-common"
+    "@launchdarkly/js-server-sdk-common": "@launchdarkly/js-server-sdk-common"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",

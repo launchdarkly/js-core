@@ -5,7 +5,6 @@
  * Big Segments are a specific type of user segments. For more information, read the LaunchDarkly
  * documentation: https://docs.launchdarkly.com/home/users/big-segments
  */
-
 export interface BigSegmentStoreStatus {
   /**
    * True if the Big Segment store is able to respond to queries, so that the SDK can

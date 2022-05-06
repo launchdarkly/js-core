@@ -9,7 +9,6 @@ import { VersionedData } from './VersionedData';
  * @see [[PersistentDataStore]]
  * @see [[PersistentDataStoreNonAtomic]]
  */
-
 export interface PersistentDataStoreBase {
   /**
    * Get an entity from the store.

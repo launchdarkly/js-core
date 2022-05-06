@@ -1,27 +1,11 @@
 import { LDFeatureStore } from '../LDFeatureStore';
 import { LDLogger } from '../LDLogger';
+import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 import { LDTLSOptions } from './LDTLSOptions';
 
 /**
- * Creates an instance of the LaunchDarkly client.
- *
- * Applications should instantiate a single instance for the lifetime of the application.
- * The client will begin attempting to connect to LaunchDarkly as soon as it is created. To
- * determine when it is ready to use, call [[LDClient.waitForInitialization]], or register an
- * event listener for the `"ready"` event using [[LDClient.on]].
- *
- * @param key
- *   The SDK key.
- * @param options
- *   Optional configuration settings.
- * @return
- *   The new client instance.
- */
-// export function init(key: string, options?: LDOptions): LDClient;
-/**
  * LaunchDarkly initialization options.
  */
-
 export interface LDOptions {
   /**
    * The base URI for the LaunchDarkly server.

@@ -5,7 +5,6 @@
  * This is the actual type of parameters and return values in `LDFeatureStore` methods that refer
  * to a flag or segment item. Those methods still use the `object` type for backward compatibility.
  */
-
 export interface VersionedData {
   /**
    * The item's unique key, such as a feature flag key.

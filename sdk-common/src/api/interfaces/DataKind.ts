@@ -6,7 +6,6 @@
  * still declared as taking `any` for backward compatibility, but in the future they will reference
  * this type.
  */
-
 export interface DataKind {
   /**
    * A string such as `"features"` or `"segments"` which can be used in keys to distinguish this

@@ -6,5 +6,4 @@
  * to most importance, the levels are `'debug'`, `'info'`, `'warn'`, and `'error'`.
  * You can also specify `'none'` instead to disable all logging.
  */
-
 export type LDLogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';

@@ -12,7 +12,6 @@
  * is not part of normal use of the SDK) you should be aware that the callback may be executed
  * immediately.
  */
-
 export interface LDFeatureStore {
   /**
    * Get an entity from the store.
