@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./sdk-common/tsconfig.ref.json"
+    },
+    {
+      "path": "./server-sdk-common/tsconfig.ref.json"
+    },
+    {
+      "path": "./platform-node/tsconfig.ref.json"
+    },
+  ],
+}

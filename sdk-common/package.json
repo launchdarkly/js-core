@@ -1,0 +1,26 @@
+{
+  "name": "@launchdarkly/js-sdk-common",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "description": "LaunchDarkly SDK for JavaScript - common code",
+  "files": [
+    "/dist"
+  ],
+  "keywords": [
+    "launchdarkly",
+    "analytics",
+    "client"
+  ],
+  "scripts": {
+    "test": "jest --ci",
+    "build": "tsc"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.4",
+    "typescript": "^4.6.3"
+  }
+}
