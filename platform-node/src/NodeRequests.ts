@@ -1,58 +1,14 @@
 /* eslint-disable class-methods-use-this */
-/* eslint-disable max-classes-per-file */
 import { Requests } from '@launchdarkly/js-server-sdk-common';
 import LDProxyOptions from '@launchdarkly/js-server-sdk-common/dist/api/options/LDProxyOptions';
 import { LDTLSOptions } from '@launchdarkly/js-server-sdk-common/dist/api/options/LDTLSOptions';
-import { Headers, Options, Response } from '@launchdarkly/js-server-sdk-common/dist/platform/Requests';
+import { Options, Response } from '@launchdarkly/js-server-sdk-common/dist/platform/Requests';
 import createHttpsProxyAgent, { HttpsProxyAgentOptions } from 'https-proxy-agent';
 
 import * as http from 'http';
 import * as https from 'https';
 
-class NodeResponse implements Response {
-  incomingMessage: http.IncomingMessage;
-
-  body: any[] = [];
-
-  promise: Promise<string>;
-
-  headers: Headers;
-
-  status: number;
-
-  constructor(res: http.IncomingMessage) {
-    this.headers = {
-      get: (name: string) => res.headers[name],
-    };
-    // Status code is optionally typed, but will always be present for this
-    // use case.
-    this.status = res.statusCode || 0;
-    this.incomingMessage = res;
-
-    this.promise = new Promise((resolve, reject) => {
-      res.on('data', (chunk) => {
-        this.body.push(chunk);
-      });
-
-      res.on('error', (err) => {
-        reject(err);
-      });
-
-      res.on('end', () => {
-        resolve(Buffer.concat(this.body).toString());
-      });
-    });
-  }
-
-  text(): Promise<string> {
-    return this.promise;
-  }
-
-  async json(): Promise<any> {
-    const stringValue = await this.promise;
-    return JSON.parse(stringValue);
-  }
-}
+import NodeResponse from './NodeResponse';
 
 function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   return {
@@ -110,7 +66,6 @@ function createAgent(options: Options): https.Agent | http.Agent | undefined {
 }
 
 export default class NodeRequests implements Requests {
-  // eslint-disable-next-line class-methods-use-this
   /**
    * @inheritdoc
    */

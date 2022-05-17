@@ -34,7 +34,7 @@ export interface PlatformData {
   /**
    * Any additional attributes associated with the platform.
    */
-  additional: Record<string, string>;
+  additional?: Record<string, string>;
 }
 
 export interface SdkData {

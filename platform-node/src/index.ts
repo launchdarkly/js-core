@@ -1,5 +1,6 @@
+// This file contains temporary code for testing.
 import doesItWork from '@launchdarkly/js-server-sdk-common';
-import NodeRequests from './Requests';
+import NodeRequests from './NodeRequests';
 
 doesItWork();
 
