@@ -16,5 +16,4 @@ module.exports = {
   ignorePatterns: ["**/dist/**"],
   rules: {
   },
-  ignorePatterns: ["**/dist/**"],
 };
