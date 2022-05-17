@@ -1,6 +1,7 @@
 import { LDFeatureStore } from '../LDFeatureStore';
 import { LDLogger } from '../LDLogger';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
+import LDProxyOptions from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
 
 /**
@@ -99,27 +100,9 @@ export interface LDOptions {
   pollInterval?: number;
 
   /**
-   * Allows you to specify a host for an optional HTTP proxy.
+   * Allows you to specify configuration for an optional HTTP proxy.
    */
-  proxyHost?: string;
-
-  /**
-   * Allows you to specify a port for an optional HTTP proxy.
-   *
-   * Both the host and port must be specified to enable proxy support.
-   */
-  proxyPort?: number;
-
-  /**
-   * When using an HTTP proxy, specifies whether it is accessed via `http` or `https`.
-   */
-  proxyScheme?: string;
-
-  /**
-   * Allows you to specify basic authentication parameters for an optional HTTP proxy.
-   * Usually of the form `username:password`.
-   */
-  proxyAuth?: string;
+  proxyOptions?: LDProxyOptions;
 
   /**
    * Whether the client should be initialized in offline mode.

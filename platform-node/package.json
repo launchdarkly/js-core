@@ -16,7 +16,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "@launchdarkly/js-server-sdk-common"
+    "@launchdarkly/js-server-sdk-common": "@launchdarkly/js-server-sdk-common",
+    "https-proxy-agent": "^5.0.1"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
