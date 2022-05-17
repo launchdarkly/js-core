@@ -1,12 +1,12 @@
 import Crypto from './platform/Crypto';
-import FileSystem from './platform/FileSystem';
+import Filesystem from './platform/Filesystem';
 import Info from './platform/Info';
 import Platform from './platform/Platform';
 import Requests from './platform/Requests';
 
 export {
   Crypto,
-  FileSystem,
+  Filesystem as FileSystem,
   Info,
   Platform,
   Requests,

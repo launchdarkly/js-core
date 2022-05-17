@@ -1,5 +1,5 @@
 import Crypto from './Crypto';
-import FileSystem from './FileSystem';
+import Filesystem from './Filesystem';
 import Info from './Info';
 import Requests from './Requests';
 
@@ -14,7 +14,7 @@ export default interface Platform {
    * The interface for performing file system operations. If the platform does
    * not support filesystem access, then this may be undefined.
    */
-  fileSystem?:FileSystem;
+  fileSystem?:Filesystem;
 
   /**
    * The interface for performing cryptographic operations.

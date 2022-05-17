@@ -1,7 +1,7 @@
 /**
  * Interface for doing filesystem operations on the platform.
  */
-export default interface FileSystem {
+export default interface Filesystem {
   /**
    * The time, in ms since POSIX epoch, that the file was last modified.
    * @param path The path to get a timestamp for.
@@ -31,5 +31,5 @@ export default interface FileSystem {
    *
    * @returns An async iterator that watches for changes to `path`.
    */
-  watch(path: string): AsyncIterator<{ eventType: string, filename: string }>;
+  watch(path: string): AsyncIterable<{ eventType: string, filename: string }>;
 }
