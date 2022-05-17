@@ -1,7 +1,7 @@
 /**
  * Information about the platform of the SDK and the environment it is executing.
  */
-interface PlatformData {
+export interface PlatformData {
   /**
    * Information about the OS on which the SDK is running. Should be populated
    * when available. Not all platforms will make this data accessible.
@@ -37,7 +37,7 @@ interface PlatformData {
   additional: Record<string, string>;
 }
 
-interface SdkData {
+export interface SdkData {
   /**
    * The name of the SDK. e.g. "node-server-sdk"
    */
