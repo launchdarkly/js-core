@@ -20,3 +20,5 @@ async function runTest() {
 }
 
 runTest();
+
+console.log(platform.info.sdkData());

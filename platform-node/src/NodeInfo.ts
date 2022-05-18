@@ -4,7 +4,7 @@ import { PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common/dist/p
 
 import * as os from 'os';
 
-import packageJson from '../package.json';
+import * as packageJson from '../package.json';
 
 function processPlatformName(name: string): string {
   switch (name) {
@@ -25,6 +25,7 @@ export default class NodeInfo implements platform.Info {
       os: {
         name: processPlatformName(os.platform()),
         version: os.version(),
+        arch: os.arch(),
       },
       name: 'Node',
       version: process.version,
