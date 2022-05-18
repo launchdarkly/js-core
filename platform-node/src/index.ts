@@ -1,13 +1,10 @@
+/* eslint-disable no-console */
 // This file contains temporary code for testing.
-import doesItWork from '@launchdarkly/js-server-sdk-common';
 import NodePlatform from './NodePlatform';
-import NodeRequests from './NodeRequests';
-
-doesItWork();
 
 const platform = new NodePlatform({
   tlsParams: {
-    checkServerIdentity: (name, cert) => {
+    checkServerIdentity: (name) => {
       console.log('GOT A IDENTITY CHECK', name);
       return undefined;
     },
