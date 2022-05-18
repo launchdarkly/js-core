@@ -1,9 +1,7 @@
-/* eslint-disable class-methods-use-this */
-import { Requests } from '@launchdarkly/js-server-sdk-common';
-import LDProxyOptions from '@launchdarkly/js-server-sdk-common/dist/api/options/LDProxyOptions';
-import { LDTLSOptions } from '@launchdarkly/js-server-sdk-common/dist/api/options/LDTLSOptions';
-import { Options, Response } from '@launchdarkly/js-server-sdk-common/dist/platform/Requests';
+// import { Options, platform, options } from '@launchdarkly/js-server-sdk-common';
 import createHttpsProxyAgent, { HttpsProxyAgentOptions } from 'https-proxy-agent';
+
+import { platform, LDTLSOptions, LDProxyOptions } from '@launchdarkly/js-server-sdk-common';
 
 import * as http from 'http';
 import * as https from 'https';
@@ -48,28 +46,37 @@ function processProxyOptions(
   return createHttpsProxyAgent(parsedOptions);
 }
 
-function createAgent(options: Options): https.Agent | http.Agent | undefined {
-  if (!options.proxyOptions?.auth?.startsWith('https') && options.tlsOptions) {
+function createAgent(
+  tlsOptions?: LDTLSOptions,
+  proxyOptions?: LDProxyOptions,
+): https.Agent | http.Agent | undefined {
+  if (!proxyOptions?.auth?.startsWith('https') && tlsOptions) {
     // TODO: This is likely a usage error. Need to re-address when logging is
     // figured out.
   }
-  if (options.tlsOptions) {
-    const agentOptions = processTlsOptions(options.tlsOptions);
-    if (options.proxyOptions) {
-      return processProxyOptions(options.proxyOptions, agentOptions);
+  if (tlsOptions) {
+    const agentOptions = processTlsOptions(tlsOptions);
+    if (proxyOptions) {
+      return processProxyOptions(proxyOptions, agentOptions);
     }
     return new https.Agent(agentOptions);
-  } if (options.proxyOptions) {
-    return processProxyOptions(options.proxyOptions);
+  } if (proxyOptions) {
+    return processProxyOptions(proxyOptions);
   }
   return undefined;
 }
 
-export default class NodeRequests implements Requests {
+export default class NodeRequests implements platform.Requests {
+  agent: https.Agent | http.Agent | undefined;
+
+  constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions) {
+    this.agent = createAgent(tlsOptions, proxyOptions);
+  }
+
   /**
    * @inheritdoc
    */
-  fetch(url: string, options: Options = {}): Promise<Response> {
+  fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
 
@@ -78,7 +85,7 @@ export default class NodeRequests implements Requests {
         timeout: options.timeout,
         headers: options.headers,
         method: options.method,
-        agent: createAgent(options),
+        agent: this.agent,
       }, (res) => resolve(new NodeResponse(res)));
 
       if (options.body) {

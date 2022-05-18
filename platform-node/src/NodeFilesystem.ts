@@ -1,10 +1,10 @@
 /* eslint-disable class-methods-use-this */
-import { FileSystem } from '@launchdarkly/js-server-sdk-common';
+import { platform } from '@launchdarkly/js-server-sdk-common';
 import * as fs from 'fs';
 
 const fsPromises = fs.promises;
 
-export default class NodeFilesystem implements FileSystem {
+export default class NodeFilesystem implements platform.Filesystem {
   async getFileTimestamp(path: string): Promise<number> {
     const stat = await fsPromises.stat(path);
     return stat.mtimeMs;

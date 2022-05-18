@@ -25,7 +25,7 @@ export interface Hmac extends Hasher {
 /**
  * Interface provided by the platform for doing cryptographic operations.
  */
-export default interface Crypto {
+export interface Crypto {
   createHash(algorithm: string): Hasher;
   createHmac(algorithm: string, key: string): Hmac;
 }

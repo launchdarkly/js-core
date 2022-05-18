@@ -1,7 +1,7 @@
-import { LDFeatureStore } from '../LDFeatureStore';
+import { LDFeatureStore } from '../plumbing/LDFeatureStore';
 import { LDLogger } from '../LDLogger';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
-import LDProxyOptions from './LDProxyOptions';
+import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
 
 /**

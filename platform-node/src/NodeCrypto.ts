@@ -1,10 +1,10 @@
 /* eslint-disable class-methods-use-this */
-import { Crypto } from '@launchdarkly/js-server-sdk-common';
+import { platform } from '@launchdarkly/js-server-sdk-common';
 import { Hasher, Hmac } from '@launchdarkly/js-server-sdk-common/dist/platform/Crypto';
 
 import * as crypto from 'crypto';
 
-export default class NodeCrypto implements Crypto {
+export default class NodeCrypto implements platform.Crypto {
   createHash(algorithm: string): Hasher {
     return crypto.createHash(algorithm);
   }

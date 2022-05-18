@@ -1,4 +1,4 @@
-export default interface LDProxyOptions {
+export interface LDProxyOptions {
   /**
    * Allows you to specify a host for an optional HTTP proxy.
    */

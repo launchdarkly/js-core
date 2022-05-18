@@ -1,9 +1,9 @@
-import Crypto from './Crypto';
-import Filesystem from './Filesystem';
-import Info from './Info';
-import Requests from './Requests';
+import { Crypto } from './Crypto';
+import { Filesystem } from './Filesystem';
+import { Info } from './Info';
+import { Requests } from './Requests';
 
-export default interface Platform {
+export interface Platform {
   /**
    * The interface for getting information about the platform and the execution
    * environment.

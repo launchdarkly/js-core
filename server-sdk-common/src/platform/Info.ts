@@ -62,7 +62,7 @@ export interface SdkData {
  * Interface for getting information about the SDK or the environment it is
  * executing in.
  */
-export default interface Info {
+export interface Info {
   /**
    * Get information about the platform.
    */

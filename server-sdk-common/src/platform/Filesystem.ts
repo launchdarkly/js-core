@@ -1,7 +1,7 @@
 /**
  * Interface for doing filesystem operations on the platform.
  */
-export default interface Filesystem {
+export interface Filesystem {
   /**
    * The time, in ms since POSIX epoch, that the file was last modified.
    * @param path The path to get a timestamp for.

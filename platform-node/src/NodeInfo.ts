@@ -1,5 +1,5 @@
 /* eslint-disable class-methods-use-this */
-import { Info } from '@launchdarkly/js-server-sdk-common';
+import { platform } from '@launchdarkly/js-server-sdk-common';
 import { PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common/dist/platform/Info';
 
 import * as os from 'os';
@@ -19,7 +19,7 @@ function processPlatformName(name: string): string {
   }
 }
 
-export default class NodeInfo implements Info {
+export default class NodeInfo implements platform.Info {
   platformData(): PlatformData {
     return {
       os: {

@@ -1,6 +1,3 @@
-import LDProxyOptions from '../api/options/LDProxyOptions';
-import { LDTLSOptions } from '../api/options/LDTLSOptions';
-
 // The interfaces in this file are intended to be as close as possible to the
 // interfaces used for the `fetch` Web API. Doing so should allow implementations
 // which are more easily porable.
@@ -44,21 +41,8 @@ export interface Options {
   method?: string;
   body?: string
   timeout?: number;
-
-  /**
-   * Allows specification of TLS options. May not be supported on all platforms.
-   *
-   * This is not part of the `fetch` Web API.
-   */
-  tlsOptions?: LDTLSOptions;
-  /**
-   * Allows specification of proxy options. May not be supported on all platforms.
-   *
-   * This is not part of the `fetch` Web API.
-   */
-  proxyOptions?: LDProxyOptions;
 }
 
-export default interface Requests {
-  fetch(url: string, options: Options): Promise<Response>
+export interface Requests {
+  fetch(url: string, options?: Options): Promise<Response>
 }
