@@ -1,12 +1,13 @@
 export * from './context';
 export * from './data';
-export * as integrations from './integrations';
-export * as interfaces from './interfaces';
 export * from './options';
-export * as plumbing from './plumbing';
 export * from './LDClient';
 export * from './LDLogger';
 export * from './LDLogLevel';
-export * from './plumbing/LDStreamProcessor';
+export * from './subsystems/LDStreamProcessor';
 export * from './LDContext';
 export * from './LDUser';
+
+export * as integrations from './integrations';
+export * as interfaces from './interfaces';
+export * as subsystems from './subsystems';

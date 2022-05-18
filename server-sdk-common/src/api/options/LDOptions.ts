@@ -1,4 +1,4 @@
-import { LDFeatureStore } from '../plumbing/LDFeatureStore';
+import { LDFeatureStore } from '../subsystems/LDFeatureStore';
 import { LDLogger } from '../LDLogger';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 import { LDProxyOptions } from './LDProxyOptions';
