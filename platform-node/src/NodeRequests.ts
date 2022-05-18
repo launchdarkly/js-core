@@ -73,9 +73,6 @@ export default class NodeRequests implements platform.Requests {
     this.agent = createAgent(tlsOptions, proxyOptions);
   }
 
-  /**
-   * @inheritdoc
-   */
   fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
