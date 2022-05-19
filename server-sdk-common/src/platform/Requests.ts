@@ -1,6 +1,6 @@
 // The interfaces in this file are intended to be as close as possible to the
 // interfaces used for the `fetch` Web API. Doing so should allow implementations
-// which are more easily porable.
+// which are more easily portable.
 
 // These are not full specifications of the interface, but instead subsets
 // based on the functionality needed by the SDK. Exposure of the full standard
