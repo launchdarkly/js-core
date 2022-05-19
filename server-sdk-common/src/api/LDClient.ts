@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { LDContext } from './context/LDContext';
+import { LDContext } from './LDContext';
 import { BigSegmentStoreStatusProvider } from './interfaces/BigSegmentStoreStatusProvider';
 import { LDEvaluationDetail } from './data/LDEvaluationDetail';
 import { LDFlagsState } from './data/LDFlagsState';

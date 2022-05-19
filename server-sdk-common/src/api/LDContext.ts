@@ -1,5 +1,5 @@
-import { LDMultiKindContext } from './LDMultiKindContext';
-import { LDSingleKindContext } from './LDSingleKindContext';
+import { LDMultiKindContext } from './context/LDMultiKindContext';
+import { LDSingleKindContext } from './context/LDSingleKindContext';
 import { LDUser } from './LDUser';
 
 /**

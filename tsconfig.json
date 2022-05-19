@@ -1,5 +1,8 @@
 {
   "files": [],
+  "compilerOptions": {
+    "resolveJsonModule": true
+  },
   "references": [
     {
       "path": "./sdk-common/tsconfig.ref.json"
