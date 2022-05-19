@@ -1,5 +1,5 @@
-import { EventEmitter } from 'events';
-import { BigSegmentStoreStatus } from './BigSegmentStoreStatus';
+import EventEmitter from 'events';
+import { interfaces } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * An interface for querying the status of a Big Segment store.
@@ -27,12 +27,12 @@ export interface BigSegmentStoreStatusProvider extends EventEmitter {
    * @returns a {@link BigSegmentStoreStatus}, or `undefined` if the SDK has not yet queried the
    *   Big Segment store status
    */
-  getStatus(): BigSegmentStoreStatus | undefined;
+  getStatus(): interfaces.BigSegmentStoreStatus | undefined;
 
   /**
    * Gets the current status of the store, querying it if the status has not already been queried.
    *
    * @returns a Promise for the status of the store
    */
-  requireStatus(): Promise<BigSegmentStoreStatus>;
+  requireStatus(): Promise<interfaces.BigSegmentStoreStatus>;
 }

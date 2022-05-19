@@ -1,6 +1,4 @@
-import { EventEmitter } from 'events';
 import { LDContext } from './LDContext';
-import { BigSegmentStoreStatusProvider } from './interfaces/BigSegmentStoreStatusProvider';
 import { LDEvaluationDetail } from './data/LDEvaluationDetail';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
@@ -13,15 +11,8 @@ import { LDFlagValue } from './data/LDFlagValue';
  * continue to use it throughout the lifetime of the application, rather than creating instances on
  * the fly.
  *
- * Note that `LDClient` inherits from `EventEmitter`, so you can use the standard `on()`, `once()`,
- * and `off()` methods to receive events. The standard `EventEmitter` methods are not documented
- * here; see the
- * {@link https://nodejs.org/api/events.html#events_class_eventemitter|Node API documentation}. For
- * a description of events you can listen for, see [[on]].
- *
- * @see {@link https://docs.launchdarkly.com/sdk/server-side/node-js|SDK Reference Guide}
  */
-export interface LDClient extends EventEmitter {
+export interface LDClient {
   /**
    * Tests whether the client has completed initialization.
    *
@@ -242,21 +233,7 @@ export interface LDClient extends EventEmitter {
   flush(callback?: (err: Error, res: boolean) => void): Promise<void>;
 
   /**
-   * A mechanism for tracking the status of a Big Segment store.
-   *
-   * This object has methods for checking whether the Big Segment store is (as far as the SDK
-   * knows) currently operational and tracking changes in this status. See
-   * {@link interfaces.BigSegmentStoreStatusProvider} for more about this functionality.
-   */
-  readonly bigSegmentStoreStatusProvider: BigSegmentStoreStatusProvider;
-
-  /**
    * Registers an event listener that will be called when the client triggers some type of event.
-   *
-   * This is the standard `on` method inherited from Node's `EventEmitter`; see the
-   * {@link https://nodejs.org/api/events.html#events_class_eventemitter|Node API docs} for more
-   * details on how to manage event listeners. Here is a description of the event types defined by
-   * `LDClient`.
    *
    * - `"ready"`: Sent only once, when the client has successfully connected to LaunchDarkly.
    *   Alternately, you can detect this with [[waitForInitialization]].
@@ -275,24 +252,4 @@ export interface LDClient extends EventEmitter {
    * @param listener the function to call when the event happens
    */
   on(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  // The following are symbols that LDClient inherits from EventEmitter, which we are declaring
-  // again here only so that we can use @ignore to exclude them from the generated docs.
-  // Unfortunately it does not seem possible to exclude these inherited methods en masse without
-  // using a Typedoc plugin.
-  /** @ignore */ addListener(event: string | symbol, listener: (...args: any[]) => void): this;
-  /** @ignore */ emit(event: string | symbol, ...args: any[]): boolean;
-  /** @ignore */ eventNames(): Array<string | symbol>;
-  /** @ignore */ getMaxListeners(): number;
-  /** @ignore */ listenerCount(type: string | symbol): number;
-  /** @ignore */ listeners(event: string | symbol): Function[];
-  /** @ignore */ prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-  /** @ignore */ prependOnceListener(event: string | symbol, listener:
-  (...args: any[]) => void): this;
-  /** @ignore */ rawListeners(event: string | symbol): Function[];
-  /** @ignore */ removeAllListeners(event?: string | symbol): this;
-  /** @ignore */ removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
-  /** @ignore */ setMaxListeners(n: number): this;
-  /** @ignore */ once(event: string | symbol, listener: (...args: any[]) => void): this;
-  /** @ignore */ off(event: string | symbol, listener: (...args: any[]) => void): this;
 }
