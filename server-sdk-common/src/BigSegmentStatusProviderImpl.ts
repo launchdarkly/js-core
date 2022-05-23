@@ -1,11 +1,7 @@
 /* eslint-disable class-methods-use-this */
 import { BigSegmentStoreStatusProvider, BigSegmentStoreStatus } from './api/interfaces';
 
-type StatusHandler = (status: BigSegmentStoreStatus) => void;
-
 export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStoreStatusProvider {
-  private onStatus?: StatusHandler;
-
   /**
    * Gets the current status of the store, if known.
    *
@@ -26,11 +22,10 @@ export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStor
   }
 
   /**
-   * Set the status handler. Only one handler can be registered and this will replace the existing
-   * handler.
-   * @param handler
+   * This should be overridden by derived implementations.
+   * @param eventType
+   * @param status
    */
-  protected setStatusHandler(handler: StatusHandler) {
-    this.onStatus = handler;
-  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  dispatch(eventType: string, status: BigSegmentStoreStatus) {}
 }
