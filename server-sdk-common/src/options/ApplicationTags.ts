@@ -9,7 +9,8 @@ const allowedTagCharacters = /^(\w|\.|-)+$/;
 
 const tagValidator = TypeValidators.StringMatchingRegex(allowedTagCharacters);
 
-/** Class for managing tags.
+/**
+ * Class for managing tags.
  *
  * @internal
  */
