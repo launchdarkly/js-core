@@ -3,6 +3,8 @@ import { LDLogger, LDProxyOptions, LDTLSOptions } from '../api';
 /**
  * This interface applies to the options after they have been validated and defaults
  * have been applied.
+ *
+ * @internal
  */
 export interface ValidatedOptions {
   baseUri: string;
