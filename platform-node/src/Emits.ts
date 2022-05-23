@@ -3,6 +3,12 @@ import EventEmitter from 'events';
 export type EventableConstructor<T = {}> = new (...args: any[]) => T;
 export type Eventable = EventableConstructor<{ emitter: EventEmitter }>;
 
+/**
+ * Adds the implementation of an event emitter to something that contains
+ * a field of `emitter` with type `EventEmitter`.
+ * @param Base The class to derive the mixin from.
+ * @returns A class extending the base with an event emitter.
+ */
 export function Emits<TBase extends Eventable>(Base: TBase) {
   return class WithEvents extends Base {
     addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
