@@ -4,7 +4,7 @@ import ApplicationTags from './ApplicationTags';
 import OptionMessages from './OptionMessages';
 import ServiceEndpoints from './ServiceEndpoints';
 import { ValidatedOptions } from './ValidatedOptions';
-import TypeValidators, { NumberWithMinimum, Type, TypeValidator } from './validators';
+import TypeValidators, { NumberWithMinimum, TypeValidator } from './validators';
 
 // Once things are internal to the implementation of the SDK we can depend on
 // types. Calls to the SDK could contain anything without any regard to typing.
@@ -87,7 +87,7 @@ function validateTypesAndNames(options: LDOptions): {
           ));
           validatedOptions[optionName] = !!optionValue;
         } else if (validator instanceof NumberWithMinimum) {
-          const min = (validator as NumberWithMinimum).min;
+          const { min } = validator as NumberWithMinimum;
           errors.push(OptionMessages.optionBelowMinimum(optionName, optionValue, min));
         }
         else {
@@ -103,14 +103,6 @@ function validateTypesAndNames(options: LDOptions): {
   });
   return { errors, validatedOptions };
 }
-
-// function enforceMinimum(configIn, name, min) {
-//   const config = configIn;
-//   if (config[name] < min) {
-//     config.logger.warn(messages.optionBelowMinimum(name, config[name], min));
-//     config[name] = min;
-//   }
-// }
 
 /**
  * Configuration options for the LDClient.
