@@ -3,7 +3,7 @@
 import {
   LDClient, LDContext, LDEvaluationDetail, LDFlagsState, LDFlagsStateOptions,
 } from './api';
-import BigSegmentStoreStatusProvider from './BigSegmentStatusProvider';
+import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { Platform } from './platform';
 
 enum EventTypes {
@@ -39,7 +39,7 @@ export default class LDClientImpl implements LDClient {
    * a platform event system. For node this would be an EventEmitter, for other
    * platforms it would likely be an EventTarget.
    */
-  public bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProvider();
+  bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProvider();
 
   constructor(targetPlatform: Platform) {
     this.platform = targetPlatform;

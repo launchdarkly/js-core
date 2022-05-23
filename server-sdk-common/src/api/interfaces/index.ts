@@ -10,3 +10,4 @@ export * from './PersistentDataStore';
 export * from './PersistentDataStoreBase';
 export * from './PersistentDataStoreNonAtomic';
 export * from './VersionedData';
+export * from './BigSegmentStoreStatusProvider';

@@ -1,6 +1,6 @@
 import { LDClient as LDClientCommon } from '@launchdarkly/js-server-sdk-common';
-import EventEmitter from 'events';
-import { BigSegmentStoreStatusProvider } from './interfaces/BigSegmentStoreStatusProvider';
+import { BigSegmentStoreStatusProvider } from './interfaces';
+
 
 /**
  * The LaunchDarkly SDK client object.
@@ -10,7 +10,7 @@ import { BigSegmentStoreStatusProvider } from './interfaces/BigSegmentStoreStatu
  * the fly.
  *
  */
-export interface LDClient extends LDClientCommon, EventEmitter {
+export interface LDClient extends LDClientCommon {
   /**
    * A mechanism for tracking the status of a Big Segment store.
    *

@@ -1,9 +1,9 @@
 /* eslint-disable class-methods-use-this */
-import { BigSegmentStoreStatus } from './api/interfaces';
+import { BigSegmentStoreStatusProvider, BigSegmentStoreStatus } from './api/interfaces';
 
 type StatusHandler = (status: BigSegmentStoreStatus) => void;
 
-export default class BigSegmentStoreStatusProvider {
+export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStoreStatusProvider {
   private onStatus?: StatusHandler;
 
   /**
@@ -30,7 +30,7 @@ export default class BigSegmentStoreStatusProvider {
    * handler.
    * @param handler
    */
-  setStatusHandler(handler: StatusHandler) {
+  protected setStatusHandler(handler: StatusHandler) {
     this.onStatus = handler;
   }
 }
