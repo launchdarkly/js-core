@@ -1,8 +1,10 @@
 // eslint-disable-next-line max-classes-per-file
-import { LDLogger, LDOptions } from '../api';
+import { LDLogger, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
+import ApplicationTags from './ApplicationTags';
 import OptionMessages from './OptionMessages';
 import ServiceEndpoints from './ServiceEndpoints';
-import TypeValidators, { TypeValidator } from './validators';
+import { ValidatedOptions } from './ValidatedOptions';
+import TypeValidators, { NumberWithMinimum, Type, TypeValidator } from './validators';
 
 // Once things are internal to the implementation of the SDK we can depend on
 // types. Calls to the SDK could contain anything without any regard to typing.
@@ -24,7 +26,7 @@ const validations: Record<string, TypeValidator> = {
   bigSegments: TypeValidators.Object,
   updateProcessor: TypeValidators.ObjectOrFactory,
   flushInterval: TypeValidators.Number,
-  pollInterval: TypeValidators.Number,
+  pollInterval: TypeValidators.NumberWithMin(30),
   proxyOptions: TypeValidators.Object,
   offline: TypeValidators.Boolean,
   stream: TypeValidators.Boolean,
@@ -37,13 +39,13 @@ const validations: Record<string, TypeValidator> = {
   contextKeysFlushInterval: TypeValidators.Number,
   tlsParams: TypeValidators.Object,
   diagnosticOptOut: TypeValidators.Boolean,
-  diagnosticRecordingInterval: TypeValidators.Number,
+  diagnosticRecordingInterval: TypeValidators.NumberWithMin(60),
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
   application: TypeValidators.Object,
 };
 
-const defaultValues: Record<string, any> = {
+const defaultValues: ValidatedOptions = {
   baseUri: 'https://app.launchdarkly.com',
   streamUri: 'https://stream.launchdarkly.com',
   eventsUri: 'https://events.launchdarkly.com',
@@ -67,10 +69,10 @@ const defaultValues: Record<string, any> = {
 };
 
 function validateTypesAndNames(options: LDOptions): {
-  errors: string[], validatedOptions: LDOptions
+  errors: string[], validatedOptions: ValidatedOptions
 } {
   const errors: string[] = [];
-  const validatedOptions: Record<string, any> = {};
+  const validatedOptions: ValidatedOptions = { ...defaultValues };
   Object.keys(options).forEach((optionName) => {
     // We need to tell typescript it doesn't actually know what options are.
     // If we don't then it complains we are doing crazy things with it.
@@ -84,7 +86,11 @@ function validateTypesAndNames(options: LDOptions): {
             typeof optionValue,
           ));
           validatedOptions[optionName] = !!optionValue;
-        } else {
+        } else if (validator instanceof NumberWithMinimum) {
+          const min = (validator as NumberWithMinimum).min;
+          errors.push(OptionMessages.optionBelowMinimum(optionName, optionValue, min));
+        }
+        else {
           errors.push(OptionMessages.wrongOptionType(
             optionName,
             validator.getType(),
@@ -92,13 +98,19 @@ function validateTypesAndNames(options: LDOptions): {
           ));
           validatedOptions[optionName] = defaultValues[optionName];
         }
-      } else {
-        validatedOptions[optionName] = optionValue;
       }
     }
   });
   return { errors, validatedOptions };
 }
+
+// function enforceMinimum(configIn, name, min) {
+//   const config = configIn;
+//   if (config[name] < min) {
+//     config.logger.warn(messages.optionBelowMinimum(name, config[name], min));
+//     config[name] = min;
+//   }
+// }
 
 /**
  * Configuration options for the LDClient.
@@ -118,6 +130,37 @@ export default class Configuration {
 
   public readonly pollInterval: number;
 
+  public readonly proxyOptions?: LDProxyOptions;
+
+  public readonly offline: boolean;
+
+  public readonly stream: boolean;
+
+  public readonly streamInitialReconnectDelay: number;
+
+  public readonly useLdd: boolean;
+
+  public readonly sendEvents: boolean;
+
+  public readonly allAttributesPrivate: boolean;
+
+  // TODO: Change to attribute references once available.
+  public readonly privateAttributes: string[];
+
+  public readonly contextKeysCapacity: number;
+
+  public readonly contextKeysFlushInterval: number;
+
+  public readonly tlsParams?: LDTLSOptions;
+
+  public readonly diagnosticOptOut: boolean;
+
+  public readonly wrapperName?: string;
+
+  public readonly wrapperVersion?: string;
+
+  public readonly tags: ApplicationTags;
+
   constructor(options: LDOptions) {
     // If there isn't a valid logger from the platform, then logs would go nowhere.
     this.logger = options.logger;
@@ -127,16 +170,33 @@ export default class Configuration {
       this.logger?.warn(error);
     });
 
-    this.serviceEndpoints = ServiceEndpoints.FromOptions(validatedOptions);
-    // We know these options are valid now, so we cast away the uncertainty.
-    this.eventsCapacity = validatedOptions.capacity as number;
-    this.timeout = validatedOptions.timeout as number;
+    this.serviceEndpoints = new ServiceEndpoints(
+      validatedOptions.streamUri,
+      validatedOptions.baseUri,
+      validatedOptions.eventsUri,
+    );
+    this.eventsCapacity = validatedOptions.capacity;
+    this.timeout = validatedOptions.timeout;
     // TODO: featureStore
     // TODO: bigSegments
     // TODO: updateProcessor
-    this.flushInterval = validatedOptions.flushInterval as number;
-    this.pollInterval = validatedOptions.pollInterval as number;
+    this.flushInterval = validatedOptions.flushInterval;
+    this.pollInterval = validatedOptions.pollInterval;
+    this.proxyOptions = validatedOptions.proxyOptions;
 
-    // this.serviceEndpoints = ServiceEndpoints.FromOptions(options);
+    this.offline = validatedOptions.offline;
+    this.stream = validatedOptions.stream;
+    this.streamInitialReconnectDelay = validatedOptions.streamInitialReconnectDelay;
+    this.useLdd = validatedOptions.useLdd;
+    this.sendEvents = validatedOptions.sendEvents;
+    this.allAttributesPrivate = validatedOptions.allAttributesPrivate;
+    this.privateAttributes = validatedOptions.privateAttributes;
+    this.contextKeysCapacity = validatedOptions.contextKeysCapacity;
+    this.contextKeysFlushInterval = validatedOptions.contextKeysFlushInterval;
+    this.tlsParams = validatedOptions.tlsParams;
+    this.diagnosticOptOut = validatedOptions.diagnosticOptOut;
+    this.wrapperName = validatedOptions.wrapperName;
+    this.wrapperVersion = validatedOptions.wrapperVersion;
+    this.tags = new ApplicationTags(validatedOptions);
   }
 }
