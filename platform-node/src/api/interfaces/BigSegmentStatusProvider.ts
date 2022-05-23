@@ -20,7 +20,7 @@ import { interfaces } from '@launchdarkly/js-server-sdk-common';
  * type of the status change event is `"change"`, and its value is the same value that would be
  * returned by {@link getStatus}.
  */
-export interface BigSegmentStoreStatusProvider {
+export interface BigSegmentStoreStatusProvider extends EventEmitter {
   /**
    * Gets the current status of the store, if known.
    *
