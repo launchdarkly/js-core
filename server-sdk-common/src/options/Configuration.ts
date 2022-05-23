@@ -1,5 +1,6 @@
-// eslint-disable-next-line max-classes-per-file
-import { LDLogger, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
+import {
+  LDLogger, LDOptions, LDProxyOptions, LDTLSOptions,
+} from '../api';
 import ApplicationTags from './ApplicationTags';
 import OptionMessages from './OptionMessages';
 import ServiceEndpoints from './ServiceEndpoints';
@@ -89,8 +90,7 @@ function validateTypesAndNames(options: LDOptions): {
         } else if (validator instanceof NumberWithMinimum) {
           const { min } = validator as NumberWithMinimum;
           errors.push(OptionMessages.optionBelowMinimum(optionName, optionValue, min));
-        }
-        else {
+        } else {
           errors.push(OptionMessages.wrongOptionType(
             optionName,
             validator.getType(),

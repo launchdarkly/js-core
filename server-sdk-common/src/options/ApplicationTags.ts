@@ -1,6 +1,6 @@
 import OptionMessages from './OptionMessages';
 import { ValidatedOptions } from './ValidatedOptions';
-import TypeValidators, { TypeValidator } from './validators';
+import TypeValidators from './validators';
 
 /**
 * Expression to validate characters that are allowed in tag keys and values.

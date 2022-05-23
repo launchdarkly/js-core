@@ -1,6 +1,13 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
 
+// The classes here are static, but needs to be instantiated to
+// support the generic functionality. Which is why we do not care about using
+// `this`
+
+// These validators are also of trivial complexity, so we are allowing more than
+// one per file.
+
 /**
  * Interface for type validation.
  *
@@ -87,7 +94,7 @@ export class StringMatchingRegex extends Type<string> {
 }
 
 /**
- * A set of standard type validator.
+ * A set of standard type validators.
  *
  * @internal
  */
