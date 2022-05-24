@@ -1,4 +1,4 @@
-import TypeValidators from '../../src/options/validators';
+import TypeValidators, { TypeArray } from '../../src/options/validators';
 
 const stringValue = 'this is a string';
 const numberValue = 3.14159;
@@ -42,7 +42,7 @@ describe.each([
 ])(
   'Given a validator, valid values, and invalid values',
   (validator, validValues, invalidValues) => {
-    it('validates the correct type', () => {
+    it(`validates the correct type ${validator.getType()}: ${validValues}`, () => {
       validValues.forEach((validValue) => {
         expect(validator.is(validValue)).toBeTruthy();
       });
@@ -55,3 +55,47 @@ describe.each([
     });
   },
 );
+
+describe.each([
+  [TypeValidators.StringArray, [['a', 'b', 'c', 'd'], []], [[0, 'potato'], [{}]]],
+  [new TypeArray<number>('number[]', 0), [[0, 1, 2, 3], []], [[0, 'potato'], [{}]]],
+  [new TypeArray<object>('object[]', {}), [[{}, { yes: 'no' }], []], [[0, 'potato'], [{}, 17]]],
+])('given an array validator, valid arrays, and invalid arrays', (validator, validValues, invalidValues) => {
+  it(`validates the correct type ${validator.getType()}: ${validValues}`, () => {
+    validValues.forEach((validValue) => {
+      expect(validator.is(validValue)).toBeTruthy();
+    });
+  });
+
+  it(`does not validate incorrect types ${validator.getType()}: ${invalidValues}`, () => {
+    invalidValues.forEach((invalidValue) => {
+      expect(validator.is(invalidValue)).toBeFalsy();
+    });
+  });
+});
+
+describe('given a regex validator', () => {
+  const validator = TypeValidators.StringMatchingRegex(/^(\w|\.|-)+$/);
+  it('matches valid instances', () => {
+    expect(validator.is('valid-version._')).toBeTruthy();
+  });
+
+  it('does not match invalid instances', () => {
+    expect(validator.is('invalid-version!@#$%^&*()')).toBeFalsy();
+  });
+});
+
+describe.each([
+  [TypeValidators.NumberWithMin(0), 0],
+  [TypeValidators.NumberWithMin(10),  10],
+  [TypeValidators.NumberWithMin(1000), 1000],
+])('given minumum number validators', (validator, min) => {
+  it('validates numbers equal or above the minimum', () => {
+    expect(validator.is(min)).toBeTruthy();
+    expect(validator.is(min + 1)).toBeTruthy();
+  });
+
+  it('does not validate numbers less than the minimum', () => {
+    expect(validator.is(min - 1)).toBeFalsy();
+  });
+});
