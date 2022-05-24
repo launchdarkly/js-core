@@ -87,7 +87,7 @@ describe('given a regex validator', () => {
 
 describe.each([
   [TypeValidators.NumberWithMin(0), 0],
-  [TypeValidators.NumberWithMin(10),  10],
+  [TypeValidators.NumberWithMin(10), 10],
   [TypeValidators.NumberWithMin(1000), 1000],
 ])('given minumum number validators', (validator, min) => {
   it('validates numbers equal or above the minimum', () => {
