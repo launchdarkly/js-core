@@ -36,27 +36,31 @@ export default class TestLogger implements LDLogger {
     return this.callCount;
   }
 
-  checkResolves() {
+  private checkResolves() {
     this.waiters.forEach((waiter) => waiter());
   }
 
   error(...args: any[]): void {
     this.errorMessages.push(args.join(' '));
     this.callCount += 1;
+    this.checkResolves();
   }
 
   warn(...args: any[]): void {
     this.warningMessages.push(args.join(' '));
     this.callCount += 1;
+    this.checkResolves();
   }
 
   info(...args: any[]): void {
     this.infoMessages.push(args.join(' '));
     this.callCount += 1;
+    this.checkResolves();
   }
 
   debug(...args: any[]): void {
     this.debugMessages.push(args.join(' '));
     this.callCount += 1;
+    this.checkResolves();
   }
 }
