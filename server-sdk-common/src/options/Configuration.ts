@@ -87,9 +87,11 @@ function validateTypesAndNames(options: LDOptions): {
             typeof optionValue,
           ));
           validatedOptions[optionName] = !!optionValue;
-        } else if (validator instanceof NumberWithMinimum) {
+        } else if (validator instanceof NumberWithMinimum
+          && TypeValidators.Number.is(optionValue)) {
           const { min } = validator as NumberWithMinimum;
           errors.push(OptionMessages.optionBelowMinimum(optionName, optionValue, min));
+          validatedOptions[optionName] = min;
         } else {
           errors.push(OptionMessages.wrongOptionType(
             optionName,
@@ -157,6 +159,8 @@ export default class Configuration {
 
   public readonly tags: ApplicationTags;
 
+  public readonly diagnosticRecordingInterval: number;
+
   constructor(options: LDOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
@@ -198,5 +202,6 @@ export default class Configuration {
     this.wrapperName = validatedOptions.wrapperName;
     this.wrapperVersion = validatedOptions.wrapperVersion;
     this.tags = new ApplicationTags(validatedOptions);
+    this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;
   }
 }
