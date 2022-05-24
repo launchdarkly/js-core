@@ -1,4 +1,14 @@
+import { LDOptions } from '../../src';
 import Configuration from '../../src/options/Configuration';
+import TestLogger from '../Logger';
+
+function withLogger(options: LDOptions): LDOptions {
+  return {...options, logger: new TestLogger()};
+}
+
+function logger(options: LDOptions): TestLogger {
+  return options.logger as TestLogger;
+}
 
 describe.each([
   undefined, null, "potat0", 17, [], {}
@@ -32,6 +42,15 @@ describe.each([
     expect(config.useLdd).toBe(false);
     expect(config.wrapperName).toBeUndefined();
     expect(config.wrapperVersion).toBeUndefined();
+  });
+});
 
+describe('when setting different options', () => {
+  it.each([
+    ["http://cats.launchdarkly.com", "http://cats.launchdarkly.com", 0]
+  ])('allows setting the baseUri and validates the baseUri', (uri, expected, warnings) => {
+    const config = new Configuration(withLogger({baseUri: uri}));
+    expect(config.serviceEndpoints.polling).toEqual(expected);
+    expect(logger(config).warningMessages.length).toEqual(warnings);
   });
 });

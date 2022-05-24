@@ -98,7 +98,11 @@ function validateTypesAndNames(options: LDOptions): {
           ));
           validatedOptions[optionName] = defaultValues[optionName];
         }
+      } else {
+        validatedOptions[optionName] = optionValue;
       }
+    } else {
+      options.logger?.warn(OptionMessages.unknownOption(optionName));
     }
   });
   return { errors, validatedOptions };
