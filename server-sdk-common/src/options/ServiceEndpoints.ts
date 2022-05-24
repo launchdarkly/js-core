@@ -8,17 +8,11 @@ function canonicalizeUri(uri: string): string {
  * @internal
  */
 export default class ServiceEndpoints {
-  private streaming: string;
+  public readonly streaming: string;
 
-  private polling: string;
+  public readonly polling: string;
 
-  private events: string;
-
-  public get streamUri() { return this.streaming; }
-
-  public get pollingUri() { return this.polling; }
-
-  public get eventsUri() { return this.events; }
+  public readonly events: string;
 
   public constructor(streaming: string, polling: string, events: string) {
     this.streaming = canonicalizeUri(streaming);

@@ -47,7 +47,7 @@ const validations: Record<string, TypeValidator> = {
 };
 
 const defaultValues: ValidatedOptions = {
-  baseUri: 'https://app.launchdarkly.com',
+  baseUri: 'https://sdk.launchdarkly.com',
   streamUri: 'https://stream.launchdarkly.com',
   eventsUri: 'https://events.launchdarkly.com',
   stream: true,
@@ -153,7 +153,11 @@ export default class Configuration {
 
   public readonly tags: ApplicationTags;
 
-  constructor(options: LDOptions) {
+  constructor(options: LDOptions = {}) {
+    // The default will handle undefined, but not null.
+    // Because we can be called from JS we need to be extra defensive.
+    // eslint-disable-next-line no-param-reassign
+    options = options || {};
     // If there isn't a valid logger from the platform, then logs would go nowhere.
     this.logger = options.logger;
 
