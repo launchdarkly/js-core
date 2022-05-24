@@ -19,7 +19,7 @@ export default class ApplicationTags {
 
   constructor(options: ValidatedOptions) {
     const tags: Record<string, string[]> = {};
-    const { application } = options;
+    const application = options?.application;
 
     if (application?.id !== null && application?.id !== undefined) {
       if (tagValidator.is(application.id)) {
