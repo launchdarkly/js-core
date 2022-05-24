@@ -25,6 +25,9 @@ export interface TypeValidator {
  */
 export class FactoryOrInstance implements TypeValidator {
   is(factoryOrInstance: unknown) {
+    if (Array.isArray(factoryOrInstance)) {
+      return false;
+    }
     const anyFactory = factoryOrInstance as any;
     const typeOfFactory = typeof anyFactory;
     return typeOfFactory === 'function' || typeOfFactory === 'object';
@@ -43,13 +46,43 @@ export class FactoryOrInstance implements TypeValidator {
 export class Type<T> implements TypeValidator {
   private typeName: string;
 
-  constructor(typeName: string) {
+  protected typeOf: string;
+
+  constructor(typeName: string, example: T) {
     this.typeName = typeName;
+    this.typeOf = typeof example;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   is(u: unknown): u is T {
-    return true;
+    if (Array.isArray(u)) {
+      return false;
+    }
+    return typeof u === this.typeOf;
+  }
+
+  getType(): string {
+    return this.typeName;
+  }
+}
+
+export class TypeArray<T> implements TypeValidator {
+  private typeName: string;
+
+  protected typeOf: string;
+
+  constructor(typeName: string, example: T) {
+    this.typeName = typeName;
+    this.typeOf = typeof example;
+  }
+
+  is(u: unknown): u is T {
+    if (Array.isArray(u)) {
+      if (u.length > 0) {
+        return u.every((val) => typeof val === this.typeOf);
+      }
+      return true;
+    }
+    return false;
   }
 
   getType(): string {
@@ -66,12 +99,12 @@ export class NumberWithMinimum extends Type<number> {
   readonly min: number;
 
   constructor(min: number) {
-    super(`number with minimum value of ${min}`);
+    super(`number with minimum value of ${min}`, 0);
     this.min = min;
   }
 
   override is(u: unknown): u is number {
-    return (u as number) >= this.min;
+    return typeof u === this.typeOf && (u as number) >= this.min;
   }
 }
 
@@ -84,7 +117,7 @@ export class StringMatchingRegex extends Type<string> {
   readonly expression: RegExp;
 
   constructor(expression: RegExp) {
-    super(`string matching ${expression}`);
+    super(`string matching ${expression}`, '');
     this.expression = expression;
   }
 
@@ -99,17 +132,17 @@ export class StringMatchingRegex extends Type<string> {
  * @internal
  */
 export default class TypeValidators {
-  static readonly String = new Type<string>('string');
+  static readonly String = new Type<string>('string', '');
 
-  static readonly Number = new Type<number>('number');
+  static readonly Number = new Type<number>('number', 0);
 
   static readonly ObjectOrFactory = new FactoryOrInstance();
 
-  static readonly Object = new Type<object>('object');
+  static readonly Object = new Type<object>('object', {});
 
-  static readonly StringArray = new Type<Array<string>>('string[]');
+  static readonly StringArray = new TypeArray<string>('string[]', '');
 
-  static readonly Boolean = new Type<boolean>('boolean');
+  static readonly Boolean = new Type<boolean>('boolean', true);
 
   static NumberWithMin(min: number): NumberWithMinimum {
     return new NumberWithMinimum(min);
