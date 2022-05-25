@@ -1,4 +1,4 @@
-import TypeValidators, { TypeArray } from '../../src/options/validators';
+import { TypeArray, TypeValidators } from '../src';
 
 const stringValue = 'this is a string';
 const numberValue = 3.14159;
