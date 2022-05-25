@@ -4,7 +4,6 @@ export * from './LDClient';
 export * from './LDLogger';
 export * from './LDLogLevel';
 export * from './subsystems/LDStreamProcessor';
-export * from './LDUser';
 
 // These are items that should be less frequently used, and therefore they
 // are namespaced to reduce clutter amongst the top level exports.

@@ -6,7 +6,7 @@ function getComponents(reference: string): string[] {
   const referenceWithoutPrefix = reference.startsWith('/') ? reference.substring(1) : reference;
   return referenceWithoutPrefix
     .split('/')
-    .map(component => (component.indexOf('~') >= 0 ? processEscapeCharacters(component) : component));
+    .map((component) => (component.indexOf('~') >= 0 ? processEscapeCharacters(component) : component));
 }
 
 function isLiteral(reference: string) {
@@ -19,18 +19,19 @@ function isValid(reference: string) {
 
 export default class AttributeReference {
   public readonly isValid;
+
   public readonly original;
 
   private readonly components?: string[];
 
   constructor(reference: string) {
     this.original = reference;
-    if(reference === "" || reference === "/" || !isValid(reference)) {
+    if (reference === '' || reference === '/' || !isValid(reference)) {
       this.isValid = false;
-    } else if(isLiteral(reference)) {
+    } else if (isLiteral(reference)) {
       this.components = [reference];
-    } else if(reference.indexOf('/', 1) < 0) {
-      this.components = [reference.slice(1)]
+    } else if (reference.indexOf('/', 1) < 0) {
+      this.components = [reference.slice(1)];
     } else {
       this.components = getComponents(reference);
     }

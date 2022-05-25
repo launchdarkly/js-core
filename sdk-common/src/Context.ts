@@ -1,3 +1,4 @@
+import { LDContext } from './api/LDContext';
 
 type MultiKind = {
   kind: 'multi',
@@ -12,16 +13,16 @@ type SingleKind = {
 type Kind = MultiKind | SingleKind;
 
 export default class Context {
-  public readonly kind: Kind;
+  // public readonly kind: Kind;
 
-  private contexts?: Context[];
+  // private contexts?: Context[];
 
-  private attributes?: Record<string, any>;
+  // private attributes?: Record<string, any>;
 
-  constructor(context: LDContext) {
-    this.kind = {
-      kind: context.kind,
-      isMulti: context.kind === 'multi',
-    };
-  }
+  // constructor(context: LDContext) {
+  //   this.kind = {
+  //     kind: context.kind,
+  //     isMulti: context.kind === 'multi',
+  //   };
+  // }
 }

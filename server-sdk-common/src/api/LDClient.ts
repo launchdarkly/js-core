@@ -1,4 +1,4 @@
-import { LDContext } from './LDContext';
+import { LDContext } from '@launchdarkly/js-sdk-common';
 import { LDEvaluationDetail } from './data/LDEvaluationDetail';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
