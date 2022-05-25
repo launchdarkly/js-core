@@ -1,3 +1,5 @@
+import { LDContextCommon } from './api';
+
 function processEscapeCharacters(value: string): string {
   return value.replace(/~/g, '~0').replace(/\//g, '~1');
 }
@@ -9,11 +11,11 @@ function getComponents(reference: string): string[] {
     .map((component) => (component.indexOf('~') >= 0 ? processEscapeCharacters(component) : component));
 }
 
-function isLiteral(reference: string) {
+function isLiteral(reference: string): boolean {
   return !reference.startsWith('/');
 }
 
-function isValid(reference: string) {
+function validate(reference: string): boolean {
   return !reference.match(/\/\/|(^\/.*~[^0|^1])|~$/);
 }
 
@@ -22,12 +24,13 @@ export default class AttributeReference {
 
   public readonly original;
 
-  private readonly components?: string[];
+  private readonly components: string[];
 
   constructor(reference: string) {
     this.original = reference;
-    if (reference === '' || reference === '/' || !isValid(reference)) {
+    if (reference === '' || reference === '/' || !validate(reference)) {
       this.isValid = false;
+      this.components = [];
     } else if (isLiteral(reference)) {
       this.components = [reference];
     } else if (reference.indexOf('/', 1) < 0) {
@@ -37,11 +40,32 @@ export default class AttributeReference {
     }
   }
 
-  public depth(): number | undefined {
-    return this.components?.length;
-  }
+  public get(target: LDContextCommon) {
+    const { components, isValid } = this;
+    if (!isValid) {
+      return undefined;
+    }
 
-  public getComponent(index: number): string | undefined {
-    return this.components?.[index];
+    let current = target;
+
+    // This doesn't use a range based for loops, because those use generators.
+    // See `no-restricted-syntax`.
+    // It also doesn't use a collection method because this logic is more
+    // straightforward with a loop.
+    for (let index = 0; index < components.length; index += 1) {
+      const component = components[index];
+      if (
+        current !== null
+        && current !== undefined
+        // See https://eslint.org/docs/rules/no-prototype-builtins
+        && Object.prototype.hasOwnProperty.call(current, component)
+        && typeof current === 'object'
+      ) {
+        current = current[component];
+      } else {
+        return undefined;
+      }
+    }
+    return current;
   }
 }

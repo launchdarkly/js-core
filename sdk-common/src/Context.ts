@@ -3,6 +3,7 @@ import {
   LDSingleKindContext, LDMultiKindContext, LDUser, LDContextCommon,
 } from './api/context';
 import { LDContext } from './api/LDContext';
+import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
 
 // Validates a kind excluding check that it isn't "kind".
@@ -79,6 +80,11 @@ function validKey(key: string) {
   return TypeValidators.String.is(key) && key !== '';
 }
 
+/**
+ * Container for a context/contexts. Because contexts come from external code
+ * they must be thoroughly validated and then formed to comply with
+ * the type system.
+ */
 export default class Context {
   private context?: LDSingleKindContext | LDUser;
 
@@ -90,6 +96,10 @@ export default class Context {
 
   public readonly kind: string;
 
+  /**
+   * Contexts should be created using the static factory method {@link Context.FromLDContext}.
+   * @param kind The kind of the context.
+   */
   private constructor(kind: string) {
     this.kind = kind;
   }
@@ -133,22 +143,35 @@ export default class Context {
   }
 
   private static FromLegacyUser(context: LDUser): Context | undefined {
-    // TODO: Check user key.
+    const keyValid = context.key !== undefined && context.key !== null;
+    // For legacy users we allow empty keys.
+    if (!keyValid) {
+      return undefined;
+    }
     const created = new Context('user');
     created.isUser = true;
     created.context = context;
     return created;
   }
 
+  /**
+   * Attempt to create a {@link Context} from an {@link LDContext}.
+   * @param context The input context to create a Context from.
+   * @returns a {@link Context} or `undefined` if one could not be created.
+   */
   static FromLDContext(context: LDContext): Context | undefined {
     if (isSingleKind(context)) {
-      return this.FromSingleKindContext(context);
+      return Context.FromSingleKindContext(context);
     } if (isMultiKind(context)) {
-      return this.FromMultiKindContext(context);
+      return Context.FromMultiKindContext(context);
     } if (isLegacyUser(context)) {
-      return this.FromLegacyUser(context);
+      return Context.FromLegacyUser(context);
     }
     return undefined;
+  }
+
+  public get isMultiKind(): boolean {
+    return this.isMulti;
   }
 
   public get canonicalKey(): string {
@@ -169,7 +192,25 @@ export default class Context {
     return [this.kind];
   }
 
-  // public getValueForKind(kind: string, reference: AttributeReference) {
+  private static getValueFromContext(
+    reference: AttributeReference,
+    context?: LDContextCommon,
+  ): any {
+    if (!context || !reference.isValid) {
+      return undefined;
+    }
 
-  // }
+    return reference.get(context);
+  }
+
+  /**
+   * Attempt to get a value for the given context kind using the given reference.
+   * @param kind The kind of the context to get the value for.
+   * @param reference The reference to the value to get.
+   * @returns a value or `undefined` if one is not found.
+   */
+  public getValueForKind(kind: string, reference: AttributeReference): any | undefined {
+    const context = this.isMulti ? this.contexts[kind] : this.context;
+    return Context.getValueFromContext(reference, context);
+  }
 }
