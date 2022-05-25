@@ -8,6 +8,8 @@ export enum LogLevel {
   Error,
 }
 
+type ExpectedMessage = { level: LogLevel, matches: RegExp };
+
 export default class TestLogger implements LDLogger {
   private readonly messages: Record<LogLevel, string[]> = {
     [LogLevel.Debug]: [],
@@ -46,10 +48,9 @@ export default class TestLogger implements LDLogger {
    * more  than once, then it should be included multiple times.
    * @returns A list of messages that were not received.
    */
-  verifyMessages(
-    expectedMessages: { level: LogLevel, matches: RegExp }[],
-  ): string[] {
-    const missing: string[] = [];
+  expectMessages(
+    expectedMessages: ExpectedMessage[],
+  ): void {
     const matched: Record<LogLevel, number[]> = {
       [LogLevel.Debug]: [],
       [LogLevel.Info]: [],
@@ -63,14 +64,13 @@ export default class TestLogger implements LDLogger {
         (receivedMessage) => receivedMessage.match(expectedMessage.matches),
       );
       if (index < 0) {
-        missing.push(expectedMessage.matches.toString());
+        throw new Error(`Did not find expected message: ${expectedMessage}`);
       } else if (matched[expectedMessage.level].indexOf(index) >= 0) {
-        missing.push(`did not get expected message ${expectedMessage.matches}`);
+        throw new Error(`Did not find expected message: ${expectedMessage}`);
       } else {
         matched[expectedMessage.level].push(index);
       }
     });
-    return missing;
   }
 
   getCount() {

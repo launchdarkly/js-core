@@ -67,7 +67,7 @@ describe('when setting different options', () => {
     expect(logger(config).getCount()).toEqual(logs.length);
     // There should not be any messages, so checking them for undefined is a workaround
     // for a lack of pure assert.
-    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
+    logger(config).expectMessages(logs);
   });
 
   it.each([
@@ -127,7 +127,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ timeout: value }));
     expect(config.timeout).toEqual(expected);
-    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
+    logger(config).expectMessages(logs);
   });
 
   it.each([
@@ -140,7 +140,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ capacity: value }));
     expect(config.eventsCapacity).toEqual(expected);
-    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
+    logger(config).expectMessages(logs);
   });
 
   it.each([
@@ -295,21 +295,21 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ diagnosticRecordingInterval: value }));
     expect(config.diagnosticRecordingInterval).toEqual(expected);
-    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
+    logger(config).expectMessages(logs);
   });
 
   it('discards unrecognized options with a warning', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ yes: 'no', cat: 'yes' }));
     expect(logger(config).getCount()).toEqual(2);
-    logger(config).verifyMessages([
+    logger(config).expectMessages([
       {
         level: LogLevel.Warn, matches: /Ignoring unknown config option "yes"/,
       },
       {
         level: LogLevel.Warn, matches: /Ignoring unknown config option "cat"/,
       },
-    ]).forEach((message) => expect(message).toBeUndefined());
+    ]);
   });
 
   // This is more thoroughly tested in the application tags test.
