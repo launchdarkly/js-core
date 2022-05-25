@@ -7,11 +7,6 @@
  */
 export interface LDContextMeta {
   /**
-   * If true, the context will _not_ appear on the Contexts page in the LaunchDarkly dashboard.
-   */
-  transient?: boolean;
-
-  /**
    * An optional secondary key for a context.
    *
    * TODO: U2C Update with new URL when available.

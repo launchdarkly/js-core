@@ -80,13 +80,45 @@ function validKey(key: string) {
   return TypeValidators.String.is(key) && key !== '';
 }
 
+function processPrivateAttributes(
+  privateAttributes?: string[],
+  literals: boolean = false,
+): AttributeReference[] {
+  if (privateAttributes) {
+    return privateAttributes.map(
+      (privateAttribute) => new AttributeReference(privateAttribute, literals),
+    );
+  }
+  return [];
+}
+
+function legacyToSingleKind(user: LDUser): LDSingleKindContext {
+  const singleKindContext: LDSingleKindContext = {
+    ...(user.custom || []),
+    kind: 'user',
+    key: user.key,
+  };
+
+  // For legacy users we never established a difference between null
+  // and undefined for inputs. Because transient can be used in evaluations
+  // we would want it to not possibly match true/false unless defined.
+  // Which is different than treating implicit transient as `false`.
+  if (user.anonymous !== undefined && user.anonymous !== null) {
+    const transient = !!singleKindContext.anonymous;
+    delete singleKindContext.anonymous;
+    singleKindContext.transient = transient;
+  }
+
+  return singleKindContext;
+}
+
 /**
  * Container for a context/contexts. Because contexts come from external code
  * they must be thoroughly validated and then formed to comply with
  * the type system.
  */
 export default class Context {
-  private context?: LDSingleKindContext | LDUser;
+  private context?: LDSingleKindContext;
 
   private isMulti: boolean = false;
 
@@ -94,11 +126,16 @@ export default class Context {
 
   private contexts: Record<string, LDContextCommon> = {};
 
+  private privateAttributes?: Record<string, AttributeReference[]>;
+
   public readonly kind: string;
 
   /**
    * Contexts should be created using the static factory method {@link Context.FromLDContext}.
    * @param kind The kind of the context.
+   *
+   * The factory methods are static functions within the class because they access private
+   * implementation details, so they cannot be free functions.
    */
   private constructor(kind: string) {
     this.kind = kind;
@@ -112,18 +149,29 @@ export default class Context {
       return undefined;
     }
 
-    const contexts = kinds.map((kind) => context[kind]);
-    const contextsAreObjects = contexts.every(isContextCommon);
+    let contextsAreObjects = true;
+    const contexts = kinds.reduce((acc: Record<string, LDContextCommon>, kind) => {
+      const singleContext = context[kind];
+      if (isContextCommon(singleContext)) {
+        acc[kind] = singleContext;
+      } else {
+        // No early break isn't the most efficient, but it is an error condition.
+        contextsAreObjects = false;
+      }
+      return acc;
+    }, {});
 
     if (!contextsAreObjects) {
       return undefined;
     }
 
-    if (!contexts.every((part) => validKey(part.key))) {
+    if (!Object.values(contexts).every((part) => validKey(part.key))) {
       return undefined;
     }
 
     const created = new Context(context.kind);
+    created.contexts = contexts;
+
     created.isMulti = true;
     return created;
   }
@@ -134,9 +182,15 @@ export default class Context {
     const keyValid = validKey(key);
 
     if (keyValid && kindValid) {
+      // The JSON interfaces uses dandling _.
+      // eslint-disable-next-line no-underscore-dangle
+      const privateAttributeReferences = processPrivateAttributes(context._meta?.privateAttributes);
       const created = new Context(kind);
       created.isUser = kind === 'user';
       created.context = context;
+      created.privateAttributes = {
+        [kind]: privateAttributeReferences,
+      };
       return created;
     }
     return undefined;
@@ -150,7 +204,10 @@ export default class Context {
     }
     const created = new Context('user');
     created.isUser = true;
-    created.context = context;
+    created.context = legacyToSingleKind(context);
+    created.privateAttributes = {
+      user: processPrivateAttributes(context.privateAttributeNames, true),
+    };
     return created;
   }
 
