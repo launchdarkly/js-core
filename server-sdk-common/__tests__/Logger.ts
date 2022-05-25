@@ -1,13 +1,20 @@
 import { LDLogger } from '../src';
 
+// TODO: Move this to sdk-common when implementing logging.
+export enum LogLevel {
+  Debug,
+  Info,
+  Warn,
+  Error,
+}
+
 export default class TestLogger implements LDLogger {
-  public readonly errorMessages: string[] = [];
-
-  public readonly warningMessages: string[] = [];
-
-  public readonly infoMessages: string[] = [];
-
-  public readonly debugMessages: string[] = [];
+  private readonly messages: Record<LogLevel, string[]> = {
+    [LogLevel.Debug]: [],
+    [LogLevel.Info]: [],
+    [LogLevel.Warn]: [],
+    [LogLevel.Error]: [],
+  };
 
   private callCount = 0;
 
@@ -32,6 +39,40 @@ export default class TestLogger implements LDLogger {
       }), this.timeout(timeoutMs)]);
   }
 
+  /**
+   * Check received messages for expected messages.
+   *
+   * @param expectedMessages List of expected messages. If a message is expected
+   * more  than once, then it should be included multiple times.
+   * @returns A list of messages that were not received.
+   */
+  verifyMessages(
+    expectedMessages: { level: LogLevel, matches: RegExp }[],
+  ): string[] {
+    const missing: string[] = [];
+    const matched: Record<LogLevel, number[]> = {
+      [LogLevel.Debug]: [],
+      [LogLevel.Info]: [],
+      [LogLevel.Warn]: [],
+      [LogLevel.Error]: [],
+    };
+
+    expectedMessages.forEach((expectedMessage) => {
+      const received = this.messages[expectedMessage.level];
+      const index = received.findIndex(
+        (receivedMessage) => receivedMessage.match(expectedMessage.matches),
+      );
+      if (index < 0) {
+        missing.push(expectedMessage.matches.toString());
+      } else if (matched[expectedMessage.level].indexOf(index) >= 0) {
+        missing.push(`did not get expected message ${expectedMessage.matches}`);
+      } else {
+        matched[expectedMessage.level].push(index);
+      }
+    });
+    return missing;
+  }
+
   getCount() {
     return this.callCount;
   }
@@ -40,27 +81,25 @@ export default class TestLogger implements LDLogger {
     this.waiters.forEach((waiter) => waiter());
   }
 
-  error(...args: any[]): void {
-    this.errorMessages.push(args.join(' '));
+  private log(level: LogLevel, ...args: any[]) {
+    this.messages[level].push(args.join(' '));
     this.callCount += 1;
     this.checkResolves();
+  }
+
+  error(...args: any[]): void {
+    this.log(LogLevel.Error, args);
   }
 
   warn(...args: any[]): void {
-    this.warningMessages.push(args.join(' '));
-    this.callCount += 1;
-    this.checkResolves();
+    this.log(LogLevel.Warn, args);
   }
 
   info(...args: any[]): void {
-    this.infoMessages.push(args.join(' '));
-    this.callCount += 1;
-    this.checkResolves();
+    this.log(LogLevel.Info, args);
   }
 
   debug(...args: any[]): void {
-    this.debugMessages.push(args.join(' '));
-    this.callCount += 1;
-    this.checkResolves();
+    this.log(LogLevel.Debug, args);
   }
 }

@@ -110,6 +110,31 @@ function validateTypesAndNames(options: LDOptions): {
   return { errors, validatedOptions };
 }
 
+function validateEndpoints(options: LDOptions, validatedOptions: ValidatedOptions) {
+  const { baseUri, streamUri, eventsUri } = options;
+  const streamingEndpointSpecified = streamUri !== undefined && streamUri !== null;
+  const pollingEndpointSpecified = baseUri !== undefined && baseUri !== null;
+  const eventEndpointSpecified = eventsUri !== undefined && eventsUri !== null;
+
+  if ((streamingEndpointSpecified === pollingEndpointSpecified)
+    && (streamingEndpointSpecified === eventEndpointSpecified)) {
+    // Either everything is default, or everything is set.
+    return;
+  }
+
+  if (!streamingEndpointSpecified) {
+    validatedOptions.logger?.warn(OptionMessages.partialEndpoint('streamUri'));
+  }
+
+  if (!pollingEndpointSpecified) {
+    validatedOptions.logger?.warn(OptionMessages.partialEndpoint('baseUri'));
+  }
+
+  if (!eventEndpointSpecified && validatedOptions.sendEvents) {
+    validatedOptions.logger?.warn(OptionMessages.partialEndpoint('eventsUri'));
+  }
+}
+
 /**
  * Configuration options for the LDClient.
  *
@@ -173,6 +198,8 @@ export default class Configuration {
     errors.forEach((error) => {
       this.logger?.warn(error);
     });
+
+    validateEndpoints(options, validatedOptions);
 
     this.serviceEndpoints = new ServiceEndpoints(
       validatedOptions.streamUri,

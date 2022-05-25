@@ -1,7 +1,6 @@
 import { LDOptions } from '../../src';
 import Configuration from '../../src/options/Configuration';
-import OptionMessages from '../../src/options/OptionMessages';
-import TestLogger from '../Logger';
+import TestLogger, { LogLevel } from '../Logger';
 
 function withLogger(options: LDOptions): LDOptions {
   return { ...options, logger: new TestLogger() };
@@ -48,63 +47,100 @@ describe.each([
 
 describe('when setting different options', () => {
   it.each([
-    ['http://cats.launchdarkly.com', 'http://cats.launchdarkly.com', 0],
-    ['http://cats.launchdarkly.com/', 'http://cats.launchdarkly.com', 0],
-    [0, 'https://sdk.launchdarkly.com', 1],
-  ])('allows setting the baseUri and validates the baseUri', (uri, expected, warnings) => {
+    ['http://cats.launchdarkly.com', 'http://cats.launchdarkly.com', [
+      { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
+      { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
+    ]],
+    ['http://cats.launchdarkly.com/', 'http://cats.launchdarkly.com', [
+      { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
+      { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
+    ]],
+    [0, 'https://sdk.launchdarkly.com', [
+      { level: LogLevel.Warn, matches: /Config option "baseUri" should be of type/ },
+      { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
+      { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
+    ]],
+  ])('allows setting the baseUri and validates the baseUri', (uri, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ baseUri: uri }));
     expect(config.serviceEndpoints.polling).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
-    if (warnings) {
-      expect(logger(config).warningMessages[0]).toEqual(
-        OptionMessages.wrongOptionType('baseUri', 'string', typeof uri),
-      );
-    }
+    expect(logger(config).getCount()).toEqual(logs.length);
+    // There should not be any messages, so checking them for undefined is a workaround
+    // for a lack of pure assert.
+    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
   });
 
   it.each([
-    ['http://cats.launchdarkly.com', 'http://cats.launchdarkly.com', 0],
-    ['http://cats.launchdarkly.com/', 'http://cats.launchdarkly.com', 0],
-    [0, 'https://stream.launchdarkly.com', 1],
+    ['http://cats.launchdarkly.com', 'http://cats.launchdarkly.com', 2],
+    ['http://cats.launchdarkly.com/', 'http://cats.launchdarkly.com', 2],
+    [0, 'https://stream.launchdarkly.com', 3],
   ])('allows setting the streamUri and validates the streamUri', (uri, expected, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ streamUri: uri }));
     expect(config.serviceEndpoints.streaming).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
-    ['http://cats.launchdarkly.com', 'http://cats.launchdarkly.com', 0],
-    ['http://cats.launchdarkly.com/', 'http://cats.launchdarkly.com', 0],
-    [0, 'https://events.launchdarkly.com', 1],
+    ['http://cats.launchdarkly.com', 'http://cats.launchdarkly.com', 2],
+    ['http://cats.launchdarkly.com/', 'http://cats.launchdarkly.com', 2],
+    [0, 'https://events.launchdarkly.com', 3],
   ])('allows setting the eventsUri and validates the eventsUri', (uri, expected, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ eventsUri: uri }));
     expect(config.serviceEndpoints.events).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
+  });
+
+  it('produces no logs when setting all URLs.', () => {
+    // @ts-ignore
+    const config = new Configuration(withLogger({ eventsUri: 'cats', baseUri: 'cats', streamUri: 'cats' }));
+    expect(config.serviceEndpoints.events).toEqual('cats');
+    expect(config.serviceEndpoints.streaming).toEqual('cats');
+    expect(config.serviceEndpoints.polling).toEqual('cats');
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('Does not log a warning for the events URI if sendEvents is false..', () => {
+    // @ts-ignore
+    const config = new Configuration(withLogger({ sendEvents: false, baseUri: 'cats', streamUri: 'cats' }));
+    expect(config.serviceEndpoints.streaming).toEqual('cats');
+    expect(config.serviceEndpoints.polling).toEqual('cats');
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('Does log a warning for the events URI if sendEvents is true..', () => {
+    // @ts-ignore
+    const config = new Configuration(withLogger({ sendEvents: true, baseUri: 'cats', streamUri: 'cats' }));
+    expect(config.serviceEndpoints.streaming).toEqual('cats');
+    expect(config.serviceEndpoints.polling).toEqual('cats');
+    expect(logger(config).getCount()).toEqual(1);
   });
 
   it.each([
-    [0, 0, 0],
-    [6, 6, 0],
-    ['potato', 5, 1],
-  ])('allow setting timeout and validates timeout', (value, expected, warnings) => {
+    [0, 0, []],
+    [6, 6, []],
+    ['potato', 5, [
+      { level: LogLevel.Warn, matches: /Config option "timeout" should be of type/ },
+    ]],
+  ])('allow setting timeout and validates timeout', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ timeout: value }));
     expect(config.timeout).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
   });
 
   it.each([
-    [0, 0, 0],
-    [6, 6, 0],
-    ['potato', 10000, 1],
-  ])('allow setting and validates capacity', (value, expected, warnings) => {
+    [0, 0, []],
+    [6, 6, []],
+    ['potato', 10000, [
+      { level: LogLevel.Warn, matches: /Config option "capacity" should be of type/ },
+    ]],
+  ])('allow setting and validates capacity', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ capacity: value }));
     expect(config.eventsCapacity).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
   });
 
   it.each([
@@ -115,7 +151,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ flushInterval: value }));
     expect(config.flushInterval).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -126,7 +162,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ pollInterval: value }));
     expect(config.pollInterval).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -140,7 +176,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ offline: value }));
     expect(config.offline).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -154,7 +190,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ stream: value }));
     expect(config.stream).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -168,7 +204,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ useLdd: value }));
     expect(config.useLdd).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -182,7 +218,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ sendEvents: value }));
     expect(config.sendEvents).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -196,7 +232,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ allAttributesPrivate: value }));
     expect(config.allAttributesPrivate).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -208,7 +244,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ privateAttributes: value }));
     expect(config.privateAttributes).toStrictEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -219,7 +255,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ contextKeysCapacity: value }));
     expect(config.contextKeysCapacity).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -230,7 +266,7 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ contextKeysFlushInterval: value }));
     expect(config.contextKeysFlushInterval).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
@@ -244,47 +280,45 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ diagnosticOptOut: value }));
     expect(config.diagnosticOptOut).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 
   it.each([
-    [0, 60, 1],
-    [500, 500, 0],
-    ['potato', 900, 1],
-  ])('allow setting and validates diagnosticRecordingInterval', (value, expected, warnings) => {
+    [0, 60, [
+      { level: LogLevel.Warn, matches: /Config option "diagnosticRecordingInterval" had invalid/ },
+    ]],
+    [500, 500, []],
+    ['potato', 900, [
+      { level: LogLevel.Warn, matches: /Config option "diagnosticRecordingInterval" should be of type/ },
+    ]],
+  ])('allow setting and validates diagnosticRecordingInterval', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ diagnosticRecordingInterval: value }));
     expect(config.diagnosticRecordingInterval).toEqual(expected);
-    expect(logger(config).warningMessages.length).toEqual(warnings);
-    if (warnings) {
-      expect(logger(config).warningMessages[0]).toEqual(
-        value < 60
-          ? OptionMessages.optionBelowMinimum('diagnosticRecordingInterval', value as number, 60)
-          : OptionMessages.wrongOptionType('diagnosticRecordingInterval', 'number with minimum value of 60', typeof value),
-      );
-    }
+    logger(config).verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
   });
 
   it('discards unrecognized options with a warning', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ yes: 'no', cat: 'yes' }));
-    expect(logger(config).warningMessages.length).toEqual(2);
-
-    expect(logger(config).warningMessages[0]).toEqual(
-      OptionMessages.unknownOption('yes'),
-    );
-    expect(logger(config).warningMessages[1]).toEqual(
-      OptionMessages.unknownOption('cat'),
-    );
+    expect(logger(config).getCount()).toEqual(2);
+    logger(config).verifyMessages([
+      {
+        level: LogLevel.Warn, matches: /Ignoring unknown config option "yes"/,
+      },
+      {
+        level: LogLevel.Warn, matches: /Ignoring unknown config option "cat"/,
+      },
+    ]).forEach((message) => expect(message).toBeUndefined());
   });
 
   // This is more thoroughly tested in the application tags test.
   it.each([
-    [{application: {id: 'valid-id', version: 'valid-version'}}, 0],
-    [{application: "tomato"}, 1]
+    [{ application: { id: 'valid-id', version: 'valid-version' } }, 0],
+    [{ application: 'tomato' }, 1],
   ])('handles application tag settings', (values, warnings) => {
-      // @ts-ignore
-      const config = new Configuration(withLogger({ ...values }));
-      expect(logger(config).warningMessages.length).toEqual(warnings);
+    // @ts-ignore
+    const config = new Configuration(withLogger({ ...values }));
+    expect(logger(config).getCount()).toEqual(warnings);
   });
 });
