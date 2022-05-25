@@ -4,7 +4,7 @@ import { PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common/dist/p
 
 import * as os from 'os';
 
-import * as packageJson from '../package.json';
+import * as packageJson from '../../package.json';
 
 function processPlatformName(name: string): string {
   switch (name) {
