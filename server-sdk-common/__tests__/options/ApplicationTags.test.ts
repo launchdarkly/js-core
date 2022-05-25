@@ -47,7 +47,7 @@ describe.each([
   it('logs issues it encounters', () => {
     expect(config?.logger?.getCount()).toEqual(logs?.length);
     if (logs) {
-      config?.logger?.verifyMessages(logs).forEach((message) => expect(message).toBeUndefined());
+      config?.logger?.expectMessages(logs);
     }
   });
 });
