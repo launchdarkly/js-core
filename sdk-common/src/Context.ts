@@ -6,6 +6,14 @@ import { LDContext } from './api/LDContext';
 import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
 
+// The general strategy for the context is to tranform the passed in context
+// as little as possible. We do convert the legacy users to a single kind
+// context, but we do not translate all passed contexts into a rigid structure.
+// The context will have to be copied for events, but we want to avoid any
+// copying that we can.
+// So we validate that the information we are given is correct, and then we
+// just proxy calls with a nicely typed interface.
+
 // Validates a kind excluding check that it isn't "kind".
 const KindValidator = TypeValidators.StringMatchingRegex(/^(\w|\.|-)+$/);
 
@@ -92,6 +100,11 @@ function processPrivateAttributes(
   return [];
 }
 
+/**
+ * Convert a legacy user to a single kind context.
+ * @param user
+ * @returns A single kind context.
+ */
 function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   const singleKindContext: LDSingleKindContext = {
     ...(user.custom || []),
