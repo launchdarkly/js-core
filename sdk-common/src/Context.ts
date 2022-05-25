@@ -1,3 +1,4 @@
+
 type MultiKind = {
   kind: 'multi',
   isMulti: true,
@@ -16,4 +17,11 @@ export default class Context {
   private contexts?: Context[];
 
   private attributes?: Record<string, any>;
+
+  constructor(context: LDContext) {
+    this.kind = {
+      kind: context.kind,
+      isMulti: context.kind === 'multi',
+    };
+  }
 }
