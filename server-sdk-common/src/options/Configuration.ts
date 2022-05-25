@@ -122,7 +122,7 @@ function validateEndpoints(options: LDOptions, validatedOptions: ValidatedOption
     return;
   }
 
-  if (!streamingEndpointSpecified) {
+  if (!streamingEndpointSpecified && validatedOptions.stream) {
     validatedOptions.logger?.warn(OptionMessages.partialEndpoint('streamUri'));
   }
 
