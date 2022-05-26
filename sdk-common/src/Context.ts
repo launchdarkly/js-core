@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line max-classes-per-file
 import {
   LDSingleKindContext, LDMultiKindContext, LDUser, LDContextCommon,
@@ -13,6 +14,8 @@ import { TypeValidators } from './validators';
 // copying that we can.
 // So we validate that the information we are given is correct, and then we
 // just proxy calls with a nicely typed interface.
+// This is to reduce work on the hot-path. Later, for event processing, deeper
+// cloning of the context will be done.
 
 // Validates a kind excluding check that it isn't "kind".
 const KindValidator = TypeValidators.StringMatchingRegex(/^(\w|\.|-)+$/);
@@ -100,6 +103,10 @@ function processPrivateAttributes(
   return [];
 }
 
+function defined(value: any) {
+  return value !== null && value !== undefined;
+}
+
 /**
  * Convert a legacy user to a single kind context.
  * @param user
@@ -115,12 +122,22 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   // For legacy users we never established a difference between null
   // and undefined for inputs. Because transient can be used in evaluations
   // we would want it to not possibly match true/false unless defined.
-  // Which is different than treating implicit transient as `false`.
-  if (user.anonymous !== undefined && user.anonymous !== null) {
+  // Which is different than coercing a null/undefined transient as `false`.
+  if (defined(user.anonymous)) {
     const transient = !!singleKindContext.anonymous;
     delete singleKindContext.anonymous;
     singleKindContext.transient = transient;
   }
+
+  if (defined(user.secondary)) {
+    singleKindContext._meta = {};
+    const { secondary } = singleKindContext;
+    delete singleKindContext.secondary;
+    singleKindContext._meta.secondary = secondary;
+  }
+
+  // We are not pulling private attributes over because we will serialize
+  // those from attribute references for events.
 
   return singleKindContext;
 }
@@ -152,6 +169,21 @@ export default class Context {
    */
   private constructor(kind: string) {
     this.kind = kind;
+  }
+
+  private static getValueFromContext(
+    reference: AttributeReference,
+    context?: LDContextCommon,
+  ): any {
+    if (!context || !reference.isValid) {
+      return undefined;
+    }
+
+    return reference.get(context);
+  }
+
+  private contextForKind(kind: string): LDContextCommon | undefined {
+    return this.isMulti ? this.contexts[kind] : this.context;
   }
 
   private static FromMultiKindContext(context: LDMultiKindContext): Context | undefined {
@@ -229,7 +261,7 @@ export default class Context {
    * @param context The input context to create a Context from.
    * @returns a {@link Context} or `undefined` if one could not be created.
    */
-  static FromLDContext(context: LDContext): Context | undefined {
+  public static FromLDContext(context: LDContext): Context | undefined {
     if (isSingleKind(context)) {
       return Context.FromSingleKindContext(context);
     } if (isMultiKind(context)) {
@@ -240,10 +272,40 @@ export default class Context {
     return undefined;
   }
 
+  /**
+   * Attempt to get a value for the given context kind using the given reference.
+   * @param kind The kind of the context to get the value for.
+   * @param reference The reference to the value to get.
+   * @returns a value or `undefined` if one is not found.
+   */
+  public valueForKind(kind: string, reference: AttributeReference): any | undefined {
+    return Context.getValueFromContext(reference, this.contextForKind(kind));
+  }
+
+  /**
+   * Attempt to get a secondary key from a context.
+   * @param kind The kind of the context to get the secondary key for.
+   * @returns the secondary key, or undefined if not present or not a string.
+   */
+  public secondary(kind: string): string | undefined {
+    const context = this.contextForKind(kind);
+    if (defined(context?._meta?.secondary)
+     && TypeValidators.String.is(context?._meta?.secondary)) {
+      return context?._meta?.secondary;
+    }
+    return undefined;
+  }
+
+  /**
+   * True if this is a multi-kind context.
+   */
   public get isMultiKind(): boolean {
     return this.isMulti;
   }
 
+  /**
+   * Get the canonical key for this context.
+   */
   public get canonicalKey(): string {
     if (this.isUser) {
       return this.context!.key;
@@ -255,6 +317,9 @@ export default class Context {
     return `${this.kind}:${encodeURIComponent(this.context!.key)}`;
   }
 
+  /**
+   * Get the kinds of this context.
+   */
   public get kinds(): string[] {
     if (this.isMulti) {
       return Object.keys(this.contexts);
@@ -262,25 +327,17 @@ export default class Context {
     return [this.kind];
   }
 
-  private static getValueFromContext(
-    reference: AttributeReference,
-    context?: LDContextCommon,
-  ): any {
-    if (!context || !reference.isValid) {
-      return undefined;
-    }
-
-    return reference.get(context);
-  }
-
   /**
-   * Attempt to get a value for the given context kind using the given reference.
-   * @param kind The kind of the context to get the value for.
-   * @param reference The reference to the value to get.
-   * @returns a value or `undefined` if one is not found.
+   * Get the kinds, and their keys, for this context.
    */
-  public getValueForKind(kind: string, reference: AttributeReference): any | undefined {
-    const context = this.isMulti ? this.contexts[kind] : this.context;
-    return Context.getValueFromContext(reference, context);
+  public get kindsAndKeys(): Record<string, string> {
+    if (this.isMulti) {
+      return Object.entries(this.contexts)
+        .reduce((acc: Record<string, string>, [kind, context]) => {
+          acc[kind] = context.key;
+          return acc;
+        }, {});
+    }
+    return { [this.kind]: this.context!.key };
   }
 }
