@@ -124,17 +124,27 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   // we would want it to not possibly match true/false unless defined.
   // Which is different than coercing a null/undefined transient as `false`.
   if (defined(user.anonymous)) {
-    const transient = !!singleKindContext.anonymous;
+    const transient = !!user.anonymous;
     delete singleKindContext.anonymous;
     singleKindContext.transient = transient;
   }
 
   if (defined(user.secondary)) {
     singleKindContext._meta = {};
-    const { secondary } = singleKindContext;
+    const { secondary } = user;
     delete singleKindContext.secondary;
     singleKindContext._meta.secondary = secondary;
   }
+
+  // TODO: Determine if we want to enforce typing. Previously we would have
+  // stringified these at event type.
+  singleKindContext.name = user.name;
+  singleKindContext.ip = user.ip;
+  singleKindContext.firstName = user.firstName;
+  singleKindContext.lastName = user.lastName;
+  singleKindContext.email = user.email;
+  singleKindContext.avatar = user.avatar;
+  singleKindContext.country = user.country;
 
   // We are not pulling private attributes over because we will serialize
   // those from attribute references for events.
@@ -148,7 +158,7 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
  * the type system.
  */
 export default class Context {
-  private context?: LDSingleKindContext;
+  private context?: LDContextCommon;
 
   private isMulti: boolean = false;
 
@@ -156,7 +166,7 @@ export default class Context {
 
   private contexts: Record<string, LDContextCommon> = {};
 
-  private privateAttributes?: Record<string, AttributeReference[]>;
+  private privateAttributeReferences?: Record<string, AttributeReference[]>;
 
   public readonly kind: string;
 
@@ -183,22 +193,30 @@ export default class Context {
   }
 
   private contextForKind(kind: string): LDContextCommon | undefined {
-    return this.isMulti ? this.contexts[kind] : this.context;
+    if (this.isMulti) {
+      return this.contexts[kind];
+    }
+    if (this.kind === kind) {
+      return this.context;
+    }
+    return undefined;
   }
 
   private static FromMultiKindContext(context: LDMultiKindContext): Context | undefined {
     const kinds = Object.keys(context).filter((key) => key !== 'kind');
-    const kindsValid = kinds.every(validKind);
+    const kindsValid = kinds.every(validKind) && kinds.length;
 
     if (!kindsValid) {
       return undefined;
     }
 
+    const privateAttributes: Record<string, AttributeReference[]> = {};
     let contextsAreObjects = true;
     const contexts = kinds.reduce((acc: Record<string, LDContextCommon>, kind) => {
       const singleContext = context[kind];
       if (isContextCommon(singleContext)) {
         acc[kind] = singleContext;
+        privateAttributes[kind] = processPrivateAttributes(singleContext._meta?.privateAttributes);
       } else {
         // No early break isn't the most efficient, but it is an error condition.
         contextsAreObjects = false;
@@ -214,8 +232,22 @@ export default class Context {
       return undefined;
     }
 
+    // There was only a single kind in the multi-kind context.
+    // So we can just translate this to a single-kind context.
+    // TODO: Node was not doing this. So we should determine if we want to do this.
+    // it would make it consistent with strongly typed SDKs.
+    if (kinds.length === 1) {
+      const kind = kinds[0];
+      const created = new Context(kind);
+      created.context = contexts[kind];
+      created.privateAttributeReferences = privateAttributes;
+      created.isUser = kind === 'user';
+      return created;
+    }
+
     const created = new Context(context.kind);
     created.contexts = contexts;
+    created.privateAttributeReferences = privateAttributes;
 
     created.isMulti = true;
     return created;
@@ -233,7 +265,7 @@ export default class Context {
       const created = new Context(kind);
       created.isUser = kind === 'user';
       created.context = context;
-      created.privateAttributes = {
+      created.privateAttributeReferences = {
         [kind]: privateAttributeReferences,
       };
       return created;
@@ -250,7 +282,7 @@ export default class Context {
     const created = new Context('user');
     created.isUser = true;
     created.context = legacyToSingleKind(context);
-    created.privateAttributes = {
+    created.privateAttributeReferences = {
       user: processPrivateAttributes(context.privateAttributeNames, true),
     };
     return created;
@@ -339,5 +371,19 @@ export default class Context {
         }, {});
     }
     return { [this.kind]: this.context!.key };
+  }
+
+  /**
+   * Get the attribute references.
+   *
+   * For now this is for testing and therefore is flagged internal.
+   * It will not be accessible outside this package.
+   *
+   * @internal
+   *
+   * @param kind
+   */
+  public privateAttributes(kind: string): AttributeReference[] {
+    return this.privateAttributeReferences?.[kind] || [];
   }
 }
