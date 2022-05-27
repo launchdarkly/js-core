@@ -88,7 +88,7 @@ export interface LDFeatureStore {
    * @param callback
    *   Will be called when the store has been initialized.
    */
-  init(allData: DataKind, callback: () => void): void;
+  init(allData: LDFeatureStoreDataStorage, callback: () => void): void;
 
   /**
    * Delete an entity from the store.

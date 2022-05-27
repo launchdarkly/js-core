@@ -62,7 +62,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
     callback?.(result);
   }
 
-  init(allData: object, callback: () => void): void {
+  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
     this.initCalled = true;
     this.allData = allData as LDFeatureStoreDataStorage;
     callback?.();

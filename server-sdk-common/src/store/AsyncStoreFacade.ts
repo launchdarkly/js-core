@@ -1,6 +1,10 @@
 import { DataKind } from '../api/interfaces';
 import {
-  LDFeatureStore, LDFeatureStoreItem, LDFeatureStoreKindData, LDKeyedFeatureStoreItem,
+  LDFeatureStore,
+  LDFeatureStoreDataStorage,
+  LDFeatureStoreItem,
+  LDFeatureStoreKindData,
+  LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 
 /**
@@ -9,7 +13,7 @@ import {
  * @param method
  * @returns A promisified version of the method.
  */
-function promisify<T>(method: (callback: (val: T) => void)=> void): Promise<T> {
+function promisify<T>(method: (callback: (val: T) => void) => void): Promise<T> {
   return new Promise<T>((resolve) => {
     method((val: T) => { resolve(val); });
   });
@@ -41,7 +45,7 @@ export default class AsyncStoreFacade {
     });
   }
 
-  async init(allData: DataKind): Promise<void> {
+  async init(allData: LDFeatureStoreDataStorage): Promise<void> {
     return promisify((cb) => {
       this.store.init(allData, cb);
     });
