@@ -1,12 +1,12 @@
-import { LDLogger, LDLogLevel } from '../api';
+import { LDLogger } from '../api';
 import { TypeValidators } from '../validators';
 
 const loggerRequirements = {
   error: TypeValidators.Function,
   warn: TypeValidators.Function,
   info: TypeValidators.Function,
-  debug: TypeValidators.Function
-}
+  debug: TypeValidators.Function,
+};
 
 /**
  * The safeLogger logic exists because we allow the application to pass in a custom logger, but
@@ -18,10 +18,10 @@ const loggerRequirements = {
  * message to the SDK's default logger, and we can at least partly guard against the latter by
  * checking for the presence of required methods at configuration time.
  */
-export class SafeLogger implements LDLogger {
+export default class SafeLogger implements LDLogger {
   private logger: LDLogger;
 
-  private fallback:  LDLogger;
+  private fallback: LDLogger;
 
   /**
    * Construct a safe logger with the specified logger.
@@ -31,8 +31,8 @@ export class SafeLogger implements LDLogger {
    */
   constructor(logger: LDLogger, fallback: LDLogger) {
     Object.entries(loggerRequirements).forEach(([level, validator]) => {
-      if(!validator.is((logger as any)[level])) {
-        throw new Error('Provided logger instance must support logger.' + level + '(...) method');
+      if (!validator.is((logger as any)[level])) {
+        throw new Error(`Provided logger instance must support logger.${level}(...) method`);
         // Note that the SDK normally does not throw exceptions to the application, but that rule
         // does not apply to LDClient.init() which will throw an exception if the parameters are so
         // invalid that we cannot proceed with creating the client. An invalid logger meets those
@@ -44,12 +44,12 @@ export class SafeLogger implements LDLogger {
   }
 
   private log(level: 'error' | 'warn' | 'info' | 'debug', args: any[]) {
-      try {
-        this.logger[level](...args);
-      } catch {
-        // If all else fails do not break.
-        this.fallback[level](...args);
-      }
+    try {
+      this.logger[level](...args);
+    } catch {
+      // If all else fails do not break.
+      this.fallback[level](...args);
+    }
   }
 
   error(...args: any[]): void {

@@ -1,5 +1,5 @@
-import { LDFeatureStore } from '../subsystems/LDFeatureStore';
 import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDFeatureStore } from '../subsystems/LDFeatureStore';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';

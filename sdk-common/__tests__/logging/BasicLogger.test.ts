@@ -10,9 +10,12 @@ describe.each<[LDLogLevel, string[]]>([
   ['none', []],
 ])('given a logger with a log level', (level: LDLogLevel, expected: string[]) => {
   const strings: string[] = [];
-  const logger = new BasicLogger({level, destination: (...args: any) => {
-    strings.push(args.join(' '))
-  }})
+  const logger = new BasicLogger({
+    level,
+    destination: (...args: any) => {
+      strings.push(args.join(' '));
+    },
+  });
   it('it only logs messages of that level', () => {
     logger.debug('a');
     logger.info('b');
@@ -36,9 +39,11 @@ describe('given a default logger', () => {
 });
 
 describe('given a logger with a destination that throws', () => {
-  const logger = new BasicLogger({destination: () => {
-    throw new Error('BAD LOGGER');
-  }})
+  const logger = new BasicLogger({
+    destination: () => {
+      throw new Error('BAD LOGGER');
+    },
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -59,11 +64,12 @@ describe('given a logger with a formatter that throws', () => {
 
   const logger = new BasicLogger({
     destination: (...args: any) => {
-      strings.push(args.join(' '))
+      strings.push(args.join(' '));
     },
     formatter: () => {
-    throw new Error('BAD LOGGER');
-  }})
+      throw new Error('BAD LOGGER');
+    },
+  });
 
   it('logs with default formatting instead of throwing', () => {
     logger.error('a');
