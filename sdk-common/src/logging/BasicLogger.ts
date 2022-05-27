@@ -56,7 +56,6 @@ export default class BasicLogger implements LDLogger {
   }
 
   private log(level: number, args: any[]) {
-    // Default to info.
     if (level >= this.logLevel) {
       try {
         if (this.destination) {
