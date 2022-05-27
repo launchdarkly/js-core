@@ -1,4 +1,4 @@
-import { LDLogger } from '../LDLogger';
+import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 /**
  * Configuration for [[FileDataSource]].

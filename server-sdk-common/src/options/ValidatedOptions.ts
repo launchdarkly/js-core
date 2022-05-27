@@ -1,4 +1,5 @@
-import { LDLogger, LDProxyOptions, LDTLSOptions } from '../api';
+import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDProxyOptions, LDTLSOptions } from '../api';
 
 /**
  * This interface applies to the options after they have been validated and defaults

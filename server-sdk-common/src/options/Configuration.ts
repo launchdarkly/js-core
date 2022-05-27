@@ -1,6 +1,6 @@
-import { NumberWithMinimum, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { LDLogger, NumberWithMinimum, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 import {
-  LDLogger, LDOptions, LDProxyOptions, LDTLSOptions,
+  LDOptions, LDProxyOptions, LDTLSOptions,
 } from '../api';
 import ApplicationTags from './ApplicationTags';
 import OptionMessages from './OptionMessages';

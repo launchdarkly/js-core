@@ -1,21 +1,22 @@
-import { LDLogger } from '../src';
+import { LDLogger, LDLogLevel } from '@launchdarkly/js-sdk-common';
 
-// TODO: Move this to sdk-common when implementing logging.
 export enum LogLevel {
-  Debug,
-  Info,
-  Warn,
-  Error,
+  Debug = 'debug',
+  Info = 'info',
+  Warn = 'warn',
+  Error = 'error',
 }
 
 type ExpectedMessage = { level: LogLevel, matches: RegExp };
 
 export default class TestLogger implements LDLogger {
-  private readonly messages: Record<LogLevel, string[]> = {
-    [LogLevel.Debug]: [],
-    [LogLevel.Info]: [],
-    [LogLevel.Warn]: [],
-    [LogLevel.Error]: [],
+  private readonly messages: Record<LDLogLevel, string[]> = {
+    debug: [],
+    info: [],
+    warn: [],
+    error: [],
+    // Should not be used to log.
+    none: [],
   };
 
   private callCount = 0;
@@ -51,11 +52,12 @@ export default class TestLogger implements LDLogger {
   expectMessages(
     expectedMessages: ExpectedMessage[],
   ): void {
-    const matched: Record<LogLevel, number[]> = {
-      [LogLevel.Debug]: [],
-      [LogLevel.Info]: [],
-      [LogLevel.Warn]: [],
-      [LogLevel.Error]: [],
+    const matched: Record<LDLogLevel, number[]> = {
+      debug: [],
+      info: [],
+      warn: [],
+      error: [],
+      none: [],
     };
 
     expectedMessages.forEach((expectedMessage) => {
@@ -81,25 +83,25 @@ export default class TestLogger implements LDLogger {
     this.waiters.forEach((waiter) => waiter());
   }
 
-  private log(level: LogLevel, ...args: any[]) {
+  private log(level: LDLogLevel, ...args: any[]) {
     this.messages[level].push(args.join(' '));
     this.callCount += 1;
     this.checkResolves();
   }
 
   error(...args: any[]): void {
-    this.log(LogLevel.Error, args);
+    this.log('error', args);
   }
 
   warn(...args: any[]): void {
-    this.log(LogLevel.Warn, args);
+    this.log('warn', args);
   }
 
   info(...args: any[]): void {
-    this.log(LogLevel.Info, args);
+    this.log('info', args);
   }
 
   debug(...args: any[]): void {
-    this.log(LogLevel.Debug, args);
+    this.log('debug', args);
   }
 }
