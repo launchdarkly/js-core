@@ -18,9 +18,9 @@ function clone(obj: any): any {
 }
 
 export default class InMemoryFeatureStore implements LDFeatureStore {
-  allData: LDFeatureStoreDataStorage = {};
+  private allData: LDFeatureStoreDataStorage = {};
 
-  initCalled = false;
+  private initCalled = false;
 
   private addItem(kind: DataKind, key: string, item: LDFeatureStoreItem) {
     let items = this.allData[kind.namespace];
