@@ -1,5 +1,11 @@
-import { DataKind } from './api/interfaces';
-import { LDFeatureStoreDataStorage, LDKeyedFeatureStoreItem, LDFeatureStore, LDFeatureStoreKindData, LDFeatureStoreItem } from './api/subsystems';
+import { DataKind } from '../api/interfaces';
+import {
+  LDFeatureStoreDataStorage,
+  LDKeyedFeatureStoreItem,
+  LDFeatureStore,
+  LDFeatureStoreKindData,
+  LDFeatureStoreItem,
+} from '../api/subsystems';
 
 /**
  * Clone an object using JSON. This will not preserve
@@ -13,6 +19,7 @@ function clone(obj: any): any {
 
 export default class InMemoryFeatureStore implements LDFeatureStore {
   allData: LDFeatureStoreDataStorage = {};
+
   initCalled = false;
 
   private addItem(kind: DataKind, key: string, item: LDFeatureStoreItem) {
@@ -77,6 +84,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
     return callback?.(this.initCalled);
   }
 
+  /* eslint-disable class-methods-use-this */
   close(): void {
     // For the memory store this is a no-op.
   }
