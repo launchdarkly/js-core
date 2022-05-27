@@ -1,3 +1,32 @@
+import { DataKind } from '../interfaces';
+
+/**
+ * Represents an item which can be stored in the feature store.
+ */
+export interface LDFeatureStoreItem {
+  deleted?: boolean;
+  version: number;
+  // The actual data associated with the item.
+  [attribute: string]: any;
+}
+
+/**
+ * When upserting an item it must contain a key.
+ */
+export interface LDKeyedFeatureStoreItem extends LDFeatureStoreItem {
+  key: string;
+}
+
+/**
+ * Represents the storage for a single kind of data. e.g. 'flag' or 'segment'.
+ */
+export interface LDFeatureStoreKindData {[key: string]: LDFeatureStoreItem }
+
+/**
+ * Represents the storage for the full data store.
+ */
+export interface LDFeatureStoreDataStorage {[namespace: string]: LDFeatureStoreKindData }
+
 /**
  * Interface for a feature store component.
  *
@@ -30,7 +59,7 @@ export interface LDFeatureStore {
    *   Will be called with the retrieved entity, or null if not found. The actual type of the result
    *   value is [[interfaces.VersionedData]].
    */
-  get(kind: object, key: string, callback: (res: object) => void): void;
+  get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void;
 
   /**
    * Get all entities from a collection.
@@ -46,7 +75,7 @@ export interface LDFeatureStore {
    *   Will be called with the resulting map. The actual type of the result value is
    *   `interfaces.KeyedItems<VersionedData>`.
    */
-  all(kind: object, callback: (res: object) => void): void;
+  all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void): void;
 
   /**
    * Initialize the store, overwriting any existing data.
@@ -59,7 +88,7 @@ export interface LDFeatureStore {
    * @param callback
    *   Will be called when the store has been initialized.
    */
-  init(allData: object, callback: () => void): void;
+  init(allData: DataKind, callback: () => void): void;
 
   /**
    * Delete an entity from the store.
@@ -83,7 +112,7 @@ export interface LDFeatureStore {
    * @param callback
    *   Will be called when the delete operation is complete.
    */
-  delete(kind: object, key: string, version: string, callback: () => void): void;
+  delete(kind: DataKind, key: string, version: number, callback: () => void): void;
 
   /**
    * Add an entity or update an existing entity.
@@ -101,7 +130,7 @@ export interface LDFeatureStore {
    * @param callback
    *   Will be called after the upsert operation is complete.
    */
-  upsert(kind: object, data: object, callback: () => void): void;
+  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void;
 
   /**
    * Tests whether the store is initialized.
