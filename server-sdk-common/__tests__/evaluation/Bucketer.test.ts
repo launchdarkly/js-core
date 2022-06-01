@@ -1,7 +1,7 @@
 // Because we are  not providing a sha1 implementation within the SDK common
 // We cannot fully validate bucketing in the common tests. Platform implementations
 // should contain a consistency test.
-// Testing here can only validate we are providing correct inputs to the hasing algorithm.
+// Testing here can only validate we are providing correct inputs to the hashing algorithm.
 
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
 import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';

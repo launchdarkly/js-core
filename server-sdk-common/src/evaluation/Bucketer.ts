@@ -35,13 +35,13 @@ export default class Bucketer {
    * Bucket the provided context using the provided parameters.
    * @param context The context to bucket. Can be a 'multi' kind context, but
    * the bucketing will be by a specific contained kind.
-   * @param key A key to use in hasing. Typically the flag key or the segement key.
+   * @param key A key to use in hashing. Typically the flag key or the segment key.
    * @param attr The attribute to use for bucketing.
-   * @param salt A salt to use in hasing.
+   * @param salt A salt to use in hashing.
    * @param isExperiment Indicates if this rollout is an experiment. If it is, then the secondary
    * key will not be used.
    * @param kindForRollout The kind to use for bucketing.
-   * @param seed A seed to use in hasing.
+   * @param seed A seed to use in hashing.
    */
   bucket(
     context: Context,
