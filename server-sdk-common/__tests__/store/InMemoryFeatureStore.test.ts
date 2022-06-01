@@ -143,8 +143,8 @@ describe('given an initialized feature store', () => {
       key: 'new-feature',
       version: 1,
     };
-    await featureStore.upsert({namespace: 'potato'}, newPotato);
-    const feature = await featureStore.get({namespace: 'potato'}, newPotato.key);
+    await featureStore.upsert({ namespace: 'potato' }, newPotato);
+    const feature = await featureStore.get({ namespace: 'potato' }, newPotato.key);
     expect(feature).toEqual(newPotato);
   });
 });
