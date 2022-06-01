@@ -259,7 +259,7 @@ export default class Context {
     const keyValid = validKey(key);
 
     if (keyValid && kindValid) {
-      // The JSON interfaces uses dandling _.
+      // The JSON interfaces uses dangling _.
       // eslint-disable-next-line no-underscore-dangle
       const privateAttributeReferences = processPrivateAttributes(context._meta?.privateAttributes);
       const created = new Context(kind);
