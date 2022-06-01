@@ -137,7 +137,11 @@ describe.each<[
     const attrRef = new AttributeReference(attr);
 
     const bucketer = new Bucketer(crypto);
-    bucketer.bucket(validatedContext!, key, attrRef, salt, isExperiment, kindForRollout, seed);
+    // The hasher always returns the same value. This just checks that it converts it to a number
+    // in the expected way.
+    expect(
+      bucketer.bucket(validatedContext!, key, attrRef, salt, isExperiment, kindForRollout, seed)
+    ).toBeCloseTo(0.07111111110140983, 5);
     expect(hasher.update).toHaveBeenCalledWith(expected);
     expect(hasher.digest).toHaveBeenCalledWith('hex');
   });
