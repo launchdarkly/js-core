@@ -1,4 +1,4 @@
-import { LDLogLevel } from '../LDLogLevel';
+import { LDLogLevel } from './LDLogLevel';
 
 /**
  * Configuration for [[basicLogger]].
@@ -28,4 +28,14 @@ export interface BasicLoggerOptions {
    * initialization to fail.
    */
   destination?: (line: string) => void;
+
+  /**
+   * An optional formatter to use. The formatter should be compatible
+   * with node-style format strings like those used with `util.format`.
+   *
+   * If not specified, then a default implementation will be used.
+   * But using a node-specific implementation, for instance, would
+   * have performance and quality benefits.
+   */
+  formatter?: (...args: any[]) => string;
 }

@@ -120,6 +120,23 @@ export class StringMatchingRegex extends Type<string> {
 }
 
 /**
+ * Validate a value is a function.
+ */
+export class Function implements TypeValidator {
+  is(u: unknown): u is (...args: any[]) => void {
+    // We cannot inspect the parameters and there isn't really
+    // a generic function type we can instantiate.
+    // So the type guard is here just to make TS comfortable
+    // caling something after using this guard.
+    return typeof u === 'function';
+  }
+
+  getType(): string {
+    return 'function';
+  }
+}
+
+/**
  * A set of standard type validators.
  */
 export class TypeValidators {
@@ -134,6 +151,8 @@ export class TypeValidators {
   static readonly StringArray = new TypeArray<string>('string[]', '');
 
   static readonly Boolean = new Type<boolean>('boolean', true);
+
+  static readonly Function = new Function();
 
   static NumberWithMin(min: number): NumberWithMinimum {
     return new NumberWithMinimum(min);
