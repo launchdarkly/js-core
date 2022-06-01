@@ -1,10 +1,10 @@
 import { Clause } from './Clause';
 import { Rollout } from './Rollout';
 
-export interface Rule {
+export interface FlagRule {
   id: string;
   variation?: number;
   rollout?: Rollout;
-  trackEvents: boolean;
-  clauses: Clause[];
+  trackEvents?: boolean;
+  clauses?: Clause[];
 }

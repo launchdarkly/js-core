@@ -17,7 +17,7 @@ export type Op =
 
 export interface Clause {
   attribute: string,
-  negate: boolean,
+  negate?: boolean,
   op: Op,
   values: any[];
 }

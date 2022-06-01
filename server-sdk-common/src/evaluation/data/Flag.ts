@@ -1,7 +1,7 @@
 import { ClientSideAvailability } from './ClientSideAvailability';
 import { Prerequisite } from './Prerequisite';
 import { Rollout } from './Rollout';
-import { Rule } from './Rule';
+import { FlagRule } from './FlagRule';
 import { Target } from './Target';
 import { Versioned } from './Versioned';
 
@@ -12,7 +12,7 @@ export interface Flag extends Versioned {
   prerequisites?: Prerequisite[];
   targets?: Omit<Target, 'contextKind'>[],
   contextTargets?: Target[],
-  rules?: Rule[],
+  rules?: FlagRule[],
   fallthrough: VariationOrRollout,
   offVariation?: number;
   variations: any[];
