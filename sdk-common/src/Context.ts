@@ -64,7 +64,7 @@ function isLegacyUser(context: LDContext): context is LDUser {
  *
  * Due to a limitation in the expressiveness of these highly polymorphic types any field
  * in a multi-kind context can either be a context or 'kind'. So we need to re-assure
- * the compiler that is isn't the word multi.
+ * the compiler that it isn't the word multi.
  *
  * Because we do not allow top level values in a multi-kind context we can validate
  * that as well.
@@ -259,7 +259,7 @@ export default class Context {
     const keyValid = validKey(key);
 
     if (keyValid && kindValid) {
-      // The JSON interfaces uses dandling _.
+      // The JSON interfaces uses dangling _.
       // eslint-disable-next-line no-underscore-dangle
       const privateAttributeReferences = processPrivateAttributes(context._meta?.privateAttributes);
       const created = new Context(kind);
