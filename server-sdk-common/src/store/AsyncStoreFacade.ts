@@ -20,7 +20,7 @@ function promisify<T>(method: (callback: (val: T) => void) => void): Promise<T> 
 }
 
 /**
- * Provides an async interface to  a feature store.
+ * Provides an async interface to a feature store.
  *
  * This allows for using a store using async/awat instead of callbacks.
  *
