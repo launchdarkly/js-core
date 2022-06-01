@@ -91,6 +91,12 @@ describe.each([
   ['semVerGreaterThan', '2.0.1', 'xbad%ver', false],
 ])('given operations and parameters', (operator, a, b, expected) => {
   it(`Operator ${operator} with ${a} and ${b} should be ${expected}`, () => {
+    expect(Operators.is(operator)).toBeTruthy();
     expect(Operators.execute(operator, a, b)).toEqual(expected);
   });
+});
+
+it('handles unrecognized operators', () => {
+  expect(Operators.is('bacon')).toBeFalsy();
+  expect(Operators.execute('bacon', 1, 6)).toBeFalsy();
 });
