@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable class-methods-use-this */
+import { LDContext } from '@launchdarkly/js-sdk-common';
 import {
-  LDClient, LDContext, LDEvaluationDetail, LDFlagsState, LDFlagsStateOptions,
+  LDClient, LDEvaluationDetail, LDFlagsState, LDFlagsStateOptions,
 } from './api';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { Platform } from './platform';

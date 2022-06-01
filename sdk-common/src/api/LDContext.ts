@@ -1,6 +1,6 @@
 import { LDMultiKindContext } from './context/LDMultiKindContext';
 import { LDSingleKindContext } from './context/LDSingleKindContext';
-import { LDUser } from './LDUser';
+import { LDUser } from './context/LDUser';
 
 /**
  * A LaunchDarkly context object.

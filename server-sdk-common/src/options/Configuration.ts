@@ -1,3 +1,4 @@
+import { NumberWithMinimum, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 import {
   LDLogger, LDOptions, LDProxyOptions, LDTLSOptions,
 } from '../api';
@@ -5,7 +6,6 @@ import ApplicationTags from './ApplicationTags';
 import OptionMessages from './OptionMessages';
 import ServiceEndpoints from './ServiceEndpoints';
 import { ValidatedOptions } from './ValidatedOptions';
-import TypeValidators, { NumberWithMinimum, TypeValidator } from './validators';
 
 // Once things are internal to the implementation of the SDK we can depend on
 // types. Calls to the SDK could contain anything without any regard to typing.

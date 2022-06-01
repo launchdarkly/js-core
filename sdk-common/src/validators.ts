@@ -10,8 +10,6 @@
 
 /**
  * Interface for type validation.
- *
- * @internal
  */
 export interface TypeValidator {
   is(u:unknown): boolean;
@@ -20,8 +18,6 @@ export interface TypeValidator {
 
 /**
  * Validate a factory or instance.
- *
- * @internal
  */
 export class FactoryOrInstance implements TypeValidator {
   is(factoryOrInstance: unknown) {
@@ -40,8 +36,6 @@ export class FactoryOrInstance implements TypeValidator {
 
 /**
  * Validate a basic type.
- *
- * @internal
  */
 export class Type<T> implements TypeValidator {
   private typeName: string;
@@ -65,6 +59,9 @@ export class Type<T> implements TypeValidator {
   }
 }
 
+/**
+ * Validate an array of the specified type.
+ */
 export class TypeArray<T> implements TypeValidator {
   private typeName: string;
 
@@ -92,8 +89,6 @@ export class TypeArray<T> implements TypeValidator {
 
 /**
  * Validate a value is a number and is greater or eval than a minimum.
- *
- * @internal
  */
 export class NumberWithMinimum extends Type<number> {
   readonly min: number;
@@ -110,8 +105,6 @@ export class NumberWithMinimum extends Type<number> {
 
 /**
  * Validate a value is a string and it matches the given expression.
- *
- * @internal
  */
 export class StringMatchingRegex extends Type<string> {
   readonly expression: RegExp;
@@ -128,10 +121,8 @@ export class StringMatchingRegex extends Type<string> {
 
 /**
  * A set of standard type validators.
- *
- * @internal
  */
-export default class TypeValidators {
+export class TypeValidators {
   static readonly String = new Type<string>('string', '');
 
   static readonly Number = new Type<number>('number', 0);

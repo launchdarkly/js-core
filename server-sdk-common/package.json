@@ -17,6 +17,9 @@
     "build": "tsc"
   },
   "license": "Apache-2.0",
+  "dependencies": {
+    "@launchdarkly/js-sdk-common": "@launchdarkly/js-sdk-common"
+  },
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
