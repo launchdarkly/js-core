@@ -8,9 +8,6 @@ import { Queries } from './Queries';
 import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
 import evalTargets from './evalTargets';
-import { FlagRule } from './data/FlagRule';
-import { Clause } from './data/Clause';
-import Operators from './Operations';
 
 class EvalState {
   // events
