@@ -1,0 +1,39 @@
+import { Context } from '@launchdarkly/js-sdk-common';
+import { Flag } from './data/Flag';
+import { Target } from './data/Target';
+import EvalResult from './EvalResult';
+import { getVariation } from './variations';
+import Reasons from './Reasons';
+import { firstResult } from './collection';
+
+function evalTarget(flag: Flag, target: Target, context: Context): EvalResult | undefined {
+  const contextKey = context.key(target.contextKind);
+  if (contextKey !== undefined) {
+    const found = target.values.indexOf(contextKey) >= 0;
+    if (found) {
+      return getVariation(flag, target.variation, Reasons.TargetMatch);
+    }
+  }
+
+  return undefined;
+}
+
+export default function evalTargets(flag: Flag, context: Context): EvalResult | undefined {
+  if (!flag.contextTargets?.length) {
+    // There are not context targets, so we are going to evaluate the user targets.
+    return firstResult(flag.targets, (target) => evalTarget(flag, target, context));
+  }
+
+  return firstResult(flag.contextTargets, (target) => {
+    if (!target.contextKind || target.contextKind === Context.userKind) {
+      // When a context target is for a user, then use a user target with the same variation.
+      const userTarget = (flag.targets || []).find((ut) => ut.variation === target.variation);
+      if (userTarget) {
+        return evalTarget(flag, userTarget, context);
+      }
+      return undefined;
+    }
+
+    return evalTarget(flag, target, context);
+  });
+}

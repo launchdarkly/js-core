@@ -67,13 +67,13 @@ describe.each([
   });
 
   it('should get the same values', () => {
-    expect(context?.valueForKind('user', new AttributeReference('cat'))).toEqual('calico');
-    expect(context?.valueForKind('user', new AttributeReference('name'))).toEqual('context name');
+    expect(context?.valueForKind(new AttributeReference('cat'), 'user')).toEqual('calico');
+    expect(context?.valueForKind(new AttributeReference('name'), 'user')).toEqual('context name');
     expect(context?.kinds).toStrictEqual(['user']);
     expect(context?.kindsAndKeys).toStrictEqual({ user: 'test' });
     // Canonical keys for 'user' contexts are just the key.
     expect(context?.canonicalKey).toEqual('test');
-    expect(context?.valueForKind('user', new AttributeReference('transient'))).toBeTruthy();
+    expect(context?.valueForKind(new AttributeReference('transient'), 'user')).toBeTruthy();
     expect(context?.secondary('user')).toEqual('secondary');
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName)
@@ -81,7 +81,7 @@ describe.each([
   });
 
   it('should not get values for a context kind that does not exist', () => {
-    expect(context?.valueForKind('org', new AttributeReference('cat'))).toBeUndefined();
+    expect(context?.valueForKind(new AttributeReference('cat'), 'org')).toBeUndefined();
   });
 
   it('should have the correct kinds', () => {
@@ -108,12 +108,12 @@ describe('given a valid legacy user without custom attributes', () => {
   });
 
   it('should get expected values', () => {
-    expect(context?.valueForKind('user', new AttributeReference('name'))).toEqual('context name');
+    expect(context?.valueForKind(new AttributeReference('name'), 'user')).toEqual('context name');
     expect(context?.kinds).toStrictEqual(['user']);
     expect(context?.kindsAndKeys).toStrictEqual({ user: 'test' });
     // Canonical keys for 'user' contexts are just the key.
     expect(context?.canonicalKey).toEqual('test');
-    expect(context?.valueForKind('user', new AttributeReference('transient'))).toBeTruthy();
+    expect(context?.valueForKind(new AttributeReference('transient'), 'user')).toBeTruthy();
     expect(context?.secondary('user')).toEqual('secondary');
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName)
@@ -204,8 +204,8 @@ describe('given a multi-kind context', () => {
   });
 
   it('should get values from the correct context', () => {
-    expect(context?.valueForKind('org', new AttributeReference('value'))).toEqual('OrgValue');
-    expect(context?.valueForKind('user', new AttributeReference('value'))).toEqual('UserValue');
+    expect(context?.valueForKind(new AttributeReference('value'), 'org')).toEqual('OrgValue');
+    expect(context?.valueForKind(new AttributeReference('value'), 'user')).toEqual('UserValue');
 
     expect(context?.secondary('org')).toEqual('value');
     expect(context?.secondary('user')).toBeUndefined();
