@@ -136,6 +136,28 @@ export class Function implements TypeValidator {
   }
 }
 
+// Our reference SDK, Go, parses date/time strings with the time.RFC3339Nano format.
+// This regex should match strings that are valid in that format, and no others.
+// Acceptable:
+//   2019-10-31T23:59:59Z, 2019-10-31T23:59:59.100Z,
+//   2019-10-31T23:59:59-07, 2019-10-31T23:59:59-07:00, etc.
+// Unacceptable: no "T", no time zone designation
+const DATE_REGEX = /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d\d*)?(Z|[-+]\d\d(:\d\d)?)/;
+
+/**
+ * Validate a value is a date. Values which are numbers are treated as dates and any string
+ * which if compliant with `time.RFC3339Nano` is a date.
+ */
+export class DateValidator implements TypeValidator {
+  is(u: unknown): boolean {
+    return typeof u === 'number' || (typeof u === 'string' && DATE_REGEX.test(u));
+  }
+
+  getType(): string {
+    return 'date';
+  }
+}
+
 /**
  * A set of standard type validators.
  */
@@ -161,4 +183,6 @@ export class TypeValidators {
   static StringMatchingRegex(expression: RegExp): StringMatchingRegex {
     return new StringMatchingRegex(expression);
   }
+
+  static readonly Date = new DateValidator();
 }
