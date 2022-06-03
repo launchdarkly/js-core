@@ -1,5 +1,6 @@
-import { FlagRule } from '../evaluation/data/FlagRule';
-import { Clause } from '../evaluation/data/Clause';
+// The deserialization will be updating parameter values, so we don't need this
+// warning in this file.
+/* eslint-disable no-param-reassign */
 import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
@@ -50,7 +51,10 @@ function processSegment(segment: Segment) {
     if (rule.bucketBy) {
       // Rules before U2C would have had literals for attributes.
       // So use the rolloutContextKind to indicate if this is new or old data.
-      rule.bucketByAttributeReference = new AttributeReference(rule.bucketBy, !rule.rolloutContextKind);
+      rule.bucketByAttributeReference = new AttributeReference(
+        rule.bucketBy,
+        !rule.rolloutContextKind,
+      );
     }
   });
 }
@@ -76,12 +80,12 @@ export function deserializeAll(data: string): AllData {
 export function deserializePatch(data: string): PatchData {
   const parsed = JSON.parse(data, reviver) as PatchData;
 
-  if(parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
+  if (parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
     processFlag(parsed.data as VersionedFlag);
   }
-  
-  if(parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
-    processSegment(parsed.data as VersionedSegment)
+
+  if (parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
+    processSegment(parsed.data as VersionedSegment);
   }
 
   return parsed;
@@ -90,3 +94,5 @@ export function deserializePatch(data: string): PatchData {
 export function deserializeDelete(data: string): DeleteData {
   return JSON.parse(data, reviver);
 }
+
+// TODO: Remove attribute reference types during serialization.
