@@ -1,3 +1,4 @@
+import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import { Clause } from './Clause';
 
 export interface SegmentRule {
@@ -6,4 +7,7 @@ export interface SegmentRule {
   weight?: number;
   bucketBy?: string;
   rolloutContextKind?: string;
+
+  // This field is not part of the schema, but it is populated during parsing.
+  bucketByAttributeReference?: AttributeReference,
 }

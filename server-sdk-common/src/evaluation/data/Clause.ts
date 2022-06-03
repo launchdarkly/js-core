@@ -1,3 +1,5 @@
+import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
+
 export type Op =
   'in'
   | 'startsWith'
@@ -20,4 +22,8 @@ export interface Clause {
   negate?: boolean,
   op: Op,
   values: any[];
+  contextKind?: string;
+
+  // This field is not part of the schema, but it is populated during parsing.
+  attributeReference: AttributeReference
 }
