@@ -59,6 +59,9 @@ function processSegment(segment: Segment) {
   });
 }
 
+/**
+ * @internal
+ */
 export function deserializeAll(data: string): AllData {
   // The reviver lacks the context of where a different key exists, being as it
   // starts at the deepest level and works outward. As a result attributes are
@@ -77,6 +80,9 @@ export function deserializeAll(data: string): AllData {
   return parsed;
 }
 
+/**
+ * @internal
+ */
 export function deserializePatch(data: string): PatchData {
   const parsed = JSON.parse(data, reviver) as PatchData;
 
@@ -91,6 +97,9 @@ export function deserializePatch(data: string): PatchData {
   return parsed;
 }
 
+/**
+ * @internal
+ */
 export function deserializeDelete(data: string): DeleteData {
   return JSON.parse(data, reviver);
 }
