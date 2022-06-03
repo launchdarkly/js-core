@@ -1,6 +1,12 @@
 import { LDEvaluationDetail, LDEvaluationReason } from '../api';
 import ErrorKinds from './ErrorKinds';
 
+/**
+ * A class which encapsulates the result of an evaluation. It allows for differentiating between
+ * successful and error result types.
+ *
+ * @internal
+ */
 export default class EvalResult {
   public readonly isError: boolean;
 

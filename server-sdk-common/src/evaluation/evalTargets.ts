@@ -18,6 +18,14 @@ function evalTarget(flag: Flag, target: Target, context: Context): EvalResult | 
   return undefined;
 }
 
+/**
+ * Evaluate the targets of the specified flag against the given context.
+ * @param flag The flag to evaluate targets for.
+ * @param context The context to evaluate those targets against.
+ * @returns An evaluation result if there is a target match/error or undefined if there is not.
+ *
+ * @internal
+ */
 export default function evalTargets(flag: Flag, context: Context): EvalResult | undefined {
   if (!flag.contextTargets?.length) {
     // There are not context targets, so we are going to evaluate the user targets.

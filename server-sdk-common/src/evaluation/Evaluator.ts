@@ -14,6 +14,9 @@ class EvalState {
   // bigSegmentsStatus
 }
 
+/**
+ * @internal
+ */
 export default class Evaluator {
   private queries: Queries;
 
