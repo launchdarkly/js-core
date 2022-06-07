@@ -8,6 +8,9 @@ import { VersionedData } from '../api/interfaces';
 import VersionedDataKinds from './VersionedDataKinds';
 import { Rollout } from '../evaluation/data/Rollout';
 
+/**
+ * @internal
+ */
 export function reviver(this: any, key: string, value: any): any {
   // Whenever a null is included we want to remove the field.
   // In this way validation checks do not have to consider null, only undefined.
@@ -32,6 +35,8 @@ interface AllData {
  * @param key The key of the item being visited.
  * @param value The value of the item being visited.
  * @returns A transformed value for serialization.
+ *
+ * @internal
  */
 export function replacer(this: any, key: string, value: any): any {
   if (value instanceof AttributeReference) {
