@@ -5,14 +5,10 @@ import { FlagRule } from './FlagRule';
 import { Target } from './Target';
 import { Versioned } from './Versioned';
 
-<<<<<<< HEAD
 interface VariationOrRollout {
   variation?: number,
   rollout?: Rollout
 }
-=======
-type VariationOrRollout = { variation: number; } | { rollout: Rollout };
->>>>>>> rlamb/sc-154361/target-evaluation
 
 export interface Flag extends Versioned {
   on: boolean,
