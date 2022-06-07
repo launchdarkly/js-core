@@ -42,11 +42,6 @@ export default class AttributeReference {
    */
   public readonly redactionName;
 
-  /**
-   * The original un-modified value. Used for serialization.
-   */
-  public readonly original;
-
   private readonly components: string[];
 
   /**
@@ -64,7 +59,6 @@ export default class AttributeReference {
    * @param literal it true the value should be treated as a literal.
    */
   public constructor(refOrLiteral: string, literal: boolean = false) {
-    this.original = refOrLiteral;
     if (!literal) {
       this.redactionName = refOrLiteral;
       if (refOrLiteral === '' || refOrLiteral === '/' || !validate(refOrLiteral)) {
@@ -125,5 +119,9 @@ export default class AttributeReference {
       }
     }
     return current;
+  }
+
+  public isKind(): boolean {
+    return this.components.length === 1 && this.components[0] === 'kind';
   }
 }
