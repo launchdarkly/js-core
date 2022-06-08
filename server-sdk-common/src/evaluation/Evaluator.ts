@@ -7,9 +7,10 @@ import { Queries } from './Queries';
 import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
 import evalTargets from './evalTargets';
-import { allSeriesAsync } from './collection';
+import { allSeriesAsync, firstSeriesAsync } from './collection';
 import Operators from './Operations';
 import { Clause } from './data/Clause';
+import { FlagRule } from './data/FlagRule';
 
 class EvalState {
   // events
@@ -92,6 +93,11 @@ export default class Evaluator {
       return targetRes;
     }
 
+    const ruleRes = await this.evaluateRules(flag, context, state);
+    if (ruleRes) {
+      return ruleRes;
+    }
+
     // TODO: For now this provides a default result during implementation.
     return EvalResult.ForError(ErrorKinds.FlagNotFound, 'Temporary');
   }
@@ -165,28 +171,57 @@ export default class Evaluator {
     return undefined;
   }
 
-  // /**
-  //  * Evaluate a flag rule against the given context.
-  //  * @param rule The rule to match.
-  //  * @param context The context to match the rule against.
-  //  * @returns An {@link EvalResult} or `undefined` if there are no matches or errors.
-  //  */
-  // private async ruleMatchContext(
-  //   rule: FlagRule,
-  //   context: Context,
-  // ): Promise<EvalResult | undefined> {
-  //   if (!rule.clauses) {
-  //     return undefined;
-  //   }
-  //   const match = await allSeriesAsync(rule.clauses, async (clause) => {
-  //     if (clause.op === 'segmentMatch') {
-  //       const match = await allSeriesAsync(clause.values, async (value) => {
+  /**
+   *
+   * @param flag The flag to evaluate rules for.
+   * @param context The context to evaluate the rules against.
+   * @param state The current evaluation state.
+   * @returns
+   */
+  private async evaluateRules(
+    flag: Flag,
+    context: Context,
+    state: EvalState,
+  ): Promise<EvalResult | undefined> {
+    let ruleResult: EvalResult | undefined;
 
-  //       });
-  //       // TODO: Implement.
-  //       return false;
-  //     }
-  //     return matchClause(clause, context);
-  //   });
-  // }
+    await firstSeriesAsync(flag.rules, async (rule) => {
+      ruleResult = await this.ruleMatchContext(rule, context, state);
+      return !!ruleResult;
+    });
+
+    return ruleResult;
+  }
+
+  /**
+   * Evaluate a flag rule against the given context.
+   * @param rule The rule to match.
+   * @param context The context to match the rule against.
+   * @returns An {@link EvalResult} or `undefined` if there are no matches or errors.
+   */
+  // TODO: Should be used once we have big segment support.
+  // eslint-disable-next-line class-methods-use-this
+  private async ruleMatchContext(
+    rule: FlagRule,
+    context: Context,
+    // TODO: Will be used once big segments are implemented.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    state: EvalState,
+  ): Promise<EvalResult | undefined> {
+    if (!rule.clauses) {
+      return undefined;
+    }
+    const match = await allSeriesAsync(rule.clauses, async (clause) => {
+      if (clause.op === 'segmentMatch') {
+        // TODO: Implement.
+        return false;
+      }
+      return matchClause(clause, context);
+    });
+
+    if (match) {
+      // TODO: Need to get the result.
+    }
+    return undefined;
+  }
 }

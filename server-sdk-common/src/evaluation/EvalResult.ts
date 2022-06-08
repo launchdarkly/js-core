@@ -21,7 +21,7 @@ export default class EvalResult {
     this.message = message;
   }
 
-  public isOff() {
+  public get isOff() {
     return this.detail.reason.kind === Reasons.Off.kind;
   }
 

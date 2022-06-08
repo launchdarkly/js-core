@@ -18,16 +18,11 @@ export function firstResult<T, U>(
   return res;
 }
 
-/**
- * Iterate a collection in series awaiting each check operation.
- * @param collection The collection to iterate.
- * @param check The check to perform for each item in the container.
- * @returns True if all items pass the check.
- */
-export async function allSeriesAsync<T>(
+async function seriesAsync<T>(
   collection: T[] | undefined,
   check: (val: T) => Promise<boolean>,
-): Promise<boolean> {
+  all: boolean,
+) {
   if (!collection) {
     return false;
   }
@@ -38,9 +33,44 @@ export async function allSeriesAsync<T>(
     // all resolve.
     // eslint-disable-next-line no-await-in-loop
     const res = await check(collection[index]);
-    if (!res) {
-      return false;
+    // If we want all checks to pass, then we return on any failed check.
+    // If we want only a single result to pass, then we return on a true result.
+    if (all) {
+      if (!res) {
+        return false;
+      }
+    } else if (res) {
+      return true;
     }
   }
-  return true;
+  // In the case of 'all', getting here means all checks passed.
+  // In the case of 'first', this means no checks passed.
+  return all;
+}
+
+/**
+ * Iterate a collection in series awaiting each check operation.
+ * @param collection The collection to iterate.
+ * @param check The check to perform for each item in the container.
+ * @returns True if all items pass the check.
+ */
+export async function allSeriesAsync<T>(
+  collection: T[] | undefined,
+  check: (val: T) => Promise<boolean>,
+): Promise<boolean> {
+  return seriesAsync(collection, check, true);
+}
+
+/**
+ * Iterate a collection in series awaiting each check operation.
+ * @param collection The collection to iterate.
+ * @param check The check to perform for each item in the container.
+ * @returns True on the first item that passes the check. False if no items
+ * pass.
+ */
+export async function firstSeriesAsync<T>(
+  collection: T[] | undefined,
+  check: (val: T) => Promise<boolean>,
+): Promise<boolean> {
+  return seriesAsync(collection, check, false);
 }
