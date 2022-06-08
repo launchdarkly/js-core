@@ -1,6 +1,7 @@
-import { TypeValidators } from '@launchdarkly/js-sdk-common';
+import { Context, TypeValidators } from '@launchdarkly/js-sdk-common';
 import { LDEvaluationReason } from '../api';
 import { Flag } from './data/Flag';
+import { VariationOrRollout } from './data/VariationOrRollout';
 import ErrorKinds from './ErrorKinds';
 import EvalResult from './EvalResult';
 

@@ -6,6 +6,8 @@ import EvalResult from '../../src/evaluation/EvalResult';
 import Evaluator from '../../src/evaluation/Evaluator';
 import { Queries } from '../../src/evaluation/Queries';
 import Reasons from '../../src/evaluation/Reasons';
+import { Info, Options, Platform, PlatformData, Requests, Response, SdkData } from '../../src/platform';
+import { crypto } from './hasher';
 
 const offBaseFlag = {
   key: 'feature0',
@@ -31,6 +33,28 @@ const noQueries: Queries = {
   },
 };
 
+const info: Info = {
+  platformData: function (): PlatformData {
+    return {};
+  },
+  sdkData: function (): SdkData {
+    return {};
+  }
+};
+
+const requests: Requests = {
+  fetch: function (url: string, options?: Options): Promise<Response> {
+    throw new Error('Function not implemented.');
+  }
+};
+
+
+const basicPlatform: Platform = {
+  info: info,
+  crypto: crypto,
+  requests: requests
+}
+
 describe.each<[Flag, LDContext, EvalResult | undefined]>([
   [{
     ...offBaseFlag,
@@ -39,7 +63,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
     ...offBaseFlag, offVariation: 2,
   }, { key: 'user-key' }, EvalResult.ForSuccess('two', Reasons.Off, 2)],
 ])('Given off flags and an evaluator', (flag, context, expected) => {
-  const evaluator = new Evaluator(noQueries);
+  const evaluator = new Evaluator(basicPlatform, noQueries);
 
   // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${context.kind} targets: ${flag.targets?.map((t) => `${t.values}, ${t.variation}`)} context targets: ${flag.contextTargets?.map((t) => `${t.contextKind}: ${t.values}, ${t.variation}`)}`, async () => {
@@ -116,7 +140,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
     }],
   }, { kind: 'org', key: 'org-key' }, EvalResult.ForSuccess('one', Reasons.TargetMatch, 1)],
 ])('given flag configurations with different targets that match', (flag, context, expected) => {
-  const evaluator = new Evaluator(noQueries);
+  const evaluator = new Evaluator(basicPlatform, noQueries);
   // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${context.kind} targets: ${flag.targets?.map((t) => `${t.values}, ${t.variation}`)} context targets: ${flag.contextTargets?.map((t) => `${t.contextKind}: ${t.values}, ${t.variation}`)}`, async () => {
     const result = await evaluator.evaluate(flag, Context.FromLDContext(context)!);

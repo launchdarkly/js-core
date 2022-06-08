@@ -151,6 +151,7 @@ export function deserializePatch(data: string): PatchData | undefined {
   }
 
   // TODO: Extend validation.
+  // TODO: Validate variation is numeric?
 
   if (parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
     processFlag(parsed.data as VersionedFlag);

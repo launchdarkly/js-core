@@ -1,8 +1,9 @@
 /* eslint-disable max-classes-per-file */
 import { Context } from '@launchdarkly/js-sdk-common';
+import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
-import { getOffVariation } from './variations';
+import { getOffVariation, getVariation } from './variations';
 import { Queries } from './Queries';
 import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
@@ -11,6 +12,12 @@ import { allSeriesAsync, firstSeriesAsync } from './collection';
 import Operators from './Operations';
 import { Clause } from './data/Clause';
 import { FlagRule } from './data/FlagRule';
+import Bucketer from './Bucketer';
+import { Platform } from '../platform';
+import { VariationOrRollout } from './data/VariationOrRollout';
+import { LDEvaluationReason } from '../api';
+
+const KEY_ATTR_REF = new AttributeReference('key');
 
 class EvalState {
   // events
@@ -46,8 +53,11 @@ function matchClause(clause: Clause, context:Context): boolean {
 export default class Evaluator {
   private queries: Queries;
 
-  constructor(queries: Queries) {
+  private bucketer: Bucketer;
+
+  constructor(platform: Platform, queries: Queries) {
     this.queries = queries;
+    this.bucketer = new Bucketer(platform.crypto);
   }
 
   async evaluate(flag: Flag, context: Context): Promise<EvalResult> {
@@ -98,8 +108,12 @@ export default class Evaluator {
       return ruleRes;
     }
 
-    // TODO: For now this provides a default result during implementation.
-    return EvalResult.ForError(ErrorKinds.FlagNotFound, 'Temporary');
+    return this.variationForContext(
+      flag.fallthrough,
+      context,
+      flag,
+      Reasons.Fallthrough,
+    );
   }
 
   /**
@@ -172,7 +186,8 @@ export default class Evaluator {
   }
 
   /**
-   *
+   * Evaluate the rules for a flag and return an {@link EvalResult} if there is
+   * a match or error.
    * @param flag The flag to evaluate rules for.
    * @param context The context to evaluate the rules against.
    * @param state The current evaluation state.
@@ -186,7 +201,7 @@ export default class Evaluator {
     let ruleResult: EvalResult | undefined;
 
     await firstSeriesAsync(flag.rules, async (rule) => {
-      ruleResult = await this.ruleMatchContext(rule, context, state);
+      ruleResult = await this.ruleMatchContext(flag, rule, context, state);
       return !!ruleResult;
     });
 
@@ -195,6 +210,7 @@ export default class Evaluator {
 
   /**
    * Evaluate a flag rule against the given context.
+   * @param flag The flag the rule is part of.
    * @param rule The rule to match.
    * @param context The context to match the rule against.
    * @returns An {@link EvalResult} or `undefined` if there are no matches or errors.
@@ -202,6 +218,7 @@ export default class Evaluator {
   // TODO: Should be used once we have big segment support.
   // eslint-disable-next-line class-methods-use-this
   private async ruleMatchContext(
+    flag: Flag,
     rule: FlagRule,
     context: Context,
     // TODO: Will be used once big segments are implemented.
@@ -220,8 +237,80 @@ export default class Evaluator {
     });
 
     if (match) {
-      // TODO: Need to get the result.
+      return this.variationForContext(
+        rule,
+        context,
+        flag,
+        Reasons.ruleMatch(rule.id),
+      );
     }
     return undefined;
+  }
+
+  private variationForContext(
+    varOrRollout: VariationOrRollout,
+    context: Context,
+    flag: Flag,
+    reason: LDEvaluationReason,
+  ): EvalResult {
+    if (varOrRollout === undefined) {
+      // By spec this field should be defined, but better to be overly cautious.
+      return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Fallthrough variation undefined');
+    }
+
+    if (varOrRollout.variation !== undefined) { // 0 would be false.
+      return getVariation(flag, varOrRollout.variation, reason);
+    }
+
+    if (varOrRollout.rollout) {
+      const { rollout } = varOrRollout;
+      const { variations } = rollout;
+      const isExperiment = rollout.kind === 'experiment';
+
+      if (variations && variations.length) {
+        const bucketBy = (isExperiment ? undefined
+          : rollout.bucketByAttributeReference) ?? KEY_ATTR_REF;
+
+        if (!bucketBy.isValid) {
+          return EvalResult.ForError(
+            ErrorKinds.MalformedFlag,
+            'Invalid attribute reference for bucketBy in rollout',
+          );
+        }
+
+        const bucket = this.bucketer.bucket(
+          context,
+          flag.key,
+          bucketBy,
+          flag.salt || '', // TODO: This may need some handling.
+          isExperiment,
+          rollout.contextKind,
+          rollout.seed,
+        );
+
+        const updatedReason = { ...reason };
+        updatedReason.inExperiment = isExperiment || undefined;
+
+        let sum = 0;
+        for (let i = 0; i < variations.length; i += 1) {
+          const variate = variations[i];
+          sum += variate.weight / 100000.0;
+          if (bucket < sum) {
+            return getVariation(flag, variate.variation, updatedReason);
+          }
+        }
+
+        // The context's bucket value was greater than or equal to the end of
+        // the last bucket. This could happen due to a rounding error, or due to
+        // the fact that we are scaling to 100000 rather than 99999, or the flag
+        // data could contain buckets that don't actually add up to 100000.
+        // Rather than returning an error in this case (or changing the scaling,
+        // which would potentially change the results for *all* users), we will
+        // simply put the context in the last bucket.
+        const lastVariate = variations[variations.length - 1];
+        return getVariation(flag, lastVariate.variation, updatedReason);
+      }
+    }
+    return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Variation/rollout object with no variation or rollout');
   }
 }

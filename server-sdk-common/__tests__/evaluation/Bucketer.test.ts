@@ -6,22 +6,7 @@
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
 import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import Bucketer from '../../src/evaluation/Bucketer';
-import { Crypto, Hasher, Hmac } from '../../src/platform';
-
-const hasher: Hasher = {
-  update: jest.fn(),
-  digest: jest.fn(() => '1234567890123456'),
-};
-const crypto: Crypto = {
-  createHash(algorithm: string): Hasher {
-    expect(algorithm).toEqual('sha1');
-    return hasher;
-  },
-  createHmac(algorithm: string, key: string): Hmac {
-    // Not used for this test.
-    throw new Error(`Function not implemented.${algorithm}${key}`);
-  },
-};
+import { crypto, hasher } from './hasher';
 
 describe.each<[
   context: LDContext,
