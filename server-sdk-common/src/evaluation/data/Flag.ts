@@ -3,7 +3,12 @@ import { Prerequisite } from './Prerequisite';
 import { FlagRule } from './FlagRule';
 import { Target } from './Target';
 import { Versioned } from './Versioned';
-import { VariationOrRollout } from './VariationOrRollout';
+import { Rollout } from './Rollout';
+
+interface VariationOrRollout {
+  variation?: number,
+  rollout?: Rollout
+}
 
 export interface Flag extends Versioned {
   on: boolean,
