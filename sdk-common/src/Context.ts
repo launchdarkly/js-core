@@ -20,6 +20,9 @@ import { TypeValidators } from './validators';
 // Validates a kind excluding check that it isn't "kind".
 const KindValidator = TypeValidators.StringMatchingRegex(/^(\w|\.|-)+$/);
 
+// When no kind is specified, then this kind will be used.
+const DEFAULT_KIND = 'user';
+
 // The API allows for calling with an `LDContext` which is
 // `LDUser | LDSingleKindContext | LDMultiKindContext`. When ingesting a context
 // first the type must be determined to allow us to put it into a consistent type.
@@ -170,6 +173,8 @@ export default class Context {
 
   public readonly kind: string;
 
+  static readonly userKind: string = DEFAULT_KIND;
+
   /**
    * Contexts should be created using the static factory method {@link Context.FromLDContext}.
    * @param kind The kind of the context.
@@ -306,12 +311,24 @@ export default class Context {
 
   /**
    * Attempt to get a value for the given context kind using the given reference.
-   * @param kind The kind of the context to get the value for.
    * @param reference The reference to the value to get.
+   * @param kind The kind of the context to get the value for.
    * @returns a value or `undefined` if one is not found.
    */
-  public valueForKind(kind: string, reference: AttributeReference): any | undefined {
+  public valueForKind(
+    reference: AttributeReference,
+    kind: string = DEFAULT_KIND,
+  ): any | undefined {
     return Context.getValueFromContext(reference, this.contextForKind(kind));
+  }
+
+  /**
+   * Attempt to get a key for the specified kind.
+   * @param kind The kind to get a key for.
+   * @returns The key for the specified kind, or undefined.
+   */
+  public key(kind: string = DEFAULT_KIND): string | undefined {
+    return this.contextForKind(kind)?.key;
   }
 
   /**
@@ -319,10 +336,10 @@ export default class Context {
    * @param kind The kind of the context to get the secondary key for.
    * @returns the secondary key, or undefined if not present or not a string.
    */
-  public secondary(kind: string): string | undefined {
+  public secondary(kind: string = DEFAULT_KIND): string | undefined {
     const context = this.contextForKind(kind);
     if (defined(context?._meta?.secondary)
-     && TypeValidators.String.is(context?._meta?.secondary)) {
+      && TypeValidators.String.is(context?._meta?.secondary)) {
       return context?._meta?.secondary;
     }
     return undefined;
