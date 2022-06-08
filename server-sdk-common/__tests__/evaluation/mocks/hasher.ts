@@ -1,6 +1,6 @@
 // Mock hashing implementation.
 
-import { Crypto, Hasher, Hmac } from '../../src/platform';
+import { Crypto, Hasher, Hmac } from '../../../src/platform';
 
 export const hasher: Hasher = {
   update: jest.fn(),

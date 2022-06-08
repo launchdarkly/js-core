@@ -121,7 +121,7 @@ export default class AttributeReference {
     return current;
   }
 
-  public isKind(): boolean {
+  public get isKind(): boolean {
     return this.components.length === 1 && this.components[0] === 'kind';
   }
 }

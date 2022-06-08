@@ -9,42 +9,18 @@ import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
 import evalTargets from './evalTargets';
 import { allSeriesAsync, firstSeriesAsync } from './collection';
-import Operators from './Operations';
-import { Clause } from './data/Clause';
 import { FlagRule } from './data/FlagRule';
 import Bucketer from './Bucketer';
 import { Platform } from '../platform';
 import { VariationOrRollout } from './data/VariationOrRollout';
 import { LDEvaluationReason } from '../api';
+import matchClause from './matchClause';
 
 const KEY_ATTR_REF = new AttributeReference('key');
 
 class EvalState {
   // events
   // bigSegmentsStatus
-}
-
-function maybeNegate(clause: Clause, value: boolean): boolean {
-  if (clause.negate) {
-    return !value;
-  }
-  return value;
-}
-
-function matchClause(clause: Clause, context:Context): boolean {
-  const contextValue = context.valueForKind(clause.attributeReference, clause.contextKind);
-  if (Array.isArray(contextValue)) {
-    return maybeNegate(
-      clause,
-      contextValue.some(
-        (value) => Operators.execute(clause.op, value, clause.values),
-      ),
-    );
-  }
-  return maybeNegate(
-    clause,
-    Operators.execute(clause.op, contextValue, clause.values),
-  );
 }
 
 /**
@@ -228,13 +204,22 @@ export default class Evaluator {
     if (!rule.clauses) {
       return undefined;
     }
+    let errorResult: EvalResult | undefined;
     const match = await allSeriesAsync(rule.clauses, async (clause) => {
+      if (!clause.attributeReference.isValid) {
+        errorResult = EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
+        return false;
+      }
       if (clause.op === 'segmentMatch') {
         // TODO: Implement.
         return false;
       }
       return matchClause(clause, context);
     });
+
+    if (errorResult) {
+      return errorResult;
+    }
 
     if (match) {
       return this.variationForContext(

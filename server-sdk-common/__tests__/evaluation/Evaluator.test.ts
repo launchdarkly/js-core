@@ -1,13 +1,10 @@
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
-import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
-import { Segment } from '../../src/evaluation/data/Segment';
 import EvalResult from '../../src/evaluation/EvalResult';
 import Evaluator from '../../src/evaluation/Evaluator';
-import { Queries } from '../../src/evaluation/Queries';
 import Reasons from '../../src/evaluation/Reasons';
-import { Info, Options, Platform, PlatformData, Requests, Response, SdkData } from '../../src/platform';
-import { crypto } from './hasher';
+import basicPlatform from './mocks/platform';
+import noQueries from './mocks/noQueries';
 
 const offBaseFlag = {
   key: 'feature0',
@@ -20,40 +17,6 @@ const offBaseFlag = {
     'two',
   ],
 };
-
-const noQueries: Queries = {
-  getFlag(): Promise<Flag | null> {
-    throw new Error('Function not implemented.');
-  },
-  getSegment(): Promise<Segment | null> {
-    throw new Error('Function not implemented.');
-  },
-  getBigSegmentsMembership(): Promise<BigSegmentStoreMembership | null> {
-    throw new Error('Function not implemented.');
-  },
-};
-
-const info: Info = {
-  platformData: function (): PlatformData {
-    return {};
-  },
-  sdkData: function (): SdkData {
-    return {};
-  }
-};
-
-const requests: Requests = {
-  fetch: function (url: string, options?: Options): Promise<Response> {
-    throw new Error('Function not implemented.');
-  }
-};
-
-
-const basicPlatform: Platform = {
-  info: info,
-  crypto: crypto,
-  requests: requests
-}
 
 describe.each<[Flag, LDContext, EvalResult | undefined]>([
   [{

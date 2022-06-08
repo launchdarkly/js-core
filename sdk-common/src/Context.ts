@@ -319,6 +319,9 @@ export default class Context {
     reference: AttributeReference,
     kind: string = DEFAULT_KIND,
   ): any | undefined {
+    if (reference.isKind) {
+      return this.kinds;
+    }
     return Context.getValueFromContext(reference, this.contextForKind(kind));
   }
 

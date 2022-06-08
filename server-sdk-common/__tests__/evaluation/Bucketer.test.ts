@@ -6,7 +6,7 @@
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
 import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import Bucketer from '../../src/evaluation/Bucketer';
-import { crypto, hasher } from './hasher';
+import { crypto, hasher } from './mocks/hasher';
 
 describe.each<[
   context: LDContext,
