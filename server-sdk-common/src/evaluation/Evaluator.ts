@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
 import { Context } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
@@ -8,7 +7,6 @@ import { Queries } from './Queries';
 import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
 import evalTargets from './evalTargets';
-import { FlagRule } from './data/FlagRule';
 import { allSeriesAsync } from './collection';
 import Operators from './Operations';
 import { Clause } from './data/Clause';
@@ -114,45 +112,56 @@ export default class Evaluator {
     visitedFlags: string[],
   ): Promise<EvalResult | undefined> {
     let prereqResult: EvalResult | undefined;
-    if (flag.prerequisites && flag.prerequisites.length) {
-      await allSeriesAsync(flag.prerequisites, async (prereq) => {
-        if (visitedFlags.indexOf(prereq.key) !== -1) {
-          prereqResult = EvalResult.ForError(
-            ErrorKinds.MalformedFlag,
-            `Prerequisite of ${flag.key} causing a circular reference.`
-          + ' This is probably a temporary condition due to an incomplete update.',
-          );
-          return false;
-        }
-        const updatedVisitedFlags = [...visitedFlags, prereq.key];
-        const prereqFlag = await this.queries.getFlag(prereq.key);
-        if (!prereqFlag) {
-          prereqResult = EvalResult.ForPrerequisiteFailed(prereq.key);
-          return false;
-        }
-        const evalResult = await this.evaluateInternal(
-          prereqFlag,
-          context,
-          state,
-          updatedVisitedFlags,
-        );
-        if (evalResult.isError) {
-          prereqResult = evalResult;
-          return false;
-        }
-        if (evalResult.isOff || evalResult.detail.variationIndex !== prereq.variation) {
-          prereqResult = EvalResult.ForPrerequisiteFailed(prereq.key);
-          return false;
-        }
-        return true;
-      });
-      if (prereqResult) {
-        return prereqResult;
-      }
+
+    if (!flag.prerequisites || !flag.prerequisites.length) {
+      return undefined;
     }
 
-    // There are no prerequisites, or there were no prereqResult, so prerequisites
-    // have been met.
+    // On any error conditions the prereq result will be set, so we do not need
+    // the result of the series evaluation.
+    await allSeriesAsync(flag.prerequisites, async (prereq) => {
+      if (visitedFlags.indexOf(prereq.key) !== -1) {
+        prereqResult = EvalResult.ForError(
+          ErrorKinds.MalformedFlag,
+          `Prerequisite of ${flag.key} causing a circular reference.`
+          + ' This is probably a temporary condition due to an incomplete update.',
+        );
+        return false;
+      }
+      const updatedVisitedFlags = [...visitedFlags, prereq.key];
+      const prereqFlag = await this.queries.getFlag(prereq.key);
+
+      if (!prereqFlag) {
+        prereqResult = EvalResult.ForPrerequisiteFailed(prereq.key);
+        return false;
+      }
+
+      const evalResult = await this.evaluateInternal(
+        prereqFlag,
+        context,
+        state,
+        updatedVisitedFlags,
+      );
+      // TODO: Add the prereq evaluation to the state events.
+
+      if (evalResult.isError) {
+        prereqResult = evalResult;
+        return false;
+      }
+
+      if (evalResult.isOff || evalResult.detail.variationIndex !== prereq.variation) {
+        prereqResult = EvalResult.ForPrerequisiteFailed(prereq.key);
+        return false;
+      }
+      return true;
+    });
+
+    if (prereqResult) {
+      return prereqResult;
+    }
+
+    // There were no prereqResults for errors or failed prerequisites.
+    // So they have all passed.
     return undefined;
   }
 
