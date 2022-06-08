@@ -1,44 +1,17 @@
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
 import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
-import { Clause } from '../src/evaluation/data/Clause';
-import { Flag } from '../src/evaluation/data/Flag';
-import { FlagRule } from '../src/evaluation/data/FlagRule';
-import Evaluator from '../src/evaluation/Evaluator';
-import noQueries from './evaluation/mocks/noQueries';
-import basicPlatform from './evaluation/mocks/platform';
+import { Clause } from '../../src/evaluation/data/Clause';
+import { Flag } from '../../src/evaluation/data/Flag';
+import { FlagRule } from '../../src/evaluation/data/FlagRule';
+import Evaluator from '../../src/evaluation/Evaluator';
+import { makeBooleanFlagWithOneClause, makeClauseThatMatchesUser, makeBooleanFlagWithRules } from './flags';
+import noQueries from './mocks/noQueries';
+import basicPlatform from './mocks/platform';
 
-function makeBooleanFlagWithRules(rules: FlagRule[]) {
-  return {
-    on: true,
-    fallthrough: { variation: 0 },
-    variations: [false, true],
-    key: 'feature',
-    version: 1,
-    rules,
-    salt: '',
-  };
-}
-
-function makeBooleanFlagWithOneClause(clause: Clause) {
-  return makeBooleanFlagWithRules([{
-    id: '1234',
-    clauses: [clause],
-    variation: 1,
-  }]);
-}
-
-function makeClauseThatMatchesUser(user: LDContext): Clause {
-  return {
-    attribute: 'key',
-    op: 'in',
-    values: [user.key],
-    attributeReference: new AttributeReference('key'),
-  };
-}
+const evaluator = new Evaluator(basicPlatform, noQueries);
 
 // Either a legacy user, or context with equivalent user.
 describe('given user clauses and contexts', () => {
-  const evaluator = new Evaluator(basicPlatform, noQueries);
   it.each<LDContext>([
     { key: 'x', name: 'Bob' },
     { kind: 'user', key: 'x', name: 'Bob' },
@@ -193,8 +166,6 @@ describe('given user clauses and contexts', () => {
 });
 
 describe('given non-user single-kind contexts', () => {
-  const evaluator = new Evaluator(basicPlatform, noQueries);
-
   it('does not match implicit user clauses to non-user contexts', async () => {
     const clause: Clause = {
       attribute: 'name',
@@ -270,8 +241,6 @@ describe('given non-user single-kind contexts', () => {
 });
 
 describe('given multi-kind contexts', () => {
-  const evaluator = new Evaluator(basicPlatform, noQueries);
-
   it('does match clauses correctly with multiple contexts', async () => {
     const clause1: Clause = {
       attribute: 'region',
@@ -390,7 +359,6 @@ describe('given multi-kind contexts', () => {
 });
 
 it('handles clauses with malformed attribute references', async () => {
-  const evaluator = new Evaluator(basicPlatform, noQueries);
   const clause: Clause = {
     attribute: '//region',
     op: 'in',

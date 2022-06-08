@@ -176,8 +176,8 @@ export default class Evaluator {
   ): Promise<EvalResult | undefined> {
     let ruleResult: EvalResult | undefined;
 
-    await firstSeriesAsync(flag.rules, async (rule) => {
-      ruleResult = await this.ruleMatchContext(flag, rule, context, state);
+    await firstSeriesAsync(flag.rules, async (rule, ruleIndex) => {
+      ruleResult = await this.ruleMatchContext(flag, rule, ruleIndex, context, state);
       return !!ruleResult;
     });
 
@@ -188,6 +188,7 @@ export default class Evaluator {
    * Evaluate a flag rule against the given context.
    * @param flag The flag the rule is part of.
    * @param rule The rule to match.
+   * @param rule The index of the rule.
    * @param context The context to match the rule against.
    * @returns An {@link EvalResult} or `undefined` if there are no matches or errors.
    */
@@ -196,6 +197,7 @@ export default class Evaluator {
   private async ruleMatchContext(
     flag: Flag,
     rule: FlagRule,
+    ruleIndex: number,
     context: Context,
     // TODO: Will be used once big segments are implemented.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -226,7 +228,7 @@ export default class Evaluator {
         rule,
         context,
         flag,
-        Reasons.ruleMatch(rule.id),
+        Reasons.ruleMatch(rule.id, ruleIndex),
       );
     }
     return undefined;

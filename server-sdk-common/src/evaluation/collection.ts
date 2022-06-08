@@ -8,11 +8,11 @@
  */
 export function firstResult<T, U>(
   collection: T[] | undefined,
-  operator: (val: T) => U | undefined,
+  operator: (val: T, index: number) => U | undefined,
 ): U | undefined {
   let res;
-  collection?.some((item) => {
-    res = operator(item);
+  collection?.some((item, index) => {
+    res = operator(item, index);
     return !!res;
   });
   return res;
@@ -20,7 +20,7 @@ export function firstResult<T, U>(
 
 async function seriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T) => Promise<boolean>,
+  check: (val: T, index: number) => Promise<boolean>,
   all: boolean,
 ) {
   if (!collection) {
@@ -32,7 +32,7 @@ async function seriesAsync<T>(
     // doesn't match. Versus starting all the evaluations and then letting them
     // all resolve.
     // eslint-disable-next-line no-await-in-loop
-    const res = await check(collection[index]);
+    const res = await check(collection[index], index);
     // If we want all checks to pass, then we return on any failed check.
     // If we want only a single result to pass, then we return on a true result.
     if (all) {
@@ -56,7 +56,7 @@ async function seriesAsync<T>(
  */
 export async function allSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T) => Promise<boolean>,
+  check: (val: T, index: number) => Promise<boolean>,
 ): Promise<boolean> {
   return seriesAsync(collection, check, true);
 }
@@ -70,7 +70,7 @@ export async function allSeriesAsync<T>(
  */
 export async function firstSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T) => Promise<boolean>,
+  check: (val: T, index: number) => Promise<boolean>,
 ): Promise<boolean> {
   return seriesAsync(collection, check, false);
 }
