@@ -202,6 +202,7 @@ export default class Evaluator {
     // TODO: Will be used once big segments are implemented.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
+    segmentsVisited: string[],
   ): Promise<EvalResult | undefined> {
     if (!rule.clauses) {
       return undefined;
@@ -213,6 +214,18 @@ export default class Evaluator {
         return false;
       }
       if (clause.op === 'segmentMatch') {
+        firstSeriesAsync(clause.values, (async (value) => {
+          const segment = await this.queries.getSegment(value);
+          if (segment) {
+            if (segmentsVisited.includes(segment.key)) {
+              errorResult = EvalResult.ForError(ErrorKinds.MalformedFlag, `Segment rule referencing segment ${segment.key} caused a circular reference. `
+              + 'This is probably a temporary condition due to an incomplete update');
+              // There was an error, so stop checking further segments.
+              return true;
+            }
+          }
+          return false;
+        }));
         // TODO: Implement.
         return false;
       }
