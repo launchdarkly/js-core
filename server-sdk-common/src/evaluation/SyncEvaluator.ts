@@ -1,13 +1,14 @@
 /* eslint-disable max-classes-per-file */
 import { Context } from '@launchdarkly/js-sdk-common';
+import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
 import { getOffVariation, variationForContext } from './variations';
-import { Queries } from './Queries';
+import {  SyncQueries } from './Queries';
 import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
 import evalTargets from './evalTargets';
-import { allSeriesAsync, firstSeriesAsync } from './collection';
+import { allSeries, allSeriesAsync, firstSeries} from './collection';
 import { FlagRule } from './data/FlagRule';
 import Bucketer from './Bucketer';
 import { Platform } from '../platform';
@@ -21,17 +22,17 @@ class EvalState {
 /**
  * @internal
  */
-export default class Evaluator {
-  private queries: Queries;
+export default class SyncEvaluator {
+  private queries: SyncQueries;
 
   private bucketer: Bucketer;
 
-  constructor(platform: Platform, queries: Queries) {
+  constructor(platform: Platform, queries: SyncQueries) {
     this.queries = queries;
     this.bucketer = new Bucketer(platform.crypto);
   }
 
-  async evaluate(flag: Flag, context: Context): Promise<EvalResult> {
+  evaluate(flag: Flag, context: Context): EvalResult {
     const state = new EvalState();
     return this.evaluateInternal(flag, context, state, []);
   }
@@ -46,18 +47,18 @@ export default class Evaluator {
    * @param visitedFlags The flags that have been visited during this evaluation.
    * This is not part of the state, because it needs to be forked during prerequisite evaluations.
    */
-  private async evaluateInternal(
+  private evaluateInternal(
     flag: Flag,
     context: Context,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     visitedFlags: string[],
-  ): Promise<EvalResult> {
+  ): EvalResult {
     if (!flag.on) {
       return getOffVariation(flag, Reasons.Off);
     }
 
-    const prereqResult = await this.checkPrerequisites(
+    const prereqResult = this.checkPrerequisites(
       flag,
       context,
       state,
@@ -74,7 +75,7 @@ export default class Evaluator {
       return targetRes;
     }
 
-    const ruleRes = await this.evaluateRules(flag, context, state);
+    const ruleRes = this.evaluateRules(flag, context, state);
     if (ruleRes) {
       return ruleRes;
     }
@@ -97,12 +98,12 @@ export default class Evaluator {
    * @returns An {@link EvalResult} containing an error result or `undefined` if the prerequisites
    * are met.
    */
-  private async checkPrerequisites(
+  private checkPrerequisites(
     flag: Flag,
     context: Context,
     state: EvalState,
     visitedFlags: string[],
-  ): Promise<EvalResult | undefined> {
+  ): EvalResult | undefined {
     let prereqResult: EvalResult | undefined;
 
     if (!flag.prerequisites || !flag.prerequisites.length) {
@@ -111,7 +112,7 @@ export default class Evaluator {
 
     // On any error conditions the prereq result will be set, so we do not need
     // the result of the series evaluation.
-    await allSeriesAsync(flag.prerequisites, async (prereq) => {
+    allSeries(flag.prerequisites, (prereq) => {
       if (visitedFlags.indexOf(prereq.key) !== -1) {
         prereqResult = EvalResult.ForError(
           ErrorKinds.MalformedFlag,
@@ -121,14 +122,14 @@ export default class Evaluator {
         return false;
       }
       const updatedVisitedFlags = [...visitedFlags, prereq.key];
-      const prereqFlag = await this.queries.getFlag(prereq.key);
+      const prereqFlag = this.queries.getFlag(prereq.key);
 
       if (!prereqFlag) {
         prereqResult = EvalResult.ForPrerequisiteFailed(prereq.key);
         return false;
       }
 
-      const evalResult = await this.evaluateInternal(
+      const evalResult = this.evaluateInternal(
         prereqFlag,
         context,
         state,
@@ -165,15 +166,15 @@ export default class Evaluator {
    * @param state The current evaluation state.
    * @returns
    */
-  private async evaluateRules(
+  private evaluateRules(
     flag: Flag,
     context: Context,
     state: EvalState,
-  ): Promise<EvalResult | undefined> {
+  ): EvalResult | undefined {
     let ruleResult: EvalResult | undefined;
 
-    await firstSeriesAsync(flag.rules, async (rule, ruleIndex) => {
-      ruleResult = await this.ruleMatchContext(flag, rule, ruleIndex, context, state);
+    firstSeries(flag.rules, (rule, ruleIndex) => {
+      ruleResult = this.ruleMatchContext(flag, rule, ruleIndex, context, state);
       return !!ruleResult;
     });
 
@@ -190,7 +191,7 @@ export default class Evaluator {
    */
   // TODO: Should be used once we have big segment support.
   // eslint-disable-next-line class-methods-use-this
-  private async ruleMatchContext(
+  private ruleMatchContext(
     flag: Flag,
     rule: FlagRule,
     ruleIndex: number,
@@ -198,12 +199,12 @@ export default class Evaluator {
     // TODO: Will be used once big segments are implemented.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
-  ): Promise<EvalResult | undefined> {
+  ): EvalResult | undefined {
     if (!rule.clauses) {
       return undefined;
     }
     let errorResult: EvalResult | undefined;
-    const match = await allSeriesAsync(rule.clauses, async (clause) => {
+    const match = allSeries(rule.clauses, (clause) => {
       if (!clause.attributeReference.isValid) {
         errorResult = EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
         return false;

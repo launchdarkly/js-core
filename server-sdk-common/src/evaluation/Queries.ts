@@ -13,3 +13,9 @@ export interface Queries {
   getSegment(key: string): Promise<Segment | undefined>
   getBigSegmentsMembership(userKey: string): Promise<BigSegmentStoreMembership | undefined>
 }
+
+export interface SyncQueries {
+  getFlag(key: string): Flag | undefined
+  getSegment(key: string): Segment | undefined
+  getBigSegmentsMembership(userKey: string): undefined
+}
