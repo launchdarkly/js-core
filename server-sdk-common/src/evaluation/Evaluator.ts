@@ -22,6 +22,18 @@ class EvalState {
   // bigSegmentsStatus
 }
 
+type Match = { error: false, isMatch: boolean, evalResult: undefined };
+type Error = { error: true, evalResult: EvalResult };
+type MatchOrError = Match | Error;
+
+function tagMatch(val: boolean): Match {
+  return { error: false, isMatch: val, evalResult: undefined };
+}
+
+function tagError(val: EvalResult): Error {
+  return { error: true, evalResult: val };
+}
+
 /**
  * @internal
  */
@@ -189,10 +201,10 @@ export default class Evaluator {
     context: Context,
     segmentsVisited: string[],
     state: EvalState,
-  ): Promise<EvalResult | boolean> {
+  ): Promise<MatchOrError> {
     let errorResult: EvalResult | undefined;
     if (!clause.attributeReference.isValid) {
-      return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
+      return tagError(EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
     }
     if (clause.op === 'segmentMatch') {
       firstSeriesAsync(clause.values, (async (value) => {
@@ -206,18 +218,22 @@ export default class Evaluator {
           }
 
           const newVisited = [...segmentsVisited, segment?.key];
-          const match = this.segmentMatchContext(segment, context, state, newVisited);
+          const res = await this.segmentMatchContext(segment, context, state, newVisited);
+          if (res.error) {
+            errorResult = res.evalResult;
+          }
+          return res.error || res.isMatch;
         }
 
         return false;
       }));
       // TODO: Implement.
-      return false;
+      return tagMatch(false);
     }
     if (errorResult) {
-      return errorResult;
+      return tagError(errorResult);
     }
-    return matchClause(clause, context);
+    return tagMatch(matchClause(clause, context));
   }
 
   /**
@@ -246,13 +262,8 @@ export default class Evaluator {
     let errorResult: EvalResult | undefined;
     const match = await allSeriesAsync(rule.clauses, async (clause) => {
       const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
-      if (res) {
-        if (res instanceof EvalResult) {
-          errorResult = res;
-        }
-        return true;
-      }
-      return false;
+      errorResult = res.evalResult;
+      return res.error || res.isMatch;
     });
 
     if (errorResult) {
@@ -277,34 +288,31 @@ export default class Evaluator {
     state: EvalState,
     segmentsVisited: string[],
     salt?: string,
-  ): Promise<EvalResult | boolean> {
+  ): Promise<MatchOrError> {
     let errorResult: EvalResult | undefined;
-    const match = allSeriesAsync(rule.clauses, async (clause) => {
+    const match = await allSeriesAsync(rule.clauses, async (clause) => {
       const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
-      if (res) {
-        if (res instanceof EvalResult) {
-          errorResult = res;
-        }
-        return true;
-      }
-      return false;
+      errorResult = res.evalResult;
+      return res.error || res.isMatch;
     });
+
     if (errorResult) {
-      return errorResult;
+      return tagError(errorResult);
     }
+
     if (match) {
       if (!rule.weight) {
-        return match;
+        return tagMatch(match);
       }
       const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
       if (!bucketBy.isValid) {
-        return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
+        return tagError(EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
       }
       const bucket = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
-      return bucket < rule.weight;
+      return tagMatch(bucket < rule.weight);
     }
 
-    return false;
+    return tagMatch(false);
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -313,27 +321,29 @@ export default class Evaluator {
     context: Context,
     state: EvalState,
     segmentsVisited: string[],
-  ): Promise<EvalResult | boolean> {
+  ): Promise<MatchOrError> {
     const includeExclude = matchSegmentTargets(segment, context);
     if (includeExclude) {
-      return true;
+      return tagMatch(true);
     }
 
     let evalResult: EvalResult | undefined;
-    const matched = allSeriesAsync(segment.rules, async (rule) => {
-      const res = this.segmentRuleMatchContext(rule, context, state, segmentsVisited, segment.salt);
-      if (res) {
-        if (res instanceof EvalResult) {
-          evalResult = res;
-        }
-        return true;
-      }
-      return false;
+    const matched = await allSeriesAsync(segment.rules, async (rule) => {
+      const res = await this.segmentRuleMatchContext(
+        rule,
+        context,
+        state,
+        segmentsVisited,
+        segment.salt,
+      );
+      evalResult = res.evalResult;
+      return res.error || res.isMatch;
     });
     if (evalResult) {
-      return evalResult;
+      return tagError(evalResult);
     }
-    return matched;
+
+    return tagMatch(matched);
   }
 
   async segmentMatchContext(
@@ -343,7 +353,7 @@ export default class Evaluator {
     state: EvalState,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     segmentsVisited: string[],
-  ): Promise<EvalResult | boolean> {
+  ): Promise<MatchOrError> {
     if (!segment.unbounded) {
       const res = await this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
       if (res) {
@@ -352,6 +362,6 @@ export default class Evaluator {
     }
 
     // TODO: Big segments.
-    return false;
+    return tagMatch(false);
   }
 }
