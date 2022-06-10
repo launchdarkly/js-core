@@ -85,15 +85,15 @@ function processFlag(flag: Flag) {
 }
 
 function processSegment(segment: Segment) {
-  if (segment.bucketBy) {
-    // Rules before U2C would have had literals for attributes.
-    // So use the rolloutContextKind to indicate if this is new or old data.
-    segment.bucketByAttributeReference = new AttributeReference(
-      segment.bucketBy,
-      !segment.rolloutContextKind,
-    );
-  }
   segment?.rules?.forEach((rule) => {
+    if (rule.bucketBy) {
+      // Rules before U2C would have had literals for attributes.
+      // So use the rolloutContextKind to indicate if this is new or old data.
+      rule.bucketByAttributeReference = new AttributeReference(
+        rule.bucketBy,
+        !rule.rolloutContextKind,
+      );
+    }
     rule?.clauses?.forEach((clause) => {
       if (clause && clause.attribute) {
         // Clauses before U2C would have had literals for attributes.

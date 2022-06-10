@@ -107,7 +107,9 @@ const segmentWithBucketBy = {
   includedContexts: [],
   excludedContexts: [],
   salt: 'saltyA',
-  bucketBy: 'potato',
+  rules: [
+    { bucketBy: 'potato' },
+  ],
   version: 0,
   deleted: false,
 };
@@ -179,7 +181,8 @@ describe('when deserializing all data', () => {
   it('handles a segment with bucketBy', () => {
     const jsonString = makeSerializedAllData(undefined, segmentWithBucketBy);
     const parsed = deserializeAll(jsonString);
-    const bucketByInSegment = parsed?.data.segments.segmentName.bucketByAttributeReference;
+    const bucketByInSegment = parsed?.data.segments.segmentName
+      ?.rules?.[0].bucketByAttributeReference;
     expect(bucketByInSegment?.isValid).toBeTruthy();
   });
 
@@ -231,7 +234,7 @@ describe('when deserializing patch data', () => {
   it('handles a segment with bucketBy', () => {
     const jsonString = makeSerializedPatchData(undefined, segmentWithBucketBy);
     const parsed = deserializePatch(jsonString);
-    const bucketByInSegment = (parsed?.data as Segment).bucketByAttributeReference;
+    const bucketByInSegment = (parsed?.data as Segment)?.rules?.[0].bucketByAttributeReference;
     expect(bucketByInSegment?.isValid).toBeTruthy();
   });
 

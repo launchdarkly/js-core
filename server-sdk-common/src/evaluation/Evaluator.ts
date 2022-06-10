@@ -1,9 +1,8 @@
 /* eslint-disable max-classes-per-file */
 import { Context } from '@launchdarkly/js-sdk-common';
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
-import { getOffVariation, getVariation } from './variations';
+import { getBucketBy, getOffVariation, variationForContext } from './variations';
 import { Queries } from './Queries';
 import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
@@ -12,11 +11,11 @@ import { allSeriesAsync, firstSeriesAsync } from './collection';
 import { FlagRule } from './data/FlagRule';
 import Bucketer from './Bucketer';
 import { Platform } from '../platform';
-import { VariationOrRollout } from './data/VariationOrRollout';
-import { LDEvaluationReason } from '../api';
 import matchClause from './matchClause';
-
-const KEY_ATTR_REF = new AttributeReference('key');
+import { Segment } from './data/Segment';
+import matchSegmentTargets from './matchSegmentTargets';
+import { SegmentRule } from './data/SegmentRule';
+import { Clause } from './data/Clause';
 
 class EvalState {
   // events
@@ -84,11 +83,12 @@ export default class Evaluator {
       return ruleRes;
     }
 
-    return this.variationForContext(
+    return variationForContext(
       flag.fallthrough,
       context,
       flag,
       Reasons.Fallthrough,
+      this.bucketer,
     );
   }
 
@@ -177,11 +177,47 @@ export default class Evaluator {
     let ruleResult: EvalResult | undefined;
 
     await firstSeriesAsync(flag.rules, async (rule, ruleIndex) => {
-      ruleResult = await this.ruleMatchContext(flag, rule, ruleIndex, context, state);
+      ruleResult = await this.ruleMatchContext(flag, rule, ruleIndex, context, state, []);
       return !!ruleResult;
     });
 
     return ruleResult;
+  }
+
+  private async clauseMatchContext(
+    clause: Clause,
+    context: Context,
+    segmentsVisited: string[],
+    state: EvalState,
+  ): Promise<EvalResult | boolean> {
+    let errorResult: EvalResult | undefined;
+    if (!clause.attributeReference.isValid) {
+      return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
+    }
+    if (clause.op === 'segmentMatch') {
+      firstSeriesAsync(clause.values, (async (value) => {
+        const segment = await this.queries.getSegment(value);
+        if (segment) {
+          if (segmentsVisited.includes(segment.key)) {
+            errorResult = EvalResult.ForError(ErrorKinds.MalformedFlag, `Segment rule referencing segment ${segment.key} caused a circular reference. `
+              + 'This is probably a temporary condition due to an incomplete update');
+            // There was an error, so stop checking further segments.
+            return true;
+          }
+
+          const newVisited = [...segmentsVisited, segment?.key];
+          const match = this.segmentMatchContext(segment, context, state, newVisited);
+        }
+
+        return false;
+      }));
+      // TODO: Implement.
+      return false;
+    }
+    if (errorResult) {
+      return errorResult;
+    }
+    return matchClause(clause, context);
   }
 
   /**
@@ -209,27 +245,14 @@ export default class Evaluator {
     }
     let errorResult: EvalResult | undefined;
     const match = await allSeriesAsync(rule.clauses, async (clause) => {
-      if (!clause.attributeReference.isValid) {
-        errorResult = EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
-        return false;
+      const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
+      if (res) {
+        if (res instanceof EvalResult) {
+          errorResult = res;
+        }
+        return true;
       }
-      if (clause.op === 'segmentMatch') {
-        firstSeriesAsync(clause.values, (async (value) => {
-          const segment = await this.queries.getSegment(value);
-          if (segment) {
-            if (segmentsVisited.includes(segment.key)) {
-              errorResult = EvalResult.ForError(ErrorKinds.MalformedFlag, `Segment rule referencing segment ${segment.key} caused a circular reference. `
-              + 'This is probably a temporary condition due to an incomplete update');
-              // There was an error, so stop checking further segments.
-              return true;
-            }
-          }
-          return false;
-        }));
-        // TODO: Implement.
-        return false;
-      }
-      return matchClause(clause, context);
+      return false;
     });
 
     if (errorResult) {
@@ -237,80 +260,98 @@ export default class Evaluator {
     }
 
     if (match) {
-      return this.variationForContext(
+      return variationForContext(
         rule,
         context,
         flag,
         Reasons.ruleMatch(rule.id, ruleIndex),
+        this.bucketer,
       );
     }
     return undefined;
   }
 
-  private variationForContext(
-    varOrRollout: VariationOrRollout,
+  async segmentRuleMatchContext(
+    rule: SegmentRule,
     context: Context,
-    flag: Flag,
-    reason: LDEvaluationReason,
-  ): EvalResult {
-    if (varOrRollout === undefined) {
-      // By spec this field should be defined, but better to be overly cautious.
-      return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Fallthrough variation undefined');
+    state: EvalState,
+    segmentsVisited: string[],
+    salt?: string,
+  ): Promise<EvalResult | boolean> {
+    let errorResult: EvalResult | undefined;
+    const match = allSeriesAsync(rule.clauses, async (clause) => {
+      const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
+      if (res) {
+        if (res instanceof EvalResult) {
+          errorResult = res;
+        }
+        return true;
+      }
+      return false;
+    });
+    if (errorResult) {
+      return errorResult;
+    }
+    if (match) {
+      if (!rule.weight) {
+        return match;
+      }
+      const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
+      if (!bucketBy.isValid) {
+        return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
+      }
+      const bucket = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
+      return bucket < rule.weight;
     }
 
-    if (varOrRollout.variation !== undefined) { // 0 would be false.
-      return getVariation(flag, varOrRollout.variation, reason);
+    return false;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async simpleSegmentMatchContext(
+    segment: Segment,
+    context: Context,
+    state: EvalState,
+    segmentsVisited: string[],
+  ): Promise<EvalResult | boolean> {
+    const includeExclude = matchSegmentTargets(segment, context);
+    if (includeExclude) {
+      return true;
     }
 
-    if (varOrRollout.rollout) {
-      const { rollout } = varOrRollout;
-      const { variations } = rollout;
-      const isExperiment = rollout.kind === 'experiment';
-
-      if (variations && variations.length) {
-        const bucketBy = (isExperiment ? undefined
-          : rollout.bucketByAttributeReference) ?? KEY_ATTR_REF;
-
-        if (!bucketBy.isValid) {
-          return EvalResult.ForError(
-            ErrorKinds.MalformedFlag,
-            'Invalid attribute reference for bucketBy in rollout',
-          );
+    let evalResult: EvalResult | undefined;
+    const matched = allSeriesAsync(segment.rules, async (rule) => {
+      const res = this.segmentRuleMatchContext(rule, context, state, segmentsVisited, segment.salt);
+      if (res) {
+        if (res instanceof EvalResult) {
+          evalResult = res;
         }
+        return true;
+      }
+      return false;
+    });
+    if (evalResult) {
+      return evalResult;
+    }
+    return matched;
+  }
 
-        const bucket = this.bucketer.bucket(
-          context,
-          flag.key,
-          bucketBy,
-          flag.salt || '', // TODO: This may need some handling.
-          isExperiment,
-          rollout.contextKind,
-          rollout.seed,
-        );
-
-        const updatedReason = { ...reason };
-        updatedReason.inExperiment = isExperiment || undefined;
-
-        let sum = 0;
-        for (let i = 0; i < variations.length; i += 1) {
-          const variate = variations[i];
-          sum += variate.weight / 100000.0;
-          if (bucket < sum) {
-            return getVariation(flag, variate.variation, updatedReason);
-          }
-        }
-
-        // The context's bucket value was greater than or equal to the end of
-        // the last bucket. This could happen due to a rounding error, or due to
-        // the fact that we are scaling to 100000 rather than 99999, or the flag
-        // data could contain buckets that don't actually add up to 100000.
-        // Rather than returning an error in this case (or changing the scaling,
-        // which would potentially change the results for *all* users), we will
-        // simply put the context in the last bucket.
-        const lastVariate = variations[variations.length - 1];
-        return getVariation(flag, lastVariate.variation, updatedReason);
+  async segmentMatchContext(
+    segment: Segment,
+    context: Context,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    state: EvalState,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    segmentsVisited: string[],
+  ): Promise<EvalResult | boolean> {
+    if (!segment.unbounded) {
+      const res = await this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
+      if (res) {
+        return res;
       }
     }
-    return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Variation/rollout object with no variation or rollout');
+
+    // TODO: Big segments.
+    return false;
   }
 }
