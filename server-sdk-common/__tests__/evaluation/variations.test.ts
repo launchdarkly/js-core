@@ -19,12 +19,12 @@ const baseFlag = {
 const givenReason = Reasons.TargetMatch;
 
 describe.each<[Flag, any, EvalResult]>([
-  [{ ...baseFlag }, 0, EvalResult.ForSuccess('zero', givenReason, 0)],
-  [{ ...baseFlag }, 1, EvalResult.ForSuccess('one', givenReason, 1)],
-  [{ ...baseFlag }, 2, EvalResult.ForSuccess('two', givenReason, 2)],
-  [{ ...baseFlag }, 3, EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
-  [{ ...baseFlag }, 'potato', EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
-  [{ ...baseFlag }, undefined, EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
+  [{ ...baseFlag }, 0, EvalResult.forSuccess('zero', givenReason, 0)],
+  [{ ...baseFlag }, 1, EvalResult.forSuccess('one', givenReason, 1)],
+  [{ ...baseFlag }, 2, EvalResult.forSuccess('two', givenReason, 2)],
+  [{ ...baseFlag }, 3, EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
+  [{ ...baseFlag }, 'potato', EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
+  [{ ...baseFlag }, undefined, EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
 ])('given flag configurations with variations', (flag, index, expected) => {
   it(`produces the expected evaluation result for variations: ${flag.variations} variation index: ${index}`, () => {
     const result = getVariation(flag, index as number, givenReason);
@@ -35,11 +35,11 @@ describe.each<[Flag, any, EvalResult]>([
 });
 
 describe.each<[Flag, EvalResult]>([
-  [{ ...baseFlag, offVariation: 0 }, EvalResult.ForSuccess('zero', Reasons.Off, 0)],
-  [{ ...baseFlag, offVariation: 1 }, EvalResult.ForSuccess('one', Reasons.Off, 1)],
-  [{ ...baseFlag, offVariation: 2 }, EvalResult.ForSuccess('two', Reasons.Off, 2)],
-  [{ ...baseFlag }, EvalResult.ForSuccess(null, Reasons.Off, undefined)],
-  [{ ...baseFlag, offVariation: 3 }, EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
+  [{ ...baseFlag, offVariation: 0 }, EvalResult.forSuccess('zero', Reasons.Off, 0)],
+  [{ ...baseFlag, offVariation: 1 }, EvalResult.forSuccess('one', Reasons.Off, 1)],
+  [{ ...baseFlag, offVariation: 2 }, EvalResult.forSuccess('two', Reasons.Off, 2)],
+  [{ ...baseFlag }, EvalResult.forSuccess(null, Reasons.Off, undefined)],
+  [{ ...baseFlag, offVariation: 3 }, EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag')],
 ])('given flag configurations for accessing off variations', (flag, expected) => {
   it(`produces the expected evaluation result for flag off variation: ${flag.offVariation}`, () => {
     const result = getOffVariation(flag, Reasons.Off);

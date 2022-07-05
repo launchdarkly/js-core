@@ -17,9 +17,9 @@ import EvalResult from './EvalResult';
  */
 export function getVariation(flag: Flag, index: number, reason: LDEvaluationReason): EvalResult {
   if (TypeValidators.Number.is(index) && index >= 0 && index < flag.variations.length) {
-    return EvalResult.ForSuccess(flag.variations[index], reason, index);
+    return EvalResult.forSuccess(flag.variations[index], reason, index);
   }
-  return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag');
+  return EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid variation index in flag');
 }
 
 /**
@@ -34,7 +34,7 @@ export function getVariation(flag: Flag, index: number, reason: LDEvaluationReas
  */
 export function getOffVariation(flag: Flag, reason: LDEvaluationReason): EvalResult {
   if (!TypeValidators.Number.is(flag.offVariation)) {
-    return EvalResult.ForSuccess(null, reason);
+    return EvalResult.forSuccess(null, reason);
   }
   return getVariation(flag, flag.offVariation, reason);
 }

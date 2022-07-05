@@ -18,7 +18,7 @@ import { TypeValidators } from './validators';
 // cloning of the context will be done.
 
 // Validates a kind excluding check that it isn't "kind".
-const KindValidator = TypeValidators.StringMatchingRegex(/^(\w|\.|-)+$/);
+const KindValidator = TypeValidators.stringMatchingRegex(/^(\w|\.|-)+$/);
 
 // When no kind is specified, then this kind will be used.
 const DEFAULT_KIND = 'user';
@@ -176,7 +176,7 @@ export default class Context {
   static readonly userKind: string = DEFAULT_KIND;
 
   /**
-   * Contexts should be created using the static factory method {@link Context.FromLDContext}.
+   * Contexts should be created using the static factory method {@link Context.fromLDContext}.
    * @param kind The kind of the context.
    *
    * The factory methods are static functions within the class because they access private
@@ -207,7 +207,7 @@ export default class Context {
     return undefined;
   }
 
-  private static FromMultiKindContext(context: LDMultiKindContext): Context | undefined {
+  private static fromMultiKindContext(context: LDMultiKindContext): Context | undefined {
     const kinds = Object.keys(context).filter((key) => key !== 'kind');
     const kindsValid = kinds.every(validKind) && kinds.length;
 
@@ -258,7 +258,7 @@ export default class Context {
     return created;
   }
 
-  private static FromSingleKindContext(context: LDSingleKindContext): Context | undefined {
+  private static fromSingleKindContext(context: LDSingleKindContext): Context | undefined {
     const { key, kind } = context;
     const kindValid = validKind(kind);
     const keyValid = validKey(key);
@@ -278,7 +278,7 @@ export default class Context {
     return undefined;
   }
 
-  private static FromLegacyUser(context: LDUser): Context | undefined {
+  private static fromLegacyUser(context: LDUser): Context | undefined {
     const keyValid = context.key !== undefined && context.key !== null;
     // For legacy users we allow empty keys.
     if (!keyValid) {
@@ -298,13 +298,13 @@ export default class Context {
    * @param context The input context to create a Context from.
    * @returns a {@link Context} or `undefined` if one could not be created.
    */
-  public static FromLDContext(context: LDContext): Context | undefined {
+  public static fromLDContext(context: LDContext): Context | undefined {
     if (isSingleKind(context)) {
-      return Context.FromSingleKindContext(context);
+      return Context.fromSingleKindContext(context);
     } if (isMultiKind(context)) {
-      return Context.FromMultiKindContext(context);
+      return Context.fromMultiKindContext(context);
     } if (isLegacyUser(context)) {
-      return Context.FromLegacyUser(context);
+      return Context.fromLegacyUser(context);
     }
     return undefined;
   }

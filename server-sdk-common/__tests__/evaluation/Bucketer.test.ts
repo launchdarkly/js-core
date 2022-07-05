@@ -117,7 +117,7 @@ describe.each<[
   ],
 ])('given bucketing parameters', (context, key, attr, salt, isExperiment, kindForRollout, seed, expected) => {
   it('hashes the correct string', () => {
-    const validatedContext = Context.FromLDContext(context);
+    const validatedContext = Context.fromLDContext(context);
     const attrRef = new AttributeReference(attr);
 
     const bucketer = new Bucketer(crypto);
@@ -142,7 +142,7 @@ describe.each([
   ['bad', 'key'],
 ])('when given a non string or integer reference', (attr) => {
   it('buckets to 0 when given bad data', () => {
-    const validatedContext = Context.FromLDContext({
+    const validatedContext = Context.fromLDContext({
       key: 'context-key',
       kind: 'org',
       object: {},

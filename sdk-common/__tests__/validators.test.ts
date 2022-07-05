@@ -75,7 +75,7 @@ describe.each([
 });
 
 describe('given a regex validator', () => {
-  const validator = TypeValidators.StringMatchingRegex(/^(\w|\.|-)+$/);
+  const validator = TypeValidators.stringMatchingRegex(/^(\w|\.|-)+$/);
   it('matches valid instances', () => {
     expect(validator.is('valid-version._')).toBeTruthy();
   });
@@ -86,9 +86,9 @@ describe('given a regex validator', () => {
 });
 
 describe.each([
-  [TypeValidators.NumberWithMin(0), 0],
-  [TypeValidators.NumberWithMin(10), 10],
-  [TypeValidators.NumberWithMin(1000), 1000],
+  [TypeValidators.numberWithMin(0), 0],
+  [TypeValidators.numberWithMin(10), 10],
+  [TypeValidators.numberWithMin(1000), 1000],
 ])('given minumum number validators', (validator, min) => {
   it('validates numbers equal or above the minimum', () => {
     expect(validator.is(min)).toBeTruthy();

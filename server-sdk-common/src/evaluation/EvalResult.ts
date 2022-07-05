@@ -25,7 +25,7 @@ export default class EvalResult {
     return this.detail.reason.kind === Reasons.Off.kind;
   }
 
-  static ForError(errorKind: ErrorKinds, message?: string): EvalResult {
+  static forError(errorKind: ErrorKinds, message?: string): EvalResult {
     return new EvalResult(true, {
       value: null,
       variationIndex: undefined,
@@ -33,7 +33,7 @@ export default class EvalResult {
     }, message);
   }
 
-  static ForSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
+  static forSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
     return new EvalResult(false, {
       value,
       variationIndex,
@@ -41,7 +41,7 @@ export default class EvalResult {
     });
   }
 
-  static ForPrerequisiteFailed(prereqKey: string): EvalResult {
+  static forPrerequisiteFailed(prereqKey: string): EvalResult {
     return new EvalResult(false, {
       value: null,
       variationIndex: undefined,

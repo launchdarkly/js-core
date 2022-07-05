@@ -24,7 +24,7 @@ describe('given user clauses and contexts', () => {
       attributeReference: new AttributeReference('name'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -43,7 +43,7 @@ describe('given user clauses and contexts', () => {
       attributeReference: new AttributeReference('legs'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -67,7 +67,7 @@ describe('given user clauses and contexts', () => {
       attributeReference: new AttributeReference(attribute, true),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -84,7 +84,7 @@ describe('given user clauses and contexts', () => {
       attributeReference: new AttributeReference('legs'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(false);
   });
@@ -102,7 +102,7 @@ describe('given user clauses and contexts', () => {
       attributeReference: new AttributeReference('name'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(false);
   });
@@ -130,7 +130,7 @@ describe('given user clauses and contexts', () => {
     }
     const rule: FlagRule = { id: '1234', clauses, variation: 1 };
     flag.rules = [rule];
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -144,7 +144,7 @@ describe('given user clauses and contexts', () => {
       attributeReference: new AttributeReference('kind'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -159,7 +159,7 @@ describe('given user clauses and contexts', () => {
       attributeReference: new AttributeReference('key'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext(user);
+    const context = Context.fromLDContext(user);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(false);
   });
@@ -174,7 +174,7 @@ describe('given non-user single-kind contexts', () => {
       attributeReference: new AttributeReference('name'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext({ kind: 'org', name: 'Bob', key: 'bobkey' });
+    const context = Context.fromLDContext({ kind: 'org', name: 'Bob', key: 'bobkey' });
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(false);
   });
@@ -188,7 +188,7 @@ describe('given non-user single-kind contexts', () => {
       attributeReference: new AttributeReference('complex'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext({
+    const context = Context.fromLDContext({
       kind: 'org', name: 'Bob', key: 'bobkey', complex: { thing: true },
     });
     const res = await evaluator.evaluate(flag, context!);
@@ -204,7 +204,7 @@ describe('given non-user single-kind contexts', () => {
       attributeReference: new AttributeReference('name'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext({ kind: 'org', name: 'Bob', key: 'bobkey' });
+    const context = Context.fromLDContext({ kind: 'org', name: 'Bob', key: 'bobkey' });
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -219,7 +219,7 @@ describe('given non-user single-kind contexts', () => {
       attributeReference: new AttributeReference('kind'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext({ kind: 'org', name: 'Bob', key: 'bobkey' });
+    const context = Context.fromLDContext({ kind: 'org', name: 'Bob', key: 'bobkey' });
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -234,7 +234,7 @@ describe('given non-user single-kind contexts', () => {
       attributeReference: new AttributeReference('kind'),
     };
     const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.FromLDContext({ kind: 'party', name: 'Bob', key: 'bobkey' });
+    const context = Context.fromLDContext({ kind: 'party', name: 'Bob', key: 'bobkey' });
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(false);
   });
@@ -257,7 +257,7 @@ describe('given multi-kind contexts', () => {
       attributeReference: new AttributeReference('count'),
     };
 
-    const context = Context.FromLDContext({
+    const context = Context.fromLDContext({
       kind: 'multi',
       park: {
         key: 'park',
@@ -290,7 +290,7 @@ describe('given multi-kind contexts', () => {
       attributeReference: new AttributeReference('count'),
     };
 
-    const context = Context.FromLDContext({
+    const context = Context.fromLDContext({
       kind: 'multi',
       park: {
         key: 'park',
@@ -315,7 +315,7 @@ describe('given multi-kind contexts', () => {
       attributeReference: new AttributeReference('kind'),
     };
 
-    const context = Context.FromLDContext({
+    const context = Context.fromLDContext({
       kind: 'multi',
       park: {
         key: 'park',
@@ -340,7 +340,7 @@ describe('given multi-kind contexts', () => {
       attributeReference: new AttributeReference('kind'),
     };
 
-    const context = Context.FromLDContext({
+    const context = Context.fromLDContext({
       kind: 'multi',
       park: {
         key: 'park',
@@ -367,7 +367,7 @@ it('handles clauses with malformed attribute references', async () => {
     attributeReference: new AttributeReference('//region'),
   };
 
-  const context = Context.FromLDContext({
+  const context = Context.fromLDContext({
     kind: 'multi',
     park: {
       key: 'park',

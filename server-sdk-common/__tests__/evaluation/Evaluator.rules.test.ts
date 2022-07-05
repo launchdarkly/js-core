@@ -29,7 +29,7 @@ describe('when evaluating user equivalent contexts', () => {
       id: 'id1', clauses: [matchClause], variation: 2,
     };
     const flag = makeFlagWithRules([rule0, rule1]);
-    const res = await evaluator.evaluate(flag, Context.FromLDContext(userToTest)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest)!);
     expect(res.detail).toMatchObject({
       value: 'c',
       variationIndex: 2,
@@ -40,7 +40,7 @@ describe('when evaluating user equivalent contexts', () => {
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('returns error if rule variation is too high', async (userToTest) => {
     const rule: FlagRule = { id: 'id', clauses: [matchClause], variation: 99 };
     const flag = makeFlagWithRules([rule]);
-    const res = await evaluator.evaluate(flag, Context.FromLDContext(userToTest)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest)!);
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Invalid variation index in flag');
     expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
@@ -49,7 +49,7 @@ describe('when evaluating user equivalent contexts', () => {
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('returns error if rule variation is negative', async (userToTest) => {
     const rule: FlagRule = { id: 'id', clauses: [matchClause], variation: -1 };
     const flag = makeFlagWithRules([rule]);
-    const res = await evaluator.evaluate(flag, Context.FromLDContext(userToTest)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest)!);
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Invalid variation index in flag');
     expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
@@ -58,7 +58,7 @@ describe('when evaluating user equivalent contexts', () => {
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('returns error if rule has no variation or rollout', async (userToTest) => {
     const rule: FlagRule = { id: 'id', clauses: [matchClause] };
     const flag = makeFlagWithRules([rule]);
-    const res = await evaluator.evaluate(flag, Context.FromLDContext(userToTest)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest)!);
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Variation/rollout object with no variation or rollout');
     expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
@@ -67,7 +67,7 @@ describe('when evaluating user equivalent contexts', () => {
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('returns error if rule has rollout with no variations', async (userToTest) => {
     const rule: FlagRule = { id: 'id', clauses: [matchClause], rollout: { variations: [] } };
     const flag = makeFlagWithRules([rule]);
-    const res = await evaluator.evaluate(flag, Context.FromLDContext(userToTest)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest)!);
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Variation/rollout object with no variation or rollout');
     expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
@@ -90,7 +90,7 @@ describe('when evaluating user equivalent contexts', () => {
       rules.push({ id: '1234', clauses: [noMatchClause], variation: 1 });
     }
     flag.rules = rules;
-    const res = await evaluator.evaluate(flag, Context.FromLDContext(userToTest)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest)!);
     expect(res.isError).toBeFalsy();
     expect(res.detail.value).toEqual(false);
   });
@@ -129,7 +129,7 @@ describe('when evaluating non-user contexts', () => {
     const rule0: FlagRule = { id: 'id0', clauses: [noMatchClause], variation: 1 };
     const rule1: FlagRule = { id: 'id1', clauses: [matchClause], variation: 2 };
     const flag = makeFlagWithRules([rule0, rule1]);
-    const res = await evaluator.evaluate(flag, Context.FromLDContext(contextToTest)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(contextToTest)!);
     expect(res.detail).toMatchObject({
       value: 'c',
       variationIndex: 2,

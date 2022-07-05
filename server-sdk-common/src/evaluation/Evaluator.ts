@@ -117,7 +117,7 @@ export default class Evaluator {
     // the result of the series evaluation.
     await allSeriesAsync(flag.prerequisites, async (prereq) => {
       if (visitedFlags.indexOf(prereq.key) !== -1) {
-        prereqResult = EvalResult.ForError(
+        prereqResult = EvalResult.forError(
           ErrorKinds.MalformedFlag,
           `Prerequisite of ${flag.key} causing a circular reference.`
           + ' This is probably a temporary condition due to an incomplete update.',
@@ -128,7 +128,7 @@ export default class Evaluator {
       const prereqFlag = await this.queries.getFlag(prereq.key);
 
       if (!prereqFlag) {
-        prereqResult = EvalResult.ForPrerequisiteFailed(prereq.key);
+        prereqResult = EvalResult.forPrerequisiteFailed(prereq.key);
         return false;
       }
 
@@ -146,7 +146,7 @@ export default class Evaluator {
       }
 
       if (evalResult.isOff || evalResult.detail.variationIndex !== prereq.variation) {
-        prereqResult = EvalResult.ForPrerequisiteFailed(prereq.key);
+        prereqResult = EvalResult.forPrerequisiteFailed(prereq.key);
         return false;
       }
       return true;
@@ -207,7 +207,7 @@ export default class Evaluator {
     let errorResult: EvalResult | undefined;
     const match = await allSeriesAsync(rule.clauses, async (clause) => {
       if (!clause.attributeReference.isValid) {
-        errorResult = EvalResult.ForError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
+        errorResult = EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
         return false;
       }
       if (clause.op === 'segmentMatch') {
@@ -240,7 +240,7 @@ export default class Evaluator {
   ): EvalResult {
     if (varOrRollout === undefined) {
       // By spec this field should be defined, but better to be overly cautious.
-      return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Fallthrough variation undefined');
+      return EvalResult.forError(ErrorKinds.MalformedFlag, 'Fallthrough variation undefined');
     }
 
     if (varOrRollout.variation !== undefined) { // 0 would be false.
@@ -257,7 +257,7 @@ export default class Evaluator {
           : rollout.bucketByAttributeReference) ?? KEY_ATTR_REF;
 
         if (!bucketBy.isValid) {
-          return EvalResult.ForError(
+          return EvalResult.forError(
             ErrorKinds.MalformedFlag,
             'Invalid attribute reference for bucketBy in rollout',
           );
@@ -296,6 +296,6 @@ export default class Evaluator {
         return getVariation(flag, lastVariate.variation, updatedReason);
       }
     }
-    return EvalResult.ForError(ErrorKinds.MalformedFlag, 'Variation/rollout object with no variation or rollout');
+    return EvalResult.forError(ErrorKinds.MalformedFlag, 'Variation/rollout object with no variation or rollout');
   }
 }

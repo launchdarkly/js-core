@@ -21,16 +21,16 @@ const offBaseFlag = {
 describe.each<[Flag, LDContext, EvalResult | undefined]>([
   [{
     ...offBaseFlag,
-  }, { key: 'user-key' }, EvalResult.ForSuccess(null, Reasons.Off, undefined)],
+  }, { key: 'user-key' }, EvalResult.forSuccess(null, Reasons.Off, undefined)],
   [{
     ...offBaseFlag, offVariation: 2,
-  }, { key: 'user-key' }, EvalResult.ForSuccess('two', Reasons.Off, 2)],
+  }, { key: 'user-key' }, EvalResult.forSuccess('two', Reasons.Off, 2)],
 ])('Given off flags and an evaluator', (flag, context, expected) => {
   const evaluator = new Evaluator(basicPlatform, noQueries);
 
   // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${context.kind} targets: ${flag.targets?.map((t) => `${t.values}, ${t.variation}`)} context targets: ${flag.contextTargets?.map((t) => `${t.contextKind}: ${t.values}, ${t.variation}`)}`, async () => {
-    const result = await evaluator.evaluate(flag, Context.FromLDContext(context)!);
+    const result = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
     expect(result?.isError).toEqual(expected?.isError);
     expect(result?.detail).toStrictEqual(expected?.detail);
     expect(result?.message).toEqual(expected?.message);
@@ -56,7 +56,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
       values: ['user-key'],
       variation: 0,
     }],
-  }, { key: 'user-key' }, EvalResult.ForSuccess('zero', Reasons.TargetMatch, 0)],
+  }, { key: 'user-key' }, EvalResult.forSuccess('zero', Reasons.TargetMatch, 0)],
   [{
     ...targetBaseFlag,
     targets: [{
@@ -68,7 +68,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
       variation: 2,
     },
     ],
-  }, { key: 'user-key2' }, EvalResult.ForSuccess('two', Reasons.TargetMatch, 2)],
+  }, { key: 'user-key2' }, EvalResult.forSuccess('two', Reasons.TargetMatch, 2)],
   [{
     ...targetBaseFlag,
     targets: [{
@@ -84,7 +84,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
       values: [],
       variation: 2,
     }],
-  }, { key: 'user-key2' }, EvalResult.ForSuccess('two', Reasons.TargetMatch, 2)],
+  }, { key: 'user-key2' }, EvalResult.forSuccess('two', Reasons.TargetMatch, 2)],
   [{
     ...targetBaseFlag,
     targets: [{
@@ -101,12 +101,12 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
       values: ['org-key'],
       variation: 1,
     }],
-  }, { kind: 'org', key: 'org-key' }, EvalResult.ForSuccess('one', Reasons.TargetMatch, 1)],
+  }, { kind: 'org', key: 'org-key' }, EvalResult.forSuccess('one', Reasons.TargetMatch, 1)],
 ])('given flag configurations with different targets that match', (flag, context, expected) => {
   const evaluator = new Evaluator(basicPlatform, noQueries);
   // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${context.kind} targets: ${flag.targets?.map((t) => `${t.values}, ${t.variation}`)} context targets: ${flag.contextTargets?.map((t) => `${t.contextKind}: ${t.values}, ${t.variation}`)}`, async () => {
-    const result = await evaluator.evaluate(flag, Context.FromLDContext(context)!);
+    const result = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
     expect(result?.isError).toEqual(expected?.isError);
     expect(result?.detail).toStrictEqual(expected?.detail);
     expect(result?.message).toEqual(expected?.message);
