@@ -1,4 +1,3 @@
-// import { Options, platform, options } from '@launchdarkly/js-server-sdk-common';
 import createHttpsProxyAgent, { HttpsProxyAgentOptions } from 'https-proxy-agent';
 
 import { platform, LDTLSOptions, LDProxyOptions } from '@launchdarkly/js-server-sdk-common';
@@ -68,6 +67,8 @@ function createAgent(
 
 export default class NodeRequests implements platform.Requests {
   agent: https.Agent | http.Agent | undefined;
+
+  tlsOptions: LDTLSOptions | undefined;
 
   constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions) {
     this.agent = createAgent(tlsOptions, proxyOptions);

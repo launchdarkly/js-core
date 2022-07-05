@@ -1,6 +1,6 @@
+/* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
-import { Context } from '@launchdarkly/js-sdk-common';
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
+import { AttributeReference, Context } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
 import { getOffVariation, getVariation } from './variations';
