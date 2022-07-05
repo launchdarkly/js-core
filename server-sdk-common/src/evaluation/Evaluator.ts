@@ -192,8 +192,6 @@ export default class Evaluator {
    * @param context The context to match the rule against.
    * @returns An {@link EvalResult} or `undefined` if there are no matches or errors.
    */
-  // TODO: Should be used once we have big segment support.
-  // eslint-disable-next-line class-methods-use-this
   private async ruleMatchContext(
     flag: Flag,
     rule: FlagRule,
