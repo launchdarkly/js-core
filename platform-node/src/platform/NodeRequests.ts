@@ -1,4 +1,3 @@
-// import { Options, platform, options } from '@launchdarkly/js-server-sdk-common';
 import createHttpsProxyAgent, { HttpsProxyAgentOptions } from 'https-proxy-agent';
 
 import { platform, LDTLSOptions, LDProxyOptions } from '@launchdarkly/js-server-sdk-common';
@@ -6,6 +5,9 @@ import { platform, LDTLSOptions, LDProxyOptions } from '@launchdarkly/js-server-
 import * as http from 'http';
 import * as https from 'https';
 
+// No types for the event source.
+// @ts-ignore
+import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import NodeResponse from './NodeResponse';
 
 function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
@@ -69,6 +71,8 @@ function createAgent(
 export default class NodeRequests implements platform.Requests {
   agent: https.Agent | http.Agent | undefined;
 
+  tlsOptions: LDTLSOptions | undefined;
+
   constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions) {
     this.agent = createAgent(tlsOptions, proxyOptions);
   }
@@ -95,5 +99,17 @@ export default class NodeRequests implements platform.Requests {
 
       req.end();
     });
+  }
+
+  createEventSource(
+    url: string,
+    eventSourceInitDict: platform.EventSourceInitDict,
+  ): platform.EventSource {
+    const expandedOptions = {
+      ...eventSourceInitDict,
+      agent: this.agent,
+      tlsParams: this.tlsOptions,
+    };
+    return new LDEventSource(url, expandedOptions);
   }
 }

@@ -1,12 +1,13 @@
 // The deserialization will be updating parameter values, so we don't need this
 // warning in this file.
 /* eslint-disable no-param-reassign */
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
+import { AttributeReference } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { VersionedData } from '../api/interfaces';
 import VersionedDataKinds from './VersionedDataKinds';
 import { Rollout } from '../evaluation/data/Rollout';
+import { SegmentRule } from '../evaluation/data/SegmentRule';
 
 /**
  * @internal
@@ -85,15 +86,15 @@ function processFlag(flag: Flag) {
 }
 
 function processSegment(segment: Segment) {
-  if (segment.bucketBy) {
-    // Rules before U2C would have had literals for attributes.
-    // So use the rolloutContextKind to indicate if this is new or old data.
-    segment.bucketByAttributeReference = new AttributeReference(
-      segment.bucketBy,
-      !segment.rolloutContextKind,
-    );
-  }
   segment?.rules?.forEach((rule) => {
+    if (rule.bucketBy) {
+      // Rules before U2C would have had literals for attributes.
+      // So use the rolloutContextKind to indicate if this is new or old data.
+      rule.bucketByAttributeReference = new AttributeReference(
+        rule.bucketBy,
+        !rule.rolloutContextKind,
+      );
+    }
     rule?.clauses?.forEach((clause) => {
       if (clause && clause.attribute) {
         // Clauses before U2C would have had literals for attributes.

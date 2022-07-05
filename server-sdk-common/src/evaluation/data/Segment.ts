@@ -1,4 +1,3 @@
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
 import { SegmentTarget } from './SegmentTarget';
 import { Versioned } from './Versioned';
 import { SegmentRule } from './SegmentRule';
@@ -13,9 +12,4 @@ export interface Segment extends Versioned {
   unbounded?: boolean;
   unboundedContextKind?: string;
   generation?: number;
-  bucketBy?: string;
-  rolloutContextKind?: string;
-
-  // This field is not part of the schema, but it is populated during parsing.
-  bucketByAttributeReference?: AttributeReference,
 }

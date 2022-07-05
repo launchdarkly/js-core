@@ -1,4 +1,4 @@
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
+import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
 export type Op =
   'in'
