@@ -9,7 +9,7 @@ import { Segment } from './data/Segment';
  * @internal
  */
 export interface Queries {
-  getFlag(key: string): Promise<Flag | null>
-  getSegment(key: string): Promise<Segment | null>
-  getBigSegmentsMembership(userKey: string): Promise<BigSegmentStoreMembership | null>
+  getFlag(key: string): Promise<Flag | undefined>
+  getSegment(key: string): Promise<Segment | undefined>
+  getBigSegmentsMembership(userKey: string): Promise<BigSegmentStoreMembership | undefined>
 }

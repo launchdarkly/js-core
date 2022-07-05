@@ -1,9 +1,9 @@
 import { ClientSideAvailability } from './ClientSideAvailability';
 import { Prerequisite } from './Prerequisite';
-import { Rollout } from './Rollout';
 import { FlagRule } from './FlagRule';
 import { Target } from './Target';
 import { Versioned } from './Versioned';
+import { Rollout } from './Rollout';
 
 interface VariationOrRollout {
   variation?: number,

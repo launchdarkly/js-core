@@ -7,7 +7,6 @@ import { Segment } from '../evaluation/data/Segment';
 import { VersionedData } from '../api/interfaces';
 import VersionedDataKinds from './VersionedDataKinds';
 import { Rollout } from '../evaluation/data/Rollout';
-import { SegmentRule } from '../evaluation/data/SegmentRule';
 
 /**
  * @internal
@@ -152,6 +151,7 @@ export function deserializePatch(data: string): PatchData | undefined {
   }
 
   // TODO: Extend validation.
+  // TODO: Validate variation is numeric?
 
   if (parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
     processFlag(parsed.data as VersionedFlag);

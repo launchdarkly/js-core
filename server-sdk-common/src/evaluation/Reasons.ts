@@ -14,8 +14,8 @@ export default class Reasons {
     return { kind: 'PREREQUISITE_FAILED', prerequisiteKey };
   }
 
-  static ruleMatch(ruleId: string): LDEvaluationReason {
-    return { kind: 'RULE_MATCH', ruleId };
+  static ruleMatch(ruleId: string, ruleIndex: number): LDEvaluationReason {
+    return { kind: 'RULE_MATCH', ruleId, ruleIndex };
   }
 
   static readonly TargetMatch: LDEvaluationReason = { kind: 'TARGET_MATCH' };

@@ -7,7 +7,7 @@ import { ValidatedOptions } from './ValidatedOptions';
 */
 const allowedTagCharacters = /^(\w|\.|-)+$/;
 
-const tagValidator = TypeValidators.StringMatchingRegex(allowedTagCharacters);
+const tagValidator = TypeValidators.stringMatchingRegex(allowedTagCharacters);
 
 /**
  * Class for managing tags.

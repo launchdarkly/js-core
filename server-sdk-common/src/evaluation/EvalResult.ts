@@ -1,5 +1,6 @@
 import { LDEvaluationDetail, LDEvaluationReason } from '../api';
 import ErrorKinds from './ErrorKinds';
+import Reasons from './Reasons';
 
 /**
  * A class which encapsulates the result of an evaluation. It allows for differentiating between
@@ -20,7 +21,11 @@ export default class EvalResult {
     this.message = message;
   }
 
-  static ForError(errorKind: ErrorKinds, message?: string): EvalResult {
+  public get isOff() {
+    return this.detail.reason.kind === Reasons.Off.kind;
+  }
+
+  static forError(errorKind: ErrorKinds, message?: string): EvalResult {
     return new EvalResult(true, {
       value: null,
       variationIndex: undefined,
@@ -28,11 +33,19 @@ export default class EvalResult {
     }, message);
   }
 
-  static ForSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
+  static forSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
     return new EvalResult(false, {
       value,
       variationIndex,
       reason,
+    });
+  }
+
+  static forPrerequisiteFailed(prereqKey: string): EvalResult {
+    return new EvalResult(false, {
+      value: null,
+      variationIndex: undefined,
+      reason: Reasons.prerequisiteFailed(prereqKey),
     });
   }
 }

@@ -176,11 +176,11 @@ export class TypeValidators {
 
   static readonly Function = new Function();
 
-  static NumberWithMin(min: number): NumberWithMinimum {
+  static numberWithMin(min: number): NumberWithMinimum {
     return new NumberWithMinimum(min);
   }
 
-  static StringMatchingRegex(expression: RegExp): StringMatchingRegex {
+  static stringMatchingRegex(expression: RegExp): StringMatchingRegex {
     return new StringMatchingRegex(expression);
   }
 

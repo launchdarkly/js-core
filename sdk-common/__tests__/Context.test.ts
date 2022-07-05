@@ -25,7 +25,7 @@ describe.each([
   it('should not create a context', () => {
     // Force TS to accept our bad contexts.
     // @ts-ignore
-    expect(Context.FromLDContext(ldConext)).toBeUndefined();
+    expect(Context.fromLDContext(ldConext)).toBeUndefined();
   });
 });
 
@@ -60,7 +60,7 @@ describe.each([
   // Here we are providing good contexts, but the types derived from
   // the parameterization are causing some problems.
   // @ts-ignore
-  const context = Context.FromLDContext(ldConext);
+  const context = Context.fromLDContext(ldConext);
 
   it('should create a context', () => {
     expect(context).toBeDefined();
@@ -94,7 +94,7 @@ describe.each([
 });
 
 describe('given a valid legacy user without custom attributes', () => {
-  const context = Context.FromLDContext({
+  const context = Context.fromLDContext({
     key: 'test',
     name: 'context name',
     custom: { cat: 'calico', '/dog~~//': 'lab' },
@@ -122,7 +122,7 @@ describe('given a valid legacy user without custom attributes', () => {
 });
 
 describe('given a non-user single kind context', () => {
-  const context = Context.FromLDContext({
+  const context = Context.fromLDContext({
     kind: 'org',
     // Key will be URL encoded.
     key: 'Org/Key',
@@ -146,7 +146,7 @@ describe('given a non-user single kind context', () => {
 });
 
 it('secondary should be defined when present', () => {
-  const context = Context.FromLDContext({
+  const context = Context.fromLDContext({
     kind: 'org',
     // Key will be URL encoded.
     key: 'Org/Key',
@@ -157,7 +157,7 @@ it('secondary should be defined when present', () => {
 });
 
 it('secondary should be undefined when meta is present, but secondary is not', () => {
-  const context = Context.FromLDContext({
+  const context = Context.fromLDContext({
     kind: 'org',
     // Key will be URL encoded.
     key: 'Org/Key',
@@ -168,7 +168,7 @@ it('secondary should be undefined when meta is present, but secondary is not', (
 });
 
 it('secondary key should be undefined when not a string', () => {
-  const context = Context.FromLDContext({
+  const context = Context.fromLDContext({
     // @ts-ignore
     kind: 'org',
     // Key will be URL encoded.
@@ -182,7 +182,7 @@ it('secondary key should be undefined when not a string', () => {
 });
 
 describe('given a multi-kind context', () => {
-  const context = Context.FromLDContext({
+  const context = Context.fromLDContext({
     kind: 'multi',
 
     org: {

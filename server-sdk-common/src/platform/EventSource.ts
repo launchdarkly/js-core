@@ -4,7 +4,7 @@ export interface EventSource {
   onopen: () => void;
   onretrying: () => void;
 
-  addEventListener(type: string, listener: (event?: {data?: any}) => void): void;
+  addEventListener(type: string, listener: (event?: { data?: any }) => void): void;
   close(): void;
 }
 
@@ -13,7 +13,7 @@ export interface EventSourceInitDict {
     status: number,
     message: string,
   }) => boolean,
-  headers: {[key: string]: string},
+  headers: { [key: string]: string },
   initialRetryDelayMillis: number,
   readTimeoutMillis: number,
   retryResetIntervalMillis: number,

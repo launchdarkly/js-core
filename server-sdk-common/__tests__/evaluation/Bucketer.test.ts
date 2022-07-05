@@ -5,22 +5,7 @@
 
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
 import Bucketer from '../../src/evaluation/Bucketer';
-import { Crypto, Hasher, Hmac } from '../../src/platform';
-
-const hasher: Hasher = {
-  update: jest.fn(),
-  digest: jest.fn(() => '1234567890123456'),
-};
-const crypto: Crypto = {
-  createHash(algorithm: string): Hasher {
-    expect(algorithm).toEqual('sha1');
-    return hasher;
-  },
-  createHmac(algorithm: string, key: string): Hmac {
-    // Not used for this test.
-    throw new Error(`Function not implemented.${algorithm}${key}`);
-  },
-};
+import { crypto, hasher } from './mocks/hasher';
 
 describe.each<[
   context: LDContext,
@@ -132,7 +117,7 @@ describe.each<[
   ],
 ])('given bucketing parameters', (context, key, attr, salt, isExperiment, kindForRollout, seed, expected) => {
   it('hashes the correct string', () => {
-    const validatedContext = Context.FromLDContext(context);
+    const validatedContext = Context.fromLDContext(context);
     const attrRef = new AttributeReference(attr);
 
     const bucketer = new Bucketer(crypto);
@@ -157,7 +142,7 @@ describe.each([
   ['bad', 'key'],
 ])('when given a non string or integer reference', (attr) => {
   it('buckets to 0 when given bad data', () => {
-    const validatedContext = Context.FromLDContext({
+    const validatedContext = Context.fromLDContext({
       key: 'context-key',
       kind: 'org',
       object: {},
