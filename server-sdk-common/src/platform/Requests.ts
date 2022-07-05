@@ -15,9 +15,43 @@ import { EventSource, EventSourceInitDict } from './EventSource';
 export interface Headers {
   /**
    * Get a header by name.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/get
+   *
    * @param name The name of the header to get.
    */
-  get(name: string): string | string[] | undefined ;
+  get(name: string): string | null;
+
+  /**
+   * Returns an iterator allowing iteration of all the keys contained
+   * in this object.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/keys
+   *
+   */
+  keys(): Iterable<string>;
+
+  /**
+   * Returns an iterator allowing iteration of all the values contained
+   * in this object.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/values
+   */
+  values(): Iterable<string>;
+
+  /**
+   * Returns an iterator allowing iteration of all the key-value pairs in
+   * the object.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/entries
+   */
+  entries(): Iterable<[string, string]>;
+
+  /**
+   * Returns true if the header is present.
+   * @param name The name of the header to check.
+   */
+  has(name: string): boolean;
 }
 
 /**

@@ -5,7 +5,7 @@ import { AttributeReference } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { VersionedData } from '../api/interfaces';
-import VersionedDataKinds from './VersionedDataKinds';
+import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 import { Rollout } from '../evaluation/data/Rollout';
 
 /**
@@ -47,6 +47,7 @@ export function replacer(this: any, key: string, value: any): any {
 
 interface DeleteData extends Omit<VersionedData, 'key'> {
   path: string;
+  kind?: VersionedDataKind
 }
 
 type VersionedFlag = VersionedData & Flag;
@@ -55,6 +56,7 @@ type VersionedSegment = VersionedData & Segment;
 interface PatchData {
   path: string;
   data: VersionedFlag | VersionedSegment
+  kind?: VersionedDataKind
 }
 
 function processRollout(rollout?: Rollout) {
@@ -155,8 +157,10 @@ export function deserializePatch(data: string): PatchData | undefined {
 
   if (parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
     processFlag(parsed.data as VersionedFlag);
+    parsed.kind = VersionedDataKinds.Features;
   } else if (parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
     processSegment(parsed.data as VersionedSegment);
+    parsed.kind = VersionedDataKinds.Segments;
   }
 
   return parsed;
@@ -166,5 +170,11 @@ export function deserializePatch(data: string): PatchData | undefined {
  * @internal
  */
 export function deserializeDelete(data: string): DeleteData | undefined {
-  return tryParse(data);
+  const parsed = tryParse(data) as DeleteData;
+  if (parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
+    parsed.kind = VersionedDataKinds.Features;
+  } else if (parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
+    parsed.kind = VersionedDataKinds.Segments;
+  }
+  return parsed;
 }

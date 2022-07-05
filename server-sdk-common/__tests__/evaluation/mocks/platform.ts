@@ -21,9 +21,9 @@ const requests: Requests = {
   },
 
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  createEventSource: function (url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
     throw new Error('Function not implemented.');
-  }
+  },
 };
 
 const basicPlatform: Platform = {
