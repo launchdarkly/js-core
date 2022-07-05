@@ -171,6 +171,9 @@ export function deserializePatch(data: string): PatchData | undefined {
  */
 export function deserializeDelete(data: string): DeleteData | undefined {
   const parsed = tryParse(data) as DeleteData;
+  if (!parsed) {
+    return undefined;
+  }
   if (parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
     parsed.kind = VersionedDataKinds.Features;
   } else if (parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
