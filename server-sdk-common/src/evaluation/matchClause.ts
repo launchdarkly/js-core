@@ -21,7 +21,10 @@ function matchAny(op: string, value: any, values: any[]) {
  *
  * @internal
  */
-export default function matchClause(clause: Clause, context: Context): boolean {
+export default function matchClauseWithoutSegmentOperations(
+  clause: Clause,
+  context: Context,
+): boolean {
   const contextValue = context.valueForKind(clause.attributeReference, clause.contextKind);
   if (Array.isArray(contextValue)) {
     return maybeNegate(

@@ -14,7 +14,7 @@ import Bucketer from './Bucketer';
 import { Platform } from '../platform';
 import { VariationOrRollout } from './data/VariationOrRollout';
 import { LDEvaluationReason } from '../api';
-import matchClause from './matchClause';
+import matchClauseWithoutSegmentOperations from './matchClause';
 
 const KEY_ATTR_REF = new AttributeReference('key');
 
@@ -214,7 +214,7 @@ export default class Evaluator {
         // TODO: Implement.
         return false;
       }
-      return matchClause(clause, context);
+      return matchClauseWithoutSegmentOperations(clause, context);
     });
 
     if (errorResult) {
