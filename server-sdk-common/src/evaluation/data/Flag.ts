@@ -5,7 +5,7 @@ import { FlagRule } from './FlagRule';
 import { Target } from './Target';
 import { Versioned } from './Versioned';
 
-type VariationOrRollout = number | Rollout;
+type VariationOrRollout = { variation: number; } | { rollout: Rollout };
 
 export interface Flag extends Versioned {
   on: boolean,

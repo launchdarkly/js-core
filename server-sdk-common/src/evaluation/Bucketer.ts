@@ -52,7 +52,7 @@ export default class Bucketer {
     kindForRollout: string = 'user',
     seed?: number,
   ): number {
-    const value = context.valueForKind(kindForRollout, attr);
+    const value = context.valueForKind(attr, kindForRollout);
     const bucketableValue = valueForBucketing(value);
 
     // Bucketing cannot be done by the specified attribute value.

@@ -104,6 +104,11 @@ const operators: OperatorsInterface = {
   semVerGreaterThan: semVerOperator((a, b) => a.compare(b) > 0),
 };
 
+/**
+ * Allows checking if a specific operator is defined and allows execution of an operator on data.
+ *
+ * @internal
+ */
 export default class Operators {
   static is(op: string): boolean {
     return Object.prototype.hasOwnProperty.call(operators, op);
