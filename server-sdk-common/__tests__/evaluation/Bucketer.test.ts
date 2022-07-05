@@ -3,8 +3,7 @@
 // should contain a consistency test.
 // Testing here can only validate we are providing correct inputs to the hashing algorithm.
 
-import { Context, LDContext } from '@launchdarkly/js-sdk-common';
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
+import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
 import Bucketer from '../../src/evaluation/Bucketer';
 import { Crypto, Hasher, Hmac } from '../../src/platform';
 

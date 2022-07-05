@@ -2,6 +2,8 @@
 // interfaces used for the `fetch` Web API. Doing so should allow implementations
 // which are more easily portable.
 
+import { EventSource, EventSourceInitDict } from './EventSource';
+
 // These are not full specifications of the interface, but instead subsets
 // based on the functionality needed by the SDK. Exposure of the full standard
 // would require much more per platform implementation for platforms that do not
@@ -45,4 +47,6 @@ export interface Options {
 
 export interface Requests {
   fetch(url: string, options?: Options): Promise<Response>
+
+  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource;
 }

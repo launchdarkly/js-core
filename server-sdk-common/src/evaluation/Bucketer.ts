@@ -1,5 +1,4 @@
-import { Context } from '@launchdarkly/js-sdk-common';
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
+import { AttributeReference, Context } from '@launchdarkly/js-sdk-common';
 import { Crypto } from '../platform';
 
 /**
