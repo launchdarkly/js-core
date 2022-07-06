@@ -65,7 +65,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
       status: number,
       message: string
     }): boolean => {
-      if (err.status && isHttpRecoverable(err.status)) {
+      if (err.status && !isHttpRecoverable(err.status)) {
         this.logConnectionResult(false);
         fn?.(new LDStreamingError(err.message, err.status));
         this.logger?.error(httpErrorMessage(err, 'streaming request'));
@@ -81,7 +81,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     const reportJsonError = (type: string, data: string) => {
       this.logger?.error(`Stream received invalid data in "${type}" message`);
       this.logger?.debug(`Invalid JSON follows: ${data}`);
-      fn?.call(new LDStreamingError('Malformed JSON data in event stream'));
+      fn?.(new LDStreamingError('Malformed JSON data in event stream'));
     };
 
     // TLS is handled by the platform implementation.

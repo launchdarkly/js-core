@@ -3,20 +3,17 @@ import Configuration from '../../src/options/Configuration';
 import { Info, PlatformData, SdkData } from '../../src/platform/Info';
 
 const makeInfo = (wrapperName?: string, wrapperVersion?: string): Info => ({
-  platformData: function (): PlatformData {
-    const pd: PlatformData = {
-
-    };
-    return pd;
+  platformData(): PlatformData {
+    return {};
   },
-  sdkData: function (): SdkData {
+  sdkData(): SdkData {
     const sdkData: SdkData = {
       version: '2.2.2',
       wrapperName,
       wrapperVersion,
     };
     return sdkData;
-  }
+  },
 });
 
 it('sets SDK key', () => {
@@ -28,7 +25,7 @@ it('sets SDK key', () => {
 it('sets user agent', () => {
   const config = new Configuration({});
   const h = defaultHeaders('my-sdk-key', config, makeInfo());
-  expect(h).toMatchObject({ 'user-agent': 'NodeJSClient/' + '2.2.2' });
+  expect(h).toMatchObject({ 'user-agent': 'NodeJSClient/2.2.2' });
 });
 
 it('does not include wrapper header by default', () => {
@@ -54,7 +51,7 @@ it('sets the X-LaunchDarkly-Tags header with valid tags.', () => {
     application: {
       id: 'test-application',
       version: 'test-version',
-    }
+    },
   });
   const h = defaultHeaders('my-sdk-key', config, makeInfo('my-wrapper'));
   expect(h).toMatchObject({

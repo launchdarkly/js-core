@@ -1,8 +1,8 @@
 export interface EventSource {
-  onclose: () => void;
-  onerror: () => void;
-  onopen: () => void;
-  onretrying: (e: { delayMillis: number }) => void;
+  onclose: (() => void) | undefined;
+  onerror: (() => void) | undefined;
+  onopen: (() => void) | undefined;
+  onretrying: ((e: { delayMillis: number }) => void) | undefined;
 
   addEventListener(type: string, listener: (event?: { data?: any }) => void): void;
   close(): void;
