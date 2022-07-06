@@ -7,6 +7,7 @@ import { EventSource, Info, Requests } from '../platform';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
 import VersionedDataKinds, { VersionedDataKind } from '../store/VersionedDataKinds';
 import defaultHeaders from './defaultHeaders';
+import httpErrorMessage from './httpErrorMessage';
 
 const STREAM_READ_TIMEOUT_MS = 5 * 60 * 1000;
 const RETRY_RESET_INTERVAL_MS = 60 * 1000;
@@ -67,10 +68,11 @@ export default class StreamingProcessor implements LDStreamProcessor {
       if (err.status && isHttpRecoverable(err.status)) {
         this.logConnectionResult(false);
         fn?.(new LDStreamingError(err.message, err.status));
-        // TODO: Log error once we have the messages implemented.
+        this.logger?.error(httpErrorMessage(err, 'streaming request'));
         return false;
       }
 
+      this.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
       this.logConnectionResult(false);
       this.logConnectionStarted();
       return true;
@@ -79,7 +81,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
     const reportJsonError = (type: string, data: string) => {
       this.logger?.error(`Stream received invalid data in "${type}" message`);
       this.logger?.debug(`Invalid JSON follows: ${data}`);
-      // cb(new errors.LDStreamingError('Malformed JSON data in event stream'));
       fn?.call(new LDStreamingError('Malformed JSON data in event stream'));
     };
 
