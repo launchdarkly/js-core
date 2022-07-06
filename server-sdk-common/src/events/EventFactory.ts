@@ -16,7 +16,7 @@ export default class EventFactory {
     context: Context,
     detail: LDEvaluationDetail,
     defaultVal: any,
-    prereqOfFlag: Flag,
+    prereqOfFlag?: Flag,
   ): InputEvalEvent {
     return new InputEvalEvent(
       this.withReasons,
