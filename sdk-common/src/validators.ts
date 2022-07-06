@@ -127,7 +127,7 @@ export class Function implements TypeValidator {
     // We cannot inspect the parameters and there isn't really
     // a generic function type we can instantiate.
     // So the type guard is here just to make TS comfortable
-    // caling something after using this guard.
+    // calling something after using this guard.
     return typeof u === 'function';
   }
 
