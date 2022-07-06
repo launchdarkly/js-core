@@ -6,15 +6,16 @@ export default function defaultHeaders(
   config: Configuration,
   info: Info,
 ): { [key: string]: string | string[] } {
+  const sdkData = info.sdkData();
   const headers: { [key: string]: string | string[] } = {
     authorization: sdkKey,
-    'user-agent': `NodeJSClient/${info.sdkData().version}`,
+    'user-agent': `NodeJSClient/${sdkData.version}`,
   };
 
-  if (config.wrapperName) {
-    headers['x-launchdarkly-wrapper'] = config.wrapperVersion
-      ? `${config.wrapperName}/${config.wrapperVersion}`
-      : config.wrapperName;
+  if (sdkData.wrapperName) {
+    headers['x-launchdarkly-wrapper'] = sdkData.wrapperVersion
+      ? `${sdkData.wrapperName}/${sdkData.wrapperVersion}`
+      : sdkData.wrapperName;
   }
 
   const tags = config.tags.value;
