@@ -3,13 +3,14 @@
  */
 export default class SummaryCounter {
   public readonly default: any;
+
   constructor(
     public count: number,
     public key: string,
     public value: any,
     defValue: any,
     public version?: number,
-    public variation?: number
+    public variation?: number,
   ) {
     this.default = defValue;
   }

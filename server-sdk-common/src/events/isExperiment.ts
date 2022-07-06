@@ -22,6 +22,8 @@ export default function isExperiment(flag: Flag, reason?: LDEvaluationReason): b
       }
       case 'FALLTHROUGH':
         return !!flag.trackEventsFallthrough;
+      default:
+        // No action needed.
     }
   }
   return false;

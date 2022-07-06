@@ -8,13 +8,20 @@ import isExperiment from './isExperiment';
  * @internal
  */
 export default class InputEvalEvent extends InputEventBase {
-  public readonly default: any
+  public readonly default: any;
+
   public readonly trackEvents?: boolean;
+
   public readonly debugEventsUntilDate?: number;
+
   public readonly prereqOf?: string;
+
   public readonly reason?: LDEvaluationReason;
+
   public readonly value: any;
+
   public readonly variation?: number;
+
   public readonly version?: number;
 
   constructor(
@@ -25,29 +32,29 @@ export default class InputEvalEvent extends InputEventBase {
     detail: LDEvaluationDetail,
     public readonly flag?: Flag,
     prereqOf?: Flag,
-    ) {
+  ) {
     super('feature', Date.now(), context);
     this.default = defValue;
     this.variation = detail.variationIndex;
     this.value = detail.value;
 
-    if(flag) {
+    if (flag) {
       const addExperimentData = isExperiment(flag, detail.reason);
       this.version = flag.version;
 
-      if(addExperimentData || flag.trackEvents) {
+      if (addExperimentData || flag.trackEvents) {
         this.trackEvents = true;
       }
 
-      if(flag.debugEventsUntilDate) {
+      if (flag.debugEventsUntilDate) {
         this.debugEventsUntilDate = flag.debugEventsUntilDate;
       }
 
-      if(prereqOf) {
+      if (prereqOf) {
         this.prereqOf = prereqOf.key;
       }
 
-      if(addExperimentData || withReasons) {
+      if (addExperimentData || withReasons) {
         this.reason = detail.reason;
       }
     }

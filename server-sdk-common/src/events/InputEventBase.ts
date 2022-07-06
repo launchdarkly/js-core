@@ -7,6 +7,6 @@ export default class InputEventBase {
   constructor(
     public readonly kind: string,
     public readonly creationDate: number,
-    public readonly context: Context
+    public readonly context: Context,
   ) {}
 }

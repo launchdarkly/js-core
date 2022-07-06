@@ -16,7 +16,7 @@ export default class EventFactory {
     context: Context,
     detail: LDEvaluationDetail,
     defaultVal: any,
-    prereqOfFlag: Flag
+    prereqOfFlag: Flag,
   ): InputEvalEvent {
     return new InputEvalEvent(
       this.withReasons,
@@ -25,7 +25,7 @@ export default class EventFactory {
       defaultVal,
       detail,
       flag,
-      prereqOfFlag
+      prereqOfFlag,
     );
   }
 
@@ -35,14 +35,16 @@ export default class EventFactory {
       context,
       key,
       detail.value,
-      detail
+      detail,
     );
   }
 
+  /* eslint-disable-next-line class-methods-use-this */
   identifyEvent(context: Context) {
     return new InputIdentifyEvent(context);
   }
 
+  /* eslint-disable-next-line class-methods-use-this */
   customEvent(key: string, context: Context, data?: any, metricValue?: number) {
     return new InputCustomEvent(context, key, data, metricValue);
   }

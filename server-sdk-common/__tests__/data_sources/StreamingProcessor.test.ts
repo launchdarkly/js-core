@@ -69,7 +69,7 @@ describe('given a stream processor with mock event source', () => {
   });
 
   async function promiseStart() {
-    return promisify(cb => streamProcessor.start(cb));
+    return promisify((cb) => streamProcessor.start(cb));
   }
 
   function expectJsonError(err: { message?: string }) {
@@ -77,7 +77,7 @@ describe('given a stream processor with mock event source', () => {
     expect(err.message).toEqual('Malformed JSON data in event stream');
     logger.expectMessages([{
       level: LogLevel.Error,
-      matches: /Stream received invalid data in/
+      matches: /Stream received invalid data in/,
     }]);
   }
 
@@ -95,12 +95,12 @@ describe('given a stream processor with mock event source', () => {
     const putData = {
       data: {
         flags: {
-          flagkey: { key: 'flagkey', version: 1 }
+          flagkey: { key: 'flagkey', version: 1 },
         },
         segments: {
-          segkey: { key: 'segkey', version: 2 }
-        }
-      }
+          segkey: { key: 'segkey', version: 2 },
+        },
+      },
     };
 
     it('causes flags and segments to be stored', async () => {
@@ -133,7 +133,6 @@ describe('given a stream processor with mock event source', () => {
     // it('updates diagnostic stats', async () => {
     //   // TODO: When diagnostics are implemented.
     // });
-
   });
 
   describe('when patching a message', () => {
@@ -141,7 +140,7 @@ describe('given a stream processor with mock event source', () => {
       streamProcessor.start();
       const patchData = {
         path: '/flags/flagkey',
-        data: { key: 'flagkey', version: 1 }
+        data: { key: 'flagkey', version: 1 },
       };
 
       es.handlers.patch({ data: JSON.stringify(patchData) });
@@ -154,7 +153,7 @@ describe('given a stream processor with mock event source', () => {
       streamProcessor.start();
       const patchData = {
         path: '/segments/segkey',
-        data: { key: 'segkey', version: 1 }
+        data: { key: 'segkey', version: 1 },
       };
 
       es.handlers.patch({ data: JSON.stringify(patchData) });
@@ -181,7 +180,7 @@ describe('given a stream processor with mock event source', () => {
       const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
       expect(f!.version).toEqual(1);
 
-      const deleteData = { path: '/flags/' + flag.key, version: 2 };
+      const deleteData = { path: `/flags/${flag.key}`, version: 2 };
 
       es.handlers.delete({ data: JSON.stringify(deleteData) });
 
@@ -196,7 +195,7 @@ describe('given a stream processor with mock event source', () => {
       const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
       expect(s!.version).toEqual(1);
 
-      const deleteData = { path: '/segments/' + segment.key, version: 2 };
+      const deleteData = { path: `/segments/${segment.key}`, version: 2 };
 
       es.handlers.delete({ data: JSON.stringify(deleteData) });
 
@@ -217,7 +216,7 @@ describe('given a stream processor with mock event source', () => {
   describe.each([400, 408, 429, 500, 503, undefined])('given recoverable http errors', (status) => {
     const err = {
       status,
-      message: 'sorry'
+      message: 'sorry',
     };
 
     it(`continues retrying after error: ${status}`, () => {
@@ -227,7 +226,7 @@ describe('given a stream processor with mock event source', () => {
       logger.expectMessages([{
         level: LogLevel.Warn,
         matches: status ? new RegExp(`error ${err.status}.*will retry`)
-          : /Received I\/O error \(sorry\) for streaming request - will retry/
+          : /Received I\/O error \(sorry\) for streaming request - will retry/,
       }]);
 
       // TODO: Diagnostics.
@@ -237,7 +236,7 @@ describe('given a stream processor with mock event source', () => {
   describe.each([401, 403])('given unrecoverable http errors', (status) => {
     const err = {
       status,
-      message: 'sorry'
+      message: 'sorry',
     };
 
     it(`stops retrying after error: ${status}`, () => {
@@ -246,7 +245,7 @@ describe('given a stream processor with mock event source', () => {
 
       logger.expectMessages([{
         level: LogLevel.Error,
-        matches: /Received error.*giving up permanently/
+        matches: /Received error.*giving up permanently/,
       }]);
 
       // TODO: Diagnostics.

@@ -7,14 +7,14 @@ function isFeature(u: InputEventBase): u is InputEvalEvent {
 }
 
 function counterKey(event: InputEvalEvent) {
-  return event.key +
-    ':' +
-    (event.variation !== null && event.variation !== undefined ? event.variation : '') +
-    ':' +
-    (event.version !== null && event.version !== undefined ? event.version : '');
+  return `${event.key
+  }:${event.variation !== null && event.variation !== undefined ? event.variation : ''
+  }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
 }
 
-
+/**
+ * @internal
+ */
 export interface FlagCounter {
   value: any,
   count: number,
@@ -23,12 +23,18 @@ export interface FlagCounter {
   unknown?: boolean,
 }
 
+/**
+ * @internal
+ */
 export interface FlagSummary {
   default: any,
   counters: FlagCounter[],
   contextKinds: string[]
 }
 
+/**
+ * @internal
+ */
 export interface SummarizedFlags {
   startDate: number,
   endDate: number,
@@ -40,8 +46,11 @@ export interface SummarizedFlags {
  */
 export default class EventSummarizer {
   private startDate = 0;
+
   private endDate = 0;
+
   private counters: Record<string, SummaryCounter> = {};
+
   private contextKinds: Record<string, Set<string>> = {};
 
   summarizeEvent(event: InputEventBase) {
@@ -53,7 +62,7 @@ export default class EventSummarizer {
         kinds = new Set();
         this.contextKinds[event.key] = kinds;
       }
-      event.context.kinds.forEach(kind => kinds.add(kind));
+      event.context.kinds.forEach((kind) => kinds.add(kind));
 
       if (counter) {
         counter.increment();
@@ -64,7 +73,8 @@ export default class EventSummarizer {
           event.value,
           event.default,
           event.version,
-          event.variation)
+          event.variation,
+        );
       }
 
       if (this.startDate === 0 || event.creationDate < this.startDate) {
@@ -77,33 +87,34 @@ export default class EventSummarizer {
   }
 
   getSummary(): SummarizedFlags {
-    const features = Object.values(this.counters).reduce((acc: Record<string, FlagSummary>, counter) => {
-      let flagSummary = acc[counter.key]
-      if (!flagSummary) {
-        flagSummary = {
-          default: counter.default,
-          counters: [],
-          contextKinds: [...this.contextKinds[counter.key]],
+    const features = Object.values(this.counters)
+      .reduce((acc: Record<string, FlagSummary>, counter) => {
+        let flagSummary = acc[counter.key];
+        if (!flagSummary) {
+          flagSummary = {
+            default: counter.default,
+            counters: [],
+            contextKinds: [...this.contextKinds[counter.key]],
+          };
+          acc[counter.key] = flagSummary;
+        }
+
+        const counterOut: FlagCounter = {
+          value: counter.value,
+          count: counter.count,
         };
-        acc[counter.key] = flagSummary;
-      }
+        if (counter.variation !== undefined && counter.variation !== null) {
+          counterOut.variation = counter.variation;
+        }
+        if (counter.version !== undefined && counter.version !== null) {
+          counterOut.version = counter.version;
+        } else {
+          counterOut.unknown = true;
+        }
+        flagSummary.counters.push(counterOut);
 
-      const counterOut: FlagCounter = {
-        value: counter.value,
-        count: counter.count,
-      };
-      if (counter.variation !== undefined && counter.variation !== null) {
-        counterOut.variation = counter.variation;
-      }
-      if (counter.version !== undefined && counter.version !== null) {
-        counterOut.version = counter.version;
-      } else {
-        counterOut.unknown = true;
-      }
-      flagSummary.counters.push(counterOut);
-
-      return acc;
-    }, {});
+        return acc;
+      }, {});
 
     return {
       startDate: this.startDate,
