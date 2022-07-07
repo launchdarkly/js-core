@@ -2,8 +2,10 @@ import {
   LDLogger, NumberWithMinimum, TypeValidator, TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 import {
-  LDOptions, LDProxyOptions, LDTLSOptions,
+  LDOptions, LDProxyOptions, LDStreamProcessor, LDTLSOptions,
 } from '../api';
+import { LDFeatureStore } from '../api/subsystems';
+import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import ApplicationTags from './ApplicationTags';
 import OptionMessages from './OptionMessages';
 import ServiceEndpoints from './ServiceEndpoints';
@@ -25,9 +27,9 @@ const validations: Record<string, TypeValidator> = {
   timeout: TypeValidators.Number,
   capacity: TypeValidators.Number,
   logger: TypeValidators.Object,
-  featureStore: TypeValidators.Object,
+  featureStore: TypeValidators.ObjectOrFactory,
   bigSegments: TypeValidators.Object,
-  updateProcessor: TypeValidators.ObjectOrFactory,
+  updateProcessor: TypeValidators.Object,
   flushInterval: TypeValidators.Number,
   pollInterval: TypeValidators.numberWithMin(30),
   proxyOptions: TypeValidators.Object,
@@ -67,8 +69,7 @@ const defaultValues: ValidatedOptions = {
   contextKeysFlushInterval: 300,
   diagnosticOptOut: false,
   diagnosticRecordingInterval: 900,
-  // TODO: Implement once available.
-  // featureStore: InMemoryFeatureStore(),
+  featureStore: new InMemoryFeatureStore(),
 };
 
 function validateTypesAndNames(options: LDOptions): {
@@ -188,6 +189,10 @@ export default class Configuration {
 
   public readonly diagnosticRecordingInterval: number;
 
+  public readonly featureStore: LDFeatureStore;
+
+  public readonly updateProcessor?: LDStreamProcessor;
+
   constructor(options: LDOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
@@ -210,9 +215,16 @@ export default class Configuration {
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;
-    // TODO: featureStore
+    if (TypeValidators.Function.is(validatedOptions.featureStore)) {
+      // @ts-ignore
+      this.featureStore = validatedOptions.featureStore(options);
+    } else {
+      // @ts-ignore
+      this.featureStore = validatedOptions.featureStore;
+    }
+
     // TODO: bigSegments
-    // TODO: updateProcessor
+    this.updateProcessor = validatedOptions.updateProcessor;
     this.flushInterval = validatedOptions.flushInterval;
     this.pollInterval = validatedOptions.pollInterval;
     this.proxyOptions = validatedOptions.proxyOptions;

@@ -1,4 +1,6 @@
 import {
+  EventSource,
+  EventSourceInitDict,
   Info, Options, Platform, PlatformData, Requests, Response, SdkData,
 } from '../../../src/platform';
 import { crypto } from './hasher';
@@ -15,6 +17,11 @@ const info: Info = {
 const requests: Requests = {
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   fetch(url: string, options?: Options): Promise<Response> {
+    throw new Error('Function not implemented.');
+  },
+
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
     throw new Error('Function not implemented.');
   },
 };

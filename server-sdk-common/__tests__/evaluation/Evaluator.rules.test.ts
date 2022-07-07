@@ -1,8 +1,7 @@
 // Tests of flag evaluation at the rule level. Clause-level behavior is covered
 // in detail in Evaluator.clause.tests and (TODO: File for segments).
 
-import { Context, LDContext } from '@launchdarkly/js-sdk-common';
-import AttributeReference from '@launchdarkly/js-sdk-common/dist/AttributeReference';
+import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';

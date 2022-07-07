@@ -297,6 +297,7 @@ it('deserializes delete data', () => {
   const deleteVal = { path: '/flags/flagkey', version: 2 };
   const deleteString = JSON.stringify(deleteVal);
   const parsed = deserializeDelete(deleteString);
+  delete parsed?.kind;
   expect(parsed).toStrictEqual(deleteVal);
 });
 

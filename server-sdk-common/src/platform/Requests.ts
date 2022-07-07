@@ -2,6 +2,8 @@
 // interfaces used for the `fetch` Web API. Doing so should allow implementations
 // which are more easily portable.
 
+import { EventSource, EventSourceInitDict } from './EventSource';
+
 // These are not full specifications of the interface, but instead subsets
 // based on the functionality needed by the SDK. Exposure of the full standard
 // would require much more per platform implementation for platforms that do not
@@ -13,9 +15,43 @@
 export interface Headers {
   /**
    * Get a header by name.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/get
+   *
    * @param name The name of the header to get.
    */
-  get(name: string): string | string[] | undefined ;
+  get(name: string): string | null;
+
+  /**
+   * Returns an iterator allowing iteration of all the keys contained
+   * in this object.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/keys
+   *
+   */
+  keys(): Iterable<string>;
+
+  /**
+   * Returns an iterator allowing iteration of all the values contained
+   * in this object.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/values
+   */
+  values(): Iterable<string>;
+
+  /**
+   * Returns an iterator allowing iteration of all the key-value pairs in
+   * the object.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/entries
+   */
+  entries(): Iterable<[string, string]>;
+
+  /**
+   * Returns true if the header is present.
+   * @param name The name of the header to check.
+   */
+  has(name: string): boolean;
 }
 
 /**
@@ -45,4 +81,6 @@ export interface Options {
 
 export interface Requests {
   fetch(url: string, options?: Options): Promise<Response>
+
+  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource;
 }

@@ -9,6 +9,14 @@ export enum LogLevel {
 
 type ExpectedMessage = { level: LogLevel, matches: RegExp };
 
+function replacer(key: string, value: any) {
+  if (value instanceof RegExp) {
+    return value.toString();
+  }
+
+  return value;
+}
+
 export default class TestLogger implements LDLogger {
   private readonly messages: Record<LDLogLevel, string[]> = {
     debug: [],
@@ -66,9 +74,9 @@ export default class TestLogger implements LDLogger {
         (receivedMessage) => receivedMessage.match(expectedMessage.matches),
       );
       if (index < 0) {
-        throw new Error(`Did not find expected message: ${expectedMessage} received: ${this.messages}`);
+        throw new Error(`Did not find expected message: ${JSON.stringify(expectedMessage, replacer)} received: ${JSON.stringify(this.messages)}`);
       } else if (matched[expectedMessage.level].indexOf(index) >= 0) {
-        throw new Error(`Did not find expected message: ${expectedMessage} received: ${this.messages}`);
+        throw new Error(`Did not find expected message: ${JSON.stringify(expectedMessage, replacer)} received: ${JSON.stringify(this.messages)}`);
       } else {
         matched[expectedMessage.level].push(index);
       }

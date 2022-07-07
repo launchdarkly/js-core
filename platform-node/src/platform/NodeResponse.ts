@@ -1,21 +1,20 @@
-import { Headers, Response } from '@launchdarkly/js-server-sdk-common/dist/platform/Requests';
+import { platform } from '@launchdarkly/js-server-sdk-common';
 import * as http from 'http';
+import HeaderWrapper from './HeaderWrapper';
 
-export default class NodeResponse implements Response {
+export default class NodeResponse implements platform.Response {
   incomingMessage: http.IncomingMessage;
 
   body: any[] = [];
 
   promise: Promise<string>;
 
-  headers: Headers;
+  headers: platform.Headers;
 
   status: number;
 
   constructor(res: http.IncomingMessage) {
-    this.headers = {
-      get: (name: string) => res.headers[name],
-    };
+    this.headers = new HeaderWrapper(res.headers);
     // Status code is optionally typed, but will always be present for this
     // use case.
     this.status = res.statusCode || 0;

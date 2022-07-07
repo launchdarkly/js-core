@@ -6,18 +6,7 @@ import {
   LDFeatureStoreKindData,
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
-
-/**
- * A basic wrapper to make async methods with callbacks into promises.
- *
- * @param method
- * @returns A promisified version of the method.
- */
-function promisify<T>(method: (callback: (val: T) => void) => void): Promise<T> {
-  return new Promise<T>((resolve) => {
-    method((val: T) => { resolve(val); });
-  });
-}
+import promisify from '../async/promisify';
 
 /**
  * Provides an async interface to a feature store.
