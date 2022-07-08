@@ -43,7 +43,7 @@ describe.each([
     key: 'test',
     name: 'context name',
     cat: 'calico',
-    transient: true,
+    anonymous: true,
     _meta: { secondary: 'secondary', privateAttributes: ['/~1dog~0~0~1~1'] },
   },
   {
@@ -51,7 +51,7 @@ describe.each([
     user: {
       key: 'test',
       cat: 'calico',
-      transient: true,
+      anonymous: true,
       name: 'context name',
       _meta: { secondary: 'secondary', privateAttributes: ['/~1dog~0~0~1~1'] },
     },
@@ -73,7 +73,7 @@ describe.each([
     expect(context?.kindsAndKeys).toStrictEqual({ user: 'test' });
     // Canonical keys for 'user' contexts are just the key.
     expect(context?.canonicalKey).toEqual('test');
-    expect(context?.valueForKind(new AttributeReference('transient'), 'user')).toBeTruthy();
+    expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
     expect(context?.secondary('user')).toEqual('secondary');
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName)
@@ -113,7 +113,7 @@ describe('given a valid legacy user without custom attributes', () => {
     expect(context?.kindsAndKeys).toStrictEqual({ user: 'test' });
     // Canonical keys for 'user' contexts are just the key.
     expect(context?.canonicalKey).toEqual('test');
-    expect(context?.valueForKind(new AttributeReference('transient'), 'user')).toBeTruthy();
+    expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
     expect(context?.secondary('user')).toEqual('secondary');
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName)
