@@ -12,10 +12,10 @@ import { Info, Requests } from '../platform';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
+import LDEventProcessor from './LDEventProcessor';
 
-interface FilteredContext {
-
-}
+// TODO: Implement.
+type FilteredContext = any;
 
 /**
  * Used for both identify and index.
@@ -54,7 +54,10 @@ type OutputEvent = IdentifyOutputEvent
 | FeatureOutputEvent
 | SummarizedFlagsEvent;
 
-export default class EventProcessor {
+/**
+ * @internal
+ */
+export default class EventProcessor implements LDEventProcessor {
   private summarizer = new EventSummarizer();
 
   private queue: OutputEvent[] = [];
@@ -130,7 +133,7 @@ export default class EventProcessor {
     }
   }
 
-  async flush(): Promise<boolean> {
+  async flush(): Promise<void> {
     if (this.shutdown) {
       throw new LDInvalidSDKKeyError('Events cannot be posted because SDK key is invalid');
     }
@@ -145,62 +148,12 @@ export default class EventProcessor {
     }
 
     if (!eventsToFlush.length) {
-      return true;
+      return;
     }
 
     this.eventsInLastBatch = eventsToFlush.length;
     this.logger?.debug('Flushing %d events', eventsToFlush.length);
-    return this.tryPostingEvents(eventsToFlush, uuidv4(), true);
-  }
-
-  async tryPostingEvents(
-    events: OutputEvent[],
-    payloadId: string,
-    canRetry: boolean,
-  ): Promise<boolean> {
-    const headers = {
-      ...this.defaultHeaders,
-      'x-launchdarkly-payload-id': payloadId,
-    };
-
-    let error;
-    try {
-      const res = await this.requests.fetch(this.uri, {
-        headers,
-        body: JSON.stringify(events),
-        method: 'POST',
-      });
-
-      const serverDate = Date.parse(res.headers.get('date') || '');
-      if (serverDate) {
-        this.lastKnownPastTime = serverDate;
-      }
-
-      if (res.status <= 204) {
-        return true;
-      }
-
-      error = new LDUnexpectedResponseError(
-        httpErrorMessage(
-          { status: res.status, message: 'some events were dropped' },
-          'event posting',
-        ),
-      );
-
-      if (!isHttpRecoverable(res.status)) {
-        this.shutdown = true;
-        throw error;
-      }
-    } catch (err) {
-      error = err;
-    }
-
-    if (this.shutdown || (error && !canRetry)) {
-      throw error;
-    }
-
-    await new Promise((r) => { setTimeout(r, 1000); });
-    return this.tryPostingEvents(events, payloadId, false);
+    await this.tryPostingEvents(eventsToFlush, uuidv4(), true);
   }
 
   sendEvent(inputEvent: InputEvent) {
@@ -313,10 +266,60 @@ export default class EventProcessor {
     }
   }
 
-  shouldDebugEvent(event: InputEvent) {
+  private shouldDebugEvent(event: InputEvent) {
     return isFeature(event)
       && event.debugEventsUntilDate
       && (event.debugEventsUntilDate > this.lastKnownPastTime)
       && (event.debugEventsUntilDate > Date.now());
+  }
+
+  private async tryPostingEvents(
+    events: OutputEvent[],
+    payloadId: string,
+    canRetry: boolean,
+  ): Promise<void> {
+    const headers = {
+      ...this.defaultHeaders,
+      'x-launchdarkly-payload-id': payloadId,
+    };
+
+    let error;
+    try {
+      const res = await this.requests.fetch(this.uri, {
+        headers,
+        body: JSON.stringify(events),
+        method: 'POST',
+      });
+
+      const serverDate = Date.parse(res.headers.get('date') || '');
+      if (serverDate) {
+        this.lastKnownPastTime = serverDate;
+      }
+
+      if (res.status <= 204) {
+        return;
+      }
+
+      error = new LDUnexpectedResponseError(
+        httpErrorMessage(
+          { status: res.status, message: 'some events were dropped' },
+          'event posting',
+        ),
+      );
+
+      if (!isHttpRecoverable(res.status)) {
+        this.shutdown = true;
+        throw error;
+      }
+    } catch (err) {
+      error = err;
+    }
+
+    if (this.shutdown || (error && !canRetry)) {
+      throw error;
+    }
+
+    await new Promise((r) => { setTimeout(r, 1000); });
+    await this.tryPostingEvents(events, payloadId, false);
   }
 }
