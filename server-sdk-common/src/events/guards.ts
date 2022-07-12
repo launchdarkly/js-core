@@ -11,5 +11,5 @@ export function isCustom(u: any): u is InputCustomEvent {
 }
 
 export function isIdentify(u: any): u is InputIdentifyEvent {
-  return u.kind === 'custom';
+  return u.kind === 'identify';
 }

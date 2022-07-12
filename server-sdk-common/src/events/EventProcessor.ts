@@ -6,7 +6,7 @@ import { LDEvaluationReason } from '../api';
 import LruCache from '../cache/LruCache';
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';
-import { LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
+import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
 import Configuration from '../options/Configuration';
 import { Info, Requests } from '../platform';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
@@ -110,10 +110,14 @@ export default class EventProcessor {
 
     this.flushUsersTimer = setInterval(() => {
       this.contextKeysCache.clear();
-    }, config.flushInterval * 1000);
+    }, config.contextKeysFlushInterval * 1000);
 
-    this.flushTimer = setInterval(() => {
-      this.flush();
+    this.flushTimer = setInterval(async () => {
+      try {
+        await this.flush();
+      } catch {
+        // Eat the errors.
+      }
     }, config.flushInterval * 1000);
 
     // TODO: Implement diagnostics.
@@ -164,26 +168,39 @@ export default class EventProcessor {
     try {
       const res = await this.requests.fetch(this.uri, {
         headers,
+        body: JSON.stringify(events),
         method: 'POST',
       });
+
+      const serverDate = Date.parse(res.headers.get('date') || '');
+      if (serverDate) {
+        this.lastKnownPastTime = serverDate;
+      }
 
       if (res.status <= 204) {
         return true;
       }
+
       error = new LDUnexpectedResponseError(
         httpErrorMessage(
           { status: res.status, message: 'some events were dropped' },
           'event posting',
         ),
       );
+
+      if (!isHttpRecoverable(res.status)) {
+        this.shutdown = true;
+        throw error;
+      }
     } catch (err) {
       error = err;
     }
 
-    if (error && !canRetry) {
+    if (this.shutdown || (error && !canRetry)) {
       throw error;
     }
 
+    await new Promise((r) => { setTimeout(r, 1000); });
     return this.tryPostingEvents(events, payloadId, false);
   }
 
@@ -205,16 +222,17 @@ export default class EventProcessor {
       if (!isIdentifyEvent) {
         this.deduplicatedUsers += 1;
       }
-    } else {
-      this.contextKeysCache.set(inputEvent.context.canonicalKey, true);
     }
+
+    this.contextKeysCache.set(inputEvent.context.canonicalKey, true);
+
     const addIndexEvent = !inCache && !isIdentifyEvent;
 
     if (addIndexEvent) {
       this.enqueue({
         kind: 'index',
         creationDate: inputEvent.creationDate,
-        context: inputEvent.context,
+        context: this.contextFilter.filter(inputEvent.context),
       });
     }
     if (addFullEvent) {
@@ -300,6 +318,6 @@ export default class EventProcessor {
     return isFeature(event)
       && event.debugEventsUntilDate
       && (event.debugEventsUntilDate > this.lastKnownPastTime)
-      && (event.debugEventsUntilDate > new Date().getTime());
+      && (event.debugEventsUntilDate > Date.now());
   }
 }

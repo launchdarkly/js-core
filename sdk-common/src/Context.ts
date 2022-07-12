@@ -150,7 +150,7 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   if (user.firstName !== null && user.firstName !== undefined) {
     singleKindContext.firstName = user.firstName;
   }
-  if (user.lastName !== null && user.name !== undefined) {
+  if (user.lastName !== null && user.lastName !== undefined) {
     singleKindContext.lastName = user.lastName;
   }
   if (user.email !== null && user.email !== undefined) {
