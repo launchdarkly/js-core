@@ -55,7 +55,6 @@ type OutputEvent = IdentifyOutputEvent
 | SummarizedFlagsEvent;
 
 export default class EventProcessor {
-  // TODO: ContextFilter.
   private summarizer = new EventSummarizer();
 
   private queue: OutputEvent[] = [];
