@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
-import { AttributeReference, Context } from '@launchdarkly/js-sdk-common';
+import { Context } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
@@ -30,7 +30,7 @@ class Match {
 
   public readonly result?: EvalResult;
 
-  constructor(public readonly isMatch: boolean) {}
+  constructor(public readonly isMatch: boolean) { }
 }
 
 class MatchError {
@@ -38,7 +38,7 @@ class MatchError {
 
   public readonly isMatch = false;
 
-  constructor(public readonly result: EvalResult) {}
+  constructor(public readonly result: EvalResult) { }
 }
 
 // type Match = { error: false, isMatch: boolean, evalResult: undefined };
@@ -213,11 +213,8 @@ export default class Evaluator {
     state: EvalState,
   ): Promise<MatchOrError> {
     let errorResult: EvalResult | undefined;
-    if (!clause.attributeReference.isValid) {
-      return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
-    }
     if (clause.op === 'segmentMatch') {
-      firstSeriesAsync(clause.values, (async (value) => {
+      const match = await firstSeriesAsync(clause.values, (async (value) => {
         const segment = await this.queries.getSegment(value);
         if (segment) {
           if (segmentsVisited.includes(segment.key)) {
@@ -237,12 +234,18 @@ export default class Evaluator {
 
         return false;
       }));
-      // TODO: Implement big segments.
-      return new Match(false);
+
+      if (errorResult) {
+        return new MatchError(errorResult);
+      }
+
+      return new Match(match);
     }
-    if (errorResult) {
-      return new MatchError(errorResult);
+    // This is after segment matching, which does not use the reference.
+    if (!clause.attributeReference.isValid) {
+      return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
     }
+
     return new Match(matchClauseWithoutSegmentOperations(clause, context));
   }
 
@@ -374,7 +377,7 @@ export default class Evaluator {
     }
 
     if (match) {
-      if (!rule.weight) {
+      if (rule.weight === undefined) {
         return new Match(match);
       }
       const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
@@ -410,7 +413,7 @@ export default class Evaluator {
         segment.salt,
       );
       evalResult = res.result;
-      return res.error || res.isMatch;
+      return !res.error && res.isMatch;
     });
     if (evalResult) {
       return new MatchError(evalResult);
@@ -428,10 +431,7 @@ export default class Evaluator {
     segmentsVisited: string[],
   ): Promise<MatchOrError> {
     if (!segment.unbounded) {
-      const res = await this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
-      if (res) {
-        return res;
-      }
+      return this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
     }
 
     // TODO: Big segments.

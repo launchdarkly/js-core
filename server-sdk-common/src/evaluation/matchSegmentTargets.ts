@@ -8,11 +8,11 @@ function segmentSearch(
   userTargets?: string[],
 ): boolean {
   if (contextTargets) {
-    for (let targetIndex = 0; targetIndex < contextTargets.length; targetIndex++) {
+    for (let targetIndex = 0; targetIndex < contextTargets.length; targetIndex += 1) {
       const target = contextTargets[targetIndex];
       const key = context.key(target.contextKind);
       if (key && target.values.includes(key)) {
-        return true
+        return true;
       }
     }
   }
