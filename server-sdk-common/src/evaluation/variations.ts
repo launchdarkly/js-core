@@ -1,8 +1,10 @@
-import { TypeValidators } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, TypeValidators } from '@launchdarkly/js-sdk-common';
 import { LDEvaluationReason } from '../api';
 import { Flag } from './data/Flag';
 import ErrorKinds from './ErrorKinds';
 import EvalResult from './EvalResult';
+
+const KEY_ATTR_REF = new AttributeReference('key');
 
 /**
  * Attempt to get an evaluation result for the specific variation/flag combination.
@@ -37,4 +39,12 @@ export function getOffVariation(flag: Flag, reason: LDEvaluationReason): EvalRes
     return EvalResult.forSuccess(null, reason);
   }
   return getVariation(flag, flag.offVariation, reason);
+}
+
+export function getBucketBy(
+  isExperiment: boolean,
+  bucketByAttributeReference: AttributeReference | undefined,
+) {
+  return (isExperiment ? undefined
+    : bucketByAttributeReference) ?? KEY_ATTR_REF;
 }
