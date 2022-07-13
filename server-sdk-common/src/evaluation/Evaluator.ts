@@ -403,12 +403,12 @@ export default class Evaluator {
     segmentsVisited: string[],
   ): Promise<MatchOrError> {
     const includeExclude = matchSegmentTargets(segment, context);
-    if (includeExclude) {
-      return new Match(true);
+    if (includeExclude !== undefined) {
+      return new Match(includeExclude);
     }
 
     let evalResult: EvalResult | undefined;
-    const matched = await allSeriesAsync(segment.rules, async (rule) => {
+    const matched = await firstSeriesAsync(segment.rules, async (rule) => {
       const res = await this.segmentRuleMatchContext(
         rule,
         context,
@@ -417,7 +417,7 @@ export default class Evaluator {
         segment.salt,
       );
       evalResult = res.result;
-      return !res.error && res.isMatch;
+      return res.error || res.isMatch;
     });
     if (evalResult) {
       return new MatchError(evalResult);

@@ -28,7 +28,10 @@ function segmentSearch(
   return false;
 }
 
-export default function matchSegmentTargets(segment: Segment, context: Context): boolean {
+export default function matchSegmentTargets(
+  segment: Segment,
+  context: Context,
+): boolean | undefined {
   const included = segmentSearch(context, segment.includedContexts, segment.included);
   if (included) {
     return true;
@@ -38,5 +41,5 @@ export default function matchSegmentTargets(segment: Segment, context: Context):
     // The match was an exclusion, so it should be negated.
     return !excluded;
   }
-  return false;
+  return undefined;
 }
