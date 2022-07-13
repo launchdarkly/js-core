@@ -402,8 +402,8 @@ export default class Evaluator {
     segmentsVisited: string[],
   ): Promise<MatchOrError> {
     const includeExclude = matchSegmentTargets(segment, context);
-    if (includeExclude) {
-      return new Match(true);
+    if (includeExclude !== undefined) {
+      return new Match(includeExclude);
     }
 
     let evalResult: EvalResult | undefined;
