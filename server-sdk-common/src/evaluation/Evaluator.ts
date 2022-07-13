@@ -41,8 +41,11 @@ class MatchError {
   constructor(public readonly result: EvalResult) { }
 }
 
-// type Match = { error: false, isMatch: boolean, evalResult: undefined };
-// type Error = { error: true, evalResult: EvalResult };
+/**
+ * MatchOrError effectively creates a discriminated union for the segment
+ * matching process. Allowing encoding a true/false match result, or an
+ * error condition represented as an EvalResult.
+ */
 type MatchOrError = Match | MatchError;
 
 /**
