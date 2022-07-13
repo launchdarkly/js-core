@@ -407,7 +407,7 @@ export default class Evaluator {
     }
 
     let evalResult: EvalResult | undefined;
-    const matched = await allSeriesAsync(segment.rules, async (rule) => {
+    const matched = await firstSeriesAsync(segment.rules, async (rule) => {
       const res = await this.segmentRuleMatchContext(
         rule,
         context,
@@ -416,7 +416,7 @@ export default class Evaluator {
         segment.salt,
       );
       evalResult = res.result;
-      return !res.error && res.isMatch;
+      return res.error || res.isMatch;
     });
     if (evalResult) {
       return new MatchError(evalResult);
