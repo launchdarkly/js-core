@@ -96,7 +96,7 @@ export default class Evaluator {
    * Evaluate the prerequisite flags for the given flag.
    * @param flag The flag to evaluate prerequisites for.
    * @param context The context to evaluate the prerequisites against.
-   * @param state Used to accumulate prerequisite events.
+   * @param state Ud to accumulate prerequisite events.
    * @param visitedFlags Used to detect cycles in prerequisite evaluation.
    * @returns An {@link EvalResult} containing an error result or `undefined` if the prerequisites
    * are met.
@@ -128,7 +128,7 @@ export default class Evaluator {
       const prereqFlag = await this.queries.getFlag(prereq.key);
 
       if (!prereqFlag) {
-        prereqResult = EvalResult.forPrerequisiteFailed(prereq.key);
+        prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
         return false;
       }
 
@@ -146,7 +146,7 @@ export default class Evaluator {
       }
 
       if (evalResult.isOff || evalResult.detail.variationIndex !== prereq.variation) {
-        prereqResult = EvalResult.forPrerequisiteFailed(prereq.key);
+        prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
         return false;
       }
       return true;
@@ -274,13 +274,13 @@ export default class Evaluator {
         );
 
         const updatedReason = { ...reason };
-        updatedReason.inExperiment = isExperiment || undefined;
 
         let sum = 0;
         for (let i = 0; i < variations.length; i += 1) {
           const variate = variations[i];
           sum += variate.weight / 100000.0;
           if (bucket < sum) {
+            updatedReason.inExperiment = (isExperiment && !variate.untracked) || undefined;
             return getVariation(flag, variate.variation, updatedReason);
           }
         }
@@ -293,6 +293,7 @@ export default class Evaluator {
         // which would potentially change the results for *all* users), we will
         // simply put the context in the last bucket.
         const lastVariate = variations[variations.length - 1];
+        updatedReason.inExperiment = (isExperiment && !lastVariate.untracked) || undefined;
         return getVariation(flag, lastVariate.variation, updatedReason);
       }
     }

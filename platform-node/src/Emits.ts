@@ -1,4 +1,4 @@
-import EventEmitter from 'events';
+import { EventEmitter } from 'events';
 
 export type EventableConstructor<T = {}> = new (...args: any[]) => T;
 export type Eventable = EventableConstructor<{ emitter: EventEmitter }>;
@@ -10,7 +10,12 @@ export type Eventable = EventableConstructor<{ emitter: EventEmitter }>;
  * @returns A class extending the base with an event emitter.
  */
 export function Emits<TBase extends Eventable>(Base: TBase) {
-  return class WithEvents extends Base {
+  return class WithEvents extends Base implements EventEmitter {
+    on(eventName: string | symbol, listener: (...args: any[]) => void): this {
+      this.emitter.on(eventName, listener);
+      return this;
+    }
+
     addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
       this.emitter.addListener(eventName, listener);
       return this;

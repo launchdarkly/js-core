@@ -1,5 +1,5 @@
 import { LDClient as LDClientCommon } from '@launchdarkly/js-server-sdk-common';
-import EventEmitter from 'events';
+import { EventEmitter } from 'events';
 import { BigSegmentStoreStatusProvider } from './interfaces';
 
 /**

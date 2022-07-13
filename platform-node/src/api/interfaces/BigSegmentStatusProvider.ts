@@ -1,4 +1,4 @@
-import EventEmitter from 'events';
+import { EventEmitter } from 'events';
 import { interfaces } from '@launchdarkly/js-server-sdk-common';
 
 /**

@@ -1,5 +1,5 @@
 import { BigSegmentStoreStatusProviderImpl, interfaces } from '@launchdarkly/js-server-sdk-common';
-import EventEmitter from 'events';
+import { EventEmitter } from 'events';
 import { Emits } from './Emits';
 
 class BigSegmentStoreStatusProviderNode extends BigSegmentStoreStatusProviderImpl {

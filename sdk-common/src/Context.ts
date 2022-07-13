@@ -210,6 +210,9 @@ export default class Context {
       return undefined;
     }
 
+    if (reference.depth === 1 && reference.getComponent(0) === 'anonymous') {
+      return !!context?.anonymous;
+    }
     return reference.get(context);
   }
 
