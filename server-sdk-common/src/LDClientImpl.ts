@@ -7,6 +7,7 @@ import {
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDFeatureStore } from './api/subsystems';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
+import ClientMessages from './ClientMessages';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import StreamingProcessor from './data_sources/StreamingProcessor';
 import { LDClientError } from './errors';
@@ -187,7 +188,7 @@ export default class LDClientImpl implements LDClient {
       key,
       context,
       defaultValue,
-      this.eventFactoryDefault,
+      this.eventFactoryWithReasons,
     );
     // if (!callback) {
     //   return res.detail;
@@ -287,19 +288,32 @@ export default class LDClientImpl implements LDClient {
   }
 
   track(key: string, context: LDContext, data?: any, metricValue?: number): void {
-    throw new Error('Method not implemented.');
+    const checkedContext = Context.fromLDContext(context);
+    if (!checkedContext) {
+      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+    }
+    this.eventProcessor.sendEvent(
+      this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
+    );
   }
 
   identify(context: LDContext): void {
-    throw new Error('Method not implemented.');
+    const checkedContext = Context.fromLDContext(context);
+    if (!checkedContext) {
+      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+    }
+    this.eventProcessor.sendEvent(
+      this.eventFactoryDefault.identifyEvent(checkedContext!),
+    );
   }
 
-  flush(callback?: (err: Error, res: boolean) => void): Promise<void> {
-    throw new Error('Method not implemented.');
-  }
-
-  on(event: string | symbol, listener: (...args: any[]) => void): this {
-    throw new Error('Method not implemented.');
+  async flush(callback?: (err: Error | null, res: boolean) => void): Promise<void> {
+    try {
+      await this.eventProcessor.flush();
+    } catch (err) {
+      callback?.(err as Error, false);
+    }
+    callback?.(null, true);
   }
 
   private async variationInternal(
@@ -322,14 +336,20 @@ export default class LDClientImpl implements LDClient {
     if (!flag) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
       this.onError(error);
-      return EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
+      const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
+      this.eventProcessor.sendEvent(
+        this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
+      );
+      return result;
     }
-    const evalRes = await this.evaluator.evaluate(flag, evalContext);
+    const evalRes = await this.evaluator.evaluate(flag, evalContext, eventFactory);
     if (evalRes.detail.variationIndex === undefined) {
       this.logger?.debug('Result value is null in variation');
       evalRes.setDefault(defaultValue);
     }
-    // TODO: Send prerequisite events.
+    evalRes.events?.forEach((event) => {
+      this.eventProcessor.sendEvent(event);
+    });
     this.eventProcessor.sendEvent(
       eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue),
     );

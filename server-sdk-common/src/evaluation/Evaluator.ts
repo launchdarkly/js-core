@@ -19,9 +19,11 @@ import { Segment } from './data/Segment';
 import matchSegmentTargets from './matchSegmentTargets';
 import { SegmentRule } from './data/SegmentRule';
 import { Clause } from './data/Clause';
+import EventFactory from '../events/EventFactory';
+import InputEvalEvent from '../events/InputEvalEvent';
 
 class EvalState {
-  // events
+  events?: InputEvalEvent[];
   // bigSegmentsStatus
 }
 
@@ -61,9 +63,11 @@ export default class Evaluator {
     this.bucketer = new Bucketer(platform.crypto);
   }
 
-  async evaluate(flag: Flag, context: Context): Promise<EvalResult> {
+  async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
     const state = new EvalState();
-    return this.evaluateInternal(flag, context, state, []);
+    const res = await this.evaluateInternal(flag, context, state, [], eventFactory);
+    res.events = state.events;
+    return res;
   }
 
   /**
@@ -82,6 +86,7 @@ export default class Evaluator {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     visitedFlags: string[],
+    eventFactory?: EventFactory,
   ): Promise<EvalResult> {
     if (!flag.on) {
       return getOffVariation(flag, Reasons.Off);
@@ -92,6 +97,7 @@ export default class Evaluator {
       context,
       state,
       visitedFlags,
+      eventFactory,
     );
     // If there is a prereq result, then prereqs have failed, or there was
     // an error.
@@ -131,6 +137,7 @@ export default class Evaluator {
     context: Context,
     state: EvalState,
     visitedFlags: string[],
+    eventFactory?: EventFactory,
   ): Promise<EvalResult | undefined> {
     let prereqResult: EvalResult | undefined;
 
@@ -162,8 +169,23 @@ export default class Evaluator {
         context,
         state,
         updatedVisitedFlags,
+        eventFactory,
       );
-      // TODO: Add the prereq evaluation to the state events.
+
+      // eslint-disable-next-line no-param-reassign
+      state.events = state.events ?? [];
+
+      if (eventFactory) {
+        state.events.push(
+          eventFactory.evalEvent(
+            prereqFlag,
+            context,
+            evalResult.detail,
+            null,
+            flag,
+          ),
+        );
+      }
 
       if (evalResult.isError) {
         prereqResult = evalResult;

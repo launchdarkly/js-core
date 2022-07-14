@@ -46,6 +46,6 @@ export default class EventFactory {
 
   /* eslint-disable-next-line class-methods-use-this */
   customEvent(key: string, context: Context, data?: any, metricValue?: number) {
-    return new InputCustomEvent(context, key, data || undefined, metricValue || undefined);
+    return new InputCustomEvent(context, key, data ?? undefined, metricValue ?? undefined);
   }
 }

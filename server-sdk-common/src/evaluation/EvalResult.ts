@@ -1,4 +1,5 @@
 import { LDEvaluationDetail, LDEvaluationReason } from '../api';
+import InputEvalEvent from '../events/InputEvalEvent';
 import ErrorKinds from './ErrorKinds';
 import Reasons from './Reasons';
 
@@ -9,13 +10,13 @@ import Reasons from './Reasons';
  * @internal
  */
 export default class EvalResult {
-  public readonly isError: boolean;
+  public events?: InputEvalEvent[];
 
-  public readonly detail: LDEvaluationDetail;
-
-  public readonly message?: string;
-
-  protected constructor(isError: boolean, detail: LDEvaluationDetail, message?: string) {
+  protected constructor(
+    public readonly isError: boolean,
+    public readonly detail: LDEvaluationDetail,
+    public readonly message?: string,
+  ) {
     this.isError = isError;
     this.detail = detail;
     this.message = message;
@@ -37,7 +38,11 @@ export default class EvalResult {
     }, message);
   }
 
-  static forSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
+  static forSuccess(
+    value: any,
+    reason: LDEvaluationReason,
+    variationIndex?: number,
+  ) {
     return new EvalResult(false, {
       value,
       variationIndex,

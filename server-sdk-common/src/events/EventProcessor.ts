@@ -106,7 +106,7 @@ export default class EventProcessor implements LDEventProcessor {
     );
     this.defaultHeaders = {
       ...defaultHeaders(sdkKey, config, info),
-      'x-launchDarkly-event-schema': '3',
+      'x-launchDarkly-event-schema': '4',
     };
     this.uri = `${config.serviceEndpoints.events}/bulk`;
 

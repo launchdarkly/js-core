@@ -230,5 +230,5 @@ export interface LDClient {
    *   flushing is finished. Note that the Promise will be rejected if the HTTP request
    *   fails, so be sure to attach a rejection handler to it.
    */
-  flush(callback?: (err: Error, res: boolean) => void): Promise<void>;
+  flush(callback?: (err: Error | null, res: boolean) => void): Promise<void>;
 }
