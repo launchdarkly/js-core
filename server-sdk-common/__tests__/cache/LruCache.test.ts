@@ -106,3 +106,20 @@ it('when getting an expired item', () => {
   expect(lruCache.get('0')).toBeUndefined();
   expect(lruCache.get('1')).toEqual(1);
 });
+
+it('getting an item keeps it recent', () => {
+  const max = 5;
+  const lruCache = new LruCache({ max });
+
+  lruCache.set('0', 0);
+  lruCache.set('1', 1);
+  lruCache.set('2', 2);
+  lruCache.set('3', 3);
+  lruCache.set('4', 4);
+  lruCache.get('0'); // 1 is now the least recently used.
+  lruCache.set('5', 5);
+
+  expect(lruCache.get('0')).toEqual(0);
+  expect(lruCache.get('1')).toBeUndefined();
+  expect(lruCache.get('2')).toEqual(2);
+});

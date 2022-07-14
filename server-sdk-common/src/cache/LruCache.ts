@@ -89,6 +89,11 @@ export default class LruCache {
         }
       }
 
+      this.setTail(index);
+      if (this.maxAge) {
+        this.lastUpdated[index] = Date.now();
+      }
+
       return this.values[index];
     }
     return undefined;
