@@ -1,0 +1,62 @@
+import { Context } from '@launchdarkly/js-sdk-common';
+import { LDEvaluationDetail, LDEvaluationReason } from '../api';
+import { Flag } from '../evaluation/data/Flag';
+import InputEventBase from './InputEventBase';
+import isExperiment from './isExperiment';
+
+/**
+ * @internal
+ */
+export default class InputEvalEvent extends InputEventBase {
+  public readonly default: any;
+
+  public readonly trackEvents?: boolean;
+
+  public readonly debugEventsUntilDate?: number;
+
+  public readonly prereqOf?: string;
+
+  public readonly reason?: LDEvaluationReason;
+
+  public readonly value: any;
+
+  public readonly variation?: number;
+
+  public readonly version?: number;
+
+  constructor(
+    withReasons: boolean,
+    context: Context,
+    public readonly key: string,
+    defValue: any, // default is a reserved keyword in this context.
+    detail: LDEvaluationDetail,
+    public readonly flag?: Flag,
+    prereqOf?: Flag,
+  ) {
+    super('feature', Date.now(), context);
+    this.default = defValue;
+    this.variation = detail.variationIndex;
+    this.value = detail.value;
+
+    if (flag) {
+      const addExperimentData = isExperiment(flag, detail.reason);
+      this.version = flag.version;
+
+      if (addExperimentData || flag.trackEvents) {
+        this.trackEvents = true;
+      }
+
+      if (flag.debugEventsUntilDate) {
+        this.debugEventsUntilDate = flag.debugEventsUntilDate;
+      }
+
+      if (prereqOf) {
+        this.prereqOf = prereqOf.key;
+      }
+
+      if (addExperimentData || withReasons) {
+        this.reason = detail.reason;
+      }
+    }
+  }
+}
