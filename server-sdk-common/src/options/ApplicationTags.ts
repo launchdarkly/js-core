@@ -22,18 +22,22 @@ export default class ApplicationTags {
     const application = options?.application;
 
     if (application?.id !== null && application?.id !== undefined) {
-      if (tagValidator.is(application.id)) {
-        tags['application-id'] = [application.id];
-      } else {
+      if (!tagValidator.is(application.id)) {
         options.logger?.warn(OptionMessages.invalidTagValue('application.id'));
+      } else if (application.id.length > 64) {
+        options.logger?.warn(OptionMessages.tagValueTooLong('application.id'));
+      } else {
+        tags['application-id'] = [application.id];
       }
     }
 
     if (application?.version !== null && application?.version !== undefined) {
-      if (tagValidator.is(application.version)) {
-        tags['application-version'] = [application.version];
-      } else {
+      if (!tagValidator.is(application.version)) {
         options.logger?.warn(OptionMessages.invalidTagValue('application.version'));
+      } else if (application.version.length > 64) {
+        options.logger?.warn(OptionMessages.tagValueTooLong('application.version'));
+      } else {
+        tags['application-version'] = [application.version];
       }
     }
 

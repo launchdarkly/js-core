@@ -24,6 +24,10 @@ export default class OptionMessages {
     return `Config option "${name}" must only contain letters, numbers, ., _ or -.`;
   }
 
+  static tagValueTooLong(name: string): string {
+    return `Value of "${name}" was longer than 64 characters and was discarded.`;
+  }
+
   static partialEndpoint(name: string): string {
     return `You have set custom uris without specifying the ${name} URI; connections may not work properly`;
   }
