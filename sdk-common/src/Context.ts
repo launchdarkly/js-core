@@ -7,7 +7,7 @@ import { LDContext } from './api/LDContext';
 import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
 
-// The general strategy for the context is to tranform the passed in context
+// The general strategy for the context is to transform the passed in context
 // as little as possible. We do convert the legacy users to a single kind
 // context, but we do not translate all passed contexts into a rigid structure.
 // The context will have to be copied for events, but we want to avoid any
