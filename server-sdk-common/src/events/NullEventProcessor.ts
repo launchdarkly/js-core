@@ -8,7 +8,7 @@ import LDEventProcessor from './LDEventProcessor';
 
 /**
  * Empty event processor implementation for when events are not desired.
- * 
+ *
  * @internal
  */
 export default class NullEventProcessor implements LDEventProcessor {
