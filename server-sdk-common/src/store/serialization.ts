@@ -63,7 +63,7 @@ function processRollout(rollout?: Rollout) {
   if (rollout && rollout.bucketBy) {
     rollout.bucketByAttributeReference = new AttributeReference(
       rollout.bucketBy,
-      !!rollout.contextKind,
+      !rollout.contextKind,
     );
   }
 }

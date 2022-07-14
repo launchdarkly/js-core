@@ -69,7 +69,7 @@ const defaultValues: ValidatedOptions = {
   contextKeysFlushInterval: 300,
   diagnosticOptOut: false,
   diagnosticRecordingInterval: 900,
-  featureStore: new InMemoryFeatureStore(),
+  featureStore: () => new InMemoryFeatureStore(),
 };
 
 function validateTypesAndNames(options: LDOptions): {
