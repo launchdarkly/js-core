@@ -13,7 +13,7 @@ class LDClientNode extends LDClientImpl {
   override bigSegmentStoreStatusProvider:
   InstanceType<typeof BigSegmentStoreStatusProviderNode>;
 
-  constructor(options: LDOptions) {
+  constructor(private sdkKey: string, options: LDOptions) {
     super(new NodePlatform(options));
     this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode();
   }
