@@ -7,34 +7,34 @@ import AsyncStoreFacade from '../../store/AsyncStoreFacade';
 import VersionedDataKinds from '../../store/VersionedDataKinds';
 
 /**
- * @internal
- */
+   ** @internal
+   **/
 export default class TestDataSource implements LDStreamProcessor {
-  constructor(
-    private readonly featureStore: AsyncStoreFacade,
-    private readonly flags: Record<string, Flag>,
-    private readonly segments: Record<string, Segment>,
-    private readonly onStop: (tfs: TestDataSource) => void,
-  ) {
-  }
+   *constructor(
+   *private readonly featureStore: AsyncStoreFacade,
+   *private readonly flags: Record<string, Flag>,
+   *private readonly segments: Record<string, Segment>,
+   *private readonly onStop: (tfs: TestDataSource) => void,
+   *) {
+   *}
 
-  async start(fn?: ((err?: any) => void) | undefined) {
-    await this.featureStore.init({
-      [VersionedDataKinds.Features.namespace]: { ...this.flags },
-      [VersionedDataKinds.Segments.namespace]: { ...this.segments },
-    });
-    fn?.();
-  }
+   *async start(fn?: ((err?: any) => void) | undefined) {
+   *await this.featureStore.init({
+   *[VersionedDataKinds.Features.namespace]: { ...this.flags },
+   *[VersionedDataKinds.Segments.namespace]: { ...this.segments },
+   *});
+   *fn?.();
+   *}
 
-  stop() {
-    this.onStop(this);
-  }
+   *stop() {
+   *this.onStop(this);
+   *}
 
-  close() {
-    this.stop();
-  }
+   *close() {
+   *this.stop();
+   *}
 
-  async upsert(kind: DataKind, value: LDKeyedFeatureStoreItem) {
-    return this.featureStore.upsert(kind, value);
-  }
+   *async upsert(kind: DataKind, value: LDKeyedFeatureStoreItem) {
+   *return this.featureStore.upsert(kind, value);
+   *}
 }

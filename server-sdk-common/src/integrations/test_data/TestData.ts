@@ -21,7 +21,8 @@ import TestDataSource from './TestDataSource';
  *
  *     const td = TestData();
  *     testData.update(td.flag("flag-key-1").booleanFlag().variationForAll(true));
- *     const client = new LDClient(sdkKey, { updateProcessor: td.getFactory() });
+ *     TKTK: May need to update this, depending on how we show importing the client.
+ *     const client = LDClient.init(sdkKey, { updateProcessor: td.getFactory() });
  *
  *     // flags can be updated at any time:
  *     td.update(td.flag("flag-key-2")
@@ -73,25 +74,25 @@ export default class TestData {
   }
 
   /**
- * Creates or copies a [[TestDataFlagBuilder]] for building a test flag configuration.
- *
- * If the flag key has already been defined in this `TestData` instance,
- * then the builder starts with the same configuration that was last
- * provided for this flag.
- *
- * Otherwise, it starts with a new default configuration in which the flag
- * has `true` and `false` variations, is `true` for all users when targeting
- * is turned on and `false` otherwise, and currently has targeting turned on.
- * You can change any of those properties and provide more complex behavior
- * using the `TestDataFlagBuilder` methods.
- *
- * Once you have set the desired configuration, pass the builder to
- * [[TestData.update]].
- *
- * @param key the flag key
- * @returns a flag configuration builder
- *
- */
+   * Creates or copies a [[TestDataFlagBuilder]] for building a test flag configuration.
+   *
+   * If the flag key has already been defined in this `TestData` instance,
+   * then the builder starts with the same configuration that was last
+   * provided for this flag.
+   *
+   * Otherwise, it starts with a new default configuration in which the flag
+   * has `true` and `false` variations, is `true` for all users when targeting
+   * is turned on and `false` otherwise, and currently has targeting turned on.
+   * You can change any of those properties and provide more complex behavior
+   * using the `TestDataFlagBuilder` methods.
+   *
+   * Once you have set the desired configuration, pass the builder to
+   * [[TestData.update]].
+   *
+   * @param key the flag key
+   * @returns a flag configuration builder
+   *
+   */
   flag(key: string): TestDataFlagBuilder {
     if (this.flagBuilders[key]) {
       return this.flagBuilders[key].clone();
@@ -100,21 +101,21 @@ export default class TestData {
   }
 
   /**
- * Updates the test data with the specified flag configuration.
- *
- * This has the same effect as if a flag were added or modified in the
- * LaunchDarkly dashboard. It immediately propagates the flag changes to
- * any [[LDClient]] instance(s) that you have already configured to use
- * this `TestData`. If no `LDClient` has been started yet, it simply adds
- * this flag to the test data which will be provided to any `LDClient`
- * that you subsequently configure.
- *
- * Any subsequent changes to this `TestDataFlagBuilder` instance do not affect
- * the test data unless you call `update` again.
- *
- * @param flagBuilder a flag configuration builder
- * @return a promise that will resolve when the feature stores are updated
- */
+   * Updates the test data with the specified flag configuration.
+   *
+   * This has the same effect as if a flag were added or modified in the
+   * LaunchDarkly dashboard. It immediately propagates the flag changes to
+   * any [[LDClient]] instance(s) that you have already configured to use
+   * this `TestData`. If no `LDClient` has been started yet, it simply adds
+   * this flag to the test data which will be provided to any `LDClient`
+   * that you subsequently configure.
+   *
+   * Any subsequent changes to this `TestDataFlagBuilder` instance do not affect
+   * the test data unless you call `update` again.
+   *
+   * @param flagBuilder a flag configuration builder
+   * @return a promise that will resolve when the feature stores are updated
+   */
   update(flagBuilder: TestDataFlagBuilder): Promise<any> {
     const flagKey = flagBuilder.getKey();
     const oldItem = this.currentFlags[flagKey];
@@ -129,22 +130,22 @@ export default class TestData {
   }
 
   /**
- * Copies a full feature flag data model object into the test data.
- *
- * It immediately propagates the flag change to any [[LDClient]] instance(s) that you have already
- * configured to use this `TestData`. If no [[LDClient]] has been started yet, it simply adds this
- * flag to the test data which will be provided to any LDClient that you subsequently configure.
- *
- * Use this method if you need to use advanced flag configuration properties that are not
- * supported by the simplified [[TestDataFlagBuilder]] API. Otherwise it is recommended to use the
- * regular [[flag]]/[[update]] mechanism to avoid dependencies on details of the data model.
- *
- * You cannot make incremental changes with [[flag]]/[[update]] to a flag that has been added in
- * this way; you can only replace it with an entirely new flag configuration.
- *
- * @param flagConfig the flag configuration as a JSON object
- * @return a promise that will resolve when the feature stores are updated
- */
+   * Copies a full feature flag data model object into the test data.
+   *
+   * It immediately propagates the flag change to any [[LDClient]] instance(s) that you have already
+   * configured to use this `TestData`. If no [[LDClient]] has been started yet, it simply adds this
+   * flag to the test data which will be provided to any LDClient that you subsequently configure.
+   *
+   * Use this method if you need to use advanced flag configuration properties that are not
+   * supported by the simplified [[TestDataFlagBuilder]] API. Otherwise it is recommended to use the
+   * regular [[flag]]/[[update]] mechanism to avoid dependencies on details of the data model.
+   *
+   * You cannot make incremental changes with [[flag]]/[[update]] to a flag that has been added in
+   * this way; you can only replace it with an entirely new flag configuration.
+   *
+   * @param flagConfig the flag configuration as a JSON object
+   * @return a promise that will resolve when the feature stores are updated
+   */
   usePreconfiguredFlag(inConfig: any): Promise<any> {
     // We need to do things like process attribute reference, and
     // we do not want to modify the passed in value.

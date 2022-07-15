@@ -73,21 +73,21 @@ export default class TestDataRuleBuilder<BuilderType> {
   }
 
   /**
- * Adds another clause using the "is not one of" operator.
- *
- * For example, this creates a rule that returns `true` if the name is
- * "Patsy" and the country is not "gb":
- *
- *     testData.flag('flag')
- *             .ifMatch('name', 'Patsy')
- *             .andNotMatch('country', 'gb')
- *             .thenReturn(true)
- *
- * @param contextKind the kind of the context
- * @param attribute the user attribute to match against
- * @param values values to compare to
- * @return the flag rule builder
- */
+   * Adds another clause using the "is not one of" operator.
+   *
+   * For example, this creates a rule that returns `true` if the name is
+   * "Patsy" and the country is not "gb":
+   *
+   *     testData.flag('flag')
+   *             .ifMatch('name', 'Patsy')
+   *             .andNotMatch('country', 'gb')
+   *             .thenReturn(true)
+   *
+   * @param contextKind the kind of the context
+   * @param attribute the user attribute to match against
+   * @param values values to compare to
+   * @return the flag rule builder
+   */
   andNotMatch(
     contextKind: string,
     attribute: string,
@@ -105,19 +105,19 @@ export default class TestDataRuleBuilder<BuilderType> {
   }
 
   /**
- * Finishes defining the rule, specifying the result value as either a boolean or an index
- *
- * If the variation is a boolean value and the flag was not already a boolean
- * flag, this also changes it to be a boolean flag.
- *
- * If the variation is an integer, it specifies a variation out of whatever
- * variation values have already been defined.
-
- * @param variation
- *    either `true` or `false` or the index of the desired variation:
- *    0 for the first, 1 for the second, etc.
- * @return the flag rule builder
- */
+   * Finishes defining the rule, specifying the result value as either a boolean or an index
+   *
+   * If the variation is a boolean value and the flag was not already a boolean
+   * flag, this also changes it to be a boolean flag.
+   *
+   * If the variation is an integer, it specifies a variation out of whatever
+   * variation values have already been defined.
+   *
+   * @param variation
+   *    either `true` or `false` or the index of the desired variation:
+   *    0 for the first, 1 for the second, etc.
+   * @return the flag rule builder
+   */
   thenReturn(variation: number | boolean): BuilderType {
     if (TypeValidators.Boolean.is(variation)) {
       this.flagBuilder.booleanFlag();
