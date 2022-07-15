@@ -1,12 +1,12 @@
-import { LDStreamProcessor } from '../api';
-import { Flag } from '../evaluation/data/Flag';
-import { Segment } from '../evaluation/data/Segment';
-import Configuration from '../options/Configuration';
-import AsyncStoreFacade from '../store/AsyncStoreFacade';
-import { processFlag, processSegment } from '../store/serialization';
-import VersionedDataKinds from '../store/VersionedDataKinds';
+import { LDStreamProcessor } from '../../api';
+import { Flag } from '../../evaluation/data/Flag';
+import { Segment } from '../../evaluation/data/Segment';
+import Configuration from '../../options/Configuration';
+import AsyncStoreFacade from '../../store/AsyncStoreFacade';
+import { processFlag, processSegment } from '../../store/serialization';
+import VersionedDataKinds from '../../store/VersionedDataKinds';
 import TestDataFlagBuilder from './TestDataFlagBuilder';
-import { TestDataSource } from './TestDataSource';
+import TestDataSource from './TestDataSource';
 
 /**
  * A mechanism for providing dynamically updatable feature flag state in a simplified form to an SDK
@@ -56,9 +56,20 @@ export default class TestData {
   getFactory(): (config: Configuration) => LDStreamProcessor {
     // Provides an arrow function to prevent needed to bind the method to
     // maintain `this`.
-    return (config: Configuration) => new TestDataSource(new AsyncStoreFacade(config.featureStore), this.currentFlags, this.currentSegments, (tds) => {
-      this.dataSources.splice(this.dataSources.indexOf(tds));
-    });
+    return (config: Configuration) => {
+      const newSource = new TestDataSource(
+        new AsyncStoreFacade(config.featureStore),
+        this.currentFlags,
+
+        this.currentSegments,
+        (tds) => {
+          this.dataSources.splice(this.dataSources.indexOf(tds));
+        },
+      );
+
+      this.dataSources.push(newSource);
+      return newSource;
+    };
   }
 
   /**
@@ -112,7 +123,9 @@ export default class TestData {
     this.currentFlags[flagKey] = newFlag;
     this.flagBuilders[flagKey] = flagBuilder.clone();
 
-    return Promise.all(this.dataSources.map(impl => impl.upsert(VersionedDataKinds.Features, newFlag)));
+    return Promise.all(
+      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newFlag)),
+    );
   }
 
   /**
@@ -136,12 +149,14 @@ export default class TestData {
     // We need to do things like process attribute reference, and
     // we do not want to modify the passed in value.
     const flagConfig = JSON.parse(JSON.stringify(inConfig));
-    processFlag(flagConfig);
     const oldItem = this.currentFlags[flagConfig.key];
     const newItem = { ...flagConfig, version: oldItem ? oldItem.version + 1 : flagConfig.version };
+    processFlag(newItem);
     this.currentFlags[flagConfig.key] = newItem;
 
-    return Promise.all(this.dataSources.map(impl => impl.upsert(VersionedDataKinds.Features, newItem)));
+    return Promise.all(
+      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newItem)),
+    );
   }
 
   /**
@@ -162,11 +177,17 @@ export default class TestData {
    */
   usePreconfiguredSegment(inConfig: any): Promise<any> {
     const segmentConfig = JSON.parse(JSON.stringify(inConfig));
-    processSegment(segmentConfig);
+
     const oldItem = this.currentSegments[segmentConfig.key];
-    const newItem = { ...segmentConfig, version: oldItem ? oldItem.version + 1 : segmentConfig.version };
+    const newItem = {
+      ...segmentConfig,
+      version: oldItem ? oldItem.version + 1 : segmentConfig.version,
+    };
+    processFlag(newItem);
     this.currentSegments[segmentConfig.key] = newItem;
 
-    return Promise.all(this.dataSources.map(impl => impl.upsert(VersionedDataKinds.Segments, newItem)));
+    return Promise.all(
+      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Segments, newItem)),
+    );
   }
 }

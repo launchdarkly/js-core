@@ -1,7 +1,8 @@
 import { TypeValidators } from '@launchdarkly/js-sdk-common';
-import { Flag } from '../evaluation/data/Flag';
+import { Flag } from '../../evaluation/data/Flag';
+import { Target } from '../../evaluation/data/Target';
+import { TRUE_VARIATION_INDEX, FALSE_VARIATION_INDEX, variationForBoolean } from './booleanVariation';
 import TestDataRuleBuilder from './TestDataRuleBuilder';
-import { variationForBoolean } from './booleanVariation';
 
 interface BuilderData {
   on: boolean;
@@ -11,7 +12,7 @@ interface BuilderData {
   // For a given variation, what are the targets of that variation.
   // Each target being a context kind and a list of keys for that kind.
   targetsByVariation?: Record<number, Record<string, string[]>>;
-  rules?: TestDataRuleBuilder[];
+  rules?: TestDataRuleBuilder<TestDataFlagBuilder>[];
 }
 
 /**
@@ -32,7 +33,7 @@ export default class TestDataFlagBuilder {
       this.data = {
         on: data.on,
         variations: [...data.variations],
-      }
+      };
       if (data.offVariation !== undefined) {
         this.data.offVariation = data.offVariation;
       }
@@ -45,7 +46,7 @@ export default class TestDataFlagBuilder {
       if (data.rules) {
         this.data.rules = [];
         data.rules.forEach((rule) => {
-          this.data.rules?.push(rule.clone())
+          this.data.rules?.push(rule.clone());
         });
       }
     }
@@ -74,7 +75,7 @@ export default class TestDataFlagBuilder {
     // Change this flag into a boolean flag.
     return this.variations(true, false)
       .fallthroughVariation(TRUE_VARIATION_INDEX)
-      .offVariation(FALSE_VARIATION_INDEX)
+      .offVariation(FALSE_VARIATION_INDEX);
   }
 
   /**
@@ -226,9 +227,14 @@ export default class TestDataFlagBuilder {
  *    0 for the first, 1 for the second, etc.
  * @return the flag builder
  */
-  variationForContext(contextKind: string, contextKey: string, variation: number | boolean): TestDataFlagBuilder {
+  variationForContext(
+    contextKind: string,
+    contextKey: string,
+    variation: number | boolean,
+  ): TestDataFlagBuilder {
     if (TypeValidators.Boolean.is(variation)) {
-      return this.booleanFlag().variationForContext(contextKind, contextKey, variationForBoolean(variation));
+      return this.booleanFlag()
+        .variationForContext(contextKind, contextKey, variationForBoolean(variation));
     }
 
     if (!this.data.targetsByVariation) {
@@ -237,7 +243,7 @@ export default class TestDataFlagBuilder {
 
     this.data.variations.forEach((_, i) => {
       if (i === variation) {
-        //If there is nothing set at the current variation then set it to the empty array
+        // If there is nothing set at the current variation then set it to the empty array
         const targetsForVariation = this.data.targetsByVariation![i] || {};
 
         if (!(contextKind in targetsForVariation)) {
@@ -264,7 +270,7 @@ export default class TestDataFlagBuilder {
               }
             }
           }
-          if (!targetsForVariation.size) {
+          if (!Object.keys(targetsForVariation).length) {
             delete this.data.targetsByVariation![i];
           }
         }
@@ -313,7 +319,11 @@ export default class TestDataFlagBuilder {
  *    a flag rule builder; call `thenReturn` to finish the rule
  *    or add more tests with another method like `andMatch`
  */
-  ifMatch(contextKind: string, attribute: string, ...values: any): TestDataRuleBuilder {
+  ifMatch(
+    contextKind: string,
+    attribute: string,
+    ...values: any
+  ): TestDataRuleBuilder<TestDataFlagBuilder> {
     const flagRuleBuilder = new TestDataRuleBuilder(this);
     return flagRuleBuilder.andMatch(contextKind, attribute, ...values);
   }
@@ -321,7 +331,7 @@ export default class TestDataFlagBuilder {
   /**
  * Starts defining a flag rule using the "is not one of" operator.
  *
- * For example, this creates a rule that returnes `true` if the name is
+ * For example, this creates a rule that returns `true` if the name is
  * neither "Saffron" nor "Bubble":
  *
  *     testData.flag('flag')
@@ -335,20 +345,24 @@ export default class TestDataFlagBuilder {
  *    a flag rule builder; call `thenReturn` to finish the rule
  *    or add more tests with another method like `andNotMatch`
  */
-  ifNotMatch(contextKind: string, attribute: string, ...values: any): TestDataRuleBuilder {
-    const flagRuleBuilder = new TestDataRuleBuilderImpl(this);
+  ifNotMatch(
+    contextKind: string,
+    attribute: string,
+    ...values: any
+  ): TestDataRuleBuilder<TestDataFlagBuilder> {
+    const flagRuleBuilder = new TestDataRuleBuilder<TestDataFlagBuilder>(this);
     return flagRuleBuilder.andNotMatch(contextKind, attribute, ...values);
   }
 
   /**
    * @internal
    */
-  addRule(flagRuleBuilder: TestDataRuleBuilder) {
+  addRule(flagRuleBuilder: TestDataRuleBuilder<TestDataFlagBuilder>) {
     if (!this.data.rules) {
       this.data.rules = [];
     }
-    this.data.rules.push(flagRuleBuilder as TestDataRuleBuilderImpl);
-  };
+    this.data.rules.push(flagRuleBuilder as TestDataRuleBuilder<TestDataFlagBuilder>);
+  }
 
   /**
    * @internal
@@ -356,7 +370,7 @@ export default class TestDataFlagBuilder {
   build(version: number) {
     const baseFlagObject: Flag = {
       key: this.key,
-      version: version,
+      version,
       on: this.data.on,
       offVariation: this.data.offVariation,
       fallthrough: {
@@ -366,34 +380,36 @@ export default class TestDataFlagBuilder {
     };
 
     if (this.data.targetsByVariation) {
-      const contextTargets = [];
-      for (const [variation, contextTargetsForVariation] of Object.entries(this.data.targetsByVariation)) {
-        for (const [contextKind, values] of Object.entries(contextTargetsForVariation)) {
+      const contextTargets: Target[] = [];
+      Object.entries(
+        this.data.targetsByVariation,
+      ).forEach(([variation, contextTargetsForVariation]) => {
+        Object.entries(contextTargetsForVariation).forEach(([contextKind, values]) => {
           contextTargets.push({
             contextKind,
             values,
             // Iterating the object it will be a string.
             variation: parseInt(variation, 10),
           });
-        }
-      }
+        });
+      });
       baseFlagObject.contextTargets = contextTargets;
     }
 
     if (this.data.rules) {
-      baseFlagObject.rules = this.data.rules.map((rule, i) =>
-        (rule as TestDataRuleBuilderImpl).build(String(i))
+      baseFlagObject.rules = this.data.rules.map(
+        (rule, i) => (rule as TestDataRuleBuilder<TestDataFlagBuilder>).build(String(i)),
       );
     }
 
     return baseFlagObject;
-  };
+  }
 
   /**
    * @internal
    */
-  clone(): TestDataFlagBuilderImpl {
-    return new TestDataFlagBuilderImpl(this.key, this.data);
+  clone(): TestDataFlagBuilder {
+    return new TestDataFlagBuilder(this.key, this.data);
   }
 
   /**

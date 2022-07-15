@@ -1,7 +1,6 @@
 import { AttributeReference, TypeValidators } from '@launchdarkly/js-sdk-common';
-import { Clause } from '../evaluation/data/Clause';
-import TestDataFlagBuilder from './TestDataFlagBuilder';
 import { variationForBoolean } from './booleanVariation';
+import { Clause } from '../../evaluation/data/Clause';
 
 /**
  * A builder for feature flag rules to be used with [[TestDataFlagBuilder]].
@@ -17,7 +16,7 @@ import { variationForBoolean } from './booleanVariation';
  * Finally, call `thenReturn` to finish defining the rule.
  */
 
-export default class TestDataRuleBuilder {
+export default class TestDataRuleBuilder<BuilderType> {
   private clauses: Clause[] = [];
 
   private variation?: number;
@@ -26,9 +25,13 @@ export default class TestDataRuleBuilder {
    * @internal
    */
   constructor(
-    private readonly flagBuilder: TestDataFlagBuilder,
+    private readonly flagBuilder: BuilderType & {
+      addRule: (rule: TestDataRuleBuilder<BuilderType>) => void,
+      booleanFlag: () => BuilderType,
+    },
     clauses?: Clause[],
-    variation?: number) {
+    variation?: number,
+  ) {
     if (clauses) {
       this.clauses = JSON.parse(JSON.stringify(clauses));
     }
@@ -53,13 +56,17 @@ export default class TestDataRuleBuilder {
    * @param values values to compare to
    * @return the flag rule builder
    */
-  andMatch(contextKind: string, attribute: string, ...values: any): TestDataRuleBuilder {
+  andMatch(
+    contextKind: string,
+    attribute: string,
+    ...values: any
+  ): TestDataRuleBuilder<BuilderType> {
     this.clauses.push({
       contextKind,
-      attribute: attribute,
+      attribute,
       attributeReference: new AttributeReference(attribute),
       op: 'in',
-      values: values,
+      values,
       negate: false,
     });
     return this;
@@ -81,13 +88,17 @@ export default class TestDataRuleBuilder {
  * @param values values to compare to
  * @return the flag rule builder
  */
-  andNotMatch(contextKind: string, attribute: string, ...values: any): TestDataRuleBuilder {
+  andNotMatch(
+    contextKind: string,
+    attribute: string,
+    ...values: any
+  ): TestDataRuleBuilder<BuilderType> {
     this.clauses.push({
       contextKind,
-      attribute: attribute,
+      attribute,
       attributeReference: new AttributeReference(attribute),
       op: 'in',
-      values: values,
+      values,
       negate: true,
     });
     return this;
@@ -107,7 +118,7 @@ export default class TestDataRuleBuilder {
  *    0 for the first, 1 for the second, etc.
  * @return the flag rule builder
  */
-  thenReturn(variation: number | boolean): TestDataFlagBuilder {
+  thenReturn(variation: number | boolean): BuilderType {
     if (TypeValidators.Boolean.is(variation)) {
       this.flagBuilder.booleanFlag();
       return this.thenReturn(variationForBoolean(variation));
@@ -123,16 +134,16 @@ export default class TestDataRuleBuilder {
    */
   build(id: string) {
     return {
-      id: 'rule' + id,
+      id: `rule${id}`,
       variation: this.variation,
       clauses: this.clauses,
     };
-  };
+  }
 
   /**
    * @internal
    */
-  clone(): TestDataRuleBuilder {
-    return new TestDataRuleBuilder(this.flagBuilder, this.clauses, this.variation);
+  clone(): TestDataRuleBuilder<BuilderType> {
+    return new TestDataRuleBuilder<BuilderType>(this.flagBuilder, this.clauses, this.variation);
   }
 }
