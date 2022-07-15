@@ -184,7 +184,7 @@ export default class TestData {
       ...segmentConfig,
       version: oldItem ? oldItem.version + 1 : segmentConfig.version,
     };
-    processFlag(newItem);
+    processSegment(newItem);
     this.currentSegments[segmentConfig.key] = newItem;
 
     return Promise.all(
