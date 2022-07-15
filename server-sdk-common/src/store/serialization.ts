@@ -68,7 +68,10 @@ function processRollout(rollout?: Rollout) {
   }
 }
 
-function processFlag(flag: Flag) {
+/**
+ * @internal
+ */
+export function processFlag(flag: Flag) {
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
     processRollout(rollout);
@@ -86,7 +89,10 @@ function processFlag(flag: Flag) {
   });
 }
 
-function processSegment(segment: Segment) {
+/**
+ * @internal
+ */
+export function processSegment(segment: Segment) {
   segment?.rules?.forEach((rule) => {
     if (rule.bucketBy) {
       // Rules before U2C would have had literals for attributes.
