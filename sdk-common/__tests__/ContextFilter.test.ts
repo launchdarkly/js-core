@@ -417,12 +417,6 @@ describe('when handling mult-kind contexts', () => {
     },
   };
 
-  // TODO: For now the entire context is invalid, but we may want to re-examine.
-  // it('it should not include invalid contexts', () => {
-  //   const uf = new ContextFilter(false, []);
-  //   expect(uf.filter(contextWithBadContexts)).toEqual(contextWithBadContextsRemoved);
-  // });
-
   it('it should remove attributes from all contexts when all attributes are private.', () => {
     const uf = new ContextFilter(true, []);
     expect(uf.filter(orgAndUserContext)).toEqual(orgAndUserContextAllPrivate);

@@ -1,3 +1,7 @@
+import {
+  BasicLogger, BasicLoggerOptions, LDLogger, LDOptions, LDClient,
+} from '@launchdarkly/js-server-sdk-common';
+import { EventEmitter } from 'events';
 import LDClientImpl from './LDClientNode';
 import BigSegmentStoreStatusProviderNode from './BigSegmentsStoreStatusProviderNode';
 
@@ -8,3 +12,11 @@ export * from '@launchdarkly/js-server-sdk-common';
 
 export { LDClient } from './api';
 export { LDClientImpl, BigSegmentStoreStatusProviderNode };
+
+export function init(sdkKey: string, options: LDOptions): LDClient & EventEmitter {
+  return new LDClientImpl(sdkKey, options);
+}
+
+export function basicLogger(options: BasicLoggerOptions): LDLogger {
+  return new BasicLogger(options);
+}
