@@ -121,7 +121,20 @@ export default class AttributeReference {
     return current;
   }
 
+  public getComponent(depth: number) {
+    return this.components[depth];
+  }
+
+  public get depth() {
+    return this.components.length;
+  }
+
   public get isKind(): boolean {
     return this.components.length === 1 && this.components[0] === 'kind';
+  }
+
+  public compare(other: AttributeReference) {
+    return this.depth === other.depth
+      && this.components.every((value, index) => value === other.getComponent(index));
   }
 }

@@ -25,7 +25,7 @@ export interface LDContextCommon {
   /**
    * If true, the context will _not_ appear on the Contexts page in the LaunchDarkly dashboard.
    */
-  transient?: boolean;
+  anonymous?: boolean;
 
   /**
    * Any additional attributes associated with the context.
