@@ -9,6 +9,8 @@ import { LDFeatureStore } from './api/subsystems';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import ClientMessages from './ClientMessages';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
+import PollingProcessor from './data_sources/PollingProcessor';
+import Requestor from './data_sources/Requestor';
 import StreamingProcessor from './data_sources/StreamingProcessor';
 import { LDClientError } from './errors';
 import { allSeriesAsync } from './evaluation/collection';
@@ -90,16 +92,20 @@ export default class LDClientImpl implements LDClient {
       this.initReject = reject;
     });
 
+    const makeDefaultProcessor = () => (config.stream ? new StreamingProcessor(
+      sdkKey,
+      config,
+      this.platform.requests,
+      this.platform.info,
+    ) : new PollingProcessor(
+      config,
+      new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+    ));
+
     if (config.offline || config.useLdd) {
       this.updateProcessor = new NullUpdateProcessor();
     } else {
-      // TODO: Update for polling.
-      this.updateProcessor = config.updateProcessor ?? new StreamingProcessor(
-        sdkKey,
-        config,
-        this.platform.requests,
-        this.platform.info,
-      );
+      this.updateProcessor = config.updateProcessor ?? makeDefaultProcessor();
     }
 
     if (!config.sendEvents || config.offline) {
@@ -226,7 +232,7 @@ export default class LDClientImpl implements LDClient {
       } else {
         this.logger?.warn(
           'Called allFlagsState before client initialization. Data store not available; '
-        + 'returning empty state',
+          + 'returning empty state',
         );
         valid = false;
       }
