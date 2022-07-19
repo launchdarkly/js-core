@@ -83,8 +83,11 @@ export default class TestLogger implements LDLogger {
     });
   }
 
-  getCount() {
-    return this.callCount;
+  getCount(level?: LogLevel) {
+    if (level === undefined) {
+      return this.callCount;
+    }
+    return this.messages[level].length;
   }
 
   private checkResolves() {
