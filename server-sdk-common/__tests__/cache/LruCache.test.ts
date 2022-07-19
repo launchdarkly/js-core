@@ -22,6 +22,10 @@ it('when the max size is exceeded', () => {
     lruCache.set(`${i}`, i);
   }
 
+  for(let i = 0; i < 10; i++) {
+    expect(lruCache.get(i.toString())).toBeUndefined();
+  }
+
   // Check they are all there.
   for (let i = 10; i < max + 10; i += 1) {
     expect(lruCache.get(i.toString())).toEqual(i);
