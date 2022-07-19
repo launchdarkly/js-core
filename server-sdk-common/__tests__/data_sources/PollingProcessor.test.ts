@@ -125,6 +125,20 @@ describe('given a polling processor with a short poll duration', () => {
     }, 300);
   });
 
+  it('continues polling after receiving invalid JSON', (done) => {
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, '{sad'));
+    processor.start((e) => {
+      expect(e).toBeDefined();
+    });
+
+    setTimeout(() => {
+      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+      const testLogger = config.logger as TestLogger;
+      expect(testLogger.getCount(LogLevel.Error)).toBeGreaterThan(2);
+      (done as jest.DoneCallback)();
+    }, 300);
+  });
+
   it.each<number | jest.DoneCallback>([401, 403])('does not continue after non-recoverable error', (status, done) => {
     requestor.requestAllData = jest.fn((cb) => cb({
       status
