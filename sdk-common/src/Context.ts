@@ -7,7 +7,7 @@ import { LDContext } from './api/LDContext';
 import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
 
-// The general strategy for the context is to tranform the passed in context
+// The general strategy for the context is to transform the passed in context
 // as little as possible. We do convert the legacy users to a single kind
 // context, but we do not translate all passed contexts into a rigid structure.
 // The context will have to be copied for events, but we want to avoid any
@@ -73,7 +73,7 @@ function isLegacyUser(context: LDContext): context is LDUser {
  * that as well.
  */
 function isContextCommon(kindOrContext: 'multi' | LDContextCommon): kindOrContext is LDContextCommon {
-  return TypeValidators.Object.is(kindOrContext);
+  return kindOrContext && TypeValidators.Object.is(kindOrContext);
 }
 
 /**
@@ -117,37 +117,51 @@ function defined(value: any) {
  */
 function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   const singleKindContext: LDSingleKindContext = {
+    // Key and secondary were coerced to strings for eval
+    // and for events, so we can make them strings up-front.
     ...(user.custom || []),
     kind: 'user',
-    key: user.key,
+    key: String(user.key),
   };
 
   // For legacy users we never established a difference between null
-  // and undefined for inputs. Because transient can be used in evaluations
+  // and undefined for inputs. Because anonymous can be used in evaluations
   // we would want it to not possibly match true/false unless defined.
-  // Which is different than coercing a null/undefined transient as `false`.
+  // Which is different than coercing a null/undefined anonymous as `false`.
   if (defined(user.anonymous)) {
-    const transient = !!user.anonymous;
+    const anonymous = !!user.anonymous;
     delete singleKindContext.anonymous;
-    singleKindContext.transient = transient;
+    singleKindContext.anonymous = anonymous;
   }
 
   if (defined(user.secondary)) {
     singleKindContext._meta = {};
     const { secondary } = user;
     delete singleKindContext.secondary;
-    singleKindContext._meta.secondary = secondary;
+    singleKindContext._meta.secondary = String(secondary);
   }
 
-  // TODO: Determine if we want to enforce typing. Previously we would have
-  // stringified these at event type.
-  singleKindContext.name = user.name;
-  singleKindContext.ip = user.ip;
-  singleKindContext.firstName = user.firstName;
-  singleKindContext.lastName = user.lastName;
-  singleKindContext.email = user.email;
-  singleKindContext.avatar = user.avatar;
-  singleKindContext.country = user.country;
+  if (user.name !== null && user.name !== undefined) {
+    singleKindContext.name = user.name;
+  }
+  if (user.ip !== null && user.ip !== undefined) {
+    singleKindContext.ip = user.ip;
+  }
+  if (user.firstName !== null && user.firstName !== undefined) {
+    singleKindContext.firstName = user.firstName;
+  }
+  if (user.lastName !== null && user.lastName !== undefined) {
+    singleKindContext.lastName = user.lastName;
+  }
+  if (user.email !== null && user.email !== undefined) {
+    singleKindContext.email = user.email;
+  }
+  if (user.avatar !== null && user.avatar !== undefined) {
+    singleKindContext.avatar = user.avatar;
+  }
+  if (user.country !== null && user.country !== undefined) {
+    singleKindContext.country = user.country;
+  }
 
   // We are not pulling private attributes over because we will serialize
   // those from attribute references for events.
@@ -166,6 +180,8 @@ export default class Context {
   private isMulti: boolean = false;
 
   private isUser: boolean = false;
+
+  private wasLegacy: boolean = false;
 
   private contexts: Record<string, LDContextCommon> = {};
 
@@ -286,6 +302,7 @@ export default class Context {
     }
     const created = new Context('user');
     created.isUser = true;
+    created.wasLegacy = true;
     created.context = legacyToSingleKind(context);
     created.privateAttributeReferences = {
       user: processPrivateAttributes(context.privateAttributeNames, true),
@@ -396,14 +413,27 @@ export default class Context {
   /**
    * Get the attribute references.
    *
-   * For now this is for testing and therefore is flagged internal.
-   * It will not be accessible outside this package.
-   *
-   * @internal
-   *
    * @param kind
    */
   public privateAttributes(kind: string): AttributeReference[] {
     return this.privateAttributeReferences?.[kind] || [];
+  }
+
+  /**
+   * Get the underlying context objects from this context.
+   *
+   * This method is intended to be used in event generation.
+   *
+   * The returned objects should not be modified.
+   */
+  public getContexts(): [string, LDContextCommon][] {
+    if (this.isMulti) {
+      return Object.entries(this.contexts);
+    }
+    return [[this.kind, this.context!]];
+  }
+
+  public get legacy(): boolean {
+    return this.wasLegacy;
   }
 }
