@@ -42,8 +42,8 @@ export default class LruCache {
     // of a linked list. All the nodes exist statically and then
     // the links between them are changed by updating the previous/next
     // arrays.
-    this.values = new Array(max).fill(undefined);
-    this.keys = new Array(max).fill(undefined);
+    this.values = new Array(max);
+    this.keys = new Array(max);
     this.next = new Uint32Array(max);
     this.prev = new Uint32Array(max);
 
