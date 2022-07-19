@@ -92,8 +92,8 @@ describe('given a polling processor with a short poll duration', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
     processor.stop();
+    jest.restoreAllMocks();
   });
 
   it('polls repeatedly', (done) => {
