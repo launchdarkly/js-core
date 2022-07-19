@@ -42,8 +42,8 @@ export default class LruCache {
     // of a linked list. All the nodes exist statically and then
     // the links between them are changed by updating the previous/next
     // arrays.
-    this.values = new Array(max).fill(undefined);
-    this.keys = new Array(max).fill(undefined);
+    this.values = new Array(max);
+    this.keys = new Array(max);
     this.next = new Uint32Array(max);
     this.prev = new Uint32Array(max);
 
@@ -87,6 +87,11 @@ export default class LruCache {
           // replaced. This would not be the case if we supported per item TTL.
           return undefined;
         }
+      }
+
+      this.setTail(index);
+      if (this.maxAge) {
+        this.lastUpdated[index] = Date.now();
       }
 
       return this.values[index];

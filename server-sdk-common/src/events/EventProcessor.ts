@@ -1,7 +1,7 @@
 import {
   AttributeReference, ContextFilter, LDLogger,
 } from '@launchdarkly/js-sdk-common';
-import { v4 as uuidv4 } from 'uuid';
+import { nanoid } from 'nanoid';
 import { LDEvaluationReason } from '../api';
 import LruCache from '../cache/LruCache';
 import defaultHeaders from '../data_sources/defaultHeaders';
@@ -153,7 +153,7 @@ export default class EventProcessor implements LDEventProcessor {
 
     this.eventsInLastBatch = eventsToFlush.length;
     this.logger?.debug('Flushing %d events', eventsToFlush.length);
-    await this.tryPostingEvents(eventsToFlush, uuidv4(), true);
+    await this.tryPostingEvents(eventsToFlush, nanoid(), true);
   }
 
   sendEvent(inputEvent: InputEvent) {
