@@ -6,7 +6,7 @@ import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import TestLogger from '../Logger';
+import TestLogger, { LogLevel } from '../Logger';
 
 describe('given an event processor', () => {
   const requestor = {
@@ -43,7 +43,7 @@ describe('given an event processor', () => {
   });
 
   it('polls immediately on start', () => {
-    processor.start(() => {});
+    processor.start(() => { });
 
     expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
   });
@@ -88,6 +88,8 @@ describe('given a polling processor with a short poll duration', () => {
       pollInterval: shortInterval,
       logger: new TestLogger()
     });
+    // Configuration will not let us set this as low as needed for the test.
+    Object.defineProperty(config, 'pollInterval', { value: 0.1 });
     processor = new PollingProcessor(config, requestor as unknown as Requestor);
   });
 
@@ -99,10 +101,43 @@ describe('given a polling processor with a short poll duration', () => {
   it('polls repeatedly', (done) => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
 
-    processor.start(() => {});
+    processor.start(() => { });
     setTimeout(() => {
       expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(4);
       done();
     }, 500);
+  });
+
+  it.each<number | jest.DoneCallback>([400, 408, 429, 500, 503])('continues polling after recoverable error', (status, done) => {
+    requestor.requestAllData = jest.fn((cb) => cb({
+      status
+    }, undefined));
+    processor.start((e) => {
+      expect(e).toBeUndefined();
+    });
+
+    setTimeout(() => {
+      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+      const testLogger = config.logger as TestLogger;
+      expect(testLogger.getCount(LogLevel.Error)).toBe(0);
+      expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
+      (done as jest.DoneCallback)();
+    }, 300);
+  });
+
+  it.each<number | jest.DoneCallback>([401, 403])('does not continue after non-recoverable error', (status, done) => {
+    requestor.requestAllData = jest.fn((cb) => cb({
+      status
+    }, undefined));
+    processor.start((e) => {
+      expect(e).toBeDefined();
+    });
+
+    setTimeout(() => {
+      expect(requestor.requestAllData.mock.calls.length).toBe(1);
+      const testLogger = config.logger as TestLogger;
+      expect(testLogger.getCount(LogLevel.Error)).toBe(1);
+      (done as jest.DoneCallback)();
+    }, 300);
   });
 });
