@@ -23,7 +23,7 @@ export default class BigSegmentsManager {
 
   constructor(
     private store: BigSegmentStore | undefined,
-    config: LDBigSegmentsOptions,
+    config: LDBigSegmentsOptions | undefined,
     private readonly logger: LDLogger | undefined,
     private readonly crypto: Crypto,
   ) {
@@ -31,14 +31,14 @@ export default class BigSegmentsManager {
       async () => this.pollStoreAndUpdateStatus(),
     );
 
-    this.staleTimeMs = (TypeValidators.Number.is(config.staleAfter)
-      && config.staleAfter > 0
-      ? config.staleAfter
+    this.staleTimeMs = (TypeValidators.Number.is(config?.staleAfter)
+      && config!.staleAfter! > 0 // It is a number, which means config and it are not undefined.
+      ? config!.staleAfter!
       : DEFAULT_STALE_AFTER_SECONDS) * 1000;
 
-    const pollIntervalMs = (TypeValidators.Number.is(config.statusPollInterval)
-      && config.statusPollInterval > 0
-      ? config.statusPollInterval
+    const pollIntervalMs = (TypeValidators.Number.is(config?.statusPollInterval)
+      && config!.statusPollInterval! > 0
+      ? config!.statusPollInterval!
       : DEFAULT_STATUS_POLL_INTERVAL_SECONDS) * 1000;
 
     this.pollHandle = store
@@ -47,8 +47,8 @@ export default class BigSegmentsManager {
 
     if (store) {
       this.cache = new LruCache({
-        max: config.userCacheSize || DEFAULT_USER_CACHE_SIZE,
-        maxAge: (config.userCacheTime || DEFAULT_USER_CACHE_TIME_SECONDS) * 1000,
+        max: config?.userCacheSize || DEFAULT_USER_CACHE_SIZE,
+        maxAge: (config?.userCacheTime || DEFAULT_USER_CACHE_TIME_SECONDS) * 1000,
       });
     }
   }

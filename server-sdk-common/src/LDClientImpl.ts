@@ -69,7 +69,7 @@ export default class LDClientImpl implements LDClient {
    * a platform event system. For node this would be an EventEmitter, for other
    * platforms it would likely be an EventTarget.
    */
-  protected bigSegmentStatusProviderInternal: BigSegmentStoreStatusProvider
+  protected bigSegmentStatusProviderInternal: BigSegmentStoreStatusProvider;
 
   constructor(
     private sdkKey: string,
@@ -122,7 +122,12 @@ export default class LDClientImpl implements LDClient {
     const asyncFacade = new AsyncStoreFacade(config.featureStore);
     this.featureStore = asyncFacade;
 
-    const manager = new BigSegmentsManager(undefined, {}, config.logger, this.platform.crypto);
+    const manager = new BigSegmentsManager(
+      config.bigSegments?.store?.(config),
+      config.bigSegments,
+      config.logger,
+      this.platform.crypto,
+    );
     this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
 
     const queries: Queries = {
