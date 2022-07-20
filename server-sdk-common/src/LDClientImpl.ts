@@ -5,7 +5,7 @@ import {
   LDClient, LDEvaluationDetail, LDFlagsState, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
 } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
-import { LDFeatureStore } from './api/subsystems';
+import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import ClientMessages from './ClientMessages';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
@@ -69,7 +69,7 @@ export default class LDClientImpl implements LDClient {
    * a platform event system. For node this would be an EventEmitter, for other
    * platforms it would likely be an EventTarget.
    */
-  bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProvider();
+  protected bigSegmentStatusProviderInternal: BigSegmentStoreStatusProvider
 
   constructor(
     private sdkKey: string,
@@ -121,6 +121,9 @@ export default class LDClientImpl implements LDClient {
 
     const asyncFacade = new AsyncStoreFacade(config.featureStore);
     this.featureStore = asyncFacade;
+
+    const manager = new BigSegmentsManager(undefined, {}, config.logger, this.platform.crypto);
+    this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
 
     const queries: Queries = {
       async getFlag(key: string): Promise<Flag | undefined> {

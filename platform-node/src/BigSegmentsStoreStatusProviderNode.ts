@@ -1,12 +1,34 @@
 import { BigSegmentStoreStatusProviderImpl, interfaces } from '@launchdarkly/js-server-sdk-common';
+import { BigSegmentStoreStatus } from '@launchdarkly/js-server-sdk-common/dist/api/interfaces';
 import { EventEmitter } from 'events';
 import { Emits } from './Emits';
 
-class BigSegmentStoreStatusProviderNode extends BigSegmentStoreStatusProviderImpl {
+class BigSegmentStoreStatusProviderNode implements interfaces.BigSegmentStoreStatusProvider {
   emitter: EventEmitter = new EventEmitter();
 
-  override dispatch(eventType: string, status: interfaces.BigSegmentStoreStatus) {
+  constructor(
+    private readonly provider: BigSegmentStoreStatusProviderImpl,
+  ) {
+    this.provider.setListener((status: BigSegmentStoreStatus) => {
+      this.dispatch('change', status);
+    });
+  }
+
+  getStatus(): interfaces.BigSegmentStoreStatus | undefined {
+    return this.provider.getStatus();
+  }
+
+  requireStatus(): Promise<interfaces.BigSegmentStoreStatus> {
+    return this.provider.requireStatus();
+  }
+
+  dispatch(eventType: string, status: interfaces.BigSegmentStoreStatus) {
     this.emitter.emit(eventType, status);
+  }
+
+  on(event: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.on(event, listener);
+    return this;
   }
 }
 

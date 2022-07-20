@@ -2,6 +2,15 @@
 import { BigSegmentStoreStatusProvider, BigSegmentStoreStatus } from './api/interfaces';
 
 export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStoreStatusProvider {
+  private lastStatus: BigSegmentStoreStatus | undefined;
+
+  private listener?: (status: BigSegmentStoreStatus) => void;
+
+  constructor(
+    private readonly onRequestStatus: () => Promise<void>,
+  ) {
+  }
+
   /**
    * Gets the current status of the store, if known.
    *
@@ -9,7 +18,7 @@ export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStor
    *   Big Segment store status
    */
   getStatus(): BigSegmentStoreStatus | undefined {
-    return undefined;
+    return this.lastStatus;
   }
 
   /**
@@ -18,14 +27,25 @@ export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStor
    * @returns a Promise for the status of the store
    */
   async requireStatus(): Promise<BigSegmentStoreStatus> {
-    return Promise.reject();
+    if (!this.lastStatus) {
+      await this.onRequestStatus();
+    }
+
+    // Status will be defined at this point.
+    return this.lastStatus!;
   }
 
-  /**
-   * This should be overridden by derived implementations.
-   * @param eventType
-   * @param status
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  dispatch(eventType: string, status: BigSegmentStoreStatus) {}
+  notify() {
+    if (this.lastStatus) {
+      this.listener?.(this.lastStatus);
+    }
+  }
+
+  setListener(listener: (status: BigSegmentStoreStatus) => void) {
+    this.listener = listener;
+  }
+
+  setStatus(status: BigSegmentStoreStatus) {
+    this.lastStatus = status;
+  }
 }

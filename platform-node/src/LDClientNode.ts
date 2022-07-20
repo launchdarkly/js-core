@@ -9,14 +9,14 @@ import { format } from 'util';
 import NodePlatform from './platform/NodePlatform';
 import { Emits } from './Emits';
 import BigSegmentStoreStatusProviderNode from './BigSegmentsStoreStatusProviderNode';
+import { BigSegmentStoreStatusProvider } from './api';
 
 class ClientEmitter extends EventEmitter {}
 
 class LDClientNode extends LDClientImpl {
   emitter: EventEmitter;
 
-  override bigSegmentStoreStatusProvider:
-  InstanceType<typeof BigSegmentStoreStatusProviderNode>;
+  bigSegmentStoreStatusProvider: BigSegmentStoreStatusProvider;
 
   constructor(sdkKey: string, options: LDOptions) {
     // TODO: Conditional error reporting needs to move here.
@@ -52,7 +52,9 @@ class LDClientNode extends LDClientImpl {
     );
     this.emitter = emitter;
 
-    this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode();
+    this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode(
+      this.bigSegmentStatusProviderInternal,
+    ) as BigSegmentStoreStatusProvider;
   }
 }
 
