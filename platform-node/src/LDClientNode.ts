@@ -15,7 +15,9 @@ class LDClientNode extends LDClientImpl {
 
   constructor(private sdkKey: string, options: LDOptions) {
     super(new NodePlatform(options));
-    this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode();
+    this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode(
+      this.bigSegmentStatusProviderInternal
+    );
   }
 }
 
