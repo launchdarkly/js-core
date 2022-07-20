@@ -35,8 +35,10 @@ export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStor
     return this.lastStatus!;
   }
 
-  dispatch(status: BigSegmentStoreStatus) {
-    this.listener?.(status);
+  notify() {
+    if (this.lastStatus) {
+      this.listener?.(this.lastStatus);
+    }
   }
 
   setListener(listener: (status: BigSegmentStoreStatus) => void) {

@@ -22,7 +22,7 @@ it('when the max size is exceeded', () => {
     lruCache.set(`${i}`, i);
   }
 
-  for(let i = 0; i < 10; i++) {
+  for (let i = 0; i < 10; i += 1) {
     expect(lruCache.get(i.toString())).toBeUndefined();
   }
 

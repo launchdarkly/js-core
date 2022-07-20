@@ -25,6 +25,11 @@ class BigSegmentStoreStatusProviderNode implements interfaces.BigSegmentStoreSta
   dispatch(eventType: string, status: interfaces.BigSegmentStoreStatus) {
     this.emitter.emit(eventType, status);
   }
+
+  on(event: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.on(event, listener);
+    return this;
+  }
 }
 
 export default Emits(BigSegmentStoreStatusProviderNode);

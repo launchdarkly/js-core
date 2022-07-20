@@ -30,24 +30,15 @@ enum InitState {
 }
 
 export default class LDClientImpl implements LDClient {
-  private platform: Platform;
-
   private initState: InitState = InitState.Initializing;
 
   protected bigSegmentStatusProviderInternal: BigSegmentStoreStatusProvider;
 
-  /**
-   * This field should be overridden by implementations.
-   */
-  bigSegmentsStatusProvider: BigSegmentStoreStatusProvider;
-
   constructor(
-    targetPlatform: Platform,
+    private readonly platform: Platform,
   ) {
-    this.platform = targetPlatform;
-    const manager = new BigSegmentsManager(undefined, {}, undefined);
+    const manager = new BigSegmentsManager(undefined, {}, undefined, this.platform.crypto);
     this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
-    this.bigSegmentsStatusProvider = this.bigSegmentStatusProviderInternal;
   }
 
   initialized(): boolean {
