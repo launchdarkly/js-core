@@ -14,7 +14,6 @@ import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
 import LDEventProcessor from './LDEventProcessor';
 
-// TODO: Implement.
 type FilteredContext = any;
 
 /**
