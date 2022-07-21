@@ -1,10 +1,7 @@
 import InputEvalEvent from './InputEvalEvent';
-import InputEventBase from './InputEventBase';
+import { isFeature } from './guards';
 import SummaryCounter from './SummaryCounter';
-
-function isFeature(u: InputEventBase): u is InputEvalEvent {
-  return u.kind === 'feature';
-}
+import InputEvent from './InputEvent';
 
 function counterKey(event: InputEvalEvent) {
   return `${event.key
@@ -35,10 +32,11 @@ export interface FlagSummary {
 /**
  * @internal
  */
-export interface SummarizedFlags {
+export interface SummarizedFlagsEvent {
   startDate: number,
   endDate: number,
   features: Record<string, FlagSummary>
+  kind: 'summary'
 }
 
 /**
@@ -53,7 +51,7 @@ export default class EventSummarizer {
 
   private contextKinds: Record<string, Set<string>> = {};
 
-  summarizeEvent(event: InputEventBase) {
+  summarizeEvent(event: InputEvent) {
     if (isFeature(event)) {
       const countKey = counterKey(event);
       const counter = this.counters[countKey];
@@ -86,7 +84,7 @@ export default class EventSummarizer {
     }
   }
 
-  getSummary(): SummarizedFlags {
+  getSummary(): SummarizedFlagsEvent {
     const features = Object.values(this.counters)
       .reduce((acc: Record<string, FlagSummary>, counter) => {
         let flagSummary = acc[counter.key];
@@ -120,6 +118,7 @@ export default class EventSummarizer {
       startDate: this.startDate,
       endDate: this.endDate,
       features,
+      kind: 'summary',
     };
   }
 

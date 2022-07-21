@@ -170,7 +170,6 @@ export default class Configuration {
 
   public readonly allAttributesPrivate: boolean;
 
-  // TODO: Change to attribute references once available.
   public readonly privateAttributes: string[];
 
   public readonly contextKeysCapacity: number;

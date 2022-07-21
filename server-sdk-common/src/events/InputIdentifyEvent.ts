@@ -1,11 +1,17 @@
 import { Context } from '@launchdarkly/js-sdk-common';
-import InputEventBase from './InputEventBase';
 
 /**
  * @internal
  */
-export default class InputIdentifyEvent extends InputEventBase {
+export default class InputIdentifyEvent {
+  public readonly kind = 'identify';
+
+  public readonly creationDate: number;
+
+  public readonly context: Context;
+
   constructor(context: Context) {
-    super('identify', Date.now(), context);
+    this.creationDate = Date.now();
+    this.context = context;
   }
 }
