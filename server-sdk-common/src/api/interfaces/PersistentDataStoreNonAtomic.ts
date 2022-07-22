@@ -1,4 +1,5 @@
 import { DataCollection } from './DataCollection';
+import { PersistentDataStoreBase } from './PersistentDataStoreBase';
 import { VersionedData } from './VersionedData';
 
 /**
@@ -10,7 +11,7 @@ import { VersionedData } from './VersionedData';
  *
  * @see [[PersistentDataStore]]
  */
-export interface PersistentDataStoreNonAtomic {
+export interface PersistentDataStoreNonAtomic extends PersistentDataStoreBase {
   /**
    * Initialize the store, overwriting any existing data.
    *
