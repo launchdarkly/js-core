@@ -1,9 +1,9 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
-import { AttributeReference, Context } from '@launchdarkly/js-sdk-common';
+import { Context } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
-import { getOffVariation, getVariation } from './variations';
+import { getBucketBy, getOffVariation, getVariation } from './variations';
 import { Queries } from './Queries';
 import Reasons from './Reasons';
 import ErrorKinds from './ErrorKinds';
@@ -15,13 +15,38 @@ import { Platform } from '../platform';
 import { VariationOrRollout } from './data/VariationOrRollout';
 import { LDEvaluationReason } from '../api';
 import matchClauseWithoutSegmentOperations from './matchClause';
-
-const KEY_ATTR_REF = new AttributeReference('key');
+import { Segment } from './data/Segment';
+import matchSegmentTargets from './matchSegmentTargets';
+import { SegmentRule } from './data/SegmentRule';
+import { Clause } from './data/Clause';
 
 class EvalState {
   // events
   // bigSegmentsStatus
 }
+
+class Match {
+  public readonly error = false;
+
+  public readonly result?: EvalResult;
+
+  constructor(public readonly isMatch: boolean) { }
+}
+
+class MatchError {
+  public readonly error = true;
+
+  public readonly isMatch = false;
+
+  constructor(public readonly result: EvalResult) { }
+}
+
+/**
+ * MatchOrError effectively creates a discriminated union for the segment
+ * matching process. Allowing encoding a true/false match result, or an
+ * error condition represented as an EvalResult.
+ */
+type MatchOrError = Match | MatchError;
 
 /**
  * @internal
@@ -177,11 +202,54 @@ export default class Evaluator {
     let ruleResult: EvalResult | undefined;
 
     await firstSeriesAsync(flag.rules, async (rule, ruleIndex) => {
-      ruleResult = await this.ruleMatchContext(flag, rule, ruleIndex, context, state);
+      ruleResult = await this.ruleMatchContext(flag, rule, ruleIndex, context, state, []);
       return !!ruleResult;
     });
 
     return ruleResult;
+  }
+
+  private async clauseMatchContext(
+    clause: Clause,
+    context: Context,
+    segmentsVisited: string[],
+    state: EvalState,
+  ): Promise<MatchOrError> {
+    let errorResult: EvalResult | undefined;
+    if (clause.op === 'segmentMatch') {
+      const match = await firstSeriesAsync(clause.values, (async (value) => {
+        const segment = await this.queries.getSegment(value);
+        if (segment) {
+          if (segmentsVisited.includes(segment.key)) {
+            errorResult = EvalResult.forError(ErrorKinds.MalformedFlag, `Segment rule referencing segment ${segment.key} caused a circular reference. `
+              + 'This is probably a temporary condition due to an incomplete update');
+            // There was an error, so stop checking further segments.
+            return true;
+          }
+
+          const newVisited = [...segmentsVisited, segment?.key];
+          const res = await this.segmentMatchContext(segment, context, state, newVisited);
+          if (res.error) {
+            errorResult = res.result;
+          }
+          return res.error || res.isMatch;
+        }
+
+        return false;
+      }));
+
+      if (errorResult) {
+        return new MatchError(errorResult);
+      }
+
+      return new Match(match);
+    }
+    // This is after segment matching, which does not use the reference.
+    if (!clause.attributeReference.isValid) {
+      return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
+    }
+
+    return new Match(matchClauseWithoutSegmentOperations(clause, context));
   }
 
   /**
@@ -200,21 +268,16 @@ export default class Evaluator {
     // TODO: Will be used once big segments are implemented.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
+    segmentsVisited: string[],
   ): Promise<EvalResult | undefined> {
     if (!rule.clauses) {
       return undefined;
     }
     let errorResult: EvalResult | undefined;
     const match = await allSeriesAsync(rule.clauses, async (clause) => {
-      if (!clause.attributeReference.isValid) {
-        errorResult = EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause');
-        return false;
-      }
-      if (clause.op === 'segmentMatch') {
-        // TODO: Implement.
-        return false;
-      }
-      return matchClauseWithoutSegmentOperations(clause, context);
+      const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
+      errorResult = res.result;
+      return res.error || res.isMatch;
     });
 
     if (errorResult) {
@@ -253,8 +316,7 @@ export default class Evaluator {
       const isExperiment = rollout.kind === 'experiment';
 
       if (variations && variations.length) {
-        const bucketBy = (isExperiment ? undefined
-          : rollout.bucketByAttributeReference) ?? KEY_ATTR_REF;
+        const bucketBy = getBucketBy(isExperiment, rollout.bucketByAttributeReference);
 
         if (!bucketBy.isValid) {
           return EvalResult.forError(
@@ -297,5 +359,85 @@ export default class Evaluator {
       }
     }
     return EvalResult.forError(ErrorKinds.MalformedFlag, 'Variation/rollout object with no variation or rollout');
+  }
+
+  async segmentRuleMatchContext(
+    rule: SegmentRule,
+    context: Context,
+    state: EvalState,
+    segmentsVisited: string[],
+    salt?: string,
+  ): Promise<MatchOrError> {
+    let errorResult: EvalResult | undefined;
+    const match = await allSeriesAsync(rule.clauses, async (clause) => {
+      const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
+      errorResult = res.result;
+      return res.error || res.isMatch;
+    });
+
+    if (errorResult) {
+      return new MatchError(errorResult);
+    }
+
+    if (match) {
+      if (rule.weight === undefined) {
+        return new Match(match);
+      }
+      const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
+      if (!bucketBy.isValid) {
+        return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
+      }
+      const bucket = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
+      return new Match(bucket < rule.weight);
+    }
+
+    return new Match(false);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async simpleSegmentMatchContext(
+    segment: Segment,
+    context: Context,
+    state: EvalState,
+    segmentsVisited: string[],
+  ): Promise<MatchOrError> {
+    const includeExclude = matchSegmentTargets(segment, context);
+    if (includeExclude !== undefined) {
+      return new Match(includeExclude);
+    }
+
+    let evalResult: EvalResult | undefined;
+    const matched = await firstSeriesAsync(segment.rules, async (rule) => {
+      const res = await this.segmentRuleMatchContext(
+        rule,
+        context,
+        state,
+        segmentsVisited,
+        segment.salt,
+      );
+      evalResult = res.result;
+      return res.error || res.isMatch;
+    });
+    if (evalResult) {
+      return new MatchError(evalResult);
+    }
+
+    return new Match(matched);
+  }
+
+  async segmentMatchContext(
+    segment: Segment,
+    context: Context,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    state: EvalState,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    segmentsVisited: string[],
+  ): Promise<MatchOrError> {
+    if (!segment.unbounded) {
+      return this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
+    }
+
+    // TODO: Big segments.
+    return new Match(false);
   }
 }
