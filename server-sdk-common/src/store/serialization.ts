@@ -63,7 +63,7 @@ function processRollout(rollout?: Rollout) {
   if (rollout && rollout.bucketBy) {
     rollout.bucketByAttributeReference = new AttributeReference(
       rollout.bucketBy,
-      !!rollout.contextKind,
+      !rollout.contextKind,
     );
   }
 }
@@ -81,6 +81,8 @@ function processFlag(flag: Flag) {
         // Clauses before U2C would have had literals for attributes.
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
+      } else if (clause) {
+        clause.attributeReference = AttributeReference.invalidReference;
       }
     });
   });
@@ -101,6 +103,8 @@ function processSegment(segment: Segment) {
         // Clauses before U2C would have had literals for attributes.
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
+      } else if (clause) {
+        clause.attributeReference = AttributeReference.invalidReference;
       }
     });
   });

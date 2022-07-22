@@ -25,9 +25,13 @@ export default class EvalResult {
     return this.detail.reason.kind === Reasons.Off.kind;
   }
 
-  static forError(errorKind: ErrorKinds, message?: string): EvalResult {
+  public setDefault(def: any) {
+    this.detail.value = def;
+  }
+
+  static forError(errorKind: ErrorKinds, message?: string, def?: any): EvalResult {
     return new EvalResult(true, {
-      value: null,
+      value: def ?? null,
       variationIndex: undefined,
       reason: { kind: 'ERROR', errorKind },
     }, message);
@@ -38,14 +42,6 @@ export default class EvalResult {
       value,
       variationIndex,
       reason,
-    });
-  }
-
-  static forPrerequisiteFailed(prereqKey: string): EvalResult {
-    return new EvalResult(false, {
-      value: null,
-      variationIndex: undefined,
-      reason: Reasons.prerequisiteFailed(prereqKey),
     });
   }
 }

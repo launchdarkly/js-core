@@ -42,6 +42,11 @@ export default class AttributeReference {
    */
   public readonly redactionName;
 
+  /**
+   * For use as invalid references when deserializing Flag/Segment data.
+   */
+  public static readonly invalidReference = new AttributeReference('');
+
   private readonly components: string[];
 
   /**
