@@ -6,10 +6,5 @@
  * @ignore
  */
 export interface LDFeatureRequestor {
-  requestObject: (
-    kind: any,
-    key: string,
-    cb: (err: any, body: any) => void
-  ) => void;
   requestAllData: (cb: (err: any, body: any) => void) => void;
 }
