@@ -2,6 +2,11 @@ function isStale(record: CacheRecord): boolean {
   return Date.now() > record.expiration;
 }
 
+/**
+ * Options for the TTL cache.
+ *
+ * @internal
+ */
 export interface TtlCacheOptions {
   /**
    * The TTL for all items in seconds.
@@ -23,6 +28,11 @@ interface CacheRecord {
   expiration: number,
 }
 
+/**
+ * A basic TTL cache with configurable TTL and check interval.
+ *
+ * @internal
+ */
 export default class TtlCache {
   private storage: Map<string, CacheRecord> = new Map();
 
@@ -58,7 +68,7 @@ export default class TtlCache {
   public set(key: string, value: any) {
     this.storage.set(key, {
       value,
-      expiration: Date.now() + this.options.ttl,
+      expiration: Date.now() + (this.options.ttl * 1000),
     });
   }
 
@@ -85,7 +95,7 @@ export default class TtlCache {
   public close() {
     this.clear();
     if (this.checkIntervalHandle) {
-      clearImmediate(this.checkIntervalHandle);
+      clearInterval(this.checkIntervalHandle);
       this.checkIntervalHandle = null;
     }
   }
@@ -96,5 +106,13 @@ export default class TtlCache {
         this.storage.delete(key);
       }
     });
+  }
+
+  /**
+   * This is for testing.
+   * @internal
+   */
+  public get size() {
+    return this.storage.size;
   }
 }

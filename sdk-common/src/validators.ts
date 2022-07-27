@@ -61,6 +61,9 @@ export class Type<T> implements TypeValidator {
 
 /**
  * Validate an array of the specified type.
+ *
+ * This does not validate instances of types. All class instances
+ * of classes will simply objects.
  */
 export class TypeArray<T> implements TypeValidator {
   private typeName: string;

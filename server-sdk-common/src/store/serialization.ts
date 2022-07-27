@@ -1,17 +1,12 @@
 // The deserialization will be updating parameter values, so we don't need this
 // warning in this file.
 /* eslint-disable no-param-reassign */
-import { AttributeReference, TypeArray } from '@launchdarkly/js-sdk-common';
+import { AttributeReference } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { VersionedData } from '../api/interfaces';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 import { Rollout } from '../evaluation/data/Rollout';
-
-const attributeReferenceArrayValidator = new TypeArray<AttributeReference>(
-  'AttributeReference[]',
-  new AttributeReference(''),
-);
 
 /**
  * @internal
@@ -49,8 +44,10 @@ export function replacer(this: any, key: string, value: any): any {
   if (value instanceof AttributeReference) {
     return undefined;
   }
-  if (attributeReferenceArrayValidator.is(value)) {
-    return undefined;
+  if (Array.isArray(value)) {
+    if (value[0] && value[0] instanceof AttributeReference) {
+      return undefined;
+    }
   }
   return value;
 }
