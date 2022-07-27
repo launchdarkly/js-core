@@ -1,12 +1,17 @@
 // The deserialization will be updating parameter values, so we don't need this
 // warning in this file.
 /* eslint-disable no-param-reassign */
-import { AttributeReference } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, TypeArray } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { VersionedData } from '../api/interfaces';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 import { Rollout } from '../evaluation/data/Rollout';
+
+const attributeReferenceArrayValidator = new TypeArray<AttributeReference>(
+  'AttributeReference[]',
+  new AttributeReference(''),
+);
 
 /**
  * @internal
@@ -40,6 +45,9 @@ interface AllData {
  */
 export function replacer(this: any, key: string, value: any): any {
   if (value instanceof AttributeReference) {
+    return undefined;
+  }
+  if (attributeReferenceArrayValidator.is(value)) {
     return undefined;
   }
   return value;
@@ -179,5 +187,53 @@ export function deserializeDelete(data: string): DeleteData | undefined {
   } else if (parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
     parsed.kind = VersionedDataKinds.Segments;
   }
+  return parsed;
+}
+
+/**
+ * Serialize a single flag. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function serializeFlag(flag: Flag): string {
+  return JSON.stringify(flag, replacer);
+}
+
+/**
+ * Deserialize a single flag. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function deserializeFlag(data: string): Flag | undefined {
+  const parsed = tryParse(data);
+  if (!parsed) {
+    return undefined;
+  }
+
+  processFlag(parsed);
+  return parsed;
+}
+
+/**
+ * Serialize a single segment. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function serializeSegment(segment: Segment): string {
+  return JSON.stringify(segment, replacer);
+}
+
+/**
+ * Deserialize a single segment. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function deserializeSegment(data: string): Segment | undefined {
+  const parsed = tryParse(data);
+  if (!parsed) {
+    return undefined;
+  }
+
+  processSegment(parsed);
   return parsed;
 }

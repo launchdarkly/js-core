@@ -1,4 +1,3 @@
-
 function isStale(record: CacheRecord): boolean {
   return Date.now() > record.expiration;
 }
@@ -26,6 +25,7 @@ interface CacheRecord {
 
 export default class TtlCache {
   private storage: Map<string, CacheRecord> = new Map();
+
   private checkIntervalHandle: any;
 
   constructor(private readonly options: TtlCacheOptions) {
@@ -42,7 +42,7 @@ export default class TtlCache {
    */
   public get(key: string): any {
     const record = this.storage.get(key);
-    if(record && isStale(record)) {
+    if (record && isStale(record)) {
       this.storage.delete(key);
       return undefined;
     }
@@ -58,7 +58,7 @@ export default class TtlCache {
   public set(key: string, value: any) {
     this.storage.set(key, {
       value,
-      expiration: Date.now() + this.options.ttl
+      expiration: Date.now() + this.options.ttl,
     });
   }
 
@@ -92,7 +92,7 @@ export default class TtlCache {
 
   private purgeStale() {
     this.storage.forEach((record, key) => {
-      if(isStale(record)) {
+      if (isStale(record)) {
         this.storage.delete(key);
       }
     });
