@@ -36,9 +36,9 @@ describe('given an event summarizer', () => {
       kind: 'feature', creationDate: 1500, key: 'key', context,
     };
 
-    summarizer.summarizeEvent(event1);
-    summarizer.summarizeEvent(event2);
-    summarizer.summarizeEvent(event3);
+    summarizer.summarizeEvent(event1 as any);
+    summarizer.summarizeEvent(event2 as any);
+    summarizer.summarizeEvent(event3 as any);
     const data = summarizer.getSummary();
 
     expect(data.startDate).toEqual(1000);
@@ -106,12 +106,12 @@ describe('given an event summarizer', () => {
       default: 444,
     };
 
-    summarizer.summarizeEvent(event1);
-    summarizer.summarizeEvent(event2);
-    summarizer.summarizeEvent(event3);
-    summarizer.summarizeEvent(event4);
-    summarizer.summarizeEvent(event5);
-    summarizer.summarizeEvent(event6);
+    summarizer.summarizeEvent(event1 as any);
+    summarizer.summarizeEvent(event2 as any);
+    summarizer.summarizeEvent(event3 as any);
+    summarizer.summarizeEvent(event4 as any);
+    summarizer.summarizeEvent(event5 as any);
+    summarizer.summarizeEvent(event6 as any);
     const summary = summarizer.getSummary();
 
     summary.features.key1.counters.sort((a, b) => a.value - b.value);
@@ -183,9 +183,9 @@ describe('given an event summarizer', () => {
       /* variation undefined */ value: 111,
       default: 111,
     };
-    summarizer.summarizeEvent(event1);
-    summarizer.summarizeEvent(event2);
-    summarizer.summarizeEvent(event3);
+    summarizer.summarizeEvent(event1 as any);
+    summarizer.summarizeEvent(event2 as any);
+    summarizer.summarizeEvent(event3 as any);
     const data = summarizer.getSummary();
 
     data.features.key1.counters.sort((a, b) => a.value - b.value);
@@ -235,9 +235,9 @@ describe('given an event summarizer', () => {
       value: 100,
       default: 111,
     };
-    summarizer.summarizeEvent(event1);
-    summarizer.summarizeEvent(event2);
-    summarizer.summarizeEvent(event3);
+    summarizer.summarizeEvent(event1 as any);
+    summarizer.summarizeEvent(event2 as any);
+    summarizer.summarizeEvent(event3 as any);
     const data = summarizer.getSummary();
 
     const expectedFeatures = {

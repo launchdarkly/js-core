@@ -1,13 +1,18 @@
 import { Context } from '@launchdarkly/js-sdk-common';
 import { LDEvaluationDetail, LDEvaluationReason } from '../api';
 import { Flag } from '../evaluation/data/Flag';
-import InputEventBase from './InputEventBase';
 import isExperiment from './isExperiment';
 
 /**
  * @internal
  */
-export default class InputEvalEvent extends InputEventBase {
+export default class InputEvalEvent {
+  public readonly kind = 'feature';
+
+  public readonly creationDate: number;
+
+  public readonly context: Context;
+
   public readonly default: any;
 
   public readonly trackEvents?: boolean;
@@ -33,7 +38,8 @@ export default class InputEvalEvent extends InputEventBase {
     public readonly flag?: Flag,
     prereqOf?: Flag,
   ) {
-    super('feature', Date.now(), context);
+    this.creationDate = Date.now();
+    this.context = context;
     this.default = defValue;
     this.variation = detail.variationIndex;
     this.value = detail.value;

@@ -7,6 +7,7 @@ enum ErrorKinds {
   MalformedFlag = 'MALFORMED_FLAG',
   UserNotSpecified = 'USER_NOT_SPECIFIED',
   FlagNotFound = 'FLAG_NOT_FOUND',
+  ClientNotReady = 'CLIENT_NOT_READY',
 }
 
 export default ErrorKinds;
