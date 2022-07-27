@@ -1,5 +1,4 @@
 import { DataKind } from '../api/interfaces';
-import { Flag } from '../evaluation/data/Flag';
 
 export interface VersionedDataKind extends DataKind {
   namespace: string,

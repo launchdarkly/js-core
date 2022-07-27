@@ -68,7 +68,7 @@ export default class TtlCache {
    * @param key The key of the value to delete.
    */
   public delete(key: string) {
-
+    this.storage.delete(key);
   }
 
   /**

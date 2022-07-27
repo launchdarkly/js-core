@@ -3,11 +3,12 @@ import {
 } from '../api/interfaces';
 import ItemDescriptor from '../api/interfaces/persistent_store/ItemDescriptor';
 import {
-  LDFeatureStore, LDFeatureStoreDataStorage, LDFeatureStoreItem, LDFeatureStoreKindData, LDKeyedFeatureStoreItem,
+  LDFeatureStore, LDFeatureStoreDataStorage, LDFeatureStoreItem,
+  LDFeatureStoreKindData, LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 import TtlCache from '../cache/TtlCache';
 import { persistentStoreKinds } from './persistentStoreKinds';
-import { sortDataSet } from './sortDataSet';
+import sortDataSet from './sortDataSet';
 import UpdateQueue from './UpdateQueue';
 
 function cacheKey(kind: DataKind, key: string) {
@@ -49,18 +50,21 @@ function deletedDescriptor(version: number): ItemDescriptor {
  * @param descriptor The serialized descriptor we want to deserialize.
  * @returns An item descriptor for the deserialized item.
  */
-function deserialize(kind: PersistentStoreDataKind, descriptor: SerializedItemDescriptor): ItemDescriptor {
+function deserialize(
+  kind: PersistentStoreDataKind,
+  descriptor: SerializedItemDescriptor,
+): ItemDescriptor {
   if (descriptor.deleted || !descriptor.serializedItem) {
     return deletedDescriptor(descriptor.version);
   }
   const deserializedItem: ItemDescriptor | null = kind.deserialize(descriptor.serializedItem);
-  if (deserializedItem == null) {
+  if (deserializedItem === null) {
     // This would only happen if the JSON is invalid.
     return deletedDescriptor(descriptor.version);
   }
-  if (deserializedItem.version == 0
-    || deserializedItem.version == descriptor.version
-    || deserializedItem.item == null) {
+  if (deserializedItem.version === 0
+    || deserializedItem.version === descriptor.version
+    || deserializedItem.item === null) {
     return deserializedItem;
   }
   // There was a mismatch between the version of the serialized descriptor and the deserialized
@@ -73,9 +77,9 @@ function deserialize(kind: PersistentStoreDataKind, descriptor: SerializedItemDe
 
 /**
  * Internal implementation of {@link LDFeatureStore} that delegates the basic functionality to an
- * instance of {@link PersistentDataStore}. It provides optional caching behavior and other logic that
- * would otherwise be repeated in every data store implementation. This makes it easier to create new
- * database integrations by implementing only the database-specific logic.
+ * instance of {@link PersistentDataStore}. It provides optional caching behavior and other logic
+ * that would otherwise be repeated in every data store implementation. This makes it easier to
+ * create new database integrations by implementing only the database-specific logic.
  *
  * @internal
  */

@@ -1,6 +1,6 @@
 import { Flag } from '../evaluation/data/Flag';
 import { PersistentStoreDataKindInternal, persistentStoreKinds } from './persistentStoreKinds';
-import { LDFeatureStoreDataStorage, LDKeyedFeatureStoreItem, LDFeatureStoreKindData } from '../api/subsystems';
+import { LDFeatureStoreDataStorage, LDFeatureStoreKindData } from '../api/subsystems';
 import KeyedItem from '../api/interfaces/persistent_store/KeyedItem';
 import PersistentStoreDataKind from '../api/interfaces/persistent_store/PersistentStoreDataKind';
 import SerializedItemDescriptor from '../api/interfaces/persistent_store/SerializedItemDescriptor';
@@ -12,28 +12,10 @@ function getDependencyKeys(flag: Flag): string[] {
   return flag.prerequisites.map((preReq) => preReq.key);
 }
 
-/**
- * For non-atomic stores we want to insert items in an order that no items exist
- * in the store before their dependencies. Segments before flags, because flags
- * are dependent on segments. For flags we want to insert them such that no flags are
- * added before the prerequisites of those flags.
- *
- * Segments can also depend on other segments, but a segment will not be accessed
- * if there are no flags.
- */
-export function sortDataSet(
-  dataMap: LDFeatureStoreDataStorage,
-): KeyedItem<PersistentStoreDataKind, KeyedItem<string, SerializedItemDescriptor>[]>[] {
-  const result: KeyedItem<PersistentStoreDataKindInternal, KeyedItem<string, SerializedItemDescriptor>[]>[] = [];
-
-  Object.keys(dataMap).forEach((kindNamespace) => {
-    const kind = persistentStoreKinds[kindNamespace];
-    result.push({ key: kind, item: topologicalSort(kind, dataMap[kindNamespace]) });
-  });
-
-  result.sort((i1, i2) => i1.key.priority - i2.key.priority);
-  return result;
-}
+// Shorthand for an array of keyed items.
+type KeyedItems<K, T> = KeyedItem<K, T>[];
+// A store organized by a kind and then items.
+type KindKeyedStore<Kind> = KeyedItems<Kind, KeyedItems<string, SerializedItemDescriptor>>;
 
 /**
  * Do a topological sort using a depth-first search.
@@ -77,4 +59,29 @@ function topologicalSort(
     visit(key);
   }
   return sortedItems;
+}
+
+/**
+ * For non-atomic stores we want to insert items in an order that no items exist
+ * in the store before their dependencies. Segments before flags, because flags
+ * are dependent on segments. For flags we want to insert them such that no flags are
+ * added before the prerequisites of those flags.
+ *
+ * Segments can also depend on other segments, but a segment will not be accessed
+ * if there are no flags.
+ */
+export default function sortDataSet(
+  dataMap: LDFeatureStoreDataStorage,
+): KindKeyedStore<PersistentStoreDataKind> {
+  // We use a different type for collecting the results so that we have access
+  // to the serialization methods and priorities.
+  const result: KindKeyedStore<PersistentStoreDataKindInternal> = [];
+
+  Object.keys(dataMap).forEach((kindNamespace) => {
+    const kind = persistentStoreKinds[kindNamespace];
+    result.push({ key: kind, item: topologicalSort(kind, dataMap[kindNamespace]) });
+  });
+
+  result.sort((i1, i2) => i1.key.priority - i2.key.priority);
+  return result;
 }

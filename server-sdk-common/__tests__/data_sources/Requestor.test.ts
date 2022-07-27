@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
 import { EventSourceInitDict, EventSource } from '../../src/platform';
-import { Headers, Options, Requests, Response } from '../../src/platform/Requests';
+import {
+  Headers, Options, Requests, Response,
+} from '../../src/platform/Requests';
 import basicPlatform from '../evaluation/mocks/platform';
 
 describe('given a requestor', () => {
@@ -22,7 +25,6 @@ describe('given a requestor', () => {
     testResponse = undefined;
     throwThis = undefined;
   }
-
 
   beforeEach(() => {
     resetRequestState();
@@ -47,7 +49,7 @@ describe('given a requestor', () => {
             entries(): Iterable<[string, string]> {
               throw new Error('Function not implemented.');
             },
-            has(name: string): boolean {
+            has(_name: string): boolean {
               throw new Error('Function not implemented.');
             },
           };
@@ -56,7 +58,7 @@ describe('given a requestor', () => {
             headers,
             status: testStatus,
             async text(): Promise<string> {
-              return testResponse ?? "";
+              return testResponse ?? '';
             },
             json(): Promise<any> {
               throw new Error('Function not implemented.');
@@ -68,7 +70,7 @@ describe('given a requestor', () => {
       },
 
       /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-      createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+      createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
         throw new Error('Function not implemented.');
       },
     };
@@ -77,14 +79,14 @@ describe('given a requestor', () => {
   });
 
   it('gets data', (done) => {
-    testResponse = "a response";
+    testResponse = 'a response';
     requestor.requestAllData((err, body) => {
       expect(err).toBeUndefined();
       expect(body).toEqual(testResponse);
 
       expect(requestsMade.length).toBe(1);
-      expect(requestsMade[0].url).toBe("https://sdk.launchdarkly.com/sdk/latest-all");
-      expect(requestsMade[0].options.headers?.['authorization']).toBe('sdkKey');
+      expect(requestsMade[0].url).toBe('https://sdk.launchdarkly.com/sdk/latest-all');
+      expect(requestsMade[0].options.headers?.authorization).toBe('sdkKey');
 
       done();
     });
@@ -99,7 +101,7 @@ describe('given a requestor', () => {
   });
 
   it('returns an error result for a network error', (done) => {
-    throwThis = "SOMETHING BAD";
+    throwThis = 'SOMETHING BAD';
     requestor.requestAllData((err, _body) => {
       expect(err.message).toBe(throwThis);
       done();
@@ -108,13 +110,13 @@ describe('given a requestor', () => {
 
   it('stores and sends etags', async () => {
     testHeaders.etag = 'abc123';
-    testResponse = "a response";
-    const res1 = await promisify<{err:any, body: any}>((cb) => {
-      requestor.requestAllData((err, body) => cb({err, body}));
+    testResponse = 'a response';
+    const res1 = await promisify<{ err:any, body: any }>((cb) => {
+      requestor.requestAllData((err, body) => cb({ err, body }));
     });
     testStatus = 304;
-    const res2 = await promisify<{err:any, body: any}>((cb) => {
-      requestor.requestAllData((err, body) => cb({err, body}));
+    const res2 = await promisify<{ err:any, body: any }>((cb) => {
+      requestor.requestAllData((err, body) => cb({ err, body }));
     });
     expect(res1.err).toBeUndefined();
     expect(res1.body).toEqual(testResponse);
