@@ -6,6 +6,11 @@ import PersistentDataStoreWrapper from '../../src/store/PersistentDataStoreWrapp
 import { persistentStoreKinds } from '../../src/store/persistentStoreKinds';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 
+/**
+ * Conditionally skip tests. Allows conditional tests within an describe.each.
+ * @param condition The condition to check.
+ * @returns Either `it` or `it.skip` depending on the condition.
+ */
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
 class MockPersistentStore implements PersistentDataStore {
