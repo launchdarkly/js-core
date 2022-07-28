@@ -25,5 +25,5 @@ export default interface PersistentStoreDataKind {
    * @return an {@link ItemDescriptor} describing the deserialized object or null if the item could
    * not be deserialized
    */
-  deserialize(data: string): ItemDescriptor | null;
+  deserialize(data: string): ItemDescriptor | undefined;
 }

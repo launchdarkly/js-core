@@ -22,7 +22,7 @@ export type PersistentStoreDataKindInternal = PersistentStoreDataKind
 export const persistentStoreKinds: Record<string, PersistentStoreDataKindInternal> = {
   segments: {
     namespace: VersionedDataKinds.Segments.namespace,
-    deserialize: (data: string): ItemDescriptor | null => {
+    deserialize: (data: string): ItemDescriptor | undefined => {
       const segment = deserializeSegment(data);
       if (segment) {
         return {
@@ -30,7 +30,7 @@ export const persistentStoreKinds: Record<string, PersistentStoreDataKindInterna
           item: segment,
         };
       }
-      return null;
+      return undefined;
     },
     serialize: (data: any): SerializedItemDescriptor => {
       const serializedItem = serializeSegment(data);
@@ -44,7 +44,7 @@ export const persistentStoreKinds: Record<string, PersistentStoreDataKindInterna
   },
   features: {
     namespace: VersionedDataKinds.Features.namespace,
-    deserialize: (data: string): ItemDescriptor | null => {
+    deserialize: (data: string): ItemDescriptor | undefined => {
       const flag = deserializeFlag(data);
       if (flag) {
         return {
@@ -52,7 +52,7 @@ export const persistentStoreKinds: Record<string, PersistentStoreDataKindInterna
           item: flag,
         };
       }
-      return null;
+      return undefined;
     },
     serialize: (data: any): SerializedItemDescriptor => {
       const serializedItem = serializeFlag(data);

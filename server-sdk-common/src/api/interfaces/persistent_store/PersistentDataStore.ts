@@ -2,6 +2,11 @@ import KeyedItem from './KeyedItem';
 import PersistentStoreDataKind from './PersistentStoreDataKind';
 import SerializedItemDescriptor from './SerializedItemDescriptor';
 
+// Shorthand for an array of keyed items.
+export type KeyedItems<K, T> = KeyedItem<K, T>[];
+// A store organized by a kind and then items.
+export type KindKeyedStore<Kind> = KeyedItems<Kind, KeyedItems<string, SerializedItemDescriptor>>;
+
 /**
  * This interface should be used for database integrations, or any other data store
  * implementation that stores data in some external service. The SDK will take care of
@@ -18,8 +23,8 @@ import SerializedItemDescriptor from './SerializedItemDescriptor';
  * 1. Preferably, it should store the version number and the
  * {@link SerializedItemDescriptor#deleted} state separately so that the object does not need to be
  * fully deserialized to read them. In this case, deleted item placeholders can ignore the value of
- * {@link SerializedItemDescriptor#item} on writes and can set it to null on reads. The store should
- * never call {@link DataKind#deserialize}.
+ * {@link SerializedItemDescriptor#item} on writes and can set it to undefined on reads. The store
+ * should never call {@link DataKind#deserialize}.
  *
  * 2. If that isn't possible, then the store should simply persist the exact string from
  * {@link SerializedItemDescriptor#serializedItem} on writes, and return the persisted
@@ -44,19 +49,19 @@ export default interface PersistentDataStore {
    * sets
    */
   init(
-    allData: KeyedItem<PersistentStoreDataKind, KeyedItem<string, SerializedItemDescriptor>[]>[],
+    allData: KindKeyedStore<PersistentStoreDataKind>,
     callback: () => void,
   ): void;
 
   /**
    * Retrieves an item from the specified collection, if available.
    *
-   * If the key is not known at all, the callback should be incoked with null. Otherwise, it should
-   * be invoked with a {@link SerializedItemDescriptor} as follows:
+   * If the key is not known at all, the callback should be invoked with undefined. Otherwise, it
+   * should be invoked with a {@link SerializedItemDescriptor} as follows:
    *
    * 1. If the version number and deletion state can be determined without fully deserializing
    * the item, then the store should set those properties in the {@link SerializedItemDescriptor}
-   * (and can set {@link SerializedItemDescriptor#serializedItem} to null for deleted items).
+   * (and can set {@link SerializedItemDescriptor#serializedItem} to undefined for deleted items).
    *
    * 2. Otherwise, it should simply set {@link SerializedItemDescriptor#serializedItem} to
    * the exact string that was persisted, and can leave the other properties as zero/false. See
@@ -69,7 +74,7 @@ export default interface PersistentDataStore {
   get(
     kind: PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: SerializedItemDescriptor | null) => void,
+    callback: (descriptor: SerializedItemDescriptor | undefined) => void,
   ): void;
 
   /**
@@ -84,7 +89,7 @@ export default interface PersistentDataStore {
    */
   getAll(
     kind: PersistentStoreDataKind,
-    callback: (descriptors: KeyedItem<string, SerializedItemDescriptor>[]) => void
+    callback: (descriptors: KeyedItem<string, SerializedItemDescriptor>[] | undefined) => void
   ): void;
 
   /**

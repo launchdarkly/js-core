@@ -4,6 +4,7 @@ import { LDFeatureStoreDataStorage, LDFeatureStoreKindData } from '../api/subsys
 import KeyedItem from '../api/interfaces/persistent_store/KeyedItem';
 import PersistentStoreDataKind from '../api/interfaces/persistent_store/PersistentStoreDataKind';
 import SerializedItemDescriptor from '../api/interfaces/persistent_store/SerializedItemDescriptor';
+import { KindKeyedStore } from '../api/interfaces/persistent_store/PersistentDataStore';
 
 function getDependencyKeys(flag: Flag): string[] {
   if (!flag.prerequisites || !flag.prerequisites.length) {
@@ -11,11 +12,6 @@ function getDependencyKeys(flag: Flag): string[] {
   }
   return flag.prerequisites.map((preReq) => preReq.key);
 }
-
-// Shorthand for an array of keyed items.
-type KeyedItems<K, T> = KeyedItem<K, T>[];
-// A store organized by a kind and then items.
-type KindKeyedStore<Kind> = KeyedItems<Kind, KeyedItems<string, SerializedItemDescriptor>>;
 
 /**
  * Do a topological sort using a depth-first search.

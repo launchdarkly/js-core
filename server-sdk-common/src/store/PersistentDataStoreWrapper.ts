@@ -57,14 +57,14 @@ function deserialize(
   if (descriptor.deleted || !descriptor.serializedItem) {
     return deletedDescriptor(descriptor.version);
   }
-  const deserializedItem: ItemDescriptor | null = kind.deserialize(descriptor.serializedItem);
-  if (deserializedItem === null) {
+  const deserializedItem: ItemDescriptor | undefined = kind.deserialize(descriptor.serializedItem);
+  if (deserializedItem === undefined) {
     // This would only happen if the JSON is invalid.
     return deletedDescriptor(descriptor.version);
   }
   if (deserializedItem.version === 0
     || deserializedItem.version === descriptor.version
-    || deserializedItem.item === null) {
+    || deserializedItem.item === undefined) {
     return deserializedItem;
   }
   // There was a mismatch between the version of the serialized descriptor and the deserialized
@@ -190,7 +190,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     const persistKind = persistentStoreKinds[kind.namespace];
     this.core.getAll(persistKind, (storeItems) => {
       if (!storeItems) {
-        callback(storeItems ?? null);
+        callback({});
         return;
       }
 

@@ -23,7 +23,7 @@ export default class UpdateQueue {
         this.queue.shift();
         // There is more work to do, so schedule an update.
         if (this.enqueue.length > 0) {
-          setTimeout(this.executePendingUpdates, 0);
+          setTimeout(() => this.executePendingUpdates(), 0);
         }
         // Call the original callback.
         cb?.();
