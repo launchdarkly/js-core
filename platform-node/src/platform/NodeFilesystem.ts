@@ -14,7 +14,12 @@ export default class NodeFilesystem implements platform.Filesystem {
     return fsPromises.readFile(path, 'utf8');
   }
 
-  watch(path: string): AsyncIterable<{ eventType: string; filename: string; }> {
-    return fsPromises.watch(path, { persistent: false });
+  watch(
+    path: string,
+    callback: (eventType: string, filename: string) => void,
+  ): platform.WatchHandle {
+    return fs.watch(path, { persistent: false }, (eventType, filename) => {
+      callback(eventType, filename);
+    });
   }
 }
