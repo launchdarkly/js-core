@@ -15,9 +15,9 @@ import { Filesystem, WatchHandle } from '../platform';
 export default class FileLoader {
   private watchers: WatchHandle[] = [];
 
-  private fileData: { [path: string]: string; } = {};
+  private fileData: Record<string, string> = {};
 
-  private fileTimestamps: { [path: string]: number; } = {};
+  private fileTimestamps: Record<string, number> = {};
 
   private debounceHandle: any;
 
@@ -38,6 +38,7 @@ export default class FileLoader {
       const timeStamp = await this.filesystem.getFileTimestamp(path);
       return { data, path, timeStamp };
     });
+    // This promise could be rejected, let the caller handle it.
     const results = await Promise.all(promises);
     results.forEach((res) => {
       this.fileData[res.path] = res.data;

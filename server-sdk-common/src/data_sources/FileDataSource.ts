@@ -4,7 +4,6 @@ import { FileDataSourceOptions } from '../api/integrations';
 import { DataKind } from '../api/interfaces';
 import { LDFeatureStore, LDFeatureStoreDataStorage } from '../api/subsystems';
 import { Flag } from '../evaluation/data/Flag';
-import Configuration from '../options/Configuration';
 import { Filesystem } from '../platform';
 import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
@@ -20,7 +19,7 @@ function makeFlagWithValue(key: string, value: any): Flag {
   };
 }
 
-class FileDataSource implements LDStreamProcessor {
+export default class FileDataSource implements LDStreamProcessor {
   private logger?: LDLogger;
 
   private yamlParser?: (data: string) => any;
@@ -33,7 +32,7 @@ class FileDataSource implements LDStreamProcessor {
 
   /**
    * This is internal because we want instances to only be created with the
-   * factory method.
+   * factory.
    * @internal
    */
   constructor(
@@ -48,7 +47,13 @@ class FileDataSource implements LDStreamProcessor {
       (results: { path: string, data: string }[]) => {
         // Whenever changes are detected we re-process all of the data.
         // The FileLoader will have handled debouncing for us.
-        this.processFileData(results);
+        try {
+          this.processFileData(results);
+        } catch (err) {
+          // If this was during start, then the initCallback will be present.
+          this.initCallback?.(err);
+          this.logger?.error(`Error processing files: ${err}`);
+        }
       },
     );
 
@@ -58,7 +63,17 @@ class FileDataSource implements LDStreamProcessor {
 
   start(fn?: ((err?: any) => void) | undefined): void {
     this.initCallback = fn;
-    this.fileLoader.loadAndWatch();
+    // Use an immediately invoked function expression to allow handling of the
+    // async loading without making start async itself.
+    (async () => {
+      try {
+        await this.fileLoader.loadAndWatch();
+      } catch (err) {
+        // There was an issue loading/watching the files.
+        // Report back to the caller.
+        fn?.(err);
+      }
+    })();
   }
 
   stop(): void {
@@ -69,21 +84,12 @@ class FileDataSource implements LDStreamProcessor {
     this.stop();
   }
 
-  private tryParse(parser: (data: string) => any, path: string, data: string): any {
-    try {
-      return parser(data);
-    } catch (err) {
-      this.logger?.error(`Error parsing file ${path}. ${err}`);
-      return undefined;
-    }
-  }
-
   private addItem(kind: DataKind, item: any) {
     if (!this.allData[kind.namespace]) {
       this.allData[kind.namespace] = {};
     }
     if (this.allData[kind.namespace][item.key]) {
-      this.logger?.error(`found duplicate key: "${item.key}"`);
+      throw new Error(`found duplicate key: "${item.key}"`);
     } else {
       this.allData[kind.namespace][item.key] = item;
     }
@@ -93,21 +99,20 @@ class FileDataSource implements LDStreamProcessor {
     // Clear any existing data before re-populating it.
     this.allData = {};
 
+    // We let the parsers throw, and the caller can handle the rejection.
     fileData.forEach((fd) => {
       let parsed: any;
       if (fd.path.endsWith('.yml') || fd.path.endsWith('.yaml')) {
         if (this.yamlParser) {
-          parsed = this.tryParse(this.yamlParser, fd.path, fd.data);
+          parsed = this.yamlParser(fd.data);
         } else {
-          this.logger?.error('Attempted to parse yaml file without parser.');
+          throw new Error(`Attempted to parse yaml file (${fd.path}) without parser.`);
         }
       } else {
-        parsed = this.tryParse(JSON.parse, fd.path, fd.data);
+        parsed = JSON.parse(fd.data);
       }
 
-      if (parsed) {
-        this.processParsedData(parsed);
-      }
+      this.processParsedData(parsed);
     });
 
     this.featureStore.init(this.allData, () => {
@@ -133,20 +138,4 @@ class FileDataSource implements LDStreamProcessor {
       this.addItem(VersionedDataKinds.Segments, parsed.segments[key]);
     });
   }
-}
-
-/**
- * Creates a factory which will create {@link FileDataSource} instances
- * based on the SDK configuration.
- */
-export default function factory(options: FileDataSourceOptions):
-(config: Configuration, filesystem: Filesystem, featureStore: LDFeatureStore) => FileDataSource {
-  return (config: Configuration, filesystem: Filesystem) => {
-    const updatedOptions: FileDataSourceOptions = {
-      paths: options.paths,
-      autoUpdate: options.autoUpdate,
-      logger: options.logger || config.logger,
-    };
-    return new FileDataSource(updatedOptions, filesystem, config.featureStore);
-  };
 }
