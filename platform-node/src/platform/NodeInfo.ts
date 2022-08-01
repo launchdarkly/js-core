@@ -27,7 +27,9 @@ export default class NodeInfo implements platform.Info {
         arch: os.arch(),
       },
       name: 'Node',
-      version: process.version,
+      additional: {
+        nodeVersion: process.versions.node,
+      },
     };
   }
 
