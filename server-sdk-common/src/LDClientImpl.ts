@@ -4,6 +4,7 @@ import { LDContext } from '@launchdarkly/js-sdk-common';
 import {
   LDClient, LDEvaluationDetail, LDFlagsState, LDFlagsStateOptions,
 } from './api';
+import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { Platform } from './platform';
 
@@ -29,21 +30,15 @@ enum InitState {
 }
 
 export default class LDClientImpl implements LDClient {
-  private platform: Platform;
-
   private initState: InitState = InitState.Initializing;
 
-  /**
-   * Intended for use by platform specific client implementations.
-   *
-   * It is not included in the main interface because it requires the use of
-   * a platform event system. For node this would be an EventEmitter, for other
-   * platforms it would likely be an EventTarget.
-   */
-  bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProvider();
+  protected bigSegmentStatusProviderInternal: BigSegmentStoreStatusProvider;
 
-  constructor(targetPlatform: Platform) {
-    this.platform = targetPlatform;
+  constructor(
+    private readonly platform: Platform,
+  ) {
+    const manager = new BigSegmentsManager(undefined, {}, undefined, this.platform.crypto);
+    this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
   }
 
   initialized(): boolean {

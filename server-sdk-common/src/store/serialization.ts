@@ -70,6 +70,9 @@ function processRollout(rollout?: Rollout) {
   }
 }
 
+/**
+ * @internal
+ */
 export function processFlag(flag: Flag) {
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
@@ -90,6 +93,9 @@ export function processFlag(flag: Flag) {
   });
 }
 
+/**
+ * @internal
+ */
 export function processSegment(segment: Segment) {
   segment?.rules?.forEach((rule) => {
     if (rule.bucketBy) {

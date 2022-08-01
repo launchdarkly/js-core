@@ -21,7 +21,7 @@ export interface BigSegmentStore {
    *
    * @returns a Promise for the result of the query
    */
-  getMetadata(): Promise<BigSegmentStoreMetadata>;
+  getMetadata(): Promise<BigSegmentStoreMetadata | undefined>;
 
   /**
    * Queries the store for a snapshot of the current segment state for a specific user.
