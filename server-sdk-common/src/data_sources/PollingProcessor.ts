@@ -31,7 +31,7 @@ export default class PollingProcessor implements LDStreamProcessor {
     }
 
     const reportJsonError = (data: string) => {
-      this.logger?.error(`Polling received invalid data`);
+      this.logger?.error('Polling received invalid data');
       this.logger?.debug(`Invalid JSON follows: ${data}`);
       fn?.(new LDPollingError('Malformed JSON data in polling response'));
     };
@@ -51,9 +51,8 @@ export default class PollingProcessor implements LDStreamProcessor {
           // It is not recoverable, return and do not trigger another
           // poll.
           return;
-        } else {
-          this.logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
         }
+        this.logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
       } else if (body) {
         const parsed = deserializePoll(body);
         if (!parsed) {
@@ -73,7 +72,7 @@ export default class PollingProcessor implements LDStreamProcessor {
             }, sleepFor);
           });
           // The poll will be triggered by  the feature store initialization
-          // completing. 
+          // completing.
           return;
         }
       }
@@ -87,18 +86,18 @@ export default class PollingProcessor implements LDStreamProcessor {
   }
 
   start(fn?: ((err?: any) => void) | undefined) {
-    this.poll(fn)
-  };
+    this.poll(fn);
+  }
 
   stop() {
-    if(this.timeoutHandle) {
+    if (this.timeoutHandle) {
       clearTimeout(this.timeoutHandle);
       this.timeoutHandle = undefined;
     }
     this.stopped = true;
-  };
+  }
 
   close() {
     this.stop();
-  };
+  }
 }
