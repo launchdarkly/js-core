@@ -138,4 +138,9 @@ export default interface PersistentDataStore {
    * Releases any resources being used by the feature store.
    */
   close(): void;
+
+  /**
+   * Get a description of the feature store.
+   */
+  getDescription(): string;
 }

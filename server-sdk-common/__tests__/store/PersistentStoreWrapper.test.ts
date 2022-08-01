@@ -73,6 +73,11 @@ class MockPersistentStore implements PersistentDataStore {
   close(): void {
     this.closed = true;
   }
+
+  // eslint-disable-next-line class-methods-use-this
+  getDescription(): string {
+    return 'mock';
+  }
 }
 
 describe.each(['caching', 'non-caching'])('given a persistent store implementation and %s wrapper', (type) => {
@@ -97,6 +102,10 @@ describe.each(['caching', 'non-caching'])('given a persistent store implementati
     const initialized = await asyncWrapper.initialized();
 
     expect(initialized).toBeFalsy();
+  });
+
+  it('it has a description', async () => {
+    expect(wrapper.getDescription()).toEqual('mock');
   });
 
   itif(isCaching)('it only checks the store for initialization once within the ttl.', async () => {

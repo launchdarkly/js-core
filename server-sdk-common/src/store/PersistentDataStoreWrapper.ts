@@ -251,4 +251,8 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     this.allItemsCache?.close();
     this.core.close();
   }
+
+  getDescription(): string {
+    return this.core.getDescription();
+  }
 }
