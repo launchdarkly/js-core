@@ -124,7 +124,7 @@ export default class LDClientImpl implements LDClient {
 
     const manager = new BigSegmentsManager(
       config.bigSegments?.store?.(config),
-      config.bigSegments,
+      config.bigSegments ?? {},
       config.logger,
       this.platform.crypto,
     );

@@ -18,10 +18,8 @@ export interface LDBigSegmentsOptions {
    * database implementation that matches how the LaunchDarkly Relay Proxy is configured, since the
    * Relay Proxy manages the Big Segment data.
    */
-
-  // TODO: What should the options be?
   store: (options: {
-    logger: LDLogger
+    logger?: LDLogger
   }) => BigSegmentStore;
 
   /**

@@ -50,9 +50,7 @@ describe.each(['STALE', 'HEALTHY'])('given a %s store', (status) => {
       getUserMembership: jest.fn((async () => expectedMembership)),
       close: () => {},
     };
-    manager = new BigSegmentsManager(store, {
-      store: () => store,
-    }, new TestLogger(), crypto);
+    manager = new BigSegmentsManager(store, {}, new TestLogger(), crypto);
   });
 
   afterEach(() => {
@@ -90,9 +88,7 @@ describe('given a store without meta data', () => {
       })),
       close: () => {},
     };
-    manager = new BigSegmentsManager(store, {
-      store: () => store,
-    }, new TestLogger(), crypto);
+    manager = new BigSegmentsManager(store, {}, new TestLogger(), crypto);
   });
 
   afterEach(() => {
@@ -126,7 +122,6 @@ describe('given a store with a user cache size of 2', () => {
       close: () => {},
     };
     manager = new BigSegmentsManager(store, {
-      store: () => store,
       userCacheSize: 2,
     }, new TestLogger(), crypto);
   });
@@ -207,7 +202,6 @@ describe('given a store with a short poll interval.', () => {
       close: () => {},
     };
     manager = new BigSegmentsManager(store, {
-      store: () => store,
       statusPollInterval: 0.01,
     }, new TestLogger(), crypto);
 

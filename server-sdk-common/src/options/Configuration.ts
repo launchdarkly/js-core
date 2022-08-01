@@ -217,13 +217,6 @@ export default class Configuration {
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;
-    if (TypeValidators.Function.is(validatedOptions.featureStore)) {
-      // @ts-ignore
-      this.featureStore = validatedOptions.featureStore(options);
-    } else {
-      // @ts-ignore
-      this.featureStore = validatedOptions.featureStore;
-    }
 
     this.bigSegments = validatedOptions.bigSegments;
     this.updateProcessor = validatedOptions.updateProcessor;
@@ -246,5 +239,13 @@ export default class Configuration {
     this.wrapperVersion = validatedOptions.wrapperVersion;
     this.tags = new ApplicationTags(validatedOptions);
     this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;
+
+    if (TypeValidators.Function.is(validatedOptions.featureStore)) {
+      // @ts-ignore
+      this.featureStore = validatedOptions.featureStore(this);
+    } else {
+      // @ts-ignore
+      this.featureStore = validatedOptions.featureStore;
+    }
   }
 }
