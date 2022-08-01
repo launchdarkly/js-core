@@ -21,11 +21,13 @@ export function reviver(this: any, key: string, value: any): any {
   return value;
 }
 
+interface FlagsAndSegments {
+  flags: { [name: string]: Flag }
+  segments: { [name: string]: Segment }
+}
+
 interface AllData {
-  data: {
-    flags: { [name: string]: Flag }
-    segments: { [name: string]: Segment }
-  }
+  data: FlagsAndSegments
 }
 
 /**
@@ -63,12 +65,15 @@ function processRollout(rollout?: Rollout) {
   if (rollout && rollout.bucketBy) {
     rollout.bucketByAttributeReference = new AttributeReference(
       rollout.bucketBy,
-      !!rollout.contextKind,
+      !rollout.contextKind,
     );
   }
 }
 
-function processFlag(flag: Flag) {
+/**
+ * @internal
+ */
+export function processFlag(flag: Flag) {
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
     processRollout(rollout);
@@ -81,12 +86,17 @@ function processFlag(flag: Flag) {
         // Clauses before U2C would have had literals for attributes.
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
+      } else if (clause) {
+        clause.attributeReference = AttributeReference.invalidReference;
       }
     });
   });
 }
 
-function processSegment(segment: Segment) {
+/**
+ * @internal
+ */
+export function processSegment(segment: Segment) {
   segment?.rules?.forEach((rule) => {
     if (rule.bucketBy) {
       // Rules before U2C would have had literals for attributes.
@@ -101,6 +111,8 @@ function processSegment(segment: Segment) {
         // Clauses before U2C would have had literals for attributes.
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
+      } else if (clause) {
+        clause.attributeReference = AttributeReference.invalidReference;
       }
     });
   });
@@ -137,6 +149,23 @@ export function deserializeAll(data: string): AllData | undefined {
   });
 
   Object.values(parsed?.data?.segments || []).forEach((segment) => {
+    processSegment(segment);
+  });
+  return parsed;
+}
+
+export function deserializePoll(data: string): FlagsAndSegments | undefined {
+  const parsed = tryParse(data) as FlagsAndSegments;
+
+  if (!parsed) {
+    return undefined;
+  }
+
+  Object.values(parsed?.flags || []).forEach((flag) => {
+    processFlag(flag);
+  });
+
+  Object.values(parsed?.segments || []).forEach((segment) => {
     processSegment(segment);
   });
   return parsed;

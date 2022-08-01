@@ -2,6 +2,7 @@ import { AttributeReference, LDContext } from '@launchdarkly/js-sdk-common';
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';
+import { Segment } from '../../src/evaluation/data/Segment';
 import { VariationOrRollout } from '../../src/evaluation/data/VariationOrRollout';
 
 export function makeFlagWithRules(rules: FlagRule[], fallthrough?: VariationOrRollout): Flag {
@@ -53,4 +54,17 @@ export function makeClauseThatDoesNotMatchUser(user: LDContext): Clause {
     values: [`not-${user.key}`],
     attributeReference: new AttributeReference('key'),
   };
+}
+
+export function makeSegmentMatchClause(segment: Segment): Clause {
+  return {
+    attribute: '',
+    attributeReference: new AttributeReference(''),
+    op: 'segmentMatch',
+    values: [segment.key],
+  };
+}
+
+export function makeFlagWithSegmentMatch(segment: Segment) {
+  return makeBooleanFlagWithOneClause(makeSegmentMatchClause(segment));
 }

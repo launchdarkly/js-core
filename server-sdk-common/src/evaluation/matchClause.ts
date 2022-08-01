@@ -26,6 +26,9 @@ export default function matchClauseWithoutSegmentOperations(
   context: Context,
 ): boolean {
   const contextValue = context.valueForKind(clause.attributeReference, clause.contextKind);
+  if (contextValue === null || contextValue === undefined) {
+    return false;
+  }
   if (Array.isArray(contextValue)) {
     return maybeNegate(
       clause,

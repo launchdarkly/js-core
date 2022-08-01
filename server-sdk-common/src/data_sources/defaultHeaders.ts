@@ -5,9 +5,9 @@ export default function defaultHeaders(
   sdkKey: string,
   config: Configuration,
   info: Info,
-): { [key: string]: string | string[] } {
+): { [key: string]: string } {
   const sdkData = info.sdkData();
-  const headers: { [key: string]: string | string[] } = {
+  const headers: { [key: string]: string } = {
     authorization: sdkKey,
     'user-agent': `NodeJSClient/${sdkData.version}`,
   };
