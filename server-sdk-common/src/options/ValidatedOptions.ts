@@ -1,5 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 import {
+  LDBigSegmentsOptions,
   LDOptions, LDProxyOptions, LDStreamProcessor, LDTLSOptions,
 } from '../api';
 import { LDFeatureStore } from '../api/subsystems';
@@ -41,4 +42,5 @@ export interface ValidatedOptions {
   logger?: LDLogger;
   // Allow indexing this by a string for the validation step.
   [index: string]: any;
+  bigSegments?: LDBigSegmentsOptions;
 }
