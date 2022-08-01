@@ -33,7 +33,7 @@ export default class TestDataRuleBuilder<BuilderType> {
     variation?: number,
   ) {
     if (clauses) {
-      this.clauses = JSON.parse(JSON.stringify(clauses));
+      this.clauses = [...clauses];
     }
     if (variation !== undefined) {
       this.variation = variation;
