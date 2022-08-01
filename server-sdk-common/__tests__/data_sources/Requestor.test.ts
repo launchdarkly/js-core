@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
@@ -48,7 +49,7 @@ describe('given a requestor', () => {
             entries(): Iterable<[string, string]> {
               throw new Error('Function not implemented.');
             },
-            has(name: string): boolean {
+            has(_name: string): boolean {
               throw new Error('Function not implemented.');
             },
           };

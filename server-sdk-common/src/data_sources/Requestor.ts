@@ -16,7 +16,12 @@ export default class Requestor implements LDFeatureRequestor {
     body: string,
   }> = {};
 
-  constructor(sdkKey: string, config: Configuration, info: Info, private readonly requests: Requests) {
+  constructor(
+    sdkKey: string,
+    config: Configuration,
+    info: Info,
+    private readonly requests: Requests,
+  ) {
     this.headers = defaultHeaders(sdkKey, config, info);
     this.uri = `${config.serviceEndpoints.polling}/sdk/latest-all`;
   }

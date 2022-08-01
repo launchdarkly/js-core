@@ -74,13 +74,11 @@ describe('given a polling processor with a short poll duration', () => {
   const jsonData = JSON.stringify(allData);
 
   let store: LDFeatureStore;
-  let storeFacade: AsyncStoreFacade;
   let config: Configuration;
   let processor: PollingProcessor;
 
   beforeEach(() => {
     store = new InMemoryFeatureStore();
-    storeFacade = new AsyncStoreFacade(store);
     config = new Configuration({
       featureStore: store,
       pollInterval: shortInterval,
