@@ -2,6 +2,7 @@ import {
   LDLogger, NumberWithMinimum, TypeValidator, TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 import {
+  LDBigSegmentsOptions,
   LDOptions, LDProxyOptions, LDStreamProcessor, LDTLSOptions,
 } from '../api';
 import { LDFeatureStore } from '../api/subsystems';
@@ -192,6 +193,8 @@ export default class Configuration {
 
   public readonly updateProcessor?: LDStreamProcessor;
 
+  public readonly bigSegments?: LDBigSegmentsOptions;
+
   constructor(options: LDOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
@@ -214,15 +217,8 @@ export default class Configuration {
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;
-    if (TypeValidators.Function.is(validatedOptions.featureStore)) {
-      // @ts-ignore
-      this.featureStore = validatedOptions.featureStore(options);
-    } else {
-      // @ts-ignore
-      this.featureStore = validatedOptions.featureStore;
-    }
 
-    // TODO: bigSegments
+    this.bigSegments = validatedOptions.bigSegments;
     this.updateProcessor = validatedOptions.updateProcessor;
     this.flushInterval = validatedOptions.flushInterval;
     this.pollInterval = validatedOptions.pollInterval;
@@ -243,5 +239,13 @@ export default class Configuration {
     this.wrapperVersion = validatedOptions.wrapperVersion;
     this.tags = new ApplicationTags(validatedOptions);
     this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;
+
+    if (TypeValidators.Function.is(validatedOptions.featureStore)) {
+      // @ts-ignore
+      this.featureStore = validatedOptions.featureStore(this);
+    } else {
+      // @ts-ignore
+      this.featureStore = validatedOptions.featureStore;
+    }
   }
 }
