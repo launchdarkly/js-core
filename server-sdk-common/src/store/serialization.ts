@@ -44,6 +44,11 @@ export function replacer(this: any, key: string, value: any): any {
   if (value instanceof AttributeReference) {
     return undefined;
   }
+  if (Array.isArray(value)) {
+    if (value[0] && value[0] instanceof AttributeReference) {
+      return undefined;
+    }
+  }
   return value;
 }
 
@@ -208,5 +213,53 @@ export function deserializeDelete(data: string): DeleteData | undefined {
   } else if (parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
     parsed.kind = VersionedDataKinds.Segments;
   }
+  return parsed;
+}
+
+/**
+ * Serialize a single flag. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function serializeFlag(flag: Flag): string {
+  return JSON.stringify(flag, replacer);
+}
+
+/**
+ * Deserialize a single flag. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function deserializeFlag(data: string): Flag | undefined {
+  const parsed = tryParse(data);
+  if (!parsed) {
+    return undefined;
+  }
+
+  processFlag(parsed);
+  return parsed;
+}
+
+/**
+ * Serialize a single segment. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function serializeSegment(segment: Segment): string {
+  return JSON.stringify(segment, replacer);
+}
+
+/**
+ * Deserialize a single segment. Used for persistent data stores.
+ *
+ * @internal
+ */
+export function deserializeSegment(data: string): Segment | undefined {
+  const parsed = tryParse(data);
+  if (!parsed) {
+    return undefined;
+  }
+
+  processSegment(parsed);
   return parsed;
 }
