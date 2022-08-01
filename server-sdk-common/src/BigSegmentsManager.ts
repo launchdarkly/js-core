@@ -23,7 +23,9 @@ export default class BigSegmentsManager {
 
   constructor(
     private store: BigSegmentStore | undefined,
-    config: LDBigSegmentsOptions,
+    // The store will have been created before the manager is instantiated, so we do not need
+    // it in the options at this stage.
+    config: Omit<LDBigSegmentsOptions, 'store'>,
     private readonly logger: LDLogger | undefined,
     private readonly crypto: Crypto,
   ) {
