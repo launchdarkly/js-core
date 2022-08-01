@@ -10,7 +10,7 @@ import TestLogger, { LogLevel } from '../Logger';
 
 describe('given an event processor', () => {
   const requestor = {
-    requestAllData: jest.fn()
+    requestAllData: jest.fn(),
   };
   const longInterval = 100000;
   const allData = { flags: { flag: { version: 1 } }, segments: { segment: { version: 1 } } };
@@ -21,14 +21,13 @@ describe('given an event processor', () => {
   let config: Configuration;
   let processor: PollingProcessor;
 
-
   beforeEach(() => {
     store = new InMemoryFeatureStore();
     storeFacade = new AsyncStoreFacade(store);
     config = new Configuration({
       featureStore: store,
       pollInterval: longInterval,
-      logger: new TestLogger()
+      logger: new TestLogger(),
     });
     processor = new PollingProcessor(config, requestor as unknown as Requestor);
   });
@@ -68,25 +67,22 @@ describe('given an event processor', () => {
 
 describe('given a polling processor with a short poll duration', () => {
   const requestor = {
-    requestAllData: jest.fn()
+    requestAllData: jest.fn(),
   };
   const shortInterval = 0.1;
   const allData = { flags: { flag: { version: 1 } }, segments: { segment: { version: 1 } } };
   const jsonData = JSON.stringify(allData);
 
   let store: LDFeatureStore;
-  let storeFacade: AsyncStoreFacade;
   let config: Configuration;
   let processor: PollingProcessor;
 
-
   beforeEach(() => {
     store = new InMemoryFeatureStore();
-    storeFacade = new AsyncStoreFacade(store);
     config = new Configuration({
       featureStore: store,
       pollInterval: shortInterval,
-      logger: new TestLogger()
+      logger: new TestLogger(),
     });
     // Configuration will not let us set this as low as needed for the test.
     Object.defineProperty(config, 'pollInterval', { value: 0.1 });
@@ -110,7 +106,7 @@ describe('given a polling processor with a short poll duration', () => {
 
   it.each<number | jest.DoneCallback>([400, 408, 429, 500, 503])('continues polling after recoverable error', (status, done) => {
     requestor.requestAllData = jest.fn((cb) => cb({
-      status
+      status,
     }, undefined));
     processor.start((e) => {
       expect(e).toBeUndefined();
@@ -141,7 +137,7 @@ describe('given a polling processor with a short poll duration', () => {
 
   it.each<number | jest.DoneCallback>([401, 403])('does not continue after non-recoverable error', (status, done) => {
     requestor.requestAllData = jest.fn((cb) => cb({
-      status
+      status,
     }, undefined));
     processor.start((e) => {
       expect(e).toBeDefined();
