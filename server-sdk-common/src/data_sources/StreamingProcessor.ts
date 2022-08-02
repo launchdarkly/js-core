@@ -54,13 +54,17 @@ export default class StreamingProcessor implements LDStreamProcessor {
   }
 
   private logConnectionStarted() {
-    this.connectionAttemptStartTime = new Date().getTime();
+    this.connectionAttemptStartTime = Date.now();
   }
 
-  // TODO: Remove once the success is used for something.
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   private logConnectionResult(success: boolean) {
-    // TODO: Implement. requires diagnosticsManager.
+    if (this.connectionAttemptStartTime && this.diagnosticsManager) {
+      this.diagnosticsManager.recordStreamInit(
+        this.connectionAttemptStartTime,
+        !success,
+        Date.now() - this.connectionAttemptStartTime,
+      );
+    }
 
     this.connectionAttemptStartTime = undefined;
   }

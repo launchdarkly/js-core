@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import Configuration, { defaultValues } from '../options/Configuration';
-import {  Platform } from '../platform';
+import { Platform } from '../platform';
 
 interface DiagnosticPlatformData {
   name?: string,
@@ -49,7 +49,7 @@ interface DiagnosticId {
   sdkKeySuffix: string;
 }
 
-interface DiagnosticInitEvent {
+export interface DiagnosticInitEvent {
   kind: 'diagnostic-init';
   id: DiagnosticId;
   creationDate: number,
@@ -64,7 +64,7 @@ interface StreamInitData {
   durationMillis: number;
 }
 
-interface DiagnosticStatsEvent {
+export interface DiagnosticStatsEvent {
   kind: 'diagnostic';
   id: DiagnosticId;
   creationDate: number;
@@ -77,11 +77,11 @@ interface DiagnosticStatsEvent {
 
 function secondsToMillis(sec: number): number {
   return Math.trunc(sec * 1000);
-};
+}
 
 /**
  * Maintains information for diagnostic events.
- * 
+ *
  * @internal
  */
 export default class DiagnosticsManager {
@@ -99,7 +99,7 @@ export default class DiagnosticsManager {
     private readonly platform: Platform,
   ) {
     this.startTime = Date.now();
-    this.dataSinceDate =  this.startTime;
+    this.dataSinceDate = this.startTime;
     this.id = {
       diagnosticId: nanoid(),
       sdkKeySuffix: sdkKey.length > 6 ? sdkKey.substring(sdkKey.length - 6) : sdkKey,
@@ -107,8 +107,8 @@ export default class DiagnosticsManager {
   }
 
   /**
-   * Creates the initial event that is sent by the event processor when the SDK starts up. This will not
-   * be repeated during the lifetime of the SDK client.
+   * Creates the initial event that is sent by the event processor when the SDK starts up. This will
+   * not be repeated during the lifetime of the SDK client.
    */
   createInitEvent(): DiagnosticInitEvent {
     const sdkData = this.platform.info.sdkData();
@@ -127,7 +127,7 @@ export default class DiagnosticsManager {
         // Node doesn't distinguish between these two kinds of timeouts. It is unlikely other web
         // based implementations would be able to either.
         connectTimeoutMillis: secondsToMillis(this.config.timeout),
-        socketTimeoutMillis: secondsToMillis(this.config.timeout), 
+        socketTimeoutMillis: secondsToMillis(this.config.timeout),
         eventsFlushIntervalMillis: secondsToMillis(this.config.flushInterval),
         pollingIntervalMillis: secondsToMillis(this.config.pollInterval),
         reconnectTimeMillis: secondsToMillis(this.config.streamInitialReconnectDelay),
@@ -147,35 +147,36 @@ export default class DiagnosticsManager {
         osArch: platformData.os?.arch,
         osName: platformData.os?.name,
         osVersion: platformData.os?.version,
-        ...(platformData.additional || {})
-      }
+        ...(platformData.additional || {}),
+      },
     };
   }
 
   /**
    * Records a stream connection attempt (called by the stream processor).
-   * 
+   *
    * @param timestamp Time of the *beginning* of the connection attempt.
    * @param failed True if the connection failed, or we got a read timeout before receiving a "put".
-   * @param durationMillis Elapsed time between starting timestamp and when we either gave up/lost the
-   * connection or received a successful "put".
+   * @param durationMillis Elapsed time between starting timestamp and when we either gave up/lost
+   * the connection or received a successful "put".
    */
   recordStreamInit(timestamp: number, failed: boolean, durationMillis: number) {
     const item = { timestamp, failed, durationMillis };
     this.streamInits.push(item);
-  };
+  }
 
   /**
-   * Creates a periodic event containing time-dependent stats, and resets the state of the manager with
-   * regard to those stats.
-   * Note: the reason droppedEvents, deduplicatedUsers, and eventsInLastBatch are passed into this function,
-   * instead of being properties of the DiagnosticsManager, is that the event processor is the one who's
-   * calling this function and is also the one who's tracking those stats.
+   * Creates a periodic event containing time-dependent stats, and resets the state of the manager
+   * with regard to those stats.
+   *
+   * Note: the reason droppedEvents, deduplicatedUsers, and eventsInLastBatch are passed into this
+   * function, instead of being properties of the DiagnosticsManager, is that the event processor is
+   * the one who's calling this function and is also the one who's tracking those stats.
    */
   createStatsEventAndReset(
     droppedEvents: number,
     deduplicatedUsers: number,
-    eventsInLastBatch: number
+    eventsInLastBatch: number,
   ): DiagnosticStatsEvent {
     const currentTime = Date.now();
     const evt: DiagnosticStatsEvent = {
@@ -187,7 +188,7 @@ export default class DiagnosticsManager {
       deduplicatedUsers,
       eventsInLastBatch,
       streamInits: this.streamInits,
-    }
+    };
 
     this.streamInits = [];
     this.dataSinceDate = currentTime;
