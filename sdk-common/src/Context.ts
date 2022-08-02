@@ -189,6 +189,10 @@ export default class Context {
 
   public readonly kind: string;
 
+  public readonly valid: boolean;
+
+  public readonly message?: string;
+
   static readonly userKind: string = DEFAULT_KIND;
 
   /**
@@ -198,8 +202,14 @@ export default class Context {
    * The factory methods are static functions within the class because they access private
    * implementation details, so they cannot be free functions.
    */
-  private constructor(kind: string) {
+  private constructor(valid: boolean, kind: string, message?: string) {
     this.kind = kind;
+    this.valid = valid;
+    this.message = message;
+  }
+
+  private static contextForError(kind: string, message: string) {
+    return new Context(false, kind, message);
   }
 
   private static getValueFromContext(
@@ -226,12 +236,12 @@ export default class Context {
     return undefined;
   }
 
-  private static fromMultiKindContext(context: LDMultiKindContext): Context | undefined {
+  private static fromMultiKindContext(context: LDMultiKindContext): Context {
     const kinds = Object.keys(context).filter((key) => key !== 'kind');
     const kindsValid = kinds.every(validKind) && kinds.length;
 
     if (!kindsValid) {
-      return undefined;
+      return Context.contextForError('multi', 'Context contains invalid kinds.');
     }
 
     const privateAttributes: Record<string, AttributeReference[]> = {};
@@ -249,11 +259,11 @@ export default class Context {
     }, {});
 
     if (!contextsAreObjects) {
-      return undefined;
+      return Context.contextForError('multi', 'Context contained contexts that were not objects.');
     }
 
     if (!Object.values(contexts).every((part) => validKey(part.key))) {
-      return undefined;
+      return Context.contextForError('multi', 'Context contained invalid keys.');
     }
 
     // There was only a single kind in the multi-kind context.
@@ -262,14 +272,14 @@ export default class Context {
     // it would make it consistent with strongly typed SDKs.
     if (kinds.length === 1) {
       const kind = kinds[0];
-      const created = new Context(kind);
+      const created = new Context(true, kind);
       created.context = contexts[kind];
       created.privateAttributeReferences = privateAttributes;
       created.isUser = kind === 'user';
       return created;
     }
 
-    const created = new Context(context.kind);
+    const created = new Context(true, context.kind);
     created.contexts = contexts;
     created.privateAttributeReferences = privateAttributes;
 
@@ -277,33 +287,38 @@ export default class Context {
     return created;
   }
 
-  private static fromSingleKindContext(context: LDSingleKindContext): Context | undefined {
+  private static fromSingleKindContext(context: LDSingleKindContext): Context {
     const { key, kind } = context;
     const kindValid = validKind(kind);
     const keyValid = validKey(key);
 
-    if (keyValid && kindValid) {
-      // The JSON interfaces uses dangling _.
-      // eslint-disable-next-line no-underscore-dangle
-      const privateAttributeReferences = processPrivateAttributes(context._meta?.privateAttributes);
-      const created = new Context(kind);
-      created.isUser = kind === 'user';
-      created.context = context;
-      created.privateAttributeReferences = {
-        [kind]: privateAttributeReferences,
-      };
-      return created;
+    if (!kindValid) {
+      return Context.contextForError(kind ?? 'unknown', 'The kind was not valid for the context.');
     }
-    return undefined;
+
+    if (!keyValid) {
+      return Context.contextForError(kind, 'The key for the context was not valid');
+    }
+
+    // The JSON interfaces uses dangling _.
+    // eslint-disable-next-line no-underscore-dangle
+    const privateAttributeReferences = processPrivateAttributes(context._meta?.privateAttributes);
+    const created = new Context(true, kind);
+    created.isUser = kind === 'user';
+    created.context = context;
+    created.privateAttributeReferences = {
+      [kind]: privateAttributeReferences,
+    };
+    return created;
   }
 
-  private static fromLegacyUser(context: LDUser): Context | undefined {
+  private static fromLegacyUser(context: LDUser): Context {
     const keyValid = context.key !== undefined && context.key !== null;
     // For legacy users we allow empty keys.
     if (!keyValid) {
-      return undefined;
+      return Context.contextForError('user', 'The key for the context was not valid');
     }
-    const created = new Context('user');
+    const created = new Context(true, 'user');
     created.isUser = true;
     created.wasLegacy = true;
     created.context = legacyToSingleKind(context);
@@ -316,17 +331,21 @@ export default class Context {
   /**
    * Attempt to create a {@link Context} from an {@link LDContext}.
    * @param context The input context to create a Context from.
-   * @returns a {@link Context} or `undefined` if one could not be created.
+   * @returns a {@link Context}, if the context was not valid, then the returned contexts `valid`
+   * property will be false.
    */
-  public static fromLDContext(context: LDContext): Context | undefined {
-    if (isSingleKind(context)) {
+  public static fromLDContext(context: LDContext): Context {
+    if (!context) {
+      return Context.contextForError('unknown', 'No context specified. Returning default value.');
+    } if (isSingleKind(context)) {
       return Context.fromSingleKindContext(context);
     } if (isMultiKind(context)) {
       return Context.fromMultiKindContext(context);
     } if (isLegacyUser(context)) {
       return Context.fromLegacyUser(context);
     }
-    return undefined;
+
+    return Context.contextForError('unknown', 'Context was not of a valid kind');
   }
 
   /**
