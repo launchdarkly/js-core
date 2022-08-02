@@ -220,9 +220,8 @@ export default class LDClientImpl implements LDClient {
     }
 
     const evalContext = Context.fromLDContext(context);
-    // TODO: Error reporting.
     if (!evalContext.valid) {
-      this.logger?.info('allFlagsState() called without context. Returning empty state.');
+      this.logger?.info(`${evalContext.message ?? 'Invalid context.'}. Returning empty state.`);
       return new FlagsStateBuilder(false, false).build();
     }
 
@@ -301,6 +300,7 @@ export default class LDClientImpl implements LDClient {
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
     }
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
@@ -311,6 +311,7 @@ export default class LDClientImpl implements LDClient {
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
     }
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.identifyEvent(checkedContext!),
