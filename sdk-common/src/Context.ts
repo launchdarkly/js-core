@@ -30,7 +30,7 @@ const DEFAULT_KIND = 'user';
 /**
  * Check if a context is a single kind context.
  * @param context
- * @returns frue if the context is a single kind context.
+ * @returns true if the context is a single kind context.
  */
 function isSingleKind(context: LDContext): context is LDSingleKindContext {
   if ('kind' in context) {
@@ -189,6 +189,10 @@ export default class Context {
 
   public readonly kind: string;
 
+  /**
+   * Is this a valid context. If a valid context cannot be created, then this flag will be true.
+   * The validity of a context should be tested before it is used.
+   */
   public readonly valid: boolean;
 
   public readonly message?: string;
