@@ -128,7 +128,17 @@ export default class EventProcessor implements LDEventProcessor {
       }
     }, config.flushInterval * 1000);
 
-    // TODO: Implement diagnostics.
+    this.diagnosticsTimer = setInterval(async () => {
+      const stats = this.diagnosticsManager?.createStatsEventAndReset(
+        this.droppedEvents,
+        this.deduplicatedUsers,
+        this.eventsInLastBatch,
+      );
+
+      this.droppedEvents = 0;
+      this.deduplicatedUsers = 0;
+      
+    });
   }
 
   close() {

@@ -106,10 +106,13 @@ export default class LDClientImpl implements LDClient {
       new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
     ));
 
+    if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
+      this.diagnosticsManager = new DiagnosticsManager(sdkKey, config, platform);
+    }
+
     if (!config.sendEvents || config.offline) {
       this.eventProcessor = new NullEventProcessor();
     } else {
-      this.diagnosticsManager = new DiagnosticsManager(sdkKey, config, platform);
       this.eventProcessor = new EventProcessor(
         sdkKey,
         config,
