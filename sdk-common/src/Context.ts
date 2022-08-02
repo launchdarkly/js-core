@@ -242,7 +242,11 @@ export default class Context {
 
   private static fromMultiKindContext(context: LDMultiKindContext): Context {
     const kinds = Object.keys(context).filter((key) => key !== 'kind');
-    const kindsValid = kinds.every(validKind) && kinds.length;
+    const kindsValid = kinds.every(validKind);
+
+    if (!kinds.length) {
+      return Context.contextForError('multi', 'Am multi-kind context must contain at least one kind.');
+    }
 
     if (!kindsValid) {
       return Context.contextForError('multi', 'Context contains invalid kinds.');
