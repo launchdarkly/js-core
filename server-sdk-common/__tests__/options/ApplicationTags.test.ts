@@ -38,7 +38,7 @@ describe.each([
     { application: { id: 'bad tag', version: 'also bad' }, logger: undefined },
     undefined, undefined,
   ],
-])('given application tags configurations', (config, result, logs) => {
+])('given application tags configurations %p', (config, result, logs) => {
   it('produces the correct tag values', () => {
     const tags = new ApplicationTags(config as unknown as ValidatedOptions);
     expect(tags.value).toEqual(result);

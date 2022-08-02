@@ -13,6 +13,11 @@ function makeSdkConfig(options, tag) {
     cf.streamUri = options.streaming.baseUri;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
   }
+  if(options.polling) {
+    cf.stream = false;
+    cf.baseUri = options.polling.baseUri;
+    cf.pollInterface = options.polling.pollIntervalMs / 1000;
+  }
   if (options.events) {
     cf.allAttributesPrivate = options.events.allAttributesPrivate;
     cf.eventsUri = options.events.baseUri;

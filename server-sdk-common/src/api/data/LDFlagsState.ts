@@ -29,7 +29,7 @@ export interface LDFlagsState {
    * @param key
    *   The flag key.
    */
-  getFlagReason(key: string): LDEvaluationReason;
+  getFlagReason(key: string): LDEvaluationReason | null;
 
   /**
    * Returns a map of feature flag keys to values. If a flag would have evaluated to the

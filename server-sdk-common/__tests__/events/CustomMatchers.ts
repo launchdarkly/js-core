@@ -24,7 +24,7 @@ expect.extend({
     const headers = {
       authorization: SDK_KEY,
       'user-agent': 'NodeJSClient/2.2.2',
-      'x-launchDarkly-event-schema': '3',
+      'x-launchDarkly-event-schema': '4',
       'x-launchdarkly-payload-id': '',
     };
 

@@ -20,6 +20,7 @@ app.get('/', (req, res) => {
   res.header('Content-Type', 'application/json');
   res.json({
     capabilities: [
+      'server-side-polling',
       'server-side',
       'all-flags-client-side-only',
       'all-flags-details-only-for-tracked-flags',

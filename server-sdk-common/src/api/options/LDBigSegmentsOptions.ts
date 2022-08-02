@@ -19,7 +19,7 @@ export interface LDBigSegmentsOptions {
    * Relay Proxy manages the Big Segment data.
    */
   store: (options: {
-    logger: LDLogger
+    logger?: LDLogger
   }) => BigSegmentStore;
 
   /**
