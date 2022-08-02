@@ -9,6 +9,7 @@ import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
 import Configuration from '../options/Configuration';
 import { Info, Requests } from '../platform';
+import DiagnosticsManager from './DiagnosticsManager';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
@@ -95,7 +96,13 @@ export default class EventProcessor implements LDEventProcessor {
     [key: string]: string | string[];
   };
 
-  constructor(sdkKey: string, config: Configuration, info: Info, private requests: Requests) {
+  constructor(
+    sdkKey: string,
+    config: Configuration,
+    info: Info,
+    private readonly requests: Requests,
+    private readonly diagnosticsManager?: DiagnosticsManager,
+  ) {
     this.capacity = config.eventsCapacity;
     this.logger = config.logger;
     this.contextKeysCache = new LruCache({ max: config.contextKeysCapacity });

@@ -20,6 +20,7 @@ import ErrorKinds from './evaluation/ErrorKinds';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
+import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
 import EventProcessor from './events/EventProcessor';
 import isExperiment from './events/isExperiment';
@@ -62,6 +63,8 @@ export default class LDClientImpl implements LDClient {
 
   private config: Configuration;
 
+  private diagnosticsManager?: DiagnosticsManager;
+
   /**
    * Intended for use by platform specific client implementations.
    *
@@ -97,26 +100,29 @@ export default class LDClientImpl implements LDClient {
       config,
       this.platform.requests,
       this.platform.info,
+      this.diagnosticsManager,
     ) : new PollingProcessor(
       config,
       new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
     ));
 
-    if (config.offline || config.useLdd) {
-      this.updateProcessor = new NullUpdateProcessor();
-    } else {
-      this.updateProcessor = config.updateProcessor ?? makeDefaultProcessor();
-    }
-
     if (!config.sendEvents || config.offline) {
       this.eventProcessor = new NullEventProcessor();
     } else {
+      this.diagnosticsManager = new DiagnosticsManager(sdkKey, config, platform);
       this.eventProcessor = new EventProcessor(
         sdkKey,
         config,
         this.platform.info,
         this.platform.requests,
+        this.diagnosticsManager,
       );
+    }
+
+    if (config.offline || config.useLdd) {
+      this.updateProcessor = new NullUpdateProcessor();
+    } else {
+      this.updateProcessor = config.updateProcessor ?? makeDefaultProcessor();
     }
 
     const asyncFacade = new AsyncStoreFacade(config.featureStore);

@@ -124,12 +124,12 @@ export default class DiagnosticsManager {
         customStreamURI: this.config.serviceEndpoints.streaming !== defaultValues.streamUri,
         customEventsURI: this.config.serviceEndpoints.events !== defaultValues.eventsUri,
         eventsCapacity: this.config.eventsCapacity,
+        // Node doesn't distinguish between these two kinds of timeouts. It is unlikely other web
+        // based implementations would be able to either.
         connectTimeoutMillis: secondsToMillis(this.config.timeout),
-        socketTimeoutMillis: secondsToMillis(this.config.timeout), // Node doesn't distinguish between these two kinds of timeouts
+        socketTimeoutMillis: secondsToMillis(this.config.timeout), 
         eventsFlushIntervalMillis: secondsToMillis(this.config.flushInterval),
         pollingIntervalMillis: secondsToMillis(this.config.pollInterval),
-        // startWaitMillis: n/a (Node SDK does not have this feature)
-        // samplingInterval: n/a (Node SDK does not have this feature)
         reconnectTimeMillis: secondsToMillis(this.config.streamInitialReconnectDelay),
         streamingDisabled: !this.config.stream,
         usingRelayDaemon: this.config.useLdd,
