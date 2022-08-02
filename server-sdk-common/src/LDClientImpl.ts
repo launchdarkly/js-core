@@ -204,10 +204,7 @@ export default class LDClientImpl implements LDClient {
       defaultValue,
       this.eventFactoryWithReasons,
     );
-    // if (!callback) {
-    //   return res.detail;
-    // }
-    // TODO: Get the error.
+
     callback?.(null, res.detail);
     return res.detail;
   }
@@ -342,7 +339,6 @@ export default class LDClientImpl implements LDClient {
     }
     const evalContext = Context.fromLDContext(context);
     if (!evalContext) {
-      // TODO: Make a way to incorporate useful data into this result.
       return EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue);
     }
 
@@ -381,7 +377,7 @@ export default class LDClientImpl implements LDClient {
       if (storeInitialized) {
         this.logger?.warn(
           'Variation called before LaunchDarkly client initialization completed'
-          + '(did you wait for the \'ready\' event?) - using last known values from feature store',
+          + ' (did you wait for the \'ready\' event?) - using last known values from feature store',
         );
         return this.variationInternal(flagKey, context, defaultValue, eventFactory);
       }
