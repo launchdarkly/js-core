@@ -34,6 +34,7 @@ export default function matchClauseWithoutSegmentOperations(
       clause,
       contextValue.some(
         (value) => matchAny(clause.op, value, clause.values),
+        // (value) => matchAny(clause.op, clause.values, value),
       ),
     );
   }
