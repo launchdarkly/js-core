@@ -185,17 +185,17 @@ describe('given a multi-kind context', () => {
   const context = Context.fromLDContext({
     kind: 'multi',
 
+    user: {
+      key: 'User /Key',
+      // Key will be URL encoded.
+      value: 'UserValue',
+    },
     org: {
       key: 'OrgKey',
       value: 'OrgValue',
       _meta: {
         secondary: 'value',
       },
-    },
-    user: {
-      key: 'User /Key',
-      // Key will be URL encoded.
-      value: 'UserValue',
     },
   });
 
@@ -212,7 +212,7 @@ describe('given a multi-kind context', () => {
   });
 
   it('should have the correct kinds', () => {
-    expect(context?.kinds).toEqual(['org', 'user']);
+    expect(context?.kinds.sort()).toEqual(['org', 'user']);
   });
 
   it('should have the correct kinds and keys', () => {
