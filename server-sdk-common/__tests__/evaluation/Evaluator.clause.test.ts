@@ -383,3 +383,56 @@ it('handles clauses with malformed attribute references', async () => {
   expect(res.detail.reason).toEqual({ kind: 'ERROR', errorKind: 'MALFORMED_FLAG' });
   expect(res.detail.value).toBe(null);
 });
+
+describe.each([
+  ['lessThan', 99, 99.0001],
+  ['lessThanOrEqual', 99, 99.0001],
+  ['greaterThan', 99.0001, 99],
+  ['greaterThanOrEqual', 99.0001, 99],
+
+  // string comparisons
+  ['startsWith', 'xyz', 'x'],
+  ['endsWith', 'xyz', 'z'],
+  ['contains', 'xyz', 'y'],
+
+  // regex
+  ['matches', 'hello world', 'hello.*rld'],
+
+  // dates
+  ['before', 0, 1],
+  ['after', '1970-01-01T00:00:02.500Z', 1000],
+
+  // semver
+  ['semVerLessThan', '2.0.0', '2.0.1'],
+  ['semVerGreaterThan', '2.0.1', '2.0.0'],
+])('executes operations with the clause value and context value correctly', (operator, contextValue, clauseValue) => {
+  const clause: Clause = {
+    attribute: 'value',
+    // @ts-ignore
+    op: operator,
+    values: [clauseValue],
+    contextKind: 'potato',
+    attributeReference: new AttributeReference('value'),
+  };
+
+  const context = Context.fromLDContext({
+    kind: 'potato',
+    key: 'potato',
+    value: contextValue,
+  });
+
+  const contextWArray = Context.fromLDContext({
+    kind: 'potato',
+    key: 'potato',
+    value: [contextValue],
+  });
+
+  it(`Operator ${operator} with ${contextValue} and ${clauseValue} should be true`, async () => {
+    const flag = makeBooleanFlagWithOneClause(clause);
+    const res = await evaluator.evaluate(flag, context);
+    expect(res.detail.value).toBe(true);
+
+    const res2 = await evaluator.evaluate(flag, contextWArray);
+    expect(res2.detail.value).toBe(true);
+  });
+});
