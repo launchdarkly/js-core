@@ -5,7 +5,7 @@ import EventSummarizer from '../../src/events/EventSummarizer';
 describe('given an event summarizer', () => {
   const summarizer = new EventSummarizer();
   const factory = new EventFactory(true);
-  const context = Context.fromLDContext({ key: 'key' })!;
+  const context = Context.fromLDContext({ key: 'key' });
 
   beforeEach(() => {
     summarizer.clearSummary();
@@ -210,7 +210,7 @@ describe('given an event summarizer', () => {
       creationDate: 1000,
       key: 'key1',
       version: 11,
-      context: Context.fromLDContext({ key: 'test' })!,
+      context: Context.fromLDContext({ key: 'test' }),
       variation: 1,
       value: 100,
       default: 111,
@@ -220,7 +220,7 @@ describe('given an event summarizer', () => {
       creationDate: 1000,
       key: 'key1',
       version: 11,
-      context: Context.fromLDContext({ kind: 'org', key: 'test' })!,
+      context: Context.fromLDContext({ kind: 'org', key: 'test' }),
       variation: 1,
       value: 100,
       default: 111,
@@ -230,7 +230,7 @@ describe('given an event summarizer', () => {
       creationDate: 1000,
       key: 'key1',
       version: 11,
-      context: Context.fromLDContext({ kind: 'multi', bacon: { key: 'crispy' }, eggs: { key: 'scrambled' } })!,
+      context: Context.fromLDContext({ kind: 'multi', bacon: { key: 'crispy' }, eggs: { key: 'scrambled' } }),
       variation: 1,
       value: 100,
       default: 111,

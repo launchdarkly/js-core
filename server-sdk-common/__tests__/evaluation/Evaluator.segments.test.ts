@@ -43,7 +43,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(true);
   });
 
@@ -55,7 +55,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(false);
   });
 
@@ -67,7 +67,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(false);
   });
 
@@ -80,7 +80,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const user = { key: 'bar' };
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
     expect(res.detail.value).toBe(false);
   });
 
@@ -93,7 +93,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(true);
   });
 
@@ -111,7 +111,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(true);
   });
 
@@ -132,7 +132,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(basicUser)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(basicUser));
     expect(res.detail.reason).toEqual({ kind: 'ERROR', errorKind: 'MALFORMED_FLAG' });
     expect(res.detail.value).toBe(null);
   });
@@ -151,7 +151,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(false);
   });
 
@@ -182,7 +182,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
     expect(res.detail.value).toBe(true);
   });
 
@@ -200,7 +200,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
     expect(res.detail.value).toBe(false);
   });
 });
@@ -217,7 +217,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(true);
   });
 
@@ -250,7 +250,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(true);
   });
 
@@ -274,7 +274,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind));
     expect(res.detail.reason).toEqual({ kind: 'ERROR', errorKind: 'MALFORMED_FLAG' });
     expect(res.detail.value).toBe(null);
   });
@@ -314,7 +314,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind));
     expect(res.detail.value).toBe(true);
   });
 
@@ -326,7 +326,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(false);
   });
 
@@ -338,7 +338,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(false);
   });
 
@@ -350,7 +350,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(false);
   });
 });

@@ -22,10 +22,10 @@ describe.each([
   },
   ...badKinds,
 ])('given invalid LDContext', (ldConext) => {
-  it('should not create a context', () => {
+  it(`should not create a context ${JSON.stringify(ldConext)}`, () => {
     // Force TS to accept our bad contexts.
     // @ts-ignore
-    expect(Context.fromLDContext(ldConext)).toBeUndefined();
+    expect(Context.fromLDContext(ldConext).valid).toBeFalsy();
   });
 });
 

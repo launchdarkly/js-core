@@ -19,7 +19,6 @@ class LDClientNode extends LDClientImpl {
   bigSegmentStoreStatusProvider: BigSegmentStoreStatusProvider;
 
   constructor(sdkKey: string, options: LDOptions) {
-    // TODO: Conditional error reporting needs to move here.
     const fallbackLogger = new BasicLogger({
       level: 'info',
       // eslint-disable-next-line no-console

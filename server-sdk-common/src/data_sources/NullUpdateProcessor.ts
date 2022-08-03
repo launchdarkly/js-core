@@ -7,9 +7,8 @@ import { LDStreamProcessor } from '../api';
 
 export default class NullUpdateProcessor implements LDStreamProcessor {
   start(fn?: ((err?: any) => void) | undefined) {
-    // TODO: This was deferred in the other implementation, it has this comment,
-    // but it has no why.
-    // the start() callback should always be deferred
+    // Deferring the start callback should allow client construction to complete before we start
+    // emitting events. Allowing the client an opportunity to register events.
     setTimeout(() => fn?.(), 0);
   }
 

@@ -112,7 +112,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
 ])('given flag configurations with different targets', (flag, context, expected) => {
   // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${context.kind} targets: ${flag.targets?.map((t) => `${t.values}, ${t.variation}`)} context targets: ${flag.contextTargets?.map((t) => `${t.contextKind}: ${t.values}, ${t.variation}`)}`, () => {
-    const result = evalTargets(flag, Context.fromLDContext(context)!);
+    const result = evalTargets(flag, Context.fromLDContext(context));
     expect(result?.isError).toEqual(expected?.isError);
     expect(result?.detail).toStrictEqual(expected?.detail);
     expect(result?.message).toEqual(expected?.message);
