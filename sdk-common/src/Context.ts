@@ -383,7 +383,7 @@ export default class Context {
       return this.context!.key;
     }
     if (this.isMulti) {
-      return Object.keys(this.contexts).map((key) => `${key}:${encodeURIComponent(this.contexts[key].key)}`)
+      return Object.keys(this.contexts).sort().map((key) => `${key}:${encodeURIComponent(this.contexts[key].key)}`)
         .join(':');
     }
     return `${this.kind}:${encodeURIComponent(this.context!.key)}`;

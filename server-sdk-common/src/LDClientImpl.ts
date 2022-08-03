@@ -52,11 +52,11 @@ export default class LDClientImpl implements LDClient {
 
   private evaluator: Evaluator;
 
-  private initResolve!: (value: LDClient | PromiseLike<LDClient>) => void;
+  private initResolve?: (value: LDClient | PromiseLike<LDClient>) => void;
 
-  private initReject!: (err: Error) => void;
+  private initReject?: (err: Error) => void;
 
-  private initializedPromise: Promise<LDClient>;
+  private initializedPromise?: Promise<LDClient>;
 
   private logger?: LDLogger;
 
@@ -86,11 +86,6 @@ export default class LDClientImpl implements LDClient {
     }
     this.config = config;
     this.logger = config.logger;
-
-    this.initializedPromise = new Promise((resolve, reject) => {
-      this.initResolve = resolve;
-      this.initReject = reject;
-    });
 
     const makeDefaultProcessor = () => (config.stream ? new StreamingProcessor(
       sdkKey,
@@ -154,11 +149,11 @@ export default class LDClientImpl implements LDClient {
 
         this.onError(error);
         this.onFailed(error);
-        this.initReject(error);
+        this.initReject?.(error);
         this.initState = InitState.Failed;
       } else if (!this.initialized()) {
         this.initState = InitState.Initialized;
-        this.initResolve(this);
+        this.initResolve?.(this);
         this.onReady();
       }
     });
@@ -169,6 +164,15 @@ export default class LDClientImpl implements LDClient {
   }
 
   waitForInitialization(): Promise<LDClient> {
+    if (this.initState === InitState.Initialized) {
+      return Promise.resolve(this);
+    }
+    if (!this.initializedPromise) {
+      this.initializedPromise = new Promise((resolve, reject) => {
+        this.initResolve = resolve;
+        this.initReject = reject;
+      });
+    }
     return this.initializedPromise;
   }
 
