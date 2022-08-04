@@ -29,8 +29,8 @@ it('fires the failed event if initialization fails', (done) => {
 // implementation.
 describe('when using secure mode hash', () => {
   it('correctly computes hash for a known message and secret', () => {
-    var client = init('secret', {offline: true});
-    var hash = client.secureModeHash({"key": "Message"});
+    const client = init('secret', {offline: true});
+    const hash = client.secureModeHash({"key": "Message"});
     expect(hash).toEqual("aa747c502a898200f9e4fa21bac68136f886a0e27aec70ba06daf2e2a5cb5597");
   });
 

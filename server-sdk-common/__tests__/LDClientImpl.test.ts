@@ -1,5 +1,6 @@
 import { LDClientImpl } from '../src';
 import basicPlatform from './evaluation/mocks/platform';
+import TestLogger from './Logger';
 
 it('fires ready event in offline mode', (done) => {
   const _client = new LDClientImpl(
@@ -25,8 +26,8 @@ it('fires the failed event if initialization fails', (done) => {
             fn(new Error("BAD THINGS"));
           }, 0);
         },
-        stop: () => {},
-        close: () => {}
+        stop: () => { },
+        close: () => { }
       },
     },
     (_err) => { },
@@ -49,4 +50,83 @@ it('isOffline returns true in offline mode', (done) => {
       done();
     },
     (_key) => { });
+});
+
+describe('when waiting for initialization', () => {
+  let client: LDClientImpl;
+
+  beforeEach(() => {
+    client = new LDClientImpl(
+      'sdk-key',
+      basicPlatform,
+      {
+        updateProcessor: {
+          start: (fn: (err?: any) => void) => {
+            setTimeout(() => {
+              fn();
+            }, 0);
+          },
+          stop: () => { },
+          close: () => { }
+        },
+        sendEvents: false,
+        logger: new TestLogger()
+      },
+      (_err) => { },
+      (_err) => { },
+      () => { },
+      (_key) => { });
+  });
+
+  it('resolves when ready', async () => {
+    await client.waitForInitialization();
+  });
+
+  it('resolves immediately if the client is already ready', async () => {
+    await client.waitForInitialization();
+    await client.waitForInitialization();
+  });
+
+  it('creates only one Promise', async () => {
+    const p1 = client.waitForInitialization();
+    const p2 = client.waitForInitialization();
+    expect(p2).toBe(p1);
+  })
+});
+
+it('does not crash when closing an offline client', () => {
+  const client = new LDClientImpl(
+    'sdk-key',
+    basicPlatform,
+    { offline: true },
+    (_err) => { },
+    (_err) => { },
+    () => {
+    },
+    (_key) => { });
+
+  expect(() => client.close()).not.toThrow();
+});
+
+it('the wait for initialization promise is rejected if initialization fails', (done) => {
+  const client = new LDClientImpl(
+    'sdk-key',
+    basicPlatform,
+    {
+      updateProcessor: {
+        start: (fn: (err: any) => void) => {
+          setTimeout(() => {
+            fn(new Error("BAD THINGS"));
+          }, 0);
+        },
+        stop: () => { },
+        close: () => { }
+      },
+    },
+    (_err) => { },
+    (_err) => { },
+    () => { },
+    (_key) => { });
+
+    client.waitForInitialization().catch(() => done());
 });
