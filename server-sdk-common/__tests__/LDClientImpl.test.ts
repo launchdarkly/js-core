@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LDClientImpl } from '../src';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
 
 it('fires ready event in offline mode', (done) => {
-  const _client = new LDClientImpl(
+  const client = new LDClientImpl(
     'sdk-key',
     basicPlatform,
     { offline: true },
@@ -12,30 +13,35 @@ it('fires ready event in offline mode', (done) => {
     () => {
       done();
     },
-    (_key) => { });
+    (_key) => { },
+  );
+  client.close();
 });
 
 it('fires the failed event if initialization fails', (done) => {
-  const _client = new LDClientImpl(
+  const client = new LDClientImpl(
     'sdk-key',
     basicPlatform,
     {
       updateProcessor: {
         start: (fn: (err: any) => void) => {
           setTimeout(() => {
-            fn(new Error("BAD THINGS"));
+            fn(new Error('BAD THINGS'));
           }, 0);
         },
         stop: () => { },
-        close: () => { }
+        close: () => { },
       },
     },
     (_err) => { },
     (_err) => {
-      done()
+      done();
     },
     () => { },
-    (_key) => { });
+    (_key) => { },
+  );
+
+  client.close();
 });
 
 it('isOffline returns true in offline mode', (done) => {
@@ -49,7 +55,10 @@ it('isOffline returns true in offline mode', (done) => {
       expect(client.isOffline()).toEqual(true);
       done();
     },
-    (_key) => { });
+    (_key) => { },
+  );
+
+  client.close();
 });
 
 describe('when waiting for initialization', () => {
@@ -67,15 +76,20 @@ describe('when waiting for initialization', () => {
             }, 0);
           },
           stop: () => { },
-          close: () => { }
+          close: () => { },
         },
         sendEvents: false,
-        logger: new TestLogger()
+        logger: new TestLogger(),
       },
       (_err) => { },
       (_err) => { },
       () => { },
-      (_key) => { });
+      (_key) => { },
+    );
+  });
+
+  afterEach(() => {
+    client.close();
   });
 
   it('resolves when ready', async () => {
@@ -91,7 +105,7 @@ describe('when waiting for initialization', () => {
     const p1 = client.waitForInitialization();
     const p2 = client.waitForInitialization();
     expect(p2).toBe(p1);
-  })
+  });
 });
 
 it('does not crash when closing an offline client', () => {
@@ -103,9 +117,11 @@ it('does not crash when closing an offline client', () => {
     (_err) => { },
     () => {
     },
-    (_key) => { });
+    (_key) => { },
+  );
 
   expect(() => client.close()).not.toThrow();
+  client.close();
 });
 
 it('the wait for initialization promise is rejected if initialization fails', (done) => {
@@ -116,17 +132,19 @@ it('the wait for initialization promise is rejected if initialization fails', (d
       updateProcessor: {
         start: (fn: (err: any) => void) => {
           setTimeout(() => {
-            fn(new Error("BAD THINGS"));
+            fn(new Error('BAD THINGS'));
           }, 0);
         },
         stop: () => { },
-        close: () => { }
+        close: () => { },
       },
     },
     (_err) => { },
     (_err) => { },
     () => { },
-    (_key) => { });
+    (_key) => { },
+  );
 
-    client.waitForInitialization().catch(() => done());
+  client.waitForInitialization().catch(() => done());
+  client.close();
 });
