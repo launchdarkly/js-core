@@ -1,4 +1,6 @@
 import { LDStreamProcessor } from '../../api';
+import { LDClientContext } from '../../api/options/LDClientContext';
+import { LDFeatureStore } from '../../api/subsystems';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
 import Configuration from '../../options/Configuration';
@@ -54,12 +56,19 @@ export default class TestData {
    * Get a factory for update processors that will be attached to this TestData instance.
    * @returns An update processor factory.
    */
-  getFactory(): (config: Configuration) => LDStreamProcessor {
+  getFactory(): (
+    clientContext: LDClientContext,
+    featureStore: LDFeatureStore
+  ) => LDStreamProcessor {
     // Provides an arrow function to prevent needed to bind the method to
     // maintain `this`.
-    return (config: Configuration) => {
+    return (
+      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+      clientContext: LDClientContext,
+      featureStore: LDFeatureStore,
+    ) => {
       const newSource = new TestDataSource(
-        new AsyncStoreFacade(config.featureStore),
+        new AsyncStoreFacade(featureStore),
         this.currentFlags,
 
         this.currentSegments,

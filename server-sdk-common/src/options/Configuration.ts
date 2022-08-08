@@ -30,7 +30,7 @@ const validations: Record<string, TypeValidator> = {
   logger: TypeValidators.Object,
   featureStore: TypeValidators.ObjectOrFactory,
   bigSegments: TypeValidators.Object,
-  updateProcessor: TypeValidators.Object,
+  updateProcessor: TypeValidators.ObjectOrFactory,
   flushInterval: TypeValidators.Number,
   pollInterval: TypeValidators.numberWithMin(30),
   proxyOptions: TypeValidators.Object,

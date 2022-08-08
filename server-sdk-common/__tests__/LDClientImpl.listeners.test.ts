@@ -9,6 +9,7 @@ describe('given a a client using test data', () => {
   const updates = [];
 
   beforeEach(() => {
+    td = new TestData();
     client = new LDClientImpl('sdk-key', basicPlatform, {
       sendEvents: false,
       updateProcessor: td.getFactory(),
@@ -17,7 +18,7 @@ describe('given a a client using test data', () => {
     });
   });
 
-  it('fires an event when a flag is updated', () => {
-    
+  it('fires an event when a flag is added', () => {
+    td.update(td.flag('new-flag'));
   });
 });
