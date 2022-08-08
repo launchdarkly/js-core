@@ -1,5 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { FileDataSourceOptions } from '../api/integrations';
+import { LDClientContext } from '../api/options/LDClientContext';
 import { LDFeatureStore } from '../api/subsystems';
 import { Filesystem } from '../platform';
 import FileDataSource from './FileDataSource';
@@ -29,15 +30,15 @@ export default class FileDataSourceFactory {
    * @returns a {@link FileDataSource}
    */
   create(
-    config: FileDataSourceFactoryConfig,
-    filesystem: Filesystem,
+    ldClientContext: LDClientContext,
+    featureStore: LDFeatureStore,
   ) {
     const updatedOptions: FileDataSourceOptions = {
       paths: this.options.paths,
       autoUpdate: this.options.autoUpdate,
-      logger: this.options.logger || config.logger,
+      logger: this.options.logger || ldClientContext.basicConfiguration.logger,
       yamlParser: this.options.yamlParser,
     };
-    return new FileDataSource(updatedOptions, filesystem, config.featureStore);
+    return new FileDataSource(updatedOptions, ldClientContext.platform.fileSystem!, featureStore);
   }
 }
