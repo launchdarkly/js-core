@@ -14,6 +14,7 @@ it('fires ready event in offline mode', (done) => {
       done();
     },
     (_key) => { },
+    () => false,
   );
   client.close();
 });
@@ -39,6 +40,7 @@ it('fires the failed event if initialization fails', (done) => {
     },
     () => { },
     (_key) => { },
+    () => false,
   );
 
   client.close();
@@ -56,6 +58,7 @@ it('isOffline returns true in offline mode', (done) => {
       done();
     },
     (_key) => { },
+    () => false,
   );
 
   client.close();
@@ -85,6 +88,7 @@ describe('when waiting for initialization', () => {
       (_err) => { },
       () => { },
       (_key) => { },
+      () => false,
     );
   });
 
@@ -118,6 +122,7 @@ it('does not crash when closing an offline client', () => {
     () => {
     },
     (_key) => { },
+    () => false,
   );
 
   expect(() => client.close()).not.toThrow();
@@ -143,6 +148,7 @@ it('the wait for initialization promise is rejected if initialization fails', (d
     (_err) => { },
     () => { },
     (_key) => { },
+    () => false,
   );
 
   client.waitForInitialization().catch(() => done());

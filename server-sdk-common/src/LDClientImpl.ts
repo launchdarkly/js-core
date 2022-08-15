@@ -80,7 +80,11 @@ export default class LDClientImpl implements LDClient {
     private onError: (err: Error) => void,
     private onFailed: (err: Error) => void,
     private onReady: () => void,
-    private onUpdate: (key: string) => void,
+    // Called whenever flags change, if there are listeners.
+    onUpdate: (key: string) => void,
+    // Method to check if event listeners have been registered.
+    // If none are registered, then onUpdate will never be called.
+    hasEventListeners: () => boolean,
   ) {
     const config = new Configuration(options);
     if (!sdkKey && !config.offline) {
@@ -91,7 +95,7 @@ export default class LDClientImpl implements LDClient {
 
     const clientContext = new ClientContext(sdkKey, config, platform);
     const featureStore = config.featureStoreFactory(clientContext);
-    const dataSourceUpdates = new DataSourceUpdates(featureStore);
+    const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
     const makeDefaultProcessor = () => (config.stream ? new StreamingProcessor(
       sdkKey,

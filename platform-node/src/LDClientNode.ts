@@ -48,6 +48,7 @@ class LDClientNode extends LDClientImpl {
         emitter.emit('update', { key });
         emitter.emit(`update:${key}`);
       },
+      () => emitter.eventNames().some((name) => name === 'update' || (typeof name === 'string' && name.startsWith('update:'))),
     );
     this.emitter = emitter;
 
