@@ -278,7 +278,7 @@ export default class LDClientImpl implements LDClient {
       builder.addFlag(
         flag,
         res.detail.value,
-        res.detail.variationIndex,
+        res.detail.variationIndex ?? undefined,
         res.detail.reason,
         flag.trackEvents || requireExperimentData,
         requireExperimentData,
@@ -370,7 +370,7 @@ export default class LDClientImpl implements LDClient {
       return result;
     }
     const evalRes = await this.evaluator.evaluate(flag, evalContext, eventFactory);
-    if (evalRes.detail.variationIndex === undefined) {
+    if (evalRes.detail.variationIndex === undefined || evalRes.detail.variationIndex === null) {
       this.logger?.debug('Result value is null in variation');
       evalRes.setDefault(defaultValue);
     }

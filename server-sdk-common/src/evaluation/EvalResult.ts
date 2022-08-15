@@ -33,7 +33,7 @@ export default class EvalResult {
   static forError(errorKind: ErrorKinds, message?: string, def?: any): EvalResult {
     return new EvalResult(true, {
       value: def ?? null,
-      variationIndex: undefined,
+      variationIndex: null,
       reason: { kind: 'ERROR', errorKind },
     }, message);
   }
@@ -45,7 +45,7 @@ export default class EvalResult {
   ) {
     return new EvalResult(false, {
       value,
-      variationIndex,
+      variationIndex: variationIndex === undefined ? null : variationIndex,
       reason,
     });
   }
