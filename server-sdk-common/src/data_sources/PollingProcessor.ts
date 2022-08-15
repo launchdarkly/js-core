@@ -1,6 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { LDStreamProcessor } from '../api';
-import { LDFeatureStore } from '../api/subsystems';
+import { LDDataSourceUpdates } from '../api/subsystems';
 import { isHttpRecoverable, LDPollingError } from '../errors';
 import Configuration from '../options/Configuration';
 import { deserializePoll } from '../store/serialization';
@@ -15,14 +15,16 @@ export default class PollingProcessor implements LDStreamProcessor {
 
   private pollInterval: number;
 
-  private featureStore: LDFeatureStore;
-
   private timeoutHandle: any;
 
-  constructor(config: Configuration, private readonly requestor: Requestor) {
+  constructor(
+    config: Configuration,
+    private readonly requestor: Requestor,
+    private readonly featureStore: LDDataSourceUpdates,
+  ) {
     this.logger = config.logger;
     this.pollInterval = config.pollInterval;
-    this.featureStore = config.featureStore;
+    this.featureStore = featureStore;
   }
 
   private poll(fn?: ((err?: any) => void) | undefined) {

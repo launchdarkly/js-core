@@ -7,7 +7,9 @@ import {
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
+import ClientContext from './ClientContext';
 import ClientMessages from './ClientMessages';
+import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
@@ -87,20 +89,27 @@ export default class LDClientImpl implements LDClient {
     this.config = config;
     this.logger = config.logger;
 
+    const clientContext = new ClientContext(sdkKey, config, platform);
+    const featureStore = config.featureStoreFactory(clientContext);
+    const dataSourceUpdates = new DataSourceUpdates(featureStore);
+
     const makeDefaultProcessor = () => (config.stream ? new StreamingProcessor(
       sdkKey,
       config,
       this.platform.requests,
       this.platform.info,
+      dataSourceUpdates,
     ) : new PollingProcessor(
       config,
       new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+      dataSourceUpdates,
     ));
 
     if (config.offline || config.useLdd) {
       this.updateProcessor = new NullUpdateProcessor();
     } else {
-      this.updateProcessor = config.updateProcessor ?? makeDefaultProcessor();
+      this.updateProcessor = config.updateProcessorFactory?.(clientContext, dataSourceUpdates)
+        ?? makeDefaultProcessor();
     }
 
     if (!config.sendEvents || config.offline) {
@@ -114,11 +123,11 @@ export default class LDClientImpl implements LDClient {
       );
     }
 
-    const asyncFacade = new AsyncStoreFacade(config.featureStore);
+    const asyncFacade = new AsyncStoreFacade(featureStore);
     this.featureStore = asyncFacade;
 
     const manager = new BigSegmentsManager(
-      config.bigSegments?.store?.(config),
+      config.bigSegments?.store?.(clientContext),
       config.bigSegments ?? {},
       config.logger,
       this.platform.crypto,

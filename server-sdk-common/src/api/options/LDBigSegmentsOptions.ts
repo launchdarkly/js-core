@@ -1,5 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { BigSegmentStore } from '../interfaces';
+import { LDClientContext } from './LDClientContext';
 
 /**
  * Additional parameters for configuring the SDK's Big Segments behavior.
@@ -18,9 +19,7 @@ export interface LDBigSegmentsOptions {
    * database implementation that matches how the LaunchDarkly Relay Proxy is configured, since the
    * Relay Proxy manages the Big Segment data.
    */
-  store: (options: {
-    logger?: LDLogger
-  }) => BigSegmentStore;
+  store: (clientContext: LDClientContext) => BigSegmentStore;
 
   /**
    * The maximum number of users whose Big Segment state will be cached by the SDK at any given

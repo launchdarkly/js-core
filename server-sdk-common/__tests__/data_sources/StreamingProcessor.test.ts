@@ -65,6 +65,7 @@ describe('given a stream processor with mock event source', () => {
       config,
       requests,
       info,
+      featureStore,
     );
   });
 

@@ -5,7 +5,8 @@ import {
   LDBigSegmentsOptions,
   LDOptions, LDProxyOptions, LDStreamProcessor, LDTLSOptions,
 } from '../api';
-import { LDFeatureStore } from '../api/subsystems';
+import { LDClientContext } from '../api/options/LDClientContext';
+import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import ApplicationTags from './ApplicationTags';
 import OptionMessages from './OptionMessages';
@@ -189,9 +190,14 @@ export default class Configuration {
 
   public readonly diagnosticRecordingInterval: number;
 
-  public readonly featureStore: LDFeatureStore;
+  // public readonly featureStore: LDFeatureStore;
 
-  public readonly updateProcessor?: LDStreamProcessor;
+  public readonly featureStoreFactory: ((clientContext: LDClientContext) => LDFeatureStore);
+
+  // public readonly updateProcessor?: LDStreamProcessor;
+
+  public readonly updateProcessorFactory?:
+  ((clientContext: LDClientContext, dataSourceUpdates: LDDataSourceUpdates) => LDStreamProcessor);
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 
@@ -219,7 +225,6 @@ export default class Configuration {
     this.timeout = validatedOptions.timeout;
 
     this.bigSegments = validatedOptions.bigSegments;
-    this.updateProcessor = validatedOptions.updateProcessor;
     this.flushInterval = validatedOptions.flushInterval;
     this.pollInterval = validatedOptions.pollInterval;
     this.proxyOptions = validatedOptions.proxyOptions;
@@ -240,12 +245,22 @@ export default class Configuration {
     this.tags = new ApplicationTags(validatedOptions);
     this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;
 
+    if (TypeValidators.Function.is(validatedOptions.updateProcessor)) {
+      // @ts-ignore
+      this.updateProcessorFactory = validatedOptions.updateProcessor;
+    } else {
+      // The processor is already created, just have the method return it.
+      // @ts-ignore
+      this.updateProcessorFactory = () => validatedOptions.updateProcessor;
+    }
+
     if (TypeValidators.Function.is(validatedOptions.featureStore)) {
       // @ts-ignore
-      this.featureStore = validatedOptions.featureStore(this);
+      this.featureStoreFactory = validatedOptions.featureStore;
     } else {
+      // The store is already created, just have the method return it.
       // @ts-ignore
-      this.featureStore = validatedOptions.featureStore;
+      this.featureStoreFactory = () => validatedOptions.featureStore;
     }
   }
 }
