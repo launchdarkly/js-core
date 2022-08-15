@@ -58,10 +58,10 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
           });
         });
 
-        if (checkForChanges && oldData) {
+        if (checkForChanges) {
           const updatedItems = new NamespacedDataSet<boolean>();
           Object.keys(allData).forEach((namespace) => {
-            const oldDataForKind = oldData[namespace];
+            const oldDataForKind = oldData?.[namespace] || {};
             const newDataForKind = allData[namespace];
             const mergedData = { ...oldDataForKind, ...newDataForKind };
             Object.keys(mergedData).forEach((key) => {
@@ -106,7 +106,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
           key,
           computeDependencies(kind.namespace, data),
         );
-        if (checkForChanges && oldItem) {
+        if (checkForChanges) {
           const updatedItems = new NamespacedDataSet<boolean>();
           this.addIfModified(kind.namespace, key, oldItem, data, updatedItems);
           this.sendChangeEvents(updatedItems);
@@ -124,7 +124,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
   addIfModified(
     namespace: string,
     key: string,
-    oldValue: LDFeatureStoreItem,
+    oldValue: LDFeatureStoreItem | null | undefined,
     newValue: LDFeatureStoreItem,
     toDataSet: NamespacedDataSet<boolean>,
   ) {
