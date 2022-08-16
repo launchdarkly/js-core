@@ -1,10 +1,10 @@
 import { Context } from '@launchdarkly/js-sdk-common';
 import promisify from '../../src/async/promisify';
 import ClientContext from '../../src/ClientContext';
-import FileDataSourceFactory from '../../src/data_sources/FileDataSourceFactory';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import Evaluator from '../../src/evaluation/Evaluator';
+import { FileDataSourceFactory } from '../../src/integrations';
 import Configuration from '../../src/options/Configuration';
 import { Filesystem, WatchHandle } from '../../src/platform';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
@@ -58,26 +58,6 @@ const allPropertiesJson = `
     "${segment1Key}": ${JSON.stringify(segment1)}
   }
 }`;
-
-// const allPropertiesYaml = `
-// flags:
-//   ${flag1Key}:
-//     key: ${flag1Key}
-//     on: true
-//     fallthrough:
-//       variation: 2
-//     variations:
-//       - fall
-//       - off
-//       - on
-// flagValues:
-//   ${flag2Key}: "${flag2Value}"
-// segments:
-//   ${segment1Key}:
-//     key: ${segment1Key}
-//     include:
-//       - user1
-// `;
 
 function sorted(a: any[]) {
   const a1 = Array.from(a);

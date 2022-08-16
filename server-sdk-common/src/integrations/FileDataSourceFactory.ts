@@ -1,8 +1,8 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { FileDataSourceOptions } from '../api/integrations';
 import { LDClientContext } from '../api/options/LDClientContext';
-import { LDFeatureStore } from '../api/subsystems';
-import FileDataSource from './FileDataSource';
+import { LDFeatureStore, LDStreamProcessor } from '../api/subsystems';
+import FileDataSource from '../data_sources/FileDataSource';
 
 /**
  * Components of the SDK runtime configuration which are required
@@ -27,6 +27,8 @@ export default class FileDataSourceFactory {
    * @param config SDK configuration required by the file data source.
    * @param filesystem Platform abstraction used for filesystem access.
    * @returns a {@link FileDataSource}
+   *
+   * @internal
    */
   create(
     ldClientContext: LDClientContext,
@@ -39,5 +41,12 @@ export default class FileDataSourceFactory {
       yamlParser: this.options.yamlParser,
     };
     return new FileDataSource(updatedOptions, ldClientContext.platform.fileSystem!, featureStore);
+  }
+
+  getFactory(): (
+    ldClientContext: LDClientContext,
+    featureStore: LDFeatureStore,
+  ) => LDStreamProcessor {
+    return (ldClientContext, featureStore) => this.create(ldClientContext, featureStore);
   }
 }
