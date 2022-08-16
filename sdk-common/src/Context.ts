@@ -319,6 +319,9 @@ export default class Context {
    * @returns a {@link Context} or `undefined` if one could not be created.
    */
   public static fromLDContext(context: LDContext): Context | undefined {
+    if (!context) {
+      return undefined;
+    }
     if (isSingleKind(context)) {
       return Context.fromSingleKindContext(context);
     } if (isMultiKind(context)) {

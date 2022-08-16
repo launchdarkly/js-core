@@ -1,4 +1,4 @@
-import { Context, LDClientImpl } from '../src';
+import { Context, LDClientImpl, LDContext } from '../src';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
 import EventProcessor from '../src/events/EventProcessor';
 import InputEvent from '../src/events/InputEvent';
@@ -66,7 +66,7 @@ describe('given a client with mock event processor', () => {
     await client.variation('flagkey', anonymousUser, 'c');
 
     expect(events).toHaveLength(1);
-    var e = events[0];
+    const e = events[0];
     expect(e).toMatchObject({
       kind: 'feature',
       key: 'flagkey',
@@ -83,7 +83,7 @@ describe('given a client with mock event processor', () => {
     await client.variationDetail('flagkey', defaultUser, 'c');
 
     expect(events).toHaveLength(1);
-    var e = events[0];
+    const e = events[0];
     expect(e).toMatchObject({
       kind: 'feature',
       key: 'flagkey',
@@ -116,7 +116,7 @@ describe('given a client with mock event processor', () => {
     await client.variation('flagkey', defaultUser, 'c');
 
     expect(events).toHaveLength(1);
-    var e = events[0];
+    const e = events[0];
     expect(e).toMatchObject({
       kind: 'feature',
       creationDate: e.creationDate,
@@ -128,6 +128,190 @@ describe('given a client with mock event processor', () => {
       default: 'c',
       trackEvents: true,
       reason: { kind: 'RULE_MATCH', ruleIndex: 0, ruleId: 'rule-id' }
+    });
+  });
+
+  it('does not force tracking when a matched rule does not have trackEvents set', async () => {
+    td.usePreconfiguredFlag({
+      key: 'flagkey',
+      version: 1,
+      on: true,
+      targets: [],
+      rules: [
+        {
+          clauses: [ { attribute: 'key', op: 'in', values: [ defaultUser.key ] } ],
+          variation: 0,
+          id: 'rule-id'
+        }
+      ],
+      fallthrough: { variation: 1 },
+      variations: ['a', 'b']
+    });
+    await client.variation('flagkey', defaultUser, 'c');
+
+    expect(events).toHaveLength(1);
+    const e = events[0];
+    expect(e).toMatchObject({
+      kind: 'feature',
+      creationDate: e.creationDate,
+      key: 'flagkey',
+      version: 1,
+      context: Context.fromLDContext(defaultUser),
+      variation: 0,
+      value: 'a',
+      default: 'c'
+    });
+  });
+
+  it('forces tracking for fallthrough result when trackEventsFallthrough is set', async () => {
+    td.usePreconfiguredFlag({
+      key: 'flagkey',
+      version: 1,
+      on: true,
+      targets: [],
+      rules: [],
+      fallthrough: { variation: 1 },
+      variations: ['a', 'b'],
+      trackEventsFallthrough: true
+    });
+    await client.variation('flagkey', defaultUser, 'c');
+
+    expect(events).toHaveLength(1);
+    const e = events[0];
+    expect(e).toMatchObject({
+      kind: 'feature',
+      creationDate: e.creationDate,
+      key: 'flagkey',
+      version: 1,
+      context: Context.fromLDContext(defaultUser),
+      variation: 1,
+      value: 'b',
+      default: 'c',
+      trackEvents: true,
+      reason: { kind: 'FALLTHROUGH' },
+    });
+  });
+
+  it('forces tracking when an evaluation is in the tracked portion of an experiment rollout', async () => {
+    td.usePreconfiguredFlag({
+      key: 'flagkey',
+      version: 1,
+      on: true,
+      targets: [],
+      rules: [],
+      fallthrough: {
+        rollout: {
+          kind: 'experiment',
+          variations: [
+            {
+              weight: 100000,
+              variation: 1,
+            },
+          ],
+        },
+      },
+      variations: ['a', 'b'],
+    });
+    await client.variation('flagkey', defaultUser, 'c');
+
+    expect(events).toHaveLength(1);
+    const e = events[0];
+    expect(e).toMatchObject({
+      kind: 'feature',
+      creationDate: e.creationDate,
+      key: 'flagkey',
+      version: 1,
+      context: Context.fromLDContext(defaultUser),
+      variation: 1,
+      value: 'b',
+      default: 'c',
+      trackEvents: true,
+      reason: { kind: 'FALLTHROUGH', inExperiment: true },
+    });
+  });
+
+  it('does not force tracking when an evaluation is in the untracked portion of an experiment rollout', async () => {
+    td.usePreconfiguredFlag({
+      key: 'flagkey',
+      version: 1,
+      on: true,
+      targets: [],
+      rules: [],
+      fallthrough: {
+        rollout: {
+          kind: 'experiment',
+          variations: [
+            {
+              weight: 100000,
+              variation: 1,
+              untracked: true,
+            },
+          ],
+        },
+      },
+      variations: ['a', 'b'],
+    });
+
+    await client.variation('flagkey', defaultUser, 'c');
+
+    expect(events).toHaveLength(1);
+    const e = events[0];
+    expect(e).toMatchObject({
+      kind: 'feature',
+      creationDate: e.creationDate,
+      key: 'flagkey',
+      version: 1,
+      context: Context.fromLDContext(defaultUser),
+      variation: 1,
+      value: 'b',
+      default: 'c',
+    });
+  });
+
+  it('does not force tracking for fallthrough result when trackEventsFallthrough is not set', async () => {
+    td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
+    await client.variation('flagkey', defaultUser, 'c');
+
+    expect(events).toHaveLength(1);
+    const e = events[0];
+    expect(e).toMatchObject({
+      kind: 'feature',
+      creationDate: e.creationDate,
+      key: 'flagkey',
+      version: 1,
+      context: Context.fromLDContext(defaultUser),
+      variation: 1,
+      value: 'b',
+      default: 'c'
+    });
+  });
+
+
+  it('generates event for unknown feature', async () => {
+    await client.variation('flagkey', defaultUser, 'c');
+
+    expect(events).toHaveLength(1);
+    const e = events[0];
+    expect(e).toMatchObject({
+      kind: 'feature',
+      key: 'flagkey',
+      context: Context.fromLDContext(defaultUser),
+      value: 'c',
+      default: 'c'
+    });
+  });
+
+  it('generates event for unknown feature when user is anonymous', async () => {
+    await client.variation('flagkey', anonymousUser, 'c');
+
+    expect(events).toHaveLength(1);
+    const e = events[0];
+    expect(e).toMatchObject({
+      kind: 'feature',
+      key: 'flagkey',
+      context: Context.fromLDContext(anonymousUser),
+      value: 'c',
+      default: 'c'
     });
   });
 });
