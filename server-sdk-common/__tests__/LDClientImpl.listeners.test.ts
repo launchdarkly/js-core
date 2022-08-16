@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncQueue from './AsyncQueue';
@@ -21,8 +20,8 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger: new TestLogger(),
       },
-      (_err) => { },
-      (_err) => { },
+      () => { },
+      () => { },
       () => { },
       (key) => {
         queue.push(key);
@@ -30,6 +29,10 @@ describe('given an LDClient with test data', () => {
       // Always listen to events.
       () => true,
     );
+  });
+
+  afterEach(() => {
+    client.close();
   });
 
   it('sends an event when a flag is added', async () => {

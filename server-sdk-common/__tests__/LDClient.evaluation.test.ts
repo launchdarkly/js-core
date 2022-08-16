@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LDClientImpl } from '../src';
 import { LDFeatureStore } from '../src/api/subsystems';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
@@ -24,10 +23,10 @@ describe('given an LDClient with test data', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
       },
-      (_err) => { },
-      (_err) => { },
       () => { },
-      (key) => { },
+      () => { },
+      () => { },
+      () => { },
       // Always listen to events.
       () => true,
     );
@@ -132,10 +131,10 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      (_err) => { },
-      (_err) => { },
       () => { },
-      (key) => { },
+      () => { },
+      () => { },
+      () => { },
       // Always listen to events.
       () => true,
     );
@@ -190,10 +189,10 @@ describe('given a client and store that are uninitialized', () => {
         sendEvents: false,
         featureStore: store,
       },
-      (_err) => { },
-      (_err) => { },
       () => { },
-      (key) => { },
+      () => { },
+      () => { },
+      () => { },
       // Always listen to events.
       () => true,
     );
@@ -246,10 +245,10 @@ describe('given a client that is un-initialized and store that is initialized', 
         sendEvents: false,
         featureStore: store,
       },
-      (_err) => { },
-      (_err) => { },
       () => { },
-      (key) => { },
+      () => { },
+      () => { },
+      () => { },
       // Always listen to events.
       () => true,
     );

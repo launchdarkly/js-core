@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import basicPlatform from './evaluation/mocks/platform';
@@ -22,10 +21,10 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger,
       },
-      (_err) => { },
-      (_err) => { },
       () => { },
-      (_key) => { },
+      () => { },
+      () => { },
+      () => { },
       // Always listen to events.
       () => true,
     );
@@ -259,10 +258,10 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      (_err) => { },
-      (_err) => { },
       () => { },
-      (key) => { },
+      () => { },
+      () => { },
+      () => { },
       // Always listen to events.
       () => true,
     );

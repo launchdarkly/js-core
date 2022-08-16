@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LDBigSegmentsOptions, LDClientImpl } from '../src';
 import { BigSegmentStore } from '../src/api/interfaces';
-import { LDClientContext } from '../src/api/options/LDClientContext';
 import makeBigSegmentRef from '../src/evaluation/makeBigSegmentRef';
 import TestData from '../src/integrations/test_data/TestData';
 import { Hasher, Crypto, Hmac } from '../src/platform';
@@ -62,7 +60,7 @@ describe('given test data with big segments', () => {
   describe('given a big segment store without the user', () => {
     beforeEach(async () => {
       const bigSegmentsConfig: LDBigSegmentsOptions = {
-        store(clientContext: LDClientContext): BigSegmentStore {
+        store(): BigSegmentStore {
           return {
             getMetadata: async () => ({ lastUpToDate: new Date().getTime() }),
             getUserMembership: async () => undefined,
@@ -79,10 +77,10 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        (_err) => { },
-        (_err) => { },
         () => { },
-        (key) => { },
+        () => { },
+        () => { },
+        () => { },
         // Always listen to events.
         () => true,
       );
@@ -105,7 +103,7 @@ describe('given test data with big segments', () => {
     beforeEach(async () => {
       const membership = { [makeBigSegmentRef(bigSegment)]: true };
       const bigSegmentsConfig: LDBigSegmentsOptions = {
-        store(clientContext: LDClientContext): BigSegmentStore {
+        store(): BigSegmentStore {
           return {
             getMetadata: async () => ({ lastUpToDate: new Date().getTime() }),
             getUserMembership: async (hash) => (hash === `is_hashed:${user.key}` ? membership : undefined),
@@ -122,10 +120,10 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        (_err) => { },
-        (_err) => { },
         () => { },
-        (key) => { },
+        () => { },
+        () => { },
+        () => { },
         // Always listen to events.
         () => true,
       );
@@ -137,7 +135,6 @@ describe('given test data with big segments', () => {
       client.close();
     });
 
-
     it('user found in big segment store', async () => {
       const result = await client.variationDetail(flag.key, user, false);
       expect(result.value).toBe(true);
@@ -148,10 +145,10 @@ describe('given test data with big segments', () => {
   describe('given a big segment store which experiences an error', () => {
     beforeEach(async () => {
       const bigSegmentsConfig: LDBigSegmentsOptions = {
-        store(clientContext: LDClientContext): BigSegmentStore {
+        store(): BigSegmentStore {
           return {
             getMetadata: async () => ({ lastUpToDate: new Date().getTime() }),
-            getUserMembership: async (hash) => { throw new Error('sorry'); },
+            getUserMembership: async () => { throw new Error('sorry'); },
             close: () => { },
           };
         },
@@ -165,10 +162,10 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        (_err) => { },
-        (_err) => { },
         () => { },
-        (key) => { },
+        () => { },
+        () => { },
+        () => { },
         // Always listen to events.
         () => true,
       );
@@ -196,10 +193,10 @@ describe('given test data with big segments', () => {
           updateProcessor: td.getFactory(),
           sendEvents: false,
         },
-        (_err) => { },
-        (_err) => { },
         () => { },
-        (key) => { },
+        () => { },
+        () => { },
+        () => { },
         // Always listen to events.
         () => true,
       );

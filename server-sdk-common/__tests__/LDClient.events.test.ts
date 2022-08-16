@@ -1,23 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Context, LDClientImpl, LDContext } from '../src';
-import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
+import { Context } from '@launchdarkly/js-sdk-common';
+import { LDClientImpl } from '../src';
 import EventProcessor from '../src/events/EventProcessor';
 import InputEvent from '../src/events/InputEvent';
-import LDEventProcessor from '../src/events/LDEventProcessor';
 import TestData from '../src/integrations/test_data/TestData';
-import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import basicPlatform from './evaluation/mocks/platform';
-import TestLogger from './Logger';
 
 const defaultUser = { key: 'user' };
 const anonymousUser = { key: 'anon-user', anonymous: true };
-const userWithNoKey = { name: 'Keyless Joe' };
-const userWithEmptyKey = { key: '' };
 
 describe('given a client with mock event processor', () => {
-  let logger: TestLogger;
   let client: LDClientImpl;
-  let store: InMemoryFeatureStore;
   let events: InputEvent[];
   let td: TestData;
 
@@ -27,13 +19,11 @@ describe('given a client with mock event processor', () => {
     jest.spyOn(EventProcessor.prototype, 'flush').mockImplementation(() => Promise.resolve());
 
     td = new TestData();
-    logger = new TestLogger();
     client = new LDClientImpl(
       'sdk-key',
       basicPlatform,
       {
         updateProcessor: td.getFactory(),
-        // featureStore: store,
       },
       () => { },
       () => { },
@@ -319,4 +309,3 @@ describe('given a client with mock event processor', () => {
     });
   });
 });
-
