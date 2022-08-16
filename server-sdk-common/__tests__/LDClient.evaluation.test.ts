@@ -35,6 +35,10 @@ describe('given an LDClient with test data', () => {
     await client.waitForInitialization();
   });
 
+  afterEach(() => {
+    client.close();
+  });
+
   it('evaluates an existing flag', async () => {
     td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
     expect(await client.variation('flagkey', defaultUser, 'c')).toBe('b');
@@ -137,6 +141,10 @@ describe('given an offline client', () => {
     );
   });
 
+  afterEach(() => {
+    client.close();
+  });
+
   it('returns the default value for variation', async () => {
     await client.waitForInitialization();
     td.update(td.flag('flagkey').variations('value').variationForAll(0));
@@ -191,6 +199,10 @@ describe('given a client and store that are uninitialized', () => {
     );
   });
 
+  afterEach(() => {
+    client.close();
+  });
+
   it('returns the default value for variation', async () => {
     expect(await client.variation('flagkey', defaultUser, 'default')).toEqual('default');
   });
@@ -241,6 +253,10 @@ describe('given a client that is un-initialized and store that is initialized', 
       // Always listen to events.
       () => true,
     );
+  });
+
+  afterEach(() => {
+    client.close();
   });
 
   it('returns the value for variation', async () => {

@@ -64,6 +64,8 @@ export default class LDClientImpl implements LDClient {
 
   private config: Configuration;
 
+  private bigSegmentsManager: BigSegmentsManager;
+
   /**
    * Intended for use by platform specific client implementations.
    *
@@ -136,6 +138,7 @@ export default class LDClientImpl implements LDClient {
       config.logger,
       this.platform.crypto,
     );
+    this.bigSegmentsManager = manager;
     this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
 
     const queries: Queries = {
@@ -314,6 +317,7 @@ export default class LDClientImpl implements LDClient {
     this.eventProcessor.close();
     this.updateProcessor.close();
     this.featureStore.close();
+    this.bigSegmentsManager.close();
   }
 
   isOffline(): boolean {

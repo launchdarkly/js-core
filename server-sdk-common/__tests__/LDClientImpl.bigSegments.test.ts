@@ -90,6 +90,10 @@ describe('given test data with big segments', () => {
       await client.waitForInitialization();
     });
 
+    afterEach(() => {
+      client.close();
+    });
+
     it('user not found in big segment store', async () => {
       const result = await client.variationDetail(flag.key, user, false);
       expect(result.value).toBe(false);
@@ -129,6 +133,11 @@ describe('given test data with big segments', () => {
       await client.waitForInitialization();
     });
 
+    afterEach(() => {
+      client.close();
+    });
+
+
     it('user found in big segment store', async () => {
       const result = await client.variationDetail(flag.key, user, false);
       expect(result.value).toBe(true);
@@ -167,6 +176,10 @@ describe('given test data with big segments', () => {
       await client.waitForInitialization();
     });
 
+    afterEach(() => {
+      client.close();
+    });
+
     it('produces a store error', async () => {
       const result = await client.variationDetail(flag.key, user, false);
       expect(result.value).toBe(false);
@@ -192,6 +205,10 @@ describe('given test data with big segments', () => {
       );
 
       await client.waitForInitialization();
+    });
+
+    afterEach(() => {
+      client.close();
     });
 
     it('produces a not configured error', async () => {

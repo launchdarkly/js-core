@@ -33,6 +33,10 @@ describe('given an LDClient with test data', () => {
     await client.waitForInitialization();
   });
 
+  afterEach(() => {
+    client.close();
+  });
+
   it('captures flag state', async () => {
     const value1 = 'value1'; const value2 = 'value2'; const
       value3 = 'value3';
@@ -262,6 +266,10 @@ describe('given an offline client', () => {
       // Always listen to events.
       () => true,
     );
+  });
+
+  afterEach(() => {
+    client.close();
   });
 
   it('returns empty state in offline mode and logs a message', async () => {

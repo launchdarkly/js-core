@@ -25,7 +25,7 @@ describe('given a client with mock event processor', () => {
     events = [];
     jest.spyOn(EventProcessor.prototype, 'sendEvent').mockImplementation((evt) => events.push(evt));
     jest.spyOn(EventProcessor.prototype, 'flush').mockImplementation(() => Promise.resolve());
-    jest.spyOn(EventProcessor.prototype, 'close').mockImplementation(() => {});
+    // jest.spyOn(EventProcessor.prototype, 'close').mockImplementation(() => {});
     td = new TestData();
     logger = new TestLogger();
     client = new LDClientImpl(
@@ -42,6 +42,10 @@ describe('given a client with mock event processor', () => {
       () => false,
     );
     await client.waitForInitialization();
+  });
+
+  afterEach(() => {
+    client.close();
   });
 
   it('generates event for existing feature', async () => {
@@ -315,3 +319,4 @@ describe('given a client with mock event processor', () => {
     });
   });
 });
+
