@@ -75,8 +75,8 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    const item = clone(data);
-    this.addItem(kind, item.key, item);
+    // const item = clone(data);
+    this.addItem(kind, data.key, data);
     callback?.();
   }
 

@@ -3,7 +3,6 @@ import { LDClientContext } from '../../api/options/LDClientContext';
 import { LDFeatureStore } from '../../api/subsystems';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
-import Configuration from '../../options/Configuration';
 import AsyncStoreFacade from '../../store/AsyncStoreFacade';
 import { processFlag, processSegment } from '../../store/serialization';
 import VersionedDataKinds from '../../store/VersionedDataKinds';

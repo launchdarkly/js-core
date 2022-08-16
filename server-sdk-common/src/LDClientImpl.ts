@@ -233,14 +233,18 @@ export default class LDClientImpl implements LDClient {
   ): Promise<LDFlagsState> {
     if (this.config.offline) {
       this.logger?.info('allFlagsState() called in offline mode. Returning empty state.');
-      return new FlagsStateBuilder(false, false).build();
+      const allFlagState = new FlagsStateBuilder(false, false).build();
+      callback?.(null, allFlagState);
+      return allFlagState;
     }
 
     const evalContext = Context.fromLDContext(context);
     // TODO: Error reporting.
     if (!evalContext) {
       this.logger?.info('allFlagsState() called without context. Returning empty state.');
-      return new FlagsStateBuilder(false, false).build();
+      const allFlagState = new FlagsStateBuilder(false, false).build();
+      callback?.(null, allFlagState);
+      return allFlagState;
     }
 
     let valid = true;
