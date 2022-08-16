@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LDClientImpl } from '../src';
 import { LDFeatureStore } from '../src/api/subsystems';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
@@ -5,7 +6,6 @@ import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
-import { AsyncQueue } from './AsyncQueue';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
 
@@ -53,7 +53,7 @@ describe('given an LDClient with test data', () => {
     td.usePreconfiguredFlag({ // TestData normally won't construct a flag with offVariation: null
       key: 'flagIsNull',
       on: false,
-      offVariation: null
+      offVariation: null,
     });
 
     expect(await client.variation('flagIsNull', defaultUser, 'default')).toEqual('default');
@@ -63,11 +63,11 @@ describe('given an LDClient with test data', () => {
     td.usePreconfiguredFlag({ // TestData normally won't construct a flag with offVariation: null
       key: 'flagIsNull',
       on: false,
-      offVariation: null
+      offVariation: null,
     });
 
     expect(await client.variationDetail('flagIsNull', defaultUser, 'default')).toMatchObject(
-      { value: 'default', variationIndex: null, reason: { kind: 'OFF' } }
+      { value: 'default', variationIndex: null, reason: { kind: 'OFF' } },
     );
   });
 
@@ -84,9 +84,10 @@ describe('given an LDClient with test data', () => {
       expect(err).toBeNull();
       expect(result).toMatchObject(
         {
-          value: 'default', variationIndex: null,
-          reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' }
-        }
+          value: 'default',
+          variationIndex: null,
+          reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+        },
       );
       done();
     });
@@ -95,16 +96,18 @@ describe('given an LDClient with test data', () => {
   it('can evaluate an existing flag with detail', async () => {
     td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
     expect(await client.variationDetail('flagkey', defaultUser, 'c')).toMatchObject(
-      { value: 'b', variationIndex: 1, reason: { kind: 'FALLTHROUGH' } }
+      { value: 'b', variationIndex: 1, reason: { kind: 'FALLTHROUGH' } },
     );
   });
 
   it('returns default for an unknown flag with detail', async () => {
     expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject(
       {
-        value: 'default', variationIndex: null,
-        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' }
-      })
+        value: 'default',
+        variationIndex: null,
+        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      },
+    );
   });
 });
 
@@ -123,7 +126,7 @@ describe('given an offline client', () => {
         offline: true,
         updateProcessor: td.getFactory(),
         sendEvents: false,
-        logger
+        logger,
       },
       (_err) => { },
       (_err) => { },
@@ -147,8 +150,9 @@ describe('given an offline client', () => {
     td.update(td.flag('flagkey').variations('value').variationForAll(0));
     const result = await client.variationDetail('flagkey', defaultUser, 'default');
     expect(result).toMatchObject({
-      value: 'default', variationIndex: null,
-      reason: { kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' }
+      value: 'default',
+      variationIndex: null,
+      reason: { kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' },
     });
     expect(logger.getCount(LogLevel.Info)).toEqual(1);
   });
@@ -167,7 +171,7 @@ describe('given a client and store that are uninitialized', () => {
       version: 1,
       on: false,
       offVariation: 0,
-      variations: ['value']
+      variations: ['value'],
     });
 
     client = new LDClientImpl(
@@ -194,9 +198,10 @@ describe('given a client and store that are uninitialized', () => {
   it('returns the default value for variationDetail', async () => {
     expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject(
       {
-        value: 'default', variationIndex: null,
-        reason: { kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' }
-      }
+        value: 'default',
+        variationIndex: null,
+        reason: { kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' },
+      },
     );
   });
 });
@@ -215,10 +220,10 @@ describe('given a client that is un-initialized and store that is initialized', 
           version: 1,
           on: false,
           offVariation: 0,
-          variations: ['value']
-        }
+          variations: ['value'],
+        },
       },
-      segments: {}
+      segments: {},
     });
 
     client = new LDClientImpl(
@@ -244,8 +249,7 @@ describe('given a client that is un-initialized and store that is initialized', 
 
   it('returns the value for variationDetail', async () => {
     expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject(
-      { value: 'value', variationIndex: 0, reason: { kind: 'OFF' } }
+      { value: 'value', variationIndex: 0, reason: { kind: 'OFF' } },
     );
   });
 });
-

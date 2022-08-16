@@ -92,8 +92,8 @@ class MockFilesystem implements Filesystem {
   }> = {};
 
   public watches: Record<string,
-    (WatchHandle & { id: number, cb: (eventType: string, filename: string) => void }
-    )[]> = {};
+  (WatchHandle & { id: number, cb: (eventType: string, filename: string) => void }
+  )[]> = {};
 
   public watchHandleId = 0;
 
@@ -165,9 +165,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
     expect(await asyncFeatureStore.initialized()).toBeFalsy();
 
@@ -192,9 +192,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -222,9 +222,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async (err) => {
@@ -251,9 +251,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async (err) => {
@@ -283,9 +283,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -317,9 +317,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async (err) => {
@@ -346,9 +346,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -374,9 +374,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -416,9 +416,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -463,9 +463,9 @@ describe('given a mock filesystem and memory feature store', () => {
             featureStore,
             logger,
           }),
-          { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+          { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
         ),
-        featureStore
+        featureStore,
       );
 
       fds.start(async () => {
@@ -498,9 +498,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -546,9 +546,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -597,9 +597,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -641,9 +641,9 @@ describe('given a mock filesystem and memory feature store', () => {
             featureStore,
             logger,
           }),
-          { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+          { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
         ),
-        featureStore
+        featureStore,
       );
 
       const err = await promisify((cb) => {
@@ -677,9 +677,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     const err = await promisify((cb) => {

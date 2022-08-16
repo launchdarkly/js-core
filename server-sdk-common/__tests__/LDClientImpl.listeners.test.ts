@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import { AsyncQueue } from './AsyncQueue';
+import AsyncQueue from './AsyncQueue';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
 
@@ -24,7 +25,7 @@ describe('given an LDClient with test data', () => {
       (_err) => { },
       () => { },
       (key) => {
-        queue.push(key)
+        queue.push(key);
       },
       // Always listen to events.
       () => true,
@@ -42,11 +43,11 @@ describe('given an LDClient with test data', () => {
 
     expect(await queue.take()).toEqual('flag1');
     expect(await queue.take()).toEqual('flag2');
-    
+
     td.update(td.flag('flag1').on(false));
     td.update(td.flag('flag2').on(false));
 
     expect(await queue.take()).toEqual('flag1');
     expect(await queue.take()).toEqual('flag2');
   });
-})
+});

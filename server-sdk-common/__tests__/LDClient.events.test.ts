@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Context, LDClientImpl, LDContext } from '../src';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
 import EventProcessor from '../src/events/EventProcessor';
@@ -8,8 +9,8 @@ import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
 
-const defaultUser = { key: 'user' };  
-const anonymousUser = { key: 'anon-user', anonymous: true };  
+const defaultUser = { key: 'user' };
+const anonymousUser = { key: 'anon-user', anonymous: true };
 const userWithNoKey = { name: 'Keyless Joe' };
 const userWithEmptyKey = { key: '' };
 
@@ -39,7 +40,7 @@ describe('given a client with mock event processor', () => {
       () => { },
       () => { },
       () => false,
-    )
+    );
     await client.waitForInitialization();
   });
 
@@ -57,7 +58,7 @@ describe('given a client with mock event processor', () => {
       context: Context.fromLDContext(defaultUser),
       variation: 1,
       value: 'b',
-      default: 'c'
+      default: 'c',
     });
   });
 
@@ -74,7 +75,7 @@ describe('given a client with mock event processor', () => {
       context: Context.fromLDContext(anonymousUser),
       variation: 1,
       value: 'b',
-      default: 'c'
+      default: 'c',
     });
   });
 
@@ -92,7 +93,7 @@ describe('given a client with mock event processor', () => {
       variation: 1,
       value: 'b',
       default: 'c',
-      reason: { kind: 'FALLTHROUGH' }
+      reason: { kind: 'FALLTHROUGH' },
     });
   });
 
@@ -104,14 +105,14 @@ describe('given a client with mock event processor', () => {
       targets: [],
       rules: [
         {
-          clauses: [ { attribute: 'key', op: 'in', values: [ defaultUser.key ] } ],
+          clauses: [{ attribute: 'key', op: 'in', values: [defaultUser.key] }],
           variation: 0,
           id: 'rule-id',
-          trackEvents: true
-        }
+          trackEvents: true,
+        },
       ],
       fallthrough: { variation: 1 },
-      variations: ['a', 'b']
+      variations: ['a', 'b'],
     });
     await client.variation('flagkey', defaultUser, 'c');
 
@@ -127,7 +128,7 @@ describe('given a client with mock event processor', () => {
       value: 'a',
       default: 'c',
       trackEvents: true,
-      reason: { kind: 'RULE_MATCH', ruleIndex: 0, ruleId: 'rule-id' }
+      reason: { kind: 'RULE_MATCH', ruleIndex: 0, ruleId: 'rule-id' },
     });
   });
 
@@ -139,13 +140,13 @@ describe('given a client with mock event processor', () => {
       targets: [],
       rules: [
         {
-          clauses: [ { attribute: 'key', op: 'in', values: [ defaultUser.key ] } ],
+          clauses: [{ attribute: 'key', op: 'in', values: [defaultUser.key] }],
           variation: 0,
-          id: 'rule-id'
-        }
+          id: 'rule-id',
+        },
       ],
       fallthrough: { variation: 1 },
-      variations: ['a', 'b']
+      variations: ['a', 'b'],
     });
     await client.variation('flagkey', defaultUser, 'c');
 
@@ -159,7 +160,7 @@ describe('given a client with mock event processor', () => {
       context: Context.fromLDContext(defaultUser),
       variation: 0,
       value: 'a',
-      default: 'c'
+      default: 'c',
     });
   });
 
@@ -172,7 +173,7 @@ describe('given a client with mock event processor', () => {
       rules: [],
       fallthrough: { variation: 1 },
       variations: ['a', 'b'],
-      trackEventsFallthrough: true
+      trackEventsFallthrough: true,
     });
     await client.variation('flagkey', defaultUser, 'c');
 
@@ -282,10 +283,9 @@ describe('given a client with mock event processor', () => {
       context: Context.fromLDContext(defaultUser),
       variation: 1,
       value: 'b',
-      default: 'c'
+      default: 'c',
     });
   });
-
 
   it('generates event for unknown feature', async () => {
     await client.variation('flagkey', defaultUser, 'c');
@@ -297,7 +297,7 @@ describe('given a client with mock event processor', () => {
       key: 'flagkey',
       context: Context.fromLDContext(defaultUser),
       value: 'c',
-      default: 'c'
+      default: 'c',
     });
   });
 
@@ -311,7 +311,7 @@ describe('given a client with mock event processor', () => {
       key: 'flagkey',
       context: Context.fromLDContext(anonymousUser),
       value: 'c',
-      default: 'c'
+      default: 'c',
     });
   });
 });

@@ -3,13 +3,13 @@ import promisify from '../../src/async/promisify';
 import DataSourceUpdates from '../../src/data_sources/DataSourceUpdates';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import { AsyncQueue } from '../AsyncQueue';
+import AsyncQueue from '../AsyncQueue';
 
 describe.each([true, false])('given a DataSourceUpdates with in memory store and change listeners: %s', (listen) => {
   let store: LDFeatureStore;
   let updates: DataSourceUpdates;
 
-  let queue = new AsyncQueue();
+  const queue = new AsyncQueue();
 
   beforeEach(() => {
     store = new InMemoryFeatureStore();
@@ -17,7 +17,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
     updates = new DataSourceUpdates(
       store,
       () => listen,
-      (key) => queue.push(key)
+      (key) => queue.push(key),
     );
   });
 
@@ -26,9 +26,9 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       updates.init({
         features: {
           a: { key: 'a', version: 1 },
-          b: { key: 'b', version: 1 }
+          b: { key: 'b', version: 1 },
         },
-        segments: {}
+        segments: {},
       }, () => {
         cb(undefined);
       });
@@ -46,16 +46,16 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       features: {
         a: { key: 'a', version: 1 },
         b: { key: 'b', version: 1 },
-        c: { key: 'c', version: 1 }
+        c: { key: 'c', version: 1 },
       },
-      segments: {}
+      segments: {},
     };
     const allData1 = {
       features: {
         a: { key: 'a', version: 1 },
-        b: { key: 'b', version: 2 }
+        b: { key: 'b', version: 2 },
       },
-      segments: {}
+      segments: {},
     };
 
     await promisify((cb) => {
@@ -91,7 +91,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
         features: {
           a: { key: 'a', version: 1 },
         },
-        segments: {}
+        segments: {},
       }, () => {
         cb(undefined);
       });
@@ -123,17 +123,19 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
           a: { key: 'a', version: 1 },
           b: { key: 'b', version: 1, prerequisites: [{ key: 'c' }, { key: 'e' }] },
           c: {
-            key: 'c', version: 1, prerequisites: [{ key: 'd' }],
+            key: 'c',
+            version: 1,
+            prerequisites: [{ key: 'd' }],
             rules: [
-              { clauses: [{ op: 'segmentMatch', values: ['s0'] }] }
-            ]
+              { clauses: [{ op: 'segmentMatch', values: ['s0'] }] },
+            ],
           },
           d: { key: 'd', version: 1, prerequisites: [{ key: 'e' }] },
-          e: { key: 'e', version: 1 }
+          e: { key: 'e', version: 1 },
         },
         segments: {
-          s0: { key: 's0', version: 1 }
-        }
+          s0: { key: 's0', version: 1 },
+        },
       }, () => {
         cb(undefined);
       });
@@ -152,13 +154,13 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       updates.upsert(
         VersionedDataKinds.Features,
         { key: 'd', version: 2, prerequisites: [{ key: 'e' }] },
-        () => cb(undefined)
+        () => cb(undefined),
       );
     });
 
     if (listen) {
       expect(
-        [await queue.take(), await queue.take(), await queue.take()].sort()
+        [await queue.take(), await queue.take(), await queue.take()].sort(),
       ).toEqual(['b', 'c', 'd']);
     }
     expect(queue.empty()).toBeTruthy();
@@ -167,7 +169,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       updates.upsert(
         VersionedDataKinds.Segments,
         { key: 's0', version: 2 },
-        () => cb(undefined)
+        () => cb(undefined),
       );
     });
 

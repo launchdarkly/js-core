@@ -1,5 +1,6 @@
-export class AsyncQueue {
+export default class AsyncQueue {
   private content: any[] = [];
+
   private takers: {
     resolve: (res: any) => void;
     reject: (err: Error) => void;

@@ -145,8 +145,9 @@ export default class LDClientImpl implements LDClient {
       async getSegment(key: string): Promise<Segment | undefined> {
         return (await asyncFacade.get(VersionedDataKinds.Segments, key) as Segment) ?? undefined;
       },
-      getBigSegmentsMembership(userKey: string): Promise<BigSegmentStoreMembership | undefined> {
-        throw new Error('Function not implemented.');
+      getBigSegmentsMembership(userKey: string):
+      Promise<[BigSegmentStoreMembership | null, string] | undefined> {
+        return manager.getUserMembership(userKey);
       },
     };
     this.evaluator = new Evaluator(this.platform, queries);

@@ -21,10 +21,46 @@ import { SegmentRule } from './data/SegmentRule';
 import { Clause } from './data/Clause';
 import EventFactory from '../events/EventFactory';
 import InputEvalEvent from '../events/InputEvalEvent';
+import { BigSegmentStoreMembership } from '../api/interfaces';
+import makeBigSegmentRef from './makeBigSegmentRef';
+
+type BigSegmentStoreStatusString = 'HEALTHY' | 'STALE' | 'STORE_ERROR' | 'NOT_CONFIGURED';
+
+const bigSegmentsStatusPriority: Record<BigSegmentStoreStatusString, number> = {
+  HEALTHY: 1,
+  STALE: 2,
+  STORE_ERROR: 3,
+  NOT_CONFIGURED: 4,
+};
+
+function getBigSegmentsStatusPriority(status?: BigSegmentStoreStatusString) {
+  if (status !== undefined) {
+    return bigSegmentsStatusPriority[status] || 0;
+  }
+  return 0;
+}
+
+/**
+ * Given two big segment statuses return the one with the higher priority.
+ * @returns The status with the higher priority.
+ */
+function computeUpdatedBigSegmentsStatus(
+  old?: BigSegmentStoreStatusString,
+  latest?: BigSegmentStoreStatusString,
+): BigSegmentStoreStatusString | undefined {
+  if (old !== undefined
+    && getBigSegmentsStatusPriority(old) > getBigSegmentsStatusPriority(latest)) {
+    return old;
+  }
+  return latest;
+}
 
 class EvalState {
   events?: InputEvalEvent[];
-  // bigSegmentsStatus
+
+  bigSegmentsStatus?: BigSegmentStoreStatusString;
+
+  bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
 }
 
 class Match {
@@ -66,6 +102,9 @@ export default class Evaluator {
   async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
     const state = new EvalState();
     const res = await this.evaluateInternal(flag, context, state, [], eventFactory);
+    if (state.bigSegmentsStatus) {
+      res.detail.reason.bigSegmentsStatus = state.bigSegmentsStatus;
+    }
     res.events = state.events;
     return res;
   }
@@ -287,8 +326,6 @@ export default class Evaluator {
     rule: FlagRule,
     ruleIndex: number,
     context: Context,
-    // TODO: Will be used once big segments are implemented.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     segmentsVisited: string[],
   ): Promise<EvalResult | undefined> {
@@ -460,7 +497,80 @@ export default class Evaluator {
       return this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
     }
 
-    // TODO: Big segments.
-    return new Match(false);
+    if (!segment.generation) {
+      // Big Segment queries can only be done if the generation is known. If it's unset,
+      // that probably means the data store was populated by an older SDK that doesn't know
+      // about the generation property and therefore dropped it from the JSON data. We'll treat
+      // that as a "not configured" condition.
+      // eslint-disable-next-line no-param-reassign
+      state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
+        state.bigSegmentsStatus,
+        'NOT_CONFIGURED',
+      );
+      return new Match(false);
+    }
+
+    const bigSegmentKind = segment.unboundedContextKind || 'user';
+    const keyForBigSegment = context.key(bigSegmentKind);
+
+    if (keyForBigSegment === undefined) {
+      return new Match(false);
+    }
+
+    if (state.bigSegmentsMembership && state.bigSegmentsMembership[keyForBigSegment]) {
+      // We've already done the query at some point during the flag evaluation and stored
+      // the result (if any) in stateOut.bigSegmentsMembership, so we don't need to do it
+      // again. Even if multiple Big Segments are being referenced, the membership includes
+      // *all* of the user's segment memberships.
+
+      return this.bigSegmentMatchContext(
+        state.bigSegmentsMembership[keyForBigSegment],
+        segment,
+        context,
+        state,
+      );
+    }
+
+    const result = await this.queries.getBigSegmentsMembership(keyForBigSegment);
+
+    // eslint-disable-next-line no-param-reassign
+    state.bigSegmentsMembership = state.bigSegmentsMembership || {};
+    if (result) {
+      const [membership, status] = result;
+      // eslint-disable-next-line no-param-reassign
+      state.bigSegmentsMembership[keyForBigSegment] = membership;
+      // eslint-disable-next-line no-param-reassign
+      state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
+        state.bigSegmentsStatus,
+        status as BigSegmentStoreStatusString,
+      );
+    } else {
+      // eslint-disable-next-line no-param-reassign
+      state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
+        state.bigSegmentsStatus,
+        'NOT_CONFIGURED',
+      );
+    }
+    /* eslint-enable no-param-reassign */
+    return this.bigSegmentMatchContext(
+      state.bigSegmentsMembership[keyForBigSegment],
+      segment,
+      context,
+      state,
+    );
+  }
+
+  async bigSegmentMatchContext(
+    membership: BigSegmentStoreMembership | null,
+    segment: Segment,
+    context: Context,
+    state: EvalState,
+  ): Promise<MatchOrError> {
+    const segmentRef = makeBigSegmentRef(segment);
+    const included = membership?.[segmentRef];
+    if (included) {
+      return new Match(true);
+    }
+    return this.simpleSegmentMatchContext(segment, context, state, []);
   }
 }

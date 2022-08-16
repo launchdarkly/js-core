@@ -2,7 +2,6 @@ import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { FileDataSourceOptions } from '../api/integrations';
 import { LDClientContext } from '../api/options/LDClientContext';
 import { LDFeatureStore } from '../api/subsystems';
-import { Filesystem } from '../platform';
 import FileDataSource from './FileDataSource';
 
 /**

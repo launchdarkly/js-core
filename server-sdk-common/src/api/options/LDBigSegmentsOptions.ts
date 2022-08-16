@@ -1,4 +1,3 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { BigSegmentStore } from '../interfaces';
 import { LDClientContext } from './LDClientContext';
 

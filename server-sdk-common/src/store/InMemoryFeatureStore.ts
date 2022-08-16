@@ -7,16 +7,6 @@ import {
   LDFeatureStoreItem,
 } from '../api/subsystems';
 
-/**
- * Clone an object using JSON. This will not preserve
- * non-JSON types (like functions).
- * @param obj
- * @returns A clone of the object.
- */
-function clone(obj: any): any {
-  return JSON.parse(JSON.stringify(obj));
-}
-
 export default class InMemoryFeatureStore implements LDFeatureStore {
   private allData: LDFeatureStoreDataStorage = {};
 
