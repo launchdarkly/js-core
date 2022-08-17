@@ -137,7 +137,7 @@ export default class EventProcessor implements LDEventProcessor {
 
     if (this.diagnosticsManager) {
       const initEvent = diagnosticsManager!.createInitEvent();
-      this.tryPostingEvents(initEvent, this.diagnosticEventsUri, undefined, true);
+      this.postDiagnosticEvent(initEvent);
 
       this.diagnosticsTimer = setInterval(() => {
         const statsEvent = this.diagnosticsManager!.createStatsEventAndReset(
@@ -149,9 +149,13 @@ export default class EventProcessor implements LDEventProcessor {
         this.droppedEvents = 0;
         this.deduplicatedUsers = 0;
 
-        this.tryPostingEvents(statsEvent, this.diagnosticEventsUri, undefined, true);
+        this.postDiagnosticEvent(statsEvent);
       }, config.diagnosticRecordingInterval * 1000);
     }
+  }
+
+  private postDiagnosticEvent(event: DiagnosticInitEvent | DiagnosticStatsEvent) {
+    this.tryPostingEvents(event, this.diagnosticEventsUri, undefined, true).catch(() => {});
   }
 
   close() {
