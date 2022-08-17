@@ -1,4 +1,5 @@
-import createHttpsProxyAgent, { HttpsProxyAgentOptions } from 'https-proxy-agent';
+import * as createHttpsProxyAgent from 'https-proxy-agent';
+import { HttpsProxyAgentOptions } from 'https-proxy-agent';
 
 import { platform, LDTLSOptions, LDProxyOptions } from '@launchdarkly/js-server-sdk-common';
 

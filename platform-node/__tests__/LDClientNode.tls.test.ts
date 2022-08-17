@@ -16,7 +16,7 @@ describe('', () => {
 
   beforeEach(() => {
     logger = basicLogger({
-      destination: () => {}
+      destination: () => {},
     });
   });
 
