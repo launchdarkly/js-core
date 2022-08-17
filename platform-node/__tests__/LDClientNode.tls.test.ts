@@ -15,7 +15,9 @@ describe('', () => {
   let logger: LDLogger;
 
   beforeEach(() => {
-    logger = basicLogger({});
+    logger = basicLogger({
+      destination: () => {}
+    });
   });
 
   it(
