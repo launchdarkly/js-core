@@ -245,11 +245,11 @@ export default class Context {
     const kindsValid = kinds.every(validKind);
 
     if (!kinds.length) {
-      return Context.contextForError('multi', 'Am multi-kind context must contain at least one kind.');
+      return Context.contextForError('multi', 'A multi-kind context must contain at least one kind');
     }
 
     if (!kindsValid) {
-      return Context.contextForError('multi', 'Context contains invalid kinds.');
+      return Context.contextForError('multi', 'Context contains invalid kinds');
     }
 
     const privateAttributes: Record<string, AttributeReference[]> = {};
@@ -267,11 +267,11 @@ export default class Context {
     }, {});
 
     if (!contextsAreObjects) {
-      return Context.contextForError('multi', 'Context contained contexts that were not objects.');
+      return Context.contextForError('multi', 'Context contained contexts that were not objects');
     }
 
     if (!Object.values(contexts).every((part) => validKey(part.key))) {
-      return Context.contextForError('multi', 'Context contained invalid keys.');
+      return Context.contextForError('multi', 'Context contained invalid keys');
     }
 
     // There was only a single kind in the multi-kind context.
@@ -301,7 +301,7 @@ export default class Context {
     const keyValid = validKey(key);
 
     if (!kindValid) {
-      return Context.contextForError(kind ?? 'unknown', 'The kind was not valid for the context.');
+      return Context.contextForError(kind ?? 'unknown', 'The kind was not valid for the context');
     }
 
     if (!keyValid) {
@@ -344,7 +344,7 @@ export default class Context {
    */
   public static fromLDContext(context: LDContext): Context {
     if (!context) {
-      return Context.contextForError('unknown', 'No context specified. Returning default value.');
+      return Context.contextForError('unknown', 'No context specified. Returning default value');
     } if (isSingleKind(context)) {
       return Context.fromSingleKindContext(context);
     } if (isMultiKind(context)) {
