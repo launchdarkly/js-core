@@ -168,7 +168,7 @@ describe('when handling legacy user contexts', () => {
   it('converts non-boolean "anonymous" to boolean', () => {
     const uf = new ContextFilter(true, []);
     // @ts-ignore
-    expect(uf.filter(Context.fromLDContext({ key: 'user', anonymous: 'yes' })!))
+    expect(uf.filter(Context.fromLDContext({ key: 'user', anonymous: 'yes' })))
       .toEqual({ key: 'user', kind: 'user', anonymous: true });
   });
 
