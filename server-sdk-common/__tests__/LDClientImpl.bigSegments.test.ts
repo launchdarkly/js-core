@@ -62,7 +62,7 @@ describe('given test data with big segments', () => {
       const bigSegmentsConfig: LDBigSegmentsOptions = {
         store(): BigSegmentStore {
           return {
-            getMetadata: async () => ({ lastUpToDate: new Date().getTime() }),
+            getMetadata: async () => ({ lastUpToDate: Date.now() }),
             getUserMembership: async () => undefined,
             close: () => { },
           };
@@ -105,7 +105,7 @@ describe('given test data with big segments', () => {
       const bigSegmentsConfig: LDBigSegmentsOptions = {
         store(): BigSegmentStore {
           return {
-            getMetadata: async () => ({ lastUpToDate: new Date().getTime() }),
+            getMetadata: async () => ({ lastUpToDate: Date.now() }),
             getUserMembership: async (hash) => (hash === `is_hashed:${user.key}` ? membership : undefined),
             close: () => { },
           };
@@ -147,7 +147,7 @@ describe('given test data with big segments', () => {
       const bigSegmentsConfig: LDBigSegmentsOptions = {
         store(): BigSegmentStore {
           return {
-            getMetadata: async () => ({ lastUpToDate: new Date().getTime() }),
+            getMetadata: async () => ({ lastUpToDate: Date.now() }),
             getUserMembership: async () => { throw new Error('sorry'); },
             close: () => { },
           };

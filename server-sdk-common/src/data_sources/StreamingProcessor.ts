@@ -50,7 +50,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
   }
 
   private logConnectionStarted() {
-    this.connectionAttemptStartTime = new Date().getTime();
+    this.connectionAttemptStartTime = Date.now();
   }
 
   // TODO: Remove once the success is used for something.
