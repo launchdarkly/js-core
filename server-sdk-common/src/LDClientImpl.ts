@@ -22,6 +22,7 @@ import ErrorKinds from './evaluation/ErrorKinds';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
+import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
 import EventProcessor from './events/EventProcessor';
 import isExperiment from './events/isExperiment';
@@ -66,6 +67,8 @@ export default class LDClientImpl implements LDClient {
 
   private bigSegmentsManager: BigSegmentsManager;
 
+  private diagnosticsManager?: DiagnosticsManager;
+
   /**
    * Intended for use by platform specific client implementations.
    *
@@ -99,12 +102,17 @@ export default class LDClientImpl implements LDClient {
     const featureStore = config.featureStoreFactory(clientContext);
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
+    if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
+      this.diagnosticsManager = new DiagnosticsManager(sdkKey, config, platform, featureStore);
+    }
+
     const makeDefaultProcessor = () => (config.stream ? new StreamingProcessor(
       sdkKey,
       config,
       this.platform.requests,
       this.platform.info,
       dataSourceUpdates,
+      this.diagnosticsManager,
     ) : new PollingProcessor(
       config,
       new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
@@ -115,7 +123,7 @@ export default class LDClientImpl implements LDClient {
       this.updateProcessor = new NullUpdateProcessor();
     } else {
       this.updateProcessor = config.updateProcessorFactory?.(clientContext, dataSourceUpdates)
-        ?? makeDefaultProcessor();
+      ?? makeDefaultProcessor();
     }
 
     if (!config.sendEvents || config.offline) {
@@ -126,10 +134,12 @@ export default class LDClientImpl implements LDClient {
         config,
         this.platform.info,
         this.platform.requests,
+        this.diagnosticsManager,
       );
     }
 
     const asyncFacade = new AsyncStoreFacade(featureStore);
+
     this.featureStore = asyncFacade;
 
     const manager = new BigSegmentsManager(
@@ -225,7 +235,6 @@ export default class LDClientImpl implements LDClient {
       defaultValue,
       this.eventFactoryWithReasons,
     );
-
     callback?.(null, res.detail);
     return res.detail;
   }

@@ -52,7 +52,7 @@ const validations: Record<string, TypeValidator> = {
   application: TypeValidators.Object,
 };
 
-const defaultValues: ValidatedOptions = {
+export const defaultValues: ValidatedOptions = {
   baseUri: 'https://sdk.launchdarkly.com',
   streamUri: 'https://stream.launchdarkly.com',
   eventsUri: 'https://events.launchdarkly.com',
