@@ -21,11 +21,11 @@ describe.each([
     },
   },
   ...badKinds,
-])('given invalid LDContext', (ldConext) => {
-  it(`should not create a context ${JSON.stringify(ldConext)}`, () => {
+])('given invalid LDContext', (ldContext) => {
+  it(`should not create a context ${JSON.stringify(ldContext)}`, () => {
     // Force TS to accept our bad contexts.
     // @ts-ignore
-    expect(Context.fromLDContext(ldConext).valid).toBeFalsy();
+    expect(Context.fromLDContext(ldContext).valid).toBeFalsy();
   });
 });
 
@@ -185,17 +185,17 @@ describe('given a multi-kind context', () => {
   const context = Context.fromLDContext({
     kind: 'multi',
 
+    user: {
+      key: 'User /Key',
+      // Key will be URL encoded.
+      value: 'UserValue',
+    },
     org: {
       key: 'OrgKey',
       value: 'OrgValue',
       _meta: {
         secondary: 'value',
       },
-    },
-    user: {
-      key: 'User /Key',
-      // Key will be URL encoded.
-      value: 'UserValue',
     },
   });
 
@@ -212,7 +212,7 @@ describe('given a multi-kind context', () => {
   });
 
   it('should have the correct kinds', () => {
-    expect(context?.kinds).toEqual(['org', 'user']);
+    expect(context?.kinds.sort()).toEqual(['org', 'user']);
   });
 
   it('should have the correct kinds and keys', () => {
