@@ -1,5 +1,3 @@
-import { basicLogger, LDClient, LDLogger } from '../src';
-
 import {
   AsyncQueue,
   sleepAsync,
@@ -7,6 +5,8 @@ import {
   TestHttpHandlers,
   TestHttpServer,
 } from 'launchdarkly-js-test-helpers';
+import { basicLogger, LDClient, LDLogger } from '../src';
+
 import LDClientNode from '../src/LDClientNode';
 
 describe('', () => {
@@ -33,47 +33,52 @@ describe('', () => {
         diagnosticOptOut: true,
       });
       await client.waitForInitialization();
-    });
+    },
+  );
 
-  it('cannot connect via HTTPS to a server with a self-signed certificate, using default config', async () => {
-    server = await TestHttpServer.startSecure();
-    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+  it(
+    'cannot connect via HTTPS to a server with a self-signed certificate, using default config',
+    async () => {
+      server = await TestHttpServer.startSecure();
+      server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
 
-    client = new LDClientNode('sdk-key', {
-      baseUri: server.url,
-      sendEvents: false,
-      stream: false,
-      logger,
-      diagnosticOptOut: true,
-    });
+      client = new LDClientNode('sdk-key', {
+        baseUri: server.url,
+        sendEvents: false,
+        stream: false,
+        logger,
+        diagnosticOptOut: true,
+      });
 
-    const spy = jest.spyOn(logger, 'warn');
+      const spy = jest.spyOn(logger, 'warn');
 
-    await sleepAsync(300); // the client won't signal an unrecoverable error, but it should log a message
+      // the client won't signal an unrecoverable error, but it should log a message
+      await sleepAsync(300);
 
-    expect(spy).toHaveBeenCalledWith(expect.stringMatching(/self.signed/));
-  });
+      expect(spy).toHaveBeenCalledWith(expect.stringMatching(/self.signed/));
+    },
+  );
 
   it('can use custom TLS options for streaming as well as polling', async () => {
     const eventData = { data: { flags: { flag: { version: 1 } }, segments: {} } };
-    let events = new AsyncQueue<SSEItem>();
+    const events = new AsyncQueue<SSEItem>();
     events.add({ type: 'put', data: JSON.stringify(eventData) });
     server = await TestHttpServer.startSecure();
     server.forMethodAndPath('get', '/stream/all', TestHttpHandlers.sseStream(events));
 
     client = new LDClientNode('sdk-key', {
       baseUri: server.url,
-      streamUri: server.url + '/stream',
+      streamUri: `${server.url}/stream`,
       sendEvents: false,
-      logger: logger,
+      logger,
       tlsParams: { ca: server.certificate },
       diagnosticOptOut: true,
     });
 
-    await client.waitForInitialization(); // this won't return until the stream receives the "put" event
+    // this won't return until the stream receives the "put" event
+    await client.waitForInitialization();
     events.close();
   });
-
 
   it('can use custom TLS options for posting events', async () => {
     server = await TestHttpServer.startSecure();
@@ -82,7 +87,7 @@ describe('', () => {
 
     client = new LDClientNode('sdk-key', {
       baseUri: server.url,
-      eventsUri: server.url + '/events',
+      eventsUri: `${server.url}/events`,
       stream: false,
       tlsParams: { ca: server.certificate },
       diagnosticOptOut: true,

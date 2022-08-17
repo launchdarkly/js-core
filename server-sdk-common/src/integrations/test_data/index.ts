@@ -5,5 +5,5 @@ import TestDataRuleBuilder from './TestDataRuleBuilder';
 export {
   TestData,
   TestDataFlagBuilder,
-  TestDataRuleBuilder
+  TestDataRuleBuilder,
 };

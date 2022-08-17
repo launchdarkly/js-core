@@ -3,7 +3,6 @@ import { LDClientImpl } from '../src';
 import { LDClient } from '../src/api/LDClient';
 
 describe('given test data with big segments', () => {
-
   // To use the public interfaces to create a client which doesn't use the
   // network. (Versus being offline, or a null update processor.)
   let td: integrations.TestData;
@@ -74,7 +73,6 @@ describe('given test data with big segments', () => {
     };
 
     beforeEach(async () => {
-
       client = new LDClientImpl('sdk-key', {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -128,7 +126,7 @@ describe('given test data with big segments', () => {
     it('Can observe the status change', (done) => {
       let message = 0;
       client.bigSegmentStoreStatusProvider.on('change', (status: interfaces.BigSegmentStoreStatus) => {
-        if(message === 0) {
+        if (message === 0) {
           expect(status.stale).toEqual(false);
           expect(status.available).toEqual(true);
           error = true;
@@ -138,7 +136,6 @@ describe('given test data with big segments', () => {
           expect(status.available).toEqual(false);
           done();
         }
-
       });
     });
 
