@@ -9,7 +9,7 @@ import { basicLogger, LDClient, LDLogger } from '../src';
 
 import LDClientNode from '../src/LDClientNode';
 
-describe('', () => {
+describe('When using a TLS connection', () => {
   let client: LDClient;
   let server: TestHttpServer;
   let logger: LDLogger;
