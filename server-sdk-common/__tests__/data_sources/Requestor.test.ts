@@ -70,7 +70,7 @@ describe('given a requestor', () => {
       },
 
       /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-      createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+      createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
         throw new Error('Function not implemented.');
       },
     };

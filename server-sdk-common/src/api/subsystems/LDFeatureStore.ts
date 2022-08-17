@@ -148,4 +148,9 @@ export interface LDFeatureStore {
    * Releases any resources being used by the feature store.
    */
   close(): void;
+
+  /**
+   * Get a description of the store.
+   */
+  getDescription?(): string;
 }
