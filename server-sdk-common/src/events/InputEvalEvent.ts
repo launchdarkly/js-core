@@ -41,7 +41,7 @@ export default class InputEvalEvent {
     this.creationDate = Date.now();
     this.context = context;
     this.default = defValue;
-    this.variation = detail.variationIndex;
+    this.variation = detail.variationIndex ?? undefined;
     this.value = detail.value;
 
     if (flag) {
