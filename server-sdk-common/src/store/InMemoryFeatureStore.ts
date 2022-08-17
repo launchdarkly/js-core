@@ -77,4 +77,8 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   close(): void {
     // For the memory store this is a no-op.
   }
+
+  getDescription(): string {
+    return 'memory';
+  }
 }
