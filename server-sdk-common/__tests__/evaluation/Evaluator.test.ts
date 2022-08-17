@@ -30,7 +30,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
 
   // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${context.kind} targets: ${flag.targets?.map((t) => `${t.values}, ${t.variation}`)} context targets: ${flag.contextTargets?.map((t) => `${t.contextKind}: ${t.values}, ${t.variation}`)}`, async () => {
-    const result = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const result = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(result?.isError).toEqual(expected?.isError);
     expect(result?.detail).toStrictEqual(expected?.detail);
     expect(result?.message).toEqual(expected?.message);
@@ -106,7 +106,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
   const evaluator = new Evaluator(basicPlatform, noQueries);
   // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${context.kind} targets: ${flag.targets?.map((t) => `${t.values}, ${t.variation}`)} context targets: ${flag.contextTargets?.map((t) => `${t.contextKind}: ${t.values}, ${t.variation}`)}`, async () => {
-    const result = await evaluator.evaluate(flag, Context.fromLDContext(context)!);
+    const result = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(result?.isError).toEqual(expected?.isError);
     expect(result?.detail).toStrictEqual(expected?.detail);
     expect(result?.message).toEqual(expected?.message);

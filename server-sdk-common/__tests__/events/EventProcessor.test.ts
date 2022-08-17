@@ -166,7 +166,7 @@ describe('given an event processor', () => {
 
   it('queues an identify event', async () => {
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
 
@@ -179,7 +179,7 @@ describe('given an event processor', () => {
 
   it('filters user in identify event', async () => {
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(userWithFilteredName)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(userWithFilteredName)));
 
     await eventProcessor.flush();
 
@@ -204,7 +204,7 @@ describe('given an event processor', () => {
       name: 9,
       anonymous: false,
       custom: { age: 99 },
-    } as any)!));
+    } as any)));
 
     await eventProcessor.flush();
 
@@ -233,7 +233,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -260,7 +260,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 0,
       variation: 1,
@@ -287,7 +287,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -315,7 +315,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -346,7 +346,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1400,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -372,14 +372,14 @@ describe('given an event processor', () => {
     Date.now = jest.fn(() => 1000);
     testHeaders.date = new Date(2000).toUTCString();
 
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
 
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1400,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -399,7 +399,7 @@ describe('given an event processor', () => {
   it('generates only one index event from two feature events for same user', async () => {
     Date.now = jest.fn(() => 1000);
 
-    const context = Context.fromLDContext(user)!;
+    const context = Context.fromLDContext(user);
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
@@ -475,7 +475,7 @@ describe('given an event processor', () => {
   it('summarizes nontracked events', async () => {
     Date.now = jest.fn(() => 1000);
 
-    const context = Context.fromLDContext(user)!;
+    const context = Context.fromLDContext(user);
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
@@ -551,7 +551,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'custom',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'eventkey',
       data: { thing: 'stuff' },
     });
@@ -580,7 +580,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'custom',
       creationDate: 1000,
-      context: Context.fromLDContext(anonUser)!,
+      context: Context.fromLDContext(anonUser),
       key: 'eventkey',
       data: { thing: 'stuff' },
     });
@@ -610,7 +610,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'custom',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'eventkey',
       data: { thing: 'stuff' },
       metricValue: 1.5,
@@ -644,10 +644,10 @@ describe('given an event processor', () => {
 
   it('sends unique payload ids', async () => {
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
 
@@ -660,7 +660,7 @@ describe('given an event processor', () => {
   describe.each([400, 408, 429, 503])('given recoverable errors', (status) => {
     it(`retries - ${status}`, async () => {
       testStatus = status;
-      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
       await expect(eventProcessor.flush()).rejects.toThrow(`error ${status}`);
       expect(requestsMade.length).toEqual(2);
 
@@ -671,11 +671,11 @@ describe('given an event processor', () => {
   describe.each([401, 403])('given unrecoverable errors', (status) => {
     it(`does not retry - ${status}`, async () => {
       testStatus = status;
-      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
       await expect(eventProcessor.flush()).rejects.toThrow(`error ${status}`);
       expect(requestsMade.length).toEqual(1);
 
-      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
       await expect(eventProcessor.flush()).rejects.toThrow(/SDK key is invalid/);
     });
   });
@@ -687,7 +687,7 @@ describe('given an event processor', () => {
 
     eventProcessor.close();
     eventProcessor = new EventProcessor(SDK_KEY, config, info, requests);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     // Need to wait long enough for the retry.
     await new Promise((r) => { setTimeout(r, 1500); });
