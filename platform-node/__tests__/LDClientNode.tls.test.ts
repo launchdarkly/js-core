@@ -1,17 +1,22 @@
-import { LDClient } from '../src';
+import { basicLogger, LDClient, LDLogger } from '../src';
 
 import {
   AsyncQueue,
   sleepAsync,
+  SSEItem,
   TestHttpHandlers,
   TestHttpServer,
-  withCloseable
 } from 'launchdarkly-js-test-helpers';
 import LDClientNode from '../src/LDClientNode';
 
 describe('', () => {
   let client: LDClient;
   let server: TestHttpServer;
+  let logger: LDLogger;
+
+  beforeEach(() => {
+    logger = basicLogger({});
+  });
 
   it(
     'can connect via HTTPS to a server with a self-signed certificate, if CA is specified',
@@ -23,11 +28,79 @@ describe('', () => {
         baseUri: server.url,
         sendEvents: false,
         stream: false,
+        logger,
         tlsParams: { ca: server.certificate },
         diagnosticOptOut: true,
       });
       await client.waitForInitialization();
     });
+
+  it('cannot connect via HTTPS to a server with a self-signed certificate, using default config', async () => {
+    server = await TestHttpServer.startSecure();
+    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+
+    client = new LDClientNode('sdk-key', {
+      baseUri: server.url,
+      sendEvents: false,
+      stream: false,
+      logger,
+      diagnosticOptOut: true,
+    });
+
+    const spy = jest.spyOn(logger, 'warn');
+
+    await sleepAsync(300); // the client won't signal an unrecoverable error, but it should log a message
+
+    expect(spy).toHaveBeenCalledWith(expect.stringMatching(/self.signed/));
+  });
+
+  it('can use custom TLS options for streaming as well as polling', async () => {
+    const eventData = { data: { flags: { flag: { version: 1 } }, segments: {} } };
+    let events = new AsyncQueue<SSEItem>();
+    events.add({ type: 'put', data: JSON.stringify(eventData) });
+    server = await TestHttpServer.startSecure();
+    server.forMethodAndPath('get', '/stream/all', TestHttpHandlers.sseStream(events));
+
+    client = new LDClientNode('sdk-key', {
+      baseUri: server.url,
+      streamUri: server.url + '/stream',
+      sendEvents: false,
+      logger: logger,
+      tlsParams: { ca: server.certificate },
+      diagnosticOptOut: true,
+    });
+
+    await client.waitForInitialization(); // this won't return until the stream receives the "put" event
+    events.close();
+  });
+
+
+  it('can use custom TLS options for posting events', async () => {
+    server = await TestHttpServer.startSecure();
+    server.forMethodAndPath('post', '/events/bulk', TestHttpHandlers.respond(200));
+    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+
+    client = new LDClientNode('sdk-key', {
+      baseUri: server.url,
+      eventsUri: server.url + '/events',
+      stream: false,
+      tlsParams: { ca: server.certificate },
+      diagnosticOptOut: true,
+    });
+
+    await client.waitForInitialization();
+    client.identify({ key: 'user' });
+    await client.flush();
+
+    const flagsRequest = await server.nextRequest();
+    expect(flagsRequest.path).toEqual('/sdk/latest-all');
+
+    const eventsRequest = await server.nextRequest();
+    expect(eventsRequest.path).toEqual('/events/bulk');
+    const eventData = JSON.parse(eventsRequest.body!);
+    expect(eventData.length).toEqual(1);
+    expect(eventData[0].kind).toEqual('identify');
+  });
 
   afterEach(() => {
     client.close();
