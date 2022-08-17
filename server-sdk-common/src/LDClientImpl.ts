@@ -220,9 +220,8 @@ export default class LDClientImpl implements LDClient {
     }
 
     const evalContext = Context.fromLDContext(context);
-    // TODO: Error reporting.
-    if (!evalContext) {
-      this.logger?.info('allFlagsState() called without context. Returning empty state.');
+    if (!evalContext.valid) {
+      this.logger?.info(`${evalContext.message ?? 'Invalid context.'}. Returning empty state.`);
       return new FlagsStateBuilder(false, false).build();
     }
 
@@ -277,11 +276,10 @@ export default class LDClientImpl implements LDClient {
   }
 
   secureModeHash(context: LDContext): string {
-    const key = Context.fromLDContext(context)?.canonicalKey;
+    const checkedContext = Context.fromLDContext(context);
+    const key = checkedContext.valid ? checkedContext.canonicalKey : undefined;
     const hmac = this.platform.crypto.createHmac('sha256', this.sdkKey);
     if (key === undefined) {
-      // TODO: Better error. The old SDK did not check this condition, so
-      // it would throw ERR_INVALID_ARG_TYPE from the hmac update.
       throw new LDClientError('Could not generate secure mode hash for invalid context');
     }
     hmac.update(key);
@@ -300,8 +298,9 @@ export default class LDClientImpl implements LDClient {
 
   track(key: string, context: LDContext, data?: any, metricValue?: number): void {
     const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext) {
+    if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
     }
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
@@ -310,8 +309,9 @@ export default class LDClientImpl implements LDClient {
 
   identify(context: LDContext): void {
     const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext) {
+    if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
     }
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.identifyEvent(checkedContext!),
@@ -338,7 +338,8 @@ export default class LDClientImpl implements LDClient {
       return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
     }
     const evalContext = Context.fromLDContext(context);
-    if (!evalContext) {
+    if (!evalContext.valid) {
+      this.onError(new LDClientError(`${evalContext.message ?? 'Context not valid;'} returning default value.`));
       return EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue);
     }
 
