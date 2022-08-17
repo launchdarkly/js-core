@@ -17,8 +17,15 @@ export interface FileDataSourceOptions {
   autoUpdate?: boolean;
 
   /**
-   * Configures a logger for warnings and errors. This can be a custom logger or an instance of
-   * `winston.Logger`. By default, it uses the same logger as the rest of the SDK.
+   * Configures a logger for warnings and errors. This can be a custom logger or an instance of.
+   * By default, it uses the same logger as the rest of the SDK.
    */
-  logger?: LDLogger | object;
+  logger?: LDLogger;
+
+  /**
+   * The SDK can support yaml if provided with a parser. The parser must output
+   * objects which are equivalent to the standard JSON parser. The parser of the
+   * `yaml` package can be used.
+   */
+  yamlParser?: (data: string) => any;
 }

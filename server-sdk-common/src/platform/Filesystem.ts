@@ -1,3 +1,10 @@
+export interface WatchHandle {
+  /**
+   * Stop watching.
+   */
+  close(): void;
+}
+
 /**
  * Interface for doing filesystem operations on the platform.
  */
@@ -31,5 +38,5 @@ export interface Filesystem {
    *
    * @returns An async iterator that watches for changes to `path`.
    */
-  watch(path: string): AsyncIterable<{ eventType: string, filename: string }>;
+  watch(path: string, callback: (eventType: string, filename: string) => void): WatchHandle;
 }
