@@ -127,7 +127,7 @@ export default class Evaluator {
    * Evaluate the prerequisite flags for the given flag.
    * @param flag The flag to evaluate prerequisites for.
    * @param context The context to evaluate the prerequisites against.
-   * @param state Used to accumulate prerequisite events.
+   * @param state used to accumulate prerequisite events.
    * @param visitedFlags Used to detect cycles in prerequisite evaluation.
    * @returns An {@link EvalResult} containing an error result or `undefined` if the prerequisites
    * are met.

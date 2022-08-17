@@ -83,4 +83,14 @@ export interface Requests {
   fetch(url: string, options?: Options): Promise<Response>
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource;
+
+  /**
+   * Returns true if a proxy is configured.
+   */
+  usingProxy?(): boolean;
+
+  /**
+   * Returns true if the proxy uses authentication.
+   */
+  usingProxyAuth?(): boolean;
 }

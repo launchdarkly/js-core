@@ -69,12 +69,18 @@ function createAgent(
 }
 
 export default class NodeRequests implements platform.Requests {
-  agent: https.Agent | http.Agent | undefined;
+  private agent: https.Agent | http.Agent | undefined;
 
-  tlsOptions: LDTLSOptions | undefined;
+  private tlsOptions: LDTLSOptions | undefined;
+
+  private hasProxy: boolean = false;
+
+  private hasProxyAuth: boolean = false;
 
   constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions) {
     this.agent = createAgent(tlsOptions, proxyOptions);
+    this.hasProxy = !!proxyOptions;
+    this.hasProxyAuth = !!proxyOptions?.auth;
   }
 
   fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
@@ -111,5 +117,13 @@ export default class NodeRequests implements platform.Requests {
       tlsParams: this.tlsOptions,
     };
     return new LDEventSource(url, expandedOptions);
+  }
+
+  usingProxy(): boolean {
+    return this.hasProxy;
+  }
+
+  usingProxyAuth(): boolean {
+    return this.hasProxyAuth;
   }
 }
