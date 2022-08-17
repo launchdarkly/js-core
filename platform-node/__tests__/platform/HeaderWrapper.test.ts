@@ -1,11 +1,13 @@
+/* eslint-disable no-restricted-syntax */
+// The header interface uses generators, so we are using restricted-syntax.
 import * as http from 'http';
 import HeaderWrapper from '../../src/platform/HeaderWrapper';
 
 describe('given header values', () => {
   const headers: http.IncomingHttpHeaders = {
-    'accept': 'anything',
+    accept: 'anything',
     'some-header': 'some-value',
-    'some-array': ['a', 'b']
+    'some-array': ['a', 'b'],
   };
   const wrapper = new HeaderWrapper(headers);
 
@@ -19,13 +21,13 @@ describe('given header values', () => {
 
   it('can get the entries', () => {
     const flat = [];
-    for(const entry of wrapper.entries()) {
+    for (const entry of wrapper.entries()) {
       flat.push(entry);
     }
     expect(flat).toEqual([
       ['accept', 'anything'],
       ['some-header', 'some-value'],
-      ['some-array', 'a, b']
+      ['some-array', 'a, b'],
     ]);
   });
 
@@ -36,25 +38,25 @@ describe('given header values', () => {
 
   it('can key the keys', () => {
     const keys = [];
-    for(const key of wrapper.keys()) {
+    for (const key of wrapper.keys()) {
       keys.push(key);
     }
     expect(keys).toEqual([
       'accept',
       'some-header',
-      'some-array'
+      'some-array',
     ]);
   });
 
   it('can key the values', () => {
     const values = [];
-    for(const value of wrapper.values()) {
+    for (const value of wrapper.values()) {
       values.push(value);
     }
     expect(values).toEqual([
       'anything',
       'some-value',
-      'a, b'
+      'a, b',
     ]);
   });
 });

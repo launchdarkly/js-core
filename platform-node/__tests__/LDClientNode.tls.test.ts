@@ -16,7 +16,7 @@ describe('When using a TLS connection', () => {
 
   beforeEach(() => {
     logger = basicLogger({
-      destination: () => {}
+      destination: () => {},
     });
   });
 

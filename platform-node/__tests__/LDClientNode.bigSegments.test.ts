@@ -1,4 +1,6 @@
-import { integrations, interfaces, LDBigSegmentsOptions, LDLogger } from '@launchdarkly/js-server-sdk-common';
+import {
+  integrations, interfaces, LDBigSegmentsOptions, LDLogger,
+} from '@launchdarkly/js-server-sdk-common';
 import { basicLogger, LDClientImpl } from '../src';
 import { LDClient } from '../src/api/LDClient';
 
@@ -11,7 +13,7 @@ describe('given test data with big segments', () => {
   beforeEach(() => {
     td = new integrations.TestData();
     logger = basicLogger({
-      destination: () => {}
+      destination: () => {},
     });
   });
 
