@@ -2,6 +2,7 @@ import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
 import { isHttpRecoverable, LDStreamingError } from '../errors';
+import DiagnosticsManager from '../events/DiagnosticsManager';
 import Configuration from '../options/Configuration';
 import { EventSource, Info, Requests } from '../platform';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
@@ -39,6 +40,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     requests: Requests,
     info: Info,
     private readonly featureStore: LDDataSourceUpdates,
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     // TODO: Will need diagnostics manager.
     this.headers = defaultHeaders(sdkKey, config, info);
@@ -53,10 +55,14 @@ export default class StreamingProcessor implements LDStreamProcessor {
     this.connectionAttemptStartTime = Date.now();
   }
 
-  // TODO: Remove once the success is used for something.
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   private logConnectionResult(success: boolean) {
-    // TODO: Implement. requires diagnosticsManager.
+    if (this.connectionAttemptStartTime && this.diagnosticsManager) {
+      this.diagnosticsManager.recordStreamInit(
+        this.connectionAttemptStartTime,
+        !success,
+        Date.now() - this.connectionAttemptStartTime,
+      );
+    }
 
     this.connectionAttemptStartTime = undefined;
   }

@@ -11,8 +11,8 @@ describe('given an information instance', () => {
     expect(data.os?.name).toBeDefined();
     expect(data.os?.version).toBeDefined();
     expect(data.os?.arch).toBeDefined();
-    expect(data.version).toBeDefined();
-    expect(data.additional).toBeUndefined();
+    expect(data.additional).toBeDefined();
+    expect(data.additional!.nodeVersion).toBeDefined();
   });
 
   it('can get SDK information', () => {
@@ -39,7 +39,8 @@ describe('given an information instance with mock data', () => {
 
     global.process = {
       ...process,
-      version: '1.2.3',
+      // @ts-ignore
+      versions: { node: '1.2.3' },
     };
 
     const data = info.platformData();
@@ -47,8 +48,7 @@ describe('given an information instance with mock data', () => {
     expect(data.os?.name).toEqual('MacOS');
     expect(data.os?.version).toEqual('0.0.0');
     expect(data.os?.arch).toEqual('potato');
-    expect(data.version).toEqual('1.2.3');
-    expect(data.additional).toBeUndefined();
+    expect(data.additional!.nodeVersion).toEqual('1.2.3');
   });
 
   it.each([['darwin', 'MacOS'], ['win32', 'Windows'], ['linux', 'Linux'], ['some_os', 'some_os']])('handles known platforms', (platform, processed) => {

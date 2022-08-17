@@ -23,7 +23,7 @@ expect.extend({
     const { url, options } = received;
     const headers = {
       authorization: SDK_KEY,
-      'user-agent': 'NodeJSClient/2.2.2',
+      'user-agent': 'NodeJSClient/2.0.2',
       'x-launchDarkly-event-schema': '4',
       'x-launchdarkly-payload-id': '',
     };
