@@ -1,5 +1,5 @@
 import {
-  AttributeReference, ContextFilter, LDLogger,
+  AttributeReference, ContextFilter, LDLogger, ApplicationTags
 } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
 import { LDEvaluationReason } from '../api';
@@ -8,7 +8,6 @@ import ClientContext from '../ClientContext';
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
-import ApplicationTags from '../options/ApplicationTags';
 import { Requests } from '../platform';
 import { DiagnosticInitEvent, DiagnosticStatsEvent } from './DiagnosticsManager';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';

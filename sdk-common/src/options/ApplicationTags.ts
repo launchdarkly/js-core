@@ -1,6 +1,6 @@
-import { TypeValidators } from '@launchdarkly/js-sdk-common';
+import { LDLogger } from '../api';
+import { TypeValidators } from '../validators';
 import OptionMessages from './OptionMessages';
-import { ValidatedOptions } from './ValidatedOptions';
 
 /**
 * Expression to validate characters that are allowed in tag keys and values.
@@ -23,13 +23,14 @@ const tagValidator = {
 
 /**
  * Class for managing tags.
- *
- * @internal
  */
 export default class ApplicationTags {
   public readonly value?: string;
 
-  constructor(options: ValidatedOptions) {
+  constructor(options: {
+    application?: { id?: string, version?: string },
+    logger?: LDLogger,
+  }) {
     const tags: Record<string, string[]> = {};
     const application = options?.application;
 

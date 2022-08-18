@@ -1,7 +1,5 @@
 /**
  * Messages for issues which can be encountered from processing the configuration options.
- *
- * @internal
  */
 export default class OptionMessages {
   static deprecated(oldName: string, newName: string): string { return `"${oldName}" is deprecated, please use "${newName}"`; }

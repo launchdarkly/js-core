@@ -1,5 +1,6 @@
 import {
-  LDLogger, NumberWithMinimum, TypeValidator, TypeValidators,
+  LDLogger, NumberWithMinimum, TypeValidator, TypeValidators, ApplicationTags,
+  OptionMessages,
 } from '@launchdarkly/js-sdk-common';
 import {
   LDBigSegmentsOptions,
@@ -8,8 +9,6 @@ import {
 import { LDClientContext } from '../api/options/LDClientContext';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
-import ApplicationTags from './ApplicationTags';
-import OptionMessages from './OptionMessages';
 import ServiceEndpoints from './ServiceEndpoints';
 import { ValidatedOptions } from './ValidatedOptions';
 

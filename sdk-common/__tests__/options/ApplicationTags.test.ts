@@ -1,5 +1,4 @@
 import ApplicationTags from '../../src/options/ApplicationTags';
-import { ValidatedOptions } from '../../src/options/ValidatedOptions';
 
 function makeLogger() {
   return {
@@ -48,7 +47,7 @@ describe.each([
   ],
 ])('given application tags configurations %p', (config, result, logs) => {
   describe('when getting tag values', () => {
-    const tags = new ApplicationTags(config as unknown as ValidatedOptions);
+    const tags = new ApplicationTags(config);
 
     it('produces the correct tag values', () => {
       expect(tags.value).toEqual(result);

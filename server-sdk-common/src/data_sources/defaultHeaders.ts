@@ -1,4 +1,4 @@
-import ApplicationTags from '../options/ApplicationTags';
+import { ApplicationTags } from '@launchdarkly/js-sdk-common';
 import { Info } from '../platform';
 
 export interface DefaultHeaderOptions {
