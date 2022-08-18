@@ -1,9 +1,13 @@
-import Configuration from '../options/Configuration';
+import ApplicationTags from '../options/ApplicationTags';
 import { Info } from '../platform';
+
+export interface DefaultHeaderOptions {
+  tags: ApplicationTags;
+}
 
 export default function defaultHeaders(
   sdkKey: string,
-  config: Configuration,
+  config: DefaultHeaderOptions,
   info: Info,
 ): { [key: string]: string } {
   const sdkData = info.sdkData();

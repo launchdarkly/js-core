@@ -130,10 +130,8 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor = new NullEventProcessor();
     } else {
       this.eventProcessor = new EventProcessor(
-        sdkKey,
         config,
-        this.platform.info,
-        this.platform.requests,
+        clientContext,
         this.diagnosticsManager,
       );
     }

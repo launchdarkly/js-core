@@ -4,12 +4,13 @@ import {
 import { nanoid } from 'nanoid';
 import { LDEvaluationReason } from '../api';
 import LruCache from '../cache/LruCache';
+import ClientContext from '../ClientContext';
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
-import Configuration from '../options/Configuration';
-import { Info, Requests } from '../platform';
-import DiagnosticsManager, { DiagnosticInitEvent, DiagnosticStatsEvent } from './DiagnosticsManager';
+import ApplicationTags from '../options/ApplicationTags';
+import { Requests } from '../platform';
+import { DiagnosticInitEvent, DiagnosticStatsEvent } from './DiagnosticsManager';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
@@ -56,6 +57,26 @@ type OutputEvent = IdentifyOutputEvent
 | DiagnosticInitEvent
 | DiagnosticStatsEvent;
 
+export interface EventProcessorOptions {
+  contextKeysCapacity: number;
+  allAttributesPrivate: boolean;
+  privateAttributes: string[];
+  eventsCapacity: number;
+  contextKeysFlushInterval: number;
+  tags: ApplicationTags;
+  flushInterval: number;
+  diagnosticRecordingInterval: number;
+}
+
+interface LDDiagnosticsManager {
+  createInitEvent(): DiagnosticInitEvent;
+  createStatsEventAndReset(
+    droppedEvents: number,
+    deduplicatedUsers: number,
+    eventsInLastBatch: number,
+  ): DiagnosticStatsEvent;
+}
+
 /**
  * @internal
  */
@@ -100,15 +121,15 @@ export default class EventProcessor implements LDEventProcessor {
     [key: string]: string;
   };
 
+  private requests: Requests;
+
   constructor(
-    sdkKey: string,
-    config: Configuration,
-    info: Info,
-    private readonly requests: Requests,
-    private readonly diagnosticsManager?: DiagnosticsManager,
+    config: EventProcessorOptions,
+    clientContext: ClientContext,
+    private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
-    this.logger = config.logger;
+    this.logger = clientContext.basicConfiguration.logger;
     this.contextKeysCache = new LruCache({ max: config.contextKeysCapacity });
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,
@@ -116,12 +137,18 @@ export default class EventProcessor implements LDEventProcessor {
     );
 
     this.defaultHeaders = {
-      ...defaultHeaders(sdkKey, config, info),
+      ...defaultHeaders(
+        clientContext.basicConfiguration.sdkKey,
+        config,
+        clientContext.platform.info,
+      ),
     };
 
-    this.eventsUri = `${config.serviceEndpoints.events}/bulk`;
+    this.requests = clientContext.platform.requests;
 
-    this.diagnosticEventsUri = `${config.serviceEndpoints.events}/diagnostic`;
+    this.eventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/bulk`;
+
+    this.diagnosticEventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/diagnostic`;
 
     this.flushUsersTimer = setInterval(() => {
       this.contextKeysCache.clear();
@@ -155,7 +182,7 @@ export default class EventProcessor implements LDEventProcessor {
   }
 
   private postDiagnosticEvent(event: DiagnosticInitEvent | DiagnosticStatsEvent) {
-    this.tryPostingEvents(event, this.diagnosticEventsUri, undefined, true).catch(() => {});
+    this.tryPostingEvents(event, this.diagnosticEventsUri, undefined, true).catch(() => { });
   }
 
   close() {

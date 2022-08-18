@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Context } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
+import ClientContext from '../../src/ClientContext';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import EventFactory from '../../src/events/EventFactory';
 import EventProcessor from '../../src/events/EventProcessor';
@@ -208,7 +209,13 @@ describe('given an event processor', () => {
     info = platform.info;
     requests = platform.requests;
 
-    eventProcessor = new EventProcessor(SDK_KEY, config, info, requests);
+    const clientContext = new ClientContext(
+      SDK_KEY,
+      config,
+      { ...basicPlatform, info, requests },
+    );
+
+    eventProcessor = new EventProcessor(config, clientContext);
   });
 
   afterEach(() => {
@@ -737,7 +744,13 @@ describe('given an event processor', () => {
     requestState.testStatus = 500;
 
     eventProcessor.close();
-    eventProcessor = new EventProcessor(SDK_KEY, config, info, requests);
+    const clientContext = new ClientContext(
+      SDK_KEY,
+      config,
+      { ...basicPlatform, info, requests },
+    );
+
+    eventProcessor = new EventProcessor(config, clientContext);
     eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     // Need to wait long enough for the retry.
@@ -797,7 +810,13 @@ describe('given an event processor with diagnostics manager', () => {
       requests,
     }, store);
 
-    eventProcessor = new EventProcessor(SDK_KEY, testConfig, info, requests, diagnosticsManager);
+    const clientContext = new ClientContext(
+      SDK_KEY,
+      testConfig,
+      { ...basicPlatform, info, requests },
+    );
+
+    eventProcessor = new EventProcessor(testConfig, clientContext, diagnosticsManager);
   });
 
   afterEach(() => {
