@@ -125,11 +125,11 @@ describe('given a non-user single kind context', () => {
   const context = Context.fromLDContext({
     kind: 'org',
     // Key will be URL encoded.
-    key: 'Org/Key',
+    key: 'Org:%Key%',
     value: 'OrgValue',
   });
   it('should have the correct canonical key', () => {
-    expect(context?.canonicalKey).toEqual('org:Org%2FKey');
+    expect(context?.canonicalKey).toEqual('org:Org%3A%25Key%25');
   });
 
   it('secondary should not be defined when not present', () => {
@@ -141,7 +141,7 @@ describe('given a non-user single kind context', () => {
   });
 
   it('should have the correct kinds and keys', () => {
-    expect(context?.kindsAndKeys).toEqual({ org: 'Org/Key' });
+    expect(context?.kindsAndKeys).toEqual({ org: 'Org:%Key%' });
   });
 });
 
@@ -186,7 +186,7 @@ describe('given a multi-kind context', () => {
     kind: 'multi',
 
     user: {
-      key: 'User /Key',
+      key: 'User%:/Key',
       // Key will be URL encoded.
       value: 'UserValue',
     },
@@ -200,7 +200,7 @@ describe('given a multi-kind context', () => {
   });
 
   it('should have the correct canonical key', () => {
-    expect(context?.canonicalKey).toEqual('org:OrgKey:user:User%20%2FKey');
+    expect(context?.canonicalKey).toEqual('org:OrgKey:user:User%25%3A/Key');
   });
 
   it('should get values from the correct context', () => {
@@ -216,6 +216,6 @@ describe('given a multi-kind context', () => {
   });
 
   it('should have the correct kinds and keys', () => {
-    expect(context?.kindsAndKeys).toEqual({ org: 'OrgKey', user: 'User /Key' });
+    expect(context?.kindsAndKeys).toEqual({ org: 'OrgKey', user: 'User%:/Key' });
   });
 });
