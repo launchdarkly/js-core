@@ -1,5 +1,4 @@
-import { AttributeReference, TypeValidators } from '@launchdarkly/js-sdk-common';
-import { LDEvaluationReason } from '../api';
+import { AttributeReference, TypeValidators, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import ErrorKinds from './ErrorKinds';
 import EvalResult from './EvalResult';

@@ -1,5 +1,4 @@
-import { Context } from '@launchdarkly/js-sdk-common';
-import { LDEvaluationDetail, LDEvaluationReason } from '../api';
+import { Context, LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../evaluation/data/Flag';
 import isExperiment from './isExperiment';
 

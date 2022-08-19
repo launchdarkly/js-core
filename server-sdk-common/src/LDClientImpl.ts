@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable class-methods-use-this */
-import { Context, LDContext, LDLogger } from '@launchdarkly/js-sdk-common';
 import {
-  LDClient, LDEvaluationDetail, LDFlagsState, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
+  Context, LDContext, LDLogger,
+  LDEvaluationDetail, LDFlagsState,
+} from '@launchdarkly/js-sdk-common';
+import {
+  LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
 } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';

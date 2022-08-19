@@ -1,8 +1,7 @@
 import {
-  AttributeReference, ContextFilter, LDLogger, ApplicationTags
+  AttributeReference, ContextFilter, LDLogger, ApplicationTags, LDEvaluationReason,
 } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
-import { LDEvaluationReason } from '../api';
 import LruCache from '../cache/LruCache';
 import ClientContext from '../ClientContext';
 import defaultHeaders from '../data_sources/defaultHeaders';

@@ -1,4 +1,4 @@
-import { LDEvaluationDetail, LDEvaluationReason } from '../api';
+import { LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 import InputEvalEvent from '../events/InputEvalEvent';
 import ErrorKinds from './ErrorKinds';
 import Reasons from './Reasons';

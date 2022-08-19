@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
-import { Context } from '@launchdarkly/js-sdk-common';
+import { Context, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
@@ -13,7 +13,6 @@ import { FlagRule } from './data/FlagRule';
 import Bucketer from './Bucketer';
 import { Platform } from '../platform';
 import { VariationOrRollout } from './data/VariationOrRollout';
-import { LDEvaluationReason } from '../api';
 import matchClauseWithoutSegmentOperations from './matchClause';
 import { Segment } from './data/Segment';
 import matchSegmentTargets from './matchSegmentTargets';

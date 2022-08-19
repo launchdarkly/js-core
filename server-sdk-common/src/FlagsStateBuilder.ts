@@ -1,4 +1,4 @@
-import { LDEvaluationReason, LDFlagSet, LDFlagsState } from './api';
+import { LDEvaluationReason, LDFlagSet, LDFlagsState } from '@launchdarkly/js-sdk-common';
 import { Flag } from './evaluation/data/Flag';
 
 interface FlagMeta {
