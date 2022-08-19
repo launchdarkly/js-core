@@ -2,7 +2,7 @@ import {
   EventSource,
   EventSourceInitDict,
   Info, Options, Platform, PlatformData, Requests, Response, SdkData,
-} from '../../../src/platform';
+} from '@launchdarkly/js-sdk-common';
 import { crypto } from './hasher';
 
 const info: Info = {

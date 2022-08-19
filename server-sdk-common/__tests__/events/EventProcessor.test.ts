@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Context } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
-import ClientContext from '../../src/ClientContext';
+import  { ClientContext } from '@launchdarkly/js-sdk-common'
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import EventFactory from '../../src/events/EventFactory';
 import EventProcessor from '../../src/events/EventProcessor';
@@ -16,7 +16,7 @@ import {
   Requests,
   Response,
   SdkData,
-} from '../../src/platform';
+} from '@launchdarkly/js-sdk-common';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import basicPlatform from '../evaluation/mocks/platform';
 import { SDK_KEY } from './CustomMatchers';

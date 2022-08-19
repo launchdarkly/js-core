@@ -1,5 +1,5 @@
 import { diff } from 'jest-diff';
-import { Options } from '../../src/platform';
+import { Options } from '@launchdarkly/js-sdk-common';
 
 export const SDK_KEY = 'test-key';
 export const DEFAULT_URL = 'https://events.launchdarkly.com/bulk';

@@ -4,7 +4,7 @@ import { LDDataSourceUpdates } from '../api/subsystems';
 import { isHttpRecoverable, LDStreamingError } from '../errors';
 import DiagnosticsManager from '../events/DiagnosticsManager';
 import Configuration from '../options/Configuration';
-import { EventSource, Info, Requests } from '../platform';
+import { EventSource, Info, Requests } from '@launchdarkly/js-sdk-common';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
 import VersionedDataKinds, { VersionedDataKind } from '../store/VersionedDataKinds';
 import defaultHeaders from './defaultHeaders';

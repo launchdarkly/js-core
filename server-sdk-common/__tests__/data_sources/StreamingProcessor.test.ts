@@ -5,7 +5,7 @@ import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
 import {
   EventSource, EventSourceInitDict, Info, Options, PlatformData, Requests, Response, SdkData,
-} from '../../src/platform';
+} from '@launchdarkly/js-sdk-common';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';

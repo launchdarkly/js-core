@@ -1,9 +1,10 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
-import { LDClientContext } from './api/options/LDClientContext';
-import Configuration from './options/Configuration';
-import ServiceEndpoints from './options/ServiceEndpoints';
-import { Platform } from './platform';
+import { LDLogger, LDClientContext, Platform } from '../api';
+import ServiceEndpoints from './ServiceEndpoints';
 
+/**
+ * Basic configuration applicable to many SDK components for both server and
+ * client SDKs.
+ */
 interface BasicConfiguration {
   logger?: LDLogger;
 
@@ -24,14 +25,19 @@ interface BasicConfiguration {
 }
 
 /**
- * @internal
+ * The client context provides basic configuration and platform support which are required
+ * when building SDK components.
  */
 export default class ClientContext implements LDClientContext {
   basicConfiguration: BasicConfiguration;
 
   constructor(
     sdkKey: string,
-    configuration: Configuration,
+    configuration: {
+      logger?: LDLogger,
+      offline: boolean,
+      serviceEndpoints: ServiceEndpoints,
+    },
     public readonly platform: Platform,
   ) {
     this.basicConfiguration = {

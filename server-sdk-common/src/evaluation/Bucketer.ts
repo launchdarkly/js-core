@@ -1,5 +1,5 @@
 import { AttributeReference, Context } from '@launchdarkly/js-sdk-common';
-import { Crypto } from '../platform';
+import { Crypto } from '@launchdarkly/js-sdk-common';
 
 /**
  * Bucketing can be done by string or integer values. The need to be converted to a string

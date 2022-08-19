@@ -11,7 +11,7 @@ import evalTargets from './evalTargets';
 import { allSeriesAsync, firstSeriesAsync } from './collection';
 import { FlagRule } from './data/FlagRule';
 import Bucketer from './Bucketer';
-import { Platform } from '../platform';
+import { Platform } from '@launchdarkly/js-sdk-common';
 import { VariationOrRollout } from './data/VariationOrRollout';
 import matchClauseWithoutSegmentOperations from './matchClause';
 import { Segment } from './data/Segment';

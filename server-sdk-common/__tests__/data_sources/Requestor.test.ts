@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Requests, Response, Headers,
+  EventSourceInitDict, EventSource,
+  Options,
+} from '@launchdarkly/js-sdk-common';
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
-import { EventSourceInitDict, EventSource } from '../../src/platform';
-import {
-  Headers, Options, Requests, Response,
-} from '../../src/platform/Requests';
 import basicPlatform from '../evaluation/mocks/platform';
 
 describe('given a requestor', () => {

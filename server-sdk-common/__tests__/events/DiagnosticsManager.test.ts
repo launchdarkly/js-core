@@ -9,7 +9,7 @@ import Configuration from '../../src/options/Configuration';
 import {
   EventSource, EventSourceInitDict, Info, Options, Platform, PlatformData,
   Requests, Response, SdkData,
-} from '../../src/platform';
+} from '@launchdarkly/js-sdk-common';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import { crypto } from '../evaluation/mocks/hasher';
 

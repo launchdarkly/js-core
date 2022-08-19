@@ -1,5 +1,5 @@
+import { LDClientContext } from '@launchdarkly/js-sdk-common';
 import { LDStreamProcessor } from '../../api';
-import { LDClientContext } from '../../api/options/LDClientContext';
 import { LDFeatureStore } from '../../api/subsystems';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';

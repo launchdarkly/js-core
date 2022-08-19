@@ -1,15 +1,13 @@
 import {
   LDLogger, NumberWithMinimum, TypeValidator, TypeValidators, ApplicationTags,
-  OptionMessages,
+  OptionMessages, LDClientContext, ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
 import {
   LDBigSegmentsOptions,
   LDOptions, LDProxyOptions, LDStreamProcessor, LDTLSOptions,
 } from '../api';
-import { LDClientContext } from '../api/options/LDClientContext';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
-import ServiceEndpoints from './ServiceEndpoints';
 import { ValidatedOptions } from './ValidatedOptions';
 
 // Once things are internal to the implementation of the SDK we can depend on

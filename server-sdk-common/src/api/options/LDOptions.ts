@@ -1,8 +1,7 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDLogger, LDClientContext } from '@launchdarkly/js-sdk-common';
 import { LDDataSourceUpdates, LDStreamProcessor } from '../subsystems';
 import { LDFeatureStore } from '../subsystems/LDFeatureStore';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
-import { LDClientContext } from './LDClientContext';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
 

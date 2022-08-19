@@ -1,4 +1,4 @@
-import { Filesystem, WatchHandle } from '../platform';
+import { Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
 
 /**
  * A debounced file load/watcher for use with the {@link FileDataSource}.

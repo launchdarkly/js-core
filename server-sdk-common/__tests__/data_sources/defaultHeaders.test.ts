@@ -1,6 +1,6 @@
+import { Info, PlatformData, SdkData } from '@launchdarkly/js-sdk-common';
 import defaultHeaders from '../../src/data_sources/defaultHeaders';
 import Configuration from '../../src/options/Configuration';
-import { Info, PlatformData, SdkData } from '../../src/platform/Info';
 
 const makeInfo = (wrapperName?: string, wrapperVersion?: string): Info => ({
   platformData(): PlatformData {
