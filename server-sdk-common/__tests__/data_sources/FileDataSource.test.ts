@@ -1,11 +1,12 @@
-import { Context, ClientContext } from '@launchdarkly/js-sdk-common';
+import {
+  Context, ClientContext, Filesystem, WatchHandle,
+} from '@launchdarkly/js-sdk-common';
 import promisify from '../../src/async/promisify';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import Evaluator from '../../src/evaluation/Evaluator';
 import { FileDataSourceFactory } from '../../src/integrations';
 import Configuration from '../../src/options/Configuration';
-import { Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';

@@ -1,6 +1,6 @@
+import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
 import { BigSegmentStore, BigSegmentStoreMembership, BigSegmentStoreStatus } from '../src/api/interfaces';
 import BigSegmentsManager from '../src/BigSegmentsManager';
-import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
 import TestLogger from './Logger';
 
 async function alwaysUpToDate() {

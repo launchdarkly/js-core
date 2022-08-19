@@ -1,9 +1,9 @@
-import { LDFeatureRequestor } from '../api/subsystems';
-import { LDStreamingError } from '../errors';
-import Configuration from '../options/Configuration';
 import {
   Info, Options, Requests, Response,
 } from '@launchdarkly/js-sdk-common';
+import { LDFeatureRequestor } from '../api/subsystems';
+import { LDStreamingError } from '../errors';
+import Configuration from '../options/Configuration';
 import defaultHeaders from './defaultHeaders';
 
 export default class Requestor implements LDFeatureRequestor {

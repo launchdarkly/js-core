@@ -1,6 +1,6 @@
+import { ClientContext } from '@launchdarkly/js-sdk-common';
 import { LDFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
-import  { ClientContext } from '@launchdarkly/js-sdk-common'
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';

@@ -1,10 +1,9 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDLogger, Filesystem } from '@launchdarkly/js-sdk-common';
 import { LDStreamProcessor } from '../api';
 import { FileDataSourceOptions } from '../api/integrations';
 import { DataKind } from '../api/interfaces';
 import { LDFeatureStore, LDFeatureStoreDataStorage } from '../api/subsystems';
 import { Flag } from '../evaluation/data/Flag';
-import { Filesystem } from '@launchdarkly/js-sdk-common';
 import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import FileLoader from './FileLoader';

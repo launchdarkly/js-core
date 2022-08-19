@@ -1,13 +1,12 @@
 import {
   AttributeReference, ContextFilter, LDLogger, ApplicationTags, LDEvaluationReason,
+  ClientContext, Requests,
 } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
 import LruCache from '../cache/LruCache';
-import  { ClientContext } from '@launchdarkly/js-sdk-common'
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
-import { Requests } from '@launchdarkly/js-sdk-common';
 import { DiagnosticInitEvent, DiagnosticStatsEvent } from './DiagnosticsManager';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';

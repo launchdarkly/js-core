@@ -3,6 +3,7 @@
 import {
   Context, LDContext, LDLogger,
   LDEvaluationDetail, LDFlagsState,
+  ClientContext, Platform,
 } from '@launchdarkly/js-sdk-common';
 import {
   LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
@@ -10,7 +11,6 @@ import {
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
-import  { ClientContext } from '@launchdarkly/js-sdk-common'
 import ClientMessages from './ClientMessages';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
@@ -33,7 +33,6 @@ import LDEventProcessor from './events/LDEventProcessor';
 import NullEventProcessor from './events/NullEventProcessor';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
-import { Platform } from '@launchdarkly/js-sdk-common';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 

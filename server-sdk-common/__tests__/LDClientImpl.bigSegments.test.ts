@@ -1,8 +1,8 @@
+import { Hasher, Crypto, Hmac } from '@launchdarkly/js-sdk-common';
 import { LDBigSegmentsOptions, LDClientImpl } from '../src';
 import { BigSegmentStore } from '../src/api/interfaces';
 import makeBigSegmentRef from '../src/evaluation/makeBigSegmentRef';
 import TestData from '../src/integrations/test_data/TestData';
-import { Hasher, Crypto, Hmac } from '@launchdarkly/js-sdk-common';
 import { makeSegmentMatchClause } from './evaluation/flags';
 import basicPlatform from './evaluation/mocks/platform';
 

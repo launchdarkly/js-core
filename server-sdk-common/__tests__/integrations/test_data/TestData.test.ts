@@ -1,5 +1,5 @@
+import { ClientContext } from '@launchdarkly/js-sdk-common';
 import { AttributeReference } from '../../../src';
-import  { ClientContext } from '@launchdarkly/js-sdk-common'
 import { Flag } from '../../../src/evaluation/data/Flag';
 import { FlagRule } from '../../../src/evaluation/data/FlagRule';
 import TestData from '../../../src/integrations/test_data/TestData';

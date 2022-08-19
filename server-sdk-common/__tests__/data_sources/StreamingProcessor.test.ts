@@ -1,11 +1,11 @@
+import {
+  EventSource, EventSourceInitDict, Info, Options, PlatformData, Requests, Response, SdkData,
+} from '@launchdarkly/js-sdk-common';
 import promisify from '../../src/async/promisify';
 import defaultHeaders from '../../src/data_sources/defaultHeaders';
 import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
-import {
-  EventSource, EventSourceInitDict, Info, Options, PlatformData, Requests, Response, SdkData,
-} from '@launchdarkly/js-sdk-common';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';

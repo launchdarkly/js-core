@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
+import { Platform } from '@launchdarkly/js-sdk-common';
 import { LDFeatureStore } from '../api/subsystems';
 import Configuration, { defaultValues } from '../options/Configuration';
-import { Platform } from '@launchdarkly/js-sdk-common';
 
 interface DiagnosticPlatformData {
   name?: string,
