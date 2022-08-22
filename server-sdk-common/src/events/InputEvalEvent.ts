@@ -34,6 +34,7 @@ export default class InputEvalEvent {
     public readonly key: string,
     defValue: any, // default is a reserved keyword in this context.
     detail: LDEvaluationDetail,
+    addExperimentData: boolean,
     public readonly flag?: Flag,
     prereqOf?: Flag,
   ) {
@@ -44,7 +45,6 @@ export default class InputEvalEvent {
     this.value = detail.value;
 
     if (flag) {
-      const addExperimentData = isExperiment(flag, detail.reason);
       this.version = flag.version;
 
       if (addExperimentData || flag.trackEvents) {

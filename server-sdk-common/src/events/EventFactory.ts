@@ -3,6 +3,7 @@ import { Flag } from '../evaluation/data/Flag';
 import InputCustomEvent from './InputCustomEvent';
 import InputEvalEvent from './InputEvalEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
+import isExperiment from './isExperiment';
 
 /**
  * @internal
@@ -17,12 +18,14 @@ export default class EventFactory {
     defaultVal: any,
     prereqOfFlag?: Flag,
   ): InputEvalEvent {
+    const addExperimentData = isExperiment(flag, detail.reason);
     return new InputEvalEvent(
       this.withReasons,
       context,
       flag.key,
       defaultVal,
       detail,
+      addExperimentData,
       flag,
       prereqOfFlag,
     );
@@ -35,6 +38,7 @@ export default class EventFactory {
       key,
       detail.value,
       detail,
+      false,
     );
   }
 
