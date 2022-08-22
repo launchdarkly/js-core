@@ -2,10 +2,7 @@ import {
   AttributeReference, ContextFilter, LDLogger, ApplicationTags, LDEvaluationReason,
   ClientContext, Requests, internal, subsystem,
 } from '@launchdarkly/js-sdk-common';
-import { nanoid } from 'nanoid';
-import defaultHeaders from '../data_sources/defaultHeaders';
-import httpErrorMessage from '../data_sources/httpErrorMessage';
-import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
+import { LDInvalidSDKKeyError } from '../errors';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 
@@ -99,10 +96,6 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
 
   private contextFilter: ContextFilter;
 
-  private eventsUri: string;
-
-  private diagnosticEventsUri: string;
-
   // Using any here, because setInterval handles are not the same
   // between node and web.
   private diagnosticsTimer: any;
@@ -111,15 +104,10 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
 
   private flushUsersTimer: any = null;
 
-  private defaultHeaders: {
-    [key: string]: string;
-  };
-
-  private requests: Requests;
-
   constructor(
     config: EventProcessorOptions,
     clientContext: ClientContext,
+    private readonly eventSender: subsystem.LDEventSender,
     private readonly contextDeduplicator: subsystem.LDContextDeduplicator,
     private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
@@ -130,20 +118,6 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
       config.allAttributesPrivate,
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
-
-    this.defaultHeaders = {
-      ...defaultHeaders(
-        clientContext.basicConfiguration.sdkKey,
-        config,
-        clientContext.platform.info,
-      ),
-    };
-
-    this.requests = clientContext.platform.requests;
-
-    this.eventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/bulk`;
-
-    this.diagnosticEventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/diagnostic`;
 
     if (this.contextDeduplicator.flushInterval !== undefined) {
       this.flushUsersTimer = setInterval(() => {
@@ -179,7 +153,10 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
   }
 
   private postDiagnosticEvent(event: DiagnosticEvent) {
-    this.tryPostingEvents(event, this.diagnosticEventsUri, undefined, true).catch(() => { });
+    this.eventSender.sendEventData(
+      subsystem.LDEventType.DiagnosticEvent,
+      event,
+    );
   }
 
   close() {
@@ -212,7 +189,7 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
 
     this.eventsInLastBatch = eventsToFlush.length;
     this.logger?.debug('Flushing %d events', eventsToFlush.length);
-    await this.tryPostingEvents(eventsToFlush, this.eventsUri, nanoid(), true);
+    await this.tryPostingEvents(eventsToFlush);
   }
 
   sendEvent(inputEvent: internal.InputEvent) {
@@ -333,55 +310,18 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
 
   private async tryPostingEvents(
     events: OutputEvent[] | OutputEvent,
-    uri: string,
-    payloadId: string | undefined,
-    canRetry: boolean,
   ): Promise<void> {
-    const headers = {
-      ...this.defaultHeaders,
-    };
-
-    if (payloadId) {
-      headers['x-launchdarkly-payload-id'] = payloadId;
-      headers['x-launchDarkly-event-schema'] = '4';
-    }
-    let error;
-    try {
-      const res = await this.requests.fetch(uri, {
-        headers,
-        body: JSON.stringify(events),
-        method: 'POST',
-      });
-
-      const serverDate = Date.parse(res.headers.get('date') || '');
-      if (serverDate) {
-        this.lastKnownPastTime = serverDate;
-      }
-
-      if (res.status <= 204) {
-        return;
-      }
-
-      error = new LDUnexpectedResponseError(
-        httpErrorMessage(
-          { status: res.status, message: 'some events were dropped' },
-          'event posting',
-        ),
-      );
-
-      if (!isHttpRecoverable(res.status)) {
-        this.shutdown = true;
-        throw error;
-      }
-    } catch (err) {
-      error = err;
+    const res = await this.eventSender.sendEventData(subsystem.LDEventType.AnalyticsEvents, events);
+    if (res.status === subsystem.LDDeliveryStatus.FailedAndMustShutDown) {
+      this.shutdown = true;
     }
 
-    if (this.shutdown || (error && !canRetry)) {
-      throw error;
+    if (res.serverTime) {
+      this.lastKnownPastTime = res.serverTime;
     }
 
-    await new Promise((r) => { setTimeout(r, 1000); });
-    await this.tryPostingEvents(events, this.eventsUri, payloadId, false);
+    if (res.error) {
+      throw res.error;
+    }
   }
 }

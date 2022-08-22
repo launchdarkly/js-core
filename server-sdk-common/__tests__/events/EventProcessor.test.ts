@@ -22,6 +22,7 @@ import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import basicPlatform from '../evaluation/mocks/platform';
 import { SDK_KEY } from './CustomMatchers';
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
+import EventSender from '../../src/events/EventSender';
 
 interface RequestState {
   testHeaders: Record<string, string>;
@@ -220,6 +221,7 @@ describe('given an event processor', () => {
     eventProcessor = new EventProcessor(
       config,
       clientContext,
+      new EventSender(config, clientContext),
       new ContextDeduplicator(config),
       undefined,
     );
@@ -760,6 +762,7 @@ describe('given an event processor', () => {
     eventProcessor = new EventProcessor(
       config,
       clientContext,
+      new EventSender(config, clientContext),
       new ContextDeduplicator(config),
       undefined,
     );
@@ -831,6 +834,7 @@ describe('given an event processor with diagnostics manager', () => {
     eventProcessor = new EventProcessor(
       testConfig,
       clientContext,
+      new EventSender(config, clientContext),
       new ContextDeduplicator(config),
       diagnosticsManager,
     );

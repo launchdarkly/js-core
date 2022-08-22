@@ -1,4 +1,4 @@
-import { LDContextCommon } from './api';
+import { LDContextCommon } from './api/context/LDContextCommon';
 
 /**
  * Converts a literal to a ref string.

@@ -1,4 +1,4 @@
-import { InputEvent } from '../../internal';
+import InputEvent from '../../internal/events/InputEvent';
 
 export default interface LDEventProcessor {
   close(): void;
