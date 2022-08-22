@@ -4,6 +4,7 @@ import {
   Context, LDContext, LDLogger,
   LDEvaluationDetail, LDFlagsState,
   ClientContext, Platform, subsystem,
+  internal,
 } from '@launchdarkly/js-sdk-common';
 import {
   LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
@@ -28,7 +29,6 @@ import { Queries } from './evaluation/Queries';
 import ContextDeduplicator from './events/ContextDeduplicator';
 import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
-import EventProcessor from './events/EventProcessor';
 import EventSender from './events/EventSender';
 import isExperiment from './events/isExperiment';
 import NullEventProcessor from './events/NullEventProcessor';
@@ -132,7 +132,7 @@ export default class LDClientImpl implements LDClient {
     if (!config.sendEvents || config.offline) {
       this.eventProcessor = new NullEventProcessor();
     } else {
-      this.eventProcessor = new EventProcessor(
+      this.eventProcessor = new internal.EventProcessor(
         config,
         clientContext,
         new EventSender(config, clientContext),

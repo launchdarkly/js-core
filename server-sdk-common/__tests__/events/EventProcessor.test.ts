@@ -12,11 +12,10 @@ import {
   SdkData,
   ClientContext,
   Context,
-
+  internal,
 } from '@launchdarkly/js-sdk-common';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import EventFactory from '../../src/events/EventFactory';
-import EventProcessor from '../../src/events/EventProcessor';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import basicPlatform from '../evaluation/mocks/platform';
@@ -176,7 +175,7 @@ function makeFeatureEvent(
 const user = { key: 'userKey', name: 'Red' };
 
 describe('given an event processor', () => {
-  let eventProcessor: EventProcessor;
+  let eventProcessor: internal.EventProcessor;
 
   const requestState: RequestState = {
     requestsMade: [],
@@ -218,7 +217,7 @@ describe('given an event processor', () => {
       { ...basicPlatform, info, requests },
     );
 
-    eventProcessor = new EventProcessor(
+    eventProcessor = new internal.EventProcessor(
       config,
       clientContext,
       new EventSender(config, clientContext),
@@ -759,7 +758,7 @@ describe('given an event processor', () => {
       { ...basicPlatform, info, requests },
     );
 
-    eventProcessor = new EventProcessor(
+    eventProcessor = new internal.EventProcessor(
       config,
       clientContext,
       new EventSender(config, clientContext),
@@ -777,7 +776,7 @@ describe('given an event processor', () => {
 describe('given an event processor with diagnostics manager', () => {
   jest.mock('nanoid', () => ({ nanoid: () => '9-ypf7NswGfZ3CN2WpTix' }));
 
-  let eventProcessor: EventProcessor;
+  let eventProcessor: internal.EventProcessor;
 
   const requestState: RequestState = {
     requestsMade: [],
@@ -831,7 +830,7 @@ describe('given an event processor with diagnostics manager', () => {
       { ...basicPlatform, info, requests },
     );
 
-    eventProcessor = new EventProcessor(
+    eventProcessor = new internal.EventProcessor(
       testConfig,
       clientContext,
       new EventSender(config, clientContext),

@@ -1,10 +1,16 @@
-import {
-  AttributeReference, ContextFilter, LDLogger, ApplicationTags, LDEvaluationReason,
-  ClientContext, internal, subsystem,
-} from '@launchdarkly/js-sdk-common';
-import { LDInvalidSDKKeyError } from '../errors';
+import { LDEvaluationReason } from '../../api/data/LDEvaluationReason';
+import { LDLogger } from '../../api/logging/LDLogger';
+import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
+import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
+import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
+import AttributeReference from '../../AttributeReference';
+import ContextFilter from '../../ContextFilter';
+import ApplicationTags from '../../options/ApplicationTags';
+import ClientContext from '../../options/ClientContext';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
+import InputEvent from './InputEvent';
+import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 
 type FilteredContext = any;
 
@@ -70,10 +76,7 @@ interface LDDiagnosticsManager {
   ): DiagnosticEvent;
 }
 
-/**
- * @internal
- */
-export default class EventProcessor implements subsystem.LDEventProcessor {
+export default class EventProcessor implements LDEventProcessor {
   private summarizer = new EventSummarizer();
 
   private queue: OutputEvent[] = [];
@@ -107,8 +110,8 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
   constructor(
     config: EventProcessorOptions,
     clientContext: ClientContext,
-    private readonly eventSender: subsystem.LDEventSender,
-    private readonly contextDeduplicator: subsystem.LDContextDeduplicator,
+    private readonly eventSender: LDEventSender,
+    private readonly contextDeduplicator: LDContextDeduplicator,
     private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
@@ -154,7 +157,7 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
 
   private postDiagnosticEvent(event: DiagnosticEvent) {
     this.eventSender.sendEventData(
-      subsystem.LDEventType.DiagnosticEvent,
+      LDEventType.DiagnosticEvent,
       event,
     );
   }
@@ -192,7 +195,7 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
     await this.tryPostingEvents(eventsToFlush);
   }
 
-  sendEvent(inputEvent: internal.InputEvent) {
+  sendEvent(inputEvent: InputEvent) {
     if (this.shutdown) {
       return;
     }
@@ -230,7 +233,7 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
     }
   }
 
-  private makeOutputEvent(event: internal.InputEvent, debug: boolean): OutputEvent {
+  private makeOutputEvent(event: InputEvent, debug: boolean): OutputEvent {
     switch (event.kind) {
       case 'feature': {
         const out: FeatureOutputEvent = {
@@ -301,7 +304,7 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
     }
   }
 
-  private shouldDebugEvent(event: internal.InputEvent) {
+  private shouldDebugEvent(event: InputEvent) {
     return isFeature(event)
       && event.debugEventsUntilDate
       && (event.debugEventsUntilDate > this.lastKnownPastTime)
@@ -311,8 +314,8 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
   private async tryPostingEvents(
     events: OutputEvent[] | OutputEvent,
   ): Promise<void> {
-    const res = await this.eventSender.sendEventData(subsystem.LDEventType.AnalyticsEvents, events);
-    if (res.status === subsystem.LDDeliveryStatus.FailedAndMustShutDown) {
+    const res = await this.eventSender.sendEventData(LDEventType.AnalyticsEvents, events);
+    if (res.status === LDDeliveryStatus.FailedAndMustShutDown) {
       this.shutdown = true;
     }
 

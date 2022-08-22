@@ -1,10 +1,10 @@
-import { Context } from '@launchdarkly/js-sdk-common';
-import EventFactory from '../../src/events/EventFactory';
-import EventSummarizer from '../../src/events/EventSummarizer';
+import Context from '../../../src/Context';
+import EventSummarizer from '../../../src/internal/events/EventSummarizer';
+import InputCustomEvent from '../../../src/internal/events/InputCustomEvent';
+import InputIdentifyEvent from '../../../src/internal/events/InputIdentifyEvent';
 
 describe('given an event summarizer', () => {
   const summarizer = new EventSummarizer();
-  const factory = new EventFactory(true);
   const context = Context.fromLDContext({ key: 'key' });
 
   beforeEach(() => {
@@ -13,14 +13,14 @@ describe('given an event summarizer', () => {
 
   it('does nothing for an identify event.', () => {
     const beforeSummary = summarizer.getSummary();
-    summarizer.summarizeEvent(factory.identifyEvent(context));
+    summarizer.summarizeEvent(new InputIdentifyEvent(context));
     const afterSummary = summarizer.getSummary();
     expect(beforeSummary).toEqual(afterSummary);
   });
 
   it('does nothing for a custom event.', () => {
     const beforeSummary = summarizer.getSummary();
-    summarizer.summarizeEvent(factory.customEvent('custom', context, 'potato', 17));
+    summarizer.summarizeEvent(new InputCustomEvent(context, 'custom', 'potato', 17));
     const afterSummary = summarizer.getSummary();
     expect(beforeSummary).toEqual(afterSummary);
   });

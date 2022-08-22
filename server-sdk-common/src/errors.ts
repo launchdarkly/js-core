@@ -26,13 +26,6 @@ export class LDUnexpectedResponseError extends Error {
   }
 }
 
-export class LDInvalidSDKKeyError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'LaunchDarklyInvalidSDKKeyError';
-  }
-}
-
 export class LDClientError extends Error {
   constructor(message: string) {
     super(message);
