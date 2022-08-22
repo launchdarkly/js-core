@@ -25,9 +25,13 @@ export default class EventFactory {
       flag.key,
       defaultVal,
       detail,
-      addExperimentData,
-      flag,
-      prereqOfFlag,
+      flag.version,
+      // Exclude null as a possibility.
+      detail.variationIndex ?? undefined,
+      flag.trackEvents || addExperimentData,
+      prereqOfFlag?.key,
+      this.withReasons || addExperimentData ? detail.reason : undefined,
+      flag.debugEventsUntilDate,
     );
   }
 
@@ -38,7 +42,6 @@ export default class EventFactory {
       key,
       detail.value,
       detail,
-      false,
     );
   }
 
