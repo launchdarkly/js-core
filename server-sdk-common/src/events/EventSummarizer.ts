@@ -1,9 +1,8 @@
-import InputEvalEvent from './InputEvalEvent';
+import {internal} from '@launchdarkly/js-sdk-common';
 import { isFeature } from './guards';
 import SummaryCounter from './SummaryCounter';
-import InputEvent from './InputEvent';
 
-function counterKey(event: InputEvalEvent) {
+function counterKey(event: internal.InputEvalEvent) {
   return `${event.key
   }:${event.variation !== null && event.variation !== undefined ? event.variation : ''
   }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
@@ -51,7 +50,7 @@ export default class EventSummarizer {
 
   private contextKinds: Record<string, Set<string>> = {};
 
-  summarizeEvent(event: InputEvent) {
+  summarizeEvent(event: internal.InputEvent) {
     if (isFeature(event)) {
       const countKey = counterKey(event);
       const counter = this.counters[countKey];

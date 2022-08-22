@@ -3,21 +3,20 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import InputEvent from './InputEvent';
-import LDEventProcessor from './LDEventProcessor';
+import { internal, subsystem } from '@launchdarkly/js-sdk-common';
 
 /**
  * Empty event processor implementation for when events are not desired.
  *
  * @internal
  */
-export default class NullEventProcessor implements LDEventProcessor {
+export default class NullEventProcessor implements subsystem.LDEventProcessor {
   close(): void {
   }
 
   async flush(): Promise<void> {
   }
 
-  sendEvent(inputEvent: InputEvent): void {
+  sendEvent(inputEvent: internal.InputEvent): void {
   }
 }

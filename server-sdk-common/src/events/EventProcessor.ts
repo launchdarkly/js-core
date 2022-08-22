@@ -1,6 +1,6 @@
 import {
   AttributeReference, ContextFilter, LDLogger, ApplicationTags, LDEvaluationReason,
-  ClientContext, Requests,
+  ClientContext, Requests, internal, subsystem
 } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
 import LruCache from '../cache/LruCache';
@@ -9,8 +9,6 @@ import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
-import InputEvent from './InputEvent';
-import LDEventProcessor from './LDEventProcessor';
 
 type FilteredContext = any;
 
@@ -83,7 +81,7 @@ interface LDDiagnosticsManager {
 /**
  * @internal
  */
-export default class EventProcessor implements LDEventProcessor {
+export default class EventProcessor implements subsystem.LDEventProcessor {
   private summarizer = new EventSummarizer();
 
   private queue: OutputEvent[] = [];
@@ -229,7 +227,7 @@ export default class EventProcessor implements LDEventProcessor {
     await this.tryPostingEvents(eventsToFlush, this.eventsUri, nanoid(), true);
   }
 
-  sendEvent(inputEvent: InputEvent) {
+  sendEvent(inputEvent: internal.InputEvent) {
     if (this.shutdown) {
       return;
     }
@@ -269,7 +267,7 @@ export default class EventProcessor implements LDEventProcessor {
     }
   }
 
-  private makeOutputEvent(event: InputEvent, debug: boolean): OutputEvent {
+  private makeOutputEvent(event: internal.InputEvent, debug: boolean): OutputEvent {
     switch (event.kind) {
       case 'feature': {
         const out: FeatureOutputEvent = {
@@ -340,7 +338,7 @@ export default class EventProcessor implements LDEventProcessor {
     }
   }
 
-  private shouldDebugEvent(event: InputEvent) {
+  private shouldDebugEvent(event: internal.InputEvent) {
     return isFeature(event)
       && event.debugEventsUntilDate
       && (event.debugEventsUntilDate > this.lastKnownPastTime)

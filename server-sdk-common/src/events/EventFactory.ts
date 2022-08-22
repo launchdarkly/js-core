@@ -1,8 +1,5 @@
-import { Context, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
+import { Context, LDEvaluationDetail, internal } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../evaluation/data/Flag';
-import InputCustomEvent from './InputCustomEvent';
-import InputEvalEvent from './InputEvalEvent';
-import InputIdentifyEvent from './InputIdentifyEvent';
 import isExperiment from './isExperiment';
 
 /**
@@ -17,9 +14,9 @@ export default class EventFactory {
     detail: LDEvaluationDetail,
     defaultVal: any,
     prereqOfFlag?: Flag,
-  ): InputEvalEvent {
+  ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
-    return new InputEvalEvent(
+    return new internal.InputEvalEvent(
       this.withReasons,
       context,
       flag.key,
@@ -36,7 +33,7 @@ export default class EventFactory {
   }
 
   unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
-    return new InputEvalEvent(
+    return new internal.InputEvalEvent(
       this.withReasons,
       context,
       key,
@@ -47,11 +44,11 @@ export default class EventFactory {
 
   /* eslint-disable-next-line class-methods-use-this */
   identifyEvent(context: Context) {
-    return new InputIdentifyEvent(context);
+    return new internal.InputIdentifyEvent(context);
   }
 
   /* eslint-disable-next-line class-methods-use-this */
   customEvent(key: string, context: Context, data?: any, metricValue?: number) {
-    return new InputCustomEvent(context, key, data ?? undefined, metricValue ?? undefined);
+    return new internal.InputCustomEvent(context, key, data ?? undefined, metricValue ?? undefined);
   }
 }

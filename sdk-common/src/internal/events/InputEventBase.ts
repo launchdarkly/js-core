@@ -1,8 +1,5 @@
-import { Context } from '@launchdarkly/js-sdk-common';
+import Context from '../../Context';
 
-/**
- * @internal
- */
 export default class InputEventBase {
   constructor(
     public readonly kind: string,

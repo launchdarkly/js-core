@@ -1,15 +1,13 @@
-import InputCustomEvent from './InputCustomEvent';
-import InputEvalEvent from './InputEvalEvent';
-import InputIdentifyEvent from './InputIdentifyEvent';
+import { internal } from '@launchdarkly/js-sdk-common';
 
-export function isFeature(u: any): u is InputEvalEvent {
+export function isFeature(u: any): u is internal.InputEvalEvent {
   return u.kind === 'feature';
 }
 
-export function isCustom(u: any): u is InputCustomEvent {
+export function isCustom(u: any): u is internal.InputCustomEvent {
   return u.kind === 'custom';
 }
 
-export function isIdentify(u: any): u is InputIdentifyEvent {
+export function isIdentify(u: any): u is internal.InputIdentifyEvent {
   return u.kind === 'identify';
 }

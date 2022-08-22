@@ -1,5 +1,4 @@
-import { LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
-import InputEvalEvent from '../events/InputEvalEvent';
+import { LDEvaluationDetail, LDEvaluationReason, internal } from '@launchdarkly/js-sdk-common';
 import ErrorKinds from './ErrorKinds';
 import Reasons from './Reasons';
 
@@ -10,7 +9,7 @@ import Reasons from './Reasons';
  * @internal
  */
 export default class EvalResult {
-  public events?: InputEvalEvent[];
+  public events?: internal.InputEvalEvent[];
 
   protected constructor(
     public readonly isError: boolean,

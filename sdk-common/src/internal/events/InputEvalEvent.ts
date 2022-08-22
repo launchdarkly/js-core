@@ -1,8 +1,6 @@
-import { Context, LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
+import { LDEvaluationReason, LDEvaluationDetail } from '../../api';
+import Context from '../../Context';
 
-/**
- * @internal
- */
 export default class InputEvalEvent {
   public readonly kind = 'feature';
 
@@ -68,24 +66,5 @@ export default class InputEvalEvent {
     if (debugEventsUntilDate !== undefined) {
       this.debugEventsUntilDate = debugEventsUntilDate;
     }
-    // if (flag) {
-    //   this.version = flag.version;
-
-    //   if (addExperimentData || flag.trackEvents) {
-    //     this.trackEvents = true;
-    //   }
-
-    //   if (flag.debugEventsUntilDate) {
-    //     this.debugEventsUntilDate = flag.debugEventsUntilDate;
-    //   }
-
-    //   if (prereqOf) {
-    //     this.prereqOf = prereqOf.key;
-    //   }
-
-    //   if (addExperimentData || withReasons) {
-    //     this.reason = detail.reason;
-    //   }
-    // }
   }
 }

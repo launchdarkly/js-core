@@ -3,7 +3,7 @@
 import {
   Context, LDContext, LDLogger,
   LDEvaluationDetail, LDFlagsState,
-  ClientContext, Platform,
+  ClientContext, Platform, subsystem
 } from '@launchdarkly/js-sdk-common';
 import {
   LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
@@ -29,7 +29,6 @@ import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
 import EventProcessor from './events/EventProcessor';
 import isExperiment from './events/isExperiment';
-import LDEventProcessor from './events/LDEventProcessor';
 import NullEventProcessor from './events/NullEventProcessor';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
@@ -53,7 +52,7 @@ export default class LDClientImpl implements LDClient {
 
   private eventFactoryWithReasons = new EventFactory(true);
 
-  private eventProcessor: LDEventProcessor;
+  private eventProcessor: subsystem.LDEventProcessor;
 
   private evaluator: Evaluator;
 

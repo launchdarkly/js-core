@@ -1,6 +1,6 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
-import { Context, LDEvaluationReason, Platform } from '@launchdarkly/js-sdk-common';
+import { Context, LDEvaluationReason, Platform, internal } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
@@ -18,7 +18,6 @@ import matchSegmentTargets from './matchSegmentTargets';
 import { SegmentRule } from './data/SegmentRule';
 import { Clause } from './data/Clause';
 import EventFactory from '../events/EventFactory';
-import InputEvalEvent from '../events/InputEvalEvent';
 import { BigSegmentStoreMembership } from '../api/interfaces';
 import makeBigSegmentRef from './makeBigSegmentRef';
 
@@ -54,7 +53,7 @@ function computeUpdatedBigSegmentsStatus(
 }
 
 class EvalState {
-  events?: InputEvalEvent[];
+  events?: internal.InputEvalEvent[];
 
   bigSegmentsStatus?: BigSegmentStoreStatusString;
 
