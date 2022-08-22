@@ -7,7 +7,6 @@ import LruCache from '../cache/LruCache';
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
-import { DiagnosticInitEvent, DiagnosticStatsEvent } from './DiagnosticsManager';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
@@ -47,12 +46,17 @@ interface FeatureOutputEvent {
   contextKeys?: Record<string, string>;
 }
 
+/**
+ * The event processor doesn't need to know anything about the shape of the
+ * diagnostic events.
+ */
+type DiagnosticEvent = any;
+
 type OutputEvent = IdentifyOutputEvent
 | CustomOutputEvent
 | FeatureOutputEvent
 | SummarizedFlagsEvent
-| DiagnosticInitEvent
-| DiagnosticStatsEvent;
+| DiagnosticEvent;
 
 export interface EventProcessorOptions {
   allAttributesPrivate: boolean;
@@ -68,12 +72,12 @@ export interface EventProcessorOptions {
 }
 
 interface LDDiagnosticsManager {
-  createInitEvent(): DiagnosticInitEvent;
+  createInitEvent(): DiagnosticEvent;
   createStatsEventAndReset(
     droppedEvents: number,
     deduplicatedUsers: number,
     eventsInLastBatch: number,
-  ): DiagnosticStatsEvent;
+  ): DiagnosticEvent;
 }
 
 /**
@@ -188,7 +192,7 @@ export default class EventProcessor implements LDEventProcessor {
     }
   }
 
-  private postDiagnosticEvent(event: DiagnosticInitEvent | DiagnosticStatsEvent) {
+  private postDiagnosticEvent(event: DiagnosticEvent) {
     this.tryPostingEvents(event, this.diagnosticEventsUri, undefined, true).catch(() => { });
   }
 
