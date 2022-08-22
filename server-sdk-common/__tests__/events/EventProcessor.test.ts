@@ -21,6 +21,7 @@ import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import basicPlatform from '../evaluation/mocks/platform';
 import { SDK_KEY } from './CustomMatchers';
+import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 
 interface RequestState {
   testHeaders: Record<string, string>;
@@ -216,7 +217,12 @@ describe('given an event processor', () => {
       { ...basicPlatform, info, requests },
     );
 
-    eventProcessor = new EventProcessor(config, clientContext);
+    eventProcessor = new EventProcessor(
+      config,
+      clientContext,
+      new ContextDeduplicator(config),
+      undefined,
+    );
   });
 
   afterEach(() => {
@@ -751,7 +757,12 @@ describe('given an event processor', () => {
       { ...basicPlatform, info, requests },
     );
 
-    eventProcessor = new EventProcessor(config, clientContext);
+    eventProcessor = new EventProcessor(
+      config,
+      clientContext,
+      new ContextDeduplicator(config),
+      undefined,
+    );
     eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     // Need to wait long enough for the retry.
@@ -817,7 +828,12 @@ describe('given an event processor with diagnostics manager', () => {
       { ...basicPlatform, info, requests },
     );
 
-    eventProcessor = new EventProcessor(testConfig, clientContext, diagnosticsManager);
+    eventProcessor = new EventProcessor(
+      testConfig,
+      clientContext,
+      new ContextDeduplicator(config),
+      diagnosticsManager,
+    );
   });
 
   afterEach(() => {

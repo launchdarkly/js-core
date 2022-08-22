@@ -1,6 +1,6 @@
 import {
   AttributeReference, ContextFilter, LDLogger, ApplicationTags, LDEvaluationReason,
-  ClientContext, Requests, internal, subsystem
+  ClientContext, Requests, internal, subsystem,
 } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
 import LruCache from '../cache/LruCache';
@@ -63,10 +63,6 @@ export interface EventProcessorOptions {
   tags: ApplicationTags;
   flushInterval: number;
   diagnosticRecordingInterval: number;
-  /* Only used in server SDKs. */
-  contextKeysFlushInterval?: number;
-  /* Only used in server SDKs. */
-  contextKeysCapacity?: number;
 }
 
 interface LDDiagnosticsManager {
@@ -104,12 +100,6 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
 
   private contextFilter: ContextFilter;
 
-  /**
-   * Will be created if contextKeysFlushInterval and contextKeysCapacity are
-   * set.
-   */
-  private contextKeysCache?: LruCache;
-
   private eventsUri: string;
 
   private diagnosticEventsUri: string;
@@ -131,13 +121,12 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
   constructor(
     config: EventProcessorOptions,
     clientContext: ClientContext,
+    private readonly contextDeduplicator: subsystem.LDContextDeduplicator,
     private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
-    if (config.contextKeysCapacity !== undefined && config.contextKeysFlushInterval !== undefined) {
-      this.contextKeysCache = new LruCache({ max: config.contextKeysCapacity });
-    }
+
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
@@ -157,10 +146,10 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
 
     this.diagnosticEventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/diagnostic`;
 
-    if (this.contextKeysCache) {
+    if (this.contextDeduplicator.flushInterval !== undefined) {
       this.flushUsersTimer = setInterval(() => {
-        this.contextKeysCache!.clear();
-      }, config.contextKeysFlushInterval! * 1000);
+        this.contextDeduplicator.flush();
+      }, this.contextDeduplicator.flushInterval * 1000);
     }
 
     this.flushTimer = setInterval(async () => {
@@ -239,18 +228,16 @@ export default class EventProcessor implements subsystem.LDEventProcessor {
     const addDebugEvent = this.shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
-    const inCache = this.contextKeysCache?.get(inputEvent.context.canonicalKey);
+    const shouldNotDeduplicate = this.contextDeduplicator.processContext(inputEvent.context);
 
     // If there is no cache, then it will never be in the cache.
-    if (inCache) {
+    if (!shouldNotDeduplicate) {
       if (!isIdentifyEvent) {
         this.deduplicatedUsers += 1;
       }
     }
 
-    this.contextKeysCache?.set(inputEvent.context.canonicalKey, true);
-
-    const addIndexEvent = !inCache && !isIdentifyEvent;
+    const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
     if (addIndexEvent) {
       this.enqueue({

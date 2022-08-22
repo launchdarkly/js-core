@@ -25,6 +25,7 @@ import ErrorKinds from './evaluation/ErrorKinds';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
+import ContextDeduplicator from './events/ContextDeduplicator';
 import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
 import EventProcessor from './events/EventProcessor';
@@ -133,6 +134,7 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor = new EventProcessor(
         config,
         clientContext,
+        new ContextDeduplicator(config),
         this.diagnosticsManager,
       );
     }
