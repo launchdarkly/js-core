@@ -3,7 +3,6 @@ import {
   ClientContext, Requests, internal, subsystem,
 } from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
-import LruCache from '../cache/LruCache';
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
