@@ -7,5 +7,5 @@ export {
   InputCustomEvent,
   InputEvalEvent,
   InputEvent,
-  InputIdentifyEvent
+  InputIdentifyEvent,
 };

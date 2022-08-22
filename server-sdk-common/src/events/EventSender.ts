@@ -1,4 +1,6 @@
-import { ApplicationTags, ClientContext, LDClientContext, Requests, subsystem } from '@launchdarkly/js-sdk-common';
+import {
+  ApplicationTags, ClientContext, Requests, subsystem,
+} from '@launchdarkly/js-sdk-common';
 import { nanoid } from 'nanoid';
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';

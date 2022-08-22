@@ -1,6 +1,8 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
-import { Context, LDEvaluationReason, Platform, internal } from '@launchdarkly/js-sdk-common';
+import {
+  Context, LDEvaluationReason, Platform, internal,
+} from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
 import { getBucketBy, getOffVariation, getVariation } from './variations';

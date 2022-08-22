@@ -1,4 +1,4 @@
-import {internal} from '@launchdarkly/js-sdk-common';
+import { internal } from '@launchdarkly/js-sdk-common';
 import { isFeature } from './guards';
 import SummaryCounter from './SummaryCounter';
 

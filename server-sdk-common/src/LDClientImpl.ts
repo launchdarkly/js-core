@@ -3,7 +3,7 @@
 import {
   Context, LDContext, LDLogger,
   LDEvaluationDetail, LDFlagsState,
-  ClientContext, Platform, subsystem
+  ClientContext, Platform, subsystem,
 } from '@launchdarkly/js-sdk-common';
 import {
   LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor,

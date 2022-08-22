@@ -1,6 +1,6 @@
 import {
   AttributeReference, ContextFilter, LDLogger, ApplicationTags, LDEvaluationReason,
-  ClientContext, Requests, internal, subsystem,
+  ClientContext, internal, subsystem,
 } from '@launchdarkly/js-sdk-common';
 import { LDInvalidSDKKeyError } from '../errors';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
