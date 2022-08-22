@@ -17,9 +17,6 @@
     "build": "tsc"
   },
   "license": "Apache-2.0",
-  "dependencies": {
-    "nanoid": "^3.0.0"
-  },
   "devDependencies": {
     "@types/jest": "^27.4.1",
     "jest": "^27.5.1",
