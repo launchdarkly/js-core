@@ -121,15 +121,19 @@ describe('given a valid legacy user without custom attributes', () => {
   });
 });
 
-describe('given a non-user single kind context', () => {
+describe.each([
+  ['Org:%Key%', 'org:Org%3A%25Key%25'],
+  ['Org:Key', 'org:Org%3AKey'],
+  ['Org%Key', 'org:Org%25Key'],
+])('given a non-user single kind context', (key, encoded) => {
   const context = Context.fromLDContext({
     kind: 'org',
     // Key will be URL encoded.
-    key: 'Org:%Key%',
+    key,
     value: 'OrgValue',
   });
   it('should have the correct canonical key', () => {
-    expect(context?.canonicalKey).toEqual('org:Org%3A%25Key%25');
+    expect(context?.canonicalKey).toEqual(encoded);
   });
 
   it('secondary should not be defined when not present', () => {
@@ -141,7 +145,7 @@ describe('given a non-user single kind context', () => {
   });
 
   it('should have the correct kinds and keys', () => {
-    expect(context?.kindsAndKeys).toEqual({ org: 'Org:%Key%' });
+    expect(context?.kindsAndKeys).toEqual({ org: key });
   });
 });
 

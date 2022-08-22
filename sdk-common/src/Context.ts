@@ -37,7 +37,7 @@ const DEFAULT_KIND = 'user';
  * @returns Partially URL encoded key.
  */
 function encodeKey(key: string): string {
-  if (key.includes('%') || key.includes('%')) {
+  if (key.includes('%') || key.includes(':')) {
     return key.replace(/%/g, '%25').replace(/:/g, '%3A');
   }
   return key;
