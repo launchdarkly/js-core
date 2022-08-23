@@ -22,14 +22,6 @@ describe('given an LDClient with test data', () => {
         logger: new TestLogger(),
       },
       { ...makeCallbacks(true), onUpdate: (key: string) => queue.push(key) },
-      // () => { },
-      // () => { },
-      // () => { },
-      // (key) => {
-      //   queue.push(key);
-      // },
-      // // Always listen to events.
-      // () => true,
     );
   });
 

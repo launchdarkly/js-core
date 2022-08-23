@@ -47,14 +47,6 @@ it('isOffline returns true in offline mode', (done) => {
         done();
       },
     },
-    // (_err) => { },
-    // (_err) => { },
-    // () => {
-    //   expect(client.isOffline()).toEqual(true);
-    //   done();
-    // },
-    // (_key) => { },
-    // () => false,
   );
 
   client.close();
