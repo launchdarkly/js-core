@@ -28,6 +28,22 @@ const DEFAULT_KIND = 'user';
 // first the type must be determined to allow us to put it into a consistent type.
 
 /**
+ * The partial URL encoding is needed because : is a valid character in context keys.
+ *
+ * Partial encoding is the replacement of all colon (:) characters with the URL
+ * encoded equivalent (%3A) and all percent (%) characters with the URL encoded
+ * equivalent (%25).
+ * @param key The key to encode.
+ * @returns Partially URL encoded key.
+ */
+function encodeKey(key: string): string {
+  if (key.includes('%') || key.includes(':')) {
+    return key.replace(/%/g, '%25').replace(/:/g, '%3A');
+  }
+  return key;
+}
+
+/**
  * Check if a context is a single kind context.
  * @param context
  * @returns true if the context is a single kind context.
@@ -412,10 +428,10 @@ export default class Context {
     if (this.isMulti) {
       return Object.keys(this.contexts)
         .sort()
-        .map((key) => `${key}:${encodeURIComponent(this.contexts[key].key)}`)
+        .map((key) => `${key}:${encodeKey(this.contexts[key].key)}`)
         .join(':');
     }
-    return `${this.kind}:${encodeURIComponent(this.context!.key)}`;
+    return `${this.kind}:${encodeKey(this.context!.key)}`;
   }
 
   /**
