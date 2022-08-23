@@ -19,7 +19,7 @@ export default class ContextDeduplicator implements subsystem.LDContextDeduplica
   public processContext(context: Context): boolean {
     const { canonicalKey } = context;
     const inCache = this.contextKeysCache.get(canonicalKey);
-    this.contextKeysCache?.set(canonicalKey, true);
+    this.contextKeysCache.set(canonicalKey, true);
 
     // If it is in the cache, then we do not want to add an event.
     return !inCache;
