@@ -43,6 +43,17 @@ enum InitState {
   Failed,
 }
 
+export interface LDClientCallbacks {
+  onError: (err: Error) => void;
+  onFailed: (err: Error) => void;
+  onReady: () => void;
+  // Called whenever flags change, if there are listeners.
+  onUpdate: (key: string) => void,
+  // Method to check if event listeners have been registered.
+  // If none are registered, then onUpdate will never be called.
+  hasEventListeners: () => boolean,
+}
+
 export default class LDClientImpl implements LDClient {
   private initState: InitState = InitState.Initializing;
 
@@ -70,6 +81,12 @@ export default class LDClientImpl implements LDClient {
 
   private bigSegmentsManager: BigSegmentsManager;
 
+  private onError: (err: Error) => void;
+
+  private onFailed: (err: Error) => void;
+
+  private onReady: () => void;
+
   private diagnosticsManager?: DiagnosticsManager;
 
   /**
@@ -85,15 +102,13 @@ export default class LDClientImpl implements LDClient {
     private sdkKey: string,
     private platform: Platform,
     options: LDOptions,
-    private onError: (err: Error) => void,
-    private onFailed: (err: Error) => void,
-    private onReady: () => void,
-    // Called whenever flags change, if there are listeners.
-    onUpdate: (key: string) => void,
-    // Method to check if event listeners have been registered.
-    // If none are registered, then onUpdate will never be called.
-    hasEventListeners: () => boolean,
+    callbacks: LDClientCallbacks,
   ) {
+    this.onError = callbacks.onError;
+    this.onFailed = callbacks.onFailed;
+    this.onReady = callbacks.onReady;
+
+    const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options);
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');

@@ -20,7 +20,7 @@ const flag = {
 };
 const allData = { flags: { flagKey: flag }, segments: {} };
 
-describe('', () => {
+describe('When using a proxy', () => {
   let logger: LDLogger;
   let closeable: { close: () => void }[];
 

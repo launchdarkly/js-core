@@ -1,10 +1,12 @@
-import { Hasher, Crypto, Hmac } from '@launchdarkly/js-sdk-common';
-import { LDBigSegmentsOptions, LDClientImpl } from '../src';
+import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
 import { BigSegmentStore } from '../src/api/interfaces';
+import { LDBigSegmentsOptions } from '../src/api/options/LDBigSegmentsOptions';
 import makeBigSegmentRef from '../src/evaluation/makeBigSegmentRef';
 import TestData from '../src/integrations/test_data/TestData';
+import LDClientImpl from '../src/LDClientImpl';
 import { makeSegmentMatchClause } from './evaluation/flags';
 import basicPlatform from './evaluation/mocks/platform';
+import makeCallbacks from './makeCallbacks';
 
 const user = { key: 'userkey' };
 const bigSegment = {
@@ -77,12 +79,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        // Always listen to events.
-        () => true,
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -120,12 +117,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        // Always listen to events.
-        () => true,
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -162,12 +154,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        // Always listen to events.
-        () => true,
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -193,12 +180,7 @@ describe('given test data with big segments', () => {
           updateProcessor: td.getFactory(),
           sendEvents: false,
         },
-        () => { },
-        () => { },
-        () => { },
-        () => { },
-        // Always listen to events.
-        () => true,
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
