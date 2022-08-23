@@ -1,6 +1,6 @@
+import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import AsyncQueue from './AsyncQueue';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';
@@ -8,7 +8,7 @@ import makeCallbacks from './makeCallbacks';
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
   let td: TestData;
-  let queue: AsyncQueue;
+  let queue: AsyncQueue<string>;
 
   beforeEach(() => {
     queue = new AsyncQueue();
@@ -21,7 +21,7 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger: new TestLogger(),
       },
-      { ...makeCallbacks(true), onUpdate: (key: string) => queue.push(key) },
+      { ...makeCallbacks(true), onUpdate: (key: string) => queue.add(key) },
     );
   });
 
