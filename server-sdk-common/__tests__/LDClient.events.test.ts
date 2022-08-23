@@ -4,6 +4,7 @@ import EventProcessor from '../src/events/EventProcessor';
 import InputEvent from '../src/events/InputEvent';
 import TestData from '../src/integrations/test_data/TestData';
 import basicPlatform from './evaluation/mocks/platform';
+import { makeCallbacks } from './makeCallbacks';
 
 const defaultUser = { key: 'user' };
 const anonymousUser = { key: 'anon-user', anonymous: true };
@@ -25,11 +26,7 @@ describe('given a client with mock event processor', () => {
       {
         updateProcessor: td.getFactory(),
       },
-      () => { },
-      () => { },
-      () => { },
-      () => { },
-      () => false,
+      makeCallbacks(false),
     );
     await client.waitForInitialization();
   });

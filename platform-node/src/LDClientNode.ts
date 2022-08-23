@@ -11,7 +11,7 @@ import { Emits } from './Emits';
 import BigSegmentStoreStatusProviderNode from './BigSegmentsStoreStatusProviderNode';
 import { BigSegmentStoreStatusProvider } from './api';
 
-class ClientEmitter extends EventEmitter {}
+class ClientEmitter extends EventEmitter { }
 
 class LDClientNode extends LDClientImpl {
   emitter: EventEmitter;
@@ -33,22 +33,25 @@ class LDClientNode extends LDClientImpl {
       sdkKey,
       new NodePlatform({ ...options, logger }),
       { ...options, logger },
-      (err: Error) => {
-        if (emitter.listenerCount('error')) {
-          emitter.emit('error', err);
-        }
+      {
+        onError: (err: Error) => {
+          if (emitter.listenerCount('error')) {
+            emitter.emit('error', err);
+          }
+        },
+        onFailed: (err: Error) => {
+          emitter.emit('failed', err);
+        },
+        onReady: () => {
+          emitter.emit('ready');
+        },
+        onUpdate: (key: string) => {
+          emitter.emit('update', { key });
+          emitter.emit(`update:${key}`, { key });
+        },
+        hasEventListeners: () => emitter.eventNames().some((name) => name === 'update' || (typeof name === 'string' && name.startsWith('update:'))),
       },
-      (err: Error) => {
-        emitter.emit('failed', err);
-      },
-      () => {
-        emitter.emit('ready');
-      },
-      (key: string) => {
-        emitter.emit('update', { key });
-        emitter.emit(`update:${key}`, { key });
-      },
-      () => emitter.eventNames().some((name) => name === 'update' || (typeof name === 'string' && name.startsWith('update:'))),
+
     );
     this.emitter = emitter;
 

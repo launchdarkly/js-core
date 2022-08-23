@@ -2,19 +2,14 @@
 import { LDClientImpl } from '../src';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
+import { makeCallbacks } from './makeCallbacks';
 
 it('fires ready event in offline mode', (done) => {
   const client = new LDClientImpl(
     'sdk-key',
     basicPlatform,
     { offline: true },
-    (_err) => { },
-    (_err) => { },
-    () => {
-      done();
-    },
-    (_key) => { },
-    () => false,
+    { ...makeCallbacks(false), onReady: () => done() },
   );
   client.close();
 });
@@ -34,13 +29,7 @@ it('fires the failed event if initialization fails', (done) => {
         close: () => { },
       },
     },
-    (_err) => { },
-    (_err) => {
-      done();
-    },
-    () => { },
-    (_key) => { },
-    () => false,
+    { ...makeCallbacks(false), onFailed: () => done() },
   );
 
   client.close();
@@ -51,14 +40,21 @@ it('isOffline returns true in offline mode', (done) => {
     'sdk-key',
     basicPlatform,
     { offline: true },
-    (_err) => { },
-    (_err) => { },
-    () => {
-      expect(client.isOffline()).toEqual(true);
-      done();
+    {
+      ...makeCallbacks(false),
+      onReady: () => {
+        expect(client.isOffline()).toEqual(true);
+        done();
+      },
     },
-    (_key) => { },
-    () => false,
+    // (_err) => { },
+    // (_err) => { },
+    // () => {
+    //   expect(client.isOffline()).toEqual(true);
+    //   done();
+    // },
+    // (_key) => { },
+    // () => false,
   );
 
   client.close();
@@ -84,11 +80,7 @@ describe('when waiting for initialization', () => {
         sendEvents: false,
         logger: new TestLogger(),
       },
-      (_err) => { },
-      (_err) => { },
-      () => { },
-      (_key) => { },
-      () => false,
+      makeCallbacks(false),
     );
   });
 
@@ -117,12 +109,7 @@ it('does not crash when closing an offline client', () => {
     'sdk-key',
     basicPlatform,
     { offline: true },
-    (_err) => { },
-    (_err) => { },
-    () => {
-    },
-    (_key) => { },
-    () => false,
+    makeCallbacks(false),
   );
 
   expect(() => client.close()).not.toThrow();
@@ -144,11 +131,7 @@ it('the wait for initialization promise is rejected if initialization fails', (d
         close: () => { },
       },
     },
-    (_err) => { },
-    (_err) => { },
-    () => { },
-    (_key) => { },
-    () => false,
+    makeCallbacks(false),
   );
 
   client.waitForInitialization().catch(() => done());

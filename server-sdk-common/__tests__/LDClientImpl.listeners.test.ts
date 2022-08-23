@@ -3,6 +3,7 @@ import TestData from '../src/integrations/test_data/TestData';
 import AsyncQueue from './AsyncQueue';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
+import { makeCallbacks } from './makeCallbacks';
 
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
@@ -20,14 +21,15 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger: new TestLogger(),
       },
-      () => { },
-      () => { },
-      () => { },
-      (key) => {
-        queue.push(key);
-      },
-      // Always listen to events.
-      () => true,
+      { ...makeCallbacks(true), onUpdate: (key: string) => queue.push(key) },
+      // () => { },
+      // () => { },
+      // () => { },
+      // (key) => {
+      //   queue.push(key);
+      // },
+      // // Always listen to events.
+      // () => true,
     );
   });
 

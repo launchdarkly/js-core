@@ -7,6 +7,7 @@ import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
+import { makeCallbacks } from './makeCallbacks';
 
 const defaultUser = { key: 'user' };
 
@@ -23,12 +24,7 @@ describe('given an LDClient with test data', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
       },
-      () => { },
-      () => { },
-      () => { },
-      () => { },
-      // Always listen to events.
-      () => true,
+      makeCallbacks(true),
     );
 
     await client.waitForInitialization();
@@ -131,12 +127,7 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      () => { },
-      () => { },
-      () => { },
-      () => { },
-      // Always listen to events.
-      () => true,
+      makeCallbacks(true),
     );
   });
 
@@ -189,12 +180,7 @@ describe('given a client and store that are uninitialized', () => {
         sendEvents: false,
         featureStore: store,
       },
-      () => { },
-      () => { },
-      () => { },
-      () => { },
-      // Always listen to events.
-      () => true,
+      makeCallbacks(true),
     );
   });
 
@@ -245,12 +231,7 @@ describe('given a client that is un-initialized and store that is initialized', 
         sendEvents: false,
         featureStore: store,
       },
-      () => { },
-      () => { },
-      () => { },
-      () => { },
-      // Always listen to events.
-      () => true,
+      makeCallbacks(true),
     );
   });
 
