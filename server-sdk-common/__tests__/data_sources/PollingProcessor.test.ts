@@ -1,11 +1,13 @@
 import { LDFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
+import ClientContext from '../../src/ClientContext';
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
+import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger, { LogLevel } from '../Logger';
 
 describe('given an event processor', () => {
@@ -29,7 +31,11 @@ describe('given an event processor', () => {
       pollInterval: longInterval,
       logger: new TestLogger(),
     });
-    processor = new PollingProcessor(config, requestor as unknown as Requestor);
+    processor = new PollingProcessor(
+      config,
+      requestor as unknown as Requestor,
+      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+    );
   });
 
   afterEach(() => {
@@ -86,7 +92,11 @@ describe('given a polling processor with a short poll duration', () => {
     });
     // Configuration will not let us set this as low as needed for the test.
     Object.defineProperty(config, 'pollInterval', { value: 0.1 });
-    processor = new PollingProcessor(config, requestor as unknown as Requestor);
+    processor = new PollingProcessor(
+      config,
+      requestor as unknown as Requestor,
+      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+    );
   });
 
   afterEach(() => {

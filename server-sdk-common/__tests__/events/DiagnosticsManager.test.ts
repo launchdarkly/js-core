@@ -10,6 +10,7 @@ import {
   EventSource, EventSourceInitDict, Info, Options, Platform, PlatformData,
   Requests, Response, SdkData,
 } from '../../src/platform';
+import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import { crypto } from '../evaluation/mocks/hasher';
 
 const info: Info = {
@@ -71,6 +72,7 @@ describe('given a diagnostics manager', () => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
+      new InMemoryFeatureStore(),
     );
   });
 
@@ -88,6 +90,7 @@ describe('given a diagnostics manager', () => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
+      new InMemoryFeatureStore(),
     );
 
     const { id } = manager.createInitEvent();
@@ -249,6 +252,8 @@ describe.each([
       'my-sdk-key',
       new Configuration(configIn),
       basicPlatform,
+      // @ts-ignore
+      configIn.featureStore ?? new InMemoryFeatureStore(),
     );
   });
 
@@ -273,6 +278,7 @@ describe.each([true, false])('Given proxy and proxy auth=%p', (auth) => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
+      new InMemoryFeatureStore(),
     );
   });
 

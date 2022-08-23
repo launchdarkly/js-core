@@ -20,7 +20,7 @@ export interface LDEvaluationDetail {
    * The index of the returned value within the flag's list of variations, e.g. 0 for the
    * first variation-- or `null` if the default value was returned.
    */
-  variationIndex?: number;
+  variationIndex?: number | null;
 
   /**
    * An object describing the main factor that influenced the flag evaluation value.

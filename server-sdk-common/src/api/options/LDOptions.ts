@@ -1,6 +1,8 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDDataSourceUpdates, LDStreamProcessor } from '../subsystems';
 import { LDFeatureStore } from '../subsystems/LDFeatureStore';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
+import { LDClientContext } from './LDClientContext';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
 
@@ -66,7 +68,7 @@ export interface LDOptions {
    * provide a factory function that creates the store implementation based on the SDK
    * configuration; this property accepts either.
    */
-  featureStore?: LDFeatureStore | ((options: LDOptions) => LDFeatureStore);
+  featureStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
 
   /**
    * Additional parameters for configuring the SDK's Big Segments behavior.
@@ -87,7 +89,8 @@ export interface LDOptions {
    * By default, this is the client's default streaming or polling component. It can be changed
    * for testing purposes; see [[FileDataSource]].
    */
-  updateProcessor?: object;
+  updateProcessor?: object |
+  ((clientContext: LDClientContext, dataSourceUpdates: LDDataSourceUpdates) => LDStreamProcessor);
 
   /**
    * The interval in between flushes of the analytics events queue, in seconds.

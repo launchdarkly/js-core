@@ -10,7 +10,7 @@ const noQueries: Queries = {
   getSegment(): Promise<Segment | undefined> {
     throw new Error('Function not implemented.');
   },
-  getBigSegmentsMembership(): Promise<BigSegmentStoreMembership | undefined> {
+  getBigSegmentsMembership(): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
     throw new Error('Function not implemented.');
   },
 };

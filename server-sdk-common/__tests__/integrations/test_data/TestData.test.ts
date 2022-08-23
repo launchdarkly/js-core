@@ -1,4 +1,5 @@
 import { AttributeReference } from '../../../src';
+import ClientContext from '../../../src/ClientContext';
 import { Flag } from '../../../src/evaluation/data/Flag';
 import { FlagRule } from '../../../src/evaluation/data/FlagRule';
 import TestData from '../../../src/integrations/test_data/TestData';
@@ -6,6 +7,7 @@ import Configuration from '../../../src/options/Configuration';
 import AsyncStoreFacade from '../../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../../src/store/VersionedDataKinds';
+import basicPlatform from '../../evaluation/mocks/platform';
 
 const basicBooleanFlag: Flag = {
   fallthrough: {
@@ -23,9 +25,10 @@ it('initializes the data store with flags configured the data store is created',
   td.update(td.flag('new-flag').variationForAll(true));
 
   const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(new Configuration({
-    featureStore: store,
-  }));
+  const processor = td.getFactory()(
+    new ClientContext('', new Configuration({}), basicPlatform),
+    store,
+  );
 
   processor.start();
   const facade = new AsyncStoreFacade(store);
@@ -38,9 +41,10 @@ it('initializes the data store with flags configured the data store is created',
 it('updates the data store when update is called', async () => {
   const td = new TestData();
   const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(new Configuration({
-    featureStore: store,
-  }));
+  const processor = td.getFactory()(
+    new ClientContext('', new Configuration({}), basicPlatform),
+    store,
+  );
 
   processor.start();
   const facade = new AsyncStoreFacade(store);
@@ -57,9 +61,10 @@ it('can include pre-configured items', async () => {
   td.usePreconfiguredSegment({ key: 'my-segment', version: 2000 });
 
   const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(new Configuration({
-    featureStore: store,
-  }));
+  const processor = td.getFactory()(
+    new ClientContext('', new Configuration({}), basicPlatform),
+    store,
+  );
 
   processor.start();
 
@@ -104,9 +109,10 @@ it.each([true, false])('does not update the store after stop/close is called', a
   const td = new TestData();
 
   const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(new Configuration({
-    featureStore: store,
-  }));
+  const processor = td.getFactory()(
+    new ClientContext('', new Configuration({}), basicPlatform),
+    store,
+  );
 
   processor.start();
   td.update(td.flag('new-flag').variationForAll(true));
@@ -131,9 +137,10 @@ it('can update a flag that already exists in the store', async () => {
 
   const store = new InMemoryFeatureStore();
 
-  const processor = td.getFactory()(new Configuration({
-    featureStore: store,
-  }));
+  const processor = td.getFactory()(
+    new ClientContext('', new Configuration({}), basicPlatform),
+    store,
+  );
 
   processor.start();
   td.update(td.flag('new-flag').variationForAll(true));

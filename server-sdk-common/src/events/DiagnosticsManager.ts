@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid';
+import { LDFeatureStore } from '../api/subsystems';
 import Configuration, { defaultValues } from '../options/Configuration';
 import { Platform } from '../platform';
 
@@ -97,6 +98,7 @@ export default class DiagnosticsManager {
     sdkKey: string,
     private readonly config: Configuration,
     private readonly platform: Platform,
+    private readonly featureStore: LDFeatureStore,
   ) {
     this.startTime = Date.now();
     this.dataSinceDate = this.startTime;
@@ -140,7 +142,7 @@ export default class DiagnosticsManager {
         usingProxy: !!this.platform.requests.usingProxy?.(),
         usingProxyAuthenticator: !!this.platform.requests.usingProxyAuth?.(),
         diagnosticRecordingIntervalMillis: secondsToMillis(this.config.diagnosticRecordingInterval),
-        dataStoreType: this.config.featureStore.getDescription?.() ?? 'memory',
+        dataStoreType: this.featureStore.getDescription?.() ?? 'memory',
       },
       platform: {
         name: platformData.name,

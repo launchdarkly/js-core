@@ -11,7 +11,7 @@ import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import NodeResponse from './NodeResponse';
 
 function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
-  return {
+  const options: https.AgentOptions & { [index: string]: any } = {
     ca: tlsOptions.ca,
     cert: tlsOptions.cert,
     checkServerIdentity: tlsOptions.checkServerIdentity,
@@ -27,6 +27,15 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
     secureProtocol: tlsOptions.secureProtocol,
     servername: tlsOptions.servername,
   };
+
+  // Node does not take kindly to undefined keys.
+  Object.keys(options).forEach((key) => {
+    if (options[key] === undefined) {
+      delete options[key];
+    }
+  });
+
+  return options;
 }
 
 function processProxyOptions(
@@ -34,7 +43,7 @@ function processProxyOptions(
   additional: https.AgentOptions = {},
 ): https.Agent | http.Agent {
   const protocol = proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http';
-  const parsedOptions: HttpsProxyAgentOptions = {
+  const parsedOptions: HttpsProxyAgentOptions & { [index: string]: any } = {
     port: proxyOptions.port,
     host: proxyOptions.host,
     protocol,
@@ -45,6 +54,14 @@ function processProxyOptions(
       'Proxy-Authorization': `Basic ${Buffer.from(proxyOptions.auth).toString('base64')}}`,
     };
   }
+
+  // Node does not take kindly to undefined keys.
+  Object.keys(parsedOptions).forEach((key) => {
+    if (parsedOptions[key] === undefined) {
+      delete parsedOptions[key];
+    }
+  });
+
   return createHttpsProxyAgent(parsedOptions);
 }
 

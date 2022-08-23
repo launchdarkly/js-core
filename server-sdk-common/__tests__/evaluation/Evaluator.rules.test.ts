@@ -42,7 +42,7 @@ describe('when evaluating user equivalent contexts', () => {
     const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest));
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Invalid variation index in flag');
-    expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
+    expect(res.detail).toMatchObject({ value: null, variationIndex: null, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
   });
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('returns error if rule variation is negative', async (userToTest) => {
@@ -51,7 +51,7 @@ describe('when evaluating user equivalent contexts', () => {
     const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest));
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Invalid variation index in flag');
-    expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
+    expect(res.detail).toMatchObject({ value: null, variationIndex: null, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
   });
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('returns error if rule has no variation or rollout', async (userToTest) => {
@@ -60,7 +60,7 @@ describe('when evaluating user equivalent contexts', () => {
     const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest));
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Variation/rollout object with no variation or rollout');
-    expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
+    expect(res.detail).toMatchObject({ value: null, variationIndex: null, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
   });
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('returns error if rule has rollout with no variations', async (userToTest) => {
@@ -69,7 +69,7 @@ describe('when evaluating user equivalent contexts', () => {
     const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest));
     expect(res.isError).toBeTruthy();
     expect(res.message).toEqual('Variation/rollout object with no variation or rollout');
-    expect(res.detail).toMatchObject({ value: null, variationIndex: undefined, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
+    expect(res.detail).toMatchObject({ value: null, variationIndex: null, reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' } });
   });
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])('does not overflow the call stack when evaluating a huge number of rules', async (userToTest) => {

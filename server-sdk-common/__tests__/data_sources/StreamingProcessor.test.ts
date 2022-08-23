@@ -63,12 +63,13 @@ describe('given a stream processor with mock event source', () => {
       featureStore,
       logger,
     });
-    diagnosticsManager = new DiagnosticsManager('sdk-key', config, basicPlatform);
+    diagnosticsManager = new DiagnosticsManager('sdk-key', config, basicPlatform, featureStore);
     streamProcessor = new StreamingProcessor(
       sdkKey,
       config,
       requests,
       info,
+      featureStore,
       diagnosticsManager,
     );
   });

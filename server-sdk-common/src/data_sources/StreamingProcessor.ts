@@ -1,6 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { LDStreamProcessor } from '../api';
-import { LDFeatureStore } from '../api/subsystems';
+import { LDDataSourceUpdates } from '../api/subsystems';
 import { isHttpRecoverable, LDStreamingError } from '../errors';
 import DiagnosticsManager from '../events/DiagnosticsManager';
 import Configuration from '../options/Configuration';
@@ -32,8 +32,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
 
   private requests: Requests;
 
-  private featureStore: LDFeatureStore;
-
   private connectionAttemptStartTime?: number;
 
   constructor(
@@ -41,6 +39,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     config: Configuration,
     requests: Requests,
     info: Info,
+    private readonly featureStore: LDDataSourceUpdates,
     private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     // TODO: Will need diagnostics manager.
@@ -48,7 +47,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
     this.logger = config.logger;
     this.streamInitialReconnectDelay = config.streamInitialReconnectDelay;
     this.requests = requests;
-    this.featureStore = config.featureStore;
 
     this.streamUri = `${config.serviceEndpoints.streaming}/all`;
   }
@@ -178,7 +176,11 @@ export default class StreamingProcessor implements LDStreamProcessor {
             this.logger?.debug(`Deleting ${key} in ${parsed.kind.namespace}`);
             // TODO: The interface didn't specify the callback was optional,
             // but previously it was not included here. Need to resolve.
-            this.featureStore.delete(parsed.kind, key, parsed.version, () => { });
+            this.featureStore.upsert(parsed.kind, {
+              key,
+              version: parsed.version,
+              deleted: true,
+            }, () => {});
           }
         }
       } else {

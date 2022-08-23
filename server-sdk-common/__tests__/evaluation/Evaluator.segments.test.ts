@@ -27,7 +27,8 @@ class TestQueries implements Queries {
     return this.data.segments?.find((segment) => segment.key === key);
   }
 
-  getBigSegmentsMembership(userKey: string): Promise<BigSegmentStoreMembership | undefined> {
+  getBigSegmentsMembership(userKey: string):
+  Promise<[BigSegmentStoreMembership | null, string] | undefined> {
     throw new Error('Method not implemented.');
   }
 }

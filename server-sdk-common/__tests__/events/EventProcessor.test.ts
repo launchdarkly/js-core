@@ -16,6 +16,7 @@ import {
   Response,
   SdkData,
 } from '../../src/platform';
+import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import basicPlatform from '../evaluation/mocks/platform';
 import { SDK_KEY } from './CustomMatchers';
 
@@ -782,7 +783,8 @@ describe('given an event processor with diagnostics manager', () => {
     resetRequestState();
     jest.spyOn(Date, 'now').mockImplementation(() => 1000);
 
-    const config = new Configuration({ capacity: 3 });
+    const store = new InMemoryFeatureStore();
+    const config = new Configuration({ capacity: 3, featureStore: store });
 
     // Cannot create a config with the recording interval this short, so
     // we need to make an object and replace the value.
@@ -793,7 +795,7 @@ describe('given an event processor with diagnostics manager', () => {
       // Replace info and requests.
       info,
       requests,
-    });
+    }, store);
 
     eventProcessor = new EventProcessor(SDK_KEY, testConfig, info, requests, diagnosticsManager);
   });
