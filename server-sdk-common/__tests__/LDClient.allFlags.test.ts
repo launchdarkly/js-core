@@ -2,6 +2,7 @@ import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
+import makeCallbacks from './makeCallbacks';
 
 const defaultUser = { key: 'user' };
 
@@ -21,12 +22,7 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger,
       },
-      () => { },
-      () => { },
-      () => { },
-      () => { },
-      // Always listen to events.
-      () => true,
+      makeCallbacks(true),
     );
 
     await client.waitForInitialization();
@@ -258,12 +254,7 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      () => { },
-      () => { },
-      () => { },
-      () => { },
-      // Always listen to events.
-      () => true,
+      makeCallbacks(true),
     );
   });
 
