@@ -2,7 +2,7 @@ import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
-import { makeCallbacks } from './makeCallbacks';
+import makeCallbacks from './makeCallbacks';
 
 const defaultUser = { key: 'user' };
 

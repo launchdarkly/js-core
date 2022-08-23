@@ -7,7 +7,7 @@ import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
-import { makeCallbacks } from './makeCallbacks';
+import makeCallbacks from './makeCallbacks';
 
 const defaultUser = { key: 'user' };
 

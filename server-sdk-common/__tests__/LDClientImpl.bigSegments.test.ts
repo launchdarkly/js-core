@@ -5,7 +5,7 @@ import TestData from '../src/integrations/test_data/TestData';
 import { Hasher, Crypto, Hmac } from '../src/platform';
 import { makeSegmentMatchClause } from './evaluation/flags';
 import basicPlatform from './evaluation/mocks/platform';
-import { makeCallbacks } from './makeCallbacks';
+import makeCallbacks from './makeCallbacks';
 
 const user = { key: 'userkey' };
 const bigSegment = {

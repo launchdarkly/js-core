@@ -2,7 +2,7 @@
 import { LDClientImpl } from '../src';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
-import { makeCallbacks } from './makeCallbacks';
+import makeCallbacks from './makeCallbacks';
 
 it('fires ready event in offline mode', (done) => {
   const client = new LDClientImpl(

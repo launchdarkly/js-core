@@ -3,7 +3,7 @@ import TestData from '../src/integrations/test_data/TestData';
 import AsyncQueue from './AsyncQueue';
 import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
-import { makeCallbacks } from './makeCallbacks';
+import makeCallbacks from './makeCallbacks';
 
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
