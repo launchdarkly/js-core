@@ -1,14 +1,20 @@
-import { integrations, interfaces, LDBigSegmentsOptions } from '@launchdarkly/js-server-sdk-common';
-import { LDClientImpl } from '../src';
+import {
+  integrations, interfaces, LDBigSegmentsOptions, LDLogger,
+} from '@launchdarkly/js-server-sdk-common';
+import { basicLogger, LDClientImpl } from '../src';
 import { LDClient } from '../src/api/LDClient';
 
 describe('given test data with big segments', () => {
   // To use the public interfaces to create a client which doesn't use the
   // network. (Versus being offline, or a null update processor.)
   let td: integrations.TestData;
+  let logger: LDLogger;
 
   beforeEach(() => {
     td = new integrations.TestData();
+    logger = basicLogger({
+      destination: () => {},
+    });
   });
 
   describe('given a healthy big segment store', () => {
@@ -118,6 +124,7 @@ describe('given test data with big segments', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
         bigSegments: bigSegmentsConfig,
+        logger,
       });
 
       await client.waitForInitialization();

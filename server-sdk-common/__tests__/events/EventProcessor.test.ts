@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Context } from '@launchdarkly/js-sdk-common';
+import { nanoid } from 'nanoid';
+import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import EventFactory from '../../src/events/EventFactory';
 import EventProcessor from '../../src/events/EventProcessor';
 import Configuration from '../../src/options/Configuration';
@@ -14,7 +16,102 @@ import {
   Response,
   SdkData,
 } from '../../src/platform';
+import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
+import basicPlatform from '../evaluation/mocks/platform';
 import { SDK_KEY } from './CustomMatchers';
+
+interface RequestState {
+  testHeaders: Record<string, string>;
+  testStatus: number;
+  requestsMade: Array<{ url: string; options: Options; }>;
+}
+
+// Mock the nanoid module so we can replace the implementation in specific tests.
+jest.mock('nanoid', () => ({
+  nanoid: jest.fn(() => jest.requireActual('nanoid').nanoid()),
+}));
+
+function makePlatform(requestState: RequestState) {
+  const info: Info = {
+    platformData(): PlatformData {
+      return {
+        os: {
+          name: 'An OS',
+          version: '1.0.1',
+          arch: 'An Arch',
+        },
+        name: 'The SDK Name',
+        additional: {
+          nodeVersion: '42',
+        },
+      };
+    },
+    sdkData(): SdkData {
+      return {
+        name: 'An SDK',
+        version: '2.0.2',
+      };
+    },
+  };
+
+  const waiters: Array<() => void> = [];
+  let callCount = 0;
+  const waitForMessages = async (count: number) => new Promise<number>((resolve) => {
+    const waiter = () => {
+      if (callCount >= count) {
+        resolve(callCount);
+      }
+    };
+    waiter();
+    waiters.push(waiter);
+  });
+
+  const requests: Requests = {
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    fetch(url: string, options?: Options): Promise<Response> {
+      return new Promise<Response>((a, r) => {
+        const headers: Headers = {
+          get(name: string): string | null {
+            return requestState.testHeaders[name] || null;
+          },
+          keys(): Iterable<string> {
+            throw new Error('Function not implemented.');
+          },
+          values(): Iterable<string> {
+            throw new Error('Function not implemented.');
+          },
+          entries(): Iterable<[string, string]> {
+            throw new Error('Function not implemented.');
+          },
+          has(name: string): boolean {
+            throw new Error('Function not implemented.');
+          },
+        };
+
+        const res: Response = {
+          headers,
+          status: requestState.testStatus,
+          text(): Promise<string> {
+            throw new Error('Function not implemented.');
+          },
+          json(): Promise<any> {
+            throw new Error('Function not implemented.');
+          },
+        };
+        requestState.requestsMade.push({ url, options: options! });
+        callCount += 1;
+        waiters.forEach((waiter) => waiter());
+        a(res);
+      });
+    },
+
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+      throw new Error('Function not implemented.');
+    },
+  };
+  return { info, requests, waitForMessages };
+}
 
 function makeSummary(start: number, end: number, count: number, version: number): any {
   return {
@@ -72,22 +169,25 @@ function makeFeatureEvent(
   };
 }
 
+const user = { key: 'userKey', name: 'Red' };
+
 describe('given an event processor', () => {
   let eventProcessor: EventProcessor;
-  let requestsMade: Array<{ url: string, options: Options }>;
 
-  let testHeaders: Record<string, string>;
-  let testStatus = 200;
+  const requestState: RequestState = {
+    requestsMade: [],
+    testHeaders: {},
+    testStatus: 200,
+  };
 
   function resetRequestState() {
-    requestsMade = [];
-    testHeaders = {};
-    testStatus = 200;
+    requestState.requestsMade = [];
+    requestState.testHeaders = {};
+    requestState.testStatus = 200;
   }
 
   const factory = new EventFactory(true);
 
-  const user = { key: 'userKey', name: 'Red' };
   const userWithFilteredName = {
     key: 'userKey',
     kind: 'user',
@@ -97,65 +197,16 @@ describe('given an event processor', () => {
   const anonUser = { key: 'anon-user', name: 'Anon', anonymous: true };
   const filteredUser = { key: 'userKey', kind: 'user', _meta: { redactedAttributes: ['name'] } };
 
-  const info: Info = {
-    platformData(): PlatformData {
-      return {};
-    },
-    sdkData(): SdkData {
-      const sdkData: SdkData = {
-        version: '2.2.2',
-      };
-      return sdkData;
-    },
-  };
-
-  const requests: Requests = {
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    fetch(url: string, options?: Options): Promise<Response> {
-      return new Promise<Response>((a, r) => {
-        const headers: Headers = {
-          get(name: string): string | null {
-            return testHeaders[name] || null;
-          },
-          keys(): Iterable<string> {
-            throw new Error('Function not implemented.');
-          },
-          values(): Iterable<string> {
-            throw new Error('Function not implemented.');
-          },
-          entries(): Iterable<[string, string]> {
-            throw new Error('Function not implemented.');
-          },
-          has(name: string): boolean {
-            throw new Error('Function not implemented.');
-          },
-        };
-
-        const res: Response = {
-          headers,
-          status: testStatus,
-          text(): Promise<string> {
-            throw new Error('Function not implemented.');
-          },
-          json(): Promise<any> {
-            throw new Error('Function not implemented.');
-          },
-        };
-        requestsMade.push({ url, options: options! });
-        a(res);
-      });
-    },
-
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-      throw new Error('Function not implemented.');
-    },
-  };
+  let info: Info;
+  let requests: Requests;
 
   beforeEach(() => {
     resetRequestState();
 
     const config = new Configuration();
+    const platform = makePlatform(requestState);
+    info = platform.info;
+    requests = platform.requests;
 
     eventProcessor = new EventProcessor(SDK_KEY, config, info, requests);
   });
@@ -166,11 +217,11 @@ describe('given an event processor', () => {
 
   it('queues an identify event', async () => {
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([{
+    expect(requestState.requestsMade[0]).toMatchEvents([{
       context: { ...user, kind: 'user' },
       creationDate: 1000,
       kind: 'identify',
@@ -179,11 +230,11 @@ describe('given an event processor', () => {
 
   it('filters user in identify event', async () => {
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(userWithFilteredName)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(userWithFilteredName)));
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([{
+    expect(requestState.requestsMade[0]).toMatchEvents([{
       context: { ...filteredUser, kind: 'user' },
       creationDate: 1000,
       kind: 'identify',
@@ -204,11 +255,11 @@ describe('given an event processor', () => {
       name: 9,
       anonymous: false,
       custom: { age: 99 },
-    } as any)!));
+    } as any)));
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([{
+    expect(requestState.requestsMade[0]).toMatchEvents([{
       kind: 'identify',
       creationDate: 1000,
       context: {
@@ -233,7 +284,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -244,7 +295,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -260,7 +311,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 0,
       variation: 1,
@@ -271,7 +322,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -287,7 +338,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -299,7 +350,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -315,7 +366,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -327,7 +378,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -341,12 +392,12 @@ describe('given an event processor', () => {
 
   it('expires debug mode based on client time if client time is later than server time', async () => {
     Date.now = jest.fn(() => 2000);
-    testHeaders.date = new Date(1000).toUTCString();
+    requestState.testHeaders.date = new Date(1000).toUTCString();
 
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1400,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -358,7 +409,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1400,
@@ -370,16 +421,16 @@ describe('given an event processor', () => {
 
   it('expires debug mode based on server time if server time is later than client time', async () => {
     Date.now = jest.fn(() => 1000);
-    testHeaders.date = new Date(2000).toUTCString();
+    requestState.testHeaders.date = new Date(2000).toUTCString();
 
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
 
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1400,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'flagkey',
       version: 11,
       variation: 1,
@@ -391,7 +442,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[1]).toMatchEvents([
+    expect(requestState.requestsMade[1]).toMatchEvents([
       makeSummary(1400, 1400, 1, 11),
     ]);
   });
@@ -399,7 +450,7 @@ describe('given an event processor', () => {
   it('generates only one index event from two feature events for same user', async () => {
     Date.now = jest.fn(() => 1000);
 
-    const context = Context.fromLDContext(user)!;
+    const context = Context.fromLDContext(user);
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
@@ -425,7 +476,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -475,7 +526,7 @@ describe('given an event processor', () => {
   it('summarizes nontracked events', async () => {
     Date.now = jest.fn(() => 1000);
 
-    const context = Context.fromLDContext(user)!;
+    const context = Context.fromLDContext(user);
     eventProcessor.sendEvent({
       kind: 'feature',
       creationDate: 1000,
@@ -501,7 +552,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -551,14 +602,14 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'custom',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'eventkey',
       data: { thing: 'stuff' },
     });
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -580,14 +631,14 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'custom',
       creationDate: 1000,
-      context: Context.fromLDContext(anonUser)!,
+      context: Context.fromLDContext(anonUser),
       key: 'eventkey',
       data: { thing: 'stuff' },
     });
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -610,7 +661,7 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent({
       kind: 'custom',
       creationDate: 1000,
-      context: Context.fromLDContext(user)!,
+      context: Context.fromLDContext(user),
       key: 'eventkey',
       data: { thing: 'stuff' },
       metricValue: 1.5,
@@ -618,7 +669,7 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    expect(requestsMade[0]).toMatchEvents([
+    expect(requestState.requestsMade[0]).toMatchEvents([
       {
         kind: 'index',
         creationDate: 1000,
@@ -639,43 +690,43 @@ describe('given an event processor', () => {
 
   it('it makes no network requests if there are no events to flush', async () => {
     eventProcessor.flush();
-    expect(requestsMade.length).toEqual(0);
+    expect(requestState.requestsMade.length).toEqual(0);
   });
 
   it('sends unique payload ids', async () => {
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     await eventProcessor.flush();
 
-    const headers1 = requestsMade[0].options.headers!;
-    const headers2 = requestsMade[1].options.headers!;
+    const headers1 = requestState.requestsMade[0].options.headers!;
+    const headers2 = requestState.requestsMade[1].options.headers!;
 
     expect(headers1['x-launchdarkly-payload-id']).not.toEqual(headers2['x-launchdarkly-payload-id']);
   });
 
   describe.each([400, 408, 429, 503])('given recoverable errors', (status) => {
     it(`retries - ${status}`, async () => {
-      testStatus = status;
-      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+      requestState.testStatus = status;
+      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
       await expect(eventProcessor.flush()).rejects.toThrow(`error ${status}`);
-      expect(requestsMade.length).toEqual(2);
+      expect(requestState.requestsMade.length).toEqual(2);
 
-      expect(requestsMade[0]).toEqual(requestsMade[1]);
+      expect(requestState.requestsMade[0]).toEqual(requestState.requestsMade[1]);
     });
   });
 
   describe.each([401, 403])('given unrecoverable errors', (status) => {
     it(`does not retry - ${status}`, async () => {
-      testStatus = status;
-      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+      requestState.testStatus = status;
+      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
       await expect(eventProcessor.flush()).rejects.toThrow(`error ${status}`);
-      expect(requestsMade.length).toEqual(1);
+      expect(requestState.requestsMade.length).toEqual(1);
 
-      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+      eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
       await expect(eventProcessor.flush()).rejects.toThrow(/SDK key is invalid/);
     });
   });
@@ -683,14 +734,237 @@ describe('given an event processor', () => {
   it('swallows errors from failed background flush', async () => {
     const config = new Configuration({ flushInterval: 0.1 });
 
-    testStatus = 500;
+    requestState.testStatus = 500;
 
     eventProcessor.close();
     eventProcessor = new EventProcessor(SDK_KEY, config, info, requests);
-    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)!));
+    eventProcessor.sendEvent(factory.identifyEvent(Context.fromLDContext(user)));
 
     // Need to wait long enough for the retry.
     await new Promise((r) => { setTimeout(r, 1500); });
-    expect(requestsMade.length).toEqual(2);
+    expect(requestState.requestsMade.length).toEqual(2);
+  });
+});
+
+describe('given an event processor with diagnostics manager', () => {
+  jest.mock('nanoid', () => ({ nanoid: () => '9-ypf7NswGfZ3CN2WpTix' }));
+
+  let eventProcessor: EventProcessor;
+
+  const requestState: RequestState = {
+    requestsMade: [],
+    testHeaders: {},
+    testStatus: 200,
+  };
+
+  function resetRequestState() {
+    requestState.requestsMade = [];
+    requestState.testHeaders = {};
+    requestState.testStatus = 200;
+  }
+
+  let info: Info;
+  let requests: Requests;
+
+  /**
+   * Wait for the total messages sent to be at least count.
+   */
+  let waitForMessages: (count: number) => Promise<number>;
+
+  beforeEach(() => {
+    // @ts-ignore
+    nanoid.mockImplementation(() => '9-ypf7NswGfZ3CN2WpTix');
+
+    const platform = makePlatform(requestState);
+    info = platform.info;
+    requests = platform.requests;
+    waitForMessages = platform.waitForMessages;
+
+    resetRequestState();
+    jest.spyOn(Date, 'now').mockImplementation(() => 1000);
+
+    const store = new InMemoryFeatureStore();
+    const config = new Configuration({ capacity: 3, featureStore: store });
+
+    // Cannot create a config with the recording interval this short, so
+    // we need to make an object and replace the value.
+    const testConfig = { ...config, diagnosticRecordingInterval: 0.1 };
+
+    const diagnosticsManager = new DiagnosticsManager('sdk-key', testConfig, {
+      ...basicPlatform,
+      // Replace info and requests.
+      info,
+      requests,
+    }, store);
+
+    eventProcessor = new EventProcessor(SDK_KEY, testConfig, info, requests, diagnosticsManager);
+  });
+
+  afterEach(() => {
+    eventProcessor.close();
+    jest.resetAllMocks();
+  });
+
+  it('sends initial diagnostic event', () => {
+    expect(requestState.requestsMade.length).toEqual(1);
+    expect(JSON.parse(requestState.requestsMade[0].options.body!)).toEqual(
+      {
+        configuration: {
+          allAttributesPrivate: false,
+          connectTimeoutMillis: 5000,
+          contextKeysCapacity: 1000,
+          contextKeysFlushIntervalMillis: 300000,
+          customBaseURI: false,
+          customEventsURI: false,
+          customStreamURI: false,
+          dataStoreType: 'memory',
+          diagnosticRecordingIntervalMillis: 100,
+          eventsCapacity: 3,
+          eventsFlushIntervalMillis: 5000,
+          offline: false,
+          pollingIntervalMillis: 30000,
+          reconnectTimeMillis: 1000,
+          socketTimeoutMillis: 5000,
+          streamingDisabled: false,
+          usingProxy: false,
+          usingProxyAuthenticator: false,
+          usingRelayDaemon: false,
+        },
+        creationDate: 1000,
+        id: {
+          diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+          sdkKeySuffix: 'dk-key',
+        },
+        kind: 'diagnostic-init',
+        platform: {
+          name: 'The SDK Name',
+          osName: 'An OS',
+          osVersion: '1.0.1',
+          osArch: 'An Arch',
+          nodeVersion: '42',
+        },
+        sdk: {
+          name: 'An SDK',
+          version: '2.0.2',
+        },
+      },
+    );
+  });
+
+  it('sends periodic diagnostic event', async () => {
+    let count = 0;
+    jest.spyOn(Date, 'now').mockImplementation(() => {
+      const inCount = count;
+      count += 1;
+      if (inCount === 0) {
+        return 2000;
+      }
+      if (inCount === 1) {
+        return 3000;
+      }
+      return 4000;
+    });
+
+    await waitForMessages(3);
+
+    const diag1 = requestState.requestsMade[1];
+    const diag2 = requestState.requestsMade[2];
+    expect(diag1.url).toContain('/diagnostic');
+    expect(diag2.url).toContain('/diagnostic');
+
+    const data = JSON.parse(diag1.options.body!);
+    expect(data.kind).toEqual('diagnostic');
+    expect(data.id).toEqual({
+      diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+      sdkKeySuffix: 'dk-key',
+    });
+    expect(data.creationDate).toEqual(2000);
+    expect(data.dataSinceDate).toEqual(1000);
+
+    expect(data.droppedEvents).toEqual(0);
+    expect(data.deduplicatedUsers).toEqual(0);
+    expect(data.eventsInLastBatch).toEqual(0);
+
+    const data2 = JSON.parse(diag2.options.body!);
+    expect(data2.kind).toEqual('diagnostic');
+    expect(data2.id).toEqual({
+      diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+      sdkKeySuffix: 'dk-key',
+    });
+    expect(data2.creationDate).toEqual(3000);
+    expect(data2.dataSinceDate).toEqual(2000);
+
+    expect(data2.droppedEvents).toEqual(0);
+    expect(data2.deduplicatedUsers).toEqual(0);
+    expect(data2.eventsInLastBatch).toEqual(0);
+  });
+
+  it('counts events in queue from last flush and dropped events', async () => {
+    const context = Context.fromLDContext(user);
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1000, context });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1001, context });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1002, context });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1003, context });
+    await eventProcessor.flush();
+
+    await waitForMessages(3);
+
+    const eventMessage = requestState.requestsMade.find((msg) => msg.url.endsWith('/bulk'));
+    expect(eventMessage).toBeDefined();
+    const eventMessageData = JSON.parse(eventMessage!.options.body!);
+    expect(eventMessageData).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'identify', creationDate: 1000 }),
+      expect.objectContaining({ kind: 'identify', creationDate: 1001 }),
+      expect.objectContaining({ kind: 'identify', creationDate: 1002 }),
+    ]));
+
+    const diagnosticMessage = requestState.requestsMade.find((msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic'));
+    expect(diagnosticMessage).toBeDefined();
+    const diagnosticMessageData = JSON.parse(diagnosticMessage!.options.body!);
+    expect(diagnosticMessageData).toEqual(expect.objectContaining({
+      kind: 'diagnostic',
+      id: {
+        diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+        sdkKeySuffix: 'dk-key',
+      },
+      droppedEvents: 1,
+      deduplicatedUsers: 0,
+      eventsInLastBatch: 3,
+    }));
+  });
+
+  it('counts de-duplicated users', async () => {
+    const context = Context.fromLDContext(user);
+    eventProcessor.sendEvent({
+      kind: 'custom', key: 'eventkey1', creationDate: 1000, context,
+    });
+    eventProcessor.sendEvent({
+      kind: 'custom', key: 'eventkey2', creationDate: 1001, context,
+    });
+    await eventProcessor.flush();
+
+    await waitForMessages(4);
+
+    const eventMessage = requestState.requestsMade.find((msg) => msg.url.endsWith('/bulk'));
+    expect(eventMessage).toBeDefined();
+    const eventMessageData = JSON.parse(eventMessage!.options.body!);
+    expect(eventMessageData).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: 'custom', creationDate: 1000 }),
+      expect.objectContaining({ kind: 'custom', creationDate: 1001 }),
+    ]));
+
+    const diagnosticMessage = requestState.requestsMade.find((msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic'));
+    expect(diagnosticMessage).toBeDefined();
+    const diagnosticMessageData = JSON.parse(diagnosticMessage!.options.body!);
+    expect(diagnosticMessageData).toEqual(expect.objectContaining({
+      kind: 'diagnostic',
+      id: {
+        diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+        sdkKeySuffix: 'dk-key',
+      },
+      droppedEvents: 0,
+      deduplicatedUsers: 1,
+      eventsInLastBatch: 3,
+    }));
   });
 });

@@ -22,6 +22,7 @@ import ErrorKinds from './evaluation/ErrorKinds';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
+import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
 import EventProcessor from './events/EventProcessor';
 import isExperiment from './events/isExperiment';
@@ -83,6 +84,8 @@ export default class LDClientImpl implements LDClient {
 
   private onReady: () => void;
 
+  private diagnosticsManager?: DiagnosticsManager;
+
   /**
    * Intended for use by platform specific client implementations.
    *
@@ -114,12 +117,17 @@ export default class LDClientImpl implements LDClient {
     const featureStore = config.featureStoreFactory(clientContext);
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
+    if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
+      this.diagnosticsManager = new DiagnosticsManager(sdkKey, config, platform, featureStore);
+    }
+
     const makeDefaultProcessor = () => (config.stream ? new StreamingProcessor(
       sdkKey,
       config,
       this.platform.requests,
       this.platform.info,
       dataSourceUpdates,
+      this.diagnosticsManager,
     ) : new PollingProcessor(
       config,
       new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
@@ -130,7 +138,7 @@ export default class LDClientImpl implements LDClient {
       this.updateProcessor = new NullUpdateProcessor();
     } else {
       this.updateProcessor = config.updateProcessorFactory?.(clientContext, dataSourceUpdates)
-        ?? makeDefaultProcessor();
+      ?? makeDefaultProcessor();
     }
 
     if (!config.sendEvents || config.offline) {
@@ -141,10 +149,12 @@ export default class LDClientImpl implements LDClient {
         config,
         this.platform.info,
         this.platform.requests,
+        this.diagnosticsManager,
       );
     }
 
     const asyncFacade = new AsyncStoreFacade(featureStore);
+
     this.featureStore = asyncFacade;
 
     const manager = new BigSegmentsManager(
@@ -240,7 +250,6 @@ export default class LDClientImpl implements LDClient {
       defaultValue,
       this.eventFactoryWithReasons,
     );
-
     callback?.(null, res.detail);
     return res.detail;
   }
@@ -258,12 +267,9 @@ export default class LDClientImpl implements LDClient {
     }
 
     const evalContext = Context.fromLDContext(context);
-    // TODO: Error reporting.
-    if (!evalContext) {
-      this.logger?.info('allFlagsState() called without context. Returning empty state.');
-      const allFlagState = new FlagsStateBuilder(false, false).build();
-      callback?.(null, allFlagState);
-      return allFlagState;
+    if (!evalContext.valid) {
+      this.logger?.info(`${evalContext.message ?? 'Invalid context.'}. Returning empty state.`);
+      return new FlagsStateBuilder(false, false).build();
     }
 
     let valid = true;
@@ -317,11 +323,10 @@ export default class LDClientImpl implements LDClient {
   }
 
   secureModeHash(context: LDContext): string {
-    const key = Context.fromLDContext(context)?.canonicalKey;
+    const checkedContext = Context.fromLDContext(context);
+    const key = checkedContext.valid ? checkedContext.canonicalKey : undefined;
     const hmac = this.platform.crypto.createHmac('sha256', this.sdkKey);
     if (key === undefined) {
-      // TODO: Better error. The old SDK did not check this condition, so
-      // it would throw ERR_INVALID_ARG_TYPE from the hmac update.
       throw new LDClientError('Could not generate secure mode hash for invalid context');
     }
     hmac.update(key);
@@ -341,8 +346,9 @@ export default class LDClientImpl implements LDClient {
 
   track(key: string, context: LDContext, data?: any, metricValue?: number): void {
     const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext) {
+    if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
     }
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
@@ -351,8 +357,9 @@ export default class LDClientImpl implements LDClient {
 
   identify(context: LDContext): void {
     const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext) {
+    if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
     }
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.identifyEvent(checkedContext!),
@@ -379,7 +386,8 @@ export default class LDClientImpl implements LDClient {
       return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
     }
     const evalContext = Context.fromLDContext(context);
-    if (!evalContext) {
+    if (!evalContext.valid) {
+      this.onError(new LDClientError(`${evalContext.message ?? 'Context not valid;'} returning default value.`));
       return EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue);
     }
 

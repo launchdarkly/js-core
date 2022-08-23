@@ -26,10 +26,6 @@ export interface PlatformData {
    * The name of the platform the SDK is running on. For instance 'Node'.
    */
   name?: string;
-  /**
-   * The version of the platform the SDK is running on. e.g. "13.1.0".
-   */
-  version?: string;
 
   /**
    * Any additional attributes associated with the platform.

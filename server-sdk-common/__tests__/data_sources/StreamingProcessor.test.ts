@@ -1,6 +1,7 @@
 import promisify from '../../src/async/promisify';
 import defaultHeaders from '../../src/data_sources/defaultHeaders';
 import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
+import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
 import {
   EventSource, EventSourceInitDict, Info, Options, PlatformData, Requests, Response, SdkData,
@@ -8,6 +9,7 @@ import {
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
+import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger, { LogLevel } from '../Logger';
 import MockEventSource from '../MockEventSource';
 
@@ -47,6 +49,7 @@ describe('given a stream processor with mock event source', () => {
   let config: Configuration;
   let asyncStore: AsyncStoreFacade;
   let logger: TestLogger;
+  let diagnosticsManager: DiagnosticsManager;
 
   beforeEach(() => {
     requests = createRequests((nes) => { es = nes; });
@@ -60,12 +63,14 @@ describe('given a stream processor with mock event source', () => {
       featureStore,
       logger,
     });
+    diagnosticsManager = new DiagnosticsManager('sdk-key', config, basicPlatform, featureStore);
     streamProcessor = new StreamingProcessor(
       sdkKey,
       config,
       requests,
       info,
       featureStore,
+      diagnosticsManager,
     );
   });
 
@@ -221,6 +226,7 @@ describe('given a stream processor with mock event source', () => {
     };
 
     it(`continues retrying after error: ${status}`, () => {
+      const startTime = Date.now();
       streamProcessor.start();
       es.simulateError(err as any);
 
@@ -230,11 +236,17 @@ describe('given a stream processor with mock event source', () => {
           : /Received I\/O error \(sorry\) for streaming request - will retry/,
       }]);
 
-      // TODO: Diagnostics.
+      const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+      expect(event.streamInits.length).toEqual(1);
+      const si = event.streamInits[0];
+      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+      expect(si.failed).toBeTruthy();
+      expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });
   });
 
   describe.each([401, 403])('given unrecoverable http errors', (status) => {
+    const startTime = Date.now();
     const err = {
       status,
       message: 'sorry',
@@ -249,7 +261,12 @@ describe('given a stream processor with mock event source', () => {
         matches: /Received error.*giving up permanently/,
       }]);
 
-      // TODO: Diagnostics.
+      const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+      expect(event.streamInits.length).toEqual(1);
+      const si = event.streamInits[0];
+      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+      expect(si.failed).toBeTruthy();
+      expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });
   });
 });

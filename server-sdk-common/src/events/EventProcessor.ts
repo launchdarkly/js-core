@@ -9,6 +9,7 @@ import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
 import Configuration from '../options/Configuration';
 import { Info, Requests } from '../platform';
+import DiagnosticsManager, { DiagnosticInitEvent, DiagnosticStatsEvent } from './DiagnosticsManager';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
@@ -51,7 +52,9 @@ interface FeatureOutputEvent {
 type OutputEvent = IdentifyOutputEvent
 | CustomOutputEvent
 | FeatureOutputEvent
-| SummarizedFlagsEvent;
+| SummarizedFlagsEvent
+| DiagnosticInitEvent
+| DiagnosticStatsEvent;
 
 /**
  * @internal
@@ -81,7 +84,9 @@ export default class EventProcessor implements LDEventProcessor {
 
   private contextFilter: ContextFilter;
 
-  private uri: string;
+  private eventsUri: string;
+
+  private diagnosticEventsUri: string;
 
   // Using any here, because setInterval handles are not the same
   // between node and web.
@@ -92,10 +97,16 @@ export default class EventProcessor implements LDEventProcessor {
   private flushUsersTimer: any;
 
   private defaultHeaders: {
-    [key: string]: string | string[];
+    [key: string]: string;
   };
 
-  constructor(sdkKey: string, config: Configuration, info: Info, private requests: Requests) {
+  constructor(
+    sdkKey: string,
+    config: Configuration,
+    info: Info,
+    private readonly requests: Requests,
+    private readonly diagnosticsManager?: DiagnosticsManager,
+  ) {
     this.capacity = config.eventsCapacity;
     this.logger = config.logger;
     this.contextKeysCache = new LruCache({ max: config.contextKeysCapacity });
@@ -103,11 +114,14 @@ export default class EventProcessor implements LDEventProcessor {
       config.allAttributesPrivate,
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
+
     this.defaultHeaders = {
       ...defaultHeaders(sdkKey, config, info),
-      'x-launchDarkly-event-schema': '4',
     };
-    this.uri = `${config.serviceEndpoints.events}/bulk`;
+
+    this.eventsUri = `${config.serviceEndpoints.events}/bulk`;
+
+    this.diagnosticEventsUri = `${config.serviceEndpoints.events}/diagnostic`;
 
     this.flushUsersTimer = setInterval(() => {
       this.contextKeysCache.clear();
@@ -121,7 +135,27 @@ export default class EventProcessor implements LDEventProcessor {
       }
     }, config.flushInterval * 1000);
 
-    // TODO: Implement diagnostics.
+    if (this.diagnosticsManager) {
+      const initEvent = diagnosticsManager!.createInitEvent();
+      this.postDiagnosticEvent(initEvent);
+
+      this.diagnosticsTimer = setInterval(() => {
+        const statsEvent = this.diagnosticsManager!.createStatsEventAndReset(
+          this.droppedEvents,
+          this.deduplicatedUsers,
+          this.eventsInLastBatch,
+        );
+
+        this.droppedEvents = 0;
+        this.deduplicatedUsers = 0;
+
+        this.postDiagnosticEvent(statsEvent);
+      }, config.diagnosticRecordingInterval * 1000);
+    }
+  }
+
+  private postDiagnosticEvent(event: DiagnosticInitEvent | DiagnosticStatsEvent) {
+    this.tryPostingEvents(event, this.diagnosticEventsUri, undefined, true).catch(() => {});
   }
 
   close() {
@@ -152,7 +186,7 @@ export default class EventProcessor implements LDEventProcessor {
 
     this.eventsInLastBatch = eventsToFlush.length;
     this.logger?.debug('Flushing %d events', eventsToFlush.length);
-    await this.tryPostingEvents(eventsToFlush, nanoid(), true);
+    await this.tryPostingEvents(eventsToFlush, this.eventsUri, nanoid(), true);
   }
 
   sendEvent(inputEvent: InputEvent) {
@@ -273,18 +307,22 @@ export default class EventProcessor implements LDEventProcessor {
   }
 
   private async tryPostingEvents(
-    events: OutputEvent[],
-    payloadId: string,
+    events: OutputEvent[] | OutputEvent,
+    uri: string,
+    payloadId: string | undefined,
     canRetry: boolean,
   ): Promise<void> {
     const headers = {
       ...this.defaultHeaders,
-      'x-launchdarkly-payload-id': payloadId,
     };
 
+    if (payloadId) {
+      headers['x-launchdarkly-payload-id'] = payloadId;
+      headers['x-launchDarkly-event-schema'] = '4';
+    }
     let error;
     try {
-      const res = await this.requests.fetch(this.uri, {
+      const res = await this.requests.fetch(uri, {
         headers,
         body: JSON.stringify(events),
         method: 'POST',
@@ -319,6 +357,6 @@ export default class EventProcessor implements LDEventProcessor {
     }
 
     await new Promise((r) => { setTimeout(r, 1000); });
-    await this.tryPostingEvents(events, payloadId, false);
+    await this.tryPostingEvents(events, this.eventsUri, payloadId, false);
   }
 }
