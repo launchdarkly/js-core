@@ -5,7 +5,6 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
-import ApplicationTags from '../../options/ApplicationTags';
 import ClientContext from '../../options/ClientContext';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
@@ -62,7 +61,6 @@ export interface EventProcessorOptions {
   allAttributesPrivate: boolean;
   privateAttributes: string[];
   eventsCapacity: number;
-  tags: ApplicationTags;
   flushInterval: number;
   diagnosticRecordingInterval: number;
 }
