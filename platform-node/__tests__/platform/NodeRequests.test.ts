@@ -1,6 +1,6 @@
 import * as http from 'http';
 
-import NodeRequests from '../src/platform/NodeRequests';
+import NodeRequests from '../../src/platform/NodeRequests';
 
 const PORT = '3333';
 const TEXT_RESPONSE = 'Test Text';
