@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ClientContext, EventSource, EventSourceInitDict, Headers, Info, Options, PlatformData, Requests, Response, SdkData } from '@launchdarkly/js-sdk-common';
+import {
+  ClientContext, EventSource, EventSourceInitDict, Headers,
+  Info, Options, PlatformData, Requests, Response, SdkData,
+} from '@launchdarkly/js-sdk-common';
 import { LDDeliveryStatus, LDEventType } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 import EventSender from '../../src/events/EventSender';
 import Configuration from '../../src/options/Configuration';
 import basicPlatform from '../evaluation/mocks/platform';
-
 
 describe('given an event sender', () => {
   let queue: AsyncQueue<{ url: string, options?: Options }>;
@@ -84,7 +86,10 @@ describe('given an event sender', () => {
     };
 
     const config = new Configuration({});
-    eventSender = new EventSender(config, new ClientContext('sdk-key', config, { ...basicPlatform, requests, info }));
+    eventSender = new EventSender(
+      config,
+      new ClientContext('sdk-key', config, { ...basicPlatform, requests, info }),
+    );
   });
 
   it('indicates a success for a success status', async () => {
@@ -128,14 +133,14 @@ describe('given an event sender', () => {
     await eventSender.sendEventData(LDEventType.AnalyticsEvents, { something: true });
     const req2 = await queue.take();
     expect(
-      req1.options!.headers!['x-launchdarkly-payload-id']
+      req1.options!.headers!['x-launchdarkly-payload-id'],
     ).not.toEqual(
-      req2.options!.headers!['x-launchdarkly-payload-id']
+      req2.options!.headers!['x-launchdarkly-payload-id'],
     );
   });
 
   it('can get server time', async () => {
-    requestHeaders['date'] = new Date(1000).toISOString();
+    requestHeaders.date = new Date(1000).toISOString();
     const res = await eventSender.sendEventData(LDEventType.AnalyticsEvents, { something: true });
     expect(res.serverTime).toEqual(new Date(1000).getTime());
   });
