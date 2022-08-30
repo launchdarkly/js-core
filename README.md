@@ -1,7 +1,7 @@
 # LaunchDarkly Server-Side SDK for JavaScript
 
 <!--
-These will need updated. Likely the NPM packge for node will be the same.
+These will need updated. Likely the NPM package for node will be the same.
 
  [![NPM](https://img.shields.io/npm/v/launchdarkly-node-server-sdk.svg?style=flat-square)](https://www.npmjs.com/package/launchdarkly-node-server-sdk)
 [![CircleCI](https://circleci.com/gh/launchdarkly/node-server-sdk.svg?style=svg)](https://circleci.com/gh/launchdarkly/node-server-sdk)

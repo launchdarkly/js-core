@@ -2,12 +2,12 @@
 /* eslint-disable class-methods-use-this */
 import {
   Context, LDContext, LDLogger,
-  LDEvaluationDetail, LDFlagsState,
+  LDEvaluationDetail,
   ClientContext, Platform, subsystem,
   internal,
 } from '@launchdarkly/js-sdk-common';
 import {
-  LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
+  LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor, LDFlagsState,
 } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';

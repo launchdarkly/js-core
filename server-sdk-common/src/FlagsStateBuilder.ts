@@ -1,5 +1,6 @@
-import { LDEvaluationReason, LDFlagSet, LDFlagsState } from '@launchdarkly/js-sdk-common';
+import { LDEvaluationReason, LDFlagSet } from '@launchdarkly/js-sdk-common';
 import { Flag } from './evaluation/data/Flag';
+import { LDFlagsState } from './api/data/LDFlagsState';
 
 interface FlagMeta {
   variation?: number,
