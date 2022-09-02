@@ -41,6 +41,10 @@ export default class Bucketer {
    * key will not be used.
    * @param kindForRollout The kind to use for bucketing.
    * @param seed A seed to use in hashing.
+   *
+   * @returns A tuple where the first value is the bucket, and the second value indicates if there
+   * was a context for the value specified by `kindForRollout`. If there was not a context for the
+   * specified kind, then the `inExperiment` attribute should be `false`.
    */
   bucket(
     context: Context,
@@ -50,13 +54,17 @@ export default class Bucketer {
     isExperiment: boolean,
     kindForRollout: string = 'user',
     seed?: number,
-  ): number {
+  ): [number, boolean] {
     const value = context.valueForKind(attr, kindForRollout);
     const bucketableValue = valueForBucketing(value);
 
     // Bucketing cannot be done by the specified attribute value.
     if (bucketableValue === null) {
-      return 0;
+      // If we got a value, then we know there was a context, but if we didn't get a value, then
+      // it could either be there wasn't an attribute, the attribute was undefined/null, or there
+      // was not a context. So here check for the context.
+      const hadContext = context.kinds.indexOf(kindForRollout) >= 0;
+      return [0, hadContext];
     }
 
     const secondary = context.secondary(kindForRollout) ?? null;
@@ -70,6 +78,6 @@ export default class Bucketer {
     // ideal.
     // The maximum safe integer representation in JS is 2^53 - 1.
     // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
-    return hashVal / 0xfffffffffffffff;
+    return [hashVal / 0xfffffffffffffff, true];
   }
 }

@@ -384,7 +384,7 @@ export default class Evaluator {
           );
         }
 
-        const bucket = this.bucketer.bucket(
+        const [bucket, hadContext] = this.bucketer.bucket(
           context,
           flag.key,
           bucketBy,
@@ -401,7 +401,8 @@ export default class Evaluator {
           const variate = variations[i];
           sum += variate.weight / 100000.0;
           if (bucket < sum) {
-            updatedReason.inExperiment = (isExperiment && !variate.untracked) || undefined;
+            updatedReason.inExperiment = (isExperiment && hadContext && !variate.untracked)
+              || undefined;
             return getVariation(flag, variate.variation, updatedReason);
           }
         }
@@ -447,7 +448,7 @@ export default class Evaluator {
       if (!bucketBy.isValid) {
         return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
       }
-      const bucket = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
+      const [bucket] = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
       return new Match(bucket < rule.weight);
     }
 
