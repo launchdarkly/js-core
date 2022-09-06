@@ -401,8 +401,9 @@ export default class Evaluator {
           const variate = variations[i];
           sum += variate.weight / 100000.0;
           if (bucket < sum) {
-            updatedReason.inExperiment = (isExperiment && hadContext && !variate.untracked)
-              || undefined;
+            if (isExperiment && hadContext && !variate.untracked) {
+              updatedReason.inExperiment = true;
+            }
             return getVariation(flag, variate.variation, updatedReason);
           }
         }
@@ -415,7 +416,9 @@ export default class Evaluator {
         // which would potentially change the results for *all* users), we will
         // simply put the context in the last bucket.
         const lastVariate = variations[variations.length - 1];
-        updatedReason.inExperiment = (isExperiment && !lastVariate.untracked) || undefined;
+        if (isExperiment && !lastVariate.untracked) {
+          updatedReason.inExperiment = true;
+        }
         return getVariation(flag, lastVariate.variation, updatedReason);
       }
     }
