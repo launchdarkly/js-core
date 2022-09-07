@@ -384,7 +384,7 @@ export default class Evaluator {
           );
         }
 
-        const bucket = this.bucketer.bucket(
+        const [bucket, hadContext] = this.bucketer.bucket(
           context,
           flag.key,
           bucketBy,
@@ -401,7 +401,9 @@ export default class Evaluator {
           const variate = variations[i];
           sum += variate.weight / 100000.0;
           if (bucket < sum) {
-            updatedReason.inExperiment = (isExperiment && !variate.untracked) || undefined;
+            if (isExperiment && hadContext && !variate.untracked) {
+              updatedReason.inExperiment = true;
+            }
             return getVariation(flag, variate.variation, updatedReason);
           }
         }
@@ -414,7 +416,9 @@ export default class Evaluator {
         // which would potentially change the results for *all* users), we will
         // simply put the context in the last bucket.
         const lastVariate = variations[variations.length - 1];
-        updatedReason.inExperiment = (isExperiment && !lastVariate.untracked) || undefined;
+        if (isExperiment && !lastVariate.untracked) {
+          updatedReason.inExperiment = true;
+        }
         return getVariation(flag, lastVariate.variation, updatedReason);
       }
     }
@@ -447,7 +451,7 @@ export default class Evaluator {
       if (!bucketBy.isValid) {
         return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
       }
-      const bucket = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
+      const [bucket] = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
       return new Match(bucket < rule.weight);
     }
 

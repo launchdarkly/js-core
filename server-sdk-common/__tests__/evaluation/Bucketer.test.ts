@@ -121,11 +121,22 @@ describe.each<[
     const attrRef = new AttributeReference(attr);
 
     const bucketer = new Bucketer(crypto);
+    const [bucket, hadContext] = bucketer.bucket(
+      validatedContext!,
+      key,
+      attrRef,
+      salt,
+      isExperiment,
+      kindForRollout,
+      seed,
+    );
+
     // The hasher always returns the same value. This just checks that it converts it to a number
     // in the expected way.
     expect(
-      bucketer.bucket(validatedContext!, key, attrRef, salt, isExperiment, kindForRollout, seed),
+      bucket,
     ).toBeCloseTo(0.07111111110140983, 5);
+    expect(hadContext).toBeTruthy();
     expect(hasher.update).toHaveBeenCalledWith(expected);
     expect(hasher.digest).toHaveBeenCalledWith('hex');
   });
@@ -140,11 +151,11 @@ describe.each([
   ['org', 'array'],
   ['org', 'null'],
   ['bad', 'key'],
-])('when given a non string or integer reference', (attr) => {
+])('when given a non string or integer reference', (kind, attr) => {
   it('buckets to 0 when given bad data', () => {
     const validatedContext = Context.fromLDContext({
       key: 'context-key',
-      kind: 'org',
+      kind,
       object: {},
       array: [],
       null: null,
@@ -152,7 +163,17 @@ describe.each([
     const attrRef = new AttributeReference(attr);
 
     const bucketer = new Bucketer(crypto);
-    expect(bucketer.bucket(validatedContext!, 'key', attrRef, 'salty', false, 'org', undefined)).toEqual(0);
+    const [bucket, hadContext] = bucketer.bucket(
+      validatedContext!,
+      'key',
+      attrRef,
+      'salty',
+      false,
+      'org',
+      undefined,
+    );
+    expect(bucket).toEqual(0);
+    expect(hadContext).toEqual(kind === 'org');
     expect(hasher.update).toBeCalledTimes(0);
     expect(hasher.digest).toBeCalledTimes(0);
   });
