@@ -1,9 +1,12 @@
-import Configuration from '../options/Configuration';
-import { Info } from '../platform';
+import { ApplicationTags, Info } from '@launchdarkly/js-sdk-common';
+
+export interface DefaultHeaderOptions {
+  tags: ApplicationTags;
+}
 
 export default function defaultHeaders(
   sdkKey: string,
-  config: Configuration,
+  config: DefaultHeaderOptions,
   info: Info,
 ): { [key: string]: string } {
   const sdkData = info.sdkData();

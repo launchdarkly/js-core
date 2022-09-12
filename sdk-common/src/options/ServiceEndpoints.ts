@@ -4,8 +4,6 @@ function canonicalizeUri(uri: string): string {
 
 /**
  * Specifies the base service URIs used by SDK components.
- *
- * @internal
  */
 export default class ServiceEndpoints {
   public readonly streaming: string;

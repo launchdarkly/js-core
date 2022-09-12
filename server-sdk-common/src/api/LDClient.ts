@@ -1,8 +1,8 @@
-import { LDContext } from '@launchdarkly/js-sdk-common';
-import { LDEvaluationDetail } from './data/LDEvaluationDetail';
-import { LDFlagsState } from './data/LDFlagsState';
+import {
+  LDContext, LDEvaluationDetail, LDFlagValue,
+} from '@launchdarkly/js-sdk-common';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
-import { LDFlagValue } from './data/LDFlagValue';
+import { LDFlagsState } from './data/LDFlagsState';
 
 /**
  * The LaunchDarkly SDK client object.

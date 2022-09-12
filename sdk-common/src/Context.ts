@@ -3,7 +3,7 @@
 import {
   LDSingleKindContext, LDMultiKindContext, LDUser, LDContextCommon,
 } from './api/context';
-import { LDContext } from './api/LDContext';
+import { LDContext } from './api/context/LDContext';
 import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
 

@@ -5,6 +5,9 @@ import ContextFilter from './ContextFilter';
 export * from './api';
 export * from './validators';
 export * from './logging';
+export * from './options';
+
+export * as internal from './internal';
 
 export {
   AttributeReference,

@@ -122,6 +122,7 @@ it('the wait for initialization promise is rejected if initialization fails', (d
         stop: () => { },
         close: () => { },
       },
+      sendEvents: false,
     },
     makeCallbacks(false),
   );

@@ -1,8 +1,5 @@
-import InputEvent from './InputEvent';
+import InputEvent from '../../internal/events/InputEvent';
 
-/**
- * @internal
- */
 export default interface LDEventProcessor {
   close(): void;
   flush(): Promise<void>;

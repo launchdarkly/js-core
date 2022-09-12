@@ -1,11 +1,6 @@
-import { Context } from '@launchdarkly/js-sdk-common';
-import { LDEvaluationDetail, LDEvaluationReason } from '../api';
-import { Flag } from '../evaluation/data/Flag';
-import isExperiment from './isExperiment';
+import { LDEvaluationReason, LDEvaluationDetail } from '../../api/data';
+import Context from '../../Context';
 
-/**
- * @internal
- */
 export default class InputEvalEvent {
   public readonly kind = 'feature';
 
@@ -35,8 +30,12 @@ export default class InputEvalEvent {
     public readonly key: string,
     defValue: any, // default is a reserved keyword in this context.
     detail: LDEvaluationDetail,
-    public readonly flag?: Flag,
-    prereqOf?: Flag,
+    version?: number,
+    variation?: number,
+    trackEvents?: boolean,
+    prereqOf?: string,
+    reason?: LDEvaluationReason,
+    debugEventsUntilDate?: number,
   ) {
     this.creationDate = Date.now();
     this.context = context;
@@ -44,25 +43,28 @@ export default class InputEvalEvent {
     this.variation = detail.variationIndex ?? undefined;
     this.value = detail.value;
 
-    if (flag) {
-      const addExperimentData = isExperiment(flag, detail.reason);
-      this.version = flag.version;
+    if (version !== undefined) {
+      this.version = version;
+    }
 
-      if (addExperimentData || flag.trackEvents) {
-        this.trackEvents = true;
-      }
+    if (variation !== undefined) {
+      this.variation = variation;
+    }
 
-      if (flag.debugEventsUntilDate) {
-        this.debugEventsUntilDate = flag.debugEventsUntilDate;
-      }
+    if (trackEvents !== undefined) {
+      this.trackEvents = trackEvents;
+    }
 
-      if (prereqOf) {
-        this.prereqOf = prereqOf.key;
-      }
+    if (prereqOf !== undefined) {
+      this.prereqOf = prereqOf;
+    }
 
-      if (addExperimentData || withReasons) {
-        this.reason = detail.reason;
-      }
+    if (reason !== undefined) {
+      this.reason = reason;
+    }
+
+    if (debugEventsUntilDate !== undefined) {
+      this.debugEventsUntilDate = debugEventsUntilDate;
     }
   }
 }

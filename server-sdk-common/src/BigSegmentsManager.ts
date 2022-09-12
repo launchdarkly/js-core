@@ -1,9 +1,8 @@
-import { LDLogger, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { LDLogger, TypeValidators, Crypto } from '@launchdarkly/js-sdk-common';
 import { LDBigSegmentsOptions } from './api';
 import { BigSegmentStore, BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentStoreStatusProviderImpl from './BigSegmentStatusProviderImpl';
 import LruCache from './cache/LruCache';
-import { Crypto } from './platform';
 
 const DEFAULT_STALE_AFTER_SECONDS = 120;
 const DEFAULT_STATUS_POLL_INTERVAL_SECONDS = 5;

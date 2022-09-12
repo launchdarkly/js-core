@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  EventSource, EventSourceInitDict, Info, Options, Platform, PlatformData,
+  Requests, Response, SdkData,
+} from '@launchdarkly/js-sdk-common';
 import { DataKind } from '../../src/api/interfaces';
 import {
   LDFeatureStore, LDFeatureStoreDataStorage, LDFeatureStoreItem,
@@ -6,10 +10,6 @@ import {
 } from '../../src/api/subsystems';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
-import {
-  EventSource, EventSourceInitDict, Info, Options, Platform, PlatformData,
-  Requests, Response, SdkData,
-} from '../../src/platform';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import { crypto } from '../evaluation/mocks/hasher';
 

@@ -1,19 +1,15 @@
-import {
-  AttributeReference, ContextFilter, LDLogger,
-} from '@launchdarkly/js-sdk-common';
-import { nanoid } from 'nanoid';
-import { LDEvaluationReason } from '../api';
-import LruCache from '../cache/LruCache';
-import defaultHeaders from '../data_sources/defaultHeaders';
-import httpErrorMessage from '../data_sources/httpErrorMessage';
-import { isHttpRecoverable, LDInvalidSDKKeyError, LDUnexpectedResponseError } from '../errors';
-import Configuration from '../options/Configuration';
-import { Info, Requests } from '../platform';
-import DiagnosticsManager, { DiagnosticInitEvent, DiagnosticStatsEvent } from './DiagnosticsManager';
+import { LDEvaluationReason } from '../../api/data/LDEvaluationReason';
+import { LDLogger } from '../../api/logging/LDLogger';
+import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
+import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
+import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
+import AttributeReference from '../../AttributeReference';
+import ContextFilter from '../../ContextFilter';
+import ClientContext from '../../options/ClientContext';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
-import LDEventProcessor from './LDEventProcessor';
+import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 
 type FilteredContext = any;
 
@@ -49,16 +45,35 @@ interface FeatureOutputEvent {
   contextKeys?: Record<string, string>;
 }
 
+/**
+ * The event processor doesn't need to know anything about the shape of the
+ * diagnostic events.
+ */
+type DiagnosticEvent = any;
+
 type OutputEvent = IdentifyOutputEvent
 | CustomOutputEvent
 | FeatureOutputEvent
 | SummarizedFlagsEvent
-| DiagnosticInitEvent
-| DiagnosticStatsEvent;
+| DiagnosticEvent;
 
-/**
- * @internal
- */
+export interface EventProcessorOptions {
+  allAttributesPrivate: boolean;
+  privateAttributes: string[];
+  eventsCapacity: number;
+  flushInterval: number;
+  diagnosticRecordingInterval: number;
+}
+
+interface LDDiagnosticsManager {
+  createInitEvent(): DiagnosticEvent;
+  createStatsEventAndReset(
+    droppedEvents: number,
+    deduplicatedUsers: number,
+    eventsInLastBatch: number,
+  ): DiagnosticEvent;
+}
+
 export default class EventProcessor implements LDEventProcessor {
   private summarizer = new EventSummarizer();
 
@@ -80,13 +95,7 @@ export default class EventProcessor implements LDEventProcessor {
 
   private logger?: LDLogger;
 
-  private contextKeysCache: LruCache;
-
   private contextFilter: ContextFilter;
-
-  private eventsUri: string;
-
-  private diagnosticEventsUri: string;
 
   // Using any here, because setInterval handles are not the same
   // between node and web.
@@ -94,38 +103,28 @@ export default class EventProcessor implements LDEventProcessor {
 
   private flushTimer: any;
 
-  private flushUsersTimer: any;
-
-  private defaultHeaders: {
-    [key: string]: string;
-  };
+  private flushUsersTimer: any = null;
 
   constructor(
-    sdkKey: string,
-    config: Configuration,
-    info: Info,
-    private readonly requests: Requests,
-    private readonly diagnosticsManager?: DiagnosticsManager,
+    config: EventProcessorOptions,
+    clientContext: ClientContext,
+    private readonly eventSender: LDEventSender,
+    private readonly contextDeduplicator: LDContextDeduplicator,
+    private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
-    this.logger = config.logger;
-    this.contextKeysCache = new LruCache({ max: config.contextKeysCapacity });
+    this.logger = clientContext.basicConfiguration.logger;
+
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
-    this.defaultHeaders = {
-      ...defaultHeaders(sdkKey, config, info),
-    };
-
-    this.eventsUri = `${config.serviceEndpoints.events}/bulk`;
-
-    this.diagnosticEventsUri = `${config.serviceEndpoints.events}/diagnostic`;
-
-    this.flushUsersTimer = setInterval(() => {
-      this.contextKeysCache.clear();
-    }, config.contextKeysFlushInterval * 1000);
+    if (this.contextDeduplicator.flushInterval !== undefined) {
+      this.flushUsersTimer = setInterval(() => {
+        this.contextDeduplicator.flush();
+      }, this.contextDeduplicator.flushInterval * 1000);
+    }
 
     this.flushTimer = setInterval(async () => {
       try {
@@ -154,13 +153,18 @@ export default class EventProcessor implements LDEventProcessor {
     }
   }
 
-  private postDiagnosticEvent(event: DiagnosticInitEvent | DiagnosticStatsEvent) {
-    this.tryPostingEvents(event, this.diagnosticEventsUri, undefined, true).catch(() => {});
+  private postDiagnosticEvent(event: DiagnosticEvent) {
+    this.eventSender.sendEventData(
+      LDEventType.DiagnosticEvent,
+      event,
+    );
   }
 
   close() {
     clearInterval(this.flushTimer);
-    clearInterval(this.flushUsersTimer);
+    if (this.flushUsersTimer) {
+      clearInterval(this.flushUsersTimer);
+    }
     if (this.diagnosticsTimer) {
       clearInterval(this.diagnosticsTimer);
     }
@@ -186,7 +190,7 @@ export default class EventProcessor implements LDEventProcessor {
 
     this.eventsInLastBatch = eventsToFlush.length;
     this.logger?.debug('Flushing %d events', eventsToFlush.length);
-    await this.tryPostingEvents(eventsToFlush, this.eventsUri, nanoid(), true);
+    await this.tryPostingEvents(eventsToFlush);
   }
 
   sendEvent(inputEvent: InputEvent) {
@@ -201,17 +205,16 @@ export default class EventProcessor implements LDEventProcessor {
     const addDebugEvent = this.shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
-    const inCache = this.contextKeysCache.get(inputEvent.context.canonicalKey);
+    const shouldNotDeduplicate = this.contextDeduplicator.processContext(inputEvent.context);
 
-    if (inCache) {
+    // If there is no cache, then it will never be in the cache.
+    if (!shouldNotDeduplicate) {
       if (!isIdentifyEvent) {
         this.deduplicatedUsers += 1;
       }
     }
 
-    this.contextKeysCache.set(inputEvent.context.canonicalKey, true);
-
-    const addIndexEvent = !inCache && !isIdentifyEvent;
+    const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
     if (addIndexEvent) {
       this.enqueue({
@@ -308,55 +311,18 @@ export default class EventProcessor implements LDEventProcessor {
 
   private async tryPostingEvents(
     events: OutputEvent[] | OutputEvent,
-    uri: string,
-    payloadId: string | undefined,
-    canRetry: boolean,
   ): Promise<void> {
-    const headers = {
-      ...this.defaultHeaders,
-    };
-
-    if (payloadId) {
-      headers['x-launchdarkly-payload-id'] = payloadId;
-      headers['x-launchDarkly-event-schema'] = '4';
-    }
-    let error;
-    try {
-      const res = await this.requests.fetch(uri, {
-        headers,
-        body: JSON.stringify(events),
-        method: 'POST',
-      });
-
-      const serverDate = Date.parse(res.headers.get('date') || '');
-      if (serverDate) {
-        this.lastKnownPastTime = serverDate;
-      }
-
-      if (res.status <= 204) {
-        return;
-      }
-
-      error = new LDUnexpectedResponseError(
-        httpErrorMessage(
-          { status: res.status, message: 'some events were dropped' },
-          'event posting',
-        ),
-      );
-
-      if (!isHttpRecoverable(res.status)) {
-        this.shutdown = true;
-        throw error;
-      }
-    } catch (err) {
-      error = err;
+    const res = await this.eventSender.sendEventData(LDEventType.AnalyticsEvents, events);
+    if (res.status === LDDeliveryStatus.FailedAndMustShutDown) {
+      this.shutdown = true;
     }
 
-    if (this.shutdown || (error && !canRetry)) {
-      throw error;
+    if (res.serverTime) {
+      this.lastKnownPastTime = res.serverTime;
     }
 
-    await new Promise((r) => { setTimeout(r, 1000); });
-    await this.tryPostingEvents(events, this.eventsUri, payloadId, false);
+    if (res.error) {
+      throw res.error;
+    }
   }
 }

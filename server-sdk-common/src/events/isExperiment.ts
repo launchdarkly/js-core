@@ -1,4 +1,4 @@
-import { LDEvaluationReason } from '../api';
+import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../evaluation/data/Flag';
 
 /**

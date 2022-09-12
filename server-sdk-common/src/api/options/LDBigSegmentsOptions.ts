@@ -1,5 +1,5 @@
+import { LDClientContext } from '@launchdarkly/js-sdk-common';
 import { BigSegmentStore } from '../interfaces';
-import { LDClientContext } from './LDClientContext';
 
 /**
  * Additional parameters for configuring the SDK's Big Segments behavior.

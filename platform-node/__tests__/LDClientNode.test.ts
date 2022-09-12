@@ -19,6 +19,7 @@ it('fires the failed event if initialization fails', (done) => {
       },
       stop: () => { },
       close: () => { },
+      sendEvents: false,
     },
   });
   client.on('failed', () => {

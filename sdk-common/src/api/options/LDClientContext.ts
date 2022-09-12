@@ -1,5 +1,5 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
-import { Platform } from '../../platform';
+import { LDLogger } from '../logging';
+import { Platform } from '../platform';
 
 /**
  * Specifies the base service URIs used by SDK components.

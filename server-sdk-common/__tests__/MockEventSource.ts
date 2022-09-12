@@ -1,4 +1,4 @@
-import { EventSource, EventSourceInitDict } from '../src/platform';
+import { EventSource, EventSourceInitDict } from '@launchdarkly/js-sdk-common';
 
 export default class MockEventSource implements EventSource {
   handlers: Record<string, (event?: { data?: any; }) => void> = {};

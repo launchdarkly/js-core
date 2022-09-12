@@ -1,15 +1,15 @@
+import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 import { LDFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
 import DataSourceUpdates from '../../src/data_sources/DataSourceUpdates';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import AsyncQueue from '../AsyncQueue';
 
 describe.each([true, false])('given a DataSourceUpdates with in memory store and change listeners: %s', (listen) => {
   let store: LDFeatureStore;
   let updates: DataSourceUpdates;
 
-  const queue = new AsyncQueue();
+  const queue = new AsyncQueue<string>();
 
   beforeEach(() => {
     store = new InMemoryFeatureStore();
@@ -17,7 +17,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
     updates = new DataSourceUpdates(
       store,
       () => listen,
-      (key) => queue.push(key),
+      (key) => queue.add(key),
     );
   });
 
@@ -38,7 +38,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       expect(await queue.take()).toEqual('a');
       expect(await queue.take()).toEqual('b');
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
   });
 
   it('sends events for re-init of non-empty store', async () => {
@@ -69,7 +69,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       expect(await queue.take()).toEqual('b');
       expect(await queue.take()).toEqual('c');
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
 
     await promisify((cb) => {
       updates.init(allData1, () => {
@@ -82,7 +82,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       expect(await queue.take()).toEqual('b'); // Different version
       expect(await queue.take()).toEqual('c'); // Deleted
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
   });
 
   it('sends events for upserts', async () => {
@@ -100,7 +100,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
     if (listen) {
       expect(await queue.take()).toEqual('a');
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
 
     // Upsert the same thing twice. Should only be 1 event.
     promisify((cb) => {
@@ -113,7 +113,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
     if (listen) {
       expect(await queue.take()).toEqual('a');
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
   });
 
   it('sends events for transitive dependencies', async () => {
@@ -148,7 +148,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
       expect(await queue.take()).toEqual('d');
       expect(await queue.take()).toEqual('e');
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
 
     promisify((cb) => {
       updates.upsert(
@@ -163,7 +163,7 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
         [await queue.take(), await queue.take(), await queue.take()].sort(),
       ).toEqual(['b', 'c', 'd']);
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
 
     promisify((cb) => {
       updates.upsert(
@@ -176,6 +176,6 @@ describe.each([true, false])('given a DataSourceUpdates with in memory store and
     if (listen) {
       expect([await queue.take(), await queue.take()].sort()).toEqual(['b', 'c']);
     }
-    expect(queue.empty()).toBeTruthy();
+    expect(queue.isEmpty()).toBeTruthy();
   });
 });

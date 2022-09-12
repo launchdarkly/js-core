@@ -1,13 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable class-methods-use-this */
-import { Context, LDContext, LDLogger } from '@launchdarkly/js-sdk-common';
 import {
-  LDClient, LDEvaluationDetail, LDFlagsState, LDFlagsStateOptions, LDOptions, LDStreamProcessor,
+  Context, LDContext, LDLogger,
+  LDEvaluationDetail,
+  ClientContext, Platform, subsystem,
+  internal,
+} from '@launchdarkly/js-sdk-common';
+import {
+  LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor, LDFlagsState,
 } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
-import ClientContext from './ClientContext';
 import ClientMessages from './ClientMessages';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
@@ -22,15 +26,14 @@ import ErrorKinds from './evaluation/ErrorKinds';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
+import ContextDeduplicator from './events/ContextDeduplicator';
 import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
-import EventProcessor from './events/EventProcessor';
+import EventSender from './events/EventSender';
 import isExperiment from './events/isExperiment';
-import LDEventProcessor from './events/LDEventProcessor';
 import NullEventProcessor from './events/NullEventProcessor';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
-import { Platform } from './platform';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
@@ -62,7 +65,7 @@ export default class LDClientImpl implements LDClient {
 
   private eventFactoryWithReasons = new EventFactory(true);
 
-  private eventProcessor: LDEventProcessor;
+  private eventProcessor: subsystem.LDEventProcessor;
 
   private evaluator: Evaluator;
 
@@ -144,11 +147,11 @@ export default class LDClientImpl implements LDClient {
     if (!config.sendEvents || config.offline) {
       this.eventProcessor = new NullEventProcessor();
     } else {
-      this.eventProcessor = new EventProcessor(
-        sdkKey,
+      this.eventProcessor = new internal.EventProcessor(
         config,
-        this.platform.info,
-        this.platform.requests,
+        clientContext,
+        new EventSender(config, clientContext),
+        new ContextDeduplicator(config),
         this.diagnosticsManager,
       );
     }

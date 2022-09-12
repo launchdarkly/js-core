@@ -1,7 +1,5 @@
-import { Context } from '@launchdarkly/js-sdk-common';
+import { Context, internal } from '@launchdarkly/js-sdk-common';
 import { LDClientImpl } from '../src';
-import EventProcessor from '../src/events/EventProcessor';
-import InputEvent from '../src/events/InputEvent';
 import TestData from '../src/integrations/test_data/TestData';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
@@ -11,13 +9,13 @@ const anonymousUser = { key: 'anon-user', anonymous: true };
 
 describe('given a client with mock event processor', () => {
   let client: LDClientImpl;
-  let events: InputEvent[];
+  let events: internal.InputEvent[];
   let td: TestData;
 
   beforeEach(async () => {
     events = [];
-    jest.spyOn(EventProcessor.prototype, 'sendEvent').mockImplementation((evt) => events.push(evt));
-    jest.spyOn(EventProcessor.prototype, 'flush').mockImplementation(() => Promise.resolve());
+    jest.spyOn(internal.EventProcessor.prototype, 'sendEvent').mockImplementation((evt) => events.push(evt));
+    jest.spyOn(internal.EventProcessor.prototype, 'flush').mockImplementation(() => Promise.resolve());
 
     td = new TestData();
     client = new LDClientImpl(

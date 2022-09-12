@@ -1,7 +1,7 @@
-import InputEvalEvent from './InputEvalEvent';
 import { isFeature } from './guards';
-import SummaryCounter from './SummaryCounter';
+import InputEvalEvent from './InputEvalEvent';
 import InputEvent from './InputEvent';
+import SummaryCounter from './SummaryCounter';
 
 function counterKey(event: InputEvalEvent) {
   return `${event.key
