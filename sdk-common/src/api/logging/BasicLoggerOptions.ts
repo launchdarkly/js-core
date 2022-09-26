@@ -16,6 +16,11 @@ export interface BasicLoggerOptions {
   level?: LDLogLevel;
 
   /**
+   * Name to use for the log entires. The default name is `LaunchDarkly`.
+   */
+  name?: string;
+
+  /**
    * An optional function to use to print each log line.
    *
    * If this is specified, `basicLogger` calls it to write each line of output. The

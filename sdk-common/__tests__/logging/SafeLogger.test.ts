@@ -26,6 +26,11 @@ describe('given a logger that throws in logs', () => {
     logger.info('b');
     logger.warn('c');
     logger.error('d');
-    expect(strings).toEqual(['a', 'b', 'c', 'd']);
+    expect(strings).toEqual([
+      'debug: [LaunchDarkly] a',
+      'info: [LaunchDarkly] b',
+      'warn: [LaunchDarkly] c',
+      'error: [LaunchDarkly] d',
+    ]);
   });
 });
