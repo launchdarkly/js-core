@@ -9,6 +9,8 @@ const LogPriority = {
   none: 4,
 };
 
+const LevelNames = ['debug', 'info', 'warn', 'error', 'none'];
+
 /**
  * A basic logger which handles filtering by level.
  *
@@ -23,12 +25,15 @@ const LogPriority = {
 export default class BasicLogger implements LDLogger {
   private logLevel: number;
 
+  private name: string;
+
   private destination?: (line: string) => void;
 
   private formatter?: (...args: any[]) => string;
 
   constructor(options: BasicLoggerOptions) {
     this.logLevel = LogPriority[options.level ?? 'info'] ?? LogPriority.info;
+    this.name = options.name ?? 'LaunchDarkly';
     // eslint-disable-next-line no-console
     this.destination = options.destination;
     this.formatter = options.formatter;
@@ -57,9 +62,10 @@ export default class BasicLogger implements LDLogger {
 
   private log(level: number, args: any[]) {
     if (level >= this.logLevel) {
+      const prefix = `${LevelNames[level]}: [${this.name}]`;
       try {
         if (this.destination) {
-          this.tryWrite(this.tryFormat(...args));
+          this.tryWrite(this.tryFormat(prefix, ...args));
         } else {
           // `console.error` has its own formatter.
           // So we don't need to do anything.
