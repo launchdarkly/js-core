@@ -46,7 +46,6 @@ describe.each([
   [new AttributeReference(' /a/b', true), { ' /a/b': true }, true],
   [new AttributeReference(' /a/b', false), { ' /a/b': true }, true],
   [new AttributeReference('/a/b'), { a: { b: 'c' } }, 'c'],
-  [new AttributeReference('/a/1'), { a: ['b', 'c'] }, 'c'],
 ])('when given valid attribute references', (reference, object, expected) => {
   it('should be valid', () => {
     expect(reference.isValid).toBeTruthy();
@@ -71,4 +70,9 @@ describe.each([
   it('should not be able to get a value', () => {
     expect(reference.get(AsContextCommon(object))).toBeUndefined();
   });
+});
+
+it('should not allow indexing an array', () => {
+  expect(new AttributeReference('/foo/0')
+    .get(AsContextCommon({ foo: ['bar', 'baz'] }))).toBeUndefined();
 });

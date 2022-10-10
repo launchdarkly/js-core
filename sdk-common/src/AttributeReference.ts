@@ -117,6 +117,8 @@ export default class AttributeReference {
         // See https://eslint.org/docs/rules/no-prototype-builtins
         && Object.prototype.hasOwnProperty.call(current, component)
         && typeof current === 'object'
+        // We do not want to allow indexing into an array.
+        && !Array.isArray(current)
       ) {
         current = current[component];
       } else {
