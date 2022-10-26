@@ -35,7 +35,6 @@ describe.each([
     name: 'context name',
     custom: { cat: 'calico', '/dog~~//': 'lab' },
     anonymous: true,
-    secondary: 'secondary',
     privateAttributeNames: ['/dog~~//'],
   },
   {
@@ -44,7 +43,7 @@ describe.each([
     name: 'context name',
     cat: 'calico',
     anonymous: true,
-    _meta: { secondary: 'secondary', privateAttributes: ['/~1dog~0~0~1~1'] },
+    _meta: { privateAttributes: ['/~1dog~0~0~1~1'] },
   },
   {
     kind: 'multi',
@@ -53,7 +52,7 @@ describe.each([
       cat: 'calico',
       anonymous: true,
       name: 'context name',
-      _meta: { secondary: 'secondary', privateAttributes: ['/~1dog~0~0~1~1'] },
+      _meta: { privateAttributes: ['/~1dog~0~0~1~1'] },
     },
   },
 ])('given a series of equivalent good user contexts', (ldConext) => {
@@ -74,7 +73,6 @@ describe.each([
     // Canonical keys for 'user' contexts are just the key.
     expect(context?.canonicalKey).toEqual('test');
     expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
-    expect(context?.secondary('user')).toEqual('secondary');
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName)
       .toEqual(new AttributeReference('/~1dog~0~0~1~1').redactionName);
@@ -99,7 +97,6 @@ describe('given a valid legacy user without custom attributes', () => {
     name: 'context name',
     custom: { cat: 'calico', '/dog~~//': 'lab' },
     anonymous: true,
-    secondary: 'secondary',
     privateAttributeNames: ['/dog~~//'],
   });
 
@@ -114,7 +111,6 @@ describe('given a valid legacy user without custom attributes', () => {
     // Canonical keys for 'user' contexts are just the key.
     expect(context?.canonicalKey).toEqual('test');
     expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
-    expect(context?.secondary('user')).toEqual('secondary');
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName)
       .toEqual(new AttributeReference('/~1dog~0~0~1~1').redactionName);
@@ -136,10 +132,6 @@ describe.each([
     expect(context?.canonicalKey).toEqual(encoded);
   });
 
-  it('secondary should not be defined when not present', () => {
-    expect(context?.secondary('org')).toBeUndefined();
-  });
-
   it('should have the correct kinds', () => {
     expect(context?.kinds).toEqual(['org']);
   });
@@ -147,42 +139,6 @@ describe.each([
   it('should have the correct kinds and keys', () => {
     expect(context?.kindsAndKeys).toEqual({ org: key });
   });
-});
-
-it('secondary should be defined when present', () => {
-  const context = Context.fromLDContext({
-    kind: 'org',
-    // Key will be URL encoded.
-    key: 'Org/Key',
-    value: 'OrgValue',
-    _meta: { secondary: 'secondary' },
-  });
-  expect(context?.secondary('org')).toEqual('secondary');
-});
-
-it('secondary should be undefined when meta is present, but secondary is not', () => {
-  const context = Context.fromLDContext({
-    kind: 'org',
-    // Key will be URL encoded.
-    key: 'Org/Key',
-    value: 'OrgValue',
-    _meta: {},
-  });
-  expect(context?.secondary('org')).toBeUndefined();
-});
-
-it('secondary key should be undefined when not a string', () => {
-  const context = Context.fromLDContext({
-    // @ts-ignore
-    kind: 'org',
-    // Key will be URL encoded.
-    key: 'Org/Key',
-    // @ts-ignore
-    value: 'OrgValue',
-    // @ts-ignore
-    _meta: { secondary: 17 }, // This really displeases typescript.
-  });
-  expect(context?.secondary('org')).toBeUndefined();
 });
 
 describe('given a multi-kind context', () => {
@@ -197,9 +153,6 @@ describe('given a multi-kind context', () => {
     org: {
       key: 'OrgKey',
       value: 'OrgValue',
-      _meta: {
-        secondary: 'value',
-      },
     },
   });
 
@@ -210,9 +163,6 @@ describe('given a multi-kind context', () => {
   it('should get values from the correct context', () => {
     expect(context?.valueForKind(new AttributeReference('value'), 'org')).toEqual('OrgValue');
     expect(context?.valueForKind(new AttributeReference('value'), 'user')).toEqual('UserValue');
-
-    expect(context?.secondary('org')).toEqual('value');
-    expect(context?.secondary('user')).toBeUndefined();
   });
 
   it('should have the correct kinds', () => {

@@ -345,7 +345,6 @@ describe('when handling mult-kind contexts', () => {
         b: 'b',
       },
       _meta: {
-        secondary: 'order',
         privateAttributes: ['letters', '/object/b'],
       },
     },
@@ -362,7 +361,6 @@ describe('when handling mult-kind contexts', () => {
     user: {
       key: 'abc',
       _meta: {
-        secondary: 'order',
         redactedAttributes: ['letters', 'name', 'object', 'order'],
       },
     },
@@ -387,7 +385,6 @@ describe('when handling mult-kind contexts', () => {
         a: 'a',
       },
       _meta: {
-        secondary: 'order',
         redactedAttributes: ['/object/b', 'letters', 'name'],
       },
     },
@@ -411,7 +408,6 @@ describe('when handling mult-kind contexts', () => {
         a: 'a',
       },
       _meta: {
-        secondary: 'order',
         redactedAttributes: ['/object/b', 'letters'],
       },
     },

@@ -36,8 +36,6 @@ export default class Bucketer {
    * @param key A key to use in hashing. Typically the flag key or the segment key.
    * @param attr The attribute to use for bucketing.
    * @param salt A salt to use in hashing.
-   * @param isExperiment Indicates if this rollout is an experiment. If it is, then the secondary
-   * key will not be used.
    * @param kindForRollout The kind to use for bucketing.
    * @param seed A seed to use in hashing.
    *
@@ -50,7 +48,6 @@ export default class Bucketer {
     key: string,
     attr: AttributeReference,
     salt: string,
-    isExperiment: boolean,
     kindForRollout: string = 'user',
     seed?: number,
   ): [number, boolean] {
@@ -66,11 +63,8 @@ export default class Bucketer {
       return [0, hadContext];
     }
 
-    const secondary = context.secondary(kindForRollout) ?? null;
-    const useSecondary = secondary !== null && !isExperiment;
-
     const prefix = seed ? Number(seed) : `${key}.${salt}`;
-    const hashKey = `${prefix}.${bucketableValue}${useSecondary ? `.${secondary}` : ''}`;
+    const hashKey = `${prefix}.${bucketableValue}`;
     const hashVal = parseInt(this.sha1Hex(hashKey).substring(0, 15), 16);
 
     // This is how this has worked in previous implementations, but it is not

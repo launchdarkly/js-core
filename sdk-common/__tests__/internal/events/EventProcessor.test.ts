@@ -220,7 +220,6 @@ describe('given an event processor', () => {
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext({
       key: 1,
-      secondary: 2,
       ip: 3,
       country: 4,
       email: 5,
@@ -246,7 +245,6 @@ describe('given an event processor', () => {
       name: '9',
       age: 99,
       anonymous: false,
-      _meta: { secondary: '2' },
     });
     expect(request.data[0].creationDate).toEqual(1000);
     expect(request.data[0].kind).toEqual('identify');

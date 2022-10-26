@@ -142,13 +142,6 @@ export default class ContextFilter {
       cloned._meta.redactedAttributes = excluded;
     }
     if (cloned._meta) {
-      if (cloned._meta.secondary === null) {
-        delete cloned._meta.secondary;
-      }
-      if (cloned._meta.secondary !== undefined) {
-        // TODO: May need to circle back to this. Convert up-front, or disallow.
-        cloned._meta.secondary = String(cloned._meta.secondary);
-      }
       delete cloned._meta.privateAttributes;
       if (Object.keys(cloned._meta).length === 0) {
         delete cloned._meta;
