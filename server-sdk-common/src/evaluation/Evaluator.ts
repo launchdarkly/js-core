@@ -388,7 +388,6 @@ export default class Evaluator {
           flag.key,
           bucketBy,
           flag.salt || '', // TODO: This may need some handling.
-          isExperiment,
           rollout.contextKind,
           rollout.seed,
         );
@@ -450,7 +449,7 @@ export default class Evaluator {
       if (!bucketBy.isValid) {
         return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
       }
-      const [bucket] = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', false, rule.rolloutContextKind);
+      const [bucket] = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', rule.rolloutContextKind);
       return new Match(bucket < rule.weight);
     }
 

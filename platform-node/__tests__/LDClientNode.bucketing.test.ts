@@ -79,12 +79,4 @@ describe('given a client with test data', () => {
     expect(detail.variationIndex).toEqual(0);
     expect(detail.reason.inExperiment).toBe(true);
   });
-
-  it('does not use the secondary key for experiments', async () => {
-    const user = { key: 'userKeyA', secondary: 'secondary' };
-    const detail = await client.variationDetail(flagKey, user, null);
-    expect(detail.reason).toEqual({ inExperiment: true, kind: 'FALLTHROUGH' });
-    expect(detail.variationIndex).toEqual(0);
-    expect(detail.reason.inExperiment).toBe(true);
-  });
 });

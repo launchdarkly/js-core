@@ -133,8 +133,7 @@ function defined(value: any) {
  */
 function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   const singleKindContext: LDSingleKindContext = {
-    // Key and secondary were coerced to strings for eval
-    // and for events, so we can make them strings up-front.
+    // Key was coerced to a string for eval and events, so we can do that up-front.
     ...(user.custom || []),
     kind: 'user',
     key: String(user.key),
@@ -148,13 +147,6 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
     const anonymous = !!user.anonymous;
     delete singleKindContext.anonymous;
     singleKindContext.anonymous = anonymous;
-  }
-
-  if (defined(user.secondary)) {
-    singleKindContext._meta = {};
-    const { secondary } = user;
-    delete singleKindContext.secondary;
-    singleKindContext._meta.secondary = String(secondary);
   }
 
   if (user.name !== null && user.name !== undefined) {
@@ -395,20 +387,6 @@ export default class Context {
    */
   public key(kind: string = DEFAULT_KIND): string | undefined {
     return this.contextForKind(kind)?.key;
-  }
-
-  /**
-   * Attempt to get a secondary key from a context.
-   * @param kind The kind of the context to get the secondary key for.
-   * @returns the secondary key, or undefined if not present or not a string.
-   */
-  public secondary(kind: string = DEFAULT_KIND): string | undefined {
-    const context = this.contextForKind(kind);
-    if (defined(context?._meta?.secondary)
-      && TypeValidators.String.is(context?._meta?.secondary)) {
-      return context?._meta?.secondary;
-    }
-    return undefined;
   }
 
   /**

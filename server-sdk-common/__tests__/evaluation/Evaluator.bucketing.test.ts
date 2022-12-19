@@ -54,12 +54,4 @@ describe('given a flag with a rollout', () => {
     expect(res.detail.variationIndex).toEqual(0);
     expect(res.detail.reason.inExperiment).toBe(true);
   });
-
-  it('does not use the secondary key for experiments', async () => {
-    const user = { key: 'userKeyA', secondary: 'secondary' };
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
-    expect(res.isError).toBeFalsy();
-    expect(res.detail.variationIndex).toEqual(0);
-    expect(res.detail.reason.inExperiment).toBe(true);
-  });
 });

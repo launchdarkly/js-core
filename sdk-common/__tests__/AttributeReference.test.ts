@@ -16,7 +16,6 @@ describe.each([
   new AttributeReference('', true),
   new AttributeReference('_meta'),
   new AttributeReference('/_meta'),
-  new AttributeReference('/_meta/secondary'),
 ])('when given invalid attribute references', (reference) => {
   it('should not be valid', () => {
     expect(reference.isValid).toBeFalsy();
@@ -28,7 +27,7 @@ describe.each([
       '//': true,
       '/~3': true,
       '': true,
-      _meta: { secondary: true },
+      _meta: { },
     }))).toBeUndefined();
   });
 });
