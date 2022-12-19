@@ -3,6 +3,7 @@
   "workspaces": [
     "sdk-common",
     "server-sdk-common",
+    "platform-fastly",
     "platform-node"
   ],
   "scripts": {

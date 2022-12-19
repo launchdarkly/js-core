@@ -13,5 +13,8 @@
     {
       "path": "./platform-node/tsconfig.ref.json"
     },
+    {
+      "path": "./platform-fastly/tsconfig.ref.json"
+    },
   ],
 }
