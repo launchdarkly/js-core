@@ -7,7 +7,7 @@
  */
 export interface Hasher {
   update(data: string): Hasher;
-  digest(encoding: string): string;
+  digest(encoding: string): string
 }
 
 /**

@@ -1,5 +1,5 @@
 import * as os from 'os';
-import NodeInfo from '../../src/platform/NodeInfo';
+import NodeInfo from '../../src/platform/FastlyInfo';
 
 describe('given an information instance', () => {
   const info = new NodeInfo();

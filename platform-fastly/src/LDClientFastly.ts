@@ -1,56 +1,48 @@
 // eslint-disable-next-line max-classes-per-file
 import {
   LDClientImpl, LDOptions,
-  BasicLogger, SafeLogger,
+  BasicLogger,
 } from '@launchdarkly/js-server-sdk-common';
 
-import { EventEmitter } from 'events';
-import { format } from 'util';
 import FastlyPlatform from './platform/FastlyPlatform';
-import { Emits } from './Emits';
-
-class ClientEmitter extends EventEmitter { }
 
 class LDClientFastly extends LDClientImpl {
-  emitter: EventEmitter;
+  emitter: EventTarget;
 
   constructor(sdkKey: string, options: LDOptions) {
     const fallbackLogger = new BasicLogger({
       level: 'info',
       // eslint-disable-next-line no-console
       destination: console.error,
-      formatter: format,
     });
 
-    const emitter = new ClientEmitter();
+    const emitter = new EventTarget();
+    const logger = fallbackLogger;
 
-    const logger = options.logger ? new SafeLogger(options.logger, fallbackLogger) : fallbackLogger;
     super(
       sdkKey,
       new FastlyPlatform({ ...options, logger }),
       { ...options, logger },
       {
         onError: (err: Error) => {
-          if (emitter.listenerCount('error')) {
-            emitter.emit('error', err);
-          }
+          emitter.dispatchEvent(new CustomEvent('error', { detail: err }));
         },
         onFailed: (err: Error) => {
-          emitter.emit('failed', err);
+          emitter.dispatchEvent(new CustomEvent('failed', { detail: err }));
         },
         onReady: () => {
-          emitter.emit('ready');
+          emitter.dispatchEvent(new Event('ready'));
         },
         onUpdate: (key: string) => {
-          emitter.emit('update', { key });
-          emitter.emit(`update:${key}`, { key });
+          emitter.dispatchEvent(new CustomEvent('update', { detail: key }));
+          emitter.dispatchEvent(new CustomEvent(`update:${key}`, { detail: key }));
         },
-        hasEventListeners: () => emitter.eventNames().some((name) => name === 'update' || (typeof name === 'string' && name.startsWith('update:'))),
+        hasEventListeners: () => false,
       },
     );
-    this.emitter = emitter;
 
+    this.emitter = emitter;
   }
 }
 
-export default Emits(LDClientFastly);
+export default LDClientFastly;

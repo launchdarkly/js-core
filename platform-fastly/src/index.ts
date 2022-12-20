@@ -1,7 +1,6 @@
 import {
   BasicLogger, BasicLoggerOptions, LDLogger, LDOptions, LDClient,
 } from '@launchdarkly/js-server-sdk-common';
-import { EventEmitter } from 'events';
 import LDClientImpl from './LDClientFastly';
 
 export * from '@launchdarkly/js-server-sdk-common';
@@ -12,7 +11,8 @@ export * from '@launchdarkly/js-server-sdk-common';
 export { LDClient } from './api';
 export { LDClientImpl };
 
-export function init(sdkKey: string, options: LDOptions): LDClient & EventEmitter {
+// @ts-ignore
+export function init(sdkKey: string, options: LDOptions): LDClient {
   return new LDClientImpl(sdkKey, options);
 }
 

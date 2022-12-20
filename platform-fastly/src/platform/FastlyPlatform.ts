@@ -1,6 +1,6 @@
 import { LDOptions, platform } from '@launchdarkly/js-server-sdk-common';
 import FastlyCrypto from './FastlyCrypto';
-import NodeInfo from './NodeInfo';
+import NodeInfo from './FastlyInfo';
 
 export default class FastlyPlatform implements platform.Platform {
   info: platform.Info = new NodeInfo();
@@ -10,7 +10,10 @@ export default class FastlyPlatform implements platform.Platform {
   requests: platform.Requests;
 
   constructor(options: LDOptions) {
-    //@ts-ignore
-    this.requests = new fetch(options.tlsParams, options.proxyOptions);
+    // @ts-ignore
+    this.requests = fetch(options.tlsParams, {
+      backend: 'ldstream',
+      ...options.proxyOptions,
+    });
   }
 }

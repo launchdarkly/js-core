@@ -79,7 +79,7 @@ export default class LDClientImpl implements LDClient {
 
   private config: Configuration;
 
-  private bigSegmentsManager: BigSegmentsManager;
+  private bigSegmentsManager?: BigSegmentsManager;
 
   private onError: (err: Error) => void;
 
@@ -340,7 +340,9 @@ export default class LDClientImpl implements LDClient {
     this.eventProcessor.close();
     this.updateProcessor.close();
     this.featureStore.close();
-    this.bigSegmentsManager.close();
+    if (this.bigSegmentsManager) {
+      this.bigSegmentsManager.close();
+    }
   }
 
   isOffline(): boolean {
