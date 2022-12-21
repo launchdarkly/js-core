@@ -18,5 +18,5 @@
     "resolveJsonModule": true,
     "stripInternal": true,
     "moduleResolution": "node"
-  },
+  }
 }
