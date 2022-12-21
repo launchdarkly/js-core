@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable class-methods-use-this */
-import { LDProxyOptions, LDTLSOptions, platform } from '@launchdarkly/js-server-sdk-common';
+import {
+  EventSourceInitDict, LDProxyOptions, LDTLSOptions, platform,
+} from '@launchdarkly/js-server-sdk-common';
+import FastlyEventSource from './FastlyEventSource';
 // @ts-ignore
 // import { EventSource as LDEventSource } from 'js-eventsource';
 
@@ -18,14 +21,14 @@ export default class FastlyRequests implements platform.Requests {
     this.hasProxyAuth = !!proxyOptions?.auth;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
     // @ts-ignore
-    return fetch(options.tlsParams, {
-      // @ts-ignore
+    return fetch(url, options, {
       backend: 'ldstream',
     });
   }
 
-  // @ts-ignore
+  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): platform.EventSource {
+    return new FastlyEventSource(url, eventSourceInitDict);
+  }
 }

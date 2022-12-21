@@ -1,37 +1,34 @@
 /* eslint-disable class-methods-use-this */
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
-import * as crypto from 'crypto-js';
+import * as CryptoJS from 'crypto-js';
+
+const FORMATS: { [algo: string]: any } = {
+  sha1: CryptoJS.algo.SHA1,
+  sha256: CryptoJS.algo.SHA256,
+};
+
+const ENCODINGS: { [algo: string]: any } = {
+  hex: CryptoJS.enc.Hex,
+  base64: CryptoJS.enc.Base64,
+};
 
 export default class FastlyHash implements platform.Hasher {
-  hashFormat: string;
+  // TODO: Cannot seem to find the hasher type exported.
+  hasher: any;
 
   constructor(algorithm: string) {
-    this.hashFormat = algorithm;
+    const algoImpl = FORMATS[algorithm];
+    this.hasher = algoImpl?.create();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   update(data: string): platform.Hasher {
-    return new FastlyHash(this.hashFormat);
+    this.hasher?.update(data);
+    return this;
   }
 
   digest(encoding: string) {
-    return this.getHash()!.create().finalize(encoding).toString();
-  }
-
-  private getHash() {
-    let hashType;
-    switch (this.hashFormat) {
-      case 'sha1':
-        hashType = crypto.algo.SHA1;
-        break;
-      case 'sha256':
-        hashType = crypto.algo.SHA256;
-        break;
-      default:
-        break;
-    }
-
-    return hashType;
+    const hash = this.hasher.finalize();
+    return hash.toString(ENCODINGS[encoding]);
   }
 }

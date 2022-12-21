@@ -5,9 +5,9 @@
     "target": "es6",
     "lib": [
       "es6",
-      "DOM"
+      "DOM",
+      "DOM.Iterable"
     ],
-    "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
     // Needed for CommonJS modules: markdown-it, fs-extra

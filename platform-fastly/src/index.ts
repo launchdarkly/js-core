@@ -11,7 +11,6 @@ export * from '@launchdarkly/js-server-sdk-common';
 export { LDClient } from './api';
 export { LDClientImpl };
 
-// @ts-ignore
 export function init(sdkKey: string, options: LDOptions): LDClient {
   return new LDClientImpl(sdkKey, options);
 }

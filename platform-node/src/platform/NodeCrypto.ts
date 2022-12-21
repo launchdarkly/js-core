@@ -9,6 +9,5 @@ export default class NodeCrypto implements platform.Crypto {
   }
 
   createHmac(algorithm: string, key: string): platform.Hmac {
-    return crypto.createHmac(algorithm, key);
-  }
+    return crypto.createHmac(algorithm, key)
 }
