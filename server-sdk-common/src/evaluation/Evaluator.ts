@@ -451,7 +451,7 @@ export default class Evaluator {
       }
 
       const [bucket] = this.bucketer.bucket(context, segment.key, bucketBy, segment.salt || '', rule.rolloutContextKind);
-      return new Match(bucket < rule.weight);
+      return new Match(bucket < (rule.weight / 10000.0));
     }
 
     return new Match(false);
