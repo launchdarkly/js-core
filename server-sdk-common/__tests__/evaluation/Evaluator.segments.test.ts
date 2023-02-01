@@ -1,6 +1,8 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { AttributeReference, Context, Crypto, Hasher, Hmac, LDContext } from '@launchdarkly/js-sdk-common';
+import {
+  AttributeReference, Context, Crypto, Hasher, Hmac, LDContext,
+} from '@launchdarkly/js-sdk-common';
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
@@ -28,7 +30,7 @@ class TestQueries implements Queries {
   }
 
   getBigSegmentsMembership(userKey: string):
-    Promise<[BigSegmentStoreMembership | null, string] | undefined> {
+  Promise<[BigSegmentStoreMembership | null, string] | undefined> {
     throw new Error('Method not implemented.');
   }
 }
