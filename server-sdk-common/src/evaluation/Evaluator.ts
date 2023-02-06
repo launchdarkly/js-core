@@ -424,11 +424,11 @@ export default class Evaluator {
   }
 
   async segmentRuleMatchContext(
+    segment: Segment,
     rule: SegmentRule,
     context: Context,
     state: EvalState,
     segmentsVisited: string[],
-    salt?: string,
   ): Promise<MatchOrError> {
     let errorResult: EvalResult | undefined;
     const match = await allSeriesAsync(rule.clauses, async (clause) => {
@@ -449,8 +449,9 @@ export default class Evaluator {
       if (!bucketBy.isValid) {
         return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
       }
-      const [bucket] = this.bucketer.bucket(context, 'TODO: Key', bucketBy, salt || '', rule.rolloutContextKind);
-      return new Match(bucket < rule.weight);
+
+      const [bucket] = this.bucketer.bucket(context, segment.key, bucketBy, segment.salt || '', rule.rolloutContextKind);
+      return new Match(bucket < (rule.weight / 100000.0));
     }
 
     return new Match(false);
@@ -471,11 +472,11 @@ export default class Evaluator {
     let evalResult: EvalResult | undefined;
     const matched = await firstSeriesAsync(segment.rules, async (rule) => {
       const res = await this.segmentRuleMatchContext(
+        segment,
         rule,
         context,
         state,
         segmentsVisited,
-        segment.salt,
       );
       evalResult = res.result;
       return res.error || res.isMatch;

@@ -1,6 +1,8 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
+import {
+  AttributeReference, Context, Crypto, Hasher, Hmac, LDContext,
+} from '@launchdarkly/js-sdk-common';
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
@@ -203,6 +205,72 @@ describe('when evaluating user equivalent contexts for segments', () => {
     const flag = makeFlagWithSegmentMatch(segment);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
     expect(res.detail.value).toBe(false);
+  });
+
+  it('incorporates the segment key when bucketing', async () => {
+    const hashUpdates: string[] = [];
+
+    const hasher: Hasher = {
+      update: (data) => {
+        hashUpdates.push(data);
+        return hasher;
+      },
+      digest: jest.fn(() => '1234567890123456'),
+    };
+
+    const crypto: Crypto = {
+      createHash(algorithm: string): Hasher {
+        expect(algorithm).toEqual('sha1');
+        return hasher;
+      },
+      createHmac(algorithm: string, key: string): Hmac {
+        // Not used for this test.
+        throw new Error(`Function not implemented.${algorithm}${key}`);
+      },
+    };
+
+    const bucketingPlatform = { ...basicPlatform, crypto };
+    const context = Context.fromLDContext({ contextKind: 'user', key: 'userkey' });
+
+    const segment1: Segment = {
+      key: 'b',
+      salt: 'same',
+      rules: [
+        {
+          id: 'id',
+          clauses: [matchClause],
+          weight: 5000,
+        },
+      ],
+      version: 1,
+    };
+    const segment2: Segment = {
+      key: 'abcd',
+      salt: 'same',
+      rules: [
+        {
+          id: 'id',
+          clauses: [matchClause],
+          weight: 5000,
+        },
+      ],
+      version: 1,
+    };
+    const evaluator = new Evaluator(bucketingPlatform, new TestQueries({
+      segments: [
+        segment1,
+        segment2,
+      ],
+    }));
+    const flag1 = makeFlagWithSegmentMatch(segment1);
+    const flag2 = makeFlagWithSegmentMatch(segment2);
+
+    await evaluator.evaluate(flag1, context);
+    await evaluator.evaluate(flag2, context);
+
+    expect(hashUpdates.length).toBe(2);
+    expect(hashUpdates[0]).toBe('b.same.userkey');
+    expect(hashUpdates[1]).toBe('abcd.same.userkey');
   });
 });
 
