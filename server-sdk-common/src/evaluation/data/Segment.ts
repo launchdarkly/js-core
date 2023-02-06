@@ -13,8 +13,6 @@ export interface Segment extends Versioned {
   unbounded?: boolean;
   unboundedContextKind?: string;
   generation?: number;
-  bucketBy?: string;
-  rolloutContextKind?: string;
 
   // This field is not part of the schema, but it is populated during parsing.
   bucketByAttributeReference?: AttributeReference,
