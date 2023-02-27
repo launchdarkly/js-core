@@ -6,8 +6,8 @@ export interface LDContextMeta {
   /**
    *
    * Designate any number of Context attributes, or properties within them, as private: that is,
-   * teir values will not be sent to LaunchDarkly.
-   * 
+   * their values will not be sent to LaunchDarkly.
+   *
    * Each parameter can be a simple attribute name, such as "email". Or, if the first character is
    * a slash, the parameter is interpreted as a slash-delimited path to a property within a JSON
    * object, where the first path component is a Context attribute name and each following
