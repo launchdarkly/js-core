@@ -283,6 +283,7 @@ export default class EventProcessor implements LDEventProcessor {
         return out;
       }
       default:
+        // This would happen during the addition of a new event type to the SDK.
         return event;
     }
   }
