@@ -2,8 +2,7 @@
   "name": "@launchdarkly/js-server-sdk",
   "workspaces": [
     "sdk-common",
-    "server-sdk-common",
-    "platform-node"
+    "server-sdk-common"
   ],
   "scripts": {
     "clean": "tsc --build --clean",
