@@ -9,8 +9,6 @@ const DEFAULT_STATUS_POLL_INTERVAL_SECONDS = 5;
 const DEFAULT_USER_CACHE_SIZE = 1000;
 const DEFAULT_USER_CACHE_TIME_SECONDS = 5;
 
-// TODO: Do we need defensive code for store and big segment configuration?
-
 export default class BigSegmentsManager {
   private cache: LruCache | undefined;
 

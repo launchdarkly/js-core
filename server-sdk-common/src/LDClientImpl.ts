@@ -236,7 +236,6 @@ export default class LDClientImpl implements LDClient {
     if (!callback) {
       return res.detail.value;
     }
-    // TODO: Get the error.
     callback(null, res.detail.value);
     return undefined;
   }

@@ -14,11 +14,10 @@ export interface LDContextCommon {
   name?: string;
 
   /**
+   * Meta attributes are used to control behavioral aspects of the Context, such as private
+   * private attributes. See {@link LDContextMeta.privateAttributes} as an example.
    *
-   * TODO: U2C We will need some uniform description for this.
-   *
-   * Meta attributes are used to control behavioral aspects of the Context.
-   * They cannot be addressed in targetting rules.
+   * They cannot be addressed in targeting rules.
    */
   _meta?: LDContextMeta;
 

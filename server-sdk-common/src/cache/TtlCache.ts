@@ -19,10 +19,6 @@ export interface TtlCacheOptions {
   checkInterval: number;
 }
 
-// TODO: Do we need to clone. Former node cache cloned returned objects.
-// Our default in-memory store does not clone objects. My inclination is that
-// we don't really need to.
-
 interface CacheRecord {
   value: any,
   expiration: number,

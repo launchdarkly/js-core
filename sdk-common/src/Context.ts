@@ -284,8 +284,6 @@ export default class Context {
 
     // There was only a single kind in the multi-kind context.
     // So we can just translate this to a single-kind context.
-    // TODO: Node was not doing this. So we should determine if we want to do this.
-    // it would make it consistent with strongly typed SDKs.
     if (kinds.length === 1) {
       const kind = kinds[0];
       const created = new Context(true, kind);

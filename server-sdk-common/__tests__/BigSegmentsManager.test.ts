@@ -79,8 +79,6 @@ describe('given a store without meta data', () => {
   let manager: BigSegmentsManager;
   beforeEach(() => {
     store = {
-      // TODO: Should the interface be updated to represent this situation?
-      // @ts-ignore
       getMetadata: async () => undefined,
       getUserMembership: jest.fn((async (hash) => {
         expect(hash).toEqual(userHash);

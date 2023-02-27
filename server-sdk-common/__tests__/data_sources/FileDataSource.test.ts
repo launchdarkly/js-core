@@ -338,8 +338,6 @@ describe('given a mock filesystem and memory feature store', () => {
     });
   });
 
-  // TODO: Use the full client for some evaluations when it is merged together.
-
   it('can evaluate simple loaded flags', (done) => {
     filesystem.fileData['file1.json'] = { timestamp: 0, data: allPropertiesJson };
 

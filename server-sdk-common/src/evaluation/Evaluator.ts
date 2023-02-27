@@ -387,7 +387,7 @@ export default class Evaluator {
           context,
           flag.key,
           bucketBy,
-          flag.salt || '', // TODO: This may need some handling.
+          flag.salt || '',
           rollout.contextKind,
           rollout.seed,
         );

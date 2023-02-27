@@ -30,8 +30,6 @@ export interface ValidatedOptions {
   contextKeysFlushInterval: number;
   diagnosticOptOut: boolean;
   diagnosticRecordingInterval: number;
-  // TODO: This takes the non-validated options. We may want to consider wrapping
-  // the validated config in its own interface.
   featureStore: LDFeatureStore | ((options: LDOptions) => LDFeatureStore);
   tlsParams?: LDTLSOptions;
   updateProcessor?: LDStreamProcessor;

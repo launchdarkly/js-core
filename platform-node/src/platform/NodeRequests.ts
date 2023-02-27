@@ -1,7 +1,7 @@
 import * as createHttpsProxyAgent from 'https-proxy-agent';
 import { HttpsProxyAgentOptions } from 'https-proxy-agent';
 
-import { platform, LDTLSOptions, LDProxyOptions } from '@launchdarkly/js-server-sdk-common';
+import { platform, LDTLSOptions, LDProxyOptions, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import * as http from 'http';
 import * as https from 'https';
@@ -69,10 +69,10 @@ function processProxyOptions(
 function createAgent(
   tlsOptions?: LDTLSOptions,
   proxyOptions?: LDProxyOptions,
+  logger?: LDLogger,
 ): https.Agent | http.Agent | undefined {
   if (!proxyOptions?.auth?.startsWith('https') && tlsOptions) {
-    // TODO: This is likely a usage error. Need to re-address when logging is
-    // figured out.
+    logger?.warn('Proxy configured with TLS options, but is not using an https auth.');
   }
   if (tlsOptions) {
     const agentOptions = processTlsOptions(tlsOptions);
@@ -95,8 +95,8 @@ export default class NodeRequests implements platform.Requests {
 
   private hasProxyAuth: boolean = false;
 
-  constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions) {
-    this.agent = createAgent(tlsOptions, proxyOptions);
+  constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions, logger?: LDLogger) {
+    this.agent = createAgent(tlsOptions, proxyOptions, logger);
     this.hasProxy = !!proxyOptions;
     this.hasProxyAuth = !!proxyOptions?.auth;
   }

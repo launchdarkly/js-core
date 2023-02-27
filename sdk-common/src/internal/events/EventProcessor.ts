@@ -283,8 +283,6 @@ export default class EventProcessor implements LDEventProcessor {
         return out;
       }
       default:
-        // TODO: This is what it did do, but I am not sure
-        // about this.
         return event;
     }
   }
