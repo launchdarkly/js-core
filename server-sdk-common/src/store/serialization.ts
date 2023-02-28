@@ -147,8 +147,6 @@ export function deserializeAll(data: string): AllData | undefined {
     return undefined;
   }
 
-  // TODO: Extend validation.
-
   Object.values(parsed?.data?.flags || []).forEach((flag) => {
     processFlag(flag);
   });
@@ -185,9 +183,6 @@ export function deserializePatch(data: string): PatchData | undefined {
   if (!parsed) {
     return undefined;
   }
-
-  // TODO: Extend validation.
-  // TODO: Validate variation is numeric?
 
   if (parsed.path.startsWith(VersionedDataKinds.Features.streamApiPath)) {
     processFlag(parsed.data as VersionedFlag);

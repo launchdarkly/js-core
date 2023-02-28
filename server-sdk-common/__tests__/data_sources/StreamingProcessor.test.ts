@@ -136,9 +136,19 @@ describe('given a stream processor with mock event source', () => {
       expectJsonError(result as any);
     });
 
-    // it('updates diagnostic stats', async () => {
-    //   // TODO: When diagnostics are implemented.
-    // });
+    it('creates a stream init event', async () => {
+      const startTime = Date.now();
+      streamProcessor.start();
+      es.handlers.put({ data: JSON.stringify(putData) });
+      await asyncStore.initialized();
+
+      const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+      expect(event.streamInits.length).toEqual(1);
+      const si = event.streamInits[0];
+      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+      expect(si.failed).toBeFalsy();
+      expect(si.durationMillis).toBeGreaterThanOrEqual(0);
+    });
   });
 
   describe('when patching a message', () => {

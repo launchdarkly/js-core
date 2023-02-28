@@ -12,8 +12,6 @@ const protectedAttributes = ['key', 'kind', '_meta', 'anonymous']
 const legacyTopLevelCopyAttributes = ['name', 'ip', 'firstName',
   'lastName', 'email', 'avatar', 'country'];
 
-// TODO: Make a type for the filtered context.
-
 function compare(a: AttributeReference, b: string[]) {
   return a.depth === b.length
     && b.every((value, index) => value === a.getComponent(index));

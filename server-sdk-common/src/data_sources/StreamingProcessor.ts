@@ -43,7 +43,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
     private readonly featureStore: LDDataSourceUpdates,
     private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
-    // TODO: Will need diagnostics manager.
     this.headers = defaultHeaders(sdkKey, config, info);
     this.logger = config.logger;
     this.streamInitialReconnectDelay = config.streamInitialReconnectDelay;
@@ -153,8 +152,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
           const key = getKeyFromPath(parsed.kind, parsed.path);
           if (key) {
             this.logger?.debug(`Updating ${key} in ${parsed.kind.namespace}`);
-            // TODO: The interface didn't specify the callback was optional,
-            // but previously it was not included here. Need to resolve.
             this.featureStore.upsert(parsed.kind, parsed.data, () => { });
           }
         }
@@ -175,8 +172,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
           const key = getKeyFromPath(parsed.kind, parsed.path);
           if (key) {
             this.logger?.debug(`Deleting ${key} in ${parsed.kind.namespace}`);
-            // TODO: The interface didn't specify the callback was optional,
-            // but previously it was not included here. Need to resolve.
             this.featureStore.upsert(parsed.kind, {
               key,
               version: parsed.version,

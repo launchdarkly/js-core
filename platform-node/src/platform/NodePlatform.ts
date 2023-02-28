@@ -14,6 +14,6 @@ export default class NodePlatform implements platform.Platform {
   requests: platform.Requests;
 
   constructor(options: LDOptions) {
-    this.requests = new NodeRequests(options.tlsParams, options.proxyOptions);
+    this.requests = new NodeRequests(options.tlsParams, options.proxyOptions, options.logger);
   }
 }

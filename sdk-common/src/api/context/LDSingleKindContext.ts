@@ -1,10 +1,20 @@
 import { LDContextCommon } from './LDContextCommon';
 
 /**
+ * A context which represents a single kind.
  *
- * TODO: U2C How do we want to describe this?
+ * For a single kind context the 'kind' may not be 'multi'.
  *
- * A single-kind context.
+ * ```
+ * const myOrgContext = {
+ *   kind: 'org',
+ *   key: 'my-org-key',
+ *   someAttribute: 'my-attribute-value'
+ * };
+ * ```
+ *
+ * The above context would be a single kind context representing an organization. It has a key
+ * for that organization, and a single attribute 'someAttribute'.
  */
 export interface LDSingleKindContext extends LDContextCommon {
   /**
