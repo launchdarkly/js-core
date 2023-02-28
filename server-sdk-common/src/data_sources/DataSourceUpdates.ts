@@ -3,19 +3,40 @@ import {
   LDDataSourceUpdates, LDFeatureStore, LDFeatureStoreDataStorage,
   LDFeatureStoreItem, LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
+import { Clause } from '../evaluation/data/Clause';
 import { Flag } from '../evaluation/data/Flag';
+import { Prerequisite } from '../evaluation/data/Prerequisite';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import DependencyTracker from './DependencyTracker';
 import NamespacedDataSet from './NamespacedDataSet';
 
+/**
+ * This type allows computing the clause dependencies of either a flag or a segment.
+ */
+interface TypeWithRuleClauses {
+  prerequisites?: Prerequisite[];
+  rules?: [{
+    // The shape of rules are different between flags and segments, but
+    // both have clauses of the same shape.
+    clauses?: Clause[];
+  }]
+}
+
 function computeDependencies(namespace: string, item: LDFeatureStoreItem) {
   const ret = new NamespacedDataSet<boolean>();
-  if (namespace === VersionedDataKinds.Features.namespace) {
+  const isFlag = namespace === VersionedDataKinds.Features.namespace;
+  const isSegment = namespace === VersionedDataKinds.Segments.namespace;
+  if (isFlag) {
     const flag = item as Flag;
     flag?.prerequisites?.forEach((prereq) => {
       ret.set(namespace, prereq.key, true);
     });
-    flag?.rules?.forEach((rule) => {
+  }
+
+  if (isFlag || isSegment) {
+    const itemWithRuleClauses = item as TypeWithRuleClauses;
+
+    itemWithRuleClauses?.rules?.forEach((rule) => {
       rule.clauses?.forEach((clause) => {
         if (clause.op === 'segmentMatch') {
           clause.values.forEach((value) => {
