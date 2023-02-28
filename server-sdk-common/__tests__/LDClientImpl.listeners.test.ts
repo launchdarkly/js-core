@@ -1,6 +1,5 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
-import { AttributeReference } from '../dist';
-import { LDClientImpl } from '../src';
+import { AttributeReference, LDClientImpl } from '../src';
 import { Op } from '../src/evaluation/data/Clause';
 import TestData from '../src/integrations/test_data/TestData';
 import { makeFlagWithSegmentMatch } from './evaluation/flags';
