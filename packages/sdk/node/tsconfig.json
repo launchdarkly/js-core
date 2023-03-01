@@ -18,5 +18,5 @@
     "stripInternal": true,
     "moduleResolution": "node"
   },
-  "exclude": ["__tests__"]
+  "exclude": ["**/*.test.ts"]
 }
