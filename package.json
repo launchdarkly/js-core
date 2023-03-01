@@ -9,6 +9,8 @@
   "scripts": {
     "clean": "npx tsc --build --clean",
     "build": "npx tsc --build",
+    "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc sdk-common' for example.",
+    "build:doc": "run(){ npx typedoc --readme ./$1/README.md --out ./$1/docs --entryPointStrategy packages $1; }; run",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
     "test": "jest",
@@ -23,6 +25,7 @@
     "eslint": "^8.14.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
-    "eslint-plugin-import": "^2.26.0"
+    "eslint-plugin-import": "^2.26.0",
+    "typedoc": "0.23.26"
   }
 }
