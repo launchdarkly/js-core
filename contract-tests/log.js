@@ -1,4 +1,4 @@
-const ld = require('platform-node');
+const ld = require('node-server-sdk');
 
 function Log(tag) {
   function doLog(level, message) {

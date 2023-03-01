@@ -4,8 +4,8 @@ module.exports = {
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   collectCoverageFrom: [
-    "platform-node/src/**/*.ts",
-    "sdk-common/src/**/*.ts",
-    "server-sdk-common/src/**/*.ts"
+    "packages/sdk/node/src/**/*.ts",
+    "packages/shared/common/src/**/*.ts",
+    "packages/shared/sdk-server/src/**/*.ts"
   ]
 };

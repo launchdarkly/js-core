@@ -1,4 +1,4 @@
-const ld = require('platform-node');
+const ld = require('node-server-sdk');
 
 const { Log, sdkLogger } = require('./log');
 
