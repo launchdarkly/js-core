@@ -5,13 +5,13 @@
   },
   "references": [
     {
-      "path": "./sdk-common/tsconfig.ref.json"
+      "path": "./common-packages/sdk-common/tsconfig.ref.json"
     },
     {
-      "path": "./server-sdk-common/tsconfig.ref.json"
+      "path": "./common-packages/server-sdk-common/tsconfig.ref.json"
     },
     {
-      "path": "./platform-node/tsconfig.ref.json"
+      "path": "./platform-packages/platform-node/tsconfig.ref.json"
     },
   ],
 }
