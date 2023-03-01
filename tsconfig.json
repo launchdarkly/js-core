@@ -5,10 +5,10 @@
   },
   "references": [
     {
-      "path": "./packages/common/sdk/tsconfig.ref.json"
+      "path": "./packages/shared/common/tsconfig.ref.json"
     },
     {
-      "path": "./packages/common/server-sdk/tsconfig.ref.json"
+      "path": "./packages/shared/sdk-server/tsconfig.ref.json"
     },
     {
       "path": "./packages/platform/node/tsconfig.ref.json"
