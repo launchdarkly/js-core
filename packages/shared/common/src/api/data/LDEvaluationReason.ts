@@ -1,6 +1,6 @@
 /**
  * Describes the reason that a flag evaluation produced a particular value. This is
- * part of the [[LDEvaluationDetail]] object returned by [[LDClient.variationDetail]].
+ * part of the {@link LDEvaluationDetail} object returned by `LDClient.variationDetail`.
  */
 export interface LDEvaluationReason {
   /**

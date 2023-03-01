@@ -13,6 +13,9 @@ import { BigSegmentStoreStatusProvider } from './api';
 
 class ClientEmitter extends EventEmitter { }
 
+/**
+ * @ignore
+ */
 class LDClientNode extends LDClientImpl {
   emitter: EventEmitter;
 

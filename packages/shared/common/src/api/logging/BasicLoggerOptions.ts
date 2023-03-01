@@ -1,13 +1,13 @@
 import { LDLogLevel } from './LDLogLevel';
 
 /**
- * Configuration for [[basicLogger]].
+ * Configuration for {@link basicLogger}.
  */
 export interface BasicLoggerOptions {
   /**
    * The lowest level of log message to enable.
    *
-   * See [[LDLogLevel]] for a list of possible levels. Setting a level here causes
+   * See {@link LDLogLevel} for a list of possible levels. Setting a level here causes
    * all lower-importance levels to be disabled: for instance, if you specify
    * `'warn'`, then `'debug'` and `'info'` are disabled.
    *

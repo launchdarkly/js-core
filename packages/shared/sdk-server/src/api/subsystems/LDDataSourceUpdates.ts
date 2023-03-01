@@ -28,13 +28,13 @@ export interface LDDataSourceUpdates {
    *
    * @param kind
    *   The type of data to be accessed. The actual type of this parameter is
-   *   [[interfaces.DataKind]].
+   *   {@link interfaces.DataKind}.
    *
    * @param data
    *   The contents of the entity, as an object that can be converted to JSON. The store
    *   should check the `version` property of this object, and should *not* overwrite any
    *   existing data if the existing `version` is greater than or equal to that value.
-   *   The actual type of this parameter is [[interfaces.VersionedData]].
+   *   The actual type of this parameter is {@link interfaces.VersionedData}.
    *
    * @param callback
    *   Will be called after the upsert operation is complete.

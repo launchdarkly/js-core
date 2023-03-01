@@ -3,7 +3,7 @@ import { variationForBoolean } from './booleanVariation';
 import { Clause } from '../../evaluation/data/Clause';
 
 /**
- * A builder for feature flag rules to be used with [[TestDataFlagBuilder]].
+ * A builder for feature flag rules to be used with {@link TestDataFlagBuilder}.
  *
  * In the LaunchDarkly model, a flag can have any number of rules, and
  * a rule can have any number of clauses. A clause is an individual test

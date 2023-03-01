@@ -1,7 +1,7 @@
 /**
  * The LaunchDarkly client logger interface.
  *
- * The [[LDOptions.logger]] property accepts any object that conforms to this
+ * The {@link LDOptions.logger} property accepts any object that conforms to this
  * interface. The SDK only uses four logging levels: `error`, `warn`, `info`, and
  * `debug`. It will call the corresponding method of the `LDLogger` either with a
  * single string argument, or with a format string and variable arguments in the
@@ -9,9 +9,9 @@
  *
  * The [Winston](https://github.com/winstonjs/winston) logging package provides a
  * logger that conforms to this interface, so if you have created a logger with
- * Winston, you can simply put it into the [[LDOptions.logger]] property.
+ * Winston, you can simply put it into the {@link LDOptions.logger} property.
  *
- * If you do not provide a logger object, the SDK uses the [[basicLogger]]
+ * If you do not provide a logger object, the SDK uses the {@link basicLogger}
  * implementation with a minimum level of `info`.
  */
 export interface LDLogger {

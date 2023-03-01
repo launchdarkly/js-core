@@ -7,7 +7,7 @@ import { LDFlagsState } from './data/LDFlagsState';
 /**
  * The LaunchDarkly SDK client object.
  *
- * Create this object with [[init]]. Applications should configure the client at startup time and
+ * Create this object with {@link init}. Applications should configure the client at startup time and
  * continue to use it throughout the lifetime of the application, rather than creating instances on
  * the fly.
  *
@@ -35,7 +35,7 @@ export interface LDClient {
    * this method, be sure to attach a rejection handler to it (or, if using `async`/`await`, a catch
    * block).
    *
-   * Note that you can also use event listeners ([[on]]) for the same purpose: the event `"ready"`
+   * Note that you can also use event listeners ({@link on}) for the same purpose: the event `"ready"`
    * indicates success, and `"failed"` indicates failure.
    *
    * There is no built-in timeout for this method. If you want your code to stop waiting on the
@@ -108,11 +108,11 @@ export interface LDClient {
    *   register this context with LaunchDarkly if the context does not already exist.
    * @param defaultValue The default value of the flag, to be used if the value is not available
    *   from LaunchDarkly.
-   * @param callback A Node-style callback to receive the result (as an [[LDEvaluationDetail]]). If
+   * @param callback A Node-style callback to receive the result (as an {@link LDEvaluationDetail}). If
    *   omitted, you will receive a Promise instead.
    * @returns
    *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
-   *   the result (as an [[LDEvaluationDetail]]).
+   *   the result (as an{@link LDEvaluationDetail}).
    */
   variationDetail(
     key: string,
@@ -133,13 +133,13 @@ export interface LDClient {
    * @param context
    *   The context requesting the feature flags.
    * @param options
-   *   Optional [[LDFlagsStateOptions]] to determine how the state is computed.
+   *   Optional {@link LDFlagsStateOptions} to determine how the state is computed.
    * @param callback
-   *   A Node-style callback to receive the result (as an [[LDFlagsState]]). If omitted, you
+   *   A Node-style callback to receive the result (as an {@link LDFlagsState}). If omitted, you
    *   will receive a Promise instead.
    * @returns
    *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved
-   *   with the result as an [[LDFlagsState]].
+   *   with the result as an {@link LDFlagsState}.
    */
   allFlagsState(
     context: LDContext,
@@ -172,7 +172,7 @@ export interface LDClient {
    * Tests whether the client is configured in offline mode.
    *
    * @returns
-   *   True if the `offline` property is true in your [[LDOptions]].
+   *   True if the `offline` property is true in your {@link LDOptions}.
    */
   isOffline(): boolean;
 
@@ -184,7 +184,7 @@ export interface LDClient {
    * have goals.
    *
    * Note that event delivery is asynchronous, so the event may not actually be sent until later;
-   * see [[flush]].
+   * see {@link flush}.
    *
    * If the context is omitted or has no key, the client will log a warning and will not send an
    * event.
@@ -217,7 +217,7 @@ export interface LDClient {
    * Flushes all pending analytics events.
    *
    * Normally, batches of events are delivered in the background at intervals determined by the
-   * `flushInterval` property of [[LDOptions]]. Calling `flush()` triggers an immediate delivery.
+   * `flushInterval` property of {@link LDOptions}. Calling `flush()` triggers an immediate delivery.
    * However, like Node I/O in general, this is still an asynchronous operation so you must still
    * use Promise chaining, a callback, or `async`/`await` to detect when it has finished or failed.
    *

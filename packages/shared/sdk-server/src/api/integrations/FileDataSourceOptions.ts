@@ -1,7 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 /**
- * Configuration for [[FileDataSource]].
+ * Configuration for {@link FileDataSource}.
  */
 export interface FileDataSourceOptions {
   /**

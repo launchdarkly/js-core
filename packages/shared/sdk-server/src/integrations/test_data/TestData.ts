@@ -13,10 +13,10 @@ import TestDataSource from './TestDataSource';
  * A mechanism for providing dynamically updatable feature flag state in a simplified form to an SDK
  * client in test scenarios.
  *
- * Unlike [[FileData]], this mechanism does not use any external resources. It provides only the
- * data that the application has put into it using the [[TestData.update]] method.
+ * Unlike `FileData`, this mechanism does not use any external resources. It provides only the
+ * data that the application has put into it using the {@link TestData.update} method.
  *
- * @example
+ * ```
  *     TKTK: Needs updating when we know the package name.
  *     const { TestData } = require('launchdarkly-node-server-sdk/interfaces');
  *
@@ -29,18 +29,17 @@ import TestDataSource from './TestDataSource';
  *     td.update(td.flag("flag-key-2")
  *         .variationForContext("user", "some-user-key", true)
  *         .fallthroughVariation(false));
+ * ```
  *
  * The above example uses a simple boolean flag, but more complex configurations are possible using
- * the methods of the [[TestDataFlagBuilder]] that is returned by [[TestData.flag]].
- * [[TestDataFlagBuilder]] supports many of the ways a flag can be configured on the LaunchDarkly
+ * the methods of the {@link TestDataFlagBuilder} that is returned by {@link TestData.flag}.
+ * {@link TestDataFlagBuilder} supports many of the ways a flag can be configured on the LaunchDarkly
  * dashboard, but does not currently support
  *  1. rule operators other than "in" and "not in", or
  *  2. percentage rollouts.
  *
  * If the same `TestData` instance is used to configure multiple `LDClient` instances,
  * any changes made to the data will propagate to all of the `LDClient`s.
- *
- * @see [[FileDataSource]]
  */
 export default class TestData {
   private currentFlags: Record<string, Flag> = {};
@@ -82,7 +81,7 @@ export default class TestData {
   }
 
   /**
-   * Creates or copies a [[TestDataFlagBuilder]] for building a test flag configuration.
+   * Creates or copies a {@link TestDataFlagBuilder} for building a test flag configuration.
    *
    * If the flag key has already been defined in this `TestData` instance,
    * then the builder starts with the same configuration that was last
@@ -95,7 +94,7 @@ export default class TestData {
    * using the `TestDataFlagBuilder` methods.
    *
    * Once you have set the desired configuration, pass the builder to
-   * [[TestData.update]].
+   * {@link TestData.update}.
    *
    * @param key the flag key
    * @returns a flag configuration builder
@@ -113,7 +112,7 @@ export default class TestData {
    *
    * This has the same effect as if a flag were added or modified in the
    * LaunchDarkly dashboard. It immediately propagates the flag changes to
-   * any [[LDClient]] instance(s) that you have already configured to use
+   * any `LDClient` instance(s) that you have already configured to use
    * this `TestData`. If no `LDClient` has been started yet, it simply adds
    * this flag to the test data which will be provided to any `LDClient`
    * that you subsequently configure.
@@ -140,15 +139,15 @@ export default class TestData {
   /**
    * Copies a full feature flag data model object into the test data.
    *
-   * It immediately propagates the flag change to any [[LDClient]] instance(s) that you have already
-   * configured to use this `TestData`. If no [[LDClient]] has been started yet, it simply adds this
+   * It immediately propagates the flag change to any `LDClient` instance(s) that you have already
+   * configured to use this `TestData`. If no `LDClient` has been started yet, it simply adds this
    * flag to the test data which will be provided to any LDClient that you subsequently configure.
    *
    * Use this method if you need to use advanced flag configuration properties that are not
-   * supported by the simplified [[TestDataFlagBuilder]] API. Otherwise it is recommended to use the
-   * regular [[flag]]/[[update]] mechanism to avoid dependencies on details of the data model.
+   * supported by the simplified {@link TestDataFlagBuilder} API. Otherwise it is recommended to use the
+   * regular {@link flag}/{@link update} mechanism to avoid dependencies on details of the data model.
    *
-   * You cannot make incremental changes with [[flag]]/[[update]] to a flag that has been added in
+   * You cannot make incremental changes with {@link flag}/{@link update} to a flag that has been added in
    * this way; you can only replace it with an entirely new flag configuration.
    *
    * @param flagConfig the flag configuration as a JSON object
@@ -171,8 +170,8 @@ export default class TestData {
   /**
    * Copies a full segment data model object into the test data.
    *
-   * It immediately propagates the change to any [[LDClient]] instance(s) that you have already
-   * configured to use this `TestData`. If no [[LDClient]] has been started yet, it simply adds
+   * It immediately propagates the change to any `LDClient` instance(s) that you have already
+   * configured to use this `TestData`. If no `LDClient` has been started yet, it simply adds
    * this segment to the test data which will be provided to any LDClient that you subsequently
    * configure.
    *

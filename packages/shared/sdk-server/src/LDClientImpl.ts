@@ -54,6 +54,9 @@ export interface LDClientCallbacks {
   hasEventListeners: () => boolean,
 }
 
+/**
+ * @ignore
+ */
 export default class LDClientImpl implements LDClient {
   private initState: InitState = InitState.Initializing;
 

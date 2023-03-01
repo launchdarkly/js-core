@@ -5,7 +5,7 @@ import { BigSegmentStoreStatusProvider } from './interfaces';
 /**
  * The LaunchDarkly SDK client object.
  *
- * Create this object with [[init]]. Applications should configure the client at startup time and
+ * Create this object with {@link init}. Applications should configure the client at startup time and
  * continue to use it throughout the lifetime of the application, rather than creating instances on
  * the fly.
  *

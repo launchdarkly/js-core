@@ -1,5 +1,5 @@
 /**
- * Optional settings that can be passed to [[LDClient.allFlagsState]].
+ * Optional settings that can be passed to `LDClient.allFlagsState`.
  */
 export interface LDFlagsStateOptions {
   /**
