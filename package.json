@@ -3,7 +3,7 @@
   "workspaces": [
     "packages/shared/common",
     "packages/shared/sdk-server",
-    "packages/platform/node"
+    "packages/sdk/node"
   ],
   "private": true,
   "scripts": {
