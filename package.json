@@ -1,5 +1,5 @@
 {
-  "name": "@launchdarkly/node-server-sdk",
+  "name": "@launchdarkly/js-core",
   "workspaces": [
     "packages/shared/common",
     "packages/shared/sdk-server",
@@ -9,8 +9,9 @@
   "scripts": {
     "clean": "npx tsc --build --clean",
     "build": "npx tsc --build",
+    "doc-name": "run(){ node -p \"let pj = require('./$1/package.json');${pj.name} (${pj.version})`\"; }; run",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/common' for example.",
-    "build:doc": "run(){ npx typedoc --readme none --out ./$1/docs --entryPointStrategy packages $1; }; run",
+    "build:doc": "./scripts/build-doc.sh $1",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
     "test": "jest",
