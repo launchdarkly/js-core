@@ -9,7 +9,6 @@
   "scripts": {
     "clean": "npx tsc --build --clean",
     "build": "npx tsc --build",
-    "doc-name": "run(){ node -p \"let pj = require('./$1/package.json');${pj.name} (${pj.version})`\"; }; run",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/common' for example.",
     "build:doc": "./scripts/build-doc.sh $1",
     "lint": "npx eslint . --ext .ts",
