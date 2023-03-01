@@ -1,8 +1,9 @@
 import {
   integrations, interfaces, LDBigSegmentsOptions, LDLogger,
 } from '@launchdarkly/js-server-sdk-common';
-import { basicLogger, LDClientImpl } from '../src';
+import { basicLogger } from '../src';
 import { LDClient } from '../src/api/LDClient';
+import LDClientNode from '../src/LDClientNode';
 
 describe('given test data with big segments', () => {
   // To use the public interfaces to create a client which doesn't use the
@@ -31,7 +32,7 @@ describe('given test data with big segments', () => {
     };
 
     beforeEach(() => {
-      client = new LDClientImpl('sdk-key', {
+      client = new LDClientNode('sdk-key', {
         updateProcessor: td.getFactory(),
         sendEvents: false,
         bigSegments: bigSegmentsConfig,
@@ -79,7 +80,7 @@ describe('given test data with big segments', () => {
     };
 
     beforeEach(async () => {
-      client = new LDClientImpl('sdk-key', {
+      client = new LDClientNode('sdk-key', {
         updateProcessor: td.getFactory(),
         sendEvents: false,
         bigSegments: bigSegmentsConfig,
@@ -120,7 +121,7 @@ describe('given test data with big segments', () => {
 
     beforeEach(async () => {
       error = false;
-      client = new LDClientImpl('sdk-key', {
+      client = new LDClientNode('sdk-key', {
         updateProcessor: td.getFactory(),
         sendEvents: false,
         bigSegments: bigSegmentsConfig,

@@ -1,5 +1,5 @@
 /**
- * The return type of [[BigSegmentStore.getUserMembership]], describing which Big Segments a
+ * The return type of {@link BigSegmentStore.getUserMembership}, describing which Big Segments a
  * specific user is included in or excluded from.
  *
  * This object may be cached by the SDK, so it should not be modified after it is created. It

@@ -1,6 +1,9 @@
 /* eslint-disable class-methods-use-this */
 import { BigSegmentStoreStatusProvider, BigSegmentStoreStatus } from './api/interfaces';
 
+/**
+ * @ignore
+ */
 export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStoreStatusProvider {
   private lastStatus: BigSegmentStoreStatus | undefined;
 

@@ -16,7 +16,7 @@ interface BuilderData {
 }
 
 /**
- * A builder for feature flag configurations to be used with [[TestData]].
+ * A builder for feature flag configurations to be used with {@link TestData}.
  */
 export default class TestDataFlagBuilder {
   private data: BuilderData = {
@@ -61,7 +61,7 @@ export default class TestDataFlagBuilder {
   /**
  * A shortcut for setting the flag to use the standard boolean configuration.
  *
- * This is the default for all new flags created with [[TestData.flag]]. The
+ * This is the default for all new flags created with {@link TestData.flag}. The
  * flag will have two variations, `true` and `false` (in that order). It
  * will return `false` whenever targeting is off and `true` when targeting
  * is on unless other settings specify otherwise.
@@ -98,7 +98,7 @@ export default class TestDataFlagBuilder {
    *
    * The effect of this depends on the rest of the flag configuration, just
    * as it does on the real LaunchDarkly dashboard. In the default configuration
-   * that you get from calling [[TestData.flag]] with a new flag key, the flag
+   * that you get from calling {@link TestData.flag} with a new flag key, the flag
    * will return `false` whenever targeting is off and `true` when targeting
    * is on.
    *
@@ -282,7 +282,7 @@ export default class TestDataFlagBuilder {
 
   /**
    * Removes any existing rules from the flag. This undoes the effect of methods
-   * like [[ifMatch]].
+   * like {@link  ifMatch}.
    *
    * @return the same flag builder
    */
@@ -293,7 +293,7 @@ export default class TestDataFlagBuilder {
 
   /**
    * Removes any existing targets from the flag. This undoes the effect of
-   * methods like [[variationForContext]].
+   * methods like {@link variationForContext}.
    *
    * @return the same flag builder
    */

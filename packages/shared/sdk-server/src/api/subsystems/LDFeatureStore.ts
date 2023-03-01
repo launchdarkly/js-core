@@ -50,14 +50,14 @@ export interface LDFeatureStore {
    * @param kind
    *   The type of data to be accessed. The store should not make any assumptions about the format
    *   of the data, but just return a JSON object. The actual type of this parameter is
-   *   [[interfaces.DataKind]].
+   *   {@link interfaces.DataKind}.
    *
    * @param key
    *   The unique key of the entity within the specified collection.
    *
    * @param callback
    *   Will be called with the retrieved entity, or null if not found. The actual type of the result
-   *   value is [[interfaces.VersionedData]].
+   *   value is {@link interfaces.VersionedData}.
    */
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void;
 
@@ -69,7 +69,7 @@ export interface LDFeatureStore {
    * @param kind
    *   The type of data to be accessed. The store should not make any assumptions about the format
    *   of the data, but just return an object in which each key is the `key` property of an entity
-   *   and the value is the entity. The actual type of this parameter is [[interfaces.DataKind]].
+   *   and the value is the entity. The actual type of this parameter is {@link interfaces.DataKind}.
    *
    * @param callback
    *   Will be called with the resulting map. The actual type of the result value is
@@ -99,7 +99,7 @@ export interface LDFeatureStore {
    *
    * @param kind
    *   The type of data to be accessed. The actual type of this parameter is
-   *   [[interfaces.DataKind]].
+   *   {@link interfaces.DataKind}.
    *
    * @param key
    *   The unique key of the entity within the specified collection.
@@ -119,13 +119,13 @@ export interface LDFeatureStore {
    *
    * @param kind
    *   The type of data to be accessed. The actual type of this parameter is
-   *   [[interfaces.DataKind]].
+   *   {@link interfaces.DataKind}.
    *
    * @param data
    *   The contents of the entity, as an object that can be converted to JSON. The store
    *   should check the `version` property of this object, and should *not* overwrite any
    *   existing data if the existing `version` is greater than or equal to that value.
-   *   The actual type of this parameter is [[interfaces.VersionedData]].
+   *   The actual type of this parameter is {@link interfaces.VersionedData}.
    *
    * @param callback
    *   Will be called after the upsert operation is complete.

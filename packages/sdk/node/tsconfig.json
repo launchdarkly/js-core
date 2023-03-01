@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    // Uses "." so it can load package.json.
     "rootDir": ".",
     "outDir": "dist",
     "target": "es6",
@@ -18,4 +19,5 @@
     "stripInternal": true,
     "moduleResolution": "node"
   },
+  "exclude": ["**/*.test.ts", "dist", "node_modules"]
 }

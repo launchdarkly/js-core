@@ -2,6 +2,9 @@ import { BigSegmentStoreStatusProviderImpl, interfaces } from '@launchdarkly/js-
 import { EventEmitter } from 'events';
 import { Emits } from './Emits';
 
+/**
+ * @ignore
+ */
 class BigSegmentStoreStatusProviderNode implements interfaces.BigSegmentStoreStatusProvider {
   emitter: EventEmitter = new EventEmitter();
 

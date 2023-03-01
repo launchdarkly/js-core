@@ -1,35 +1,32 @@
-# LaunchDarkly Server-Side SDK for JavaScript
+# LaunchDarkly monorepo for JavaScript SDKs.
 
-<!--
-These will need updated. Likely the NPM package for node will be the same.
+This repository contains LaunchDarkly SDK packages which are designed for execution in JavaScript environments.
+This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
- [![NPM](https://img.shields.io/npm/v/launchdarkly-node-server-sdk.svg?style=flat-square)](https://www.npmjs.com/package/launchdarkly-node-server-sdk)
-[![CircleCI](https://circleci.com/gh/launchdarkly/node-server-sdk.svg?style=svg)](https://circleci.com/gh/launchdarkly/node-server-sdk)
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/node-server-sdk) -->
+## Packages
 
-The LaunchDarkly Server-Side SDK for Node.js is designed primarily for use in multi-user systems such as web servers and applications. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
+| SDK Packages                                                               | npm                          | issues                           | tests                          
+| ---------------------------------------------------------------------------| -----------------------------| -------------------------------- | -------------------------------
+| [@launchdarkly/node-server-sdk](packages/sdk/node/README.md)               | [![NPM Package][TODO]][TODO] | [![Client Issues][TODO]][TODO]   | [![Actions Status][TODO]][TODO]
 
-For using LaunchDarkly in *client-side* Node.js applications, refer to our [Client-side Node.js SDK](https://github.com/launchdarkly/node-client-sdk).
+| Shared Packages                                                            | npm                          | issues                           | tests                          
+| ---------------------------------------------------------------------------| -----------------------------| -------------------------------- | -------------------------------
+| [@launchdarkly/js-sdk-common](packages/shared/common/README.md)            | [![NPM Package][TODO]][TODO] | [![Common][TODO]][TODO]          | [![Actions Status][TODO]][TODO]
+| [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md) | [![NPM Package][TODO]][TODO] | [![Common Server][TODO]][TODO]   | [![Actions Status][TODO]][TODO]
+
+## Organization
+
+`packages` Top level directory containing package implementations.
+
+`packages/shared` Packages which are primarily intended for consumption by LaunchDarkly and are used in other packages types.
+
+`packages/sdk` SDK packages intended for use by application developers.
 
 ## LaunchDarkly overview
 
 [LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/intent/follow?screen_name=launchdarkly)
-
-## Supported Node versions
-
-This version of the LaunchDarkly SDK is compatible with Node.js versions 12 and above.
-
-## Getting started
-
-Refer to the [SDK reference guide](https://docs.launchdarkly.com/sdk/server-side/node-js) for instructions on getting started with using the SDK.
-
-## Learn more
-
-Check out our [documentation](http://docs.launchdarkly.com) for in-depth instructions on configuring and using LaunchDarkly. You can also head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/node-js).
-
-The authoritative description of all properties and methods is in the [TypeScript documentation](https://launchdarkly.github.io/node-server-sdk/).
 
 ## Testing
 

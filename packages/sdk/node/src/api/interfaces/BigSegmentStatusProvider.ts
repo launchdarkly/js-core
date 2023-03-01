@@ -24,7 +24,7 @@ export interface BigSegmentStoreStatusProvider extends EventEmitter {
   /**
    * Gets the current status of the store, if known.
    *
-   * @returns a {@link BigSegmentStoreStatus}, or `undefined` if the SDK has not yet queried the
+   * @returns status information, or `undefined` if the SDK has not yet queried the
    *   Big Segment store status
    */
   getStatus(): interfaces.BigSegmentStoreStatus | undefined;
