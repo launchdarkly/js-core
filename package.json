@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "npx tsc --build --clean",
     "build": "npx tsc --build",
-    "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/common/sdk' for example.",
+    "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/sdk' for example.",
     "build:doc": "run(){ npx typedoc --readme ./$1/README.md --out ./$1/docs --entryPointStrategy packages $1; }; run",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
