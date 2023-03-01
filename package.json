@@ -1,9 +1,9 @@
 {
   "name": "@launchdarkly/js-server-sdk",
   "workspaces": [
-    "sdk-common",
-    "server-sdk-common",
-    "platform-node"
+    "packages/shared/common",
+    "packages/shared/sdk-server",
+    "packages/sdk/node"
   ],
   "private": true,
   "scripts": {
