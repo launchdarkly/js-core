@@ -17,12 +17,12 @@ import TestDataSource from './TestDataSource';
  * data that the application has put into it using the {@link TestData.update} method.
  *
  * ```
- *     TKTK: Needs updating when we know the package name.
- *     const { TestData } = require('launchdarkly-node-server-sdk/interfaces');
+ *     // Import TestData from the integrations package of the SDK you are using.
+ *     // This is a common implementation and may be used in multiple SDKs.
  *
  *     const td = TestData();
  *     testData.update(td.flag("flag-key-1").booleanFlag().variationForAll(true));
- *     TKTK: May need to update this, depending on how we show importing the client.
+ *     // Use the initialize mechanism specified by your SDK.
  *     const client = LDClient.init(sdkKey, { updateProcessor: td.getFactory() });
  *
  *     // flags can be updated at any time:
