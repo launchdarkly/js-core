@@ -22,7 +22,7 @@ import TestDataSource from './TestDataSource';
  *
  *     const td = TestData();
  *     testData.update(td.flag("flag-key-1").booleanFlag().variationForAll(true));
- *     // Use the initialize mechanism specified by your SDK.
+ *     // Use the initialization mechanism specified by your SDK.
  *     const client = LDClient.init(sdkKey, { updateProcessor: td.getFactory() });
  *
  *     // flags can be updated at any time:
