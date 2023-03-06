@@ -11,7 +11,7 @@
       "path": "./packages/shared/sdk-server/tsconfig.ref.json"
     },
     {
-      "path": "./packages/sdk/node/tsconfig.ref.json"
+      "path": "./packages/sdk/server-node/tsconfig.ref.json"
     },
   ],
 }

@@ -28,8 +28,8 @@
     "@types/semver": "^7.3.9",
     "jest": "^27.5.1",
     "jest-diff": "^28.1.1",
+    "launchdarkly-js-test-helpers": "^2.2.0",
     "ts-jest": "^27.1.4",
-    "typescript": "^4.6.3",
-    "launchdarkly-js-test-helpers": "^2.2.0"
+    "typescript": "^4.6.3"
   }
 }

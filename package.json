@@ -3,7 +3,7 @@
   "workspaces": [
     "packages/shared/common",
     "packages/shared/sdk-server",
-    "packages/sdk/node"
+    "packages/sdk/server-node"
   ],
   "private": true,
   "scripts": {
@@ -27,5 +27,6 @@
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
     "typedoc": "0.23.26"
-  }
+  },
+  "packageManager": "yarn@3.4.1"
 }
