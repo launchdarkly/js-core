@@ -29,9 +29,9 @@ jobs:
           yarn workspaces foreach -ptR --from '@launchdarkly/node-server-sdk' run build
 
       - uses: actions/upload-artifact@v2
-              with:
-                name: sdk-build
-                path: ./
+        with:
+          name: sdk-build
+          path: ./
     
   contract-test-service:
     runs-on: ubuntu-latest
