@@ -12,12 +12,22 @@ on:
 
 jobs:
   build-test-server-node:
-    uses: launchdarkly/js-core/.github/workflows/ci.yml@rlamb/sc-191283/add-ci-config
-    with:
-      workspace_name: '@launchdarkly/node-server-sdk'
-      workspace_path: packages/sdk/server-node
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # Node versions to run on.
+        version: [16, 18, 19]
+
     steps:
-      - name: Run Contract Tests
-        run: yarn run contract-tests
-    env:
-      TEST_HARNESS_PARAMS: "--skip-from=./contract-tests/testharness-suppressions.txt"
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.version }}
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        uses: launchdarkly/js-core/.github/workflows/ci.yml@rlamb/sc-191283/add-ci-config
+          with:
+            workspace_name: '@launchdarkly/node-server-sdk'
+            workspace_path: packages/sdk/server-node
+
