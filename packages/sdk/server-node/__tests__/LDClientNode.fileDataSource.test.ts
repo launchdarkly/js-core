@@ -62,12 +62,14 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+const tmpDir = './tmp_test';
+
 async function makeTempFile(content: string): Promise<string> {
   const fileName = (Math.random() + 1).toString(36).substring(7);
-  if (!await exists('./tmp_test')) {
-    await fs.mkdir('./tmp_test');
+  if (!await exists(tmpDir)) {
+    await fs.mkdir(tmpDir);
   }
-  const fullPath = `./tmp_test/${fileName}`;
+  const fullPath = `${tmpDir}/${fileName}`;
   await fs.writeFile(fullPath, content);
   tmpFiles.push(fullPath);
   return fullPath;
@@ -82,10 +84,12 @@ async function replaceFileContent(filePath: string, content: string) {
 jest.setTimeout(30000);
 
 describe('When using a file data source', () => {
-  afterAll(() => {
-    tmpFiles.forEach((filePath) => {
-      fs.unlink(filePath);
-    });
+  afterAll(async () => {
+    try {
+      await fs.rmdir(tmpDir, { recursive: true });
+    } catch {
+      // Not critical.
+    }
   });
 
   it('loads flags on start from JSON', async () => {
