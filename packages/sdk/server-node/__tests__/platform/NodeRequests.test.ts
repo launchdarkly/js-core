@@ -21,7 +21,7 @@ describe('given a default instance of NodeRequests', () => {
     promise = new Promise<TestRequestData>((res) => {
       resolve = res;
     });
-    server = http.createServer((req, res) => {
+    server = http.createServer({ keepAlive: false }, (req, res) => {
       const chunks: any[] = [];
       req.on('data', (chunk) => {
         chunks.push(chunk);
@@ -35,6 +35,7 @@ describe('given a default instance of NodeRequests', () => {
       });
       res.statusCode = 200;
       res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Connection', 'close');
       if ((req.url?.indexOf('json') || -1) >= 0) {
         res.end(JSON_RESPONSE);
       } else if ((req.url?.indexOf('interrupt') || -1) >= 0) {
