@@ -20,7 +20,7 @@ jobs:
           node-version: 16
           registry-url: 'https://registry.npmjs.org'
       - id: shared
-        uses: launchdarkly/js-core/.github/workflows/ci.yml@rlamb/sc-191283/add-ci-config
+        uses: ci@rlamb/sc-191283/add-ci-config
           with:
             workspace_name: '@launchdarkly/js-server-sdk-common'
             workspace_path: packages/shared/sdk-server
