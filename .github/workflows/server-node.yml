@@ -26,7 +26,7 @@ jobs:
           node-version: ${{ matrix.version }}
           registry-url: 'https://registry.npmjs.org'
       - id: shared
-        uses: ./actions/ci
+        uses: actions/ci
         with:
           workspace_name: '@launchdarkly/node-server-sdk'
           workspace_path: packages/sdk/server-node
