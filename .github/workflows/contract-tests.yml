@@ -15,7 +15,7 @@ on:
     - '**.md'
 
 jobs:
-  build:
+  contract-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -28,33 +28,8 @@ jobs:
           yarn workspace focus @launchdarkly/node-server-sdk
           yarn workspaces foreach -ptR --from '@launchdarkly/node-server-sdk' run build
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: sdk-build
-          path: ./
-    
-  contract-test-service:
-    runs-on: ubuntu-latest
-    needs: [build]
-    ports: [8000]
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: sdk-build
-      - run: ls
-      - name: Run Contract Test Service
-        run: yarn run contract-test-service
-
-  contract-test-harness:
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: sdk-build
-      - run: ls
-      - name: Run Contract Test Harness
-        run: yarn run contract-test-harness
+      - name: Run Contract Tests
+        run: yarn run contract-tests
     env:
       TEST_HARNESS_PARAMS: "--skip-from=./contract-tests/testharness-suppressions.txt"
     
