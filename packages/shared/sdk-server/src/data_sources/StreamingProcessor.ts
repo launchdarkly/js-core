@@ -20,6 +20,9 @@ function getKeyFromPath(kind: VersionedDataKind, path: string): string | undefin
     : undefined;
 }
 
+/**
+ * @internal
+ */
 export default class StreamingProcessor implements LDStreamProcessor {
   private headers: { [key: string]: string | string[] };
 

@@ -12,6 +12,9 @@ export interface LruCacheOptions {
   maxAge?: number
 }
 
+/**
+ * @internal
+ */
 export default class LruCache {
   private values: any[];
 

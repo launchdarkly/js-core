@@ -6,6 +6,9 @@ import { LDStreamingError } from '../errors';
 import Configuration from '../options/Configuration';
 import defaultHeaders from './defaultHeaders';
 
+/**
+ * @internal
+ */
 export default class Requestor implements LDFeatureRequestor {
   private readonly headers: Record<string, string>;
 

@@ -10,4 +10,7 @@ enum ErrorKinds {
   ClientNotReady = 'CLIENT_NOT_READY',
 }
 
+/**
+ * @internal
+ */
 export default ErrorKinds;

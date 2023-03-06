@@ -8,6 +8,9 @@ import VersionedDataKinds from '../store/VersionedDataKinds';
 import httpErrorMessage from './httpErrorMessage';
 import Requestor from './Requestor';
 
+/**
+ * @internal
+ */
 export default class PollingProcessor implements LDStreamProcessor {
   private stopped = false;
 

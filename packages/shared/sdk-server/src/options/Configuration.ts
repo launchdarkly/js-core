@@ -49,6 +49,9 @@ const validations: Record<string, TypeValidator> = {
   application: TypeValidators.Object,
 };
 
+/**
+ * @internal
+ */
 export const defaultValues: ValidatedOptions = {
   baseUri: 'https://sdk.launchdarkly.com',
   streamUri: 'https://stream.launchdarkly.com',
