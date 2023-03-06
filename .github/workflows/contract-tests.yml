@@ -1,0 +1,60 @@
+# Currently this repository uses the Node.js implementation of the contract
+# tests for testing. As more implementations are added, they should be ran
+# as well. Additionally the contract test implementation should likely be
+# moved to a subdirectory.
+name: Contract Tests (Node.js Server)
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Build SDK
+        run: |
+          yarn workspace focus @launchdarkly/node-server-sdk
+          yarn workspaces foreach -ptR --from '@launchdarkly/node-server-sdk' run build
+
+      - uses: actions/upload-artifact@v2
+              with:
+                name: sdk-build
+                path: ./
+    
+  contract-test-service:
+    runs-on: ubuntu-latest
+    needs: [build]
+    ports: [8000]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: sdk-build
+      - run: ls
+      - name: Run Contract Test Service
+        run: yarn run contract-test-service
+
+  contract-test-harness:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: sdk-build
+      - run: ls
+      - name: Run Contract Test Harness
+        run: yarn run contract-test-harness
+    env:
+      TEST_HARNESS_PARAMS: "--skip-from=./contract-tests/testharness-suppressions.txt"
+    
