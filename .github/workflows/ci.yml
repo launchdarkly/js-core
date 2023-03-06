@@ -41,7 +41,7 @@ jobs:
         run: yarn workspaces foreach -ptR --from '${{ inputs.workspace_name }}' run build
 
       - name: Lint
-        run: run: yarn workspace ${{ inputs.workspace_name }} lint
+        run: yarn workspace ${{ inputs.workspace_name }} lint
 
       - name: Test
         # Run just the tests for the targeted package.
