@@ -47,6 +47,7 @@ describe.each([
   ],
 ])('given application tags configurations %p', (config, result, logs) => {
   describe('when getting tag values', () => {
+    // @ts-ignore
     const tags = new ApplicationTags(config);
 
     it('produces the correct tag values', () => {
