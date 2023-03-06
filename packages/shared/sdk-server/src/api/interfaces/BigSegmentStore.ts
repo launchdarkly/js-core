@@ -11,9 +11,9 @@ export interface BigSegmentStore {
   /**
    * Queries information about the overall state of the store.
    *
-   * The resolved value of the Promise should always be a {@link BigSegmentStoreMetadata} object. If the
-   * store is accessible but contains no metadata, the object's `lastUpToDate` property can be
-   * undefined. If the store is not accessible due to a database error, the method can throw an
+   * The resolved value of the Promise should always be a {@link BigSegmentStoreMetadata} object.
+   * If the store is accessible but contains no metadata, the object's `lastUpToDate` property can
+   * be undefined. If the store is not accessible due to a database error, the method can throw an
    * exception/reject the promise.
    *
    * This method will be called only when the SDK needs the latest state, so it should not be

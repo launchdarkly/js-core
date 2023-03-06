@@ -1,7 +1,9 @@
 import * as createHttpsProxyAgent from 'https-proxy-agent';
 import { HttpsProxyAgentOptions } from 'https-proxy-agent';
 
-import { platform, LDTLSOptions, LDProxyOptions, LDLogger } from '@launchdarkly/js-server-sdk-common';
+import {
+  platform, LDTLSOptions, LDProxyOptions, LDLogger,
+} from '@launchdarkly/js-server-sdk-common';
 
 import * as http from 'http';
 import * as https from 'https';

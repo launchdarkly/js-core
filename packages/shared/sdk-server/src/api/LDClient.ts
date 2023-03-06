@@ -217,9 +217,10 @@ export interface LDClient {
    * Flushes all pending analytics events.
    *
    * Normally, batches of events are delivered in the background at intervals determined by the
-   * `flushInterval` property of {@link LDOptions}. Calling `flush()` triggers an immediate delivery.
-   * However, like Node I/O in general, this is still an asynchronous operation so you must still
-   * use Promise chaining, a callback, or `async`/`await` to detect when it has finished or failed.
+   * `flushInterval` property of {@link LDOptions}. Calling `flush()` triggers an immediate
+   * delivery. However, like Node I/O in general, this is still an asynchronous operation so you
+   * must still use Promise chaining, a callback, or `async`/`await` to detect when it has finished
+   * or failed.
    *
    * @param callback
    *   A function which will be called when the flush completes (meaning that all pending events

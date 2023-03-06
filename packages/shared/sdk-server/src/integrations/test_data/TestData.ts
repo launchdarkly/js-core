@@ -33,8 +33,8 @@ import TestDataSource from './TestDataSource';
  *
  * The above example uses a simple boolean flag, but more complex configurations are possible using
  * the methods of the {@link TestDataFlagBuilder} that is returned by {@link TestData.flag}.
- * {@link TestDataFlagBuilder} supports many of the ways a flag can be configured on the LaunchDarkly
- * dashboard, but does not currently support
+ * {@link TestDataFlagBuilder} supports many of the ways a flag can be configured on the
+ * LaunchDarkly dashboard, but does not currently support
  *  1. rule operators other than "in" and "not in", or
  *  2. percentage rollouts.
  *
@@ -144,11 +144,12 @@ export default class TestData {
    * flag to the test data which will be provided to any LDClient that you subsequently configure.
    *
    * Use this method if you need to use advanced flag configuration properties that are not
-   * supported by the simplified {@link TestDataFlagBuilder} API. Otherwise it is recommended to use the
-   * regular {@link flag}/{@link update} mechanism to avoid dependencies on details of the data model.
+   * supported by the simplified {@link TestDataFlagBuilder} API. Otherwise it is recommended to use
+   * the regular {@link flag}/{@link update} mechanism to avoid dependencies on details of the data
+   * model.
    *
-   * You cannot make incremental changes with {@link flag}/{@link update} to a flag that has been added in
-   * this way; you can only replace it with an entirely new flag configuration.
+   * You cannot make incremental changes with {@link flag}/{@link update} to a flag that has been
+   * added in this way; you can only replace it with an entirely new flag configuration.
    *
    * @param flagConfig the flag configuration as a JSON object
    * @return a promise that will resolve when the feature stores are updated
