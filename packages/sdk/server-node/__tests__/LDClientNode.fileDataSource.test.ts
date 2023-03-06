@@ -85,11 +85,9 @@ jest.setTimeout(30000);
 
 describe('When using a file data source', () => {
   afterAll(async () => {
-    try {
-      await fs.rmdir(tmpDir, { recursive: true });
-    } catch {
-      // Not critical.
-    }
+    fs.rm(tmpDir, { recursive: true }).catch(() => {
+      // Don't care.
+    });
   });
 
   it('loads flags on start from JSON', async () => {
