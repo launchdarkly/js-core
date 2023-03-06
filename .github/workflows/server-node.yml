@@ -27,7 +27,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - id: shared
         uses: ci@rlamb/sc-191283/add-ci-config
-          with:
-            workspace_name: '@launchdarkly/node-server-sdk'
-            workspace_path: packages/sdk/server-node
+        with:
+          workspace_name: '@launchdarkly/node-server-sdk'
+          workspace_path: packages/sdk/server-node
 
