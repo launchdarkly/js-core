@@ -16,8 +16,8 @@ jobs:
     with:
       workspace_name: '@launchdarkly/node-server-sdk'
       workspace_path: packages/sdk/server-node
-
-    - name: Run Contract Tests
-      run: yarn run contract-tests
+    steps:
+      - name: Run Contract Tests
+        run: yarn run contract-tests
     env:
       TEST_HARNESS_PARAMS: "--skip-from=./contract-tests/testharness-suppressions.txt"
