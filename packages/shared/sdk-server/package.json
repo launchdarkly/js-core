@@ -14,8 +14,8 @@
     "client"
   ],
   "scripts": {
-    "test": "jest --ci",
-    "build": "tsc"
+    "test": "npx jest",
+    "build": "npx tsc"
   },
   "license": "Apache-2.0",
   "dependencies": {
