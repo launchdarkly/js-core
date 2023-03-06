@@ -75,7 +75,9 @@ jest.setTimeout(30000);
 describe('When using a file data source', () => {
   afterAll(() => {
     tmpFiles.forEach((filePath) => {
-      fs.unlinkSync(filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     });
   });
 
