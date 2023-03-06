@@ -20,6 +20,7 @@ jobs:
           node-version: 16
           registry-url: 'https://registry.npmjs.org'
       - id: shared
+        name: Shared CI Steps
         uses: ./actions/ci
         with:
           workspace_name: '@launchdarkly/js-sdk-common'
