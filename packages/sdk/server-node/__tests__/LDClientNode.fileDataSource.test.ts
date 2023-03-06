@@ -55,10 +55,10 @@ const tmpFiles: string[] = [];
 
 function makeTempFile(content: string): string {
   const fileName = (Math.random() + 1).toString(36).substring(7);
-  if (!fs.existsSync('./tmp')) {
-    fs.mkdirSync('./tmp');
+  if (!fs.existsSync('./tmp_test')) {
+    fs.mkdirSync('./tmp_test');
   }
-  const fullPath = `./tmp/${fileName}`;
+  const fullPath = `./tmp_test/${fileName}`;
   fs.writeFileSync(fullPath, content);
   tmpFiles.push(fullPath);
   return fullPath;
