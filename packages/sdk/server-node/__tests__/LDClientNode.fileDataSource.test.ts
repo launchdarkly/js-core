@@ -1,5 +1,5 @@
 import { integrations } from '@launchdarkly/js-server-sdk-common';
-import * as fs from 'node:fs';
+import * as fs from 'node:fs/promises';
 import LDClientNode from '../src/LDClientNode';
 
 const flag1Key = 'flag1';
@@ -53,19 +53,28 @@ const allPropertiesJson = `
 
 const tmpFiles: string[] = [];
 
-function makeTempFile(content: string): string {
+async function exists(path: string): Promise<boolean> {
+  try {
+    await fs.stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function makeTempFile(content: string): Promise<string> {
   const fileName = (Math.random() + 1).toString(36).substring(7);
-  if (!fs.existsSync('./tmp_test')) {
-    fs.mkdirSync('./tmp_test');
+  if (!await exists('./tmp_test')) {
+    await fs.mkdir('./tmp_test');
   }
   const fullPath = `./tmp_test/${fileName}`;
-  fs.writeFileSync(fullPath, content);
+  await fs.writeFile(fullPath, content);
   tmpFiles.push(fullPath);
   return fullPath;
 }
 
-function replaceFileContent(filePath: string, content: string) {
-  fs.writeFileSync(filePath, content);
+async function replaceFileContent(filePath: string, content: string) {
+  return fs.writeFile(filePath, content);
 }
 
 // Filesystem operations can be slow in CI environments.
@@ -75,14 +84,12 @@ jest.setTimeout(30000);
 describe('When using a file data source', () => {
   afterAll(() => {
     tmpFiles.forEach((filePath) => {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+      fs.unlink(filePath);
     });
   });
 
   it('loads flags on start from JSON', async () => {
-    const path = makeTempFile(allPropertiesJson);
+    const path = await makeTempFile(allPropertiesJson);
     const fds = new integrations.FileDataSourceFactory({
       paths: [path],
     });
@@ -105,8 +112,8 @@ describe('When using a file data source', () => {
   });
 
   it('it can load multiple files', async () => {
-    const path1 = makeTempFile(flagOnlyJson);
-    const path2 = makeTempFile(segmentOnlyJson);
+    const path1 = await makeTempFile(flagOnlyJson);
+    const path2 = await makeTempFile(segmentOnlyJson);
     const fds = new integrations.FileDataSourceFactory({
       paths: [path1, path2],
     });
@@ -127,7 +134,7 @@ describe('When using a file data source', () => {
   });
 
   it('reloads the file if the content changes', async () => {
-    const path = makeTempFile(allPropertiesJson);
+    const path = await makeTempFile(allPropertiesJson);
     const fds = new integrations.FileDataSourceFactory({
       paths: [path],
       autoUpdate: true,
@@ -147,15 +154,15 @@ describe('When using a file data source', () => {
     const f2Var = await client.variation(flag2Key, { key: 'user1' }, 'default');
     expect(f2Var).toEqual('value2');
 
-    replaceFileContent(path, flagOnlyJson);
+    await replaceFileContent(path, flagOnlyJson);
 
     await new Promise<void>((resolve) => {
-      client.once('update', () => {
+      client.once('update', async () => {
         // After the file reloads we get changes, so we know we can move onto
         // evaluation.
+        await replaceFileContent(path, flagOnlyJson);
         resolve();
       });
-      replaceFileContent(path, flagOnlyJson);
     });
 
     const f1VarB = await client.variation(flag1Key, { key: 'user1' }, 'default');

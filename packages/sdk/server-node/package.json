@@ -11,7 +11,8 @@
     "client"
   ],
   "scripts": {
-    "test": "npx jest --ci",
+    "//": "We run the tests in-band because the FS tests work best sequential.",
+    "test": "npx jest --ci --runInBand",
     "build": "npx tsc"
   },
   "license": "Apache-2.0",
