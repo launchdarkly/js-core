@@ -1,6 +1,6 @@
-# This is a re-usable workflow intended to define CI steps for projects in this monorepo.
-# If the package diverges substantially from this, then it can implement its own workflow,
-# but most packages should try to use this first.
+# This is a composite to allow sharing these steps into other workflows.
+# It isn't a shared workflow, because then it isn't convenient to add
+# additional package specific steps.
 name: Shared CI Workflow
 inputs:
   # Some commands work on the package name (yarn commands), other require the path (typedoc),
