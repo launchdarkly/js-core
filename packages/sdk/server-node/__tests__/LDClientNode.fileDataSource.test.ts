@@ -68,6 +68,10 @@ function replaceFileContent(filePath: string, content: string) {
   fs.writeFileSync(filePath, content);
 }
 
+// Filesystem operations can be slow in CI environments.
+// This is outside a describe block because of: https://github.com/facebook/jest/issues/11543
+jest.setTimeout(30000);
+
 describe('When using a file data source', () => {
   afterAll(() => {
     tmpFiles.forEach((filePath) => {
@@ -121,8 +125,6 @@ describe('When using a file data source', () => {
   });
 
   it('reloads the file if the content changes', async () => {
-    // Filesystem operations can be slow in CI environments.
-    jest.setTimeout(30000);
     const path = makeTempFile(allPropertiesJson);
     const fds = new integrations.FileDataSourceFactory({
       paths: [path],
