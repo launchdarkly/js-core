@@ -13,7 +13,7 @@ export interface Filesystem {
    * The time, in ms since POSIX epoch, that the file was last modified.
    * @param path The path to get a timestamp for.
    *
-   * @returns A promise which will resolve to a timestamp if succeful, or be
+   * @returns A promise which will resolve to a timestamp if successful, or be
    * rejected if the operation fails.
    */
   getFileTimestamp(path: string): Promise<number>

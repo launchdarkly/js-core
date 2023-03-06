@@ -49,7 +49,7 @@ export default class FileLoader {
     // If we are watching, then setup watchers and notify of any changes.
     if (this.watch) {
       this.paths.forEach((path) => {
-        const watcher = this.filesystem.watch(path, async (_, updatePath) => {
+        const watcher = this.filesystem.watch(path, async (updateType, updatePath) => {
           const timeStamp = await this.filesystem.getFileTimestamp(updatePath);
           // The modification time is the same, so we are going to ignore this update.
           // In some implementations watch might be triggered multiple times for a single update.
@@ -59,6 +59,7 @@ export default class FileLoader {
           this.fileTimestamps[updatePath] = timeStamp;
           const data = await this.filesystem.readFile(updatePath);
           this.fileData[updatePath] = data;
+
           this.debounceCallback();
         });
         this.watchers.push(watcher);

@@ -79,13 +79,9 @@ async function replaceFileContent(filePath: string, content: string) {
   return fs.writeFile(filePath, content);
 }
 
-// Filesystem operations can be slow in CI environments.
-// This is outside a describe block because of: https://github.com/facebook/jest/issues/11543
-jest.setTimeout(30000);
-
 describe('When using a file data source', () => {
   afterAll(async () => {
-    fs.rm(tmpDir, { recursive: true }).catch(() => {
+    await fs.rm(tmpDir, { recursive: true }).catch(() => {
       // Don't care.
     });
   });
@@ -156,16 +152,21 @@ describe('When using a file data source', () => {
     const f2Var = await client.variation(flag2Key, { key: 'user1' }, 'default');
     expect(f2Var).toEqual('value2');
 
-    await replaceFileContent(path, flagOnlyJson);
-
-    await new Promise<void>((resolve) => {
+    const updatePromise = new Promise<void>((resolve) => {
       client.once('update', async () => {
         // After the file reloads we get changes, so we know we can move onto
         // evaluation.
-        await replaceFileContent(path, flagOnlyJson);
         resolve();
       });
     });
+
+    // Introduce a little delay so the file timestamp changes.
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 100);
+    });
+    await replaceFileContent(path, flagOnlyJson);
+
+    await updatePromise;
 
     const f1VarB = await client.variation(flag1Key, { key: 'user1' }, 'default');
     expect(f1VarB).toEqual('on'); // Segment doesn't exist anymore.
