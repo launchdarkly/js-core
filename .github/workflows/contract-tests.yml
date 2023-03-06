@@ -23,6 +23,9 @@ jobs:
         with:
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Setup Yarn
+        run: yarn set version 3.4.1
+
       - name: Build SDK
         run: |
           yarn workspace focus @launchdarkly/node-server-sdk
