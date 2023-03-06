@@ -1,4 +1,4 @@
-name: Build and Test sdk/server-node
+name: sdk/server-node
 
 on:
   push:

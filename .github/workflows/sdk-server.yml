@@ -1,4 +1,4 @@
-name: Build and Test shared/sdk-server
+name: shared/sdk-server
 
 on:
   push:
