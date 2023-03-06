@@ -198,7 +198,7 @@ describe('when deserializing all data', () => {
   it('handles a flag with a rollout in a rule', () => {
     const jsonString = makeSerializedAllData(flagWithBucketByInRolloutInRule);
     const parsed = deserializeAll(jsonString);
-    const ref = parsed.data.flags.flagName.rules?.[0].rollout?.bucketByAttributeReference;
+    const ref = parsed?.data.flags.flagName.rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
 });
