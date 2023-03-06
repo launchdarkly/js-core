@@ -1,6 +1,7 @@
 # This is a re-usable workflow intended to define CI steps for projects in this monorepo.
 # If the package diverges substantially from this, then it can implement its own workflow,
 # but most packages should try to use this first.
+name: Shared CI Workflow
 on:
   workflow_call:
     inputs:
