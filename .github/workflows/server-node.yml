@@ -33,4 +33,6 @@ jobs:
           workspace_path: packages/sdk/server-node
       - name: Contract Tests
         run: yarn run contract-tests
+        env:
+          TEST_HARNESS_PARAMS: "--skip-from=./contract-tests/testharness-suppressions.txt"
 

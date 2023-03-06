@@ -1,3 +1,6 @@
+# This is a composite to allow sharing these steps into other workflows.
+# It isn't a shared workflow, because then it isn't convenient to add
+# additional package specific steps.
 name: shared/common
 
 on:
