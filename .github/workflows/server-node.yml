@@ -19,6 +19,9 @@ jobs:
         # Node versions to run on.
         version: [16, 18, 19]
 
+    env:
+      TEST_HARNESS_PARAMS: "--skip-from=./contract-tests/testharness-suppressions.txt"
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -33,6 +36,3 @@ jobs:
           workspace_path: packages/sdk/server-node
       - name: Contract Tests
         run: yarn run contract-tests
-        env:
-          TEST_HARNESS_PARAMS: "--skip-from=./contract-tests/testharness-suppressions.txt"
-
