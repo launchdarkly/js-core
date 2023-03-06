@@ -1,0 +1,18 @@
+name: Build and test shared/common
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md'
+
+jobs:
+  build-test-package-a:
+    uses: launchdarkly/learn-release-please/.github/workflows/ci.yml@main
+    with:
+      workspace_name: '@launchdarkly/js-sdk-common'
+      workspace_path: packages/shared/common

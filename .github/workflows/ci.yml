@@ -1,0 +1,48 @@
+# This is a re-usable workflow intended to define CI steps for projects in this monorepo.
+# If the package diverges substantially from this, then it can implement its own workflow,
+# but most packages should try to use this first.
+on:
+  workflow_call:
+    inputs:
+      # Some commands work on the package name (yarn commands), other require the path (typedoc),
+      # so we supply both.
+      workspace_name:
+        required: true
+        type: string
+      workspace_path:
+        required: true
+        type: string
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # Node versions to run on.
+        version: [16, 18, 19]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.version }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Yarn
+        run: yarn set version 3.4.1
+
+      - name: Install Dependencies
+        # Install only the dependencies requires for the specific workspace.
+        run: yarn workspaces focus ${{ inputs.workspace_name }}
+        
+      - name: Build
+        # This will build the package and its dependencies.
+        run: yarn workspaces foreach -ptR --from '${{ inputs.workspace_name }}' run build
+
+      - name: Test
+        # Run just the tests for the targeted package.
+        run: yarn workspace ${{ inputs.workspace_name }} test
+
+      - name: Build Docs
+        run: ./scripts/build-doc.sh ${{ inputs.workspace_path }}

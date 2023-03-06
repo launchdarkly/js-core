@@ -1,0 +1,18 @@
+name: Build and Test sdk/server-node
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+    - '**.md'
+
+jobs:
+  build-test-package-a:
+    uses: launchdarkly/js-core/.github/workflows/ci.yml@main
+    with:
+      workspace_name: '@launchdarkly/node-server-sdk'
+      workspace_path: packages/sdk/server-node
