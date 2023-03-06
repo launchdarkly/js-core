@@ -7,9 +7,9 @@ import { LDFlagsState } from './data/LDFlagsState';
 /**
  * The LaunchDarkly SDK client object.
  *
- * Create this object with {@link init}. Applications should configure the client at startup time and
- * continue to use it throughout the lifetime of the application, rather than creating instances on
- * the fly.
+ * Create this object with {@link init}. Applications should configure the client at startup time
+ * and continue to use it throughout the lifetime of the application, rather than creating instances
+ * on the fly.
  *
  */
 export interface LDClient {
@@ -35,8 +35,8 @@ export interface LDClient {
    * this method, be sure to attach a rejection handler to it (or, if using `async`/`await`, a catch
    * block).
    *
-   * Note that you can also use event listeners ({@link on}) for the same purpose: the event `"ready"`
-   * indicates success, and `"failed"` indicates failure.
+   * Note that you can also use event listeners ({@link on}) for the same purpose: the event
+   * `"ready"` indicates success, and `"failed"` indicates failure.
    *
    * There is no built-in timeout for this method. If you want your code to stop waiting on the
    * Promise after some amount of time, you could use
@@ -108,8 +108,8 @@ export interface LDClient {
    *   register this context with LaunchDarkly if the context does not already exist.
    * @param defaultValue The default value of the flag, to be used if the value is not available
    *   from LaunchDarkly.
-   * @param callback A Node-style callback to receive the result (as an {@link LDEvaluationDetail}). If
-   *   omitted, you will receive a Promise instead.
+   * @param callback A Node-style callback to receive the result (as an {@link LDEvaluationDetail}).
+   *   If omitted, you will receive a Promise instead.
    * @returns
    *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
    *   the result (as an{@link LDEvaluationDetail}).
