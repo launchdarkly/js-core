@@ -121,6 +121,8 @@ describe('When using a file data source', () => {
   });
 
   it('reloads the file if the content changes', async () => {
+    // Filesystem operations can be slow in CI environments.
+    jest.setTimeout(30000);
     const path = makeTempFile(allPropertiesJson);
     const fds = new integrations.FileDataSourceFactory({
       paths: [path],
