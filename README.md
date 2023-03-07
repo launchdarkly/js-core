@@ -7,12 +7,12 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 | SDK Packages                                                               | npm                          | issues                           | tests                          
 | ---------------------------------------------------------------------------| -----------------------------| -------------------------------- | -------------------------------
-| [@launchdarkly/node-server-sdk](packages/sdk/node/README.md)               | [![NPM Package][TODO]][TODO] | [![Client Issues][TODO]][TODO]   | [![Actions Status][TODO]][TODO]
+| [@launchdarkly/node-server-sdk](packages/sdk/node/README.md)               | [![NPM Package][TODO]][TODO] | [![Client Issues][TODO]][TODO]   | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci-badge]
 
 | Shared Packages                                                            | npm                          | issues                           | tests                          
 | ---------------------------------------------------------------------------| -----------------------------| -------------------------------- | -------------------------------
-| [@launchdarkly/js-sdk-common](packages/shared/common/README.md)            | [![NPM Package][TODO]][TODO] | [![Common][TODO]][TODO]          | [![Actions Status][TODO]][TODO]
-| [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md) | [![NPM Package][TODO]][TODO] | [![Common Server][TODO]][TODO]   | [![Actions Status][TODO]][TODO]
+| [@launchdarkly/js-sdk-common](packages/shared/common/README.md)            | [![NPM Package][TODO]][TODO] | [![Common][TODO]][TODO]          | [![Actions Status][shared-common-ci-badge]][shared-common-ci]
+| [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md) | [![NPM Package][TODO]][TODO] | [![Common Server][TODO]][TODO]   | [![Actions Status][shared-sdk-server-ci-badge]][shared-sdk-server-ci]
 
 ## Organization
 
@@ -49,3 +49,12 @@ We encourage pull requests and other contributions from the community. Check out
     * [docs.launchdarkly.com](https://docs.launchdarkly.com/  "LaunchDarkly Documentation") for our documentation and SDK reference guides
     * [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/  "LaunchDarkly API Documentation") for our API documentation
     * [blog.launchdarkly.com](https://blog.launchdarkly.com/  "LaunchDarkly Blog Documentation") for the latest product updates
+
+[shared-common-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/common.yml/badge.svg
+[shared-common-ci]: https://github.com/launchdarkly/js-core/actions/workflows/common.yml
+
+[shared-sdk-server-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml/badge.svg
+[shared-sdk-server-ci]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml
+
+[sdk-server-node-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-node.yml/badge.svg
+[sdk-server-node-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-node.yml
