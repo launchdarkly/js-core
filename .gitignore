@@ -8,7 +8,9 @@ coverage/
 docs/
 .pnp.*
 .yarn/*
-!.yarn/patches
+.dev*
+.vscode/launch.json
+.idea
 !.yarn/plugins
 !.yarn/releases
 !.yarn/sdks
