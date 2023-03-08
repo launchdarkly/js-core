@@ -1,5 +1,7 @@
 import { integrations } from '@launchdarkly/js-server-sdk-common';
-import * as fs from 'node:fs/promises';
+import {
+  mkdir, rm, stat, writeFile,
+} from 'node:fs/promises';
 import LDClientNode from '../src/LDClientNode';
 
 const flag1Key = 'flag1';
@@ -55,7 +57,7 @@ const tmpFiles: string[] = [];
 
 async function exists(path: string): Promise<boolean> {
   try {
-    await fs.stat(path);
+    await stat(path);
     return true;
   } catch {
     return false;
@@ -67,21 +69,21 @@ const tmpDir = './tmp_test';
 async function makeTempFile(content: string): Promise<string> {
   const fileName = (Math.random() + 1).toString(36).substring(7);
   if (!await exists(tmpDir)) {
-    await fs.mkdir(tmpDir);
+    await mkdir(tmpDir);
   }
   const fullPath = `${tmpDir}/${fileName}`;
-  await fs.writeFile(fullPath, content);
+  await writeFile(fullPath, content);
   tmpFiles.push(fullPath);
   return fullPath;
 }
 
 async function replaceFileContent(filePath: string, content: string) {
-  return fs.writeFile(filePath, content);
+  return writeFile(filePath, content);
 }
 
 describe('When using a file data source', () => {
   afterAll(async () => {
-    await fs.rm(tmpDir, { recursive: true }).catch(() => {
+    await rm(tmpDir, { recursive: true }).catch(() => {
       // Don't care.
     });
   });
