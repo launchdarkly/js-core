@@ -160,8 +160,8 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
     undefined,
   ],
 ])('given flag configurations with different targets', (flag, context, expected) => {
-  // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${
+    // @ts-ignore
     context.kind
   } targets: ${flag.targets?.map(
     (t) => `${t.values}, ${t.variation}`

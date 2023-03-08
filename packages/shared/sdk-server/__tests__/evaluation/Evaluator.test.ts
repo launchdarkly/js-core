@@ -33,8 +33,8 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
 ])('Given off flags and an evaluator', (flag, context, expected) => {
   const evaluator = new Evaluator(basicPlatform, noQueries);
 
-  // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${
+    // @ts-ignore
     context.kind
   } targets: ${flag.targets?.map(
     (t) => `${t.values}, ${t.variation}`
@@ -136,8 +136,8 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
   ],
 ])('given flag configurations with different targets that match', (flag, context, expected) => {
   const evaluator = new Evaluator(basicPlatform, noQueries);
-  // @ts-ignore
   it(`produces the expected evaluation result for context: ${context.key} ${
+    // @ts-ignore
     context.kind
   } targets: ${flag.targets?.map(
     (t) => `${t.values}, ${t.variation}`
