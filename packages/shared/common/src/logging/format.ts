@@ -21,7 +21,9 @@ function tryStringify(val: any) {
   if (Object.prototype.hasOwnProperty.call(val, 'toString')) {
     try {
       return val.toString();
-    } catch { /* Keep going */ }
+    } catch {
+      /* Keep going */
+    }
   }
 
   if (typeof val === 'bigint') {

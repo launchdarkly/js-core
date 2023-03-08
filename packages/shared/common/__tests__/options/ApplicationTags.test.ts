@@ -12,10 +12,15 @@ function makeLogger() {
 describe.each([
   [
     { application: { id: 'is-valid', version: 'also-valid' }, logger: makeLogger() },
-    'application-id/is-valid application-version/also-valid', [],
+    'application-id/is-valid application-version/also-valid',
+    [],
   ],
   [{ application: { id: 'is-valid' }, logger: makeLogger() }, 'application-id/is-valid', []],
-  [{ application: { version: 'also-valid' }, logger: makeLogger() }, 'application-version/also-valid', []],
+  [
+    { application: { version: 'also-valid' }, logger: makeLogger() },
+    'application-version/also-valid',
+    [],
+  ],
   [{ application: {}, logger: makeLogger() }, undefined, []],
   [{ logger: makeLogger() }, undefined, []],
   [undefined, undefined, undefined],
@@ -23,19 +28,18 @@ describe.each([
   // Above ones are 'valid' cases. Below are invalid.
   [
     { application: { id: 'bad tag' }, logger: makeLogger() },
-    undefined, [
-      { level: 'warn', matches: /Config option "application.id" must/ },
-    ],
+    undefined,
+    [{ level: 'warn', matches: /Config option "application.id" must/ }],
   ],
   [
     { application: { id: 'bad tag', version: 'good-tag' }, logger: makeLogger() },
-    'application-version/good-tag', [
-      { level: 'warn', matches: /Config option "application.id" must/ },
-    ],
+    'application-version/good-tag',
+    [{ level: 'warn', matches: /Config option "application.id" must/ }],
   ],
   [
     { application: { id: 'bad tag', version: 'also bad' }, logger: makeLogger() },
-    undefined, [
+    undefined,
+    [
       { level: 'warn', matches: /Config option "application.id" must/ },
       { level: 'warn', matches: /Config option "application.version" must/ },
     ],
@@ -43,7 +47,8 @@ describe.each([
   // Bad tags and no logger.
   [
     { application: { id: 'bad tag', version: 'also bad' }, logger: undefined },
-    undefined, undefined,
+    undefined,
+    undefined,
   ],
 ])('given application tags configurations %p', (config, result, logs) => {
   describe('when getting tag values', () => {
@@ -60,16 +65,16 @@ describe.each([
       if (logs) {
         const expected = [...logs];
         config!.logger!.warn.mock.calls.forEach((call) => {
-          const index = expected.findIndex(
-            (expectedLog) => call[0].match(expectedLog.matches),
-          );
+          const index = expected.findIndex((expectedLog) => call[0].match(expectedLog.matches));
           if (index < 0) {
             throw new Error(`Did not find expectation for ${call[0]}`);
           }
           expected.splice(index, 1);
         });
         if (expected.length) {
-          throw new Error(`Did not find expected messages: ${expected.map((item) => item.matches.toString())}`);
+          throw new Error(
+            `Did not find expected messages: ${expected.map((item) => item.matches.toString())}`
+          );
         }
       }
     });

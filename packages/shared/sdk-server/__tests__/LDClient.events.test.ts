@@ -14,8 +14,12 @@ describe('given a client with mock event processor', () => {
 
   beforeEach(async () => {
     events = [];
-    jest.spyOn(internal.EventProcessor.prototype, 'sendEvent').mockImplementation((evt) => events.push(evt));
-    jest.spyOn(internal.EventProcessor.prototype, 'flush').mockImplementation(() => Promise.resolve());
+    jest
+      .spyOn(internal.EventProcessor.prototype, 'sendEvent')
+      .mockImplementation((evt) => events.push(evt));
+    jest
+      .spyOn(internal.EventProcessor.prototype, 'flush')
+      .mockImplementation(() => Promise.resolve());
 
     td = new TestData();
     client = new LDClientImpl(
@@ -24,7 +28,7 @@ describe('given a client with mock event processor', () => {
       {
         updateProcessor: td.getFactory(),
       },
-      makeCallbacks(false),
+      makeCallbacks(false)
     );
     await client.waitForInitialization();
   });
@@ -87,7 +91,8 @@ describe('given a client with mock event processor', () => {
   });
 
   it('forces tracking when a matched rule has trackEvents set', async () => {
-    td.usePreconfiguredFlag({ // TestData doesn't normally set trackEvents
+    td.usePreconfiguredFlag({
+      // TestData doesn't normally set trackEvents
       key: 'flagkey',
       version: 1,
       on: true,

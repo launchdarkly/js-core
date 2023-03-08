@@ -5,11 +5,11 @@ export interface LruCacheOptions {
   /**
    * The maximum items to keep in the cache.
    */
-  max: number,
+  max: number;
   /**
    * The maximum age, in milliseconds, for items in the cache.
    */
-  maxAge?: number
+  maxAge?: number;
 }
 
 /**
@@ -85,7 +85,7 @@ export default class LruCache {
     if (index !== undefined) {
       if (this.maxAge) {
         const lastUpdated = this.lastUpdated[index];
-        if ((Date.now() - lastUpdated) > this.maxAge) {
+        if (Date.now() - lastUpdated > this.maxAge) {
           // The oldest items are always the head, so they get incrementally
           // replaced. This would not be the case if we supported per item TTL.
           return undefined;

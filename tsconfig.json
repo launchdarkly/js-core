@@ -12,6 +12,6 @@
     },
     {
       "path": "./packages/sdk/server-node/tsconfig.ref.json"
-    },
-  ],
+    }
+  ]
 }

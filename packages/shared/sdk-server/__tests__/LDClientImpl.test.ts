@@ -9,7 +9,7 @@ it('fires ready event in offline mode', (done) => {
     'sdk-key',
     basicPlatform,
     { offline: true },
-    { ...makeCallbacks(false), onReady: () => done() },
+    { ...makeCallbacks(false), onReady: () => done() }
   );
   client.close();
 });
@@ -25,11 +25,11 @@ it('fires the failed event if initialization fails', (done) => {
             fn(new Error('BAD THINGS'));
           }, 0);
         },
-        stop: () => { },
-        close: () => { },
+        stop: () => {},
+        close: () => {},
       },
     },
-    { ...makeCallbacks(false), onFailed: () => done() },
+    { ...makeCallbacks(false), onFailed: () => done() }
   );
 
   client.close();
@@ -46,7 +46,7 @@ it('isOffline returns true in offline mode', (done) => {
         expect(client.isOffline()).toEqual(true);
         done();
       },
-    },
+    }
   );
 
   client.close();
@@ -66,13 +66,13 @@ describe('when waiting for initialization', () => {
               fn();
             }, 0);
           },
-          stop: () => { },
-          close: () => { },
+          stop: () => {},
+          close: () => {},
         },
         sendEvents: false,
         logger: new TestLogger(),
       },
-      makeCallbacks(false),
+      makeCallbacks(false)
     );
   });
 
@@ -101,7 +101,7 @@ it('does not crash when closing an offline client', () => {
     'sdk-key',
     basicPlatform,
     { offline: true },
-    makeCallbacks(false),
+    makeCallbacks(false)
   );
 
   expect(() => client.close()).not.toThrow();
@@ -119,12 +119,12 @@ it('the wait for initialization promise is rejected if initialization fails', (d
             fn(new Error('BAD THINGS'));
           }, 0);
         },
-        stop: () => { },
-        close: () => { },
+        stop: () => {},
+        close: () => {},
       },
       sendEvents: false,
     },
-    makeCallbacks(false),
+    makeCallbacks(false)
   );
 
   client.waitForInitialization().catch(() => done());

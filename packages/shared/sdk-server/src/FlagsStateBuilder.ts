@@ -3,12 +3,12 @@ import { Flag } from './evaluation/data/Flag';
 import { LDFlagsState } from './api/data/LDFlagsState';
 
 interface FlagMeta {
-  variation?: number,
-  version?: number,
-  reason?: LDEvaluationReason,
-  trackEvents?: boolean,
-  trackReason?: boolean,
-  debugEventsUntilDate?: number,
+  variation?: number;
+  version?: number;
+  reason?: LDEvaluationReason;
+  trackEvents?: boolean;
+  trackReason?: boolean;
+  debugEventsUntilDate?: number;
 }
 
 export default class FlagsStateBuilder {
@@ -16,8 +16,7 @@ export default class FlagsStateBuilder {
 
   private flagMetadata: Record<string, FlagMeta> = {};
 
-  constructor(private valid: boolean, private withReasons: boolean) {
-  }
+  constructor(private valid: boolean, private withReasons: boolean) {}
 
   addFlag(
     flag: Flag,
@@ -26,17 +25,18 @@ export default class FlagsStateBuilder {
     reason: LDEvaluationReason,
     trackEvents: boolean,
     trackReason: boolean,
-    detailsOnlyIfTracked: boolean,
+    detailsOnlyIfTracked: boolean
   ) {
     this.flagValues[flag.key] = value;
     const meta: FlagMeta = {};
     if (variation !== undefined) {
       meta.variation = variation;
     }
-    const omitDetails = detailsOnlyIfTracked
-      && !trackEvents
-      && !trackReason
-      && (flag.debugEventsUntilDate === undefined); // 0 probably doesn't matter.
+    const omitDetails =
+      detailsOnlyIfTracked &&
+      !trackEvents &&
+      !trackReason &&
+      flag.debugEventsUntilDate === undefined; // 0 probably doesn't matter.
     if (!omitDetails) {
       meta.version = flag.version;
     }
@@ -61,8 +61,8 @@ export default class FlagsStateBuilder {
       valid: state.valid,
       allValues: () => state.flagValues,
       getFlagValue: (key) => state.flagValues[key],
-      getFlagReason: (key) => (state.flagMetadata[key] ? state.flagMetadata[key].reason
-        : null) ?? null,
+      getFlagReason: (key) =>
+        (state.flagMetadata[key] ? state.flagMetadata[key].reason : null) ?? null,
       toJSON: () => ({
         ...state.flagValues,
         $flagsState: state.flagMetadata,

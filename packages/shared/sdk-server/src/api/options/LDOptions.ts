@@ -87,8 +87,12 @@ export interface LDOptions {
    *
    * By default, this is the client's default streaming or polling component.
    */
-  updateProcessor?: object |
-  ((clientContext: LDClientContext, dataSourceUpdates: LDDataSourceUpdates) => LDStreamProcessor);
+  updateProcessor?:
+    | object
+    | ((
+        clientContext: LDClientContext,
+        dataSourceUpdates: LDDataSourceUpdates
+      ) => LDStreamProcessor);
 
   /**
    * The interval in between flushes of the analytics events queue, in seconds.

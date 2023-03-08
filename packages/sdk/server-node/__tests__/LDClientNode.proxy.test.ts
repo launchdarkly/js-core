@@ -27,7 +27,7 @@ describe('When using a proxy', () => {
   beforeEach(() => {
     closeable = [];
     logger = basicLogger({
-      destination: () => { },
+      destination: () => {},
     });
   });
 

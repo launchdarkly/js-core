@@ -24,7 +24,7 @@ describe('given an LDClient with test data', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
       },
-      makeCallbacks(true),
+      makeCallbacks(true)
     );
 
     await client.waitForInitialization();
@@ -49,7 +49,8 @@ describe('given an LDClient with test data', () => {
   });
 
   it('returns the default for a flag which evaluates to null', async () => {
-    td.usePreconfiguredFlag({ // TestData normally won't construct a flag with offVariation: null
+    td.usePreconfiguredFlag({
+      // TestData normally won't construct a flag with offVariation: null
       key: 'flagIsNull',
       on: false,
       offVariation: null,
@@ -59,15 +60,18 @@ describe('given an LDClient with test data', () => {
   });
 
   it('returns the default for a flag which evaluates to null using variationDetail', async () => {
-    td.usePreconfiguredFlag({ // TestData normally won't construct a flag with offVariation: null
+    td.usePreconfiguredFlag({
+      // TestData normally won't construct a flag with offVariation: null
       key: 'flagIsNull',
       on: false,
       offVariation: null,
     });
 
-    expect(await client.variationDetail('flagIsNull', defaultUser, 'default')).toMatchObject(
-      { value: 'default', variationIndex: null, reason: { kind: 'OFF' } },
-    );
+    expect(await client.variationDetail('flagIsNull', defaultUser, 'default')).toMatchObject({
+      value: 'default',
+      variationIndex: null,
+      reason: { kind: 'OFF' },
+    });
   });
 
   it('can use a callback instead of a promise', (done) => {
@@ -81,32 +85,30 @@ describe('given an LDClient with test data', () => {
   it('can use a callback instead of a promise for variationDetail', (done) => {
     client.variationDetail('nonsense', defaultUser, 'default', (err, result) => {
       expect(err).toBeNull();
-      expect(result).toMatchObject(
-        {
-          value: 'default',
-          variationIndex: null,
-          reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-        },
-      );
+      expect(result).toMatchObject({
+        value: 'default',
+        variationIndex: null,
+        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      });
       done();
     });
   });
 
   it('can evaluate an existing flag with detail', async () => {
     td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
-    expect(await client.variationDetail('flagkey', defaultUser, 'c')).toMatchObject(
-      { value: 'b', variationIndex: 1, reason: { kind: 'FALLTHROUGH' } },
-    );
+    expect(await client.variationDetail('flagkey', defaultUser, 'c')).toMatchObject({
+      value: 'b',
+      variationIndex: 1,
+      reason: { kind: 'FALLTHROUGH' },
+    });
   });
 
   it('returns default for an unknown flag with detail', async () => {
-    expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject(
-      {
-        value: 'default',
-        variationIndex: null,
-        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-      },
-    );
+    expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject({
+      value: 'default',
+      variationIndex: null,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+    });
   });
 });
 
@@ -127,7 +129,7 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      makeCallbacks(true),
+      makeCallbacks(true)
     );
   });
 
@@ -180,7 +182,7 @@ describe('given a client and store that are uninitialized', () => {
         sendEvents: false,
         featureStore: store,
       },
-      makeCallbacks(true),
+      makeCallbacks(true)
     );
   });
 
@@ -193,13 +195,11 @@ describe('given a client and store that are uninitialized', () => {
   });
 
   it('returns the default value for variationDetail', async () => {
-    expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject(
-      {
-        value: 'default',
-        variationIndex: null,
-        reason: { kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' },
-      },
-    );
+    expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject({
+      value: 'default',
+      variationIndex: null,
+      reason: { kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' },
+    });
   });
 });
 
@@ -231,7 +231,7 @@ describe('given a client that is un-initialized and store that is initialized', 
         sendEvents: false,
         featureStore: store,
       },
-      makeCallbacks(true),
+      makeCallbacks(true)
     );
   });
 
@@ -244,8 +244,10 @@ describe('given a client that is un-initialized and store that is initialized', 
   });
 
   it('returns the value for variationDetail', async () => {
-    expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject(
-      { value: 'value', variationIndex: 0, reason: { kind: 'OFF' } },
-    );
+    expect(await client.variationDetail('flagkey', defaultUser, 'default')).toMatchObject({
+      value: 'value',
+      variationIndex: 0,
+      reason: { kind: 'OFF' },
+    });
   });
 });

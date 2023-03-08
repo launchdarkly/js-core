@@ -26,11 +26,11 @@ export default class TestDataRuleBuilder<BuilderType> {
    */
   constructor(
     private readonly flagBuilder: BuilderType & {
-      addRule: (rule: TestDataRuleBuilder<BuilderType>) => void,
-      booleanFlag: () => BuilderType,
+      addRule: (rule: TestDataRuleBuilder<BuilderType>) => void;
+      booleanFlag: () => BuilderType;
     },
     clauses?: Clause[],
-    variation?: number,
+    variation?: number
   ) {
     if (clauses) {
       this.clauses = [...clauses];

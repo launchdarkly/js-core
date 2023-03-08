@@ -4,15 +4,15 @@ import { LDFeatureStore } from '../api/subsystems';
 import Configuration, { defaultValues } from '../options/Configuration';
 
 interface DiagnosticPlatformData {
-  name?: string,
-  osArch?: string,
-  osName?: string,
-  osVersion?: string,
+  name?: string;
+  osArch?: string;
+  osName?: string;
+  osVersion?: string;
   /**
    * Platform specific identifiers.
    * For instance `nodeVersion`
    */
-  [key: string]: string | undefined
+  [key: string]: string | undefined;
 }
 
 interface DiagnosticSdkData {
@@ -22,27 +22,27 @@ interface DiagnosticSdkData {
 }
 
 interface DiagnosticConfigData {
-  customBaseURI: boolean,
-  customStreamURI: boolean,
-  customEventsURI: boolean,
-  eventsCapacity: number,
-  connectTimeoutMillis: number,
-  socketTimeoutMillis: number,
-  eventsFlushIntervalMillis: number,
-  pollingIntervalMillis: number,
+  customBaseURI: boolean;
+  customStreamURI: boolean;
+  customEventsURI: boolean;
+  eventsCapacity: number;
+  connectTimeoutMillis: number;
+  socketTimeoutMillis: number;
+  eventsFlushIntervalMillis: number;
+  pollingIntervalMillis: number;
   // startWaitMillis: n/a (SDK does not have this feature)
   // samplingInterval: n/a (SDK does not have this feature)
-  reconnectTimeMillis: number,
-  streamingDisabled: boolean,
-  usingRelayDaemon: boolean,
-  offline: boolean,
-  allAttributesPrivate: boolean,
-  contextKeysCapacity: number,
-  contextKeysFlushIntervalMillis: number,
-  usingProxy: boolean,
-  usingProxyAuthenticator: boolean,
-  diagnosticRecordingIntervalMillis: number,
-  dataStoreType: string,
+  reconnectTimeMillis: number;
+  streamingDisabled: boolean;
+  usingRelayDaemon: boolean;
+  offline: boolean;
+  allAttributesPrivate: boolean;
+  contextKeysCapacity: number;
+  contextKeysFlushIntervalMillis: number;
+  usingProxy: boolean;
+  usingProxyAuthenticator: boolean;
+  diagnosticRecordingIntervalMillis: number;
+  dataStoreType: string;
 }
 
 interface DiagnosticId {
@@ -53,7 +53,7 @@ interface DiagnosticId {
 export interface DiagnosticInitEvent {
   kind: 'diagnostic-init';
   id: DiagnosticId;
-  creationDate: number,
+  creationDate: number;
   sdk: DiagnosticSdkData;
   configuration: DiagnosticConfigData;
   platform: DiagnosticPlatformData;
@@ -98,7 +98,7 @@ export default class DiagnosticsManager {
     sdkKey: string,
     private readonly config: Configuration,
     private readonly platform: Platform,
-    private readonly featureStore: LDFeatureStore,
+    private readonly featureStore: LDFeatureStore
   ) {
     this.startTime = Date.now();
     this.dataSinceDate = this.startTime;
@@ -178,7 +178,7 @@ export default class DiagnosticsManager {
   createStatsEventAndReset(
     droppedEvents: number,
     deduplicatedUsers: number,
-    eventsInLastBatch: number,
+    eventsInLastBatch: number
   ): DiagnosticStatsEvent {
     const currentTime = Date.now();
     const evt: DiagnosticStatsEvent = {

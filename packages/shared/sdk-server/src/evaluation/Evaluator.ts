@@ -1,8 +1,6 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
-import {
-  Context, LDEvaluationReason, Platform, internal,
-} from '@launchdarkly/js-sdk-common';
+import { Context, LDEvaluationReason, Platform, internal } from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import EvalResult from './EvalResult';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
@@ -45,10 +43,12 @@ function getBigSegmentsStatusPriority(status?: BigSegmentStoreStatusString) {
  */
 function computeUpdatedBigSegmentsStatus(
   old?: BigSegmentStoreStatusString,
-  latest?: BigSegmentStoreStatusString,
+  latest?: BigSegmentStoreStatusString
 ): BigSegmentStoreStatusString | undefined {
-  if (old !== undefined
-    && getBigSegmentsStatusPriority(old) > getBigSegmentsStatusPriority(latest)) {
+  if (
+    old !== undefined &&
+    getBigSegmentsStatusPriority(old) > getBigSegmentsStatusPriority(latest)
+  ) {
     return old;
   }
   return latest;
@@ -67,7 +67,7 @@ class Match {
 
   public readonly result?: EvalResult;
 
-  constructor(public readonly isMatch: boolean) { }
+  constructor(public readonly isMatch: boolean) {}
 }
 
 class MatchError {
@@ -75,7 +75,7 @@ class MatchError {
 
   public readonly isMatch = false;
 
-  constructor(public readonly result: EvalResult) { }
+  constructor(public readonly result: EvalResult) {}
 }
 
 /**
@@ -124,7 +124,7 @@ export default class Evaluator {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     visitedFlags: string[],
-    eventFactory?: EventFactory,
+    eventFactory?: EventFactory
   ): Promise<EvalResult> {
     if (!flag.on) {
       return getOffVariation(flag, Reasons.Off);
@@ -135,7 +135,7 @@ export default class Evaluator {
       context,
       state,
       visitedFlags,
-      eventFactory,
+      eventFactory
     );
     // If there is a prereq result, then prereqs have failed, or there was
     // an error.
@@ -153,12 +153,7 @@ export default class Evaluator {
       return ruleRes;
     }
 
-    return this.variationForContext(
-      flag.fallthrough,
-      context,
-      flag,
-      Reasons.Fallthrough,
-    );
+    return this.variationForContext(flag.fallthrough, context, flag, Reasons.Fallthrough);
   }
 
   /**
@@ -175,7 +170,7 @@ export default class Evaluator {
     context: Context,
     state: EvalState,
     visitedFlags: string[],
-    eventFactory?: EventFactory,
+    eventFactory?: EventFactory
   ): Promise<EvalResult | undefined> {
     let prereqResult: EvalResult | undefined;
 
@@ -189,8 +184,8 @@ export default class Evaluator {
       if (visitedFlags.indexOf(prereq.key) !== -1) {
         prereqResult = EvalResult.forError(
           ErrorKinds.MalformedFlag,
-          `Prerequisite of ${flag.key} causing a circular reference.`
-          + ' This is probably a temporary condition due to an incomplete update.',
+          `Prerequisite of ${flag.key} causing a circular reference.` +
+            ' This is probably a temporary condition due to an incomplete update.'
         );
         return false;
       }
@@ -207,7 +202,7 @@ export default class Evaluator {
         context,
         state,
         updatedVisitedFlags,
-        eventFactory,
+        eventFactory
       );
 
       // eslint-disable-next-line no-param-reassign
@@ -215,13 +210,7 @@ export default class Evaluator {
 
       if (eventFactory) {
         state.events.push(
-          eventFactory.evalEvent(
-            prereqFlag,
-            context,
-            evalResult.detail,
-            null,
-            flag,
-          ),
+          eventFactory.evalEvent(prereqFlag, context, evalResult.detail, null, flag)
         );
       }
 
@@ -257,7 +246,7 @@ export default class Evaluator {
   private async evaluateRules(
     flag: Flag,
     context: Context,
-    state: EvalState,
+    state: EvalState
   ): Promise<EvalResult | undefined> {
     let ruleResult: EvalResult | undefined;
 
@@ -273,16 +262,19 @@ export default class Evaluator {
     clause: Clause,
     context: Context,
     segmentsVisited: string[],
-    state: EvalState,
+    state: EvalState
   ): Promise<MatchOrError> {
     let errorResult: EvalResult | undefined;
     if (clause.op === 'segmentMatch') {
-      const match = await firstSeriesAsync(clause.values, (async (value) => {
+      const match = await firstSeriesAsync(clause.values, async (value) => {
         const segment = await this.queries.getSegment(value);
         if (segment) {
           if (segmentsVisited.includes(segment.key)) {
-            errorResult = EvalResult.forError(ErrorKinds.MalformedFlag, `Segment rule referencing segment ${segment.key} caused a circular reference. `
-              + 'This is probably a temporary condition due to an incomplete update');
+            errorResult = EvalResult.forError(
+              ErrorKinds.MalformedFlag,
+              `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
+                'This is probably a temporary condition due to an incomplete update'
+            );
             // There was an error, so stop checking further segments.
             return true;
           }
@@ -296,7 +288,7 @@ export default class Evaluator {
         }
 
         return false;
-      }));
+      });
 
       if (errorResult) {
         return new MatchError(errorResult);
@@ -306,7 +298,9 @@ export default class Evaluator {
     }
     // This is after segment matching, which does not use the reference.
     if (!clause.attributeReference.isValid) {
-      return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
+      return new MatchError(
+        EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause')
+      );
     }
 
     return new Match(matchClauseWithoutSegmentOperations(clause, context));
@@ -326,7 +320,7 @@ export default class Evaluator {
     ruleIndex: number,
     context: Context,
     state: EvalState,
-    segmentsVisited: string[],
+    segmentsVisited: string[]
   ): Promise<EvalResult | undefined> {
     if (!rule.clauses) {
       return undefined;
@@ -343,12 +337,7 @@ export default class Evaluator {
     }
 
     if (match) {
-      return this.variationForContext(
-        rule,
-        context,
-        flag,
-        Reasons.ruleMatch(rule.id, ruleIndex),
-      );
+      return this.variationForContext(rule, context, flag, Reasons.ruleMatch(rule.id, ruleIndex));
     }
     return undefined;
   }
@@ -357,14 +346,15 @@ export default class Evaluator {
     varOrRollout: VariationOrRollout,
     context: Context,
     flag: Flag,
-    reason: LDEvaluationReason,
+    reason: LDEvaluationReason
   ): EvalResult {
     if (varOrRollout === undefined) {
       // By spec this field should be defined, but better to be overly cautious.
       return EvalResult.forError(ErrorKinds.MalformedFlag, 'Fallthrough variation undefined');
     }
 
-    if (varOrRollout.variation !== undefined) { // 0 would be false.
+    if (varOrRollout.variation !== undefined) {
+      // 0 would be false.
       return getVariation(flag, varOrRollout.variation, reason);
     }
 
@@ -379,7 +369,7 @@ export default class Evaluator {
         if (!bucketBy.isValid) {
           return EvalResult.forError(
             ErrorKinds.MalformedFlag,
-            'Invalid attribute reference for bucketBy in rollout',
+            'Invalid attribute reference for bucketBy in rollout'
           );
         }
 
@@ -389,7 +379,7 @@ export default class Evaluator {
           bucketBy,
           flag.salt || '',
           rollout.contextKind,
-          rollout.seed,
+          rollout.seed
         );
 
         const updatedReason = { ...reason };
@@ -420,7 +410,10 @@ export default class Evaluator {
         return getVariation(flag, lastVariate.variation, updatedReason);
       }
     }
-    return EvalResult.forError(ErrorKinds.MalformedFlag, 'Variation/rollout object with no variation or rollout');
+    return EvalResult.forError(
+      ErrorKinds.MalformedFlag,
+      'Variation/rollout object with no variation or rollout'
+    );
   }
 
   async segmentRuleMatchContext(
@@ -428,7 +421,7 @@ export default class Evaluator {
     rule: SegmentRule,
     context: Context,
     state: EvalState,
-    segmentsVisited: string[],
+    segmentsVisited: string[]
   ): Promise<MatchOrError> {
     let errorResult: EvalResult | undefined;
     const match = await allSeriesAsync(rule.clauses, async (clause) => {
@@ -447,11 +440,19 @@ export default class Evaluator {
       }
       const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
       if (!bucketBy.isValid) {
-        return new MatchError(EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'));
+        return new MatchError(
+          EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause')
+        );
       }
 
-      const [bucket] = this.bucketer.bucket(context, segment.key, bucketBy, segment.salt || '', rule.rolloutContextKind);
-      return new Match(bucket < (rule.weight / 100000.0));
+      const [bucket] = this.bucketer.bucket(
+        context,
+        segment.key,
+        bucketBy,
+        segment.salt || '',
+        rule.rolloutContextKind
+      );
+      return new Match(bucket < rule.weight / 100000.0);
     }
 
     return new Match(false);
@@ -462,7 +463,7 @@ export default class Evaluator {
     segment: Segment,
     context: Context,
     state: EvalState,
-    segmentsVisited: string[],
+    segmentsVisited: string[]
   ): Promise<MatchOrError> {
     const includeExclude = matchSegmentTargets(segment, context);
     if (includeExclude !== undefined) {
@@ -476,7 +477,7 @@ export default class Evaluator {
         rule,
         context,
         state,
-        segmentsVisited,
+        segmentsVisited
       );
       evalResult = res.result;
       return res.error || res.isMatch;
@@ -494,7 +495,7 @@ export default class Evaluator {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    segmentsVisited: string[],
+    segmentsVisited: string[]
   ): Promise<MatchOrError> {
     if (!segment.unbounded) {
       return this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
@@ -508,7 +509,7 @@ export default class Evaluator {
       // eslint-disable-next-line no-param-reassign
       state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
         state.bigSegmentsStatus,
-        'NOT_CONFIGURED',
+        'NOT_CONFIGURED'
       );
       return new Match(false);
     }
@@ -530,7 +531,7 @@ export default class Evaluator {
         state.bigSegmentsMembership[keyForBigSegment],
         segment,
         context,
-        state,
+        state
       );
     }
 
@@ -545,13 +546,13 @@ export default class Evaluator {
       // eslint-disable-next-line no-param-reassign
       state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
         state.bigSegmentsStatus,
-        status as BigSegmentStoreStatusString,
+        status as BigSegmentStoreStatusString
       );
     } else {
       // eslint-disable-next-line no-param-reassign
       state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
         state.bigSegmentsStatus,
-        'NOT_CONFIGURED',
+        'NOT_CONFIGURED'
       );
     }
     /* eslint-enable no-param-reassign */
@@ -559,7 +560,7 @@ export default class Evaluator {
       state.bigSegmentsMembership[keyForBigSegment],
       segment,
       context,
-      state,
+      state
     );
   }
 
@@ -567,7 +568,7 @@ export default class Evaluator {
     membership: BigSegmentStoreMembership | null,
     segment: Segment,
     context: Context,
-    state: EvalState,
+    state: EvalState
   ): Promise<MatchOrError> {
     const segmentRef = makeBigSegmentRef(segment);
     const included = membership?.[segmentRef];

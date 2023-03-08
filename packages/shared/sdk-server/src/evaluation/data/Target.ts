@@ -1,5 +1,5 @@
 export interface Target {
   contextKind?: string;
-  values: string[],
-  variation: number
+  values: string[];
+  variation: number;
 }

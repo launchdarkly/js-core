@@ -5,7 +5,7 @@ import { SegmentTarget } from './data/SegmentTarget';
 function segmentSearch(
   context: Context,
   contextTargets?: SegmentTarget[],
-  userTargets?: string[],
+  userTargets?: string[]
 ): boolean {
   if (contextTargets) {
     for (let targetIndex = 0; targetIndex < contextTargets.length; targetIndex += 1) {
@@ -30,7 +30,7 @@ function segmentSearch(
 
 export default function matchSegmentTargets(
   segment: Segment,
-  context: Context,
+  context: Context
 ): boolean | undefined {
   const included = segmentSearch(context, segment.includedContexts, segment.included);
   if (included) {

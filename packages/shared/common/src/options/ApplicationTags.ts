@@ -3,14 +3,14 @@ import { TypeValidators } from '../validators';
 import OptionMessages from './OptionMessages';
 
 /**
-* Expression to validate characters that are allowed in tag keys and values.
-*/
+ * Expression to validate characters that are allowed in tag keys and values.
+ */
 const allowedTagCharacters = /^(\w|\.|-)+$/;
 
 const regexValidator = TypeValidators.stringMatchingRegex(allowedTagCharacters);
 
 const tagValidator = {
-  is: (u: unknown, name: string): { valid: boolean, message?: string } => {
+  is: (u: unknown, name: string): { valid: boolean; message?: string } => {
     if (regexValidator.is(u)) {
       if (u.length > 64) {
         return { valid: false, message: OptionMessages.tagValueTooLong(name) };
@@ -27,10 +27,7 @@ const tagValidator = {
 export default class ApplicationTags {
   public readonly value?: string;
 
-  constructor(options: {
-    application?: { id?: string, version?: string },
-    logger?: LDLogger,
-  }) {
+  constructor(options: { application?: { id?: string; version?: string }; logger?: LDLogger }) {
     const tags: Record<string, string[]> = {};
     const application = options?.application;
 

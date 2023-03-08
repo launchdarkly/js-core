@@ -73,14 +73,14 @@ export interface Response {
 }
 
 export interface Options {
-  headers?: Record<string, string>
+  headers?: Record<string, string>;
   method?: string;
-  body?: string
+  body?: string;
   timeout?: number;
 }
 
 export interface Requests {
-  fetch(url: string, options?: Options): Promise<Response>
+  fetch(url: string, options?: Options): Promise<Response>;
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource;
 

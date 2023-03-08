@@ -20,46 +20,40 @@ describe('When using a TLS connection', () => {
     });
   });
 
-  it(
-    'can connect via HTTPS to a server with a self-signed certificate, if CA is specified',
-    async () => {
-      server = await TestHttpServer.startSecure();
-      server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+  it('can connect via HTTPS to a server with a self-signed certificate, if CA is specified', async () => {
+    server = await TestHttpServer.startSecure();
+    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
 
-      client = new LDClientNode('sdk-key', {
-        baseUri: server.url,
-        sendEvents: false,
-        stream: false,
-        logger,
-        tlsParams: { ca: server.certificate },
-        diagnosticOptOut: true,
-      });
-      await client.waitForInitialization();
-    },
-  );
+    client = new LDClientNode('sdk-key', {
+      baseUri: server.url,
+      sendEvents: false,
+      stream: false,
+      logger,
+      tlsParams: { ca: server.certificate },
+      diagnosticOptOut: true,
+    });
+    await client.waitForInitialization();
+  });
 
-  it(
-    'cannot connect via HTTPS to a server with a self-signed certificate, using default config',
-    async () => {
-      server = await TestHttpServer.startSecure();
-      server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+  it('cannot connect via HTTPS to a server with a self-signed certificate, using default config', async () => {
+    server = await TestHttpServer.startSecure();
+    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
 
-      client = new LDClientNode('sdk-key', {
-        baseUri: server.url,
-        sendEvents: false,
-        stream: false,
-        logger,
-        diagnosticOptOut: true,
-      });
+    client = new LDClientNode('sdk-key', {
+      baseUri: server.url,
+      sendEvents: false,
+      stream: false,
+      logger,
+      diagnosticOptOut: true,
+    });
 
-      const spy = jest.spyOn(logger, 'warn');
+    const spy = jest.spyOn(logger, 'warn');
 
-      // the client won't signal an unrecoverable error, but it should log a message
-      await sleepAsync(300);
+    // the client won't signal an unrecoverable error, but it should log a message
+    await sleepAsync(300);
 
-      expect(spy).toHaveBeenCalledWith(expect.stringMatching(/self.signed/));
-    },
-  );
+    expect(spy).toHaveBeenCalledWith(expect.stringMatching(/self.signed/));
+  });
 
   it('can use custom TLS options for streaming as well as polling', async () => {
     const eventData = { data: { flags: { flag: { version: 1 } }, segments: {} } };

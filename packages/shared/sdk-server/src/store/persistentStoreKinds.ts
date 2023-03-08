@@ -1,7 +1,10 @@
 import { PersistentStoreDataKind, SerializedItemDescriptor } from '../api/interfaces';
 import ItemDescriptor from '../api/interfaces/persistent_store/ItemDescriptor';
 import {
-  deserializeFlag, deserializeSegment, serializeFlag, serializeSegment,
+  deserializeFlag,
+  deserializeSegment,
+  serializeFlag,
+  serializeSegment,
 } from './serialization';
 import VersionedDataKinds from './VersionedDataKinds';
 
@@ -10,10 +13,9 @@ import VersionedDataKinds from './VersionedDataKinds';
  * able to serialize items. Additionally we also need priority internally for sorting
  * kinds.
  */
-export type PersistentStoreDataKindInternal = PersistentStoreDataKind
-& {
+export type PersistentStoreDataKindInternal = PersistentStoreDataKind & {
   serialize: (data: any) => SerializedItemDescriptor;
-  priority: number,
+  priority: number;
 };
 
 /**

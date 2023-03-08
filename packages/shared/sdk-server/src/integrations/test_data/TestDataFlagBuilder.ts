@@ -1,7 +1,11 @@
 import { TypeValidators } from '@launchdarkly/js-sdk-common';
 import { Flag } from '../../evaluation/data/Flag';
 import { Target } from '../../evaluation/data/Target';
-import { TRUE_VARIATION_INDEX, FALSE_VARIATION_INDEX, variationForBoolean } from './booleanVariation';
+import {
+  TRUE_VARIATION_INDEX,
+  FALSE_VARIATION_INDEX,
+  variationForBoolean,
+} from './booleanVariation';
 import TestDataRuleBuilder from './TestDataRuleBuilder';
 
 interface BuilderData {
@@ -53,21 +57,23 @@ export default class TestDataFlagBuilder {
   }
 
   private get isBooleanFlag(): boolean {
-    return this.data.variations.length === 2
-      && this.data.variations[TRUE_VARIATION_INDEX] === true
-      && this.data.variations[FALSE_VARIATION_INDEX] === false;
+    return (
+      this.data.variations.length === 2 &&
+      this.data.variations[TRUE_VARIATION_INDEX] === true &&
+      this.data.variations[FALSE_VARIATION_INDEX] === false
+    );
   }
 
   /**
- * A shortcut for setting the flag to use the standard boolean configuration.
- *
- * This is the default for all new flags created with {@link TestData.flag}. The
- * flag will have two variations, `true` and `false` (in that order). It
- * will return `false` whenever targeting is off and `true` when targeting
- * is on unless other settings specify otherwise.
- *
- * @return the flag builder
- */
+   * A shortcut for setting the flag to use the standard boolean configuration.
+   *
+   * This is the default for all new flags created with {@link TestData.flag}. The
+   * flag will have two variations, `true` and `false` (in that order). It
+   * will return `false` whenever targeting is off and `true` when targeting
+   * is on unless other settings specify otherwise.
+   *
+   * @return the flag builder
+   */
   booleanFlag(): TestDataFlagBuilder {
     if (this.isBooleanFlag) {
       return this;
@@ -79,15 +85,15 @@ export default class TestDataFlagBuilder {
   }
 
   /**
- * Sets the allowable variation values for the flag.
- *
- * The values may be of any JSON-compatible type: boolean, number, string, array,
- * or object. For instance, a boolean flag normally has `variations(true, false)`;
- * a string-valued flag might have `variations("red", "green")`; etc.
- *
- * @param values any number of variation values
- * @return the flag builder
- */
+   * Sets the allowable variation values for the flag.
+   *
+   * The values may be of any JSON-compatible type: boolean, number, string, array,
+   * or object. For instance, a boolean flag normally has `variations(true, false)`;
+   * a string-valued flag might have `variations("red", "green")`; etc.
+   *
+   * @param values any number of variation values
+   * @return the flag builder
+   */
   variations(...values: any[]): TestDataFlagBuilder {
     this.data.variations = [...values];
     return this;
@@ -230,11 +236,14 @@ export default class TestDataFlagBuilder {
   variationForContext(
     contextKind: string,
     contextKey: string,
-    variation: number | boolean,
+    variation: number | boolean
   ): TestDataFlagBuilder {
     if (TypeValidators.Boolean.is(variation)) {
-      return this.booleanFlag()
-        .variationForContext(contextKind, contextKey, variationForBoolean(variation));
+      return this.booleanFlag().variationForContext(
+        contextKind,
+        contextKey,
+        variationForBoolean(variation)
+      );
     }
 
     if (!this.data.targetsByVariation) {
@@ -381,24 +390,24 @@ export default class TestDataFlagBuilder {
 
     if (this.data.targetsByVariation) {
       const contextTargets: Target[] = [];
-      Object.entries(
-        this.data.targetsByVariation,
-      ).forEach(([variation, contextTargetsForVariation]) => {
-        Object.entries(contextTargetsForVariation).forEach(([contextKind, values]) => {
-          contextTargets.push({
-            contextKind,
-            values,
-            // Iterating the object it will be a string.
-            variation: parseInt(variation, 10),
+      Object.entries(this.data.targetsByVariation).forEach(
+        ([variation, contextTargetsForVariation]) => {
+          Object.entries(contextTargetsForVariation).forEach(([contextKind, values]) => {
+            contextTargets.push({
+              contextKind,
+              values,
+              // Iterating the object it will be a string.
+              variation: parseInt(variation, 10),
+            });
           });
-        });
-      });
+        }
+      );
       baseFlagObject.contextTargets = contextTargets;
     }
 
     if (this.data.rules) {
-      baseFlagObject.rules = this.data.rules.map(
-        (rule, i) => (rule as TestDataRuleBuilder<TestDataFlagBuilder>).build(String(i)),
+      baseFlagObject.rules = this.data.rules.map((rule, i) =>
+        (rule as TestDataRuleBuilder<TestDataFlagBuilder>).build(String(i))
       );
     }
 

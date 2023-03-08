@@ -8,13 +8,10 @@ describe('given an LDClient with test data', () => {
 
   beforeEach(() => {
     td = new integrations.TestData();
-    client = new LDClientNode(
-      'sdk-key',
-      {
-        updateProcessor: td.getFactory(),
-        sendEvents: false,
-      },
-    );
+    client = new LDClientNode('sdk-key', {
+      updateProcessor: td.getFactory(),
+      sendEvents: false,
+    });
   });
 
   afterEach(() => {
@@ -38,12 +35,7 @@ describe('given an LDClient with test data', () => {
   });
 
   it('sends an "update" when a flag is updated', (done) => {
-    const expectedUpdates = [
-      'flag1',
-      'flag2',
-      'flag1',
-      'flag2',
-    ];
+    const expectedUpdates = ['flag1', 'flag2', 'flag1', 'flag2'];
 
     client.on('update', (params) => {
       expect(expectedUpdates.includes(params.key)).toBeTruthy();
@@ -61,12 +53,7 @@ describe('given an LDClient with test data', () => {
   });
 
   it('sends an "update:<flag-key>" when a flag is updated', (done) => {
-    const expectedUpdates = [
-      'flag1',
-      'flag2',
-      'flag1',
-      'flag2',
-    ];
+    const expectedUpdates = ['flag1', 'flag2', 'flag1', 'flag2'];
 
     client.on('update:flag1', (params) => {
       expect(expectedUpdates.includes(params.key)).toBeTruthy();

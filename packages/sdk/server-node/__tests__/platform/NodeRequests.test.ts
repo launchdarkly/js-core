@@ -50,9 +50,12 @@ describe('given a default instance of NodeRequests', () => {
     server.listen(PORT);
   });
 
-  afterEach(async () => new Promise((resolveClose) => {
-    server.close(resolveClose);
-  }));
+  afterEach(
+    async () =>
+      new Promise((resolveClose) => {
+        server.close(resolveClose);
+      })
+  );
 
   const requests = new NodeRequests();
   it('can make a basic get request', async () => {
@@ -76,17 +79,11 @@ describe('given a default instance of NodeRequests', () => {
     expect(serverResult.body).toEqual('');
   });
 
-  it(
-    'can handle errors establishing a connection',
-    async () => expect(async () => requests.fetch(`http://badurl:${PORT}/json`))
-      .rejects.toThrow(),
-  );
+  it('can handle errors establishing a connection', async () =>
+    expect(async () => requests.fetch(`http://badurl:${PORT}/json`)).rejects.toThrow());
 
-  it(
-    'can handle handle errors after a connection is established',
-    async () => expect(async () => requests.fetch(`http://localhost:${PORT}/interrupt`))
-      .rejects.toThrow(),
-  );
+  it('can handle handle errors after a connection is established', async () =>
+    expect(async () => requests.fetch(`http://localhost:${PORT}/interrupt`)).rejects.toThrow());
 
   it('can handle status codes', async () => {
     const res = await requests.fetch(`http://localhost:${PORT}/404`);

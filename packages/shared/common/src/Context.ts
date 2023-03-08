@@ -1,8 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line max-classes-per-file
-import {
-  LDSingleKindContext, LDMultiKindContext, LDUser, LDContextCommon,
-} from './api/context';
+import { LDSingleKindContext, LDMultiKindContext, LDUser, LDContextCommon } from './api/context';
 import { LDContext } from './api/context/LDContext';
 import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
@@ -88,7 +86,9 @@ function isLegacyUser(context: LDContext): context is LDUser {
  * Because we do not allow top level values in a multi-kind context we can validate
  * that as well.
  */
-function isContextCommon(kindOrContext: 'multi' | LDContextCommon): kindOrContext is LDContextCommon {
+function isContextCommon(
+  kindOrContext: 'multi' | LDContextCommon
+): kindOrContext is LDContextCommon {
   return kindOrContext && TypeValidators.Object.is(kindOrContext);
 }
 
@@ -112,11 +112,11 @@ function validKey(key: string) {
 
 function processPrivateAttributes(
   privateAttributes?: string[],
-  literals: boolean = false,
+  literals: boolean = false
 ): AttributeReference[] {
   if (privateAttributes) {
     return privateAttributes.map(
-      (privateAttribute) => new AttributeReference(privateAttribute, literals),
+      (privateAttribute) => new AttributeReference(privateAttribute, literals)
     );
   }
   return [];
@@ -226,7 +226,7 @@ export default class Context {
 
   private static getValueFromContext(
     reference: AttributeReference,
-    context?: LDContextCommon,
+    context?: LDContextCommon
   ): any {
     if (!context || !reference.isValid) {
       return undefined;
@@ -253,7 +253,10 @@ export default class Context {
     const kindsValid = kinds.every(validKind);
 
     if (!kinds.length) {
-      return Context.contextForError('multi', 'A multi-kind context must contain at least one kind');
+      return Context.contextForError(
+        'multi',
+        'A multi-kind context must contain at least one kind'
+      );
     }
 
     if (!kindsValid) {
@@ -351,11 +354,14 @@ export default class Context {
   public static fromLDContext(context: LDContext): Context {
     if (!context) {
       return Context.contextForError('unknown', 'No context specified. Returning default value');
-    } if (isSingleKind(context)) {
+    }
+    if (isSingleKind(context)) {
       return Context.fromSingleKindContext(context);
-    } if (isMultiKind(context)) {
+    }
+    if (isMultiKind(context)) {
       return Context.fromMultiKindContext(context);
-    } if (isLegacyUser(context)) {
+    }
+    if (isLegacyUser(context)) {
       return Context.fromLegacyUser(context);
     }
 
@@ -368,10 +374,7 @@ export default class Context {
    * @param kind The kind of the context to get the value for.
    * @returns a value or `undefined` if one is not found.
    */
-  public valueForKind(
-    reference: AttributeReference,
-    kind: string = DEFAULT_KIND,
-  ): any | undefined {
+  public valueForKind(reference: AttributeReference, kind: string = DEFAULT_KIND): any | undefined {
     if (reference.isKind) {
       return this.kinds;
     }
@@ -425,11 +428,13 @@ export default class Context {
    */
   public get kindsAndKeys(): Record<string, string> {
     if (this.isMulti) {
-      return Object.entries(this.contexts)
-        .reduce((acc: Record<string, string>, [kind, context]) => {
+      return Object.entries(this.contexts).reduce(
+        (acc: Record<string, string>, [kind, context]) => {
           acc[kind] = context.key;
           return acc;
-        }, {});
+        },
+        {}
+      );
     }
     return { [this.kind]: this.context!.key };
   }

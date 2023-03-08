@@ -10,9 +10,9 @@ export enum LDDeliveryStatus {
 }
 
 export interface LDEventSenderResult {
-  status: LDDeliveryStatus,
-  serverTime?: number,
-  error?: any,
+  status: LDDeliveryStatus;
+  serverTime?: number;
+  error?: any;
 }
 
 export default interface LDEventSender {

@@ -26,8 +26,7 @@ export function Emits<TBase extends Eventable>(Base: TBase) {
       return this;
     }
 
-    removeListener(eventName: string | symbol, listener: (
-      ...args: any[]) => void): this {
+    removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
       this.emitter.removeListener(eventName, listener);
       return this;
     }
@@ -67,8 +66,7 @@ export function Emits<TBase extends Eventable>(Base: TBase) {
       return this.emitter.listenerCount(eventName);
     }
 
-    prependListener(eventName: string | symbol, listener: (
-      ...args: any[]) => void): this {
+    prependListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
       this.emitter.prependListener(eventName, listener);
       return this;
     }

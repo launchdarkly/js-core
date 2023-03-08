@@ -19,7 +19,7 @@ function getDependencyKeys(flag: Flag): string[] {
  */
 function topologicalSort(
   kind: PersistentStoreDataKindInternal,
-  itemsMap: LDFeatureStoreKindData,
+  itemsMap: LDFeatureStoreKindData
 ): KeyedItem<string, SerializedItemDescriptor>[] {
   const sortedItems: KeyedItem<string, SerializedItemDescriptor>[] = [];
   const unvisitedItems: Set<string> = new Set(Object.keys(itemsMap));
@@ -67,7 +67,7 @@ function topologicalSort(
  * if there are no flags.
  */
 export default function sortDataSet(
-  dataMap: LDFeatureStoreDataStorage,
+  dataMap: LDFeatureStoreDataStorage
 ): KindKeyedStore<PersistentStoreDataKind> {
   // We use a different type for collecting the results so that we have access
   // to the serialization methods and priorities.

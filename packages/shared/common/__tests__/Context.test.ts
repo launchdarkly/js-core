@@ -2,8 +2,10 @@ import AttributeReference from '../src/AttributeReference';
 import Context from '../src/Context';
 
 // A sample of invalid characters.
-const invalidSampleChars = [...`#$%&'()*+,/:;<=>?@[\\]^\`{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²
-³´µ¶·¸¹º»¼½¾¿À汉字`];
+const invalidSampleChars = [
+  ...`#$%&'()*+,/:;<=>?@[\\]^\`{|}~ ¡¢£¤¥¦§¨©ª«¬­®¯°±²
+³´µ¶·¸¹º»¼½¾¿À汉字`,
+];
 const badKinds = invalidSampleChars.map((char) => ({ kind: char, key: 'test' }));
 
 describe.each([
@@ -74,8 +76,9 @@ describe.each([
     expect(context?.canonicalKey).toEqual('test');
     expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
     expect(context?.isMultiKind).toBeFalsy();
-    expect(context?.privateAttributes('user')?.[0].redactionName)
-      .toEqual(new AttributeReference('/~1dog~0~0~1~1').redactionName);
+    expect(context?.privateAttributes('user')?.[0].redactionName).toEqual(
+      new AttributeReference('/~1dog~0~0~1~1').redactionName
+    );
   });
 
   it('should not get values for a context kind that does not exist', () => {
@@ -112,8 +115,9 @@ describe('given a valid legacy user without custom attributes', () => {
     expect(context?.canonicalKey).toEqual('test');
     expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
     expect(context?.isMultiKind).toBeFalsy();
-    expect(context?.privateAttributes('user')?.[0].redactionName)
-      .toEqual(new AttributeReference('/~1dog~0~0~1~1').redactionName);
+    expect(context?.privateAttributes('user')?.[0].redactionName).toEqual(
+      new AttributeReference('/~1dog~0~0~1~1').redactionName
+    );
   });
 });
 

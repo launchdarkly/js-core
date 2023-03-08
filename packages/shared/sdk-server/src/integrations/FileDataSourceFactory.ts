@@ -8,8 +8,8 @@ import FileDataSource from '../data_sources/FileDataSource';
  * by the FileDataSource.
  */
 export interface FileDataSourceFactoryConfig {
-  featureStore: LDFeatureStore,
-  logger?: LDLogger
+  featureStore: LDFeatureStore;
+  logger?: LDLogger;
 }
 
 /**
@@ -17,7 +17,7 @@ export interface FileDataSourceFactoryConfig {
  */
 
 export default class FileDataSourceFactory {
-  constructor(private readonly options: FileDataSourceOptions) { }
+  constructor(private readonly options: FileDataSourceOptions) {}
 
   /**
    * Method for creating instances of the file data source. This method is intended to be used
@@ -29,10 +29,7 @@ export default class FileDataSourceFactory {
    *
    * @internal
    */
-  create(
-    ldClientContext: LDClientContext,
-    featureStore: LDFeatureStore,
-  ) {
+  create(ldClientContext: LDClientContext, featureStore: LDFeatureStore) {
     const updatedOptions: FileDataSourceOptions = {
       paths: this.options.paths,
       autoUpdate: this.options.autoUpdate,
@@ -44,7 +41,7 @@ export default class FileDataSourceFactory {
 
   getFactory(): (
     ldClientContext: LDClientContext,
-    featureStore: LDFeatureStore,
+    featureStore: LDFeatureStore
   ) => LDStreamProcessor {
     return (ldClientContext, featureStore) => this.create(ldClientContext, featureStore);
   }

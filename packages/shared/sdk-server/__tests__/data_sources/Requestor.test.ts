@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  Requests, Response, Headers,
-  EventSourceInitDict, EventSource,
+  Requests,
+  Response,
+  Headers,
+  EventSourceInitDict,
+  EventSource,
   Options,
 } from '@launchdarkly/js-sdk-common';
 import promisify from '../../src/async/promisify';
@@ -12,7 +15,7 @@ import basicPlatform from '../evaluation/mocks/platform';
 describe('given a requestor', () => {
   let requestor: Requestor;
 
-  let requestsMade: Array<{ url: string, options: Options }>;
+  let requestsMade: Array<{ url: string; options: Options }>;
 
   let testHeaders: Record<string, string>;
   let testStatus = 200;
@@ -112,11 +115,11 @@ describe('given a requestor', () => {
   it('stores and sends etags', async () => {
     testHeaders.etag = 'abc123';
     testResponse = 'a response';
-    const res1 = await promisify<{ err:any, body: any }>((cb) => {
+    const res1 = await promisify<{ err: any; body: any }>((cb) => {
       requestor.requestAllData((err, body) => cb({ err, body }));
     });
     testStatus = 304;
-    const res2 = await promisify<{ err:any, body: any }>((cb) => {
+    const res2 = await promisify<{ err: any; body: any }>((cb) => {
       requestor.requestAllData((err, body) => cb({ err, body }));
     });
     expect(res1.err).toBeUndefined();
@@ -127,6 +130,6 @@ describe('given a requestor', () => {
     const req1 = requestsMade[0];
     const req2 = requestsMade[1];
     expect(req1.options.headers?.['if-none-match']).toBe(undefined);
-    expect(req2.options.headers?.['if-none-match']).toBe(testHeaders.etag = 'abc123');
+    expect(req2.options.headers?.['if-none-match']).toBe((testHeaders.etag = 'abc123'));
   });
 });

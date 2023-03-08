@@ -8,9 +8,7 @@ import { Emits } from './Emits';
 class BigSegmentStoreStatusProviderNode implements interfaces.BigSegmentStoreStatusProvider {
   emitter: EventEmitter = new EventEmitter();
 
-  constructor(
-    private readonly provider: BigSegmentStoreStatusProviderImpl,
-  ) {
+  constructor(private readonly provider: BigSegmentStoreStatusProviderImpl) {
     this.provider.setListener((status: interfaces.BigSegmentStoreStatus) => {
       this.dispatch('change', status);
     });

@@ -9,8 +9,4 @@ export * from './options';
 
 export * as internal from './internal';
 
-export {
-  AttributeReference,
-  Context,
-  ContextFilter,
-};
+export { AttributeReference, Context, ContextFilter };

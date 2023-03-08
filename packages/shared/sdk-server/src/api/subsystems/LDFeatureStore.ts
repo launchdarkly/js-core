@@ -20,12 +20,16 @@ export interface LDKeyedFeatureStoreItem extends LDFeatureStoreItem {
 /**
  * Represents the storage for a single kind of data. e.g. 'flag' or 'segment'.
  */
-export interface LDFeatureStoreKindData {[key: string]: LDFeatureStoreItem }
+export interface LDFeatureStoreKindData {
+  [key: string]: LDFeatureStoreItem;
+}
 
 /**
  * Represents the storage for the full data store.
  */
-export interface LDFeatureStoreDataStorage {[namespace: string]: LDFeatureStoreKindData }
+export interface LDFeatureStoreDataStorage {
+  [namespace: string]: LDFeatureStoreKindData;
+}
 
 /**
  * Interface for a feature store component.

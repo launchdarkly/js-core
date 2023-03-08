@@ -3,7 +3,11 @@ import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';
 import Evaluator from '../../src/evaluation/Evaluator';
-import { makeBooleanFlagWithOneClause, makeClauseThatMatchesUser, makeBooleanFlagWithRules } from './flags';
+import {
+  makeBooleanFlagWithOneClause,
+  makeClauseThatMatchesUser,
+  makeBooleanFlagWithRules,
+} from './flags';
 import noQueries from './mocks/noQueries';
 import basicPlatform from './mocks/platform';
 
@@ -31,7 +35,10 @@ describe('given user clauses and contexts', () => {
   it.each<LDContext>([
     { key: 'x', name: 'Bob', custom: { legs: 4 } },
     {
-      kind: 'user', key: 'x', name: 'Bob', legs: 4,
+      kind: 'user',
+      key: 'x',
+      name: 'Bob',
+      legs: 4,
     },
     { kind: 'multi', user: { key: 'x', name: 'Bob', legs: 4 } },
   ])('can match custom attribute', async (user) => {
@@ -49,27 +56,42 @@ describe('given user clauses and contexts', () => {
 
   it.each<[LDContext, string]>([
     [{ key: 'x', name: 'Bob', custom: { '//': 4 } }, '//'],
-    [{
-      kind: 'user', key: 'x', name: 'Bob', '//': 4,
-    }, '//'],
+    [
+      {
+        kind: 'user',
+        key: 'x',
+        name: 'Bob',
+        '//': 4,
+      },
+      '//',
+    ],
     [{ kind: 'multi', user: { key: 'x', name: 'Bob', '//': 4 } }, '//'],
     [{ key: 'x', name: 'Bob', custom: { '/~~': 4 } }, '/~~'],
-    [{
-      kind: 'user', key: 'x', name: 'Bob', '/~~': 4,
-    }, '/~~'],
+    [
+      {
+        kind: 'user',
+        key: 'x',
+        name: 'Bob',
+        '/~~': 4,
+      },
+      '/~~',
+    ],
     [{ kind: 'multi', user: { key: 'x', name: 'Bob', '/~~': 4 } }, '/~~'],
-  ])('can match attributes which would have be invalid references, but are valid literals', async (user, attribute) => {
-    const clause: Clause = {
-      attribute,
-      op: 'in',
-      values: [4],
-      attributeReference: new AttributeReference(attribute, true),
-    };
-    const flag = makeBooleanFlagWithOneClause(clause);
-    const context = Context.fromLDContext(user);
-    const res = await evaluator.evaluate(flag, context!);
-    expect(res.detail.value).toBe(true);
-  });
+  ])(
+    'can match attributes which would have be invalid references, but are valid literals',
+    async (user, attribute) => {
+      const clause: Clause = {
+        attribute,
+        op: 'in',
+        values: [4],
+        attributeReference: new AttributeReference(attribute, true),
+      };
+      const flag = makeBooleanFlagWithOneClause(clause);
+      const context = Context.fromLDContext(user);
+      const res = await evaluator.evaluate(flag, context!);
+      expect(res.detail.value).toBe(true);
+    }
+  );
 
   it.each<LDContext>([
     { key: 'x', name: 'Bob' },
@@ -188,7 +210,10 @@ describe('given non-user single-kind contexts', () => {
     };
     const flag = makeBooleanFlagWithOneClause(clause);
     const context = Context.fromLDContext({
-      kind: 'org', name: 'Bob', key: 'bobkey', complex: { thing: true },
+      kind: 'org',
+      name: 'Bob',
+      key: 'bobkey',
+      complex: { thing: true },
     });
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(false);
@@ -268,7 +293,9 @@ describe('given multi-kind contexts', () => {
       },
     });
 
-    const flag = makeBooleanFlagWithRules([{ id: '1234', clauses: [clause1, clause2], variation: 1 }]);
+    const flag = makeBooleanFlagWithRules([
+      { id: '1234', clauses: [clause1, clause2], variation: 1 },
+    ]);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(true);
   });
@@ -301,7 +328,9 @@ describe('given multi-kind contexts', () => {
       },
     });
 
-    const flag = makeBooleanFlagWithRules([{ id: '1234', clauses: [clause1, clause2], variation: 1 }]);
+    const flag = makeBooleanFlagWithRules([
+      { id: '1234', clauses: [clause1, clause2], variation: 1 },
+    ]);
     const res = await evaluator.evaluate(flag, context!);
     expect(res.detail.value).toBe(false);
   });
@@ -405,34 +434,37 @@ describe.each([
   // semver
   ['semVerLessThan', '2.0.0', '2.0.1'],
   ['semVerGreaterThan', '2.0.1', '2.0.0'],
-])('executes operations with the clause value and context value correctly', (operator, contextValue, clauseValue) => {
-  const clause: Clause = {
-    attribute: 'value',
-    // @ts-ignore
-    op: operator,
-    values: [clauseValue],
-    contextKind: 'potato',
-    attributeReference: new AttributeReference('value'),
-  };
+])(
+  'executes operations with the clause value and context value correctly',
+  (operator, contextValue, clauseValue) => {
+    const clause: Clause = {
+      attribute: 'value',
+      // @ts-ignore
+      op: operator,
+      values: [clauseValue],
+      contextKind: 'potato',
+      attributeReference: new AttributeReference('value'),
+    };
 
-  const context = Context.fromLDContext({
-    kind: 'potato',
-    key: 'potato',
-    value: contextValue,
-  });
+    const context = Context.fromLDContext({
+      kind: 'potato',
+      key: 'potato',
+      value: contextValue,
+    });
 
-  const contextWArray = Context.fromLDContext({
-    kind: 'potato',
-    key: 'potato',
-    value: [contextValue],
-  });
+    const contextWArray = Context.fromLDContext({
+      kind: 'potato',
+      key: 'potato',
+      value: [contextValue],
+    });
 
-  it(`Operator ${operator} with ${contextValue} and ${clauseValue} should be true`, async () => {
-    const flag = makeBooleanFlagWithOneClause(clause);
-    const res = await evaluator.evaluate(flag, context);
-    expect(res.detail.value).toBe(true);
+    it(`Operator ${operator} with ${contextValue} and ${clauseValue} should be true`, async () => {
+      const flag = makeBooleanFlagWithOneClause(clause);
+      const res = await evaluator.evaluate(flag, context);
+      expect(res.detail.value).toBe(true);
 
-    const res2 = await evaluator.evaluate(flag, contextWArray);
-    expect(res2.detail.value).toBe(true);
-  });
-});
+      const res2 = await evaluator.evaluate(flag, contextWArray);
+      expect(res2.detail.value).toBe(true);
+    });
+  }
+);

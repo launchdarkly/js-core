@@ -2,7 +2,10 @@ import * as createHttpsProxyAgent from 'https-proxy-agent';
 import { HttpsProxyAgentOptions } from 'https-proxy-agent';
 
 import {
-  platform, LDTLSOptions, LDProxyOptions, LDLogger,
+  platform,
+  LDTLSOptions,
+  LDProxyOptions,
+  LDLogger,
 } from '@launchdarkly/js-server-sdk-common';
 
 import * as http from 'http';
@@ -43,7 +46,7 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
 
 function processProxyOptions(
   proxyOptions: LDProxyOptions,
-  additional: https.AgentOptions = {},
+  additional: https.AgentOptions = {}
 ): https.Agent | http.Agent {
   const protocol = proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http';
   const parsedOptions: HttpsProxyAgentOptions & { [index: string]: any } = {
@@ -71,7 +74,7 @@ function processProxyOptions(
 function createAgent(
   tlsOptions?: LDTLSOptions,
   proxyOptions?: LDProxyOptions,
-  logger?: LDLogger,
+  logger?: LDLogger
 ): https.Agent | http.Agent | undefined {
   if (!proxyOptions?.auth?.startsWith('https') && tlsOptions) {
     logger?.warn('Proxy configured with TLS options, but is not using an https auth.');
@@ -82,7 +85,8 @@ function createAgent(
       return processProxyOptions(proxyOptions, agentOptions);
     }
     return new https.Agent(agentOptions);
-  } if (proxyOptions) {
+  }
+  if (proxyOptions) {
     return processProxyOptions(proxyOptions);
   }
   return undefined;
@@ -108,12 +112,16 @@ export default class NodeRequests implements platform.Requests {
     const impl = isSecure ? https : http;
 
     return new Promise((resolve, reject) => {
-      const req = impl.request(url, {
-        timeout: options.timeout,
-        headers: options.headers,
-        method: options.method,
-        agent: this.agent,
-      }, (res) => resolve(new NodeResponse(res)));
+      const req = impl.request(
+        url,
+        {
+          timeout: options.timeout,
+          headers: options.headers,
+          method: options.method,
+          agent: this.agent,
+        },
+        (res) => resolve(new NodeResponse(res))
+      );
 
       if (options.body) {
         req.write(options.body);
@@ -129,7 +137,7 @@ export default class NodeRequests implements platform.Requests {
 
   createEventSource(
     url: string,
-    eventSourceInitDict: platform.EventSourceInitDict,
+    eventSourceInitDict: platform.EventSourceInitDict
   ): platform.EventSource {
     const expandedOptions = {
       ...eventSourceInitDict,

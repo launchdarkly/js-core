@@ -6,14 +6,14 @@ import isExperiment from './isExperiment';
  * @internal
  */
 export default class EventFactory {
-  constructor(private readonly withReasons: boolean) { }
+  constructor(private readonly withReasons: boolean) {}
 
   evalEvent(
     flag: Flag,
     context: Context,
     detail: LDEvaluationDetail,
     defaultVal: any,
-    prereqOfFlag?: Flag,
+    prereqOfFlag?: Flag
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
     return new internal.InputEvalEvent(
@@ -28,18 +28,12 @@ export default class EventFactory {
       flag.trackEvents || addExperimentData,
       prereqOfFlag?.key,
       this.withReasons || addExperimentData ? detail.reason : undefined,
-      flag.debugEventsUntilDate,
+      flag.debugEventsUntilDate
     );
   }
 
   unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
-    return new internal.InputEvalEvent(
-      this.withReasons,
-      context,
-      key,
-      detail.value,
-      detail,
-    );
+    return new internal.InputEvalEvent(this.withReasons, context, key, detail.value, detail);
   }
 
   /* eslint-disable-next-line class-methods-use-this */

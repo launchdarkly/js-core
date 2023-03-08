@@ -1,7 +1,5 @@
 import { integrations } from '@launchdarkly/js-server-sdk-common';
-import {
-  mkdir, rm, stat, writeFile,
-} from 'node:fs/promises';
+import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import LDClientNode from '../src/LDClientNode';
 
 const flag1Key = 'flag1';
@@ -12,9 +10,7 @@ const segment1Key = 'seg1';
 const flag1 = {
   key: flag1Key,
   on: true,
-  rules: [
-    { clauses: [{ op: 'segmentMatch', values: [segment1Key] }], variation: 1 },
-  ],
+  rules: [{ clauses: [{ op: 'segmentMatch', values: [segment1Key] }], variation: 1 }],
   fallthrough: {
     variation: 2,
   },
@@ -68,7 +64,7 @@ const tmpDir = './tmp_test';
 
 async function makeTempFile(content: string): Promise<string> {
   const fileName = (Math.random() + 1).toString(36).substring(7);
-  if (!await exists(tmpDir)) {
+  if (!(await exists(tmpDir))) {
     await mkdir(tmpDir);
   }
   const fullPath = `${tmpDir}/${fileName}`;

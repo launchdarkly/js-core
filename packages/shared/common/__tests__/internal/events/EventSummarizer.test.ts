@@ -27,13 +27,22 @@ describe('given an event summarizer', () => {
 
   it('sets start and end dates for feature events', () => {
     const event1 = {
-      kind: 'feature', creationDate: 2000, key: 'key', context,
+      kind: 'feature',
+      creationDate: 2000,
+      key: 'key',
+      context,
     };
     const event2 = {
-      kind: 'feature', creationDate: 1000, key: 'key', context,
+      kind: 'feature',
+      creationDate: 1000,
+      key: 'key',
+      context,
     };
     const event3 = {
-      kind: 'feature', creationDate: 1500, key: 'key', context,
+      kind: 'feature',
+      creationDate: 1500,
+      key: 'key',
+      context,
     };
 
     summarizer.summarizeEvent(event1 as any);
@@ -120,7 +129,10 @@ describe('given an event summarizer', () => {
         default: 444,
         counters: [
           {
-            variation: 1, value: 100, version: 0, count: 1,
+            variation: 1,
+            value: 100,
+            version: 0,
+            count: 1,
           },
         ],
         contextKinds: ['user'],
@@ -129,19 +141,30 @@ describe('given an event summarizer', () => {
         default: 111,
         counters: [
           {
-            variation: 1, value: 100, version: 11, count: 2,
+            variation: 1,
+            value: 100,
+            version: 11,
+            count: 2,
           },
           {
-            variation: 2, value: 200, version: 11, count: 1,
+            variation: 2,
+            value: 200,
+            version: 11,
+            count: 1,
           },
         ],
         contextKinds: ['user'],
       },
       key2: {
         default: 222,
-        counters: [{
-          variation: 1, value: 999, version: 22, count: 1,
-        }],
+        counters: [
+          {
+            variation: 1,
+            value: 999,
+            version: 22,
+            count: 1,
+          },
+        ],
         contextKinds: ['user'],
       },
       badkey: {
@@ -194,7 +217,10 @@ describe('given an event summarizer', () => {
         default: 111,
         counters: [
           {
-            variation: 0, value: 100, version: 11, count: 1,
+            variation: 0,
+            value: 100,
+            version: 11,
+            count: 1,
           },
           { value: 111, version: 11, count: 2 },
         ],
@@ -230,7 +256,11 @@ describe('given an event summarizer', () => {
       creationDate: 1000,
       key: 'key1',
       version: 11,
-      context: Context.fromLDContext({ kind: 'multi', bacon: { key: 'crispy' }, eggs: { key: 'scrambled' } }),
+      context: Context.fromLDContext({
+        kind: 'multi',
+        bacon: { key: 'crispy' },
+        eggs: { key: 'scrambled' },
+      }),
       variation: 1,
       value: 100,
       default: 111,
@@ -245,7 +275,10 @@ describe('given an event summarizer', () => {
         default: 111,
         counters: [
           {
-            variation: 1, value: 100, version: 11, count: 3,
+            variation: 1,
+            value: 100,
+            version: 11,
+            count: 3,
           },
         ],
         contextKinds: ['user', 'org', 'bacon', 'eggs'],

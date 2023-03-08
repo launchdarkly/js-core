@@ -1,7 +1,9 @@
 // eslint-disable-next-line max-classes-per-file
 import {
-  LDClientImpl, LDOptions,
-  BasicLogger, SafeLogger,
+  LDClientImpl,
+  LDOptions,
+  BasicLogger,
+  SafeLogger,
 } from '@launchdarkly/js-server-sdk-common';
 
 import { EventEmitter } from 'events';
@@ -11,7 +13,7 @@ import { Emits } from './Emits';
 import BigSegmentStoreStatusProviderNode from './BigSegmentsStoreStatusProviderNode';
 import { BigSegmentStoreStatusProvider } from './api';
 
-class ClientEmitter extends EventEmitter { }
+class ClientEmitter extends EventEmitter {}
 
 /**
  * @ignore
@@ -52,13 +54,19 @@ class LDClientNode extends LDClientImpl {
           emitter.emit('update', { key });
           emitter.emit(`update:${key}`, { key });
         },
-        hasEventListeners: () => emitter.eventNames().some((name) => name === 'update' || (typeof name === 'string' && name.startsWith('update:'))),
-      },
+        hasEventListeners: () =>
+          emitter
+            .eventNames()
+            .some(
+              (name) =>
+                name === 'update' || (typeof name === 'string' && name.startsWith('update:'))
+            ),
+      }
     );
     this.emitter = emitter;
 
     this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode(
-      this.bigSegmentStatusProviderInternal,
+      this.bigSegmentStatusProviderInternal
     ) as BigSegmentStoreStatusProvider;
   }
 }

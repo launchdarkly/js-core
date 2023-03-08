@@ -53,26 +53,36 @@ describe.each([
         expect(validator.is(invalidValue)).toBeFalsy();
       });
     });
-  },
+  }
 );
 
 describe.each([
   [TypeValidators.StringArray, [['a', 'b', 'c', 'd'], []], [[0, 'potato'], [{}]]],
   [new TypeArray<number>('number[]', 0), [[0, 1, 2, 3], []], [[0, 'potato'], [{}]]],
-  [new TypeArray<object>('object[]', {}), [[{}, { yes: 'no' }], []], [[0, 'potato'], [{}, 17]]],
-])('given an array validator, valid arrays, and invalid arrays', (validator, validValues, invalidValues) => {
-  it(`validates the correct type ${validator.getType()}: ${validValues}`, () => {
-    validValues.forEach((validValue) => {
-      expect(validator.is(validValue)).toBeTruthy();
+  [
+    new TypeArray<object>('object[]', {}),
+    [[{}, { yes: 'no' }], []],
+    [
+      [0, 'potato'],
+      [{}, 17],
+    ],
+  ],
+])(
+  'given an array validator, valid arrays, and invalid arrays',
+  (validator, validValues, invalidValues) => {
+    it(`validates the correct type ${validator.getType()}: ${validValues}`, () => {
+      validValues.forEach((validValue) => {
+        expect(validator.is(validValue)).toBeTruthy();
+      });
     });
-  });
 
-  it(`does not validate incorrect types ${validator.getType()}: ${invalidValues}`, () => {
-    invalidValues.forEach((invalidValue) => {
-      expect(validator.is(invalidValue)).toBeFalsy();
+    it(`does not validate incorrect types ${validator.getType()}: ${invalidValues}`, () => {
+      invalidValues.forEach((invalidValue) => {
+        expect(validator.is(invalidValue)).toBeFalsy();
+      });
     });
-  });
-});
+  }
+);
 
 describe('given a regex validator', () => {
   const validator = TypeValidators.stringMatchingRegex(/^(\w|\.|-)+$/);

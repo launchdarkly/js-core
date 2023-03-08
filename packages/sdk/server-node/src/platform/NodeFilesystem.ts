@@ -16,7 +16,7 @@ export default class NodeFilesystem implements platform.Filesystem {
 
   watch(
     path: string,
-    callback: (eventType: string, filename: string) => void,
+    callback: (eventType: string, filename: string) => void
   ): platform.WatchHandle {
     return fs.watch(path, { persistent: false }, (eventType) => {
       callback(eventType, path);

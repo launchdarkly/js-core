@@ -33,7 +33,7 @@ export default class HeaderWrapper implements platform.Headers {
 
   // We want to use generators here for the simplicity of maintaining
   // this interface. Also they aren't expected to be high frequency usage.
-  * values(): Iterable<string> {
+  *values(): Iterable<string> {
     // eslint-disable-next-line no-restricted-syntax
     for (const key of this.keys()) {
       const val = this.get(key);
@@ -43,7 +43,7 @@ export default class HeaderWrapper implements platform.Headers {
     }
   }
 
-  * entries(): Iterable<[string, string]> {
+  *entries(): Iterable<[string, string]> {
     // eslint-disable-next-line no-restricted-syntax
     for (const key of this.keys()) {
       const val = this.get(key);

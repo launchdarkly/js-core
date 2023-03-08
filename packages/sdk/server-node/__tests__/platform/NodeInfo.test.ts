@@ -51,7 +51,12 @@ describe('given an information instance with mock data', () => {
     expect(data.additional!.nodeVersion).toEqual('1.2.3');
   });
 
-  it.each([['darwin', 'MacOS'], ['win32', 'Windows'], ['linux', 'Linux'], ['some_os', 'some_os']])('handles known platforms', (platform, processed) => {
+  it.each([
+    ['darwin', 'MacOS'],
+    ['win32', 'Windows'],
+    ['linux', 'Linux'],
+    ['some_os', 'some_os'],
+  ])('handles known platforms', (platform, processed) => {
     const platformSpy = jest.spyOn(os, 'platform');
     // @ts-ignore
     platformSpy.mockReturnValue(platform);

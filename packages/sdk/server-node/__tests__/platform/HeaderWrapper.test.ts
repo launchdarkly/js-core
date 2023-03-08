@@ -41,11 +41,7 @@ describe('given header values', () => {
     for (const key of wrapper.keys()) {
       keys.push(key);
     }
-    expect(keys).toEqual([
-      'accept',
-      'some-header',
-      'some-array',
-    ]);
+    expect(keys).toEqual(['accept', 'some-header', 'some-array']);
   });
 
   it('can key the values', () => {
@@ -53,10 +49,6 @@ describe('given header values', () => {
     for (const value of wrapper.values()) {
       values.push(value);
     }
-    expect(values).toEqual([
-      'anything',
-      'some-value',
-      'a, b',
-    ]);
+    expect(values).toEqual(['anything', 'some-value', 'a, b']);
   });
 });

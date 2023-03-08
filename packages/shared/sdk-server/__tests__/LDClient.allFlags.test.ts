@@ -22,7 +22,7 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger,
       },
-      makeCallbacks(true),
+      makeCallbacks(true)
     );
 
     await client.waitForInitialization();
@@ -33,8 +33,9 @@ describe('given an LDClient with test data', () => {
   });
 
   it('captures flag state', async () => {
-    const value1 = 'value1'; const value2 = 'value2'; const
-      value3 = 'value3';
+    const value1 = 'value1';
+    const value2 = 'value2';
+    const value3 = 'value3';
     const flag1 = {
       key: 'key1',
       version: 100,
@@ -67,9 +68,11 @@ describe('given an LDClient with test data', () => {
 
     const state = await client.allFlagsState(defaultUser);
     expect(state.valid).toEqual(true);
-    expect(state.allValues()).toEqual(
-      { [flag1.key]: value1, [flag2.key]: value2, [flag3.key]: value3 },
-    );
+    expect(state.allValues()).toEqual({
+      [flag1.key]: value1,
+      [flag2.key]: value2,
+      [flag3.key]: value3,
+    });
     expect(state.getFlagValue(flag1.key)).toEqual(value1);
     expect(state.getFlagReason('feature')).toEqual(null);
     expect(state.toJSON()).toEqual({
@@ -101,16 +104,32 @@ describe('given an LDClient with test data', () => {
 
   it('can filter for only client-side flags', async () => {
     td.usePreconfiguredFlag({
-      key: 'server-side-1', on: false, offVariation: 0, variations: ['a'], clientSide: false,
+      key: 'server-side-1',
+      on: false,
+      offVariation: 0,
+      variations: ['a'],
+      clientSide: false,
     });
     td.usePreconfiguredFlag({
-      key: 'server-side-2', on: false, offVariation: 0, variations: ['b'], clientSide: false,
+      key: 'server-side-2',
+      on: false,
+      offVariation: 0,
+      variations: ['b'],
+      clientSide: false,
     });
     td.usePreconfiguredFlag({
-      key: 'client-side-1', on: false, offVariation: 0, variations: ['value1'], clientSide: true,
+      key: 'client-side-1',
+      on: false,
+      offVariation: 0,
+      variations: ['value1'],
+      clientSide: true,
     });
     td.usePreconfiguredFlag({
-      key: 'client-side-2', on: false, offVariation: 0, variations: ['value2'], clientSide: true,
+      key: 'client-side-2',
+      on: false,
+      offVariation: 0,
+      variations: ['value2'],
+      clientSide: true,
     });
     const state = await client.allFlagsState(defaultUser, { clientSideOnly: true });
     expect(state.valid).toEqual(true);
@@ -171,10 +190,10 @@ describe('given an LDClient with test data', () => {
     td.usePreconfiguredFlag(flag2);
     td.usePreconfiguredFlag(flag3);
 
-    const state = await client.allFlagsState(
-      defaultUser,
-      { withReasons: true, detailsOnlyForTrackedFlags: true },
-    );
+    const state = await client.allFlagsState(defaultUser, {
+      withReasons: true,
+      detailsOnlyForTrackedFlags: true,
+    });
     expect(state.valid).toEqual(true);
     expect(state.allValues()).toEqual({ flag1: 'value1', flag2: 'value2', flag3: 'value3' });
     expect(state.getFlagValue('flag1')).toEqual('value1');
@@ -218,16 +237,32 @@ describe('given an LDClient with test data', () => {
 
   it('can use callback instead of promise', (done) => {
     td.usePreconfiguredFlag({
-      key: 'server-side-1', on: false, offVariation: 0, variations: ['a'], clientSide: false,
+      key: 'server-side-1',
+      on: false,
+      offVariation: 0,
+      variations: ['a'],
+      clientSide: false,
     });
     td.usePreconfiguredFlag({
-      key: 'server-side-2', on: false, offVariation: 0, variations: ['b'], clientSide: false,
+      key: 'server-side-2',
+      on: false,
+      offVariation: 0,
+      variations: ['b'],
+      clientSide: false,
     });
     td.usePreconfiguredFlag({
-      key: 'client-side-1', on: false, offVariation: 0, variations: ['value1'], clientSide: true,
+      key: 'client-side-1',
+      on: false,
+      offVariation: 0,
+      variations: ['value1'],
+      clientSide: true,
     });
     td.usePreconfiguredFlag({
-      key: 'client-side-2', on: false, offVariation: 0, variations: ['value2'], clientSide: true,
+      key: 'client-side-2',
+      on: false,
+      offVariation: 0,
+      variations: ['value2'],
+      clientSide: true,
     });
     client.allFlagsState(defaultUser, { clientSideOnly: true }, (err, state) => {
       expect(state.valid).toEqual(true);
@@ -254,7 +289,7 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      makeCallbacks(true),
+      makeCallbacks(true)
     );
   });
 

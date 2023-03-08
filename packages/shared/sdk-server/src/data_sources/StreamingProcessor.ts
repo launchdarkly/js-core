@@ -1,6 +1,4 @@
-import {
-  LDLogger, EventSource, Info, Requests,
-} from '@launchdarkly/js-sdk-common';
+import { LDLogger, EventSource, Info, Requests } from '@launchdarkly/js-sdk-common';
 import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
 import { isHttpRecoverable, LDStreamingError } from '../errors';
@@ -44,7 +42,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     requests: Requests,
     info: Info,
     private readonly featureStore: LDDataSourceUpdates,
-    private readonly diagnosticsManager?: DiagnosticsManager,
+    private readonly diagnosticsManager?: DiagnosticsManager
   ) {
     this.headers = defaultHeaders(sdkKey, config, info);
     this.logger = config.logger;
@@ -63,7 +61,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
       this.diagnosticsManager.recordStreamInit(
         this.connectionAttemptStartTime,
         !success,
-        Date.now() - this.connectionAttemptStartTime,
+        Date.now() - this.connectionAttemptStartTime
       );
     }
 
@@ -73,10 +71,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
   start(fn?: ((err?: any) => void) | undefined) {
     this.logConnectionStarted();
 
-    const errorFilter = (err: {
-      status: number,
-      message: string
-    }): boolean => {
+    const errorFilter = (err: { status: number; message: string }): boolean => {
       if (err.status && !isHttpRecoverable(err.status)) {
         this.logConnectionResult(false);
         fn?.(new LDStreamingError(err.message, err.status));
@@ -155,7 +150,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
           const key = getKeyFromPath(parsed.kind, parsed.path);
           if (key) {
             this.logger?.debug(`Updating ${key} in ${parsed.kind.namespace}`);
-            this.featureStore.upsert(parsed.kind, parsed.data, () => { });
+            this.featureStore.upsert(parsed.kind, parsed.data, () => {});
           }
         }
       } else {
@@ -175,11 +170,15 @@ export default class StreamingProcessor implements LDStreamProcessor {
           const key = getKeyFromPath(parsed.kind, parsed.path);
           if (key) {
             this.logger?.debug(`Deleting ${key} in ${parsed.kind.namespace}`);
-            this.featureStore.upsert(parsed.kind, {
-              key,
-              version: parsed.version,
-              deleted: true,
-            }, () => {});
+            this.featureStore.upsert(
+              parsed.kind,
+              {
+                key,
+                version: parsed.version,
+                deleted: true,
+              },
+              () => {}
+            );
           }
         }
       } else {

@@ -63,7 +63,7 @@ export default class TestData {
     return (
       /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       clientContext: LDClientContext,
-      featureStore: LDFeatureStore,
+      featureStore: LDFeatureStore
     ) => {
       const newSource = new TestDataSource(
         new AsyncStoreFacade(featureStore),
@@ -72,7 +72,7 @@ export default class TestData {
         this.currentSegments,
         (tds) => {
           this.dataSources.splice(this.dataSources.indexOf(tds));
-        },
+        }
       );
 
       this.dataSources.push(newSource);
@@ -132,7 +132,7 @@ export default class TestData {
     this.flagBuilders[flagKey] = flagBuilder.clone();
 
     return Promise.all(
-      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newFlag)),
+      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newFlag))
     );
   }
 
@@ -164,7 +164,7 @@ export default class TestData {
     this.currentFlags[flagConfig.key] = newItem;
 
     return Promise.all(
-      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newItem)),
+      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newItem))
     );
   }
 
@@ -196,7 +196,7 @@ export default class TestData {
     this.currentSegments[segmentConfig.key] = newItem;
 
     return Promise.all(
-      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Segments, newItem)),
+      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Segments, newItem))
     );
   }
 }

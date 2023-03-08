@@ -1,7 +1,13 @@
 import {
   EventSource,
   EventSourceInitDict,
-  Info, Options, Platform, PlatformData, Requests, Response, SdkData,
+  Info,
+  Options,
+  Platform,
+  PlatformData,
+  Requests,
+  Response,
+  SdkData,
 } from '@launchdarkly/js-sdk-common';
 import { crypto } from './hasher';
 

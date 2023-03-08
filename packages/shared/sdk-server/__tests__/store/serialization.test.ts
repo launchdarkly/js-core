@@ -1,20 +1,31 @@
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import {
-  deserializeAll, deserializeDelete, deserializePatch, replacer, reviver,
+  deserializeAll,
+  deserializeDelete,
+  deserializePatch,
+  replacer,
+  reviver,
 } from '../../src/store/serialization';
 
 const flagWithAttributeNameInClause = {
   key: 'test-after-value1',
   on: true,
-  rules: [{
-    variation: 0,
-    id: 'ruleid',
-    clauses: [{
-      attribute: 'attrname', op: 'after', values: ['not valid'], negate: false,
-    }],
-    trackEvents: false,
-  }],
+  rules: [
+    {
+      variation: 0,
+      id: 'ruleid',
+      clauses: [
+        {
+          attribute: 'attrname',
+          op: 'after',
+          values: ['not valid'],
+          negate: false,
+        },
+      ],
+      trackEvents: false,
+    },
+  ],
   fallthrough: { variation: 1 },
   variations: [true, false],
   version: 1,
@@ -23,14 +34,22 @@ const flagWithAttributeNameInClause = {
 const flagWithAttributeReferenceInClause = {
   key: 'test-flag',
   on: true,
-  rules: [{
-    variation: 0,
-    id: 'ruleid',
-    clauses: [{
-      contextKind: 'user', attribute: '/attr1', op: 'in', values: ['right'], negate: false,
-    }],
-    trackEvents: false,
-  }],
+  rules: [
+    {
+      variation: 0,
+      id: 'ruleid',
+      clauses: [
+        {
+          contextKind: 'user',
+          attribute: '/attr1',
+          op: 'in',
+          values: ['right'],
+          negate: false,
+        },
+      ],
+      trackEvents: false,
+    },
+  ],
   fallthrough: { variation: 1 },
   variations: [true, false],
   version: 1,
@@ -52,18 +71,25 @@ const flagWithBucketByInRollout = {
 const flagWithBucketByInRolloutInRule = {
   key: 'test-after-value1',
   on: true,
-  rules: [{
-    variation: 0,
-    id: 'ruleid',
-    clauses: [{
-      attribute: 'attrname', op: 'after', values: ['not valid'], negate: false,
-    }],
-    trackEvents: false,
-    rollout: {
-      bucketBy: 'bucket',
-      variations: [{ variation: 0, weight: 5 }],
+  rules: [
+    {
+      variation: 0,
+      id: 'ruleid',
+      clauses: [
+        {
+          attribute: 'attrname',
+          op: 'after',
+          values: ['not valid'],
+          negate: false,
+        },
+      ],
+      trackEvents: false,
+      rollout: {
+        bucketBy: 'bucket',
+        variations: [{ variation: 0, weight: 5 }],
+      },
     },
-  }],
+  ],
   fallthrough: { variation: 1 },
   variations: [true, false],
   version: 1,
@@ -88,14 +114,21 @@ const segmentWithClauseAttributeName = {
   includedContexts: [],
   excludedContexts: [],
   salt: 'saltyA',
-  rules: [{
-    id: '',
-    clauses: [{
-      attribute: 'kind', op: 'in', values: [''], negate: true,
-    }],
-    weight: 42162,
-    rolloutContextKind: 'user',
-  }],
+  rules: [
+    {
+      id: '',
+      clauses: [
+        {
+          attribute: 'kind',
+          op: 'in',
+          values: [''],
+          negate: true,
+        },
+      ],
+      weight: 42162,
+      rolloutContextKind: 'user',
+    },
+  ],
   version: 0,
   deleted: false,
 };
@@ -107,11 +140,13 @@ const segmentWithBucketBy = {
   includedContexts: [],
   excludedContexts: [],
   salt: 'saltyA',
-  rules: [{
-    id: 'rule-id',
-    clauses: [],
-    bucketBy: 'potato',
-  }],
+  rules: [
+    {
+      id: 'rule-id',
+      clauses: [],
+      bucketBy: 'potato',
+    },
+  ],
   version: 0,
   deleted: false,
 };
@@ -119,10 +154,8 @@ const segmentWithBucketBy = {
 function makeAllData(flag?: any, segment?: any): any {
   const allData: any = {
     data: {
-      flags: {
-      },
-      segments: {
-      },
+      flags: {},
+      segments: {},
     },
   };
 
@@ -175,16 +208,16 @@ describe('when deserializing all data', () => {
   it('handles a segment clause with attribute name', () => {
     const jsonString = makeSerializedAllData(undefined, segmentWithClauseAttributeName);
     const parsed = deserializeAll(jsonString);
-    const refInSegment = parsed?.data.segments.segmentName.rules
-      ?.[0].clauses?.[0].attributeReference;
+    const refInSegment =
+      parsed?.data.segments.segmentName.rules?.[0].clauses?.[0].attributeReference;
     expect(refInSegment?.isValid).toBeTruthy();
   });
 
   it('handles a segment with bucketBy', () => {
     const jsonString = makeSerializedAllData(undefined, segmentWithBucketBy);
     const parsed = deserializeAll(jsonString);
-    const bucketByInSegment = parsed!.data.segments.segmentName
-      .rules![0].bucketByAttributeReference;
+    const bucketByInSegment =
+      parsed!.data.segments.segmentName.rules![0].bucketByAttributeReference;
     expect(bucketByInSegment?.isValid).toBeTruthy();
   });
 
@@ -228,8 +261,7 @@ describe('when deserializing patch data', () => {
   it('handles a segment clause with attribute name', () => {
     const jsonString = makeSerializedPatchData(undefined, segmentWithClauseAttributeName);
     const parsed = deserializePatch(jsonString);
-    const refInSegment = (parsed?.data as Segment).rules
-      ?.[0].clauses?.[0].attributeReference;
+    const refInSegment = (parsed?.data as Segment).rules?.[0].clauses?.[0].attributeReference;
     expect(refInSegment?.isValid).toBeTruthy();
   });
 

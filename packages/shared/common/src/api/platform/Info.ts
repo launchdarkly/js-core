@@ -20,7 +20,7 @@ export interface PlatformData {
 
     /** The version of the OS. */
     version?: string;
-  }
+  };
 
   /**
    * The name of the platform the SDK is running on. For instance 'Node'.

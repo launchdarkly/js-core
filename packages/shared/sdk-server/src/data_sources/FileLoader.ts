@@ -25,9 +25,8 @@ export default class FileLoader {
     private readonly filesystem: Filesystem,
     private readonly paths: string[],
     private readonly watch: boolean,
-    private readonly callback: (results: { path: string; data: string; }[]) => void,
-  ) {
-  }
+    private readonly callback: (results: { path: string; data: string }[]) => void
+  ) {}
 
   /**
    * Load all the files and start watching them if watching is enabled.
@@ -75,11 +74,15 @@ export default class FileLoader {
     if (!this.debounceHandle) {
       this.debounceHandle = setTimeout(() => {
         this.debounceHandle = undefined;
-        this.callback(Object.entries(this.fileData)
-          .reduce((acc: { path: string; data: string; }[], [path, data]) => {
-            acc.push({ path, data });
-            return acc;
-          }, []));
+        this.callback(
+          Object.entries(this.fileData).reduce(
+            (acc: { path: string; data: string }[], [path, data]) => {
+              acc.push({ path, data });
+              return acc;
+            },
+            []
+          )
+        );
       }, 10);
       // The 10ms delay above is arbitrary - we just don't want to have the number be zero,
       // because in a case where multiple watch events are fired off one after another,

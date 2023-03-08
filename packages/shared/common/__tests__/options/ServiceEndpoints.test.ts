@@ -2,12 +2,28 @@ import ServiceEndpoints from '../../src/options/ServiceEndpoints';
 
 describe.each([
   [
-    { baseUri: 'https://sdk.launchdarkly.com', streamingUri: 'https://stream.launchdarkly.com', eventsUri: 'https://events.launchdarkly.com' },
-    { baseUri: 'https://sdk.launchdarkly.com', streamingUri: 'https://stream.launchdarkly.com', eventsUri: 'https://events.launchdarkly.com' },
+    {
+      baseUri: 'https://sdk.launchdarkly.com',
+      streamingUri: 'https://stream.launchdarkly.com',
+      eventsUri: 'https://events.launchdarkly.com',
+    },
+    {
+      baseUri: 'https://sdk.launchdarkly.com',
+      streamingUri: 'https://stream.launchdarkly.com',
+      eventsUri: 'https://events.launchdarkly.com',
+    },
   ],
   [
-    { baseUri: 'https://sdk.launchdarkly.com/', streamingUri: 'https://stream.launchdarkly.com/', eventsUri: 'https://events.launchdarkly.com/' },
-    { baseUri: 'https://sdk.launchdarkly.com', streamingUri: 'https://stream.launchdarkly.com', eventsUri: 'https://events.launchdarkly.com' },
+    {
+      baseUri: 'https://sdk.launchdarkly.com/',
+      streamingUri: 'https://stream.launchdarkly.com/',
+      eventsUri: 'https://events.launchdarkly.com/',
+    },
+    {
+      baseUri: 'https://sdk.launchdarkly.com',
+      streamingUri: 'https://stream.launchdarkly.com',
+      eventsUri: 'https://events.launchdarkly.com',
+    },
   ],
 ])('given endpoint urls', (input, expected) => {
   it('has canonical urls', () => {

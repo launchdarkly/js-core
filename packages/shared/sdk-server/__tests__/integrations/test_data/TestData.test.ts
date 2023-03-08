@@ -27,7 +27,7 @@ it('initializes the data store with flags configured the data store is created',
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
     new ClientContext('', new Configuration({}), basicPlatform),
-    store,
+    store
   );
 
   processor.start();
@@ -43,7 +43,7 @@ it('updates the data store when update is called', async () => {
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
     new ClientContext('', new Configuration({}), basicPlatform),
-    store,
+    store
   );
 
   processor.start();
@@ -63,7 +63,7 @@ it('can include pre-configured items', async () => {
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
     new ClientContext('', new Configuration({}), basicPlatform),
-    store,
+    store
   );
 
   processor.start();
@@ -92,9 +92,7 @@ it('can include pre-configured items', async () => {
 
   expect(allSegments).toEqual({
     'my-segment': {
-      included: [
-        'x',
-      ],
+      included: ['x'],
       key: 'my-segment',
       version: 2001,
     },
@@ -111,7 +109,7 @@ it.each([true, false])('does not update the store after stop/close is called', a
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
     new ClientContext('', new Configuration({}), basicPlatform),
-    store,
+    store
   );
 
   processor.start();
@@ -139,7 +137,7 @@ it('can update a flag that already exists in the store', async () => {
 
   const processor = td.getFactory()(
     new ClientContext('', new Configuration({}), basicPlatform),
-    store,
+    store
   );
 
   processor.start();
@@ -158,7 +156,7 @@ describe('given a TestData instance', () => {
     td = new TestData();
   });
 
-  it('doesn\'t provide the same reference when updating an existing builder', () => {
+  it("doesn't provide the same reference when updating an existing builder", () => {
     const flag = td.flag('test-flag');
     td.update(flag);
     const flagCopy = td.flag('test-flag');
@@ -167,7 +165,8 @@ describe('given a TestData instance', () => {
   });
 
   it('can clone a complex flag configuration', () => {
-    const flag = td.flag('test-flag')
+    const flag = td
+      .flag('test-flag')
       .ifMatch('user', 'name', 'ben', 'christian')
       .andNotMatch('user', 'country', 'fr')
       .thenReturn(true);
@@ -175,33 +174,30 @@ describe('given a TestData instance', () => {
     td.update(flag);
     const flagCopy = td.flag('test-flag');
 
-    const flagRules: FlagRule[] = [{
-      id: 'rule0',
-      variation: 0,
-      clauses: [
-        {
-          attribute: 'name',
-          attributeReference: new AttributeReference('name'),
-          contextKind: 'user',
-          negate: false,
-          op: 'in',
-          values: [
-            'ben',
-            'christian',
-          ],
-        },
-        {
-          contextKind: 'user',
-          attribute: 'country',
-          attributeReference: new AttributeReference('country'),
-          negate: true,
-          op: 'in',
-          values: [
-            'fr',
-          ],
-        },
-      ],
-    }];
+    const flagRules: FlagRule[] = [
+      {
+        id: 'rule0',
+        variation: 0,
+        clauses: [
+          {
+            attribute: 'name',
+            attributeReference: new AttributeReference('name'),
+            contextKind: 'user',
+            negate: false,
+            op: 'in',
+            values: ['ben', 'christian'],
+          },
+          {
+            contextKind: 'user',
+            attribute: 'country',
+            attributeReference: new AttributeReference('country'),
+            negate: true,
+            op: 'in',
+            values: ['fr'],
+          },
+        ],
+      },
+    ];
 
     expect(flagCopy.build(1).rules).toEqual(flagRules);
   });
@@ -265,9 +261,7 @@ describe('given a TestData instance', () => {
   });
 
   it('can make not matching rules', () => {
-    const flag = td.flag('flag')
-      .ifNotMatch('user', 'name', 'Saffron', 'Bubble')
-      .thenReturn(true);
+    const flag = td.flag('flag').ifNotMatch('user', 'name', 'Saffron', 'Bubble').thenReturn(true);
 
     expect(flag.build(1)).toEqual({
       fallthrough: {
@@ -282,66 +276,56 @@ describe('given a TestData instance', () => {
             {
               attribute: 'name',
               attributeReference: {
-                components: [
-                  'name',
-                ],
+                components: ['name'],
                 isValid: true,
                 redactionName: 'name',
               },
               contextKind: 'user',
               negate: true,
               op: 'in',
-              values: [
-                'Saffron',
-                'Bubble',
-              ],
+              values: ['Saffron', 'Bubble'],
             },
           ],
           id: 'rule0',
           variation: 0,
         },
       ],
-      variations: [
-        true,
-        false,
-      ],
+      variations: [true, false],
       version: 1,
     });
   });
 
   it('can add and remove a rule', () => {
-    const flag = td.flag('test-flag')
+    const flag = td
+      .flag('test-flag')
       .ifMatch('user', 'name', 'ben', 'christian')
       .andNotMatch('user', 'country', 'fr')
       .thenReturn(true);
 
-    const flagRules: FlagRule[] = [{
-      id: 'rule0',
-      variation: 0,
-      clauses: [
-        {
-          attribute: 'name',
-          attributeReference: new AttributeReference('name'),
-          contextKind: 'user',
-          negate: false,
-          op: 'in',
-          values: [
-            'ben',
-            'christian',
-          ],
-        },
-        {
-          contextKind: 'user',
-          attribute: 'country',
-          attributeReference: new AttributeReference('country'),
-          negate: true,
-          op: 'in',
-          values: [
-            'fr',
-          ],
-        },
-      ],
-    }];
+    const flagRules: FlagRule[] = [
+      {
+        id: 'rule0',
+        variation: 0,
+        clauses: [
+          {
+            attribute: 'name',
+            attributeReference: new AttributeReference('name'),
+            contextKind: 'user',
+            negate: false,
+            op: 'in',
+            values: ['ben', 'christian'],
+          },
+          {
+            contextKind: 'user',
+            attribute: 'country',
+            attributeReference: new AttributeReference('country'),
+            negate: true,
+            op: 'in',
+            values: ['fr'],
+          },
+        ],
+      },
+    ];
 
     expect(flag.build(1).rules).toEqual(flagRules);
 
@@ -350,7 +334,10 @@ describe('given a TestData instance', () => {
   });
 
   it('can move a targeted context from one variation to another', () => {
-    const flag = td.flag('test-flag').variationForContext('user', 'ben', false).variationForContext('user', 'ben', true);
+    const flag = td
+      .flag('test-flag')
+      .variationForContext('user', 'ben', false)
+      .variationForContext('user', 'ben', true);
     // Because there was only one target in the first variation there will be only
     // a single variation after that target is removed.
     expect(flag.build(1).contextTargets).toEqual([
@@ -363,7 +350,8 @@ describe('given a TestData instance', () => {
   });
 
   it('if a targeted context is moved from one variation to another, then other targets remain for that variation', () => {
-    const flag = td.flag('test-flag')
+    const flag = td
+      .flag('test-flag')
       .variationForContext('user', 'ben', false)
       .variationForContext('user', 'joe', false)
       .variationForContext('user', 'ben', true);
@@ -383,7 +371,8 @@ describe('given a TestData instance', () => {
   });
 
   it('should allow targets from multiple contexts in the same variation', () => {
-    const flag = td.flag('test-flag')
+    const flag = td
+      .flag('test-flag')
       .variationForContext('user', 'ben', false)
       .variationForContext('potato', 'russet', false)
       .variationForContext('potato', 'yukon', false);

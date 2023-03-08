@@ -7,7 +7,7 @@ export enum LogLevel {
   Error = 'error',
 }
 
-type ExpectedMessage = { level: LogLevel, matches: RegExp };
+type ExpectedMessage = { level: LogLevel; matches: RegExp };
 
 function replacer(key: string, value: any) {
   if (value instanceof RegExp) {
@@ -47,7 +47,9 @@ export default class TestLogger implements LDLogger {
         };
         waiter();
         this.waiters.push(waiter);
-      }), this.timeout(timeoutMs)]);
+      }),
+      this.timeout(timeoutMs),
+    ]);
   }
 
   /**
@@ -57,9 +59,7 @@ export default class TestLogger implements LDLogger {
    * more  than once, then it should be included multiple times.
    * @returns A list of messages that were not received.
    */
-  expectMessages(
-    expectedMessages: ExpectedMessage[],
-  ): void {
+  expectMessages(expectedMessages: ExpectedMessage[]): void {
     const matched: Record<LDLogLevel, number[]> = {
       debug: [],
       info: [],
@@ -70,13 +70,23 @@ export default class TestLogger implements LDLogger {
 
     expectedMessages.forEach((expectedMessage) => {
       const received = this.messages[expectedMessage.level];
-      const index = received.findIndex(
-        (receivedMessage) => receivedMessage.match(expectedMessage.matches),
+      const index = received.findIndex((receivedMessage) =>
+        receivedMessage.match(expectedMessage.matches)
       );
       if (index < 0) {
-        throw new Error(`Did not find expected message: ${JSON.stringify(expectedMessage, replacer)} received: ${JSON.stringify(this.messages)}`);
+        throw new Error(
+          `Did not find expected message: ${JSON.stringify(
+            expectedMessage,
+            replacer
+          )} received: ${JSON.stringify(this.messages)}`
+        );
       } else if (matched[expectedMessage.level].indexOf(index) >= 0) {
-        throw new Error(`Did not find expected message: ${JSON.stringify(expectedMessage, replacer)} received: ${JSON.stringify(this.messages)}`);
+        throw new Error(
+          `Did not find expected message: ${JSON.stringify(
+            expectedMessage,
+            replacer
+          )} received: ${JSON.stringify(this.messages)}`
+        );
       } else {
         matched[expectedMessage.level].push(index);
       }

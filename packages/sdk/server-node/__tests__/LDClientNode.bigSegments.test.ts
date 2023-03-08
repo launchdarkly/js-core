@@ -1,5 +1,8 @@
 import {
-  integrations, interfaces, LDBigSegmentsOptions, LDLogger,
+  integrations,
+  interfaces,
+  LDBigSegmentsOptions,
+  LDLogger,
 } from '@launchdarkly/js-server-sdk-common';
 import { basicLogger } from '../src';
 import { LDClient } from '../src/api/LDClient';
@@ -26,7 +29,7 @@ describe('given test data with big segments', () => {
         return {
           getMetadata: async () => ({ lastUpToDate: Date.now() }),
           getUserMembership: async () => undefined,
-          close: () => { },
+          close: () => {},
         };
       },
     };
@@ -51,15 +54,18 @@ describe('given test data with big segments', () => {
     });
 
     it('Can listen to the event emitter for the status', (done) => {
-      client.bigSegmentStoreStatusProvider.on('change', (status: interfaces.BigSegmentStoreStatus) => {
-        expect(status.stale).toEqual(false);
-        expect(status.available).toEqual(true);
+      client.bigSegmentStoreStatusProvider.on(
+        'change',
+        (status: interfaces.BigSegmentStoreStatus) => {
+          expect(status.stale).toEqual(false);
+          expect(status.available).toEqual(true);
 
-        const status2 = client.bigSegmentStoreStatusProvider.getStatus();
-        expect(status2!.stale).toEqual(false);
-        expect(status2!.available).toEqual(true);
-        done();
-      });
+          const status2 = client.bigSegmentStoreStatusProvider.getStatus();
+          expect(status2!.stale).toEqual(false);
+          expect(status2!.available).toEqual(true);
+          done();
+        }
+      );
     });
 
     afterEach(() => {
@@ -74,7 +80,7 @@ describe('given test data with big segments', () => {
         return {
           getMetadata: async () => ({ lastUpToDate: 1000 }),
           getUserMembership: async () => undefined,
-          close: () => { },
+          close: () => {},
         };
       },
     };
@@ -114,7 +120,7 @@ describe('given test data with big segments', () => {
             return { lastUpToDate: Date.now() };
           },
           getUserMembership: async () => undefined,
-          close: () => { },
+          close: () => {},
         };
       },
     };
@@ -133,18 +139,21 @@ describe('given test data with big segments', () => {
 
     it('Can observe the status change', (done) => {
       let message = 0;
-      client.bigSegmentStoreStatusProvider.on('change', (status: interfaces.BigSegmentStoreStatus) => {
-        if (message === 0) {
-          expect(status.stale).toEqual(false);
-          expect(status.available).toEqual(true);
-          error = true;
-          message += 1;
-        } else {
-          expect(status.stale).toEqual(false);
-          expect(status.available).toEqual(false);
-          done();
+      client.bigSegmentStoreStatusProvider.on(
+        'change',
+        (status: interfaces.BigSegmentStoreStatus) => {
+          if (message === 0) {
+            expect(status.stale).toEqual(false);
+            expect(status.available).toEqual(true);
+            error = true;
+            message += 1;
+          } else {
+            expect(status.stale).toEqual(false);
+            expect(status.available).toEqual(false);
+            done();
+          }
         }
-      });
+      );
     });
 
     afterEach(() => {

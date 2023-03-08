@@ -7,51 +7,23 @@ import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-com
 import Bucketer from '../../src/evaluation/Bucketer';
 import { crypto, hasher } from './mocks/hasher';
 
-describe.each<[
-  context: LDContext,
-  key: string,
-  attr: string,
-  salt: string,
-  kindForRollout: string | undefined,
-  seed: number | undefined,
-  expected: string,
-]>([
+describe.each<
   [
-    { key: 'is-key' },
-    'flag-key',
-    'key',
-    'salty',
-    undefined,
-    undefined,
-    'flag-key.salty.is-key',
-  ],
+    context: LDContext,
+    key: string,
+    attr: string,
+    salt: string,
+    kindForRollout: string | undefined,
+    seed: number | undefined,
+    expected: string
+  ]
+>([
+  [{ key: 'is-key' }, 'flag-key', 'key', 'salty', undefined, undefined, 'flag-key.salty.is-key'],
   // No specified kind, and user, are equivalent.
-  [
-    { key: 'is-key' },
-    'flag-key',
-    'key',
-    'salty',
-    'user',
-    undefined,
-    'flag-key.salty.is-key',
-  ],
-  [{ key: 'is-key' },
-    'flag-key',
-    'key',
-    'salty',
-    undefined,
-    undefined,
-    'flag-key.salty.is-key',
-  ],
+  [{ key: 'is-key' }, 'flag-key', 'key', 'salty', 'user', undefined, 'flag-key.salty.is-key'],
+  [{ key: 'is-key' }, 'flag-key', 'key', 'salty', undefined, undefined, 'flag-key.salty.is-key'],
 
-  [{ key: 'is-key' },
-    'flag-key',
-    'key',
-    'salty',
-    undefined,
-    82,
-    '82.is-key',
-  ],
+  [{ key: 'is-key' }, 'flag-key', 'key', 'salty', undefined, 82, '82.is-key'],
   [
     { key: 'is-key', kind: 'org' },
     'flag-key',
@@ -100,14 +72,12 @@ describe.each<[
       attrRef,
       salt,
       kindForRollout,
-      seed,
+      seed
     );
 
     // The hasher always returns the same value. This just checks that it converts it to a number
     // in the expected way.
-    expect(
-      bucket,
-    ).toBeCloseTo(0.07111111110140983, 5);
+    expect(bucket).toBeCloseTo(0.07111111110140983, 5);
     expect(hadContext).toBeTruthy();
     expect(hasher.update).toHaveBeenCalledWith(expected);
     expect(hasher.digest).toHaveBeenCalledWith('hex');
@@ -141,7 +111,7 @@ describe.each([
       attrRef,
       'salty',
       'org',
-      undefined,
+      undefined
     );
     expect(bucket).toEqual(0);
     expect(hadContext).toEqual(kind === 'org');

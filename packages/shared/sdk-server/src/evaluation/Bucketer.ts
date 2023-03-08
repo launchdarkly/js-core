@@ -49,7 +49,7 @@ export default class Bucketer {
     attr: AttributeReference,
     salt: string,
     kindForRollout: string = 'user',
-    seed?: number,
+    seed?: number
   ): [number, boolean] {
     const value = context.valueForKind(attr, kindForRollout);
     const bucketableValue = valueForBucketing(value);

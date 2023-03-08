@@ -1,5 +1,12 @@
 import {
-  EventSource, EventSourceInitDict, Info, Options, PlatformData, Requests, Response, SdkData,
+  EventSource,
+  EventSourceInitDict,
+  Info,
+  Options,
+  PlatformData,
+  Requests,
+  Response,
+  SdkData,
 } from '@launchdarkly/js-sdk-common';
 import promisify from '../../src/async/promisify';
 import defaultHeaders from '../../src/data_sources/defaultHeaders';
@@ -52,7 +59,9 @@ describe('given a stream processor with mock event source', () => {
   let diagnosticsManager: DiagnosticsManager;
 
   beforeEach(() => {
-    requests = createRequests((nes) => { es = nes; });
+    requests = createRequests((nes) => {
+      es = nes;
+    });
     featureStore = new InMemoryFeatureStore();
     asyncStore = new AsyncStoreFacade(featureStore);
     logger = new TestLogger();
@@ -70,7 +79,7 @@ describe('given a stream processor with mock event source', () => {
       requests,
       info,
       featureStore,
-      diagnosticsManager,
+      diagnosticsManager
     );
   });
 
@@ -81,10 +90,12 @@ describe('given a stream processor with mock event source', () => {
   function expectJsonError(err: { message?: string }) {
     expect(err).toBeDefined();
     expect(err.message).toEqual('Malformed JSON data in event stream');
-    logger.expectMessages([{
-      level: LogLevel.Error,
-      matches: /Stream received invalid data in/,
-    }]);
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches: /Stream received invalid data in/,
+      },
+    ]);
   }
 
   it('uses expected URL', () => {
@@ -240,11 +251,14 @@ describe('given a stream processor with mock event source', () => {
       streamProcessor.start();
       es.simulateError(err as any);
 
-      logger.expectMessages([{
-        level: LogLevel.Warn,
-        matches: status ? new RegExp(`error ${err.status}.*will retry`)
-          : /Received I\/O error \(sorry\) for streaming request - will retry/,
-      }]);
+      logger.expectMessages([
+        {
+          level: LogLevel.Warn,
+          matches: status
+            ? new RegExp(`error ${err.status}.*will retry`)
+            : /Received I\/O error \(sorry\) for streaming request - will retry/,
+        },
+      ]);
 
       const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
       expect(event.streamInits.length).toEqual(1);
@@ -266,10 +280,12 @@ describe('given a stream processor with mock event source', () => {
       streamProcessor.start();
       es.simulateError(err as any);
 
-      logger.expectMessages([{
-        level: LogLevel.Error,
-        matches: /Received error.*giving up permanently/,
-      }]);
+      logger.expectMessages([
+        {
+          level: LogLevel.Error,
+          matches: /Received error.*giving up permanently/,
+        },
+      ]);
 
       const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
       expect(event.streamInits.length).toEqual(1);

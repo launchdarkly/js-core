@@ -14,7 +14,7 @@ export interface Platform {
    * The interface for performing file system operations. If the platform does
    * not support filesystem access, then this may be undefined.
    */
-  fileSystem?:Filesystem;
+  fileSystem?: Filesystem;
 
   /**
    * The interface for performing cryptographic operations.
@@ -24,5 +24,5 @@ export interface Platform {
   /**
    * The interface for performing http/https requests.
    */
-  requests: Requests
+  requests: Requests;
 }

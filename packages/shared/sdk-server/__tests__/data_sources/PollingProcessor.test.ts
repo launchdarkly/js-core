@@ -34,7 +34,7 @@ describe('given an event processor', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, basicPlatform))
     );
   });
 
@@ -48,7 +48,7 @@ describe('given an event processor', () => {
   });
 
   it('polls immediately on start', () => {
-    processor.start(() => { });
+    processor.start(() => {});
 
     expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
   });
@@ -95,7 +95,7 @@ describe('given a polling processor with a short poll duration', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, basicPlatform))
     );
   });
 
@@ -107,29 +107,37 @@ describe('given a polling processor with a short poll duration', () => {
   it('polls repeatedly', (done) => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
 
-    processor.start(() => { });
+    processor.start(() => {});
     setTimeout(() => {
       expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(4);
       done();
     }, 500);
   });
 
-  it.each<number | jest.DoneCallback>([400, 408, 429, 500, 503])('continues polling after recoverable error', (status, done) => {
-    requestor.requestAllData = jest.fn((cb) => cb({
-      status,
-    }, undefined));
-    processor.start((e) => {
-      expect(e).toBeUndefined();
-    });
+  it.each<number | jest.DoneCallback>([400, 408, 429, 500, 503])(
+    'continues polling after recoverable error',
+    (status, done) => {
+      requestor.requestAllData = jest.fn((cb) =>
+        cb(
+          {
+            status,
+          },
+          undefined
+        )
+      );
+      processor.start((e) => {
+        expect(e).toBeUndefined();
+      });
 
-    setTimeout(() => {
-      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
-      const testLogger = config.logger as TestLogger;
-      expect(testLogger.getCount(LogLevel.Error)).toBe(0);
-      expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
-      (done as jest.DoneCallback)();
-    }, 300);
-  });
+      setTimeout(() => {
+        expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+        const testLogger = config.logger as TestLogger;
+        expect(testLogger.getCount(LogLevel.Error)).toBe(0);
+        expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
+        (done as jest.DoneCallback)();
+      }, 300);
+    }
+  );
 
   it('continues polling after receiving invalid JSON', (done) => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, '{sad'));
@@ -145,19 +153,27 @@ describe('given a polling processor with a short poll duration', () => {
     }, 300);
   });
 
-  it.each<number | jest.DoneCallback>([401, 403])('does not continue after non-recoverable error', (status, done) => {
-    requestor.requestAllData = jest.fn((cb) => cb({
-      status,
-    }, undefined));
-    processor.start((e) => {
-      expect(e).toBeDefined();
-    });
+  it.each<number | jest.DoneCallback>([401, 403])(
+    'does not continue after non-recoverable error',
+    (status, done) => {
+      requestor.requestAllData = jest.fn((cb) =>
+        cb(
+          {
+            status,
+          },
+          undefined
+        )
+      );
+      processor.start((e) => {
+        expect(e).toBeDefined();
+      });
 
-    setTimeout(() => {
-      expect(requestor.requestAllData.mock.calls.length).toBe(1);
-      const testLogger = config.logger as TestLogger;
-      expect(testLogger.getCount(LogLevel.Error)).toBe(1);
-      (done as jest.DoneCallback)();
-    }, 300);
-  });
+      setTimeout(() => {
+        expect(requestor.requestAllData.mock.calls.length).toBe(1);
+        const testLogger = config.logger as TestLogger;
+        expect(testLogger.getCount(LogLevel.Error)).toBe(1);
+        (done as jest.DoneCallback)();
+      }, 300);
+    }
+  );
 });

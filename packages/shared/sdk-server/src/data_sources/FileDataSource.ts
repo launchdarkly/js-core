@@ -27,7 +27,7 @@ export default class FileDataSource implements LDStreamProcessor {
 
   private allData: LDFeatureStoreDataStorage = {};
 
-  private initCallback?: ((err?: any) => void);
+  private initCallback?: (err?: any) => void;
 
   /**
    * This is internal because we want instances to only be created with the
@@ -37,13 +37,13 @@ export default class FileDataSource implements LDStreamProcessor {
   constructor(
     options: FileDataSourceOptions,
     filesystem: Filesystem,
-    private readonly featureStore: LDFeatureStore,
+    private readonly featureStore: LDFeatureStore
   ) {
     this.fileLoader = new FileLoader(
       filesystem,
       options.paths,
       options.autoUpdate ?? false,
-      (results: { path: string, data: string }[]) => {
+      (results: { path: string; data: string }[]) => {
         // Whenever changes are detected we re-process all of the data.
         // The FileLoader will have handled debouncing for us.
         try {
@@ -53,7 +53,7 @@ export default class FileDataSource implements LDStreamProcessor {
           this.initCallback?.(err);
           this.logger?.error(`Error processing files: ${err}`);
         }
-      },
+      }
     );
 
     this.logger = options.logger;
@@ -94,7 +94,7 @@ export default class FileDataSource implements LDStreamProcessor {
     }
   }
 
-  private processFileData(fileData: { path: string, data: string }[]) {
+  private processFileData(fileData: { path: string; data: string }[]) {
     // Clear any existing data before re-populating it.
     this.allData = {};
 

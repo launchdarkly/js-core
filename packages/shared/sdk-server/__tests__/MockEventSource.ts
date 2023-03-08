@@ -1,7 +1,7 @@
 import { EventSource, EventSourceInitDict } from '@launchdarkly/js-sdk-common';
 
 export default class MockEventSource implements EventSource {
-  handlers: Record<string, (event?: { data?: any; }) => void> = {};
+  handlers: Record<string, (event?: { data?: any }) => void> = {};
 
   closed = false;
 
@@ -20,9 +20,9 @@ export default class MockEventSource implements EventSource {
 
   onopen: (() => void) | undefined;
 
-  onretrying: ((e: { delayMillis: number; }) => void) | undefined;
+  onretrying: ((e: { delayMillis: number }) => void) | undefined;
 
-  addEventListener(type: string, listener: (event?: { data?: any; }) => void): void {
+  addEventListener(type: string, listener: (event?: { data?: any }) => void): void {
     this.handlers[type] = listener;
   }
 
@@ -30,7 +30,7 @@ export default class MockEventSource implements EventSource {
     this.closed = true;
   }
 
-  simulateError(error: { status: number; message: string; }) {
+  simulateError(error: { status: number; message: string }) {
     const shouldRetry = this.options.errorFilter(error);
     if (!shouldRetry) {
       this.closed = true;
