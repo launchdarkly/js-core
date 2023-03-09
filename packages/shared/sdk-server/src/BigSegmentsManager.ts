@@ -24,21 +24,21 @@ export default class BigSegmentsManager {
     // it in the options at this stage.
     config: Omit<LDBigSegmentsOptions, 'store'>,
     private readonly logger: LDLogger | undefined,
-    private readonly crypto: Crypto,
+    private readonly crypto: Crypto
   ) {
-    this.statusProvider = new BigSegmentStoreStatusProviderImpl(
-      async () => this.pollStoreAndUpdateStatus(),
+    this.statusProvider = new BigSegmentStoreStatusProviderImpl(async () =>
+      this.pollStoreAndUpdateStatus()
     );
 
-    this.staleTimeMs = (TypeValidators.Number.is(config.staleAfter)
-      && config.staleAfter > 0
-      ? config.staleAfter
-      : DEFAULT_STALE_AFTER_SECONDS) * 1000;
+    this.staleTimeMs =
+      (TypeValidators.Number.is(config.staleAfter) && config.staleAfter > 0
+        ? config.staleAfter
+        : DEFAULT_STALE_AFTER_SECONDS) * 1000;
 
-    const pollIntervalMs = (TypeValidators.Number.is(config.statusPollInterval)
-      && config.statusPollInterval > 0
-      ? config.statusPollInterval
-      : DEFAULT_STATUS_POLL_INTERVAL_SECONDS) * 1000;
+    const pollIntervalMs =
+      (TypeValidators.Number.is(config.statusPollInterval) && config.statusPollInterval > 0
+        ? config.statusPollInterval
+        : DEFAULT_STATUS_POLL_INTERVAL_SECONDS) * 1000;
 
     this.pollHandle = store
       ? setInterval(() => this.pollStoreAndUpdateStatus(), pollIntervalMs)
@@ -62,8 +62,9 @@ export default class BigSegmentsManager {
     }
   }
 
-  public async getUserMembership(userKey: string):
-  Promise<[BigSegmentStoreMembership | null, string] | undefined> {
+  public async getUserMembership(
+    userKey: string
+  ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
     if (!this.store) {
       return undefined;
     }
@@ -116,13 +117,14 @@ export default class BigSegmentsManager {
     const lastStatus = this.statusProvider.getStatus();
 
     if (
-      !lastStatus
-      || lastStatus.available !== newStatus.available
-      || lastStatus.stale !== newStatus.stale) {
+      !lastStatus ||
+      lastStatus.available !== newStatus.available ||
+      lastStatus.stale !== newStatus.stale
+    ) {
       this.logger?.debug(
         'Big Segment store status changed from %s to %s',
         JSON.stringify(lastStatus),
-        JSON.stringify(newStatus),
+        JSON.stringify(newStatus)
       );
       this.statusProvider.setStatus(newStatus);
       this.statusProvider.notify();

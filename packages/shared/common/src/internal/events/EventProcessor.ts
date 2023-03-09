@@ -27,7 +27,7 @@ interface CustomOutputEvent {
   creationDate: number;
   key: string;
   contextKeys: Record<string, string>;
-  data?: any
+  data?: any;
   metricValue?: number;
 }
 
@@ -51,11 +51,12 @@ interface FeatureOutputEvent {
  */
 type DiagnosticEvent = any;
 
-type OutputEvent = IdentifyOutputEvent
-| CustomOutputEvent
-| FeatureOutputEvent
-| SummarizedFlagsEvent
-| DiagnosticEvent;
+type OutputEvent =
+  | IdentifyOutputEvent
+  | CustomOutputEvent
+  | FeatureOutputEvent
+  | SummarizedFlagsEvent
+  | DiagnosticEvent;
 
 export interface EventProcessorOptions {
   allAttributesPrivate: boolean;
@@ -70,7 +71,7 @@ interface LDDiagnosticsManager {
   createStatsEventAndReset(
     droppedEvents: number,
     deduplicatedUsers: number,
-    eventsInLastBatch: number,
+    eventsInLastBatch: number
   ): DiagnosticEvent;
 }
 
@@ -110,14 +111,14 @@ export default class EventProcessor implements LDEventProcessor {
     clientContext: ClientContext,
     private readonly eventSender: LDEventSender,
     private readonly contextDeduplicator: LDContextDeduplicator,
-    private readonly diagnosticsManager?: LDDiagnosticsManager,
+    private readonly diagnosticsManager?: LDDiagnosticsManager
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
 
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,
-      config.privateAttributes.map((ref) => new AttributeReference(ref)),
+      config.privateAttributes.map((ref) => new AttributeReference(ref))
     );
 
     if (this.contextDeduplicator.flushInterval !== undefined) {
@@ -142,7 +143,7 @@ export default class EventProcessor implements LDEventProcessor {
         const statsEvent = this.diagnosticsManager!.createStatsEventAndReset(
           this.droppedEvents,
           this.deduplicatedUsers,
-          this.eventsInLastBatch,
+          this.eventsInLastBatch
         );
 
         this.droppedEvents = 0;
@@ -154,10 +155,7 @@ export default class EventProcessor implements LDEventProcessor {
   }
 
   private postDiagnosticEvent(event: DiagnosticEvent) {
-    this.eventSender.sendEventData(
-      LDEventType.DiagnosticEvent,
-      event,
-    );
+    this.eventSender.sendEventData(LDEventType.DiagnosticEvent, event);
   }
 
   close() {
@@ -295,22 +293,24 @@ export default class EventProcessor implements LDEventProcessor {
     } else {
       if (!this.exceededCapacity) {
         this.exceededCapacity = true;
-        this.logger?.warn('Exceeded event queue capacity. Increase capacity to avoid dropping events.');
+        this.logger?.warn(
+          'Exceeded event queue capacity. Increase capacity to avoid dropping events.'
+        );
       }
       this.droppedEvents += 1;
     }
   }
 
   private shouldDebugEvent(event: InputEvent) {
-    return isFeature(event)
-      && event.debugEventsUntilDate
-      && (event.debugEventsUntilDate > this.lastKnownPastTime)
-      && (event.debugEventsUntilDate > Date.now());
+    return (
+      isFeature(event) &&
+      event.debugEventsUntilDate &&
+      event.debugEventsUntilDate > this.lastKnownPastTime &&
+      event.debugEventsUntilDate > Date.now()
+    );
   }
 
-  private async tryPostingEvents(
-    events: OutputEvent[] | OutputEvent,
-  ): Promise<void> {
+  private async tryPostingEvents(events: OutputEvent[] | OutputEvent): Promise<void> {
     const res = await this.eventSender.sendEventData(LDEventType.AnalyticsEvents, events);
     if (res.status === LDDeliveryStatus.FailedAndMustShutDown) {
       this.shutdown = true;

@@ -20,9 +20,7 @@ const flag = {
   on: true,
   variations: [false, true],
   fallthrough: { variation: 0 },
-  rules: [
-    { variation: 1, clauses: [makeSegmentMatchClause(bigSegment)] },
-  ],
+  rules: [{ variation: 1, clauses: [makeSegmentMatchClause(bigSegment)] }],
 };
 
 class TestHasher implements Hasher {
@@ -66,7 +64,7 @@ describe('given test data with big segments', () => {
           return {
             getMetadata: async () => ({ lastUpToDate: Date.now() }),
             getUserMembership: async () => undefined,
-            close: () => { },
+            close: () => {},
           };
         },
       };
@@ -79,7 +77,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true),
+        makeCallbacks(true)
       );
 
       await client.waitForInitialization();
@@ -103,8 +101,9 @@ describe('given test data with big segments', () => {
         store(): BigSegmentStore {
           return {
             getMetadata: async () => ({ lastUpToDate: Date.now() }),
-            getUserMembership: async (hash) => (hash === `is_hashed:${user.key}` ? membership : undefined),
-            close: () => { },
+            getUserMembership: async (hash) =>
+              hash === `is_hashed:${user.key}` ? membership : undefined,
+            close: () => {},
           };
         },
       };
@@ -117,7 +116,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true),
+        makeCallbacks(true)
       );
 
       await client.waitForInitialization();
@@ -140,8 +139,10 @@ describe('given test data with big segments', () => {
         store(): BigSegmentStore {
           return {
             getMetadata: async () => ({ lastUpToDate: Date.now() }),
-            getUserMembership: async () => { throw new Error('sorry'); },
-            close: () => { },
+            getUserMembership: async () => {
+              throw new Error('sorry');
+            },
+            close: () => {},
           };
         },
       };
@@ -154,7 +155,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true),
+        makeCallbacks(true)
       );
 
       await client.waitForInitialization();
@@ -180,7 +181,7 @@ describe('given test data with big segments', () => {
           updateProcessor: td.getFactory(),
           sendEvents: false,
         },
-        makeCallbacks(true),
+        makeCallbacks(true)
       );
 
       await client.waitForInitialization();

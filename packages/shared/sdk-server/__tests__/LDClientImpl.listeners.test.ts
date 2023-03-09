@@ -23,7 +23,7 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger: new TestLogger(),
       },
-      { ...makeCallbacks(true), onUpdate: (key: string) => queue.add(key) },
+      { ...makeCallbacks(true), onUpdate: (key: string) => queue.add(key) }
     );
   });
 
@@ -80,12 +80,14 @@ describe('given an LDClient with test data', () => {
       rules: [
         {
           id: 'rule-1',
-          clauses: [{
-            attribute: '',
-            op: 'segmentMatch' as Op,
-            values: [segment1.key],
-            attributeReference: new AttributeReference(''),
-          }],
+          clauses: [
+            {
+              attribute: '',
+              op: 'segmentMatch' as Op,
+              values: [segment1.key],
+              attributeReference: new AttributeReference(''),
+            },
+          ],
           weight: 100000,
         },
       ],
@@ -115,12 +117,14 @@ describe('given an LDClient with test data', () => {
       rules: [
         {
           id: 'rule-1',
-          clauses: [{
-            attribute: '',
-            op: 'segmentMatch' as Op,
-            values: [segment1.key],
-            attributeReference: new AttributeReference(''),
-          }],
+          clauses: [
+            {
+              attribute: '',
+              op: 'segmentMatch' as Op,
+              values: [segment1.key],
+              attributeReference: new AttributeReference(''),
+            },
+          ],
           weight: 100000,
         },
       ],

@@ -10,9 +10,7 @@ function logger(options: LDOptions): TestLogger {
   return options.logger as TestLogger;
 }
 
-describe.each([
-  undefined, null, 'potat0', 17, [], {},
-])('constructed without options', (input) => {
+describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without options', (input) => {
   it('should have default options', () => {
     // JavaScript is not going to stop you from calling this with whatever
     // you want. So we need to tell TS to ingore our bad behavior.
@@ -47,19 +45,31 @@ describe.each([
 
 describe('when setting different options', () => {
   it.each([
-    ['http://cats.launchdarkly.com', 'http://cats.launchdarkly.com', [
-      { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
-      { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
-    ]],
-    ['http://cats.launchdarkly.com/', 'http://cats.launchdarkly.com', [
-      { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
-      { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
-    ]],
-    [0, 'https://sdk.launchdarkly.com', [
-      { level: LogLevel.Warn, matches: /Config option "baseUri" should be of type/ },
-      { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
-      { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
-    ]],
+    [
+      'http://cats.launchdarkly.com',
+      'http://cats.launchdarkly.com',
+      [
+        { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
+        { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
+      ],
+    ],
+    [
+      'http://cats.launchdarkly.com/',
+      'http://cats.launchdarkly.com',
+      [
+        { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
+        { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
+      ],
+    ],
+    [
+      0,
+      'https://sdk.launchdarkly.com',
+      [
+        { level: LogLevel.Warn, matches: /Config option "baseUri" should be of type/ },
+        { level: LogLevel.Warn, matches: /You have set custom uris without.* streamUri/ },
+        { level: LogLevel.Warn, matches: /You have set custom uris without.* eventsUri/ },
+      ],
+    ],
   ])('allows setting the baseUri and validates the baseUri', (uri, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ baseUri: uri }));
@@ -94,7 +104,9 @@ describe('when setting different options', () => {
 
   it('produces no logs when setting all URLs.', () => {
     // @ts-ignore
-    const config = new Configuration(withLogger({ eventsUri: 'cats', baseUri: 'cats', streamUri: 'cats' }));
+    const config = new Configuration(
+      withLogger({ eventsUri: 'cats', baseUri: 'cats', streamUri: 'cats' })
+    );
     expect(config.serviceEndpoints.events).toEqual('cats');
     expect(config.serviceEndpoints.streaming).toEqual('cats');
     expect(config.serviceEndpoints.polling).toEqual('cats');
@@ -103,7 +115,9 @@ describe('when setting different options', () => {
 
   it('Does not log a warning for the events URI if sendEvents is false..', () => {
     // @ts-ignore
-    const config = new Configuration(withLogger({ sendEvents: false, baseUri: 'cats', streamUri: 'cats' }));
+    const config = new Configuration(
+      withLogger({ sendEvents: false, baseUri: 'cats', streamUri: 'cats' })
+    );
     expect(config.serviceEndpoints.streaming).toEqual('cats');
     expect(config.serviceEndpoints.polling).toEqual('cats');
     expect(logger(config).getCount()).toEqual(0);
@@ -111,7 +125,9 @@ describe('when setting different options', () => {
 
   it('Does log a warning for the events URI if sendEvents is true..', () => {
     // @ts-ignore
-    const config = new Configuration(withLogger({ sendEvents: true, baseUri: 'cats', streamUri: 'cats' }));
+    const config = new Configuration(
+      withLogger({ sendEvents: true, baseUri: 'cats', streamUri: 'cats' })
+    );
     expect(config.serviceEndpoints.streaming).toEqual('cats');
     expect(config.serviceEndpoints.polling).toEqual('cats');
     expect(logger(config).getCount()).toEqual(1);
@@ -120,9 +136,7 @@ describe('when setting different options', () => {
   it.each([
     [0, 0, []],
     [6, 6, []],
-    ['potato', 5, [
-      { level: LogLevel.Warn, matches: /Config option "timeout" should be of type/ },
-    ]],
+    ['potato', 5, [{ level: LogLevel.Warn, matches: /Config option "timeout" should be of type/ }]],
   ])('allow setting timeout and validates timeout', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ timeout: value }));
@@ -133,9 +147,11 @@ describe('when setting different options', () => {
   it.each([
     [0, 0, []],
     [6, 6, []],
-    ['potato', 10000, [
-      { level: LogLevel.Warn, matches: /Config option "capacity" should be of type/ },
-    ]],
+    [
+      'potato',
+      10000,
+      [{ level: LogLevel.Warn, matches: /Config option "capacity" should be of type/ }],
+    ],
   ])('allow setting and validates capacity', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ capacity: value }));
@@ -284,13 +300,27 @@ describe('when setting different options', () => {
   });
 
   it.each([
-    [0, 60, [
-      { level: LogLevel.Warn, matches: /Config option "diagnosticRecordingInterval" had invalid/ },
-    ]],
+    [
+      0,
+      60,
+      [
+        {
+          level: LogLevel.Warn,
+          matches: /Config option "diagnosticRecordingInterval" had invalid/,
+        },
+      ],
+    ],
     [500, 500, []],
-    ['potato', 900, [
-      { level: LogLevel.Warn, matches: /Config option "diagnosticRecordingInterval" should be of type/ },
-    ]],
+    [
+      'potato',
+      900,
+      [
+        {
+          level: LogLevel.Warn,
+          matches: /Config option "diagnosticRecordingInterval" should be of type/,
+        },
+      ],
+    ],
   ])('allow setting and validates diagnosticRecordingInterval', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ diagnosticRecordingInterval: value }));
@@ -304,10 +334,12 @@ describe('when setting different options', () => {
     expect(logger(config).getCount()).toEqual(2);
     logger(config).expectMessages([
       {
-        level: LogLevel.Warn, matches: /Ignoring unknown config option "yes"/,
+        level: LogLevel.Warn,
+        matches: /Ignoring unknown config option "yes"/,
       },
       {
-        level: LogLevel.Warn, matches: /Ignoring unknown config option "cat"/,
+        level: LogLevel.Warn,
+        matches: /Ignoring unknown config option "cat"/,
       },
     ]);
   });

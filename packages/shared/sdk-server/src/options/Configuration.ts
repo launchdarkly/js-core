@@ -1,10 +1,19 @@
 import {
-  LDLogger, NumberWithMinimum, TypeValidator, TypeValidators, ApplicationTags,
-  OptionMessages, LDClientContext, ServiceEndpoints,
+  LDLogger,
+  NumberWithMinimum,
+  TypeValidator,
+  TypeValidators,
+  ApplicationTags,
+  OptionMessages,
+  LDClientContext,
+  ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
 import {
   LDBigSegmentsOptions,
-  LDOptions, LDProxyOptions, LDStreamProcessor, LDTLSOptions,
+  LDOptions,
+  LDProxyOptions,
+  LDStreamProcessor,
+  LDTLSOptions,
 } from '../api';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
@@ -49,6 +58,9 @@ const validations: Record<string, TypeValidator> = {
   application: TypeValidators.Object,
 };
 
+/**
+ * @internal
+ */
 export const defaultValues: ValidatedOptions = {
   baseUri: 'https://sdk.launchdarkly.com',
   streamUri: 'https://stream.launchdarkly.com',
@@ -72,7 +84,8 @@ export const defaultValues: ValidatedOptions = {
 };
 
 function validateTypesAndNames(options: LDOptions): {
-  errors: string[], validatedOptions: ValidatedOptions
+  errors: string[];
+  validatedOptions: ValidatedOptions;
 } {
   const errors: string[] = [];
   const validatedOptions: ValidatedOptions = { ...defaultValues };
@@ -84,22 +97,19 @@ function validateTypesAndNames(options: LDOptions): {
     if (validator) {
       if (!validator.is(optionValue)) {
         if (validator.getType() === 'boolean') {
-          errors.push(OptionMessages.wrongOptionTypeBoolean(
-            optionName,
-            typeof optionValue,
-          ));
+          errors.push(OptionMessages.wrongOptionTypeBoolean(optionName, typeof optionValue));
           validatedOptions[optionName] = !!optionValue;
-        } else if (validator instanceof NumberWithMinimum
-          && TypeValidators.Number.is(optionValue)) {
+        } else if (
+          validator instanceof NumberWithMinimum &&
+          TypeValidators.Number.is(optionValue)
+        ) {
           const { min } = validator as NumberWithMinimum;
           errors.push(OptionMessages.optionBelowMinimum(optionName, optionValue, min));
           validatedOptions[optionName] = min;
         } else {
-          errors.push(OptionMessages.wrongOptionType(
-            optionName,
-            validator.getType(),
-            typeof optionValue,
-          ));
+          errors.push(
+            OptionMessages.wrongOptionType(optionName, validator.getType(), typeof optionValue)
+          );
           validatedOptions[optionName] = defaultValues[optionName];
         }
       } else {
@@ -118,8 +128,10 @@ function validateEndpoints(options: LDOptions, validatedOptions: ValidatedOption
   const pollingEndpointSpecified = baseUri !== undefined && baseUri !== null;
   const eventEndpointSpecified = eventsUri !== undefined && eventsUri !== null;
 
-  if ((streamingEndpointSpecified === pollingEndpointSpecified)
-    && (streamingEndpointSpecified === eventEndpointSpecified)) {
+  if (
+    streamingEndpointSpecified === pollingEndpointSpecified &&
+    streamingEndpointSpecified === eventEndpointSpecified
+  ) {
     // Either everything is default, or everything is set.
     return;
   }
@@ -189,12 +201,14 @@ export default class Configuration {
 
   // public readonly featureStore: LDFeatureStore;
 
-  public readonly featureStoreFactory: ((clientContext: LDClientContext) => LDFeatureStore);
+  public readonly featureStoreFactory: (clientContext: LDClientContext) => LDFeatureStore;
 
   // public readonly updateProcessor?: LDStreamProcessor;
 
-  public readonly updateProcessorFactory?:
-  ((clientContext: LDClientContext, dataSourceUpdates: LDDataSourceUpdates) => LDStreamProcessor);
+  public readonly updateProcessorFactory?: (
+    clientContext: LDClientContext,
+    dataSourceUpdates: LDDataSourceUpdates
+  ) => LDStreamProcessor;
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 
@@ -216,7 +230,7 @@ export default class Configuration {
     this.serviceEndpoints = new ServiceEndpoints(
       validatedOptions.streamUri,
       validatedOptions.baseUri,
-      validatedOptions.eventsUri,
+      validatedOptions.eventsUri
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;

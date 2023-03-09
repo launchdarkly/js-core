@@ -20,9 +20,7 @@ function unescape(ref: string): string {
 
 function getComponents(reference: string): string[] {
   const referenceWithoutPrefix = reference.startsWith('/') ? reference.substring(1) : reference;
-  return referenceWithoutPrefix
-    .split('/')
-    .map((component) => (unescape(component)));
+  return referenceWithoutPrefix.split('/').map((component) => unescape(component));
 }
 
 function isLiteral(reference: string): boolean {
@@ -112,13 +110,13 @@ export default class AttributeReference {
     for (let index = 0; index < components.length; index += 1) {
       const component = components[index];
       if (
-        current !== null
-        && current !== undefined
+        current !== null &&
+        current !== undefined &&
         // See https://eslint.org/docs/rules/no-prototype-builtins
-        && Object.prototype.hasOwnProperty.call(current, component)
-        && typeof current === 'object'
+        Object.prototype.hasOwnProperty.call(current, component) &&
+        typeof current === 'object' &&
         // We do not want to allow indexing into an array.
-        && !Array.isArray(current)
+        !Array.isArray(current)
       ) {
         current = current[component];
       } else {
@@ -141,7 +139,9 @@ export default class AttributeReference {
   }
 
   public compare(other: AttributeReference) {
-    return this.depth === other.depth
-      && this.components.every((value, index) => value === other.getComponent(index));
+    return (
+      this.depth === other.depth &&
+      this.components.every((value, index) => value === other.getComponent(index))
+    );
   }
 }

@@ -1,0 +1,38 @@
+name: sdk/server-node
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-server-node:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # Node versions to run on.
+        version: [16, 19]
+
+    env:
+      TEST_HARNESS_PARAMS: '--skip-from=./contract-tests/testharness-suppressions.txt'
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.version }}
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/node-server-sdk'
+          workspace_path: packages/sdk/server-node
+      - name: Contract Tests
+        run: yarn run contract-tests

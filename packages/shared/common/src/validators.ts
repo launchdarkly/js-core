@@ -12,7 +12,7 @@
  * Interface for type validation.
  */
 export interface TypeValidator {
-  is(u:unknown): boolean;
+  is(u: unknown): boolean;
   getType(): string;
 }
 

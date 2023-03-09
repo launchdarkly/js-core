@@ -46,5 +46,5 @@ export interface LDClientContext {
   /**
    * Interfaces providing platform specific information and functionality.
    */
-  platform: Platform
+  platform: Platform;
 }

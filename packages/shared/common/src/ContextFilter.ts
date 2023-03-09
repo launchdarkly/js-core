@@ -5,25 +5,32 @@ import AttributeReference from './AttributeReference';
 import Context from './Context';
 
 // These attributes cannot be removed via a private attribute.
-const protectedAttributes = ['key', 'kind', '_meta', 'anonymous']
-  .map((str) => new AttributeReference(str, true));
+const protectedAttributes = ['key', 'kind', '_meta', 'anonymous'].map(
+  (str) => new AttributeReference(str, true)
+);
 
 // Attributes that should be stringified for legacy users.
-const legacyTopLevelCopyAttributes = ['name', 'ip', 'firstName',
-  'lastName', 'email', 'avatar', 'country'];
+const legacyTopLevelCopyAttributes = [
+  'name',
+  'ip',
+  'firstName',
+  'lastName',
+  'email',
+  'avatar',
+  'country',
+];
 
 function compare(a: AttributeReference, b: string[]) {
-  return a.depth === b.length
-    && b.every((value, index) => value === a.getComponent(index));
+  return a.depth === b.length && b.every((value, index) => value === a.getComponent(index));
 }
 
 function cloneWithRedactions(target: LDContextCommon, references: AttributeReference[]): any {
   const stack: {
-    key: string,
-    ptr: string[],
-    source: any,
-    parent: any,
-    visited: any[],
+    key: string;
+    ptr: string[];
+    source: any;
+    parent: any;
+    visited: any[];
   }[] = [];
   const cloned: any = {};
   const excluded: string[] = [];
@@ -35,7 +42,7 @@ function cloneWithRedactions(target: LDContextCommon, references: AttributeRefer
       source: target,
       parent: cloned,
       visited: [target],
-    })),
+    }))
   );
 
   while (stack.length) {
@@ -71,7 +78,7 @@ function cloneWithRedactions(target: LDContextCommon, references: AttributeRefer
               source: value,
               parent: item.parent[item.key],
               visited: [...item.visited, value],
-            })),
+            }))
           );
         }
       } else {
@@ -87,17 +94,13 @@ function cloneWithRedactions(target: LDContextCommon, references: AttributeRefer
 export default class ContextFilter {
   constructor(
     private readonly allAttributesPrivate: boolean,
-    private readonly privateAttributes: AttributeReference[],
-  ) { }
+    private readonly privateAttributes: AttributeReference[]
+  ) {}
 
   filter(context: Context): any {
     const contexts = context.getContexts();
     if (contexts.length === 1) {
-      return this.filterSingleKind(
-        context,
-        contexts[0][1],
-        contexts[0][0],
-      );
+      return this.filterSingleKind(context, contexts[0][1], contexts[0][0]);
     }
     const filteredMulti: any = {
       kind: 'multi',
@@ -109,20 +112,17 @@ export default class ContextFilter {
   }
 
   private getAttributesToFilter(context: Context, single: LDContextCommon, kind: string) {
-    return (this.allAttributesPrivate
-      ? Object.keys(single).map((k) => new AttributeReference(k, true))
-      : [...this.privateAttributes, ...context.privateAttributes(kind)]
+    return (
+      this.allAttributesPrivate
+        ? Object.keys(single).map((k) => new AttributeReference(k, true))
+        : [...this.privateAttributes, ...context.privateAttributes(kind)]
     ).filter((attr) => !protectedAttributes.some((protectedAttr) => protectedAttr.compare(attr)));
   }
 
-  private filterSingleKind(
-    context: Context,
-    single: LDContextCommon,
-    kind: string,
-  ): any {
+  private filterSingleKind(context: Context, single: LDContextCommon, kind: string): any {
     const { cloned, excluded } = cloneWithRedactions(
       single,
-      this.getAttributesToFilter(context, single, kind),
+      this.getAttributesToFilter(context, single, kind)
     );
 
     if (context.legacy) {

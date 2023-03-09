@@ -3,21 +3,17 @@ import { BasicLogger, LDLogLevel } from '../../src';
 const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
 describe.each<[LDLogLevel, string[]]>([
-  ['debug', [
-    'debug: [LaunchDarkly] a',
-    'info: [LaunchDarkly] b',
-    'warn: [LaunchDarkly] c',
-    'error: [LaunchDarkly] d',
-  ]],
-  ['info', [
-    'info: [LaunchDarkly] b',
-    'warn: [LaunchDarkly] c',
-    'error: [LaunchDarkly] d',
-  ]],
-  ['warn', [
-    'warn: [LaunchDarkly] c',
-    'error: [LaunchDarkly] d',
-  ]],
+  [
+    'debug',
+    [
+      'debug: [LaunchDarkly] a',
+      'info: [LaunchDarkly] b',
+      'warn: [LaunchDarkly] c',
+      'error: [LaunchDarkly] d',
+    ],
+  ],
+  ['info', ['info: [LaunchDarkly] b', 'warn: [LaunchDarkly] c', 'error: [LaunchDarkly] d']],
+  ['warn', ['warn: [LaunchDarkly] c', 'error: [LaunchDarkly] d']],
   ['error', ['error: [LaunchDarkly] d']],
   ['none', []],
 ])('given a logger with a log level', (level: LDLogLevel, expected: string[]) => {

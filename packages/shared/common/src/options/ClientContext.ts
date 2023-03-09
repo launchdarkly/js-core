@@ -34,11 +34,11 @@ export default class ClientContext implements LDClientContext {
   constructor(
     sdkKey: string,
     configuration: {
-      logger?: LDLogger,
-      offline: boolean,
-      serviceEndpoints: ServiceEndpoints,
+      logger?: LDLogger;
+      offline: boolean;
+      serviceEndpoints: ServiceEndpoints;
     },
-    public readonly platform: Platform,
+    public readonly platform: Platform
   ) {
     this.basicConfiguration = {
       logger: configuration.logger,

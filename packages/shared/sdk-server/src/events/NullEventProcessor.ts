@@ -11,12 +11,9 @@ import { internal, subsystem } from '@launchdarkly/js-sdk-common';
  * @internal
  */
 export default class NullEventProcessor implements subsystem.LDEventProcessor {
-  close(): void {
-  }
+  close(): void {}
 
-  async flush(): Promise<void> {
-  }
+  async flush(): Promise<void> {}
 
-  sendEvent(inputEvent: internal.InputEvent): void {
-  }
+  sendEvent(inputEvent: internal.InputEvent): void {}
 }

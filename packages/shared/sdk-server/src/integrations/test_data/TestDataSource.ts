@@ -14,9 +14,8 @@ export default class TestDataSource implements LDStreamProcessor {
     private readonly featureStore: AsyncStoreFacade,
     private readonly flags: Record<string, Flag>,
     private readonly segments: Record<string, Segment>,
-    private readonly onStop: (tfs: TestDataSource) => void,
-  ) {
-  }
+    private readonly onStop: (tfs: TestDataSource) => void
+  ) {}
 
   async start(fn?: ((err?: any) => void) | undefined) {
     await this.featureStore.init({

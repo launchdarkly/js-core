@@ -13,10 +13,10 @@ export interface Filesystem {
    * The time, in ms since POSIX epoch, that the file was last modified.
    * @param path The path to get a timestamp for.
    *
-   * @returns A promise which will resolve to a timestamp if succeful, or be
+   * @returns A promise which will resolve to a timestamp if successful, or be
    * rejected if the operation fails.
    */
-  getFileTimestamp(path: string): Promise<number>
+  getFileTimestamp(path: string): Promise<number>;
 
   /**
    * Read a file into a utf8 encoded string.
@@ -25,7 +25,7 @@ export interface Filesystem {
    * @returns A promise which will resolve to utf8 encoded file content, or be
    * rejected if the operation fails.
    */
-  readFile(path: string): Promise<string>
+  readFile(path: string): Promise<string>;
 
   /**
    * Watch for changes to the specified path.

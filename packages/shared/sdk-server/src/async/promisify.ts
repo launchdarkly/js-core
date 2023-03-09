@@ -6,6 +6,8 @@
  */
 export default function promisify<T>(method: (callback: (val: T) => void) => void): Promise<T> {
   return new Promise<T>((resolve) => {
-    method((val: T) => { resolve(val); });
+    method((val: T) => {
+      resolve(val);
+    });
   });
 }

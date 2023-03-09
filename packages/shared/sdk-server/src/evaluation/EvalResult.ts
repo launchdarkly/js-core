@@ -14,7 +14,7 @@ export default class EvalResult {
   protected constructor(
     public readonly isError: boolean,
     public readonly detail: LDEvaluationDetail,
-    public readonly message?: string,
+    public readonly message?: string
   ) {
     this.isError = isError;
     this.detail = detail;
@@ -30,18 +30,18 @@ export default class EvalResult {
   }
 
   static forError(errorKind: ErrorKinds, message?: string, def?: any): EvalResult {
-    return new EvalResult(true, {
-      value: def ?? null,
-      variationIndex: null,
-      reason: { kind: 'ERROR', errorKind },
-    }, message);
+    return new EvalResult(
+      true,
+      {
+        value: def ?? null,
+        variationIndex: null,
+        reason: { kind: 'ERROR', errorKind },
+      },
+      message
+    );
   }
 
-  static forSuccess(
-    value: any,
-    reason: LDEvaluationReason,
-    variationIndex?: number,
-  ) {
+  static forSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
     return new EvalResult(false, {
       value,
       variationIndex: variationIndex === undefined ? null : variationIndex,

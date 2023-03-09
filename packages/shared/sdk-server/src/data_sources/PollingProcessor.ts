@@ -8,6 +8,9 @@ import VersionedDataKinds from '../store/VersionedDataKinds';
 import httpErrorMessage from './httpErrorMessage';
 import Requestor from './Requestor';
 
+/**
+ * @internal
+ */
 export default class PollingProcessor implements LDStreamProcessor {
   private stopped = false;
 
@@ -20,7 +23,7 @@ export default class PollingProcessor implements LDStreamProcessor {
   constructor(
     config: Configuration,
     private readonly requestor: Requestor,
-    private readonly featureStore: LDDataSourceUpdates,
+    private readonly featureStore: LDDataSourceUpdates
   ) {
     this.logger = config.logger;
     this.pollInterval = config.pollInterval;

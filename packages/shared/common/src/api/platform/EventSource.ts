@@ -9,12 +9,9 @@ export interface EventSource {
 }
 
 export interface EventSourceInitDict {
-  errorFilter: (err: {
-    status: number,
-    message: string,
-  }) => boolean,
-  headers: { [key: string]: string | string[] },
-  initialRetryDelayMillis: number,
-  readTimeoutMillis: number,
-  retryResetIntervalMillis: number,
+  errorFilter: (err: { status: number; message: string }) => boolean;
+  headers: { [key: string]: string | string[] };
+  initialRetryDelayMillis: number;
+  readTimeoutMillis: number;
+  retryResetIntervalMillis: number;
 }

@@ -35,7 +35,6 @@ export type KindKeyedStore<Kind> = KeyedItems<Kind, KeyedItems<string, Serialize
  * existing item if any.
  */
 export default interface PersistentDataStore {
-
   /**
    * Overwrites the store's contents with a set of items for each collection.
    *
@@ -48,10 +47,7 @@ export default interface PersistentDataStore {
    * @param allData a list of {@link PersistentStoreDataKind} instances and their corresponding data
    * sets
    */
-  init(
-    allData: KindKeyedStore<PersistentStoreDataKind>,
-    callback: () => void,
-  ): void;
+  init(allData: KindKeyedStore<PersistentStoreDataKind>, callback: () => void): void;
 
   /**
    * Retrieves an item from the specified collection, if available.
@@ -74,7 +70,7 @@ export default interface PersistentDataStore {
   get(
     kind: PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: SerializedItemDescriptor | undefined) => void,
+    callback: (descriptor: SerializedItemDescriptor | undefined) => void
   ): void;
 
   /**

@@ -9,10 +9,7 @@ export default class BigSegmentStoreStatusProviderImpl implements BigSegmentStor
 
   private listener?: (status: BigSegmentStoreStatus) => void;
 
-  constructor(
-    private readonly onRequestStatus: () => Promise<void>,
-  ) {
-  }
+  constructor(private readonly onRequestStatus: () => Promise<void>) {}
 
   /**
    * Gets the current status of the store, if known.

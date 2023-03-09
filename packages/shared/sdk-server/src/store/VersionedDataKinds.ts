@@ -1,10 +1,10 @@
 import { DataKind } from '../api/interfaces';
 
 export interface VersionedDataKind extends DataKind {
-  namespace: string,
-  streamApiPath: string,
-  requestPath: string,
-  getDependencyKeys?: (item: any) => string[]
+  namespace: string;
+  streamApiPath: string;
+  requestPath: string;
+  getDependencyKeys?: (item: any) => string[];
 }
 
 export default class VersionedDataKinds {

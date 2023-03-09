@@ -3,7 +3,7 @@
   "workspaces": [
     "packages/shared/common",
     "packages/shared/sdk-server",
-    "packages/sdk/node"
+    "packages/sdk/server-node"
   ],
   "private": true,
   "scripts": {
@@ -13,11 +13,12 @@
     "build:doc": "./scripts/build-doc.sh $1",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
-    "test": "jest",
+    "test": "npx jest",
     "coverage": "npm run test -- --coverage",
     "contract-test-service": "npm --prefix contract-tests install && npm --prefix contract-tests start",
     "contract-test-harness": "curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \\ | VERSION=v2 PARAMS=\"-url http://localhost:8000 -debug -stop-service-at-end $TEST_HARNESS_PARAMS\" sh",
-    "contract-tests": "npm run contract-test-service & npm run contract-test-harness"
+    "contract-tests": "npm run contract-test-service & npm run contract-test-harness",
+    "prettier": "npx prettier --write \"**/*.{js,ts,tsx,json,yaml,yml,md}\" --loglevel warn"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.22.0",
@@ -25,7 +26,12 @@
     "eslint": "^8.14.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-config-prettier": "^8.7.0",
     "eslint-plugin-import": "^2.26.0",
-    "typedoc": "0.23.26"
-  }
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.4",
+    "typedoc": "0.23.26",
+    "typescript": "^4.6.3"
+  },
+  "packageManager": "yarn@3.4.1"
 }

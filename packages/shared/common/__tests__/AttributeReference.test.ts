@@ -22,13 +22,17 @@ describe.each([
   });
 
   it('should not be able to get a value', () => {
-    expect(reference.get(AsContextCommon({
-      '/': true,
-      '//': true,
-      '/~3': true,
-      '': true,
-      _meta: { },
-    }))).toBeUndefined();
+    expect(
+      reference.get(
+        AsContextCommon({
+          '/': true,
+          '//': true,
+          '/~3': true,
+          '': true,
+          _meta: {},
+        })
+      )
+    ).toBeUndefined();
   });
 });
 
@@ -56,7 +60,7 @@ describe.each([
 });
 
 describe.each([
-  [new AttributeReference('name'), { }],
+  [new AttributeReference('name'), {}],
   [new AttributeReference('/a/b'), { a: {} }],
   [new AttributeReference('/a/0'), { a: 'test' }],
   [new AttributeReference('/a/b'), { a: null }],
@@ -72,6 +76,7 @@ describe.each([
 });
 
 it('should not allow indexing an array', () => {
-  expect(new AttributeReference('/foo/0')
-    .get(AsContextCommon({ foo: ['bar', 'baz'] }))).toBeUndefined();
+  expect(
+    new AttributeReference('/foo/0').get(AsContextCommon({ foo: ['bar', 'baz'] }))
+  ).toBeUndefined();
 });

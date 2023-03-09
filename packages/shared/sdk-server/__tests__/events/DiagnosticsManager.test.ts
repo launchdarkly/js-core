@@ -1,12 +1,22 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  EventSource, EventSourceInitDict, Info, Options, Platform, PlatformData,
-  Requests, Response, SdkData,
+  EventSource,
+  EventSourceInitDict,
+  Info,
+  Options,
+  Platform,
+  PlatformData,
+  Requests,
+  Response,
+  SdkData,
 } from '@launchdarkly/js-sdk-common';
 import { DataKind } from '../../src/api/interfaces';
 import {
-  LDFeatureStore, LDFeatureStoreDataStorage, LDFeatureStoreItem,
-  LDFeatureStoreKindData, LDKeyedFeatureStoreItem,
+  LDFeatureStore,
+  LDFeatureStoreDataStorage,
+  LDFeatureStoreItem,
+  LDFeatureStoreKindData,
+  LDKeyedFeatureStoreItem,
 } from '../../src/api/subsystems';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
@@ -52,8 +62,8 @@ const requests: Requests = {
   usingProxy: () => false,
 
   /**
-  * Returns true if the proxy uses authentication.
-  */
+   * Returns true if the proxy uses authentication.
+   */
   usingProxyAuth: () => false,
 };
 
@@ -72,7 +82,7 @@ describe('given a diagnostics manager', () => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
-      new InMemoryFeatureStore(),
+      new InMemoryFeatureStore()
     );
   });
 
@@ -90,7 +100,7 @@ describe('given a diagnostics manager', () => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
-      new InMemoryFeatureStore(),
+      new InMemoryFeatureStore()
     );
 
     const { id } = manager.createInitEvent();
@@ -196,42 +206,54 @@ const fakeStore: LDFeatureStore = {
 };
 
 describe.each([
-  [{}, {
-    allAttributesPrivate: false,
-    connectTimeoutMillis: 5000,
-    customBaseURI: false,
-    customEventsURI: false,
-    customStreamURI: false,
-    dataStoreType: 'memory',
-    diagnosticRecordingIntervalMillis: 900000,
-    eventsCapacity: 10000,
-    eventsFlushIntervalMillis: 5000,
-    offline: false,
-    pollingIntervalMillis: 30000,
-    reconnectTimeMillis: 1000,
-    socketTimeoutMillis: 5000,
-    streamingDisabled: false,
-    contextKeysCapacity: 1000,
-    contextKeysFlushIntervalMillis: 300000,
-    usingProxy: false,
-    usingProxyAuthenticator: false,
-    usingRelayDaemon: false,
-  }],
-  [{ baseUri: 'http://other' }, {
-    customBaseURI: true,
-    customEventsURI: false,
-    customStreamURI: false,
-  }],
-  [{ eventsUri: 'http://other' }, {
-    customBaseURI: false,
-    customEventsURI: true,
-    customStreamURI: false,
-  }],
-  [{ streamUri: 'http://other' }, {
-    customBaseURI: false,
-    customEventsURI: false,
-    customStreamURI: true,
-  }],
+  [
+    {},
+    {
+      allAttributesPrivate: false,
+      connectTimeoutMillis: 5000,
+      customBaseURI: false,
+      customEventsURI: false,
+      customStreamURI: false,
+      dataStoreType: 'memory',
+      diagnosticRecordingIntervalMillis: 900000,
+      eventsCapacity: 10000,
+      eventsFlushIntervalMillis: 5000,
+      offline: false,
+      pollingIntervalMillis: 30000,
+      reconnectTimeMillis: 1000,
+      socketTimeoutMillis: 5000,
+      streamingDisabled: false,
+      contextKeysCapacity: 1000,
+      contextKeysFlushIntervalMillis: 300000,
+      usingProxy: false,
+      usingProxyAuthenticator: false,
+      usingRelayDaemon: false,
+    },
+  ],
+  [
+    { baseUri: 'http://other' },
+    {
+      customBaseURI: true,
+      customEventsURI: false,
+      customStreamURI: false,
+    },
+  ],
+  [
+    { eventsUri: 'http://other' },
+    {
+      customBaseURI: false,
+      customEventsURI: true,
+      customStreamURI: false,
+    },
+  ],
+  [
+    { streamUri: 'http://other' },
+    {
+      customBaseURI: false,
+      customEventsURI: false,
+      customStreamURI: true,
+    },
+  ],
   [{ allAttributesPrivate: true }, { allAttributesPrivate: true }],
   [{ timeout: 6 }, { connectTimeoutMillis: 6000, socketTimeoutMillis: 6000 }],
   [{ diagnosticRecordingInterval: 999 }, { diagnosticRecordingIntervalMillis: 999000 }],
@@ -253,7 +275,7 @@ describe.each([
       new Configuration(configIn),
       basicPlatform,
       // @ts-ignore
-      configIn.featureStore ?? new InMemoryFeatureStore(),
+      configIn.featureStore ?? new InMemoryFeatureStore()
     );
   });
 
@@ -278,7 +300,7 @@ describe.each([true, false])('Given proxy and proxy auth=%p', (auth) => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
-      new InMemoryFeatureStore(),
+      new InMemoryFeatureStore()
     );
   });
 

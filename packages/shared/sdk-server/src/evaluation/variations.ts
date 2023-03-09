@@ -1,4 +1,8 @@
-import { AttributeReference, TypeValidators, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
+import {
+  AttributeReference,
+  TypeValidators,
+  LDEvaluationReason,
+} from '@launchdarkly/js-sdk-common';
 import { Flag } from './data/Flag';
 import ErrorKinds from './ErrorKinds';
 import EvalResult from './EvalResult';
@@ -42,8 +46,7 @@ export function getOffVariation(flag: Flag, reason: LDEvaluationReason): EvalRes
 
 export function getBucketBy(
   isExperiment: boolean,
-  bucketByAttributeReference: AttributeReference | undefined,
+  bucketByAttributeReference: AttributeReference | undefined
 ) {
-  return (isExperiment ? undefined
-    : bucketByAttributeReference) ?? KEY_ATTR_REF;
+  return (isExperiment ? undefined : bucketByAttributeReference) ?? KEY_ATTR_REF;
 }

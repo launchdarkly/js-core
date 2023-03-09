@@ -1,6 +1,4 @@
-import {
-  AttributeReference, Context,
-} from '../src';
+import { AttributeReference, Context } from '../src';
 import ContextFilter from '../src/ContextFilter';
 
 describe('when handling legacy user contexts', () => {
@@ -135,10 +133,10 @@ describe('when handling legacy user contexts', () => {
   });
 
   it('hides some attributes if privateAttributes is set', () => {
-    const uf = new ContextFilter(
-      false,
-      [new AttributeReference('firstName', true), new AttributeReference('bizzle', true)],
-    );
+    const uf = new ContextFilter(false, [
+      new AttributeReference('firstName', true),
+      new AttributeReference('bizzle', true),
+    ]);
     expect(uf.filter(user)).toEqual(userWithSomeAttrsHidden);
   });
 
@@ -148,10 +146,10 @@ describe('when handling legacy user contexts', () => {
   });
 
   it('looks at both per-user redactedAttributes and global config', () => {
-    const uf = new ContextFilter(
-      false,
-      [new AttributeReference('firstName', true), new AttributeReference('bizzle', true)],
-    );
+    const uf = new ContextFilter(false, [
+      new AttributeReference('firstName', true),
+      new AttributeReference('bizzle', true),
+    ]);
     expect(uf.filter(userSpecifyingOwnPrivateAttr)).toEqual(userWithAllAttrsHidden);
   });
 
@@ -168,20 +166,25 @@ describe('when handling legacy user contexts', () => {
   it('converts non-boolean "anonymous" to boolean', () => {
     const uf = new ContextFilter(true, []);
     // @ts-ignore
-    expect(uf.filter(Context.fromLDContext({ key: 'user', anonymous: 'yes' })))
-      .toEqual({ key: 'user', kind: 'user', anonymous: true });
+    expect(uf.filter(Context.fromLDContext({ key: 'user', anonymous: 'yes' }))).toEqual({
+      key: 'user',
+      kind: 'user',
+      anonymous: true,
+    });
   });
 
   it('converts fields to string types when needed', () => {
     const uf = new ContextFilter(false, []);
-    expect(uf.filter(userWithNonStringsInStringRequiredFields))
-      .toEqual(userWithStringFieldsConverted);
+    expect(uf.filter(userWithNonStringsInStringRequiredFields)).toEqual(
+      userWithStringFieldsConverted
+    );
   });
 
   it('it handles legacy names which had a preceding slash', () => {
     const uf = new ContextFilter(false, []);
-    expect(uf.filter(userWithPrivateFieldsWithAPrecedingSlash))
-      .toEqual(userWithPrivateFieldsWithAPrecedingSlashFiltered);
+    expect(uf.filter(userWithPrivateFieldsWithAPrecedingSlash)).toEqual(
+      userWithPrivateFieldsWithAPrecedingSlashFiltered
+    );
   });
 
   it.each([null, undefined])(
@@ -200,7 +203,7 @@ describe('when handling legacy user contexts', () => {
         country: value,
       })!;
       expect(cf.filter(nullUndefinedUser)).toEqual({ key: 'userKey', kind: 'user' });
-    },
+    }
   );
 });
 
@@ -281,10 +284,10 @@ describe('when handling single kind contexts', () => {
   });
 
   it('hides some attributes if privateAttributes is set', () => {
-    const uf = new ContextFilter(
-      false,
-      [new AttributeReference('firstName', true), new AttributeReference('bizzle', true)],
-    );
+    const uf = new ContextFilter(false, [
+      new AttributeReference('firstName', true),
+      new AttributeReference('bizzle', true),
+    ]);
     expect(uf.filter(context)).toEqual(contextWithSomeAttrsHidden);
   });
 
@@ -294,10 +297,10 @@ describe('when handling single kind contexts', () => {
   });
 
   it('looks at both per-context redactedAttributes and global config', () => {
-    const uf = new ContextFilter(
-      false,
-      [new AttributeReference('firstName', true), new AttributeReference('bizzle', true)],
-    );
+    const uf = new ContextFilter(false, [
+      new AttributeReference('firstName', true),
+      new AttributeReference('bizzle', true),
+    ]);
     expect(uf.filter(contextSpecifyingOwnPrivateAttr)).toEqual(userWithAllAttrsHidden);
   });
 

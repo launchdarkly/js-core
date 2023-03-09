@@ -35,7 +35,7 @@ export default class InputEvalEvent {
     trackEvents?: boolean,
     prereqOf?: string,
     reason?: LDEvaluationReason,
-    debugEventsUntilDate?: number,
+    debugEventsUntilDate?: number
   ) {
     this.creationDate = Date.now();
     this.context = context;

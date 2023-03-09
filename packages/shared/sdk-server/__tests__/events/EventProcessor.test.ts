@@ -26,7 +26,7 @@ const SDK_KEY = 'sdk-key';
 interface RequestState {
   testHeaders: Record<string, string>;
   testStatus: number;
-  requestsMade: Array<{ url: string; options: Options; }>;
+  requestsMade: Array<{ url: string; options: Options }>;
 }
 
 // Mock the nanoid module so we can replace the implementation in specific tests.
@@ -59,15 +59,16 @@ function makePlatform(requestState: RequestState) {
 
   const waiters: Array<() => void> = [];
   let callCount = 0;
-  const waitForMessages = async (count: number) => new Promise<number>((resolve) => {
-    const waiter = () => {
-      if (callCount >= count) {
-        resolve(callCount);
-      }
-    };
-    waiter();
-    waiters.push(waiter);
-  });
+  const waitForMessages = async (count: number) =>
+    new Promise<number>((resolve) => {
+      const waiter = () => {
+        if (callCount >= count) {
+          resolve(callCount);
+        }
+      };
+      waiter();
+      waiters.push(waiter);
+    });
 
   const requests: Requests = {
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
@@ -162,25 +163,30 @@ describe('given an event processor with diagnostics manager', () => {
     // we need to make an object and replace the value.
     const testConfig = { ...config, diagnosticRecordingInterval: 0.1 };
 
-    const diagnosticsManager = new DiagnosticsManager('sdk-key', testConfig, {
+    const diagnosticsManager = new DiagnosticsManager(
+      'sdk-key',
+      testConfig,
+      {
+        ...basicPlatform,
+        // Replace info and requests.
+        info,
+        requests,
+      },
+      store
+    );
+
+    const clientContext = new ClientContext(SDK_KEY, testConfig, {
       ...basicPlatform,
-      // Replace info and requests.
       info,
       requests,
-    }, store);
-
-    const clientContext = new ClientContext(
-      SDK_KEY,
-      testConfig,
-      { ...basicPlatform, info, requests },
-    );
+    });
 
     eventProcessor = new internal.EventProcessor(
       testConfig,
       clientContext,
       new EventSender(config, clientContext),
       new ContextDeduplicator(config),
-      diagnosticsManager,
+      diagnosticsManager
     );
   });
 
@@ -191,48 +197,46 @@ describe('given an event processor with diagnostics manager', () => {
 
   it('sends initial diagnostic event', () => {
     expect(requestState.requestsMade.length).toEqual(1);
-    expect(JSON.parse(requestState.requestsMade[0].options.body!)).toEqual(
-      {
-        configuration: {
-          allAttributesPrivate: false,
-          connectTimeoutMillis: 5000,
-          contextKeysCapacity: 1000,
-          contextKeysFlushIntervalMillis: 300000,
-          customBaseURI: false,
-          customEventsURI: false,
-          customStreamURI: false,
-          dataStoreType: 'memory',
-          diagnosticRecordingIntervalMillis: 100,
-          eventsCapacity: 3,
-          eventsFlushIntervalMillis: 5000,
-          offline: false,
-          pollingIntervalMillis: 30000,
-          reconnectTimeMillis: 1000,
-          socketTimeoutMillis: 5000,
-          streamingDisabled: false,
-          usingProxy: false,
-          usingProxyAuthenticator: false,
-          usingRelayDaemon: false,
-        },
-        creationDate: 1000,
-        id: {
-          diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
-          sdkKeySuffix: 'dk-key',
-        },
-        kind: 'diagnostic-init',
-        platform: {
-          name: 'The SDK Name',
-          osName: 'An OS',
-          osVersion: '1.0.1',
-          osArch: 'An Arch',
-          nodeVersion: '42',
-        },
-        sdk: {
-          name: 'An SDK',
-          version: '2.0.2',
-        },
+    expect(JSON.parse(requestState.requestsMade[0].options.body!)).toEqual({
+      configuration: {
+        allAttributesPrivate: false,
+        connectTimeoutMillis: 5000,
+        contextKeysCapacity: 1000,
+        contextKeysFlushIntervalMillis: 300000,
+        customBaseURI: false,
+        customEventsURI: false,
+        customStreamURI: false,
+        dataStoreType: 'memory',
+        diagnosticRecordingIntervalMillis: 100,
+        eventsCapacity: 3,
+        eventsFlushIntervalMillis: 5000,
+        offline: false,
+        pollingIntervalMillis: 30000,
+        reconnectTimeMillis: 1000,
+        socketTimeoutMillis: 5000,
+        streamingDisabled: false,
+        usingProxy: false,
+        usingProxyAuthenticator: false,
+        usingRelayDaemon: false,
       },
-    );
+      creationDate: 1000,
+      id: {
+        diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+        sdkKeySuffix: 'dk-key',
+      },
+      kind: 'diagnostic-init',
+      platform: {
+        name: 'The SDK Name',
+        osName: 'An OS',
+        osVersion: '1.0.1',
+        osArch: 'An Arch',
+        nodeVersion: '42',
+      },
+      sdk: {
+        name: 'An SDK',
+        version: '2.0.2',
+      },
+    });
   });
 
   it('sends periodic diagnostic event', async () => {
@@ -296,34 +300,46 @@ describe('given an event processor with diagnostics manager', () => {
     const eventMessage = requestState.requestsMade.find((msg) => msg.url.endsWith('/bulk'));
     expect(eventMessage).toBeDefined();
     const eventMessageData = JSON.parse(eventMessage!.options.body!);
-    expect(eventMessageData).toEqual(expect.arrayContaining([
-      expect.objectContaining({ kind: 'identify', creationDate: 1000 }),
-      expect.objectContaining({ kind: 'identify', creationDate: 1001 }),
-      expect.objectContaining({ kind: 'identify', creationDate: 1002 }),
-    ]));
+    expect(eventMessageData).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'identify', creationDate: 1000 }),
+        expect.objectContaining({ kind: 'identify', creationDate: 1001 }),
+        expect.objectContaining({ kind: 'identify', creationDate: 1002 }),
+      ])
+    );
 
-    const diagnosticMessage = requestState.requestsMade.find((msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic'));
+    const diagnosticMessage = requestState.requestsMade.find(
+      (msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic')
+    );
     expect(diagnosticMessage).toBeDefined();
     const diagnosticMessageData = JSON.parse(diagnosticMessage!.options.body!);
-    expect(diagnosticMessageData).toEqual(expect.objectContaining({
-      kind: 'diagnostic',
-      id: {
-        diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
-        sdkKeySuffix: 'dk-key',
-      },
-      droppedEvents: 1,
-      deduplicatedUsers: 0,
-      eventsInLastBatch: 3,
-    }));
+    expect(diagnosticMessageData).toEqual(
+      expect.objectContaining({
+        kind: 'diagnostic',
+        id: {
+          diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+          sdkKeySuffix: 'dk-key',
+        },
+        droppedEvents: 1,
+        deduplicatedUsers: 0,
+        eventsInLastBatch: 3,
+      })
+    );
   });
 
   it('counts de-duplicated users', async () => {
     const context = Context.fromLDContext(user);
     eventProcessor.sendEvent({
-      kind: 'custom', key: 'eventkey1', creationDate: 1000, context,
+      kind: 'custom',
+      key: 'eventkey1',
+      creationDate: 1000,
+      context,
     });
     eventProcessor.sendEvent({
-      kind: 'custom', key: 'eventkey2', creationDate: 1001, context,
+      kind: 'custom',
+      key: 'eventkey2',
+      creationDate: 1001,
+      context,
     });
     await eventProcessor.flush();
 
@@ -332,23 +348,29 @@ describe('given an event processor with diagnostics manager', () => {
     const eventMessage = requestState.requestsMade.find((msg) => msg.url.endsWith('/bulk'));
     expect(eventMessage).toBeDefined();
     const eventMessageData = JSON.parse(eventMessage!.options.body!);
-    expect(eventMessageData).toEqual(expect.arrayContaining([
-      expect.objectContaining({ kind: 'custom', creationDate: 1000 }),
-      expect.objectContaining({ kind: 'custom', creationDate: 1001 }),
-    ]));
+    expect(eventMessageData).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'custom', creationDate: 1000 }),
+        expect.objectContaining({ kind: 'custom', creationDate: 1001 }),
+      ])
+    );
 
-    const diagnosticMessage = requestState.requestsMade.find((msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic'));
+    const diagnosticMessage = requestState.requestsMade.find(
+      (msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic')
+    );
     expect(diagnosticMessage).toBeDefined();
     const diagnosticMessageData = JSON.parse(diagnosticMessage!.options.body!);
-    expect(diagnosticMessageData).toEqual(expect.objectContaining({
-      kind: 'diagnostic',
-      id: {
-        diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
-        sdkKeySuffix: 'dk-key',
-      },
-      droppedEvents: 0,
-      deduplicatedUsers: 1,
-      eventsInLastBatch: 3,
-    }));
+    expect(diagnosticMessageData).toEqual(
+      expect.objectContaining({
+        kind: 'diagnostic',
+        id: {
+          diagnosticId: '9-ypf7NswGfZ3CN2WpTix',
+          sdkKeySuffix: 'dk-key',
+        },
+        droppedEvents: 0,
+        deduplicatedUsers: 1,
+        eventsInLastBatch: 3,
+      })
+    );
   });
 });

@@ -10,5 +10,5 @@ export interface SegmentRule {
   rolloutContextKind?: string;
 
   // This field is not part of the schema, but it is populated during parsing.
-  bucketByAttributeReference?: AttributeReference,
+  bucketByAttributeReference?: AttributeReference;
 }

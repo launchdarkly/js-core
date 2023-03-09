@@ -2,6 +2,4 @@
 /* eslint-disable import/prefer-default-export */
 import { LDClientContext } from './LDClientContext';
 
-export {
-  LDClientContext,
-};
+export { LDClientContext };

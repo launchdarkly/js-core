@@ -4,6 +4,15 @@ dist/
 node_modules/
 **/*.tsbuildinfo
 coverage/
-tmp/
-**/docs
+**/tmp_test/
+docs/
+.pnp.*
+.yarn/*
+.dev*
+.vscode/launch.json
+.idea
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 yarn-error.log

@@ -6,17 +6,17 @@ import { Versioned } from './Versioned';
 import { Rollout } from './Rollout';
 
 interface VariationOrRollout {
-  variation?: number,
-  rollout?: Rollout
+  variation?: number;
+  rollout?: Rollout;
 }
 
 export interface Flag extends Versioned {
-  on: boolean,
+  on: boolean;
   prerequisites?: Prerequisite[];
-  targets?: Omit<Target, 'contextKind'>[],
-  contextTargets?: Target[],
-  rules?: FlagRule[],
-  fallthrough: VariationOrRollout,
+  targets?: Omit<Target, 'contextKind'>[];
+  contextTargets?: Target[];
+  rules?: FlagRule[];
+  fallthrough: VariationOrRollout;
   offVariation?: number;
   variations: any[];
   clientSide?: boolean;
@@ -24,5 +24,5 @@ export interface Flag extends Versioned {
   salt?: string;
   trackEvents?: boolean;
   trackEventsFallthrough?: boolean;
-  debugEventsUntilDate?: number
+  debugEventsUntilDate?: number;
 }

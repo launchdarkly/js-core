@@ -12,7 +12,7 @@ export default class NullUpdateProcessor implements LDStreamProcessor {
     setTimeout(() => fn?.(), 0);
   }
 
-  stop() { }
+  stop() {}
 
-  close() { }
+  close() {}
 }

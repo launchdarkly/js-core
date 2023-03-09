@@ -3,11 +3,25 @@
 /* eslint-disable max-classes-per-file */
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 import {
-  LDContextDeduplicator, LDDeliveryStatus, LDEventSender, LDEventSenderResult, LDEventType,
+  LDContextDeduplicator,
+  LDDeliveryStatus,
+  LDEventSender,
+  LDEventSenderResult,
+  LDEventType,
 } from '../../../src/api/subsystem';
 import {
-  ClientContext, Context, EventSource, EventSourceInitDict,
-  Hasher, Hmac, Options, Platform, PlatformData, Response, SdkData, ServiceEndpoints,
+  ClientContext,
+  Context,
+  EventSource,
+  EventSourceInitDict,
+  Hasher,
+  Hmac,
+  Options,
+  Platform,
+  PlatformData,
+  Response,
+  SdkData,
+  ServiceEndpoints,
 } from '../../../src';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
@@ -27,9 +41,7 @@ function makeSummary(start: number, end: number, count: number, version: number)
     endDate: end,
     features: {
       flagkey: {
-        contextKinds: [
-          'user',
-        ],
+        contextKinds: ['user'],
         counters: [
           {
             count,
@@ -53,7 +65,7 @@ function makeFeatureEvent(
   key: string = 'flagkey',
   variation: number = 1,
   def: string = 'default',
-  value: string = 'value',
+  value: string = 'value'
 ): any {
   return {
     kind: debug ? 'debug' : 'feature',
@@ -63,23 +75,24 @@ function makeFeatureEvent(
     variation,
     value,
     default: def,
-    ...(debug ? {
-      context: {
-        key: 'userKey',
-        name: 'Red',
-        kind: 'user',
-      },
-    } : {
-      contextKeys: {
-        user: 'userKey',
-      },
-    })
-    ,
+    ...(debug
+      ? {
+          context: {
+            key: 'userKey',
+            name: 'Red',
+            kind: 'user',
+          },
+        }
+      : {
+          contextKeys: {
+            user: 'userKey',
+          },
+        }),
   };
 }
 
 class MockEventSender implements LDEventSender {
-  public queue: AsyncQueue<{ type: LDEventType, data: any }> = new AsyncQueue();
+  public queue: AsyncQueue<{ type: LDEventType; data: any }> = new AsyncQueue();
 
   public results: LDEventSenderResult[] = [];
 
@@ -106,8 +119,7 @@ class MockContextDeduplicator implements LDContextDeduplicator {
     return true;
   }
 
-  flush(): void {
-  }
+  flush(): void {}
 }
 
 describe('given an event processor', () => {
@@ -181,7 +193,7 @@ describe('given an event processor', () => {
       eventProcessorConfig,
       new ClientContext('sdk-key', basicConfiguration, platform),
       eventSender,
-      contextDeduplicator,
+      contextDeduplicator
     );
   });
 
@@ -218,18 +230,22 @@ describe('given an event processor', () => {
 
   it('stringifies user attributes in identify event', async () => {
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext({
-      key: 1,
-      ip: 3,
-      country: 4,
-      email: 5,
-      firstName: 6,
-      lastName: 7,
-      avatar: 8,
-      name: 9,
-      anonymous: false,
-      custom: { age: 99 },
-    } as any)));
+    eventProcessor.sendEvent(
+      new InputIdentifyEvent(
+        Context.fromLDContext({
+          key: 1,
+          ip: 3,
+          country: 4,
+          email: 5,
+          firstName: 6,
+          lastName: 7,
+          avatar: 8,
+          name: 9,
+          anonymous: false,
+          custom: { age: 99 },
+        } as any)
+      )
+    );
 
     await eventProcessor.flush();
     const request = await eventSender.queue.take();
@@ -443,9 +459,7 @@ describe('given an event processor', () => {
         endDate: 1000,
         features: {
           flagkey1: {
-            contextKinds: [
-              'user',
-            ],
+            contextKinds: ['user'],
             counters: [
               {
                 count: 1,
@@ -458,9 +472,7 @@ describe('given an event processor', () => {
           },
 
           flagkey2: {
-            contextKinds: [
-              'user',
-            ],
+            contextKinds: ['user'],
             counters: [
               {
                 count: 1,
@@ -519,9 +531,7 @@ describe('given an event processor', () => {
         endDate: 1000,
         features: {
           flagkey1: {
-            contextKinds: [
-              'user',
-            ],
+            contextKinds: ['user'],
             counters: [
               {
                 count: 1,
@@ -534,9 +544,7 @@ describe('given an event processor', () => {
           },
 
           flagkey2: {
-            contextKinds: [
-              'user',
-            ],
+            contextKinds: ['user'],
             counters: [
               {
                 count: 1,
@@ -692,7 +700,7 @@ describe('given an event processor', () => {
       newConfig,
       new ClientContext('sdk-key', basicConfiguration, platform),
       eventSender,
-      contextDeduplicator,
+      contextDeduplicator
     );
     eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
 

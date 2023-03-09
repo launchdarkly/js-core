@@ -2,13 +2,13 @@ import { LDEvaluationReason } from './LDEvaluationReason';
 import { LDFlagValue } from './LDFlagValue';
 
 /**
-* An object that combines the result of a feature flag evaluation with information about
-* how it was calculated.
-*
-* This is the result of calling `LDClient.variationDetail`.
-*
-* For more information, see the [SDK reference guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
-*/
+ * An object that combines the result of a feature flag evaluation with information about
+ * how it was calculated.
+ *
+ * This is the result of calling `LDClient.variationDetail`.
+ *
+ * For more information, see the [SDK reference guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
+ */
 export interface LDEvaluationDetail {
   /**
    * The result of the flag evaluation. This will be either one of the flag's variations or

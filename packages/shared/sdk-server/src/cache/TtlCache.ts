@@ -20,8 +20,8 @@ export interface TtlCacheOptions {
 }
 
 interface CacheRecord {
-  value: any,
-  expiration: number,
+  value: any;
+  expiration: number;
 }
 
 /**
@@ -64,7 +64,7 @@ export default class TtlCache {
   public set(key: string, value: any) {
     this.storage.set(key, {
       value,
-      expiration: Date.now() + (this.options.ttl * 1000),
+      expiration: Date.now() + this.options.ttl * 1000,
     });
   }
 

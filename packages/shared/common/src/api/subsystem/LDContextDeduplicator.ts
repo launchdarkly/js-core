@@ -4,7 +4,7 @@ import Context from '../../Context';
  * Interface for a strategy for removing duplicate contexts from the event stream.
  * Client side event processors do not do this de-duplication, so the implementation
  * is not part of the default event processor.
-*/
+ */
 export default interface LDContextDeduplicator {
   /**
    * The interval, if any, at which the event processor should call flush.

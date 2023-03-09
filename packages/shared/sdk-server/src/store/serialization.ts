@@ -22,12 +22,12 @@ export function reviver(this: any, key: string, value: any): any {
 }
 
 interface FlagsAndSegments {
-  flags: { [name: string]: Flag }
-  segments: { [name: string]: Segment }
+  flags: { [name: string]: Flag };
+  segments: { [name: string]: Segment };
 }
 
 interface AllData {
-  data: FlagsAndSegments
+  data: FlagsAndSegments;
 }
 
 /**
@@ -54,7 +54,7 @@ export function replacer(this: any, key: string, value: any): any {
 
 interface DeleteData extends Omit<VersionedData, 'key'> {
   path: string;
-  kind?: VersionedDataKind
+  kind?: VersionedDataKind;
 }
 
 type VersionedFlag = VersionedData & Flag;
@@ -62,15 +62,15 @@ type VersionedSegment = VersionedData & Segment;
 
 interface PatchData {
   path: string;
-  data: VersionedFlag | VersionedSegment
-  kind?: VersionedDataKind
+  data: VersionedFlag | VersionedSegment;
+  kind?: VersionedDataKind;
 }
 
 function processRollout(rollout?: Rollout) {
   if (rollout && rollout.bucketBy) {
     rollout.bucketByAttributeReference = new AttributeReference(
       rollout.bucketBy,
-      !rollout.contextKind,
+      !rollout.contextKind
     );
   }
 }
@@ -108,7 +108,7 @@ export function processSegment(segment: Segment) {
       // So use the rolloutContextKind to indicate if this is new or old data.
       rule.bucketByAttributeReference = new AttributeReference(
         rule.bucketBy,
-        !rule.rolloutContextKind,
+        !rule.rolloutContextKind
       );
     }
     rule?.clauses?.forEach((clause) => {

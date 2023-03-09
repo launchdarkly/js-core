@@ -1,7 +1,10 @@
 import { DataKind } from '../api/interfaces';
 import {
-  LDDataSourceUpdates, LDFeatureStore, LDFeatureStoreDataStorage,
-  LDFeatureStoreItem, LDKeyedFeatureStoreItem,
+  LDDataSourceUpdates,
+  LDFeatureStore,
+  LDFeatureStoreDataStorage,
+  LDFeatureStoreItem,
+  LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 import { Clause } from '../evaluation/data/Clause';
 import { Flag } from '../evaluation/data/Flag';
@@ -15,11 +18,13 @@ import NamespacedDataSet from './NamespacedDataSet';
  */
 interface TypeWithRuleClauses {
   prerequisites?: Prerequisite[];
-  rules?: [{
-    // The shape of rules are different between flags and segments, but
-    // both have clauses of the same shape.
-    clauses?: Clause[];
-  }]
+  rules?: [
+    {
+      // The shape of rules are different between flags and segments, but
+      // both have clauses of the same shape.
+      clauses?: Clause[];
+    }
+  ];
 }
 
 function computeDependencies(namespace: string, item: LDFeatureStoreItem) {
@@ -58,9 +63,8 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
   constructor(
     private readonly featureStore: LDFeatureStore,
     private readonly hasEventListeners: () => boolean,
-    private readonly onChange: (key: string) => void,
-  ) {
-  }
+    private readonly onChange: (key: string) => void
+  ) {}
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
     const checkForChanges = this.hasEventListeners();
@@ -74,7 +78,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
             this.dependencyTracker.updateDependenciesFrom(
               namespace,
               key,
-              computeDependencies(namespace, item),
+              computeDependencies(namespace, item)
             );
           });
         });
@@ -91,7 +95,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
                 key,
                 oldDataForKind && oldDataForKind[key],
                 newDataForKind && newDataForKind[key],
-                updatedItems,
+                updatedItems
               );
             });
           });
@@ -125,7 +129,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
         this.dependencyTracker.updateDependenciesFrom(
           kind.namespace,
           key,
-          computeDependencies(kind.namespace, data),
+          computeDependencies(kind.namespace, data)
         );
         if (checkForChanges) {
           const updatedItems = new NamespacedDataSet<boolean>();
@@ -147,7 +151,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
     key: string,
     oldValue: LDFeatureStoreItem | null | undefined,
     newValue: LDFeatureStoreItem,
-    toDataSet: NamespacedDataSet<boolean>,
+    toDataSet: NamespacedDataSet<boolean>
   ) {
     if (newValue && oldValue && newValue.version <= oldValue.version) {
       return;

@@ -31,11 +31,13 @@ export function makeBooleanFlagWithRules(rules: FlagRule[]) {
 }
 
 export function makeBooleanFlagWithOneClause(clause: Clause) {
-  return makeBooleanFlagWithRules([{
-    id: '1234',
-    clauses: [clause],
-    variation: 1,
-  }]);
+  return makeBooleanFlagWithRules([
+    {
+      id: '1234',
+      clauses: [clause],
+      variation: 1,
+    },
+  ]);
 }
 
 export function makeClauseThatMatchesUser(user: LDContext): Clause {

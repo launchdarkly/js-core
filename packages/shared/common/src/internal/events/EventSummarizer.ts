@@ -4,8 +4,8 @@ import InputEvent from './InputEvent';
 import SummaryCounter from './SummaryCounter';
 
 function counterKey(event: InputEvalEvent) {
-  return `${event.key
-  }:${event.variation !== null && event.variation !== undefined ? event.variation : ''
+  return `${event.key}:${
+    event.variation !== null && event.variation !== undefined ? event.variation : ''
   }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
 }
 
@@ -13,30 +13,30 @@ function counterKey(event: InputEvalEvent) {
  * @internal
  */
 export interface FlagCounter {
-  value: any,
-  count: number,
-  variation?: number,
-  version?: number,
-  unknown?: boolean,
+  value: any;
+  count: number;
+  variation?: number;
+  version?: number;
+  unknown?: boolean;
 }
 
 /**
  * @internal
  */
 export interface FlagSummary {
-  default: any,
-  counters: FlagCounter[],
-  contextKinds: string[]
+  default: any;
+  counters: FlagCounter[];
+  contextKinds: string[];
 }
 
 /**
  * @internal
  */
 export interface SummarizedFlagsEvent {
-  startDate: number,
-  endDate: number,
-  features: Record<string, FlagSummary>
-  kind: 'summary'
+  startDate: number;
+  endDate: number;
+  features: Record<string, FlagSummary>;
+  kind: 'summary';
 }
 
 /**
@@ -71,7 +71,7 @@ export default class EventSummarizer {
           event.value,
           event.default,
           event.version,
-          event.variation,
+          event.variation
         );
       }
 
@@ -85,8 +85,8 @@ export default class EventSummarizer {
   }
 
   getSummary(): SummarizedFlagsEvent {
-    const features = Object.values(this.counters)
-      .reduce((acc: Record<string, FlagSummary>, counter) => {
+    const features = Object.values(this.counters).reduce(
+      (acc: Record<string, FlagSummary>, counter) => {
         let flagSummary = acc[counter.key];
         if (!flagSummary) {
           flagSummary = {
@@ -112,7 +112,9 @@ export default class EventSummarizer {
         flagSummary.counters.push(counterOut);
 
         return acc;
-      }, {});
+      },
+      {}
+    );
 
     return {
       startDate: this.startDate,

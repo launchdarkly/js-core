@@ -14,15 +14,27 @@
     "client"
   ],
   "scripts": {
-    "test": "jest --ci",
-    "build": "tsc"
+    "test": "npx jest --ci",
+    "build": "npx tsc",
+    "lint": "npx eslint . --ext .ts",
+    "lint:fix": "yarn run lint -- --fix"
   },
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/jest": "^27.4.1",
-    "jest": "^27.5.1",
-    "ts-jest": "^27.1.4",
-    "typescript": "^4.6.3",
-    "launchdarkly-js-test-helpers": "^2.2.0"
+    "@types/jest": "^29.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.22.0",
+    "@typescript-eslint/parser": "^5.22.0",
+    "eslint": "^8.14.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-config-prettier": "^8.7.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jest": "^29.5.0",
+    "launchdarkly-js-test-helpers": "^2.2.0",
+    "prettier": "^2.8.4",
+    "ts-jest": "^29.0.5",
+    "typedoc": "0.23.26",
+    "typescript": "^4.6.3"
   }
 }

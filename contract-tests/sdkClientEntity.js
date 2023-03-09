@@ -8,12 +8,13 @@ function makeSdkConfig(options, tag) {
   const cf = {
     logger: sdkLogger(tag),
   };
-  const maybeTime = seconds => (seconds === undefined || seconds === null ? undefined : seconds / 1000);
+  const maybeTime = (seconds) =>
+    seconds === undefined || seconds === null ? undefined : seconds / 1000;
   if (options.streaming) {
     cf.streamUri = options.streaming.baseUri;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
   }
-  if(options.polling) {
+  if (options.polling) {
     cf.stream = false;
     cf.baseUri = options.polling.baseUri;
     cf.pollInterface = options.polling.pollIntervalMs / 1000;
@@ -41,7 +42,8 @@ async function newSdkClientEntity(options) {
 
   log.info('Creating client with configuration: ' + JSON.stringify(options.configuration));
   const timeout =
-    options.configuration.startWaitTimeMs !== null && options.configuration.startWaitTimeMs !== undefined
+    options.configuration.startWaitTimeMs !== null &&
+    options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
   const client = ld.init(
@@ -49,7 +51,10 @@ async function newSdkClientEntity(options) {
     makeSdkConfig(options.configuration, options.tag)
   );
   try {
-    await Promise.race([client.waitForInitialization(), new Promise(resolve => setTimeout(resolve, timeout))]);
+    await Promise.race([
+      client.waitForInitialization(),
+      new Promise((resolve) => setTimeout(resolve, timeout)),
+    ]);
   } catch (_) {
     // if waitForInitialization() rejects, the client failed to initialize, see next line
   }
@@ -63,7 +68,7 @@ async function newSdkClientEntity(options) {
     log.info('Test ended');
   };
 
-  c.doCommand = async params => {
+  c.doCommand = async (params) => {
     log.info('Received command: ' + params.command);
     switch (params.command) {
       case 'evaluate': {

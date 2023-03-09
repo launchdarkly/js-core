@@ -8,12 +8,12 @@ export default interface SerializedItemDescriptor {
   readonly version: number;
 
   /**
-  * True if this a placeholder (tombstone) for a deleted item.
-  *
-  * If so, {@link #serializedItem} will still contain a string representing the deleted item, but
-  * the persistent store implementation has the option of not storing it if it can represent the
-  * placeholder in a more efficient way.
-  */
+   * True if this a placeholder (tombstone) for a deleted item.
+   *
+   * If so, {@link #serializedItem} will still contain a string representing the deleted item, but
+   * the persistent store implementation has the option of not storing it if it can represent the
+   * placeholder in a more efficient way.
+   */
   readonly deleted?: boolean;
 
   /**

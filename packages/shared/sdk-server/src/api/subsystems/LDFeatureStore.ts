@@ -20,12 +20,16 @@ export interface LDKeyedFeatureStoreItem extends LDFeatureStoreItem {
 /**
  * Represents the storage for a single kind of data. e.g. 'flag' or 'segment'.
  */
-export interface LDFeatureStoreKindData {[key: string]: LDFeatureStoreItem }
+export interface LDFeatureStoreKindData {
+  [key: string]: LDFeatureStoreItem;
+}
 
 /**
  * Represents the storage for the full data store.
  */
-export interface LDFeatureStoreDataStorage {[namespace: string]: LDFeatureStoreKindData }
+export interface LDFeatureStoreDataStorage {
+  [namespace: string]: LDFeatureStoreKindData;
+}
 
 /**
  * Interface for a feature store component.
@@ -69,7 +73,8 @@ export interface LDFeatureStore {
    * @param kind
    *   The type of data to be accessed. The store should not make any assumptions about the format
    *   of the data, but just return an object in which each key is the `key` property of an entity
-   *   and the value is the entity. The actual type of this parameter is {@link interfaces.DataKind}.
+   *   and the value is the entity. The actual type of this parameter is
+   *   {@link interfaces.DataKind}.
    *
    * @param callback
    *   Will be called with the resulting map. The actual type of the result value is

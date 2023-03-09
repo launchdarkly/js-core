@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ClientContext, EventSource, EventSourceInitDict, Headers,
-  Info, Options, PlatformData, Requests, Response, SdkData,
+  ClientContext,
+  EventSource,
+  EventSourceInitDict,
+  Headers,
+  Info,
+  Options,
+  PlatformData,
+  Requests,
+  Response,
+  SdkData,
 } from '@launchdarkly/js-sdk-common';
 import { LDDeliveryStatus, LDEventType } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
@@ -10,7 +18,7 @@ import Configuration from '../../src/options/Configuration';
 import basicPlatform from '../evaluation/mocks/platform';
 
 describe('given an event sender', () => {
-  let queue: AsyncQueue<{ url: string, options?: Options }>;
+  let queue: AsyncQueue<{ url: string; options?: Options }>;
   let eventSender: EventSender;
   let requestStatus = 200;
   let requestHeaders: Record<string, string> = {};
@@ -88,7 +96,7 @@ describe('given an event sender', () => {
     const config = new Configuration({});
     eventSender = new EventSender(
       config,
-      new ClientContext('sdk-key', config, { ...basicPlatform, requests, info }),
+      new ClientContext('sdk-key', config, { ...basicPlatform, requests, info })
     );
   });
 
@@ -132,10 +140,8 @@ describe('given an event sender', () => {
     const req1 = await queue.take();
     await eventSender.sendEventData(LDEventType.AnalyticsEvents, { something: true });
     const req2 = await queue.take();
-    expect(
-      req1.options!.headers!['x-launchdarkly-payload-id'],
-    ).not.toEqual(
-      req2.options!.headers!['x-launchdarkly-payload-id'],
+    expect(req1.options!.headers!['x-launchdarkly-payload-id']).not.toEqual(
+      req2.options!.headers!['x-launchdarkly-payload-id']
     );
   });
 

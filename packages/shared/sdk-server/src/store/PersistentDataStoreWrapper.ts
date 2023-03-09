@@ -1,10 +1,16 @@
 import {
-  DataKind, PersistentDataStore, PersistentStoreDataKind, SerializedItemDescriptor,
+  DataKind,
+  PersistentDataStore,
+  PersistentStoreDataKind,
+  SerializedItemDescriptor,
 } from '../api/interfaces';
 import ItemDescriptor from '../api/interfaces/persistent_store/ItemDescriptor';
 import {
-  LDFeatureStore, LDFeatureStoreDataStorage, LDFeatureStoreItem,
-  LDFeatureStoreKindData, LDKeyedFeatureStoreItem,
+  LDFeatureStore,
+  LDFeatureStoreDataStorage,
+  LDFeatureStoreItem,
+  LDFeatureStoreKindData,
+  LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 import TtlCache from '../cache/TtlCache';
 import { persistentStoreKinds } from './persistentStoreKinds';
@@ -31,9 +37,7 @@ const initializationCheckedKey = '$checkedInit';
 // accessed.
 const defaultCheckInterval = 600;
 
-function itemIfNotDeleted(
-  item: ItemDescriptor,
-): LDFeatureStoreItem | null {
+function itemIfNotDeleted(item: ItemDescriptor): LDFeatureStoreItem | null {
   return !item || item.item.deleted ? null : item.item;
 }
 
@@ -52,7 +56,7 @@ function deletedDescriptor(version: number): ItemDescriptor {
  */
 function deserialize(
   kind: PersistentStoreDataKind,
-  descriptor: SerializedItemDescriptor,
+  descriptor: SerializedItemDescriptor
 ): ItemDescriptor {
   if (descriptor.deleted || !descriptor.serializedItem) {
     return deletedDescriptor(descriptor.version);
@@ -62,9 +66,11 @@ function deserialize(
     // This would only happen if the JSON is invalid.
     return deletedDescriptor(descriptor.version);
   }
-  if (deserializedItem.version === 0
-    || deserializedItem.version === descriptor.version
-    || deserializedItem.item === undefined) {
+  if (
+    deserializedItem.version === 0 ||
+    deserializedItem.version === descriptor.version ||
+    deserializedItem.item === undefined
+  ) {
     return deserializedItem;
   }
   // There was a mismatch between the version of the serialized descriptor and the deserialized
@@ -209,37 +215,35 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    this.queue.enqueue(
-      (cb) => {
-        // Clear the caches which contain all the values of a specific kind.
-        if (this.allItemsCache) {
-          this.allItemsCache.clear();
-        }
+    this.queue.enqueue((cb) => {
+      // Clear the caches which contain all the values of a specific kind.
+      if (this.allItemsCache) {
+        this.allItemsCache.clear();
+      }
 
-        const persistKind = persistentStoreKinds[kind.namespace];
-        this.core.upsert(
-          persistKind,
-          data.key,
-          persistKind.serialize(data),
-          (err, updatedDescriptor) => {
-            if (!err && updatedDescriptor) {
-              if (updatedDescriptor.serializedItem) {
-                const value = deserialize(persistKind, updatedDescriptor);
-                this.itemCache?.set(cacheKey(kind, data.key), value);
-              } else if (updatedDescriptor.deleted) {
-                // Deleted and there was not a serialized representation.
-                this.itemCache?.set(
-                  data.key,
-                  { key: data.key, version: updatedDescriptor.version, deleted: true },
-                );
-              }
+      const persistKind = persistentStoreKinds[kind.namespace];
+      this.core.upsert(
+        persistKind,
+        data.key,
+        persistKind.serialize(data),
+        (err, updatedDescriptor) => {
+          if (!err && updatedDescriptor) {
+            if (updatedDescriptor.serializedItem) {
+              const value = deserialize(persistKind, updatedDescriptor);
+              this.itemCache?.set(cacheKey(kind, data.key), value);
+            } else if (updatedDescriptor.deleted) {
+              // Deleted and there was not a serialized representation.
+              this.itemCache?.set(data.key, {
+                key: data.key,
+                version: updatedDescriptor.version,
+                deleted: true,
+              });
             }
-            cb();
-          },
-        );
-      },
-      callback,
-    );
+          }
+          cb();
+        }
+      );
+    }, callback);
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {

@@ -76,7 +76,7 @@ it('when updating the head of the cache (that is not also the tail)', () => {
   expect(lruCache.get('0')).toEqual(1);
 });
 
-it('when getting something that doesn\'t exist', () => {
+it("when getting something that doesn't exist", () => {
   const max = 5;
   const lruCache = new LruCache({ max });
 

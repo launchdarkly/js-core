@@ -1,5 +1,9 @@
 import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
-import { BigSegmentStore, BigSegmentStoreMembership, BigSegmentStoreStatus } from '../src/api/interfaces';
+import {
+  BigSegmentStore,
+  BigSegmentStoreMembership,
+  BigSegmentStoreStatus,
+} from '../src/api/interfaces';
 import BigSegmentsManager from '../src/BigSegmentsManager';
 import TestLogger from './Logger';
 
@@ -47,7 +51,7 @@ describe.each(['STALE', 'HEALTHY'])('given a %s store', (status) => {
   beforeEach(() => {
     store = {
       getMetadata: status === 'HEALTHY' ? alwaysUpToDate : alwaysStale,
-      getUserMembership: jest.fn((async () => expectedMembership)),
+      getUserMembership: jest.fn(async () => expectedMembership),
       close: () => {},
     };
     manager = new BigSegmentsManager(store, {}, new TestLogger(), crypto);
@@ -80,10 +84,10 @@ describe('given a store without meta data', () => {
   beforeEach(() => {
     store = {
       getMetadata: async () => undefined,
-      getUserMembership: jest.fn((async (hash) => {
+      getUserMembership: jest.fn(async (hash) => {
         expect(hash).toEqual(userHash);
         return expectedMembership;
-      })),
+      }),
       close: () => {},
     };
     manager = new BigSegmentsManager(store, {}, new TestLogger(), crypto);
@@ -100,10 +104,12 @@ describe('given a store without meta data', () => {
 });
 
 describe('given a store with a user cache size of 2', () => {
-  const userKey1 = 'userkey1'; const userKey2 = 'userkey2'; const
-    userKey3 = 'userkey3';
-  const userHash1 = 'is_hashed:userkey1'; const userHash2 = 'is_hashed:userkey2'; const
-    userHash3 = 'is_hashed:userkey3';
+  const userKey1 = 'userkey1';
+  const userKey2 = 'userkey2';
+  const userKey3 = 'userkey3';
+  const userHash1 = 'is_hashed:userkey1';
+  const userHash2 = 'is_hashed:userkey2';
+  const userHash3 = 'is_hashed:userkey3';
 
   const memberships: Record<string, BigSegmentStoreMembership> = {};
   memberships[userHash1] = { seg1: true };
@@ -114,14 +120,18 @@ describe('given a store with a user cache size of 2', () => {
   let manager: BigSegmentsManager;
   beforeEach(() => {
     store = {
-
       getMetadata: alwaysUpToDate,
-      getUserMembership: jest.fn((async (hash) => memberships[hash])),
+      getUserMembership: jest.fn(async (hash) => memberships[hash]),
       close: () => {},
     };
-    manager = new BigSegmentsManager(store, {
-      userCacheSize: 2,
-    }, new TestLogger(), crypto);
+    manager = new BigSegmentsManager(
+      store,
+      {
+        userCacheSize: 2,
+      },
+      new TestLogger(),
+      crypto
+    );
   });
 
   afterEach(() => {
@@ -196,12 +206,17 @@ describe('given a store with a short poll interval.', () => {
 
     store = {
       getMetadata: alwaysUpToDate,
-      getUserMembership: jest.fn((async () => expectedMembership)),
+      getUserMembership: jest.fn(async () => expectedMembership),
       close: () => {},
     };
-    manager = new BigSegmentsManager(store, {
-      statusPollInterval: 0.01,
-    }, new TestLogger(), crypto);
+    manager = new BigSegmentsManager(
+      store,
+      {
+        statusPollInterval: 0.01,
+      },
+      new TestLogger(),
+      crypto
+    );
 
     let count = 0;
     manager.statusProvider.setListener((status) => {
@@ -224,7 +239,9 @@ describe('given a store with a short poll interval.', () => {
     const status1 = await manager.statusProvider.requireStatus();
     expect(status1.available).toBe(true);
 
-    store.getMetadata = async () => { throw new Error('sorry'); };
+    store.getMetadata = async () => {
+      throw new Error('sorry');
+    };
 
     await promises[1];
     expect(statuses[1].available).toBe(false);
