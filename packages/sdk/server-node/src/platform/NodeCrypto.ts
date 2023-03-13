@@ -1,14 +1,18 @@
 /* eslint-disable class-methods-use-this */
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
-import * as crypto from 'crypto';
+import { createHash, createHmac, randomUUID } from 'crypto';
 
 export default class NodeCrypto implements platform.Crypto {
   createHash(algorithm: string): platform.Hasher {
-    return crypto.createHash(algorithm);
+    return createHash(algorithm);
   }
 
   createHmac(algorithm: string, key: string): platform.Hmac {
-    return crypto.createHmac(algorithm, key);
+    return createHmac(algorithm, key);
+  }
+
+  randomUUID() {
+    return randomUUID();
   }
 }

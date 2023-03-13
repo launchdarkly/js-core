@@ -45,6 +45,10 @@ const crypto: Crypto = {
     // Not used for this test.
     throw new Error(`Function not implemented.${algorithm}${key}`);
   },
+  randomUUID(): string {
+    // Not used for this test.
+    throw new Error(`Function not implemented.`);
+  },
 };
 
 describe('given test data with big segments', () => {

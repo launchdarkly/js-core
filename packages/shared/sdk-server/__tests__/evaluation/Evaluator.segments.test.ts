@@ -257,6 +257,10 @@ describe('when evaluating user equivalent contexts for segments', () => {
         // Not used for this test.
         throw new Error(`Function not implemented.${algorithm}${key}`);
       },
+      randomUUID(): string {
+        // Not used for this test.
+        throw new Error(`Function not implemented.`);
+      },
     };
 
     const bucketingPlatform = { ...basicPlatform, crypto };

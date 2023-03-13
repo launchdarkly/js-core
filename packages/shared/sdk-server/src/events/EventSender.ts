@@ -1,5 +1,10 @@
-import { ApplicationTags, ClientContext, Requests, subsystem } from '@launchdarkly/js-sdk-common';
-import { nanoid } from 'nanoid';
+import {
+  ApplicationTags,
+  ClientContext,
+  Crypto,
+  Requests,
+  subsystem,
+} from '@launchdarkly/js-sdk-common';
 import defaultHeaders from '../data_sources/defaultHeaders';
 import httpErrorMessage from '../data_sources/httpErrorMessage';
 import { LDUnexpectedResponseError, isHttpRecoverable } from '../errors';
@@ -19,6 +24,8 @@ export default class EventSender implements subsystem.LDEventSender {
 
   private requests: Requests;
 
+  private crypto: Crypto;
+
   constructor(config: EventSenderOptions, clientContext: ClientContext) {
     this.defaultHeaders = {
       ...defaultHeaders(
@@ -33,6 +40,8 @@ export default class EventSender implements subsystem.LDEventSender {
     this.diagnosticEventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/diagnostic`;
 
     this.requests = clientContext.platform.requests;
+
+    this.crypto = clientContext.platform.crypto;
   }
 
   private async tryPostingEvents(
@@ -102,7 +111,8 @@ export default class EventSender implements subsystem.LDEventSender {
     type: subsystem.LDEventType,
     data: any
   ): Promise<subsystem.LDEventSenderResult> {
-    const payloadId = type === subsystem.LDEventType.AnalyticsEvents ? nanoid() : undefined;
+    const payloadId =
+      type === subsystem.LDEventType.AnalyticsEvents ? this.crypto.randomUUID() : undefined;
     const uri =
       type === subsystem.LDEventType.AnalyticsEvents ? this.eventsUri : this.diagnosticEventsUri;
 
