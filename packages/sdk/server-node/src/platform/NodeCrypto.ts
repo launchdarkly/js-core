@@ -2,6 +2,7 @@
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
 import * as crypto from 'crypto';
+import { v4 } from 'uuid';
 
 export default class NodeCrypto implements platform.Crypto {
   createHash(algorithm: string): platform.Hasher {
@@ -10,5 +11,9 @@ export default class NodeCrypto implements platform.Crypto {
 
   createHmac(algorithm: string, key: string): platform.Hmac {
     return crypto.createHmac(algorithm, key);
+  }
+
+  uuidv4() {
+    return v4();
   }
 }

@@ -171,6 +171,10 @@ describe('given an event processor', () => {
         // Not used for this test.
         throw new Error('Function not implemented.');
       },
+      uuidv4(): string {
+        // Not used for this test.
+        throw new Error(`Function not implemented.`);
+      },
     },
     requests: {
       /* eslint-disable-next-line @typescript-eslint/no-unused-vars */

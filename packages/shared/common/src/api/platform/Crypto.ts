@@ -28,4 +28,5 @@ export interface Hmac extends Hasher {
 export interface Crypto {
   createHash(algorithm: string): Hasher;
   createHmac(algorithm: string, key: string): Hmac;
+  uuidv4(): string;
 }

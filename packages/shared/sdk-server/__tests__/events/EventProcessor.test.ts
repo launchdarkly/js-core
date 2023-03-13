@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { nanoid } from 'nanoid';
 import {
   EventSource,
   EventSourceInitDict,
@@ -13,6 +12,8 @@ import {
   ClientContext,
   Context,
   internal,
+  Hmac,
+  Hasher,
 } from '@launchdarkly/js-sdk-common';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
@@ -28,11 +29,6 @@ interface RequestState {
   testStatus: number;
   requestsMade: Array<{ url: string; options: Options }>;
 }
-
-// Mock the nanoid module so we can replace the implementation in specific tests.
-jest.mock('nanoid', () => ({
-  nanoid: jest.fn(() => jest.requireActual('nanoid').nanoid()),
-}));
 
 function makePlatform(requestState: RequestState) {
   const info: Info = {
@@ -114,14 +110,27 @@ function makePlatform(requestState: RequestState) {
       throw new Error('Function not implemented.');
     },
   };
-  return { info, requests, waitForMessages };
+  return {
+    info,
+    requests,
+    waitForMessages,
+    crypto: {
+      createHash(algorithm: string): Hasher {
+        // Not used for this test.
+        throw new Error(`Function not implemented.${algorithm}`);
+      },
+      createHmac(algorithm: string, key: string): Hmac {
+        // Not used for this test.
+        throw new Error(`Function not implemented.${algorithm}${key}`);
+      },
+      uuidv4: () => '9-ypf7NswGfZ3CN2WpTix',
+    },
+  };
 }
 
 const user = { key: 'userKey', name: 'Red' };
 
 describe('given an event processor with diagnostics manager', () => {
-  jest.mock('nanoid', () => ({ nanoid: () => '9-ypf7NswGfZ3CN2WpTix' }));
-
   let eventProcessor: internal.EventProcessor;
 
   const requestState: RequestState = {
@@ -145,12 +154,11 @@ describe('given an event processor with diagnostics manager', () => {
   let waitForMessages: (count: number) => Promise<number>;
 
   beforeEach(() => {
-    // @ts-ignore
-    nanoid.mockImplementation(() => '9-ypf7NswGfZ3CN2WpTix');
-
     const platform = makePlatform(requestState);
+
     info = platform.info;
     requests = platform.requests;
+    const { crypto } = platform;
     waitForMessages = platform.waitForMessages;
 
     resetRequestState();
@@ -171,6 +179,7 @@ describe('given an event processor with diagnostics manager', () => {
         // Replace info and requests.
         info,
         requests,
+        crypto,
       },
       store
     );
