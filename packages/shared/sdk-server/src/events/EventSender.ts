@@ -112,7 +112,7 @@ export default class EventSender implements subsystem.LDEventSender {
     data: any
   ): Promise<subsystem.LDEventSenderResult> {
     const payloadId =
-      type === subsystem.LDEventType.AnalyticsEvents ? this.crypto.uuidv4() : undefined;
+      type === subsystem.LDEventType.AnalyticsEvents ? this.crypto.randomUUID() : undefined;
     const uri =
       type === subsystem.LDEventType.AnalyticsEvents ? this.eventsUri : this.diagnosticEventsUri;
 

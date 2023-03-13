@@ -257,7 +257,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
         // Not used for this test.
         throw new Error(`Function not implemented.${algorithm}${key}`);
       },
-      uuidv4(): string {
+      randomUUID(): string {
         // Not used for this test.
         throw new Error(`Function not implemented.`);
       },

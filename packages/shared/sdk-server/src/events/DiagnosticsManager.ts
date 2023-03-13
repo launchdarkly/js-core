@@ -102,7 +102,7 @@ export default class DiagnosticsManager {
     this.startTime = Date.now();
     this.dataSinceDate = this.startTime;
     this.id = {
-      diagnosticId: platform.crypto.uuidv4(),
+      diagnosticId: platform.crypto.randomUUID(),
       sdkKeySuffix: sdkKey.length > 6 ? sdkKey.substring(sdkKey.length - 6) : sdkKey,
     };
   }

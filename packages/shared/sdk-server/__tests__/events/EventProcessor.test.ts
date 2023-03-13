@@ -123,7 +123,7 @@ function makePlatform(requestState: RequestState) {
         // Not used for this test.
         throw new Error(`Function not implemented.${algorithm}${key}`);
       },
-      uuidv4: () => '9-ypf7NswGfZ3CN2WpTix',
+      randomUUID: () => '9-ypf7NswGfZ3CN2WpTix',
     },
   };
 }

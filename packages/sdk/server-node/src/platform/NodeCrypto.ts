@@ -12,7 +12,7 @@ export default class NodeCrypto implements platform.Crypto {
     return createHmac(algorithm, key);
   }
 
-  uuidv4() {
+  randomUUID() {
     return randomUUID();
   }
 }
