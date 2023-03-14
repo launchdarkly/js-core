@@ -8,9 +8,9 @@ on:
         default: 'packages/shared/common'
         type: choice
         options:
-        - packages/shared/common
-        - packages/shared/sdk-server
-        - packages/sdk/server-node
+          - packages/shared/common
+          - packages/shared/sdk-server
+          - packages/sdk/server-node
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean
@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
-      - name: "Set WORKSPACE_NAME variable"
+      - name: 'Set WORKSPACE_NAME variable'
         run: |
           WORKSPACE_NAME=$(./scripts/package-name.sh ${{ inputs.workspace_path }})
           echo "WORKSPACE_NAME=$WORKSPACE_NAME" >> $GITHUB_ENV

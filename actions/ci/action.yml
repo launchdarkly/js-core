@@ -23,7 +23,7 @@ runs:
       shell: bash
       # Install only the dependencies requires for the specific workspace.
       run: yarn workspaces focus ${{ inputs.workspace_name }}
-      
+
     - name: Build
       shell: bash
       # This will build the package and its dependencies.

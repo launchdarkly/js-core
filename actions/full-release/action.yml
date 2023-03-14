@@ -8,7 +8,6 @@ inputs:
     description: 'The ARN of an AWS IAM role to assume. Used to auth with AWS to upload results to S3.'
     required: true
 
-
 runs:
   using: composite
   steps:
@@ -22,10 +21,10 @@ runs:
         workspace_name: ${{ env.WORKSPACE_NAME }}
         workspace_path: ${{ inputs.workspace_path }}
     - uses: ./actions/release-secrets
-      name: "Get NPM token"
+      name: 'Get NPM token'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
-        ssm_parameter_pairs: "/production/common/releasing/npm/token = NODE_AUTH_TOKEN"
+        ssm_parameter_pairs: '/production/common/releasing/npm/token = NODE_AUTH_TOKEN'
     - name: Setup .yarnrc.yml
       shell: bash
       run: |
