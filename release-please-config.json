@@ -1,0 +1,20 @@
+{
+  "packages": {
+    "packages/shared/common": {
+      "prerelease": true,
+      "bump-minor-pre-major": true,
+      "bootstrap-sha": "282a3fed8289fef680c5c2593e74aea0a3113c71"
+    },
+    "packages/shared/sdk-server": {
+      "prerelease": true,
+      "bump-minor-pre-major": true,
+      "bootstrap-sha": "282a3fed8289fef680c5c2593e74aea0a3113c71"
+    },
+    "packages/sdk/server-node": {
+      "prerelease": true,
+      "bump-minor-pre-major": true,
+      "bootstrap-sha": "282a3fed8289fef680c5c2593e74aea0a3113c71"
+    }
+  },
+  "plugins": ["node-workspace"]
+}
