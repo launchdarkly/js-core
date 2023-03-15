@@ -13,7 +13,6 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | -------------------------------------------------------------------------- | ---------------------------- | ------------------------------ | --------------------------------------------------------------------- |
 | [@launchdarkly/js-sdk-common](packages/shared/common/README.md)            | [![NPM][common-npm-badge]][common-npm-link] | [Common][package-shared-common-issues]        | [![Actions Status][shared-common-ci-badge]][shared-common-ci]         |
 | [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md) | [![NPM][js-server-sdk-common-badge]][js-server-sdk-common-link]| [Common Server][package-shared-sdk-server-issues] | [![Actions Status][shared-sdk-server-ci-badge]][shared-sdk-server-ci] |
-| [@launchdarkly/node-server-sdk](packages/sdk/node/README.md) | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link] | [![Client Issues][TODO]][TODO] | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci-badge] |
 
 ## Organization
 
