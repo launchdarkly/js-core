@@ -1,7 +1,7 @@
 # LaunchDarkly SDK JavaScript Common Server Code
 
-[![NPM](https://www.npmjs.com/package/@launchdarkly/js-server-sdk-common)
-![Actions Status](https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml)
+[![NPM](https://www.npmjs.com/package/@launchdarkly/js-server-sdk-common)]
+[![Actions Status][shared-sdk-server-ci-badge]][shared-sdk-server-ci]
 [![Documentation](https://launchdarkly.github.io/js-core/packages/shared/common/docs/)
 
 This project contains Typescript classes and interfaces that are applicable to server-side SDKs.
@@ -23,3 +23,6 @@ See [Contributing](../CONTRIBUTING.md).
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[shared-sdk-server-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml/badge.svg
+[shared-sdk-server-ci]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml
