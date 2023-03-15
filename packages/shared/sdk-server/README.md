@@ -1,8 +1,8 @@
 # LaunchDarkly SDK JavaScript Common Server Code
 
-[![NPM](TODO)
-![Actions Status](TODO)
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](TODO)
+[![NPM](https://www.npmjs.com/package/@launchdarkly/js-server-sdk-common)
+![Actions Status](https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml)
+[![Documentation](https://launchdarkly.github.io/js-core/packages/shared/common/docs/)
 
 This project contains Typescript classes and interfaces that are applicable to server-side SDKs.
 

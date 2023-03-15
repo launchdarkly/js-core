@@ -1,8 +1,8 @@
 # LaunchDarkly Server-Side SDK for Node.js
 
-[![NPM](TODO)
-![Actions Status](TODO)
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](TODO)
+[![NPM](https://www.npmjs.com/package/@launchdarkly/node-server-sdk)
+![Actions Status](https://github.com/launchdarkly/js-core/actions/workflows/server-node.yml)
+[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/sdk/server-node/docs/)
 
 The LaunchDarkly Server-Side SDK for Node.js is designed primarily for use in multi-user systems such as web servers and applications. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
