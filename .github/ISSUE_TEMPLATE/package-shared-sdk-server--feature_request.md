@@ -1,5 +1,5 @@
 ---
-name: Feature request for B
+name: '@launchdarkly/js-server-sdk-common Feature Request'
 about: Suggest an idea for this project
 title: ''
 labels: 'package: package-b, feature'
