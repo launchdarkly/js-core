@@ -1,0 +1,38 @@
+on:
+  workflow_dispatch:
+    inputs:
+      workspace_path:
+        description: 'The workspace to publish docs for'
+        required: true
+        default: 'packages/shared/common'
+        type: choice
+        options:
+          - packages/shared/common
+          - packages/shared/sdk-server
+          - packages/sdk/server-node
+name: Publish Documentation
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - name: 'Set WORKSPACE_NAME variable'
+        run: |
+          WORKSPACE_NAME=$(./scripts/package-name.sh ${{ inputs.workspace_path }})
+          echo "WORKSPACE_NAME=$WORKSPACE_NAME" >> $GITHUB_ENV
+      - id: build
+        # Build using the same steps from CI.
+        name: Build and Test
+        uses: ./actions/ci
+        with:
+          workspace_name: ${{ env.WORKSPACE_NAME }}
+          workspace_path: ${{ inputs.workspace_path }}
+      - id: publish
+        name: Publish Documentation
+        uses: ./actions/publish-docs
+        with:
+          workspace_path: ${{ inputs.workspace_path }}

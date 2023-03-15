@@ -1,0 +1,22 @@
+# This action publishes docs. The docs must have been build prior.
+name: Publish Docs
+description: Publish documentation to github pages.
+inputs:
+  workspace_path:
+    description: 'The workspace to publish docs for'
+    required: true
+runs:
+  using: composite
+  steps:
+    # We put the github pages in another directory.
+    - uses: actions/checkout@v3
+      with:
+        path: gh-pages
+        ref: gh-pages
+    - name: Publish Docs
+      shell: bash
+      run: |
+        echo "Publishing docs for: $WORKSPACE"
+        ./scripts/publish-doc.sh
+      env:
+        WORKSPACE: ${{ inputs.workspace_path }}
