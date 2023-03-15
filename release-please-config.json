@@ -3,19 +3,19 @@
     "packages/shared/common": {
       "prerelease": true,
       "bump-minor-pre-major": true,
-      "bootstrap-sha": "282a3fed8289fef680c5c2593e74aea0a3113c71",
+      "bootstrap-sha": "7f0a4bc4768a84c4f452a94a65f033ba2e70db64",
       "release-as": "0.1.0"
     },
     "packages/shared/sdk-server": {
       "prerelease": true,
       "bump-minor-pre-major": true,
-      "bootstrap-sha": "282a3fed8289fef680c5c2593e74aea0a3113c71",
+      "bootstrap-sha": "7f0a4bc4768a84c4f452a94a65f033ba2e70db64",
       "release-as": "0.1.0"
     },
     "packages/sdk/server-node": {
       "prerelease": true,
       "bump-minor-pre-major": true,
-      "bootstrap-sha": "282a3fed8289fef680c5c2593e74aea0a3113c71",
+      "bootstrap-sha": "7f0a4bc4768a84c4f452a94a65f033ba2e70db64",
       "release-as": "0.1.0"
     }
   },
