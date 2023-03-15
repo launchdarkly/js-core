@@ -1,5 +1,5 @@
 ---
-name: Bug report for A
+name: '@launchdarkly/js-sdk-common Bug Report'
 about: Create a report to help us improve
 title: ''
 labels: 'package: shared/common, bug'
