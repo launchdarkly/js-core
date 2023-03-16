@@ -15,3 +15,13 @@ jobs:
       - uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          audience: https://github.com/launchdarkly
+          role-to-assume: arn:aws:iam::554582317989:role/github-sdk-js-core
+          aws-region: us-east-1
+      - uses: dkershner6/aws-ssm-getparameters-action@v1
+        with:
+          parameterPairs: '/production/common/releasing/npm/token = NODE_AUTH_TOKEN'
+          withDecryption: 'true'
