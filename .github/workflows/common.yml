@@ -9,7 +9,9 @@ on:
     branches: [main]
     paths-ignore:
       - '**.md'
-
+permissions:
+  id-token: write
+  contents: read
 jobs:
   build-test-common:
     runs-on: ubuntu-latest
@@ -19,12 +21,6 @@ jobs:
         with:
           node-version: 16
           registry-url: 'https://registry.npmjs.org'
-      - id: shared
-        name: Shared CI Steps
-        uses: ./actions/ci
-        with:
-          workspace_name: '@launchdarkly/js-sdk-common'
-          workspace_path: packages/shared/common
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
