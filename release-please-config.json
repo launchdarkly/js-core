@@ -1,22 +1,16 @@
 {
   "packages": {
     "packages/shared/common": {
-      "prerelease": true,
       "bump-minor-pre-major": true,
-      "bootstrap-sha": "7f0a4bc4768a84c4f452a94a65f033ba2e70db64",
-      "release-as": "0.1.0"
+      "release-as": "0.2.0"
     },
     "packages/shared/sdk-server": {
-      "prerelease": true,
       "bump-minor-pre-major": true,
-      "bootstrap-sha": "7f0a4bc4768a84c4f452a94a65f033ba2e70db64",
-      "release-as": "0.1.0"
+      "release-as": "0.2.0"
     },
     "packages/sdk/server-node": {
-      "prerelease": true,
       "bump-minor-pre-major": true,
-      "bootstrap-sha": "7f0a4bc4768a84c4f452a94a65f033ba2e70db64",
-      "release-as": "0.1.0"
+      "release-as": "0.2.0"
     }
   },
   "plugins": ["node-workspace"]
