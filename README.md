@@ -7,12 +7,12 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 | SDK Packages                                                 | npm                          | issues                         | tests                                                                   |
 | ------------------------------------------------------------ | ---------------------------- | ------------------------------ | ----------------------------------------------------------------------- |
-| [@launchdarkly/node-server-sdk](packages/sdk/node/README.md) | [![NPM Package][TODO]][TODO] | [![Client Issues][TODO]][TODO] | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci-badge] |
+| [@launchdarkly/node-server-sdk](packages/sdk/node/README.md) | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link] | [![Client Issues][TODO]][TODO] | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci-badge] |
 
 | Shared Packages                                                            | npm                          | issues                         | tests                                                                 |
 | -------------------------------------------------------------------------- | ---------------------------- | ------------------------------ | --------------------------------------------------------------------- |
-| [@launchdarkly/js-sdk-common](packages/shared/common/README.md)            | [![NPM Package][TODO]][TODO] | [![Common][TODO]][TODO]        | [![Actions Status][shared-common-ci-badge]][shared-common-ci]         |
-| [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md) | [![NPM Package][TODO]][TODO] | [![Common Server][TODO]][TODO] | [![Actions Status][shared-sdk-server-ci-badge]][shared-sdk-server-ci] |
+| [@launchdarkly/js-sdk-common](packages/shared/common/README.md)            | [![NPM][common-npm-badge]][common-npm-link]| [![Common][TODO]][TODO]        | [![Actions Status][shared-common-ci-badge]][shared-common-ci]         |
+| [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md) | [![NPM][js-server-sdk-common-badge]][js-server-sdk-common-link] | [![Common Server][TODO]][TODO] | [![Actions Status][shared-sdk-server-ci-badge]][shared-sdk-server-ci] |
 
 ## Organization
 
@@ -56,3 +56,12 @@ We encourage pull requests and other contributions from the community. Check out
 [shared-sdk-server-ci]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml
 [sdk-server-node-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-node.yml/badge.svg
 [sdk-server-node-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-node.yml
+
+[common-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/js-sdk-common.svg?style=flat-square
+[common-npm-link]: https://www.npmjs.com/package/@launchdarkly/js-sdk-common
+
+[js-server-sdk-common-badge]: https://img.shields.io/npm/v/@launchdarkly/js-server-sdk-common.svg?style=flat-square
+[js-server-sdk-common-link]: https://www.npmjs.com/package/@launchdarkly/js-server-sdk-common
+
+[sdk-server-node-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk.svg?style=flat-square
+[sdk-server-node-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk

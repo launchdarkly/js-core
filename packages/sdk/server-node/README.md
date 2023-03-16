@@ -1,8 +1,8 @@
 # LaunchDarkly Server-Side SDK for Node.js
 
-[![NPM](TODO)
-![Actions Status](TODO)
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](TODO)
+[![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link]
+[![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci]
+[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/sdk/server-node/docs/)
 
 The LaunchDarkly Server-Side SDK for Node.js is designed primarily for use in multi-user systems such as web servers and applications. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
@@ -49,3 +49,9 @@ We encourage pull requests and other contributions from the community. Check out
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[sdk-server-node-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-node.yml/badge.svg
+[sdk-server-node-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-node.yml
+
+[sdk-server-node-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk.svg?style=flat-square
+[sdk-server-node-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk
