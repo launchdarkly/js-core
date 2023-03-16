@@ -8,6 +8,8 @@ The LaunchDarkly Server-Side SDK for Node.js is designed primarily for use in mu
 
 For using LaunchDarkly in _client-side_ Node.js applications, refer to our [Client-side Node.js SDK](https://github.com/launchdarkly/node-client-sdk).
 
+This SDK is a beta version and should not be considered ready for production use while this message is visible.
+
 ## LaunchDarkly overview
 
 [LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
