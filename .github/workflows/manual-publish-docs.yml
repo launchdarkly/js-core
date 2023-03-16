@@ -3,7 +3,7 @@ on:
     inputs:
       workspace_path:
         description: 'The workspace to publish docs for'
-        required: true
+        required: false
         default: 'packages/shared/common'
         type: choice
         options:
