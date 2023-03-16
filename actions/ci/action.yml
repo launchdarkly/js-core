@@ -10,7 +10,7 @@ inputs:
     required: true
   workspace_path:
     description: 'Path to the package to release.'
-    required: true
+    required: false
 
 runs:
   using: composite
