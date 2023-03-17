@@ -55,6 +55,7 @@ jobs:
           yarn config set npmScopes.launchdarkly.npmRegistryServer "https://registry.npmjs.org"
           yarn config set npmScopes.launchdarkly.npmAlwaysAuth true
           yarn config set npmScopes.launchdarkly.npmAuthToken $NODE_AUTH_TOKEN
+          yarn config set npmScopes.launchdarkly.npmPublishAccess: "public"
       - id: publish
         name: Publish Package
         uses: ./actions/publish
