@@ -2,6 +2,17 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [0.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v0.2.0...node-server-sdk-v0.3.0) (2023-03-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* Make options optional in init method for @launchdarkly/node-server-sdk. ([#64](https://github.com/launchdarkly/js-core/issues/64))
+
+### Bug Fixes
+
+* Make options optional in init method for @launchdarkly/node-server-sdk. ([#64](https://github.com/launchdarkly/js-core/issues/64)) ([291804e](https://github.com/launchdarkly/js-core/commit/291804e75119f42575615569c974c0813453d737))
+
 ## [0.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v0.1.0...node-server-sdk-v0.2.0) (2023-03-16)
 
 
