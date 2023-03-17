@@ -31,7 +31,6 @@ runs:
         yarn config set npmScopes.launchdarkly.npmRegistryServer "https://registry.npmjs.org"
         yarn config set npmScopes.launchdarkly.npmAlwaysAuth true
         yarn config set npmScopes.launchdarkly.npmAuthToken $NODE_AUTH_TOKEN
-        yarn config set npmPublishAccess "public"
     - uses: ./actions/publish
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
