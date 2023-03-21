@@ -45,7 +45,7 @@ export { LDClient, BigSegmentStoreStatusProvider } from './api';
  * @return
  *   The new {@link LDClient} instance.
  */
-export function init(sdkKey: string, options: LDOptions): LDClient & EventEmitter {
+export function init(sdkKey: string, options: LDOptions = {}): LDClient & EventEmitter {
   return new LDClientImpl(sdkKey, options);
 }
 

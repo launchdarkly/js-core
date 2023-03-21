@@ -9,7 +9,7 @@ potato
 
 | SDK Packages                                                 | npm                          | issues                         | tests                                                                   |
 | ------------------------------------------------------------ | ---------------------------- | ------------------------------ | ----------------------------------------------------------------------- |
-| [@launchdarkly/node-server-sdk](packages/sdk/server-node/README.md) | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link] | [Node.js Server][package-sdk-server-node-issues] | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci-badge] |
+| [@launchdarkly/node-server-sdk](packages/sdk/server-node/README.md) | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link] | [Node.js Server][package-sdk-server-node-issues] | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci] |
 
 | Shared Packages                                                            | npm                          | issues                         | tests                                                                 |
 | -------------------------------------------------------------------------- | ---------------------------- | ------------------------------ | --------------------------------------------------------------------- |
