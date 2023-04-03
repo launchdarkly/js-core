@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "packageManager": "yarn@3.4.1",
   "dependencies": {
-    "@launchdarkly/cloudflare-server-sdk": "workspace:^"
+    "@launchdarkly/cloudflare-server-sdk": "0.0.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",

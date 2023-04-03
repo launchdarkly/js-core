@@ -1,8 +1,10 @@
-const ldClient = (kvNamespace: string, sdkKey: string) => {
-  const testOutput = `kv=${kvNamespace}; sdkKey=${sdkKey};`;
-  console.log(`============== ${testOutput}`);
-  return testOutput;
-  // const config = configuration.validate(kvNamespace, sdkKey, originalConfig);
+/* eslint-disable */
+import { KVNamespace } from '@cloudflare/workers-types';
+import { LDOptions } from '@launchdarkly/js-server-sdk-common';
+import createConfig from './configuration';
+
+const ldClient = (kvNamespace: KVNamespace, sdkKey: string, options: LDOptions) => {
+  const config = createConfig(kvNamespace, sdkKey, options);
   // const ldClient = ld.init('none', config);
   // const client = {};
   //
@@ -23,6 +25,9 @@ const ldClient = (kvNamespace: string, sdkKey: string) => {
   // };
   //
   // return client;
+  const testOutput = `kv=${kvNamespace}; sdkKey=${sdkKey};`;
+  console.log(`============== ${testOutput}`);
+  return testOutput;
 };
 
 export default ldClient;

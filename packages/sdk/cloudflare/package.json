@@ -22,10 +22,10 @@
     "check": "yarn prettier && yarn lint && yarn tsc && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "workspace:^"
+    "@launchdarkly/js-server-sdk-common": "0.2.0",
+    "@cloudflare/workers-types": "^4.20230321.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20230321.0",
     "@types/jest": "^29.5.0",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",
