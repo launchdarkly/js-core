@@ -3,7 +3,9 @@
   "workspaces": [
     "packages/shared/common",
     "packages/shared/sdk-server",
-    "packages/sdk/server-node"
+    "packages/sdk/server-node",
+    "packages/sdk/cloudflare",
+    "packages/sdk/cloudflare/example"
   ],
   "private": true,
   "scripts": {
