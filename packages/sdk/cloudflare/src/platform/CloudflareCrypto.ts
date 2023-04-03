@@ -12,6 +12,6 @@ export default class CloudflareCrypto implements platform.Crypto {
     throw new Error('Method not implemented.');
   }
   randomUUID(): string {
-    throw new Error('Method not implemented.');
+    return crypto.randomUUID();
   }
 }
