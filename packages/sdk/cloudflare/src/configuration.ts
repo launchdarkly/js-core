@@ -20,7 +20,7 @@ const defaults = {
 
 const allowedOptions = ['logger', 'featureStore'];
 
-export const createConfig = (kvNamespace: KVNamespace, sdkKey: string, options: LDOptions = {}) => {
+const createConfig = (kvNamespace: KVNamespace, sdkKey: string, options: LDOptions = {}) => {
   if (!sdkKey) {
     throw new Error('You must configure the client with a client key');
   }
