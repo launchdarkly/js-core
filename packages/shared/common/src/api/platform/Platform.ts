@@ -24,5 +24,5 @@ export interface Platform {
   /**
    * The interface for performing http/https requests.
    */
-  requests?: Requests;
+  requests: Requests;
 }

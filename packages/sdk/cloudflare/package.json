@@ -22,8 +22,8 @@
     "check": "yarn prettier && yarn lint && yarn tsc && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "0.2.0",
-    "@cloudflare/workers-types": "^4.20230321.0"
+    "@cloudflare/workers-types": "^4.20230321.0",
+    "@launchdarkly/js-server-sdk-common": "0.2.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

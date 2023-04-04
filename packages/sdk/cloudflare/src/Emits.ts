@@ -1,3 +1,4 @@
+// TODO: Dry this file duplicated in this repo
 import { EventEmitter } from 'events';
 
 export type EventableConstructor<T = {}> = new (...args: any[]) => T;
