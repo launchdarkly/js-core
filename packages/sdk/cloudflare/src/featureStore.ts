@@ -21,7 +21,7 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
       flagKey: string,
       callback: (res: LDFeatureStoreItem | null) => void = noop
     ): void {
-      logger.debug(`Requesting key: ${flagKey} from KV.`);
+      logger.warn(`Requesting flag: ${flagKey} from KV: ${key}`);
       kvNamespace
         .get(key, { type: 'json' })
         .then((i) => {
