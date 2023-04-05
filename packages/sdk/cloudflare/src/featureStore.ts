@@ -13,15 +13,12 @@ const noop = () => {};
 const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LDLogger) => {
   const key = `LD-Env-${sdkKey}`;
   const store: LDFeatureStore = {
-    close(): void {},
-    delete(): void {},
-    upsert(): void {},
     get(
       kind: DataKind,
       flagKey: string,
       callback: (res: LDFeatureStoreItem | null) => void = noop
     ): void {
-      logger.warn(`Requesting flag: ${flagKey} from KV: ${key}`);
+      logger.debug(`Requesting ${flagKey} from ${key}`);
       kvNamespace
         .get(key, { type: 'json' })
         .then((i) => {
@@ -53,7 +50,11 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
         });
     },
     initialized(callback: (isInitialized: boolean) => void = noop): void {
-      kvNamespace.get(key).then((item) => callback(item === null));
+      kvNamespace.get(key).then((item) => {
+        const result = item !== null;
+        logger.debug(`Is ${key} initialized? ${result}`);
+        callback(result);
+      });
     },
     init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
       callback();
@@ -61,6 +62,11 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
     getDescription(): string {
       return 'Cloudflare';
     },
+
+    // unused
+    close(): void {},
+    delete(): void {},
+    upsert(): void {},
   };
 
   return store;

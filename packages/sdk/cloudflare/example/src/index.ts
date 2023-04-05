@@ -7,9 +7,21 @@ export interface Env {
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const client = initLD(env.LD_KV, '555abcde');
+    // test data
+    const sdkKey = '555abcde';
+    const flagKey = 'dev-test-flag';
     const context = { kind: 'user', key: 'test-user-key-1' };
-    const flagValue = await client.variation('dev-test-flag', context, false);
-    return new Response(`dev-test-flag: ${flagValue}`);
+
+    // start using ld
+    const client = initLD(env.LD_KV, sdkKey);
+    await client.waitForInitialization();
+    const flag = await client.variation(flagKey, context, false);
+    const flagDetail = await client.variationDetail(flagKey, context, false);
+    const allFlags = await client.allFlagsState(context);
+    return new Response(
+      `${flagKey}: ${flag}, detail: ${JSON.stringify(flagDetail)}, allFlags: ${JSON.stringify(
+        allFlags
+      )}`
+    );
   },
 };
