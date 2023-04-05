@@ -1,5 +1,4 @@
-// eslint-disable-next-line max-classes-per-file
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 import {
   LDClientImpl,
   LDOptions,

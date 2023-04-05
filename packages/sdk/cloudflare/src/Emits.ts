@@ -1,5 +1,5 @@
 // TODO: Dry this file duplicated in this repo
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 export type EventableConstructor<T = {}> = new (...args: any[]) => T;
 export type Eventable = EventableConstructor<{ emitter: EventEmitter }>;
