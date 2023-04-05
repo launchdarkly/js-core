@@ -1,22 +1,15 @@
 /* eslint-disable */
-import ldClient from '@launchdarkly/cloudflare-server-sdk';
+import initLD from '@launchdarkly/cloudflare-server-sdk';
 
 export interface Env {
-  // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  // MY_KV_NAMESPACE: KVNamespace;
-  //
-  // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-  // MY_DURABLE_OBJECT: DurableObjectNamespace;
-  //
-  // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-  // MY_BUCKET: R2Bucket;
-  //
-  // Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-  // MY_SERVICE: Fetcher;
+  LD_KV: KVNamespace;
 }
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    return new Response(`ld: ${ldClient('LD_KV', 'some-key')}`);
+    const client = initLD(env.LD_KV, 'my-sdk-key');
+    const context = { kind: 'user', key: 'test-user-key-1' };
+    const flagValue = await client.variation('dev-test-flag', context, false);
+    return new Response(`dev-test-flag: ${flagValue}`);
   },
 };

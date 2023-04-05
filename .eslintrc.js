@@ -11,5 +11,6 @@ module.exports = {
   ignorePatterns: ['**/dist/**'],
   rules: {
     'prettier/prettier': ['error'],
+    'class-methods-use-this': 'off',
   },
 };

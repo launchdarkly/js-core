@@ -7,7 +7,7 @@ import {
   SafeLogger,
 } from '@launchdarkly/js-server-sdk-common';
 import { Emits } from './Emits';
-import CloudflarePlatform from './platform/CloudflarePlatform';
+import CloudflarePlatform from './platform';
 
 class LDClientCloudflare extends LDClientImpl {
   emitter: EventEmitter;
@@ -24,6 +24,7 @@ class LDClientCloudflare extends LDClientImpl {
       ...options,
       logger: logger ? new SafeLogger(logger, fallbackLogger) : fallbackLogger,
     };
+
     super(sdkKey, new CloudflarePlatform(), finalOptions, {
       onError: (err: Error) => {
         if (emitter.listenerCount('error')) {

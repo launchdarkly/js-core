@@ -15,7 +15,9 @@
     "/dist"
   ],
   "scripts": {
-    "start": "yarn tsc --watch",
+    "build": "yarn tsc",
+    "tsw": "yarn tsc --watch",
+    "start": "yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)'",
     "test": "jest --ci --runInBand",
@@ -23,9 +25,11 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
-    "@launchdarkly/js-server-sdk-common": "0.2.0"
+    "@launchdarkly/js-server-sdk-common": "0.2.0",
+    "crypto-js": "^4.1.1"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
     "@types/jest": "^29.5.0",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",

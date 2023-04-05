@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
 import { name, version } from '../../package.json';

@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import type {
   EventSource,
   EventSourceInitDict,
@@ -6,7 +5,7 @@ import type {
   Response,
   Requests,
 } from '@launchdarkly/js-server-sdk-common';
-import MockEventSource from './MockEventSource';
+import MockEventSource from './eventSource';
 
 export default class CloudflareRequests implements Requests {
   fetch(url: string, options: Options = {}): Promise<Response> {
