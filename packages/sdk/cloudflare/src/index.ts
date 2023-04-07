@@ -8,8 +8,7 @@ import {
   LDEvaluationDetail,
   LDFlagValue,
 } from '@launchdarkly/js-server-sdk-common';
-import createConfig from './configuration';
-import LDClientCloudflare from './LDClientCloudflare';
+import createLDClient from './createLDClient';
 
 type LDClientSubset = Pick<
   LDClient,
@@ -21,8 +20,7 @@ const init = (
   sdkKey: string,
   options: LDOptions = {}
 ): LDClientSubset => {
-  const config = createConfig(kvNamespace, sdkKey, options);
-  const client = new LDClientCloudflare('none', config);
+  const client = createLDClient(kvNamespace, sdkKey, options);
   return {
     variation(
       key: string,

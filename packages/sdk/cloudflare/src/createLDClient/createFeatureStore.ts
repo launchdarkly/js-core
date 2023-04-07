@@ -64,9 +64,9 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
     },
 
     // unused
-    close(): void {},
-    delete(): void {},
-    upsert(): void {},
+    close: noop,
+    delete: noop,
+    upsert: noop,
   };
 
   return store;
