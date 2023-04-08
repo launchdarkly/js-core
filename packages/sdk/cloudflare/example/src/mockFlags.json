@@ -10,10 +10,7 @@
         "variation": 0
       },
       "offVariation": 1,
-      "variations": [
-        true,
-        false
-      ],
+      "variations": [true, false],
       "clientSideAvailability": {
         "usingMobileKey": true,
         "usingEnvironmentId": true

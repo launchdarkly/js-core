@@ -1,6 +1,6 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
-import { name, version } from '../../package.json';
+// import packageJson from '../../package.json';
 
 export default class CloudflareInfo implements Info {
   platformData(): PlatformData {
@@ -11,8 +11,8 @@ export default class CloudflareInfo implements Info {
 
   sdkData(): SdkData {
     return {
-      name,
-      version,
+      name: 'packageJson.name',
+      version: 'packageJson.version',
     };
   }
 }

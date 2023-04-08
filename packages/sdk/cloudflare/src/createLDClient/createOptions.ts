@@ -1,6 +1,6 @@
 import { KVNamespace } from '@cloudflare/workers-types';
 import { BasicLogger, LDLogger, LDOptions, SafeLogger } from '@launchdarkly/js-server-sdk-common';
-import { version } from '../../package.json';
+// import { version } from '../../package.json';
 import createFeatureStore from './createFeatureStore';
 
 const defaults = {
@@ -15,7 +15,7 @@ const defaults = {
   diagnosticOptOut: true,
   diagnosticRecordingInterval: 900,
   wrapperName: 'cloudflare',
-  wrapperVersion: version,
+  wrapperVersion: 'version',
 };
 
 const allowedOptions = ['logger', 'featureStore'];
