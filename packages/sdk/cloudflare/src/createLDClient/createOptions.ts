@@ -3,6 +3,9 @@ import { BasicLogger, LDLogger, LDOptions, SafeLogger } from '@launchdarkly/js-s
 // import { version } from '../../package.json';
 import createFeatureStore from './createFeatureStore';
 
+type SupportedLDOptions = Pick<LDOptions, 'logger' | 'featureStore'>;
+const allowedOptions = ['logger', 'featureStore'];
+
 const defaults = {
   stream: false,
   sendEvents: false,
@@ -18,9 +21,7 @@ const defaults = {
   wrapperVersion: 'version',
 };
 
-const allowedOptions = ['logger', 'featureStore'];
-
-export const finalizeLogger = ({ logger }: LDOptions) => {
+export const finalizeLogger = ({ logger }: SupportedLDOptions) => {
   const fallbackLogger = new BasicLogger({
     level: 'info',
     // eslint-disable-next-line no-console
@@ -33,11 +34,15 @@ export const finalizeLogger = ({ logger }: LDOptions) => {
 export const finalizeFeatureStore = (
   kvNamespace: KVNamespace,
   sdkKey: string,
-  { featureStore }: LDOptions,
+  { featureStore }: SupportedLDOptions,
   logger: LDLogger
 ) => featureStore ?? createFeatureStore(kvNamespace, sdkKey, logger);
 
-const createOptions = (kvNamespace: KVNamespace, sdkKey: string, options: LDOptions = {}) => {
+const createOptions = (
+  kvNamespace: KVNamespace,
+  sdkKey: string,
+  options: SupportedLDOptions = {}
+) => {
   if (!sdkKey) {
     throw new Error('You must configure the client with a client key');
   }
