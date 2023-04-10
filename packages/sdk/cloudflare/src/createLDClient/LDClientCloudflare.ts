@@ -8,7 +8,7 @@ import createCallbacks from './createCallbacks';
 export default class LDClientCloudflare extends LDClientImpl {
   emitter: EventEmitter;
 
-  // GOTCHA: sdkKey is only used to query the KV, not to initialize with LD servers
+  // sdkKey is only used to query the KV, not to initialize with LD servers
   constructor(kvNamespace: KVNamespace, sdkKey: string, options: LDOptions = {}) {
     const emitter = new EventEmitter();
 
