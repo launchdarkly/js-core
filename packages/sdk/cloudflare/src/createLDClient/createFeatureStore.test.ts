@@ -1,4 +1,5 @@
-import { LDFeatureStoreItem } from '@launchdarkly/js-server-sdk-common';
+// TODO: fix this
+import AsyncStoreFacade from '@launchdarkly/js-server-sdk-common/dist/store/AsyncStoreFacade';
 import createFeatureStore from './createFeatureStore';
 
 describe('createFeatureStore', () => {
@@ -34,36 +35,39 @@ describe('createFeatureStore', () => {
     jest.resetAllMocks();
   });
 
-  test('get flag', (done) => {
+  test('get flag', async () => {
     // @ts-ignore
-    const ldFeatureStore = createFeatureStore(mockKV, mockSdkKey, mockLogger);
-    const cb = jest.fn((item: LDFeatureStoreItem | null) => {
-      expect(item).toEqual({ on: true });
-      done();
-    });
-    ldFeatureStore.get({ namespace: 'features' }, 'testFlagKey', cb);
+    const ldFeatureStore = new AsyncStoreFacade(createFeatureStore(mockKV, mockSdkKey, mockLogger));
+    const flag = await ldFeatureStore.get({ namespace: 'features' }, 'testFlagKey');
+
     expect(mockKV.get).toHaveBeenNthCalledWith(1, `LD-Env-${mockSdkKey}`, { type: 'json' });
+    expect(flag).toEqual({ on: true });
   });
 
-  test('get segment', (done) => {
+  test('get segment', async () => {
     // @ts-ignore
-    const ldFeatureStore = createFeatureStore(mockKV, mockSdkKey, mockLogger);
-    const cb = jest.fn((item: LDFeatureStoreItem | null) => {
-      expect(item).toEqual({ name: 'segment-a' });
-      done();
-    });
-    ldFeatureStore.get({ namespace: 'segments' }, 'testSegmentKey', cb);
+    const ldFeatureStore = new AsyncStoreFacade(createFeatureStore(mockKV, mockSdkKey, mockLogger));
+    const segment = await ldFeatureStore.get({ namespace: 'segments' }, 'testSegmentKey');
+
     expect(mockKV.get).toHaveBeenNthCalledWith(1, `LD-Env-${mockSdkKey}`, { type: 'json' });
+    expect(segment).toEqual({ name: 'segment-a' });
   });
 
-  test('get error', (done) => {
+  test('get flag error', async () => {
     // @ts-ignore
-    const ldFeatureStore = createFeatureStore(mockKV, mockSdkKey, mockLogger);
-    const cb = jest.fn((item: LDFeatureStoreItem | null) => {
-      expect(item).toBeNull();
-      done();
-    });
-    ldFeatureStore.get({ namespace: 'features' }, 'invalid', cb);
+    const ldFeatureStore = new AsyncStoreFacade(createFeatureStore(mockKV, mockSdkKey, mockLogger));
+    const flag = await ldFeatureStore.get({ namespace: 'features' }, 'invalid');
+
     expect(mockKV.get).toHaveBeenNthCalledWith(1, `LD-Env-${mockSdkKey}`, { type: 'json' });
+    expect(flag).toBeUndefined();
+  });
+
+  test('get segment error', async () => {
+    // @ts-ignore
+    const ldFeatureStore = new AsyncStoreFacade(createFeatureStore(mockKV, mockSdkKey, mockLogger));
+    const flag = await ldFeatureStore.get({ namespace: 'segments' }, 'invalid');
+
+    expect(mockKV.get).toHaveBeenNthCalledWith(1, `LD-Env-${mockSdkKey}`, { type: 'json' });
+    expect(flag).toBeUndefined();
   });
 });
