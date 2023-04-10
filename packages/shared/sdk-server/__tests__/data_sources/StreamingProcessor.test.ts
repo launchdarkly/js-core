@@ -18,7 +18,7 @@ import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger, { LogLevel } from '../Logger';
-import MockEventSource from '../MockEventSource';
+import MockEventSource from '../../src/events/MockEventSource';
 
 const sdkKey = 'my-sdk-key';
 
