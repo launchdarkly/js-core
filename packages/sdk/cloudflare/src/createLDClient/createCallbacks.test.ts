@@ -1,41 +1,44 @@
 import { EventEmitter } from 'node:events';
 import createCallbacks from './createCallbacks';
+import noop from '../utils/noop';
 
 describe('createCallbacks', () => {
-  test('onError', () => {
-    const emitter = new EventEmitter();
-    emitter.on('error', () => {});
+  let emitter: EventEmitter;
+  const err = new Error('test error');
+
+  beforeEach(() => {
+    emitter = new EventEmitter();
     emitter.emit = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  test('onError', () => {
+    emitter.on('error', noop);
+
     const { onError } = createCallbacks(emitter);
-    const err = new Error('test error');
     onError(err);
 
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'error', err);
   });
 
   test('onError should not be called', () => {
-    const emitter = new EventEmitter();
-    emitter.emit = jest.fn();
     const { onError } = createCallbacks(emitter);
-    const err = new Error('test error');
     onError(err);
 
     expect(emitter.emit).not.toHaveBeenCalled();
   });
 
   test('onFailed', () => {
-    const emitter = new EventEmitter();
-    emitter.emit = jest.fn();
     const { onFailed } = createCallbacks(emitter);
-    const err = new Error('test error');
     onFailed(err);
 
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'failed', err);
   });
 
   test('onReady', () => {
-    const emitter = new EventEmitter();
-    emitter.emit = jest.fn();
     const { onReady } = createCallbacks(emitter);
     onReady();
 
@@ -43,16 +46,12 @@ describe('createCallbacks', () => {
   });
 
   test('onUpdate should be noop', () => {
-    const emitter = new EventEmitter();
-    emitter.emit = jest.fn();
     const { onUpdate } = createCallbacks(emitter);
 
-    expect(onUpdate.toString()).toEqual('() => { }');
+    expect(onUpdate.toString()).toEqual(noop.toString());
   });
 
   test('hasEventListeners', () => {
-    const emitter = new EventEmitter();
-    emitter.emit = jest.fn();
     const { hasEventListeners } = createCallbacks(emitter);
 
     expect(hasEventListeners()).toBeFalsy();

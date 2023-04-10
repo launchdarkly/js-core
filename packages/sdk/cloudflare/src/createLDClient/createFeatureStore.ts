@@ -7,8 +7,7 @@ import type {
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
 } from '@launchdarkly/js-server-sdk-common';
-
-const noop = () => {};
+import noop from '../utils/noop';
 
 const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LDLogger) => {
   const key = `LD-Env-${sdkKey}`;
@@ -31,6 +30,7 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
         })
         .catch((err) => {
           logger.error(err);
+          callback(null);
         });
     },
     all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): void {
@@ -47,6 +47,7 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
         })
         .catch((err) => {
           logger.error(err);
+          callback({});
         });
     },
     initialized(callback: (isInitialized: boolean) => void = noop): void {

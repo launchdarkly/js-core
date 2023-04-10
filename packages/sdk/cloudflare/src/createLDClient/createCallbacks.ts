@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import noop from '../utils/noop';
 
 const createCallbacks = (emitter: EventEmitter) => ({
   onError: (err: Error) => {
@@ -12,7 +13,7 @@ const createCallbacks = (emitter: EventEmitter) => ({
   onReady: () => {
     emitter.emit('ready');
   },
-  onUpdate: () => {},
+  onUpdate: noop,
   hasEventListeners: () => false,
 });
 
