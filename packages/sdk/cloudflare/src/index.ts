@@ -10,7 +10,7 @@ import {
 } from '@launchdarkly/js-server-sdk-common';
 import createLDClient from './createLDClient';
 
-type LDClientSubset = Pick<
+export type LDClientCloudflare = Pick<
   LDClient,
   'variation' | 'variationDetail' | 'allFlagsState' | 'waitForInitialization'
 >;
@@ -19,7 +19,7 @@ const init = (
   kvNamespace: KVNamespace,
   sdkKey: string,
   options: LDOptions = {}
-): LDClientSubset => {
+): LDClientCloudflare => {
   const client = createLDClient(kvNamespace, sdkKey, options);
   return {
     variation(

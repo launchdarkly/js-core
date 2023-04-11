@@ -1,8 +1,8 @@
 import { KVNamespace } from '@cloudflare/workers-types';
 import { LDOptions } from '@launchdarkly/js-server-sdk-common';
-import LDClientCloudflare from './LDClientCloudflare';
+import CloudflareImpl from './CloudflareImpl';
 
 const createLDClient = (kvNamespace: KVNamespace, sdkKey: string, options: LDOptions = {}) =>
-  new LDClientCloudflare(kvNamespace, sdkKey, options);
+  new CloudflareImpl(kvNamespace, sdkKey, options);
 
 export default createLDClient;
