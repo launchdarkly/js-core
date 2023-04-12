@@ -21,7 +21,7 @@
     "start": "yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)'",
-    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand --coverage",
     "check": "yarn prettier && yarn lint && yarn tsc && yarn test"
   },
   "dependencies": {
