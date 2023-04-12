@@ -22,7 +22,7 @@ yarn add -D @launchdarkly/cloudflare-server-sdk
 
 ## Quickstart
 
-When configuring your SDK client, initialize with the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings):
+Initialize the ldClient with the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings) and your client side sdk key:
 
 ```typescript
 import ldInit from '@launchdarkly/cloudflare-server-sdk';
@@ -38,7 +38,7 @@ To learn more, head straight to the [complete reference guide for this SDK](http
 # at js-core repo root
 yarn && yarn build && cd packages/sdk/cloudflare
 
-# start typescript watch
+# run tests
 yarn test
 ```
 
