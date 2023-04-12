@@ -13,7 +13,6 @@ import promisify from '../async/promisify';
  *
  * This allows for using a store using async/await instead of callbacks.
  *
- * @internal
  */
 export default class AsyncStoreFacade {
   private store: LDFeatureStore;

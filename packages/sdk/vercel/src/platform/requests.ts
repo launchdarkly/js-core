@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 // TODO: DRY out vercel/cloudflare/shared stuff
 import type {
   EventSource,
@@ -8,8 +9,10 @@ import type {
 } from '@launchdarkly/js-server-sdk-common';
 import MockEventSource from './eventSource';
 
-export default class CloudflareRequests implements Requests {
+export default class VercelRequests implements Requests {
   fetch(url: string, options: Options = {}): Promise<Response> {
+    // Think this should be available to us in Edge Workers/middleware
+    // @ts-ignore
     return fetch(url, options);
   }
 

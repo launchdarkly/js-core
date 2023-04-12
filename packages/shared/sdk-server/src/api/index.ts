@@ -1,6 +1,8 @@
 export * from './data';
 export * from './options';
 export * from './LDClient';
+export * from './interfaces/DataKind';
+export * from './subsystems/LDFeatureStore';
 export * from './subsystems/LDStreamProcessor';
 
 // These are items that should be less frequently used, and therefore they

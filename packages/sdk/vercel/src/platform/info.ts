@@ -3,10 +3,10 @@ import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-co
 
 // import packageJson from '../../package.json';
 
-export default class CloudflareInfo implements Info {
+export default class VercelInfo implements Info {
   platformData(): PlatformData {
     return {
-      name: 'Cloudflare worker',
+      name: 'Vercel worker',
     };
   }
 

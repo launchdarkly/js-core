@@ -1,44 +1,33 @@
 // TODO: DRY out vercel/cloudflare/shared stuff
-import CryptoJS from 'crypto-js';
-import { Hmac as LDHmac } from '@launchdarkly/js-server-sdk-common';
-import { SupportedHashAlgorithm, SupportedOutputEncoding } from './crypto/types';
+import type { EventSource, EventSourceInitDict } from '@launchdarkly/js-sdk-common';
 
-export default class CryptoJSHmac implements LDHmac {
-  private CryptoJSHmac;
+export default class MockEventSource implements EventSource {
+  handlers: Record<string, (event?: { data?: any }) => void> = {};
 
-  constructor(algorithm: SupportedHashAlgorithm, key: string) {
-    let algo;
+  closed = false;
 
-    switch (algorithm) {
-      case 'sha1':
-        algo = CryptoJS.algo.SHA1;
-        break;
-      case 'sha256':
-        algo = CryptoJS.algo.SHA256;
-        break;
-      default:
-        throw new Error('unsupported hash algorithm. Only sha1 and sha256 are supported.');
-    }
+  url: string;
 
-    this.CryptoJSHmac = CryptoJS.algo.HMAC.create(algo, key);
+  options: EventSourceInitDict;
+
+  constructor(url: string, options: EventSourceInitDict) {
+    this.url = url;
+    this.options = options;
   }
 
-  digest(encoding: SupportedOutputEncoding): string {
-    const result = this.CryptoJSHmac.finalize();
+  onclose: (() => void) | undefined;
 
-    if (encoding === 'base64') {
-      return result.toString(CryptoJS.enc.Base64);
-    }
+  onerror: (() => void) | undefined;
 
-    if (encoding === 'hex') {
-      return result.toString(CryptoJS.enc.Hex);
-    }
+  onopen: (() => void) | undefined;
 
-    throw new Error('unsupported output encoding. Only base64 and hex are supported.');
+  onretrying: ((e: { delayMillis: number }) => void) | undefined;
+
+  addEventListener(type: string, listener: (event?: { data?: any }) => void): void {
+    this.handlers[type] = listener;
   }
 
-  update(data: string): this {
-    this.CryptoJSHmac.update(data);
-    return this;
+  close(): void {
+    this.closed = true;
   }
 }

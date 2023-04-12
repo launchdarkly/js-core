@@ -3,7 +3,8 @@
   "workspaces": [
     "packages/shared/common",
     "packages/shared/sdk-server",
-    "packages/sdk/server-node"
+    "packages/sdk/server-node",
+    "packages/sdk/vercel"
   ],
   "private": true,
   "scripts": {

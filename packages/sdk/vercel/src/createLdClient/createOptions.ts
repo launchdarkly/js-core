@@ -17,7 +17,7 @@ const defaults = {
   contextKeysFlushInterval: 300,
   diagnosticOptOut: true,
   diagnosticRecordingInterval: 900,
-  wrapperName: 'cloudflare',
+  wrapperName: 'vercel',
   wrapperVersion: 'version',
 };
 
