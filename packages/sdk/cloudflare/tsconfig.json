@@ -12,7 +12,6 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,
-    //    "noEmit": true,
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
