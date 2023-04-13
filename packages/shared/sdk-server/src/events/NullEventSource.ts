@@ -1,7 +1,6 @@
-// TODO: Dry this file duplicated in this repo
-import type { EventSource, EventSourceInitDict } from '@launchdarkly/js-sdk-common';
+import { EventSource, EventSourceInitDict } from '@launchdarkly/js-sdk-common';
 
-export default class MockEventSource implements EventSource {
+export default class NullEventSource implements EventSource {
   handlers: Record<string, (event?: { data?: any }) => void> = {};
 
   closed = false;
@@ -29,5 +28,12 @@ export default class MockEventSource implements EventSource {
 
   close(): void {
     this.closed = true;
+  }
+
+  simulateError(error: { status: number; message: string }) {
+    const shouldRetry = this.options.errorFilter(error);
+    if (!shouldRetry) {
+      this.closed = true;
+    }
   }
 }
