@@ -20,7 +20,7 @@
     "tsw": "yarn tsc --watch",
     "start": "yarn tsw",
     "lint": "eslint . --ext .ts",
-    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)'",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand --coverage",
     "check": "yarn prettier && yarn lint && yarn tsc && yarn test"
   },
