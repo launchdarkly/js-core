@@ -11,7 +11,7 @@
     "clean": "npx tsc --build --clean",
     "build": "npx tsc --build",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/common' for example.",
-    "build:doc": "./scripts/build-doc.sh $1",
+    "build:doc": "./scripts/build-doc.sh",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
     "test": "npx jest",
