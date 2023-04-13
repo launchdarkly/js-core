@@ -1,9 +1,10 @@
-import { KVNamespace } from '@cloudflare/workers-types';
-import { BasicLogger, LDLogger, LDOptions, SafeLogger } from '@launchdarkly/js-server-sdk-common';
+import { BasicLogger, LDLogger, SafeLogger } from '@launchdarkly/js-server-sdk-common';
+import type { KVNamespace } from '@cloudflare/workers-types';
 import { version } from '../../package.json';
 import createFeatureStore from './createFeatureStore';
 
-type SupportedLDOptions = Pick<LDOptions, 'logger' | 'featureStore'>;
+import type { LDOptions as LDOptionsCloudflare } from '../types';
+
 const allowedOptions = ['logger', 'featureStore'];
 
 const defaults = {
@@ -21,7 +22,7 @@ const defaults = {
   wrapperVersion: version,
 };
 
-export const finalizeLogger = ({ logger }: SupportedLDOptions) => {
+export const finalizeLogger = ({ logger }: LDOptionsCloudflare) => {
   const fallbackLogger = new BasicLogger({
     level: 'info',
     // eslint-disable-next-line no-console
@@ -34,14 +35,14 @@ export const finalizeLogger = ({ logger }: SupportedLDOptions) => {
 export const finalizeFeatureStore = (
   kvNamespace: KVNamespace,
   sdkKey: string,
-  { featureStore }: SupportedLDOptions,
+  { featureStore }: LDOptionsCloudflare,
   logger: LDLogger
 ) => featureStore ?? createFeatureStore(kvNamespace, sdkKey, logger);
 
 const createOptions = (
   kvNamespace: KVNamespace,
   sdkKey: string,
-  options: SupportedLDOptions = {}
+  options: LDOptionsCloudflare = {}
 ) => {
   if (!sdkKey) {
     throw new Error('You must configure the client with a client key');

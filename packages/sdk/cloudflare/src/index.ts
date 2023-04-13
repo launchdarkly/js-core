@@ -8,9 +8,8 @@
  *
  * @packageDocumentation
  */
-import { KVNamespace } from '@cloudflare/workers-types';
-import {
-  LDClient,
+import type { KVNamespace } from '@cloudflare/workers-types';
+import type {
   LDFlagsState,
   LDFlagsStateOptions,
   LDOptions,
@@ -19,11 +18,7 @@ import {
   LDFlagValue,
 } from '@launchdarkly/js-server-sdk-common';
 import createLDClient from './createLDClient';
-
-export type LDClientCloudflare = Pick<
-  LDClient,
-  'variation' | 'variationDetail' | 'allFlagsState' | 'waitForInitialization'
->;
+import type { LDClient as LDClientCloudflare } from './types';
 
 /**
  * Creates an instance of the LaunchDarkly client.
@@ -77,7 +72,7 @@ const init = (
     ): Promise<LDFlagsState> {
       return client.allFlagsState(context, o, callback);
     },
-    waitForInitialization(): Promise<LDClient> {
+    waitForInitialization(): Promise<LDClientCloudflare> {
       return client.waitForInitialization();
     },
   };
