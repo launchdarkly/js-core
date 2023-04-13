@@ -12,6 +12,7 @@ import MockEventSource from './eventSource';
 export default class VercelRequests implements Requests {
   fetch(url: string, options: Options = {}): Promise<Response> {
     // Think this should be available to us in Edge Workers/middleware
+    // TODO: Use tsconfig instead of ts-ignore
     // @ts-ignore
     return fetch(url, options);
   }

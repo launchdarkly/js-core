@@ -1,9 +1,6 @@
 /* eslint-disable class-methods-use-this */
 // TODO: DRY out vercel/cloudflare/shared stuff
 import type { Crypto, Hasher, Hmac } from '@launchdarkly/js-server-sdk-common';
-// TODO: Find another way to get a UUID
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { v4 as uuidv4 } from 'uuid';
 import CryptoJSHasher from './cryptoJSHasher';
 import CryptoJSHmac from './cryptoJSHmac';
 import { SupportedHashAlgorithm } from './types';
@@ -22,6 +19,9 @@ export default class VercelCrypto implements Crypto {
   }
 
   randomUUID(): string {
-    return uuidv4();
+    // This is available in Vercel Edge
+    // TODO: Use tsconfig instead of ts-ignore
+    // @ts-ignore
+    return crypto.randomUUID();
   }
 }
