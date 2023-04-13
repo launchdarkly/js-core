@@ -1,6 +1,6 @@
 import { EdgeConfigClient } from '@vercel/edge-config';
 import { BasicLogger, LDLogger, LDOptions, SafeLogger } from '@launchdarkly/js-server-sdk-common';
-// import { version } from '../../package.json';
+import { version } from '../../package.json';
 import createFeatureStore from './createFeatureStore';
 
 type SupportedLDOptions = Pick<LDOptions, 'logger' | 'featureStore'>;
@@ -8,6 +8,7 @@ const allowedOptions = ['logger', 'featureStore'];
 
 const defaults = {
   stream: false,
+  // TODO: Investigate if we can actually send events
   sendEvents: false,
   offline: false,
   useLdd: true,
@@ -18,7 +19,7 @@ const defaults = {
   diagnosticOptOut: true,
   diagnosticRecordingInterval: 900,
   wrapperName: 'vercel',
-  wrapperVersion: 'version',
+  wrapperVersion: version,
 };
 
 export const finalizeLogger = ({ logger }: SupportedLDOptions) => {
