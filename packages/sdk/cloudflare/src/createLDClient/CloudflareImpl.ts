@@ -5,7 +5,7 @@ import CloudflarePlatform from '../platform';
 import createOptions from './createOptions';
 import createCallbacks from './createCallbacks';
 
-export default class LDClientCloudflare extends LDClientImpl {
+export default class CloudflareImpl extends LDClientImpl {
   emitter: EventEmitter;
 
   // sdkKey is only used to query the KV, not to initialize with LD servers
