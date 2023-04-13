@@ -18,7 +18,7 @@ import type {
   LDFlagValue,
 } from '@launchdarkly/js-server-sdk-common';
 import createLDClient from './createLDClient';
-import type { LDClient as LDClientCloudflare } from './types';
+import type { LDClient } from './types';
 
 /**
  * Creates an instance of the LaunchDarkly client.
@@ -28,7 +28,7 @@ import type { LDClient as LDClientCloudflare } from './types';
  * soon as it is created. To determine when it is ready to use, call {@link LDClient.waitForInitialization}.
  *
  * **Important:** Do **not** try to instantiate `LDClient` with its constructor
- * (`new LDClient()/new LDClientImpl()/new LDClientCloudflare()`); the SDK does not currently support
+ * (`new LDClient()/new LDClientImpl()/new LDClient()`); the SDK does not currently support
  * this.
  *
  * @param kvNamespace
@@ -42,11 +42,7 @@ import type { LDClient as LDClientCloudflare } from './types';
  * @return
  *   The new {@link LDClient} instance.
  */
-const init = (
-  kvNamespace: KVNamespace,
-  sdkKey: string,
-  options: LDOptions = {}
-): LDClientCloudflare => {
+const init = (kvNamespace: KVNamespace, sdkKey: string, options: LDOptions = {}): LDClient => {
   const client = createLDClient(kvNamespace, sdkKey, options);
   return {
     variation(
@@ -72,7 +68,7 @@ const init = (
     ): Promise<LDFlagsState> {
       return client.allFlagsState(context, o, callback);
     },
-    waitForInitialization(): Promise<LDClientCloudflare> {
+    waitForInitialization(): Promise<LDClient> {
       return client.waitForInitialization();
     },
   };

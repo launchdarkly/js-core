@@ -1,4 +1,9 @@
-import { LDClient, LDOptions } from '@launchdarkly/js-server-sdk-common';
+import {
+  LDClient as LDClientOriginal,
+  LDOptions as LDOptionsOriginal,
+} from '@launchdarkly/js-server-sdk-common';
+
+export * from '@launchdarkly/js-server-sdk-common';
 
 /**
  * The Cloudflare SDK only supports these 4 functions:
@@ -6,17 +11,13 @@ import { LDClient, LDOptions } from '@launchdarkly/js-server-sdk-common';
  *  variation
  *  variationDetail
  *  allFlagsState
- * Note waitForInitialization is redefined to return Promise<LDClientCloudflare>
- * and not Promise<LDClient>
  */
-type LDClientCloudflare = Pick<
-  Omit<LDClient, 'waitForInitialization'>,
+export type LDClient = Pick<
+  Omit<LDClientOriginal, 'waitForInitialization'>,
   'variation' | 'variationDetail' | 'allFlagsState'
-> & { waitForInitialization: () => Promise<LDClientCloudflare> };
+> & { waitForInitialization: () => Promise<LDClient> };
 
-type LDOptionsCloudflare = Pick<LDOptions, 'logger' | 'featureStore'>;
-
-export * from '@launchdarkly/js-server-sdk-common';
-
-// override default types to retro-fit cloudflare
-export { LDClientCloudflare as LDClient, LDOptionsCloudflare as LDOptions };
+/**
+ * The Cloudflare SDK only supports the logger and featureStore options.
+ */
+export type LDOptions = Pick<LDOptionsOriginal, 'logger' | 'featureStore'>;

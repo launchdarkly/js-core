@@ -3,7 +3,7 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 import { version } from '../../package.json';
 import createFeatureStore from './createFeatureStore';
 
-import type { LDOptions as LDOptionsCloudflare } from '../types';
+import type { LDOptions } from '../types';
 
 const allowedOptions = ['logger', 'featureStore'];
 
@@ -22,7 +22,7 @@ const defaults = {
   wrapperVersion: version,
 };
 
-export const finalizeLogger = ({ logger }: LDOptionsCloudflare) => {
+export const finalizeLogger = ({ logger }: LDOptions) => {
   const fallbackLogger = new BasicLogger({
     level: 'info',
     // eslint-disable-next-line no-console
@@ -35,15 +35,11 @@ export const finalizeLogger = ({ logger }: LDOptionsCloudflare) => {
 export const finalizeFeatureStore = (
   kvNamespace: KVNamespace,
   sdkKey: string,
-  { featureStore }: LDOptionsCloudflare,
+  { featureStore }: LDOptions,
   logger: LDLogger
 ) => featureStore ?? createFeatureStore(kvNamespace, sdkKey, logger);
 
-const createOptions = (
-  kvNamespace: KVNamespace,
-  sdkKey: string,
-  options: LDOptionsCloudflare = {}
-) => {
+const createOptions = (kvNamespace: KVNamespace, sdkKey: string, options: LDOptions = {}) => {
   if (!sdkKey) {
     throw new Error('You must configure the client with a client key');
   }
