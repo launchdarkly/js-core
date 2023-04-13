@@ -1,4 +1,4 @@
-import MockEventSource from './MockEventSource';
+import NullEventSource from './NullEventSource';
 
 // eslint-disable-next-line import/prefer-default-export
-export { MockEventSource };
+export { NullEventSource };

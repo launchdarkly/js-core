@@ -1,4 +1,4 @@
-import { MockEventSource } from '@launchdarkly/js-server-sdk-common';
+import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
   EventSourceInitDict,
@@ -13,6 +13,6 @@ export default class CloudflareRequests implements Requests {
   }
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-    return new MockEventSource(url, eventSourceInitDict);
+    return new NullEventSource(url, eventSourceInitDict);
   }
 }

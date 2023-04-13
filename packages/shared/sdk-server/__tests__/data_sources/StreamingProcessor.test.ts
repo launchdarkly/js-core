@@ -18,7 +18,7 @@ import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger, { LogLevel } from '../Logger';
-import MockEventSource from '../../src/events/MockEventSource';
+import NullEventSource from '../../src/events/NullEventSource';
 
 const sdkKey = 'my-sdk-key';
 
@@ -34,14 +34,14 @@ const info: Info = {
   },
 };
 
-function createRequests(cb: (es: MockEventSource) => void): Requests {
+function createRequests(cb: (es: NullEventSource) => void): Requests {
   return {
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     fetch(url: string, options?: Options | undefined): Promise<Response> {
       throw new Error('Function not implemented.');
     },
     createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-      const es = new MockEventSource(url, eventSourceInitDict);
+      const es = new NullEventSource(url, eventSourceInitDict);
       cb(es);
       return es;
     },
@@ -49,7 +49,7 @@ function createRequests(cb: (es: MockEventSource) => void): Requests {
 }
 
 describe('given a stream processor with mock event source', () => {
-  let es: MockEventSource;
+  let es: NullEventSource;
   let requests: Requests;
   let featureStore: InMemoryFeatureStore;
   let streamProcessor: StreamingProcessor;
