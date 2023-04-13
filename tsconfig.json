@@ -12,6 +12,9 @@
     },
     {
       "path": "./packages/sdk/server-node/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/cloudflare/tsconfig.ref.json"
     }
   ]
 }

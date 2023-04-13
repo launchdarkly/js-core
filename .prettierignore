@@ -1,0 +1,8 @@
+.vscode-test/
+out/
+dist/
+test-fixtures/
+node_modules/
+docs/
+.yarn
+coverage
