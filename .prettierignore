@@ -5,3 +5,4 @@ test-fixtures/
 node_modules/
 docs/
 .yarn
+coverage
