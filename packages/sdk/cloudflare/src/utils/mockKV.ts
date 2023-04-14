@@ -1,4 +1,4 @@
-import { KVNamespace } from '@cloudflare/workers-types';
+import type { KVNamespace } from '@cloudflare/workers-types';
 
 const mockKV: KVNamespace<string> = {
   get: jest.fn(),

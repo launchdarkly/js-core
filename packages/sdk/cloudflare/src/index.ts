@@ -8,8 +8,8 @@
  *
  * @packageDocumentation
  */
-import { KVNamespace } from '@cloudflare/workers-types';
-import {
+import type { KVNamespace } from '@cloudflare/workers-types';
+import type {
   LDClient,
   LDFlagsState,
   LDFlagsStateOptions,
@@ -47,7 +47,7 @@ export type LDClientCloudflare = Pick<
  * @return
  *   The new {@link LDClient} instance.
  */
-const init = (
+export const init = (
   kvNamespace: KVNamespace,
   sdkKey: string,
   options: LDOptions = {}
@@ -82,5 +82,3 @@ const init = (
     },
   };
 };
-
-export default init;

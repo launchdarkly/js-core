@@ -1,6 +1,6 @@
-import { KVNamespace } from '@cloudflare/workers-types';
+import type { KVNamespace } from '@cloudflare/workers-types';
 import { Miniflare } from 'miniflare';
-import init, { LDClientCloudflare } from './index';
+import { init, LDClientCloudflare } from './index';
 import * as allFlagsSegments from './utils/testData.json';
 
 const mf = new Miniflare({

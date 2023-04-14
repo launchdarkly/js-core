@@ -25,9 +25,9 @@ yarn add -D @launchdarkly/cloudflare-server-sdk
 Initialize the ldClient with the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings) and your client side sdk key:
 
 ```typescript
-import ldInit from '@launchdarkly/cloudflare-server-sdk';
+import { init } from '@launchdarkly/cloudflare-server-sdk';
 
-const ldClient = ldInit(KV_NAMESPACE, 'YOUR CLIENT-SIDE SDK KEY');
+const ldClient = init(KV_NAMESPACE, 'YOUR CLIENT-SIDE SDK KEY');
 ```
 
 To learn more, head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).

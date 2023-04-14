@@ -1,4 +1,4 @@
-import { KVNamespace } from '@cloudflare/workers-types';
+import type { KVNamespace } from '@cloudflare/workers-types';
 import { EventEmitter } from 'node:events';
 import { LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
 import CloudflarePlatform from '../platform';

@@ -1,4 +1,4 @@
-import { KVNamespace } from '@cloudflare/workers-types';
+import type { KVNamespace } from '@cloudflare/workers-types';
 import { BasicLogger, LDLogger, LDOptions, SafeLogger } from '@launchdarkly/js-server-sdk-common';
 import { version } from '../../package.json';
 import createFeatureStore from './createFeatureStore';
