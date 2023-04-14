@@ -1,7 +1,7 @@
 {
   "name": "@launchdarkly/cloudflare-server-sdk",
   "version": "0.0.1",
-  "description": "LaunchDarkly Server-Side SDK for Cloudflare workers",
+  "description": "Cloudflare LaunchDarkly SDK",
   "packageManager": "yarn@3.4.1",
   "keywords": [
     "launchdarkly",
@@ -16,13 +16,14 @@
     "/dist"
   ],
   "scripts": {
+    "doc": "../../../scripts/build-doc.sh .",
     "build": "rimraf dist && yarn tsc",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand --coverage",
-    "check": "yarn prettier && yarn lint && yarn tsc && yarn test"
+    "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
