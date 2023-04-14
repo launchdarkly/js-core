@@ -44,7 +44,7 @@ export type LDClient = Pick<
 export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'featureStore'>;
 
 /**
- * Creates an instance of the LaunchDarkly client.
+ * Creates an instance of the Cloudflare LaunchDarkly client.
  *
  * Applications should instantiate a single instance for the lifetime of the worker.
  * The client will begin attempting to connect to the configured Cloudflare KV as
