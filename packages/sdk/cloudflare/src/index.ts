@@ -8,32 +8,50 @@
  *
  * @packageDocumentation
  */
-import { KVNamespace } from '@cloudflare/workers-types';
-import {
-  LDClient,
+import type { KVNamespace } from '@cloudflare/workers-types';
+import type {
+  LDClient as LDClientCommon,
   LDFlagsState,
   LDFlagsStateOptions,
-  LDOptions,
+  LDOptions as LDOptionsCommon,
   LDContext,
   LDEvaluationDetail,
   LDFlagValue,
 } from '@launchdarkly/js-server-sdk-common';
 import createLDClient from './createLDClient';
 
-export type LDClientCloudflare = Pick<
-  LDClient,
-  'variation' | 'variationDetail' | 'allFlagsState' | 'waitForInitialization'
->;
+export * from '@launchdarkly/js-server-sdk-common';
 
 /**
- * Creates an instance of the LaunchDarkly client.
+ * The Cloudflare SDK only supports these functions:
+ *  - waitForInitialization
+ *  - variation
+ *  - variationDetail
+ *  - allFlagsState
+ */
+export type LDClient = Pick<
+  Omit<LDClientCommon, 'waitForInitialization'>,
+  'variation' | 'variationDetail' | 'allFlagsState'
+> & {
+  waitForInitialization: () => Promise<LDClient>;
+};
+
+/**
+ * The Cloudflare SDK only supports these options:
+ * - logger
+ * - featureStore
+ */
+export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'featureStore'>;
+
+/**
+ * Creates an instance of the Cloudflare LaunchDarkly client.
  *
  * Applications should instantiate a single instance for the lifetime of the worker.
  * The client will begin attempting to connect to the configured Cloudflare KV as
  * soon as it is created. To determine when it is ready to use, call {@link LDClient.waitForInitialization}.
  *
  * **Important:** Do **not** try to instantiate `LDClient` with its constructor
- * (`new LDClient()/new LDClientImpl()/new LDClientCloudflare()`); the SDK does not currently support
+ * (`new LDClient()/new LDClientImpl()/new LDClient()`); the SDK does not currently support
  * this.
  *
  * @param kvNamespace
@@ -47,11 +65,11 @@ export type LDClientCloudflare = Pick<
  * @return
  *   The new {@link LDClient} instance.
  */
-const init = (
+export const init = (
   kvNamespace: KVNamespace,
   sdkKey: string,
   options: LDOptions = {}
-): LDClientCloudflare => {
+): LDClient => {
   const client = createLDClient(kvNamespace, sdkKey, options);
   return {
     variation(
@@ -82,5 +100,3 @@ const init = (
     },
   };
 };
-
-export default init;
