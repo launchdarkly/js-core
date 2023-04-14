@@ -28,7 +28,7 @@ export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'featureStore'>;
  *
  * Applications should instantiate a single instance for the lifetime of the worker.
  * The client will begin attempting to connect to the configured Cloudflare KV as
- * soon as it is created. To determine when it is ready to use, call {@link ./api!LDClient.waitForInitialization}.
+ * soon as it is created. To determine when it is ready to use, call {@link LDClient.waitForInitialization}.
  *
  * **Important:** Do **not** try to instantiate `LDClient` with its constructor
  * (`new LDClient()/new LDClientImpl()/new LDClient()`); the SDK does not currently support
