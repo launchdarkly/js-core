@@ -31,6 +31,10 @@ export default class BasicLogger implements LDLogger {
 
   private formatter?: (...args: any[]) => string;
 
+  static get() {
+    return new BasicLogger({});
+  }
+
   constructor(options: BasicLoggerOptions) {
     this.logLevel = LogPriority[options.level ?? 'info'] ?? LogPriority.info;
     this.name = options.name ?? 'LaunchDarkly';

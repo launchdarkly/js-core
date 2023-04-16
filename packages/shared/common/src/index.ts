@@ -6,6 +6,7 @@ export * from './api';
 export * from './validators';
 export * from './logging';
 export * from './options';
+export * from './utils';
 
 export * as internal from './internal';
 
