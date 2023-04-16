@@ -32,6 +32,8 @@ export type { LDClientEdgeFunction };
  *   not to connect with LD servers.
  * @param featureStore
  *   The featureStore configured with LaunchDarkly.
+ * @param platformInfo
+ *  The platform specific information for analytics purposes.
  * @return
  *   The new {@link LDClientEdgeFunction} instance.
  */
