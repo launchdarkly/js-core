@@ -8,15 +8,15 @@
  *
  * @packageDocumentation
  */
-
-import type { Info, LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
+import type { Info } from '@launchdarkly/js-server-sdk-common';
 import { LDClient } from './api';
-import validateOptions from './utils/validateOptions';
+import validateOptions, { LDOptions, LDOptionsInternal } from './utils/validateOptions';
 
 export * from '@launchdarkly/js-server-sdk-common';
 
 export type { LDClient };
 
+export { LDOptions };
 /**
  * Creates an instance of the LaunchDarkly edge client.
  *
@@ -42,5 +42,6 @@ export type { LDClient };
 export const init = (sdkKey: string, platformInfo: Info, options: LDOptionsInternal) => {
   // this throws if options are invalid
   validateOptions(sdkKey, options);
+
   return new LDClient(sdkKey, platformInfo, options);
 };

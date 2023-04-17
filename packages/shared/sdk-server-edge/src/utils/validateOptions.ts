@@ -13,10 +13,10 @@ export type LDOptions = Pick<LDOptionsCommon, PublicOptions>;
  * The internal options include featureStore because that's how the LDClient
  * implementation expects it.
  */
-type LDOptionsInternal = Pick<LDOptionsCommon, PublicOptions | 'featureStore'>;
+export type LDOptionsInternal = Pick<LDOptionsCommon, PublicOptions | 'featureStore'>;
 
 const validateOptions = (sdkKey: string, options: LDOptionsInternal) => {
-  const { featureStore, logger } = options;
+  const { featureStore, logger, sendEvents, ...rest } = options;
   if (!sdkKey) {
     throw new Error('You must configure the client with a client key');
   }
@@ -29,8 +29,11 @@ const validateOptions = (sdkKey: string, options: LDOptionsInternal) => {
     throw new Error('You must configure the client with a logger');
   }
 
-  // TODO: validate public options
-  // Object.keys(options).some((o) => publicOptions.includes(o));
+  if (JSON.stringify(rest) !== '{}') {
+    throw new Error(`Invalid configuration: ${Object.keys(rest).toString()} not supported`);
+  }
+
+  return true;
 };
 
 export default validateOptions;
