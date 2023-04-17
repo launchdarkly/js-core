@@ -7,20 +7,23 @@ import {
 } from '@launchdarkly/js-server-sdk-common';
 import createOptions from './createOptions';
 import createCallbacks from './createCallbacks';
-import EdgeFunctionPlatform from '../platform';
+import EdgePlatform from '../platform';
 
 /**
- * The EdgeFunction LaunchDarkly SDK client object.
+ * The LaunchDarkly SDK edge client object.
  *
  * Create this object with {@link init}. Applications should configure the client at startup time
  * and continue to use it throughout the lifetime of the application, rather than creating instances
  * on the fly.
  *
- * The EdgeFunction client only supports these functions:
+ * The LaunchDarkly edge client only supports these functions:
  *  - allFlagsState
  *  - variation
  *  - variationDetail
  *  - waitForInitialization
+ *  - track
+ *  - initialized
+ *  - close
  */
 export class LDClient
   extends LDClientImpl
@@ -41,7 +44,7 @@ export class LDClient
   // sdkKey is only used to query featureStore, not to initialize with LD servers
   constructor(sdkKey: string, featureStore: LDFeatureStore, platformInfo: Info) {
     const em = new EventEmitter();
-    const platform = new EdgeFunctionPlatform(platformInfo);
+    const platform = new EdgePlatform(platformInfo);
     super('n/a', platform, createOptions(sdkKey, featureStore), createCallbacks(em));
     this.emitter = em;
   }

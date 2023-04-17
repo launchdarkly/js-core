@@ -1,46 +1,16 @@
-# LaunchDarkly Cloudflare SDK
+# LaunchDarkly SDK JavaScript Common Server Edge Code
 
-[![NPM][sdk-server-cloudflare-npm-badge]][sdk-server-cloudflare-npm-link]
-[![Actions Status][sdk-server-cloudflare-ci-badge]][sdk-server-cloudflare-ci]
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/sdk/server-cloudflare/docs/)
+[![NPM][js-server-sdk-common-edge-badge]][js-server-sdk-common-edge-link]
+[![Actions Status][shared-sdk-server-edge-ci-badge]][shared-sdk-server-edge-ci]
+[![Documentation](https://launchdarkly.github.io/js-core/packages/shared/common/docs/)
 
-This library supports using Cloudflare [Workers KV](https://developers.cloudflare.com/workers/learning/how-kv-works) to replace the default in-memory feature store of the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/cloudflare-server-sdk).
+This project contains Typescript classes and interfaces that are applicable to server-side edge SDKs.
 
-For more information, see the [SDK features guide](https://docs.launchdarkly.com/sdk/features/storing-data).
+This library is a beta version and should not be considered ready for production use while this message is visible.
 
-## Installation
+## Contributing
 
-```shell
-npm i @launchdarkly/cloudflare-server-sdk
-```
-
-or yarn:
-
-```shell
-yarn add -D @launchdarkly/cloudflare-server-sdk
-```
-
-## Quickstart
-
-Initialize the ldClient with the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings) and your client side sdk key:
-
-```typescript
-import { init } from '@launchdarkly/cloudflare-server-sdk';
-
-const ldClient = init(KV_NAMESPACE, 'YOUR CLIENT-SIDE SDK KEY');
-```
-
-To learn more, head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).
-
-## Developing this SDK
-
-```shell
-# at js-core repo root
-yarn && yarn build && cd packages/sdk/cloudflare
-
-# run tests
-yarn test
-```
+See [Contributing](../CONTRIBUTING.md).
 
 ## About LaunchDarkly
 
@@ -49,9 +19,14 @@ yarn test
   - Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).
   - Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.
   - Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.
-- LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Read [our documentation](https://docs.launchdarkly.com/sdk) for a complete list.
+- LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Check out [our documentation](https://docs.launchdarkly.com/sdk) for a complete list.
 - Explore LaunchDarkly
   - [launchdarkly.com](https://www.launchdarkly.com/ 'LaunchDarkly Main Website') for more information
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[shared-sdk-server-edge-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server-edge.yml/badge.svg
+[shared-sdk-server-edge-ci]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server-edge.yml
+[js-server-sdk-common-edge-badge]: https://img.shields.io/npm/v/@launchdarkly/js-server-sdk-common-edge.svg?style=flat-square
+[js-server-sdk-common-edge-link]: https://www.npmjs.com/package/@launchdarkly/js-server-sdk-common-edge

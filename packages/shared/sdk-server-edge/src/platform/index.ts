@@ -1,13 +1,13 @@
 import type { Crypto, Info, Platform, Requests } from '@launchdarkly/js-server-sdk-common';
-import EdgeFunctionCrypto from './crypto';
-import EdgeFunctionRequests from './requests';
+import EdgeCrypto from './crypto';
+import EdgeRequests from './requests';
 
-export default class EdgeFunctionPlatform implements Platform {
+export default class EdgePlatform implements Platform {
   info: Info;
 
-  crypto: Crypto = new EdgeFunctionCrypto();
+  crypto: Crypto = new EdgeCrypto();
 
-  requests: Requests = new EdgeFunctionRequests();
+  requests: Requests = new EdgeRequests();
 
   constructor(info: Info) {
     this.info = info;

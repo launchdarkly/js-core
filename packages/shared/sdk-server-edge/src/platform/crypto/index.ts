@@ -8,7 +8,7 @@ import { SupportedHashAlgorithm } from './types';
  * is not yet supported in some runtimes.
  * https://cryptojs.gitbook.io/docs/
  */
-export default class EdgeFunctionCrypto implements Crypto {
+export default class EdgeCrypto implements Crypto {
   createHash(algorithm: SupportedHashAlgorithm): Hasher {
     return new CryptoJSHasher(algorithm);
   }

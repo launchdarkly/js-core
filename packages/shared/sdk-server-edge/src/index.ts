@@ -1,5 +1,5 @@
 /**
- * This is the API reference for the EdgeFunction LaunchDarkly SDK.
+ * This is the API reference for the LaunchDarkly SDK.
  *
  * In typical usage, you will call {@link init} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
@@ -17,7 +17,7 @@ export * from '@launchdarkly/js-server-sdk-common';
 export type { LDClient };
 
 /**
- * Creates an instance of the EdgeFunction LaunchDarkly client.
+ * Creates an instance of the LaunchDarkly edge client.
  *
  * Applications should instantiate a single instance for the lifetime of the worker.
  * The client will begin attempting to connect to the configured feature store as
