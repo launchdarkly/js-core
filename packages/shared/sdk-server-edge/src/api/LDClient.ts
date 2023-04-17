@@ -27,7 +27,13 @@ export class LDClient
   implements
     Pick<
       LDClientCommon,
-      'allFlagsState' | 'variation' | 'variationDetail' | 'waitForInitialization'
+      | 'allFlagsState'
+      | 'variation'
+      | 'variationDetail'
+      | 'waitForInitialization'
+      | 'track'
+      | 'initialized'
+      | 'close'
     >
 {
   emitter: EventEmitter;
@@ -40,15 +46,6 @@ export class LDClient
     this.emitter = em;
   }
 
-  override async waitForInitialization(): Promise<this> {
-    await super.waitForInitialization();
-    return this;
-  }
-
-  override track() {
-    throw new Error('track is not supported');
-  }
-
   override identify() {
     throw new Error('identify is not supported');
   }
@@ -59,10 +56,6 @@ export class LDClient
 
   override secureModeHash(): string {
     throw new Error('secureModeHash is not supported');
-  }
-
-  override close() {
-    throw new Error('close is not supported');
   }
 
   override flush(): Promise<void> {

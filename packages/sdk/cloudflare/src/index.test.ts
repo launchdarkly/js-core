@@ -51,4 +51,20 @@ describe('worker', () => {
       testFlag2: false,
     });
   });
+
+  test('isOffline is not supported', async () => {
+    expect(() => ldClient.isOffline()).toThrowError(/is not supported/);
+  });
+
+  test('flush is not supported', async () => {
+    expect(() => ldClient.flush()).toThrowError(/is not supported/);
+  });
+
+  test('identify is not supported', async () => {
+    expect(() => ldClient.identify()).toThrowError(/is not supported/);
+  });
+
+  test('secureModeHash is not supported', async () => {
+    expect(() => ldClient.secureModeHash()).toThrowError(/is not supported/);
+  });
 });
