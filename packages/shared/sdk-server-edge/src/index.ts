@@ -1,5 +1,5 @@
 /**
- * This is the API reference for the LaunchDarkly SDK.
+ * This is the API reference for the Server Common Edge LaunchDarkly SDK.
  *
  * In typical usage, you will call {@link init} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
@@ -18,12 +18,6 @@ export * from '@launchdarkly/js-server-sdk-common';
 export type { LDClient };
 
 /**
- * Sending events is unsupported and is only included here as a beta
- * preview.
- */
-export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
-
-/**
  * Creates an instance of the LaunchDarkly edge client.
  *
  * Applications should instantiate a single instance for the lifetime of the worker.
@@ -39,13 +33,13 @@ export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
  *   not to connect with LD servers.
  *   The featureStore configured with LaunchDarkly.
  * @param platformInfo
- *  The platform specific information for analytics purposes.
+ *  The platform specific information for analytics.
  * @param options
  *  LDOptionsCommon
  * @return
  *   The new {@link LDClient} instance.
  */
-export const init = (sdkKey: string, platformInfo: Info, options: LDOptionsCommon) => {
+export const init = (sdkKey: string, platformInfo: Info, options: LDOptionsInternal) => {
   // this throws if options are invalid
   validateOptions(sdkKey, options);
   return new LDClient(sdkKey, platformInfo, options);
