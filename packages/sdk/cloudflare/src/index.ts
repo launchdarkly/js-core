@@ -9,7 +9,12 @@
  * @packageDocumentation
  */
 import type { KVNamespace } from '@cloudflare/workers-types';
-import { BasicLogger, init as initEdge, LDClient } from '@launchdarkly/js-server-sdk-common-edge';
+import {
+  BasicLogger,
+  init as initEdge,
+  LDClient,
+  LDOptions,
+} from '@launchdarkly/js-server-sdk-common-edge';
 import createFeatureStore from './createFeatureStore';
 import createPlatformInfo from './createPlatformInfo';
 
@@ -29,16 +34,20 @@ export type { LDClient };
  * this.
  *
  * @param kvNamespace
- *   The Cloudflare KV configured with LaunchDarkly.
+ *  The Cloudflare KV configured with LaunchDarkly.
  * @param sdkKey
- *   The client side SDK key. This is only used to query the kvNamespace above,
+ *  The client side SDK key. This is only used to query the kvNamespace above,
  *   not to connect with LD servers.
+ * @param options
+ *  The only supported option is 'logger'
  * @return
- *   The new {@link LDClient} instance.
+ *  The new {@link LDClient} instance.
  */
-export const init = (sdkKey: string, kvNamespace: KVNamespace) =>
-  initEdge(
-    sdkKey,
-    createFeatureStore(kvNamespace, sdkKey, BasicLogger.get()),
-    createPlatformInfo()
-  );
+export const init = (sdkKey: string, kvNamespace: KVNamespace, options: LDOptions = {}) => {
+  const logger = options.logger ?? BasicLogger.get();
+  return initEdge(sdkKey, createPlatformInfo(), {
+    featureStore: createFeatureStore(kvNamespace, sdkKey, logger),
+    logger,
+    ...options,
+  });
+};

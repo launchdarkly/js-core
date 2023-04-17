@@ -1,6 +1,6 @@
-import { BasicLogger, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
+import { BasicLogger, LDOptions } from '@launchdarkly/js-server-sdk-common';
 
-const defaults = {
+export const defaultOptions: LDOptions = {
   stream: false,
   sendEvents: false,
   offline: false,
@@ -14,17 +14,9 @@ const defaults = {
   logger: BasicLogger.get(),
 };
 
-const createOptions = (sdkKey: string, featureStore: LDFeatureStore) => {
-  if (!sdkKey) {
-    throw new Error('You must configure the client with a client key');
-  }
-
-  if (!featureStore || typeof featureStore !== 'object' || !featureStore.get) {
-    throw new Error('You must configure the client with a feature store');
-  }
-
-  const finalOptions = { ...defaults, featureStore };
-  defaults.logger.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
+const createOptions = (options: LDOptions) => {
+  const finalOptions = { ...defaultOptions, ...options };
+  finalOptions.logger?.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
   return finalOptions;
 };
 

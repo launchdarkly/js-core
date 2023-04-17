@@ -9,12 +9,19 @@
  * @packageDocumentation
  */
 
-import type { Info, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
+import type { Info, LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 import { LDClient } from './api';
+import validateOptions from './utils/validateOptions';
 
 export * from '@launchdarkly/js-server-sdk-common';
 
 export type { LDClient };
+
+/**
+ * Sending events is unsupported and is only included here as a beta
+ * preview.
+ */
+export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
 
 /**
  * Creates an instance of the LaunchDarkly edge client.
@@ -30,12 +37,16 @@ export type { LDClient };
  * @param sdkKey
  *   The client side SDK key. This is only used to query the kvNamespace above,
  *   not to connect with LD servers.
- * @param featureStore
  *   The featureStore configured with LaunchDarkly.
  * @param platformInfo
  *  The platform specific information for analytics purposes.
+ * @param options
+ *  LDOptionsCommon
  * @return
  *   The new {@link LDClient} instance.
  */
-export const init = (sdkKey: string, featureStore: LDFeatureStore, platformInfo: Info) =>
-  new LDClient(sdkKey, featureStore, platformInfo);
+export const init = (sdkKey: string, platformInfo: Info, options: LDOptionsCommon) => {
+  // this throws if options are invalid
+  validateOptions(sdkKey, options);
+  return new LDClient(sdkKey, platformInfo, options);
+};

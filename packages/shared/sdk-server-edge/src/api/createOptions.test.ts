@@ -1,10 +1,16 @@
-import createOptions from './createOptions';
-import mockFeatureStore from '../utils/mockFeatureStore';
+import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
+import createOptions, { defaultOptions } from './createOptions';
 
 describe('createOptions', () => {
-  it('throws without SDK key', () => {
-    expect(() => {
-      createOptions('', mockFeatureStore);
-    }).toThrowError(/You must configure the client with a client key/);
+  test('default options', () => {
+    expect(createOptions({})).toEqual(defaultOptions);
+  });
+
+  test('override logger', () => {
+    const logger = new BasicLogger({ name: 'test' });
+    expect(createOptions({ logger })).toEqual({
+      ...defaultOptions,
+      logger,
+    });
   });
 });

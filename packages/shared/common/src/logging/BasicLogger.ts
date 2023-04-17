@@ -31,6 +31,11 @@ export default class BasicLogger implements LDLogger {
 
   private formatter?: (...args: any[]) => string;
 
+  /**
+   * This should only be used as a default fallback and not as a convenient
+   * solution. In most cases you should construct a new instance with the
+   * appropriate options for your specific needs.
+   */
   static get() {
     return new BasicLogger({});
   }

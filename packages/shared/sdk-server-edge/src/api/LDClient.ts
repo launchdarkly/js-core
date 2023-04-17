@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { Info, LDClientImpl, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
+import { Info, LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
 import createOptions from './createOptions';
 import createCallbacks from './createCallbacks';
 import EdgePlatform from '../platform';
@@ -16,10 +16,10 @@ export class LDClient extends LDClientImpl {
   emitter: EventEmitter;
 
   // sdkKey is only used to query featureStore, not to initialize with LD servers
-  constructor(sdkKey: string, featureStore: LDFeatureStore, platformInfo: Info) {
+  constructor(sdkKey: string, platformInfo: Info, options: LDOptions) {
     const em = new EventEmitter();
     const platform = new EdgePlatform(platformInfo);
-    super('n/a', platform, createOptions(sdkKey, featureStore), createCallbacks(em));
+    super('n/a', platform, createOptions(options), createCallbacks(em));
     this.emitter = em;
   }
 }
