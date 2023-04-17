@@ -34,12 +34,12 @@ export type { LDClient };
  * this.
  *
  * @param kvNamespace
- *  The Cloudflare KV configured with LaunchDarkly.
+ *  The Cloudflare KV configured for LaunchDarkly.
  * @param sdkKey
  *  The client side SDK key. This is only used to query the kvNamespace above,
- *   not to connect with LD servers.
+ *  not to connect with LaunchDarkly servers.
  * @param options
- *  The only supported option is 'logger'
+ *  Optional configuration settings. The only supported option is logger.
  * @return
  *  The new {@link LDClient} instance.
  */

@@ -1,19 +1,17 @@
 import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common/dist/api/options/LDOptions';
 
 /**
- * These are public options.
- * Sending events is unsupported and is only included here as a beta
+ * The Launchdarkly Edge SDKs configuration options. Only logger is officially
+ * supported. sendEvents is unsupported and is only included as a beta
  * preview.
  */
-const publicOptions = ['logger', 'sendEvents'] as const;
-type PublicOptions = (typeof publicOptions)[number];
-export type LDOptions = Pick<LDOptionsCommon, PublicOptions>;
+export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
 
 /**
  * The internal options include featureStore because that's how the LDClient
  * implementation expects it.
  */
-export type LDOptionsInternal = Pick<LDOptionsCommon, PublicOptions | 'featureStore'>;
+export type LDOptionsInternal = LDOptions & Pick<LDOptionsCommon, 'featureStore'>;
 
 const validateOptions = (sdkKey: string, options: LDOptionsInternal) => {
   const { featureStore, logger, sendEvents, ...rest } = options;

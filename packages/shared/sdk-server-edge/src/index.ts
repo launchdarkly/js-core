@@ -1,43 +1,21 @@
 /**
- * This is the API reference for the Server Common Edge LaunchDarkly SDK.
+ * This is the internal API reference for the common code shared between
+ * LaunchDarkly Edge SDKs.
  *
- * In typical usage, you will call {@link init} once at startup time to obtain an instance of
- * {@link LDClient}, which provides access to all of the SDK's functionality.
+ * Do not use this package directly in a cloud worker.
  *
- * For more information, see the SDK reference guide.
- *
- * @packageDocumentation
  */
 import type { Info } from '@launchdarkly/js-server-sdk-common';
 import { LDClient } from './api';
 import validateOptions, { LDOptions, LDOptionsInternal } from './utils/validateOptions';
 
 export * from '@launchdarkly/js-server-sdk-common';
+export type { LDClient, LDOptions };
 
-export type { LDClient };
-
-export { LDOptions };
 /**
- * Creates an instance of the LaunchDarkly edge client.
+ * Do not use this function directly.
  *
- * Applications should instantiate a single instance for the lifetime of the worker.
- * The client will begin attempting to connect to the configured feature store as
- * soon as it is created. To determine when it is ready to use, call {@link LDClient.waitForInitialization}.
- *
- * **Important:** Do **not** try to instantiate `LDClient` with its constructor
- * (`new LDClient()/new LDClientImpl()/new LDClient()`); the SDK does not currently support
- * this.
- *
- * @param sdkKey
- *   The client side SDK key. This is only used to query the kvNamespace above,
- *   not to connect with LD servers.
- *   The featureStore configured with LaunchDarkly.
- * @param platformInfo
- *  The platform specific information for analytics.
- * @param options
- *  LDOptionsCommon
- * @return
- *   The new {@link LDClient} instance.
+ * This is an internal API to be used directly only by LaunchDarkly Edge SDKs.
  */
 export const init = (sdkKey: string, platformInfo: Info, options: LDOptionsInternal) => {
   // this throws if options are invalid
