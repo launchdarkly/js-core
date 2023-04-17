@@ -1,5 +1,4 @@
 import { EventEmitter } from 'node:events';
-  LDClientImpl,
 import { Info, LDClientImpl, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
 import createOptions from './createOptions';
 import createCallbacks from './createCallbacks';
