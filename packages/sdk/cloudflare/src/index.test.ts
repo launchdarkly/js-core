@@ -1,8 +1,8 @@
 import type { KVNamespace } from '@cloudflare/workers-types';
+import { LDClient } from '@launchdarkly/js-server-sdk-common-edge';
 import { Miniflare } from 'miniflare';
 import { init } from './index';
 import * as allFlagsSegments from './utils/testData.json';
-import { LDClient } from './api';
 
 const mf = new Miniflare({
   modules: true,
@@ -23,7 +23,7 @@ describe('worker', () => {
   beforeAll(async () => {
     kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
     await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
-    ldClient = init(kv, sdkKey);
+    ldClient = init(sdkKey, kv);
     await ldClient.waitForInitialization();
   });
 

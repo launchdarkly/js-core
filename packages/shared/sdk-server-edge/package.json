@@ -1,7 +1,7 @@
 {
-  "name": "@launchdarkly/edge-function-server-sdk",
+  "name": "@launchdarkly/js-server-sdk-common-edge",
   "version": "0.0.1",
-  "description": "EdgeFunction LaunchDarkly SDK",
+  "description": "Common edge LaunchDarkly SDK",
   "packageManager": "yarn@3.4.1",
   "keywords": [
     "launchdarkly",
@@ -9,9 +9,8 @@
     "function",
     "worker"
   ],
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
-  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "/dist"
   ],
