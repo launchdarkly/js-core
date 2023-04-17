@@ -27,6 +27,10 @@ describe('worker', () => {
     await ldClient.waitForInitialization();
   });
 
+  afterAll(() => {
+    ldClient.close();
+  });
+
   test('variation', async () => {
     const flagDetail = await ldClient.variation(flagKey, context, false);
     expect(flagDetail).toBeTruthy();
