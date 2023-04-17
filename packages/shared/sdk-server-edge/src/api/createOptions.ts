@@ -2,7 +2,7 @@ import { BasicLogger, LDFeatureStore } from '@launchdarkly/js-server-sdk-common'
 
 const defaults = {
   stream: false,
-  sendEvents: true,
+  sendEvents: false,
   offline: false,
   useLdd: true,
   allAttributesPrivate: false,

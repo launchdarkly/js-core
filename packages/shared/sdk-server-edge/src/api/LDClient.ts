@@ -1,10 +1,6 @@
 import { EventEmitter } from 'node:events';
-import {
-  Info,
-  LDClient as LDClientCommon,
   LDClientImpl,
-  LDFeatureStore,
-} from '@launchdarkly/js-server-sdk-common';
+import { Info, LDClientImpl, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
 import createOptions from './createOptions';
 import createCallbacks from './createCallbacks';
 import EdgePlatform from '../platform';
@@ -16,29 +12,8 @@ import EdgePlatform from '../platform';
  * and continue to use it throughout the lifetime of the application, rather than creating instances
  * on the fly.
  *
- * The LaunchDarkly edge client only supports these functions:
- *  - allFlagsState
- *  - variation
- *  - variationDetail
- *  - waitForInitialization
- *  - track
- *  - initialized
- *  - close
  */
-export class LDClient
-  extends LDClientImpl
-  implements
-    Pick<
-      LDClientCommon,
-      | 'allFlagsState'
-      | 'variation'
-      | 'variationDetail'
-      | 'waitForInitialization'
-      | 'track'
-      | 'initialized'
-      | 'close'
-    >
-{
+export class LDClient extends LDClientImpl {
   emitter: EventEmitter;
 
   // sdkKey is only used to query featureStore, not to initialize with LD servers
@@ -47,22 +22,6 @@ export class LDClient
     const platform = new EdgePlatform(platformInfo);
     super('n/a', platform, createOptions(sdkKey, featureStore), createCallbacks(em));
     this.emitter = em;
-  }
-
-  override identify() {
-    throw new Error('identify is not supported');
-  }
-
-  override isOffline(): boolean {
-    throw new Error('isOffline is not supported');
-  }
-
-  override secureModeHash(): string {
-    throw new Error('secureModeHash is not supported');
-  }
-
-  override flush(): Promise<void> {
-    throw new Error('flush is not supported');
   }
 }
 

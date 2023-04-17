@@ -16,7 +16,7 @@ const context = { kind: 'user', key: 'test-user-key-1' };
 const namespace = 'LD_KV';
 const rootEnvKey = `LD-Env-${sdkKey}`;
 
-describe('worker', () => {
+describe('init', () => {
   let kv: KVNamespace;
   let ldClient: LDClient;
 
@@ -54,21 +54,5 @@ describe('worker', () => {
       testFlag1: true,
       testFlag2: false,
     });
-  });
-
-  test('isOffline is not supported', async () => {
-    expect(() => ldClient.isOffline()).toThrowError(/is not supported/);
-  });
-
-  test('flush is not supported', async () => {
-    expect(() => ldClient.flush()).toThrowError(/is not supported/);
-  });
-
-  test('identify is not supported', async () => {
-    expect(() => ldClient.identify()).toThrowError(/is not supported/);
-  });
-
-  test('secureModeHash is not supported', async () => {
-    expect(() => ldClient.secureModeHash()).toThrowError(/is not supported/);
   });
 });
