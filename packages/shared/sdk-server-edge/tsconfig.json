@@ -4,7 +4,7 @@
     "outDir": "dist",
     "target": "es6",
     "lib": ["es6", "webworker"],
-    "module": "es2022",
+    "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
     "allowSyntheticDefaultImports": true,

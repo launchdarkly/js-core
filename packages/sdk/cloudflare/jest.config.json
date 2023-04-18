@@ -5,11 +5,5 @@
   "modulePathIgnorePatterns": ["dist"],
   "testEnvironment": "node",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-  "collectCoverageFrom": ["src/**/*.ts"],
-  "preset": "ts-jest/presets/default-esm",
-  "globals": {
-    "ts-jest": {
-      "useESM": true
-    }
-  }
+  "collectCoverageFrom": ["src/**/*.ts"]
 }
