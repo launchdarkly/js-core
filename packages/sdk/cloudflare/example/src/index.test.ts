@@ -1,25 +1,16 @@
-import { unstable_dev } from "wrangler";
-import type { UnstableDevWorker } from "wrangler";
-import { describe, expect, it, beforeAll, afterAll } from "vitest";
+import app from './index';
+import testData from './testData.json';
 
-describe("Worker", () => {
-	let worker: UnstableDevWorker;
+test('variation true', async () => {
+  // arrange
+  const env = getMiniflareBindings();
+  const { LD_KV } = env;
+  await LD_KV.put('LD-Env-test-sdk-key', JSON.stringify(testData));
 
-	beforeAll(async () => {
-		worker = await unstable_dev("src/index.ts", {
-			experimental: { disableExperimentalWarning: true },
-		});
-	});
+  // act
+  const res = await app.fetch(new Request('http://localhost'), env);
 
-	afterAll(async () => {
-		await worker.stop();
-	});
-
-	it("should return Hello World", async () => {
-		const resp = await worker.fetch();
-		if (resp) {
-			const text = await resp.text();
-			expect(text).toMatchInlineSnapshot(`"Hello World!"`);
-		}
-	});
+  // assert
+  expect(await res.text()).toContain('testFlag1: true');
+  // expect(res.headers.get('Location')).toBe('http://localhost/test/increment');
 });

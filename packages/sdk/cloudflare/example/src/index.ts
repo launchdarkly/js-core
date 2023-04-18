@@ -1,33 +1,22 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `wrangler dev src/index.ts` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `wrangler publish src/index.ts --name my-worker` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
-
-export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-}
+import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
 export default {
-	async fetch(
-		request: Request,
-		env: Env,
-		ctx: ExecutionContext
-	): Promise<Response> {
-		return new Response("Hello World!");
-	},
+  async fetch(request: Request, env: Bindings, ctx?: ExecutionContext): Promise<Response> {
+    const sdkKey = 'test-sdk-key';
+    const flagKey = 'testFlag1';
+    const context = { kind: 'user', key: 'test-user-key-1' };
+
+    // start using ld
+    const client = initLD(sdkKey, env.LD_KV);
+    await client.waitForInitialization();
+    const flag = await client.variation(flagKey, context, false);
+    const flagDetail = await client.variationDetail(flagKey, context, false);
+    const allFlags = await client.allFlagsState(context);
+
+    const resp = `${flagKey}: ${flag}, detail: ${JSON.stringify(
+      flagDetail
+    )}, allFlags: ${JSON.stringify(allFlags)}`;
+    console.log(`------------- ${resp}`);
+    return new Response(`${resp}`);
+  },
 };
