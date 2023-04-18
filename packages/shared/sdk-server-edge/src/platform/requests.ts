@@ -7,8 +7,9 @@ import type {
   Requests,
 } from '@launchdarkly/js-server-sdk-common';
 
-export default class CloudflareRequests implements Requests {
+export default class EdgeRequests implements Requests {
   fetch(url: string, options: Options = {}): Promise<Response> {
+    // @ts-ignore
     return fetch(url, options);
   }
 

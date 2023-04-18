@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
-    // Uses "." so it can load package.json.
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist",
     "target": "es6",
-    "lib": ["es6"],
+    "lib": ["es6", "webworker"],
     "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
+
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "declaration": true,
@@ -15,8 +15,8 @@
     "resolveJsonModule": true,
     "stripInternal": true,
     "moduleResolution": "node",
-    "types": ["@cloudflare/workers-types", "jest", "node"],
+    "types": ["jest", "node"],
     "skipLibCheck": true
   },
-  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
 }

@@ -1,5 +1,5 @@
 /**
- * This is the API reference for the LaunchDarkly Server-Side SDK for Cloudflare.
+ * This is the API reference for the Cloudflare LaunchDarkly SDK.
  *
  * In typical usage, you will call {@link init} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
@@ -9,39 +9,18 @@
  * @packageDocumentation
  */
 import type { KVNamespace } from '@cloudflare/workers-types';
-import type {
-  LDClient as LDClientCommon,
-  LDFlagsState,
-  LDFlagsStateOptions,
-  LDOptions as LDOptionsCommon,
-  LDContext,
-  LDEvaluationDetail,
-  LDFlagValue,
-} from '@launchdarkly/js-server-sdk-common';
-import createLDClient from './createLDClient';
+import {
+  BasicLogger,
+  init as initEdge,
+  LDClient,
+  LDOptions,
+} from '@launchdarkly/js-server-sdk-common-edge';
+import createFeatureStore from './createFeatureStore';
+import createPlatformInfo from './createPlatformInfo';
 
-export * from '@launchdarkly/js-server-sdk-common';
+export * from '@launchdarkly/js-server-sdk-common-edge';
 
-/**
- * The Cloudflare SDK only supports these functions:
- *  - waitForInitialization
- *  - variation
- *  - variationDetail
- *  - allFlagsState
- */
-export type LDClient = Pick<
-  Omit<LDClientCommon, 'waitForInitialization'>,
-  'variation' | 'variationDetail' | 'allFlagsState'
-> & {
-  waitForInitialization: () => Promise<LDClient>;
-};
-
-/**
- * The Cloudflare SDK only supports these options:
- * - logger
- * - featureStore
- */
-export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'featureStore'>;
+export type { LDClient };
 
 /**
  * Creates an instance of the Cloudflare LaunchDarkly client.
@@ -55,48 +34,20 @@ export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'featureStore'>;
  * this.
  *
  * @param kvNamespace
- *   The Cloudflare KV configured with LaunchDarkly.
+ *  The Cloudflare KV configured for LaunchDarkly.
  * @param sdkKey
- *   The client side SDK key. This is only used to query the kvNamespace above,
- *   not to connect with LD servers.
+ *  The client side SDK key. This is only used to query the kvNamespace above,
+ *  not to connect with LaunchDarkly servers.
  * @param options
- *   Optional configuration settings. The only supported options for the Cloudflare SDK
- *   are 'logger' and 'featureStore'.
+ *  Optional configuration settings. The only supported option is logger.
  * @return
- *   The new {@link LDClient} instance.
+ *  The new {@link LDClient} instance.
  */
-export const init = (
-  kvNamespace: KVNamespace,
-  sdkKey: string,
-  options: LDOptions = {}
-): LDClient => {
-  const client = createLDClient(kvNamespace, sdkKey, options);
-  return {
-    variation(
-      key: string,
-      context: LDContext,
-      defaultValue: LDFlagValue,
-      callback?: (err: any, res: LDFlagValue) => void
-    ): Promise<LDFlagValue> {
-      return client.variation(key, context, defaultValue, callback);
-    },
-    variationDetail(
-      key: string,
-      context: LDContext,
-      defaultValue: LDFlagValue,
-      callback?: (err: any, res: LDEvaluationDetail) => void
-    ): Promise<LDEvaluationDetail> {
-      return client.variationDetail(key, context, defaultValue, callback);
-    },
-    allFlagsState(
-      context: LDContext,
-      o?: LDFlagsStateOptions,
-      callback?: (err: Error | null, res: LDFlagsState | null) => void
-    ): Promise<LDFlagsState> {
-      return client.allFlagsState(context, o, callback);
-    },
-    waitForInitialization(): Promise<LDClient> {
-      return client.waitForInitialization();
-    },
-  };
+export const init = (sdkKey: string, kvNamespace: KVNamespace, options: LDOptions = {}) => {
+  const logger = options.logger ?? BasicLogger.get();
+  return initEdge(sdkKey, createPlatformInfo(), {
+    featureStore: createFeatureStore(kvNamespace, sdkKey, logger),
+    logger,
+    ...options,
+  });
 };

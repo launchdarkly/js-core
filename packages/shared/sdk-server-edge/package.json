@@ -1,16 +1,16 @@
 {
-  "name": "@launchdarkly/cloudflare-server-sdk",
+  "name": "@launchdarkly/js-server-sdk-common-edge",
   "version": "0.0.1",
-  "description": "Cloudflare LaunchDarkly SDK",
+  "description": "LaunchDarkly Server SDK for JavaScript - common edge code",
   "packageManager": "yarn@3.4.1",
   "keywords": [
     "launchdarkly",
-    "cloudflare",
     "edge",
+    "function",
     "worker"
   ],
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "/dist"
   ],
@@ -25,8 +25,7 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.20230321.0",
-    "@launchdarkly/js-server-sdk-common-edge": "0.0.1",
+    "@launchdarkly/js-server-sdk-common": "0.2.0",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
@@ -42,7 +41,6 @@
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
-    "miniflare": "^2.13.0",
     "prettier": "^2.8.7",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.1.0",

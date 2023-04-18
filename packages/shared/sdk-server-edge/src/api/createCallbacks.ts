@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import noop from '../utils/noop';
+import { noop } from '@launchdarkly/js-server-sdk-common';
 
 const createCallbacks = (emitter: EventEmitter) => ({
   onError: (err: Error) => {

@@ -1,13 +1,13 @@
 import type { KVNamespace } from '@cloudflare/workers-types';
-import type {
+import {
   DataKind,
   LDLogger,
   LDFeatureStore,
   LDFeatureStoreDataStorage,
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
-} from '@launchdarkly/js-server-sdk-common';
-import noop from '../utils/noop';
+  noop,
+} from '@launchdarkly/js-server-sdk-common-edge';
 
 const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LDLogger) => {
   const key = `LD-Env-${sdkKey}`;

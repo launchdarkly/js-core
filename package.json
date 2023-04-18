@@ -3,6 +3,7 @@
   "workspaces": [
     "packages/shared/common",
     "packages/shared/sdk-server",
+    "packages/shared/sdk-server-edge",
     "packages/sdk/server-node",
     "packages/sdk/cloudflare"
   ],

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
+import { noop } from '@launchdarkly/js-server-sdk-common';
 import createCallbacks from './createCallbacks';
-import noop from '../utils/noop';
 
 describe('createCallbacks', () => {
   let emitter: EventEmitter;
