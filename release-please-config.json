@@ -6,8 +6,18 @@
     "packages/shared/sdk-server": {
       "bump-minor-pre-major": true
     },
+    "packages/shared/sdk-server-edge": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.0.1",
+      "bootstrap-sha": "0578190123e2712b50774ca3087c7577ef2b9eb2"
+    },
     "packages/sdk/server-node": {
       "bump-minor-pre-major": true
+    },
+    "packages/sdk/cloudflare": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.0.1",
+      "bootstrap-sha": "0578190123e2712b50774ca3087c7577ef2b9eb2"
     }
   },
   "plugins": ["node-workspace"]
