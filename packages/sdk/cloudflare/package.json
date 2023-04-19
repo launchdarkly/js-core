@@ -21,9 +21,7 @@
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build:cjs": "yarn tsc --module commonjs --outDir dist/cjs/ && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
-    "build:esm": "yarn tsc --module es2022 --outDir dist/esm/ && echo '{\"type\": \"module\"}' > dist/esm/package.json",
-    "build": "rimraf dist  && yarn build:cjs && yarn build:esm",
+    "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",

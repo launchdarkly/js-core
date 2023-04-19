@@ -12,5 +12,4 @@ test('variation true', async () => {
 
   // assert
   expect(await res.text()).toContain('testFlag1: true');
-  // expect(res.headers.get('Location')).toBe('http://localhost/test/increment');
 });

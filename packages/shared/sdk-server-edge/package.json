@@ -1,7 +1,7 @@
 {
   "name": "@launchdarkly/js-server-sdk-common-edge",
   "version": "0.0.1",
-  "description": "LaunchDarkly Server SDK for JavaScript - common edge code",
+  "description": "LaunchDarkly Server SDK for JavaScript - common Edge SDK code",
   "packageManager": "yarn@3.4.1",
   "keywords": [
     "launchdarkly",
@@ -11,19 +11,17 @@
   ],
   "type": "module",
   "exports": {
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js"
+    "require": "./dist/cjs/src/index.js",
+    "import": "./dist/esm/src/index.js"
   },
-  "main": "./dist/cjs/index.js",
-  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/src/index.js",
+  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "/dist"
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build:cjs": "yarn tsc --module commonjs --outDir dist/cjs/ && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
-    "build:esm": "yarn tsc --module es2022 --outDir dist/esm/ && echo '{\"type\": \"module\"}' > dist/esm/package.json",
-    "build": "rimraf dist  && yarn build:cjs && yarn build:esm",
+    "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",

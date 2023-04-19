@@ -1,15 +1,9 @@
 export default {
-  preset: 'ts-jest/presets/default-esm',
-  globals: {
-    'ts-jest': {
-      // tsconfig: "test/tsconfig.json",
-      useESM: true,
-    },
-  },
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
+  transform: { '^.+\\.ts?$': 'ts-jest' },
+  testMatch: ['**/*.test.ts?(x)'],
+  testPathIgnorePatterns: ['node_modules', 'dist'],
+  modulePathIgnorePatterns: ['dist'],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   testEnvironment: 'miniflare',
   testEnvironmentOptions: {
     // Miniflare doesn't yet support the `main` field in `wrangler.toml` so we

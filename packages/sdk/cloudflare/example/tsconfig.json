@@ -26,6 +26,7 @@
     // "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
 
     /* Modules */
+    "esModuleInterop": true,
     "module": "es2022" /* Specify what module code is generated. */,
     // "rootDir": "./",                                  /* Specify the root folder within your source files. */
     "moduleResolution": "node" /* Specify how TypeScript looks up a file from a given module specifier. */,
