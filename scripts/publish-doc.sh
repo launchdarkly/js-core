@@ -47,5 +47,7 @@ git commit -m "chore: Updating docs for $doc_name"
 
 # Update the local copy in case there have been any interim changes.
 # If this works inconsistently, then additional checks should be done.
-git pull --no-edit
+
+git config pull.rebase false  # merge
+git pull --no-edit # should accept the default message
 git push
