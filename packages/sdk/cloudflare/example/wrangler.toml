@@ -2,7 +2,7 @@ name = "example"
 main = "dist/index.mjs"
 compatibility_date = "2023-04-02"
 compatibility_flags = [ "nodejs_compat" ]
-kv_namespaces = [{ binding = "LD_KV", id = "616aadb3c9474693bb9faaa4e53ea40c", preview_id = "88c3bd2abe5a4c3eb9b95829b86c2449" }]
+kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREVIEW_KV_ID" }]
 
 [build]
 command = "node build.js"
