@@ -9,14 +9,19 @@
     "edge",
     "worker"
   ],
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
+  "type": "module",
+  "exports": {
+    "require": "./dist/cjs/src/index.js",
+    "import": "./dist/esm/src/index.js"
+  },
+  "main": "./dist/cjs/src/index.js",
+  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "/dist"
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build": "rimraf dist && yarn tsc",
+    "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",

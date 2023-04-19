@@ -1,0 +1,13 @@
+name = "example"
+main = "dist/index.mjs"
+compatibility_date = "2023-04-02"
+compatibility_flags = [ "nodejs_compat" ]
+kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREVIEW_KV_ID" }]
+
+[build]
+command = "node build.js"
+
+[miniflare]
+kv_persist = true
+cache_persist = true
+durable_objects_persist = true

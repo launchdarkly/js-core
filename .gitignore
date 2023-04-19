@@ -7,7 +7,7 @@ coverage/
 **/tmp_test/
 docs/
 .pnp.*
-.yarn/*
+**/.yarn/*
 .dev*
 .vscode/launch.json
 .idea
