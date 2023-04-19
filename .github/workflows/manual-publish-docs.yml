@@ -9,6 +9,8 @@ on:
         options:
           - packages/shared/common
           - packages/shared/sdk-server
+          - packages/shared/sdk-server-edge
+          - packages/sdk/cloudflare
           - packages/sdk/server-node
 name: Publish Documentation
 jobs:
