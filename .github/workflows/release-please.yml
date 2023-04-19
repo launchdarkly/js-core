@@ -10,6 +10,8 @@ jobs:
     outputs:
       package-common-released: ${{ steps.release.outputs['packages/shared/common--release_created'] }}
       package-sdk-server-released: ${{ steps.release.outputs['packages/shared/sdk-server--release_created'] }}
+      package-sdk-server-edge-released: ${{ steps.release.outputs['packages/shared/sdk-server-edge--release_created'] }}
+      package-cloudflare-released: ${{ steps.release.outputs['packages/sdk/cloudflare--release_created'] }}
       package-server-node-released: ${{ steps.release.outputs['packages/sdk/server-node--release_created'] }}
     steps:
       - uses: google-github-actions/release-please-action@v3
@@ -57,6 +59,46 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/shared/sdk-server
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-sdk-server-edge:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-sdk-server-edge-released }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-common
+        name: Full release of packages/shared/sdk-server-edge
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/shared/sdk-server-edge
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-cloudflare:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-cloudflare-released }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-common
+        name: Full release of packages/sdk/cloudflare
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/sdk/cloudflare
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-server-node:

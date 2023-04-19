@@ -10,6 +10,8 @@ on:
         options:
           - packages/shared/common
           - packages/shared/sdk-server
+          - packages/shared/sdk-server-edge
+          - packages/sdk/cloudflare
           - packages/sdk/server-node
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
@@ -45,10 +47,10 @@ jobs:
           workspace_name: ${{ env.WORKSPACE_NAME }}
           workspace_path: ${{ inputs.workspace_path }}
       - uses: ./actions/release-secrets
-        name: "Get NPM token"
+        name: 'Get NPM token'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: "/production/common/releasing/npm/token = NODE_AUTH_TOKEN"
+          ssm_parameter_pairs: '/production/common/releasing/npm/token = NODE_AUTH_TOKEN'
       - name: Setup .yarnrc.yml
         shell: bash
         run: |
