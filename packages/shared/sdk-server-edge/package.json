@@ -9,14 +9,21 @@
     "function",
     "worker"
   ],
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js"
+  },
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "files": [
     "/dist"
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build": "rimraf dist && yarn tsc",
+    "build:cjs": "yarn tsc --module commonjs --outDir dist/cjs/ && echo '{\"type\": \"commonjs\"}' > dist/cjs/package.json",
+    "build:esm": "yarn tsc --module es2022 --outDir dist/esm/ && echo '{\"type\": \"module\"}' > dist/esm/package.json",
+    "build": "rimraf dist  && yarn build:cjs && yarn build:esm",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
