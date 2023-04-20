@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 0.3.0 to 0.3.1
+
 ## 0.0.1 (2023-04-19)
 
 
