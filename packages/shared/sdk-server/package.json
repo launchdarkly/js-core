@@ -22,6 +22,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@launchdarkly/js-sdk-common": "0.3.0",
+    "//": "Pinned because 7.5.0 introduced require('util') without the node: prefix",
     "semver": "7.4.0"
   },
   "devDependencies": {
