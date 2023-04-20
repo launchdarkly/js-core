@@ -1,8 +1,8 @@
 # LaunchDarkly Cloudflare SDK
 
-[![NPM][sdk-server-cloudflare-npm-badge]][sdk-server-cloudflare-npm-link]
-[![Actions Status][sdk-server-cloudflare-ci-badge]][sdk-server-cloudflare-ci]
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/sdk/server-cloudflare/docs/)
+[![NPM][sdk-cloudflare-npm-badge]][sdk-cloudflare-npm-link]
+[![Actions Status][sdk-cloudflare-ci-badge]][sdk-cloudflare-ci]
+[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/sdk/cloudflare/docs/)
 
 This library supports using Cloudflare [Workers KV](https://developers.cloudflare.com/workers/learning/how-kv-works) to replace the default in-memory feature store of the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/cloudflare-server-sdk).
 
@@ -17,7 +17,14 @@ npm i @launchdarkly/cloudflare-server-sdk
 or yarn:
 
 ```shell
-yarn add -D @launchdarkly/cloudflare-server-sdk
+yarn add @launchdarkly/cloudflare-server-sdk
+```
+
+In `wrangler.toml` in your worker project turn on the Node.js compatibility flag.
+This allows the SDK to use `node:events`:
+
+```toml
+compatibility_flags = [ "nodejs_compat" ]
 ```
 
 ## Quickstart
@@ -55,3 +62,8 @@ yarn test
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[sdk-cloudflare-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/cloudflare.yml/badge.svg
+[sdk-cloudflare-ci]: https://github.com/launchdarkly/js-core/actions/workflows/cloudflare.yml
+[sdk-cloudflare-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
+[sdk-cloudflare-npm-link]: https://www.npmjs.com/package/@launchdarkly/cloudflare-server-sdk
