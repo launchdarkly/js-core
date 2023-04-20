@@ -22,7 +22,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@launchdarkly/js-sdk-common": "0.3.0",
-    "semver": "^7.3.8"
+    "semver": "7.4.0"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
