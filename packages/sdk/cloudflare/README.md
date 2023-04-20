@@ -20,6 +20,13 @@ or yarn:
 yarn add -D @launchdarkly/cloudflare-server-sdk
 ```
 
+In `wrangler.toml` in your worker project turn on the Node.js compatibility flag.
+This allows the SDK to use `node:events`:
+
+```toml
+compatibility_flags = [ "nodejs_compat" ]
+```
+
 ## Quickstart
 
 Initialize the ldClient with the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings) and your client side sdk key:
