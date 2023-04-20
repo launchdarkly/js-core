@@ -17,7 +17,7 @@ npm i @launchdarkly/cloudflare-server-sdk
 or yarn:
 
 ```shell
-yarn add -D @launchdarkly/cloudflare-server-sdk
+yarn add @launchdarkly/cloudflare-server-sdk
 ```
 
 In `wrangler.toml` in your worker project turn on the Node.js compatibility flag.
