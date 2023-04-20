@@ -11,7 +11,13 @@
       "path": "./packages/shared/sdk-server/tsconfig.ref.json"
     },
     {
+      "path": "./packages/shared/sdk-server-edge/tsconfig.ref.json"
+    },
+    {
       "path": "./packages/sdk/server-node/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/cloudflare/tsconfig.ref.json"
     },
     {
       "path": "./packages/sdk/vercel/tsconfig.ref.json"

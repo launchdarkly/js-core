@@ -12,12 +12,6 @@ doc_name=$($base_name/doc-name.sh $WORKSPACE)
 # Move the built docs so switching branches doesn't conflict.
 mv $WORKSPACE/docs $RUNNER_TEMP/doc-temp
 
-# Fetch the gg-pages branch.
-# git fetch origin gh-pages
-
-# Switch to the pages branch.
-# git checkout gh-pages
-
 # Action should have cloned the gh-pages to a subdirectory.
 cd gh-pages
 
@@ -51,4 +45,9 @@ git add $WORKSPACE/docs
 
 git commit -m "chore: Updating docs for $doc_name"
 
+# Update the local copy in case there have been any interim changes.
+# If this works inconsistently, then additional checks should be done.
+
+git config pull.rebase false  # merge
+git pull --no-edit # should accept the default message
 git push
