@@ -39,6 +39,7 @@ class VercelFeatureStore implements LDFeatureStore {
       callback(null);
     }
   }
+
   async all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): Promise<void> {
     const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
     this.logger.debug(`Requesting all ${kindKey} data from Edge Config.`);
@@ -54,22 +55,27 @@ class VercelFeatureStore implements LDFeatureStore {
       callback({});
     }
   }
+
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
     const config = await this.edgeConfig.get(this.configKey);
     const result = config !== null;
     this.logger.debug(`Is ${this.configKey} initialized? ${result}`);
     callback(result);
   }
+
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
     callback();
   }
+
   getDescription(): string {
     return 'Vercel Edge Config';
   }
 
   // unused
   close = noop;
+
   delete = noop;
+  
   upsert = noop;
 }
 
