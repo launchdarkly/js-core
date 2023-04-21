@@ -1,10 +1,10 @@
 import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common-edge';
-import createFeatureStore from './createFeatureStore';
+import VercelFeatureStore from './vercelFeatureStore';
 
 import mockEdge from './utils/mockEdge';
 import * as testData from './utils/testData.json';
 
-describe('createFeatureStore', () => {
+describe('VercelFeatureStore', () => {
   const sdkKey = 'sdkKey';
   const configKey = `LD-Env-${sdkKey}`;
   const mockLogger = {
@@ -19,7 +19,7 @@ describe('createFeatureStore', () => {
 
   beforeEach(() => {
     mockGet.mockImplementation(() => Promise.resolve(testData));
-    featureStore = createFeatureStore(mockEdge, sdkKey, mockLogger);
+    featureStore = new VercelFeatureStore(mockEdge, sdkKey, mockLogger);
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
 

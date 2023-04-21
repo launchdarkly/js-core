@@ -15,7 +15,7 @@ import {
   LDClient,
   LDOptions,
 } from '@launchdarkly/js-server-sdk-common-edge';
-import createFeatureStore from './createFeatureStore';
+import VercelFeatureStore from './vercelFeatureStore';
 import createPlatformInfo from './createPlatformInfo';
 
 export * from '@launchdarkly/js-server-sdk-common-edge';
@@ -46,7 +46,7 @@ export type { LDClient };
 export const init = (sdkKey: string, edgeConfig: EdgeConfigClient, options: LDOptions = {}) => {
   const logger = options.logger ?? BasicLogger.get();
   return initEdge(sdkKey, createPlatformInfo(), {
-    featureStore: new createFeatureStore(edgeConfig, sdkKey, logger),
+    featureStore: new VercelFeatureStore(edgeConfig, sdkKey, logger),
     logger,
     ...options,
   });
