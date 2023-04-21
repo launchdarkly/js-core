@@ -1,13 +1,13 @@
 import { EdgeConfigClient } from '@vercel/edge-config';
-import type {
+import {
   DataKind,
   LDLogger,
   LDFeatureStore,
   LDFeatureStoreDataStorage,
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
+  noop
 } from '@launchdarkly/js-server-sdk-common-edge';
-import noop from '../utils/noop';
 
 const createFeatureStore = (edgeConfig: EdgeConfigClient, sdkKey: string, logger: LDLogger) => {
   const key = `LD-Env-${sdkKey}`;

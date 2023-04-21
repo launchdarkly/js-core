@@ -1,8 +1,8 @@
-import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
+import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common-edge';
 import createFeatureStore from './createFeatureStore';
 
-import mockEdge from '../utils/mockEdge';
-import * as testData from '../utils/testData.json';
+import mockEdge from './utils/mockEdge';
+import * as testData from './utils/testData.json';
 
 describe('createFeatureStore', () => {
   const sdkKey = 'sdkKey';
