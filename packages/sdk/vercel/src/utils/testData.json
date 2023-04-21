@@ -1,50 +1,50 @@
 {
-    "flags": {
-      "testFlag1": {
-        "key": "testFlag1",
-        "on": false,
-        "prerequisites": [],
-        "targets": [],
-        "rules": [],
-        "fallthrough": {
-          "variation": 0
-        },
-        "offVariation": 1,
-        "variations": [true, false],
-        "clientSideAvailability": {
-          "usingMobileKey": true,
-          "usingEnvironmentId": true
-        },
-        "clientSide": true,
-        "salt": "aef830243d6640d0a973be89988e008d",
-        "trackEvents": false,
-        "trackEventsFallthrough": false,
-        "debugEventsUntilDate": null,
-        "version": 2,
-        "deleted": false
+  "flags": {
+    "testFlag1": {
+      "key": "testFlag1",
+      "on": false,
+      "prerequisites": [],
+      "targets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
       },
-      "testFlag2": {
-        "key": "testFlag2",
-        "on": false,
-        "prerequisites": [],
-        "targets": [],
-        "rules": [],
-        "fallthrough": {
-          "variation": 0
-        },
-        "offVariation": 1,
-        "variations": [true, false],
-        "clientSideAvailability": {
-          "usingMobileKey": true,
-          "usingEnvironmentId": true
-        },
-        "clientSide": true,
-        "salt": "aef830243d6640d0a973be89988e008d",
-        "trackEvents": false,
-        "trackEventsFallthrough": false,
-        "debugEventsUntilDate": null,
-        "version": 2,
-        "deleted": false
-      }
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": {
+        "usingMobileKey": true,
+        "usingEnvironmentId": true
+      },
+      "clientSide": true,
+      "salt": "aef830243d6640d0a973be89988e008d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 2,
+      "deleted": false
+    },
+    "testFlag2": {
+      "key": "testFlag2",
+      "on": false,
+      "prerequisites": [],
+      "targets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": {
+        "usingMobileKey": true,
+        "usingEnvironmentId": true
+      },
+      "clientSide": true,
+      "salt": "aef830243d6640d0a973be89988e008d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 2,
+      "deleted": false
     }
   }
+}
