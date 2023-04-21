@@ -36,7 +36,6 @@ const ldContext = {
 const flagValue = await ldClient.variation('my-flag', ldContext, true);
 ```
 
-<!-- TODO: Get docs ready below -->
 To learn more, head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/vercel).
 
 ## Developing this SDK
