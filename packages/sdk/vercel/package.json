@@ -11,7 +11,8 @@
   "type": "module",
   "exports": {
     "require": "./dist/cjs/src/index.js",
-    "import": "./dist/esm/src/index.js"
+    "import": "./dist/esm/src/index.js",
+    "types": "./dist/esm/src/index.d.ts"
   },
   "main": "./dist/cjs/src/index.js",
   "types": "./dist/cjs/src/index.d.ts",
