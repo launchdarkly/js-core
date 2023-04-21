@@ -11,7 +11,9 @@ import { noop } from '@launchdarkly/js-server-sdk-common-edge';
 
 class VercelFeatureStore implements LDFeatureStore {
   private edgeConfig: EdgeConfigClient;
+
   private configKey: string;
+
   private logger: LDLogger;
 
   constructor(edgeConfig: EdgeConfigClient, sdkKey: string, logger: LDLogger) {
@@ -75,7 +77,7 @@ class VercelFeatureStore implements LDFeatureStore {
   close = noop;
 
   delete = noop;
-  
+
   upsert = noop;
 }
 
