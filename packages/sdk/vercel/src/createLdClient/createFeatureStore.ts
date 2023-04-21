@@ -6,7 +6,7 @@ import type {
   LDFeatureStoreDataStorage,
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
-} from '@launchdarkly/js-server-sdk-common';
+} from '@launchdarkly/js-server-sdk-common-edge';
 import noop from '../utils/noop';
 
 const createFeatureStore = (edgeConfig: EdgeConfigClient, sdkKey: string, logger: LDLogger) => {

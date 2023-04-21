@@ -8,7 +8,7 @@ import {
   LDEvaluationDetail,
   LDFlagValue,
 } from '@launchdarkly/js-server-sdk-common';
-import createLDClient from './createLDClient';
+import createLdClient from './createLdClient';
 
 type LDClientSubset = Pick<
   LDClient,
@@ -20,7 +20,7 @@ const init = (
   sdkKey: string,
   options: LDOptions = {}
 ): LDClientSubset => {
-  const client = createLDClient(edgeSdk, sdkKey, options);
+  const client = createLdClient(edgeSdk, sdkKey, options);
   return {
     variation(
       key: string,

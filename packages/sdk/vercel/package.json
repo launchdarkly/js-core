@@ -8,14 +8,18 @@
     "vercel",
     "edge"
   ],
-  "main": "./dist/src/index.js",
-  "types": "./dist/src/index.d.ts",
   "type": "module",
+  "exports": {
+    "require": "./dist/cjs/src/index.js",
+    "import": "./dist/esm/src/index.js"
+  },
+  "main": "./dist/cjs/src/index.js",
+  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "/dist"
   ],
   "scripts": {
-    "build": "yarn tsc --declaration",
+    "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
     "start": "yarn tsw",
     "lint": "eslint . --ext .ts",
@@ -25,6 +29,7 @@
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "^0.2.0",
+    "@launchdarkly/js-server-sdk-common-edge": "0.0.2",
     "crypto-js": "^4.1.1",
     "uuid": "^9.0.0"
   },
