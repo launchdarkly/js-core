@@ -4,7 +4,7 @@ This library supports using Vercel [Edge Config](https://vercel.com/docs/concept
 
 For more information, see the [SDK features guide](https://docs.launchdarkly.com/sdk/features/storing-data).
 
-## Installation
+## Install
 
 ```shell
 npm i @launchdarkly/vercel-server-sdk
@@ -25,7 +25,15 @@ import init from '@launchdarkly/vercel-server-sdk'
 import { createClient } from '@vercel/edge-config'
 
 const edgeClient = createClient(process.env.EDGE_CONFIG)
-const ldClient = init(edgeClient, 'YOUR CLIENT-SIDE SDK KEY');
+const ldClient = init('YOUR CLIENT-SIDE SDK KEY', edgeClient);
+
+await ldClient.waitForInitialization()
+const ldContext = { 
+  kind: 'org',
+  key: 'my-org-key',
+  someAttribute: 'my-attribute-value'
+}
+const flagValue = await ldClient.variation('my-flag', ldContext, true);
 ```
 
 <!-- TODO: Get docs ready below -->
