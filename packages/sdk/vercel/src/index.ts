@@ -34,7 +34,7 @@ export type { LDClient };
  * this.
  *
  * @param edgeConfig
- *  The Vercel KV configured for LaunchDarkly.
+ *  The Vercel Edge Config client configured for LaunchDarkly.
  * @param sdkKey
  *  The client side SDK key. This is only used to query the edgeConfig above,
  *  not to connect with LaunchDarkly servers.
@@ -46,7 +46,7 @@ export type { LDClient };
 export const init = (sdkKey: string, edgeConfig: EdgeConfigClient, options: LDOptions = {}) => {
   const logger = options.logger ?? BasicLogger.get();
   return initEdge(sdkKey, createPlatformInfo(), {
-    featureStore: createFeatureStore(edgeConfig, sdkKey, logger),
+    featureStore: new createFeatureStore(edgeConfig, sdkKey, logger),
     logger,
     ...options,
   });

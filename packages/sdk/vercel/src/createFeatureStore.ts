@@ -1,76 +1,77 @@
 import { EdgeConfigClient } from '@vercel/edge-config';
-import {
+import type {
   DataKind,
   LDLogger,
   LDFeatureStore,
   LDFeatureStoreDataStorage,
   LDFeatureStoreItem,
-  LDFeatureStoreKindData,
-  noop
+  LDFeatureStoreKindData
 } from '@launchdarkly/js-server-sdk-common-edge';
+import { noop } from '@launchdarkly/js-server-sdk-common-edge';
 
-const createFeatureStore = (edgeConfig: EdgeConfigClient, sdkKey: string, logger: LDLogger) => {
-  const key = `LD-Env-${sdkKey}`;
-  const store: LDFeatureStore = {
-    get(
-      kind: DataKind,
-      flagKey: string,
-      callback: (res: LDFeatureStoreItem | null) => void = noop
-    ): void {
-      logger.debug(`Requesting ${flagKey} from ${key}`);
-      edgeConfig
-        .get(key)
-        .then((i) => {
-          if (i === null) {
-            logger.error('Feature data not found in Edge Config.');
-          }
-          const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-          const item = i as LDFeatureStoreItem;
-          callback(item[kindKey][flagKey]);
-        })
-        .catch((err) => {
-          logger.error(err);
-          callback(null);
-        });
-    },
-    all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): void {
-      const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-      logger.debug(`Requesting all ${kindKey} data from Edge Config.`);
-      edgeConfig
-        .get(key)
-        .then((i) => {
-          if (i === null) {
-            logger.error('Feature data not found in Edge Config.');
-          }
-          const item = i as LDFeatureStoreItem;
-          callback(item[kindKey]);
-        })
-        .catch((err) => {
-          logger.error(err);
-          callback({});
-        });
-    },
-    initialized(callback: (isInitialized: boolean) => void = noop): void {
-      edgeConfig.get(key).then((item) => {
-        const result = item !== null;
-        logger.debug(`Is ${key} initialized? ${result}`);
-        callback(result);
+class VercelFeatureStore implements LDFeatureStore {
+  private edgeConfig: EdgeConfigClient
+  private configKey: string
+  private logger: LDLogger
+
+  constructor (edgeConfig: EdgeConfigClient, sdkKey: string, logger: LDLogger) {
+    this.edgeConfig = edgeConfig
+    this.configKey = `LD-Env-${sdkKey}`;
+    this.logger = logger
+  }
+  
+  get(kind: DataKind, flagKey: string, callback: (res: LDFeatureStoreItem | null) => void): void {
+    this.logger.debug(`Requesting ${flagKey} from ${this.configKey}`);
+    this.edgeConfig
+      .get(this.configKey)
+      .then((i) => {
+        if (i === null) {
+          this.logger.error('Feature data not found in Edge Config.');
+        }
+        const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
+        const item = i as LDFeatureStoreItem;
+        callback(item[kindKey][flagKey]);
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        callback(null);
       });
-    },
-    init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-      callback();
-    },
-    getDescription(): string {
-      return 'Vercel Edge Config';
-    },
+  }
+  all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): void {
+    const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
+    this.logger.debug(`Requesting all ${kindKey} data from Edge Config.`);
+    this.edgeConfig
+      .get(this.configKey)
+      .then((i) => {
+        if (i === null) {
+          this.logger.error('Feature data not found in Edge Config.');
+        }
+        const item = i as LDFeatureStoreItem;
+        callback(item[kindKey]);
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        callback({});
+      });
+  }
+  initialized(callback: (isInitialized: boolean) => void = noop): void {
+    this.edgeConfig.get(this.configKey).then((item) => {
+      const result = item !== null;
+      this.logger.debug(`Is ${this.configKey} initialized? ${result}`);
+      callback(result);
+    });
+  }
+  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+    callback();
+  }
+  getDescription(): string {
+    return 'Vercel Edge Config';
+  }
 
-    // unused
-    close: noop,
-    delete: noop,
-    upsert: noop,
-  };
+  // unused
+  close = noop
+  delete = noop
+  upsert = noop
+}
 
-  return store;
-};
-
-export default createFeatureStore;
+export default VercelFeatureStore;
