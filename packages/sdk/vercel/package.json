@@ -20,13 +20,14 @@
     "/dist"
   ],
   "scripts": {
+    "doc": "../../../scripts/build-doc.sh .",
     "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
     "start": "yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)'",
     "test": "jest --ci --runInBand",
-    "check": "yarn prettier && yarn lint && yarn tsc && yarn test"
+    "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "^0.2.0",
