@@ -12,7 +12,7 @@ describe('init', () => {
   let ldClient: LDClient;
 
   beforeAll(async () => {
-    // I can't figure out a way around the generic types used in @vercel/edge-config causing us type issues here. 
+    // I can't figure out a way around the generic types used in @vercel/edge-config causing us type issues here.
     // The tests work as expected
     // @ts-ignore
     mockEdge.get = jest.fn(async () => testData as EdgeConfigValue);
