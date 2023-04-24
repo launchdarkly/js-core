@@ -15,8 +15,8 @@ describe('Vercel Platform Info', () => {
     const platformData = createPlatformInfo();
 
     expect(platformData.sdkData()).toEqual({
-      name: name,
-      version: version,
+      name,
+      version,
     });
   });
 });

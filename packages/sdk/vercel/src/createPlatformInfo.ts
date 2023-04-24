@@ -11,8 +11,8 @@ class VercelPlatformInfo implements Info {
 
   sdkData(): SdkData {
     return {
-      name: name,
-      version: version,
+      name,
+      version,
     };
   }
 }
