@@ -21,18 +21,18 @@ yarn add -D @launchdarkly/vercel-server-sdk
 Initialize the ldClient with the [Vercel Edge SDK](https://vercel.com/docs/concepts/edge-network/edge-config/edge-config-sdk) and your LaunchDarkly client side sdk key:
 
 ```typescript
-import init from '@launchdarkly/vercel-server-sdk'
-import { createClient } from '@vercel/edge-config'
+import init from '@launchdarkly/vercel-server-sdk';
+import { createClient } from '@vercel/edge-config';
 
-const edgeClient = createClient(process.env.EDGE_CONFIG)
+const edgeClient = createClient(process.env.EDGE_CONFIG);
 const ldClient = init('YOUR CLIENT-SIDE SDK KEY', edgeClient);
 
-await ldClient.waitForInitialization()
-const ldContext = { 
+await ldClient.waitForInitialization();
+const ldContext = {
   kind: 'org',
   key: 'my-org-key',
-  someAttribute: 'my-attribute-value'
-}
+  someAttribute: 'my-attribute-value',
+};
 const flagValue = await ldClient.variation('my-flag', ldContext, true);
 ```
 

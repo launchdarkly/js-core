@@ -23,8 +23,8 @@ ESM_PACKAGE_JSON=$( jq -n \
                   --arg type "module" \
                   '{ name: $name, version: $version, type: $type }' )
 
-tsc --module commonjs --declaration --outDir dist/cjs/ 
+tsc --module commonjs --outDir dist/cjs/ 
 echo "$CJS_PACKAGE_JSON" > dist/cjs/package.json
 
-tsc --module es2022 --declaration --outDir dist/esm/
+tsc --module es2022 --outDir dist/esm/
 echo "$ESM_PACKAGE_JSON" > dist/esm/package.json

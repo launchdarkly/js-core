@@ -11,11 +11,9 @@
   "type": "module",
   "exports": {
     "require": "./dist/cjs/src/index.js",
-    "import": "./dist/esm/src/index.js",
-    "types": "./dist/esm/src/index.d.ts"
+    "import": "./dist/esm/src/index.js"
   },
   "main": "./dist/cjs/src/index.js",
-  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "/dist"
   ],
@@ -23,22 +21,19 @@
     "doc": "../../../scripts/build-doc.sh .",
     "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
-    "start": "yarn tsw",
+    "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)'",
     "test": "jest --ci --runInBand",
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "^0.2.0",
     "@launchdarkly/js-server-sdk-common-edge": "0.0.2",
-    "crypto-js": "^4.1.1",
-    "uuid": "^9.0.0"
+    "crypto-js": "^4.1.1"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",
     "@types/jest": "^29.5.0",
-    "@types/uuid": "^9.0.1",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",
     "@vercel/edge-config": "^0.1.7",
