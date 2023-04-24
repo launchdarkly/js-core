@@ -1,9 +1,8 @@
-import type { EdgeConfigClient } from '@vercel/edge-config';
+import type { EdgeConfigClient, EdgeConfigValue } from '@vercel/edge-config';
 import { LDClient } from '@launchdarkly/js-server-sdk-common-edge';
 import { init } from './index';
 import * as testData from './utils/testData.json';
 import mockEdge from './utils/mockEdge';
-
 
 const sdkKey = 'test-sdk-key';
 const flagKey = 'testFlag1';
@@ -14,7 +13,7 @@ describe('init', () => {
 
   beforeAll(async () => {
     // @ts-ignore
-    mockEdge.get = jest.fn(((key: string) => testData))
+    mockEdge.get = jest.fn(async () => testData as EdgeConfigValue);
     ldClient = init(sdkKey, mockEdge);
     await ldClient.waitForInitialization();
   });
