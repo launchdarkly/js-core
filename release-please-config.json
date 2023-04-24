@@ -14,6 +14,11 @@
     },
     "packages/sdk/cloudflare": {
       "bump-minor-pre-major": true
+    },
+    "packages/type/my-package": {
+      "bump-minor-pre-major": true, 
+      "release-as": "0.1.0", 
+      "bootstrap-sha": "4a8d7959297f6d33b61796cb98a1bd1bc638f62e"
     }
   },
   "plugins": ["node-workspace"]
