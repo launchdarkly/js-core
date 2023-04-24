@@ -1,4 +1,4 @@
-import type { EdgeConfigClient, EdgeConfigValue } from '@vercel/edge-config';
+import type { EdgeConfigValue } from '@vercel/edge-config';
 import { LDClient } from '@launchdarkly/js-server-sdk-common-edge';
 import { init } from './index';
 import * as testData from './utils/testData.json';
@@ -12,6 +12,8 @@ describe('init', () => {
   let ldClient: LDClient;
 
   beforeAll(async () => {
+    // I can't figure out a way around the generic types used in @vercel/edge-config causing us type issues here. 
+    // The tests work as expected
     // @ts-ignore
     mockEdge.get = jest.fn(async () => testData as EdgeConfigValue);
     ldClient = init(sdkKey, mockEdge);
