@@ -41,6 +41,12 @@ describe('VercelFeatureStore', () => {
       expect(flag).toBeUndefined();
     });
 
+    test('invalid namespace key', async () => {
+      const flag = await asyncFeatureStore.get({ namespace: 'invalid' }, 'testFlag1');
+
+      expect(flag).toBe(null);
+    });
+
     test('invalid edge config key', async () => {
       mockGet.mockImplementation(() => Promise.resolve(null));
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
