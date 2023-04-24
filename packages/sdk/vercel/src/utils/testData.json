@@ -2,7 +2,7 @@
   "flags": {
     "testFlag1": {
       "key": "testFlag1",
-      "on": false,
+      "on": true,
       "prerequisites": [],
       "targets": [],
       "rules": [],
