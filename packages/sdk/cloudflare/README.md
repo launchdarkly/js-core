@@ -8,20 +8,13 @@ This library supports using Cloudflare [Workers KV](https://developers.cloudflar
 
 For more information, see the [SDK features guide](https://docs.launchdarkly.com/sdk/features/storing-data).
 
-## Installation
+## Install
 
 ```shell
 npm i @launchdarkly/cloudflare-server-sdk
 ```
 
-or yarn:
-
-```shell
-yarn add @launchdarkly/cloudflare-server-sdk
-```
-
-In `wrangler.toml` in your worker project turn on the Node.js compatibility flag.
-This allows the SDK to use `node:events`:
+Then turn on the Node.js compatibility flag in your `wrangler.toml`. This allows the SDK to use `node:events`:
 
 ```toml
 compatibility_flags = [ "nodejs_compat" ]
@@ -29,15 +22,30 @@ compatibility_flags = [ "nodejs_compat" ]
 
 ## Quickstart
 
-Initialize the ldClient with the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings) and your client side sdk key:
+Initialize the ldClient with your client side sdk key and the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings):
 
 ```typescript
-import { init } from '@launchdarkly/cloudflare-server-sdk';
+import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
-const ldClient = init(KV_NAMESPACE, 'YOUR CLIENT-SIDE SDK KEY');
+export default {
+  async fetch(request: Request, env: Bindings): Promise<Response> {
+    const sdkKey = 'test-sdk-key';
+    const flagKey = 'testFlag1';
+    const context = { kind: 'user', key: 'test-user-key-1' };
+
+    // init the ldClient, wait and finally evaluate
+    const client = initLD(sdkKey, env.LD_KV);
+    await client.waitForInitialization();
+    const flagValue = await client.variation(flagKey, context, false);
+
+    return new Response(`${flagKey}: ${flagValue}`);
+  },
+};
 ```
 
-To learn more, head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).
+See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare/example).
+
+Read the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).
 
 ## Developing this SDK
 

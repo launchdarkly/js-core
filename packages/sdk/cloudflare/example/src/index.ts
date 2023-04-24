@@ -9,11 +9,11 @@ export default {
     // start using ld
     const client = initLD(sdkKey, env.LD_KV);
     await client.waitForInitialization();
-    const flag = await client.variation(flagKey, context, false);
+    const flagValue = await client.variation(flagKey, context, false);
     const flagDetail = await client.variationDetail(flagKey, context, false);
     const allFlags = await client.allFlagsState(context);
 
-    const resp = `${flagKey}: ${flag}, detail: ${JSON.stringify(
+    const resp = `${flagKey}: ${flagValue}, detail: ${JSON.stringify(
       flagDetail
     )}, allFlags: ${JSON.stringify(allFlags)}`;
 

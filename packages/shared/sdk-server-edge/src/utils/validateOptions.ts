@@ -1,4 +1,4 @@
-import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common/dist/api/options/LDOptions';
+import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * The Launchdarkly Edge SDKs configuration options. Only logger is officially
