@@ -2,11 +2,15 @@
 
 [![NPM][sdk-cloudflare-npm-badge]][sdk-cloudflare-npm-link]
 [![Actions Status][sdk-cloudflare-ci-badge]][sdk-cloudflare-ci]
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/sdk/cloudflare/docs/)
+[![Documentation][sdk-cloudflare-ghp-badge]][sdk-cloudflare-ghp-link]
+[![NPM][sdk-cloudflare-dm-badge]][sdk-cloudflare-npm-link]
+[![NPM][sdk-cloudflare-dt-badge]][sdk-cloudflare-npm-link]
 
-This library supports using Cloudflare [Workers KV](https://developers.cloudflare.com/workers/learning/how-kv-works) to replace the default in-memory feature store of the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/cloudflare-server-sdk).
+The LaunchDarkly Cloudflare SDK is designed primarily for use in multi-user Cloudflare workers. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
-For more information, see the [SDK features guide](https://docs.launchdarkly.com/sdk/features/storing-data).
+For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).
+
+This SDK is a beta version and should not be considered ready for production use while this message is visible.
 
 ## Install
 
@@ -75,3 +79,7 @@ yarn test
 [sdk-cloudflare-ci]: https://github.com/launchdarkly/js-core/actions/workflows/cloudflare.yml
 [sdk-cloudflare-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
 [sdk-cloudflare-npm-link]: https://www.npmjs.com/package/@launchdarkly/cloudflare-server-sdk
+[sdk-cloudflare-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-cloudflare-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/cloudflare/docs/
+[sdk-cloudflare-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
+[sdk-cloudflare-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
