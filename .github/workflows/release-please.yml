@@ -122,22 +122,22 @@ jobs:
           workspace_path: packages/sdk/server-node
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
     
-    release-vercel:
-      runs-on: ubuntu-latest
-      needs: ['release-please']
-      permissions:
-        id-token: write
-        contents: write
-      if: ${{ needs.release-please.outputs.package-vercel-released }}
-      steps:
-        - uses: actions/checkout@v3
-        - uses: actions/setup-node@v3
-          with:
-            node-version: 16.x
-            registry-url: 'https://registry.npmjs.org'
-        - id: release-common
-          name: Full release of packages/sdk/vercel
-          uses: ./actions/full-release
-          with:
-            workspace_path: packages/sdk/vercel
-            aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+  release-vercel:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-vercel-released }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-common
+        name: Full release of packages/sdk/vercel
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/sdk/vercel
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
