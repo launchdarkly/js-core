@@ -12,6 +12,7 @@ on:
           - packages/shared/sdk-server-edge
           - packages/sdk/cloudflare
           - packages/sdk/server-node
+          - packages/sdk/vercel
 name: Publish Documentation
 jobs:
   build-publish:
