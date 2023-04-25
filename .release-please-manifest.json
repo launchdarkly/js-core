@@ -1,1 +1,1 @@
-{"packages/shared/common":"0.3.0","packages/shared/sdk-server":"0.3.1","packages/sdk/server-node":"0.3.2","packages/sdk/cloudflare":"0.0.2","packages/shared/sdk-server-edge":"0.0.2"}
+{"packages/shared/common":"0.3.0","packages/shared/sdk-server":"0.3.1","packages/sdk/server-node":"0.3.2","packages/sdk/cloudflare":"0.0.3","packages/shared/sdk-server-edge":"0.0.3","packages/sdk/vercel":"0.1.0"}

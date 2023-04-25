@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common-edge",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "LaunchDarkly Server SDK for JavaScript - common Edge SDK code",
   "packageManager": "yarn@3.4.1",
   "keywords": [
