@@ -16,9 +16,7 @@
       "bump-minor-pre-major": true
     },
     "packages/sdk/vercel": {
-      "bump-minor-pre-major": true, 
-      "release-as": "0.1.0", 
-      "bootstrap-sha": "bc70619e59f88b6336cf84f79b1c28c55e54d44b"
+      "bump-minor-pre-major": true
     }
   },
   "plugins": ["node-workspace"]
