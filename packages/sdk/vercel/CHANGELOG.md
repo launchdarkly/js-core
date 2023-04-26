@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v0.1.1...vercel-server-sdk-v0.2.0) (2023-04-26)
+
+
+### Features
+
+* initial major release ([#101](https://github.com/launchdarkly/js-core/issues/101)) ([9883675](https://github.com/launchdarkly/js-core/commit/98836758d1998f208a1e13a68955611e0b10a8ce))
+
 ## [0.1.1](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v0.1.0...vercel-server-sdk-v0.1.1) (2023-04-26)
 
 

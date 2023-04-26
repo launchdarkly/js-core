@@ -8,6 +8,14 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 0.0.2 to 0.0.3
 
+## [2.0.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v0.0.4...cloudflare-server-sdk-v2.0.0) (2023-04-26)
+
+
+### Features
+
+* The latest version of this SDK supports LaunchDarkly's new custom contexts feature. Contexts are an evolution of a previously-existing concept, "users." Contexts let you create targeting rules for feature flags based on a variety of different information, including attributes pertaining to users, organizations, devices, and more. You can even combine contexts to create "multi-contexts." For detailed information about this version, please refer to the list below. For information on how to upgrade from the previous version, please read the [migration guide](https://docs.launchdarkly.com/sdk/server-side/cloudflare/migration-1-to-2).
+* The latest version of this SDK replaces [launchdarkly-cloudflare-edge-sdk](https://github.com/launchdarkly/cloudflare-edge-sdk). Please consider updating your application to use this package instead.
+
 ## [0.0.4](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v0.0.3...cloudflare-server-sdk-v0.0.4) (2023-04-26)
 
 

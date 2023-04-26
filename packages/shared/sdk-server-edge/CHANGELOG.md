@@ -6,6 +6,13 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 0.3.0 to 0.3.1
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v0.0.3...js-server-sdk-common-edge-v1.0.0) (2023-04-26)
+
+
+### Features
+
+* initial major release ([#101](https://github.com/launchdarkly/js-core/issues/101)) ([9883675](https://github.com/launchdarkly/js-core/commit/98836758d1998f208a1e13a68955611e0b10a8ce))
+
 ## [0.0.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v0.0.2...js-server-sdk-common-edge-v0.0.3) (2023-04-25)
 
 
