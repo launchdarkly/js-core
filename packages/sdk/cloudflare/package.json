@@ -2,6 +2,12 @@
   "name": "@launchdarkly/cloudflare-server-sdk",
   "version": "2.0.0",
   "description": "Cloudflare LaunchDarkly SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
   "packageManager": "yarn@3.4.1",
   "keywords": [
     "launchdarkly",

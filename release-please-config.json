@@ -1,19 +1,19 @@
 {
   "packages": {
     "packages/shared/common": {
-      "release-as": "1.0.0"
+      "bump-minor-pre-major": true
     },
     "packages/shared/sdk-server": {
-      "release-as": "1.0.0"
+      "bump-minor-pre-major": true
     },
     "packages/shared/sdk-server-edge": {
-      "release-as": "1.0.0"
+      "bump-minor-pre-major": true
     },
     "packages/sdk/server-node": {
       "bump-minor-pre-major": true
     },
     "packages/sdk/cloudflare": {
-      "release-as": "2.0.0"
+      "bump-minor-pre-major": true
     },
     "packages/sdk/vercel": {
       "bump-minor-pre-major": true
