@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/vercel-server-sdk",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "LaunchDarkly Server-Side SDK for Vercel Edge",
   "packageManager": "yarn@3.4.1",
   "keywords": [
