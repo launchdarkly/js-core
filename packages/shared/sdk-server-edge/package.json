@@ -30,7 +30,7 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "0.3.1",
+    "@launchdarkly/js-server-sdk-common": "1.0.0",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
