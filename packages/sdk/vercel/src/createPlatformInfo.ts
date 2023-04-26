@@ -1,6 +1,6 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common-edge';
 
-import packageJson from '../package.json';
+const packageJson = require('../package.json');
 
 class VercelPlatformInfo implements Info {
   platformData(): PlatformData {
