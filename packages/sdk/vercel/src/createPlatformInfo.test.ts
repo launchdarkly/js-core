@@ -1,6 +1,6 @@
-import { name, version } from '../package.json';
-
 import createPlatformInfo from './createPlatformInfo';
+
+const packageJson = require('../package.json');
 
 describe('Vercel Platform Info', () => {
   it('platformData shows correct information', () => {
@@ -15,8 +15,8 @@ describe('Vercel Platform Info', () => {
     const platformData = createPlatformInfo();
 
     expect(platformData.sdkData()).toEqual({
-      name,
-      version,
+      name: packageJson.name,
+      version: packageJson.version,
     });
   });
 });
