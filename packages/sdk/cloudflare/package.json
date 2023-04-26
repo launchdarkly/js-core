@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/cloudflare-server-sdk",
-  "version": "0.0.4",
+  "version": "2.0.0",
   "description": "Cloudflare LaunchDarkly SDK",
   "packageManager": "yarn@3.4.1",
   "keywords": [
