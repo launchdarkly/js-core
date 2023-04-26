@@ -19,7 +19,7 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
 
 ### Features
 
-* initial major release ([#101](https://github.com/launchdarkly/js-core/issues/101)) ([9883675](https://github.com/launchdarkly/js-core/commit/98836758d1998f208a1e13a68955611e0b10a8ce))
+* Updates common package dep to 1.0.0 ([#101](https://github.com/launchdarkly/js-core/issues/101)) ([9883675](https://github.com/launchdarkly/js-core/commit/98836758d1998f208a1e13a68955611e0b10a8ce))
 
 ## [0.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v0.2.0...node-server-sdk-v0.3.0) (2023-03-16)
 
