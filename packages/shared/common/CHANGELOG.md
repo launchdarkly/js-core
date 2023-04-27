@@ -2,6 +2,15 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v1.0.0...js-sdk-common-v1.0.1) (2023-04-27)
+
+
+### Bug Fixes
+
+* add licence and fix missing package.json fields. ([c586398](https://github.com/launchdarkly/js-core/commit/c5863980c5bf4ee2a7590dfc4f7c575045d669b0))
+* Ensure top level commands work correctly ([#105](https://github.com/launchdarkly/js-core/issues/105)) ([762571f](https://github.com/launchdarkly/js-core/commit/762571ff851558d229e4d29ba40a9c16b89f2a8d))
+* remove beta text from cloudflare sdk readme. ([c586398](https://github.com/launchdarkly/js-core/commit/c5863980c5bf4ee2a7590dfc4f7c575045d669b0))
+
 ## [1.0.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v0.3.0...js-sdk-common-v1.0.0) (2023-04-26)
 
 
