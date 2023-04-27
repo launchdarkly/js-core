@@ -21,6 +21,7 @@
   "scripts": {
     "test": "npx jest --ci",
     "build": "npx tsc",
+    "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix"
   },

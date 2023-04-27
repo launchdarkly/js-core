@@ -28,6 +28,7 @@
     "doc": "../../../scripts/build-doc.sh .",
     "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
+    "clean": "rimraf dist",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
