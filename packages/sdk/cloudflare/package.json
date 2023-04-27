@@ -28,6 +28,7 @@
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
     "build": "../../../scripts/build-package.sh",
+    "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
