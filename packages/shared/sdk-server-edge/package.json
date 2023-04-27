@@ -22,7 +22,7 @@
   "main": "./dist/cjs/src/index.js",
   "types": "./dist/cjs/src/index.d.ts",
   "files": [
-    "/dist"
+    "dist"
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",

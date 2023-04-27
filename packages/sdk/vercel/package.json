@@ -21,7 +21,7 @@
   },
   "main": "./dist/cjs/src/index.js",
   "files": [
-    "/dist"
+    "dist"
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",

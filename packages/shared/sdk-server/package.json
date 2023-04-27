@@ -11,7 +11,7 @@
   },
   "description": "LaunchDarkly Server SDK for JavaScript - common code",
   "files": [
-    "/dist"
+    "dist"
   ],
   "keywords": [
     "launchdarkly",
