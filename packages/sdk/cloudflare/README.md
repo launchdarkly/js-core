@@ -8,9 +8,9 @@
 
 The LaunchDarkly Cloudflare SDK is designed primarily for use in multi-user Cloudflare workers. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
-For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).
+This SDK is a replacement of [launchdarkly-cloudflare-edge-sdk](https://github.com/launchdarkly/cloudflare-edge-sdk). Please consider updating your application to use this package instead.
 
-This SDK is a beta version and should not be considered ready for production use while this message is visible.
+For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).
 
 ## Install
 
@@ -48,8 +48,6 @@ export default {
 ```
 
 See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare/example).
-
-Read the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/cloudflare).
 
 ## Developing this SDK
 

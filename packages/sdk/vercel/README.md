@@ -1,5 +1,11 @@
 # LaunchDarkly Vercel Edge SDK
 
+[![NPM][sdk-vercel-npm-badge]][sdk-vercel-npm-link]
+[![Actions Status][sdk-vercel-ci-badge]][sdk-vercel-ci]
+[![Documentation][sdk-vercel-ghp-badge]][sdk-vercel-ghp-link]
+[![NPM][sdk-vercel-dm-badge]][sdk-vercel-npm-link]
+[![NPM][sdk-vercel-dt-badge]][sdk-vercel-npm-link]
+
 This library supports using Vercel [Edge Config](https://vercel.com/docs/concepts/edge-network/edge-config) to replace the default in-memory feature store of the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/vercel-server-sdk).
 
 For more information, see the [SDK features guide](https://docs.launchdarkly.com/sdk/features/storing-data).
@@ -60,3 +66,12 @@ yarn test
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[sdk-vercel-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/vercel.yml/badge.svg
+[sdk-vercel-ci]: https://github.com/launchdarkly/js-core/actions/workflows/vercel.yml
+[sdk-vercel-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/vercel-server-sdk.svg?style=flat-square
+[sdk-vercel-npm-link]: https://www.npmjs.com/package/@launchdarkly/vercel-server-sdk
+[sdk-vercel-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-vercel-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/vercel/docs/
+[sdk-vercel-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/vercel-server-sdk.svg?style=flat-square
+[sdk-vercel-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/vercel-server-sdk.svg?style=flat-square

@@ -1,4 +1,4 @@
-name: shared/sdk-server
+name: shared/sdk-server-edge
 
 on:
   push:

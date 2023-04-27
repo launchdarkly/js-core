@@ -1,6 +1,11 @@
 {
   "name": "@launchdarkly/js-server-sdk-common-edge",
   "version": "1.0.0",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server-edge",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
   "description": "LaunchDarkly Server SDK for JavaScript - common Edge SDK code",
   "packageManager": "yarn@3.4.1",
   "keywords": [
@@ -17,7 +22,7 @@
   "main": "./dist/cjs/src/index.js",
   "types": "./dist/cjs/src/index.d.ts",
   "files": [
-    "/dist"
+    "dist"
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",

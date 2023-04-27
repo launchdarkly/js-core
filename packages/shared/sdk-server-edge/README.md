@@ -2,7 +2,7 @@
 
 [![NPM][js-server-sdk-common-edge-badge]][js-server-sdk-common-edge-link]
 [![Actions Status][shared-sdk-server-edge-ci-badge]][shared-sdk-server-edge-ci]
-[![Documentation](https://launchdarkly.github.io/js-core/packages/shared/common/docs/)
+[![Documentation][shared-sdk-server-edge-ghp-badge]][shared-sdk-server-edge-ghp-link]
 
 This project contains Typescript classes and interfaces that are applicable to server-side edge SDKs.
 
@@ -30,3 +30,5 @@ See [Contributing](../CONTRIBUTING.md).
 [shared-sdk-server-edge-ci]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server-edge.yml
 [js-server-sdk-common-edge-badge]: https://img.shields.io/npm/v/@launchdarkly/js-server-sdk-common-edge.svg?style=flat-square
 [js-server-sdk-common-edge-link]: https://www.npmjs.com/package/@launchdarkly/js-server-sdk-common-edge
+[shared-sdk-server-edge-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[shared-sdk-server-edge-ghp-link]: https://launchdarkly.github.io/js-core/packages/shared/sdk-server-edge/docs/
