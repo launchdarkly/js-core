@@ -18,7 +18,8 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
       dataKey: string,
       callback: (res: LDFeatureStoreItem | null) => void = noop
     ): void {
-      const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
+      const { namespace } = kind;
+      const kindKey = namespace === 'features' ? 'flags' : namespace;
       logger.debug(`Requesting ${dataKey} from ${key}.${kindKey}`);
 
       kvNamespace
@@ -32,7 +33,8 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
           if (!item) {
             throw new Error(`Error deserializing ${kindKey}`);
           }
-          switch (kind.namespace) {
+
+          switch (namespace) {
             case 'features':
               callback(item.flags[dataKey]);
               break;
@@ -40,8 +42,7 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
               callback(item.segments[dataKey]);
               break;
             default:
-              // Unsupported data kind.
-              callback(null);
+              throw new Error(`Unsupported DataKind: ${namespace}`);
           }
         })
         .catch((err) => {
@@ -50,7 +51,8 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
         });
     },
     all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): void {
-      const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
+      const { namespace } = kind;
+      const kindKey = namespace === 'features' ? 'flags' : namespace;
       logger.debug(`Requesting all from ${key}.${kindKey}`);
       kvNamespace
         .get(key)
@@ -64,7 +66,7 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
             throw new Error(`Error deserializing ${kindKey}`);
           }
 
-          switch (kind.namespace) {
+          switch (namespace) {
             case 'features':
               callback(item.flags);
               break;
@@ -72,8 +74,7 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
               callback(item.segments);
               break;
             default:
-              // Unsupported data kind.
-              callback({});
+              throw new Error(`Unsupported DataKind: ${namespace}`);
           }
         })
         .catch((err) => {

@@ -64,10 +64,10 @@ describe('createFeatureStore', () => {
 
   describe('all', () => {
     test('all flags', async () => {
-      const flag = await asyncFeatureStore.all({ namespace: 'features' });
+      const flags = await asyncFeatureStore.all({ namespace: 'features' });
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
-      expect(flag).toMatchObject(testData);
+      expect(flags).toMatchObject(testData.flags);
     });
 
     test('all segments', async () => {
@@ -80,7 +80,7 @@ describe('createFeatureStore', () => {
     test('invalid DataKind', async () => {
       const flag = await asyncFeatureStore.all({ namespace: 'InvalidDataKind' });
 
-      expect(flag).toBeUndefined();
+      expect(flag).toEqual({});
     });
 
     test('invalid kv key', async () => {
