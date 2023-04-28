@@ -1,0 +1,12 @@
+{
+  "extends": "next/core-web-vitals",
+  "parserOptions": {
+    "project": "tsconfig.json",
+    "tsconfigRootDir": "./",
+    "sourceType": "module"
+  },
+  "rules": {
+    "arrow-body-style": "off",
+    "import/no-anonymous-default-export": "off"
+  }
+}

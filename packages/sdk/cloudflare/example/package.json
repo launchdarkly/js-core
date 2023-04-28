@@ -1,5 +1,5 @@
 {
-  "name": "example",
+  "name": "example-cloudflare",
   "version": "0.0.0",
   "type": "module",
   "module": "./dist/index.mjs",

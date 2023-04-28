@@ -31,13 +31,13 @@ class VercelFeatureStore implements LDFeatureStore {
     this.logger.debug(`Requesting ${flagKey} from ${this.configKey}.${kindKey}`);
 
     try {
-      const config = await this.edgeConfig.get<string>(this.configKey);
+      const config = await this.edgeConfig.get(this.configKey);
 
       if (!config) {
         throw new Error(`${this.configKey} is not found in Edge Config.`);
       }
 
-      const item = deserializePoll(config);
+      const item = deserializePoll(JSON.stringify(config));
       if (!item) {
         throw new Error(`Error deserializing ${this.configKey}`);
       }
@@ -52,12 +52,12 @@ class VercelFeatureStore implements LDFeatureStore {
     const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
     this.logger.debug(`Requesting all from ${this.configKey}.${kindKey}`);
     try {
-      const config = await this.edgeConfig.get<string>(this.configKey);
+      const config = await this.edgeConfig.get(this.configKey);
       if (!config) {
         throw new Error(`${this.configKey} is not found in Edge Config.`);
       }
 
-      const item = deserializePoll(config);
+      const item = deserializePoll(JSON.stringify(config));
       if (!item) {
         throw new Error(`Error deserializing ${this.configKey}`);
       }
