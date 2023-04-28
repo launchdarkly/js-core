@@ -7,7 +7,7 @@ import type {
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
 } from '@launchdarkly/js-server-sdk-common-edge';
-import { noop } from '@launchdarkly/js-server-sdk-common-edge';
+import { deserializePoll, noop } from '@launchdarkly/js-server-sdk-common-edge';
 
 class VercelFeatureStore implements LDFeatureStore {
   private edgeConfig: EdgeConfigClient;
@@ -27,14 +27,20 @@ class VercelFeatureStore implements LDFeatureStore {
     flagKey: string,
     callback: (res: LDFeatureStoreItem | null) => void
   ): Promise<void> {
-    this.logger.debug(`Requesting ${flagKey} from ${this.configKey}`);
+    const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
+    this.logger.debug(`Requesting ${flagKey} from ${this.configKey}.${kindKey}`);
+
     try {
-      const config = await this.edgeConfig.get(this.configKey);
-      if (config === null) {
-        this.logger.error('Feature data not found in Edge Config.');
+      const config = await this.edgeConfig.get<string>(this.configKey);
+
+      if (!config) {
+        throw new Error(`${this.configKey} is not found in Edge Config.`);
       }
-      const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-      const item = config as LDFeatureStoreItem;
+
+      const item = deserializePoll(config);
+      if (!item) {
+        throw new Error(`Error deserializing ${this.configKey}`);
+      }
       callback(item[kindKey][flagKey]);
     } catch (err) {
       this.logger.error(err);
@@ -44,13 +50,18 @@ class VercelFeatureStore implements LDFeatureStore {
 
   async all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): Promise<void> {
     const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-    this.logger.debug(`Requesting all ${kindKey} data from Edge Config.`);
+    this.logger.debug(`Requesting all from ${this.configKey}.${kindKey}`);
     try {
-      const config = await this.edgeConfig.get(this.configKey);
-      if (config === null) {
-        this.logger.error('Feature data not found in Edge Config.');
+      const config = await this.edgeConfig.get<string>(this.configKey);
+      if (!config) {
+        throw new Error(`${this.configKey} is not found in Edge Config.`);
       }
-      const item = config as LDFeatureStoreItem;
+
+      const item = deserializePoll(config);
+      if (!item) {
+        throw new Error(`Error deserializing ${this.configKey}`);
+      }
+
       callback(item[kindKey]);
     } catch (err) {
       this.logger.error(err);
@@ -59,7 +70,7 @@ class VercelFeatureStore implements LDFeatureStore {
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
-    const config = await this.edgeConfig.get(this.configKey);
+    const config = await this.edgeConfig.get<string>(this.configKey);
     const result = config !== null;
     this.logger.debug(`Is ${this.configKey} initialized? ${result}`);
     callback(result);

@@ -30,7 +30,7 @@
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)'",
-    "test": "jest --ci --runInBand --coverage",
+    "test": "jest --ci --runInBand",
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
