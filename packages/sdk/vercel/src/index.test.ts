@@ -14,7 +14,8 @@ describe('init', () => {
   const mockGet = mockEdge.get as jest.Mock;
 
   beforeAll(async () => {
-    mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
+    // Vercel Edge can't return simple strings
+    mockGet.mockImplementation(() => Promise.resolve(testData));
     ldClient = init(sdkKey, mockEdge);
     await ldClient.waitForInitialization();
   });

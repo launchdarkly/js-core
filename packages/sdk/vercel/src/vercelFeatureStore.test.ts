@@ -28,7 +28,8 @@ describe('VercelFeatureStore', () => {
   let asyncFeatureStore: AsyncStoreFacade;
 
   beforeEach(() => {
-    mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
+    // Vercel Edge can't return simple strings
+    mockGet.mockImplementation(() => Promise.resolve(testData));
     featureStore = new VercelFeatureStore(mockEdge, sdkKey, mockLogger);
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
