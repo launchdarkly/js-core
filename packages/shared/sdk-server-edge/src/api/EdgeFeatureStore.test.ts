@@ -1,7 +1,7 @@
 import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
 import { EdgeFeatureStore } from './EdgeFeatureStore';
 
-import mockKV from '../utils/mockKV';
+import mockEdgeProvider from '../utils/mockEdgeProvider';
 import * as testData from '../utils/testData.json';
 
 describe('EdgeFeatureStore', () => {
@@ -13,13 +13,13 @@ describe('EdgeFeatureStore', () => {
     info: jest.fn(),
     debug: jest.fn(),
   };
-  const mockGet = mockKV.get as jest.Mock;
+  const mockGet = mockEdgeProvider.get as jest.Mock;
   let featureStore: LDFeatureStore;
   let asyncFeatureStore: AsyncStoreFacade;
 
   beforeEach(() => {
     mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
-    featureStore = new EdgeFeatureStore(mockKV, sdkKey, 'MockEdgeProvider', mockLogger);
+    featureStore = new EdgeFeatureStore(mockEdgeProvider, sdkKey, 'MockEdgeProvider', mockLogger);
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
 
