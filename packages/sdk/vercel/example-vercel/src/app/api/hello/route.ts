@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient, EdgeConfigClient } from '@vercel/edge-config';
+import { NextResponse } from 'next/server';
+import { createClient } from '@vercel/edge-config';
 import { init as initLD } from '@launchdarkly/vercel-server-sdk';
 
 export const config = {
   runtime: 'edge',
 };
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const sdkKey = 'test-sdk-key';
   const flagKey = 'testFlag1';
 
