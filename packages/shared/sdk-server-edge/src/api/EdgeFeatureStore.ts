@@ -9,7 +9,7 @@ import type {
 import { deserializePoll, noop } from '@launchdarkly/js-server-sdk-common';
 
 export interface EdgeProvider {
-  get: (rootKey: string) => Promise<string>;
+  get: (rootKey: string) => Promise<string | null | undefined>;
 }
 
 export class EdgeFeatureStore implements LDFeatureStore {
