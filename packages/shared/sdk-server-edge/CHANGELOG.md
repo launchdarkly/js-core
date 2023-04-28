@@ -6,6 +6,20 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 0.3.0 to 0.3.1
 
+## [1.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.1...js-server-sdk-common-edge-v1.0.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* make vercel use EdgeProvider ([#114](https://github.com/launchdarkly/js-core/issues/114)) ([6705996](https://github.com/launchdarkly/js-core/commit/6705996929471ff8f72f97d58a665f75d4e5fecd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.1 to 1.0.2
+
 ## [1.0.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.0...js-server-sdk-common-edge-v1.0.1) (2023-04-27)
 
 

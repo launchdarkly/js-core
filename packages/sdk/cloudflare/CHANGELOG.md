@@ -8,6 +8,20 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 0.0.2 to 0.0.3
 
+## [2.0.2](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.0.1...cloudflare-server-sdk-v2.0.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* fixed bug where the feature store does not deserialize KV values… ([#107](https://github.com/launchdarkly/js-core/issues/107)) ([68113b7](https://github.com/launchdarkly/js-core/commit/68113b7ac39f70a92b291eb2c0eda3b7d78145fc))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.1 to 1.0.2
+
 ## [2.0.1](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.0.0...cloudflare-server-sdk-v2.0.1) (2023-04-27)
 
 

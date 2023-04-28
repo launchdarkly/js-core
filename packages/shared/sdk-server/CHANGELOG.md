@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.1...js-server-sdk-common-v1.0.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* fixed bug where the feature store does not deserialize KV values… ([#107](https://github.com/launchdarkly/js-core/issues/107)) ([68113b7](https://github.com/launchdarkly/js-core/commit/68113b7ac39f70a92b291eb2c0eda3b7d78145fc))
+
 ## [1.0.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.0...js-server-sdk-common-v1.0.1) (2023-04-27)
 
 
