@@ -33,11 +33,11 @@ export type { LDClient };
  * (`new LDClient()/new LDClientImpl()/new LDClient()`); the SDK does not currently support
  * this.
  *
- * @param edgeConfig
- *  The Vercel Edge Config client configured for LaunchDarkly.
  * @param sdkKey
  *  The client side SDK key. This is only used to query the edgeConfig above,
  *  not to connect with LaunchDarkly servers.
+ * @param edgeConfig
+ *  The Vercel Edge Config client configured for LaunchDarkly.
  * @param options
  *  Optional configuration settings. The only supported option is logger.
  * @return
