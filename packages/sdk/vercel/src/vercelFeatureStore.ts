@@ -37,7 +37,9 @@ class VercelFeatureStore implements LDFeatureStore {
         throw new Error(`${this.configKey} is not found in Edge Config.`);
       }
 
-      // We are serializing/deserialising here as deserializePoll replaces null with undefined (and we do get null values out of the Edge Config which can cause issues)
+      // We are serializing/deserialising here as deserializePoll replaces null with undefined (and we do get null values out of the Edge Config which can cause issues).
+      // deserializePoll also converts rules, rollouts, buckets and other nested structures into objects which the sdk understands. 
+      // We have to JSON.stringify the response from edge because they only support returning a json response at this time.
       const item = deserializePoll(JSON.stringify(config));
       if (!item) {
         throw new Error(`Error deserializing ${this.configKey}`);
