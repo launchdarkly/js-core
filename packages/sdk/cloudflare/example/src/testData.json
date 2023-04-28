@@ -5,7 +5,26 @@
       "on": true,
       "prerequisites": [],
       "targets": [],
-      "rules": [],
+      "rules": [
+        {
+          "variation": 1,
+          "id": "rule1",
+          "clauses": [
+            {
+              "contextKind": "user",
+              "attribute": "/email",
+              "op": "contains",
+              "values": ["gmail"],
+              "negate": false
+            }
+          ],
+          "trackEvents": false,
+          "rollout": {
+            "bucketBy": "bucket",
+            "variations": [{ "variation": 1, "weight": 100 }]
+          }
+        }
+      ],
       "fallthrough": {
         "variation": 0
       },
@@ -25,10 +44,52 @@
     },
     "testFlag2": {
       "key": "testFlag2",
-      "on": false,
+      "on": true,
       "prerequisites": [],
       "targets": [],
       "rules": [],
+      "fallthrough": {
+        "variation": 0,
+        "rollout": {
+          "bucketBy": "bucket",
+          "variations": [{ "variation": 1, "weight": 100 }],
+          "contextKind:": "user",
+          "attribute": "/email"
+        }
+      },
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": {
+        "usingMobileKey": true,
+        "usingEnvironmentId": true
+      },
+      "clientSide": true,
+      "salt": "aef830243d6640d0a973be89988e008d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 2,
+      "deleted": false
+    },
+    "testFlag3": {
+      "key": "testFlag3",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "rules": [
+        {
+          "variation": 1,
+          "id": "rule1",
+          "clauses": [
+            {
+              "op": "segmentMatch",
+              "values": ["testSegment1"],
+              "negate": false
+            }
+          ],
+          "trackEvents": false
+        }
+      ],
       "fallthrough": {
         "variation": 0
       },
@@ -65,7 +126,19 @@
         },
         "site": { "href": "/default/test/segments/beta-users-1", "type": "text/html" }
       },
-      "rules": [],
+      "rules": [
+        {
+          "id": "rule-country",
+          "clauses": [
+            {
+              "attribute": "country",
+              "op": "in",
+              "values": ["australia"],
+              "negate": false
+            }
+          ]
+        }
+      ],
       "version": 1,
       "deleted": false,
       "_access": { "denied": [], "allowed": [] },
