@@ -16,8 +16,7 @@
     "stripInternal": true,
     "moduleResolution": "node",
     "types": ["jest", "node"],
-    "skipLibCheck": true,
-    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
 }
