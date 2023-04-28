@@ -19,13 +19,13 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
       callback: (res: LDFeatureStoreItem | null) => void = noop
     ): void {
       const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-      logger.debug(`Requesting ${flagKey} from ${key}:${kindKey}`);
+      logger.debug(`Requesting ${flagKey} from ${key}.${kindKey}`);
 
       kvNamespace
         .get(key)
         .then((i) => {
-          if (i === null) {
-            throw new Error(`The ${kindKey} key: ${key} is not found in KV.`);
+          if (!i) {
+            throw new Error(`${key}.${kindKey} is not found in KV.`);
           }
 
           const item = deserializePoll(i);
@@ -41,12 +41,12 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
     },
     all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): void {
       const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-      logger.debug(`Requesting all from ${key}:${kindKey}`);
+      logger.debug(`Requesting all from ${key}.${kindKey}`);
       kvNamespace
         .get(key)
         .then((i) => {
-          if (i === null) {
-            throw new Error(`The ${kindKey} key: ${key} is not found in KV.`);
+          if (!i) {
+            throw new Error(`${key}.${kindKey} is not found in KV.`);
           }
 
           const item = deserializePoll(i);
