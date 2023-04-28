@@ -7,6 +7,7 @@ import {
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
   noop,
+  deserializePoll,
 } from '@launchdarkly/js-server-sdk-common-edge';
 
 const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LDLogger) => {
@@ -14,19 +15,35 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
   const store: LDFeatureStore = {
     get(
       kind: DataKind,
-      flagKey: string,
+      dataKey: string,
       callback: (res: LDFeatureStoreItem | null) => void = noop
     ): void {
-      logger.debug(`Requesting ${flagKey} from ${key}`);
+      const { namespace } = kind;
+      const kindKey = namespace === 'features' ? 'flags' : namespace;
+      logger.debug(`Requesting ${dataKey} from ${key}.${kindKey}`);
+
       kvNamespace
-        .get(key, { type: 'json' })
+        .get(key)
         .then((i) => {
-          if (i === null) {
-            logger.error('Feature data not found in KV.');
+          if (!i) {
+            throw new Error(`${key}.${kindKey} is not found in KV.`);
           }
-          const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-          const item = i as LDFeatureStoreItem;
-          callback(item[kindKey][flagKey]);
+
+          const item = deserializePoll(i);
+          if (!item) {
+            throw new Error(`Error deserializing ${kindKey}`);
+          }
+
+          switch (namespace) {
+            case 'features':
+              callback(item.flags[dataKey]);
+              break;
+            case 'segments':
+              callback(item.segments[dataKey]);
+              break;
+            default:
+              throw new Error(`Unsupported DataKind: ${namespace}`);
+          }
         })
         .catch((err) => {
           logger.error(err);
@@ -34,16 +51,31 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
         });
     },
     all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): void {
-      const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-      logger.debug(`Requesting all ${kindKey} data from KV.`);
+      const { namespace } = kind;
+      const kindKey = namespace === 'features' ? 'flags' : namespace;
+      logger.debug(`Requesting all from ${key}.${kindKey}`);
       kvNamespace
-        .get(key, { type: 'json' })
+        .get(key)
         .then((i) => {
-          if (i === null) {
-            logger.error('Feature data not found in KV.');
+          if (!i) {
+            throw new Error(`${key}.${kindKey} is not found in KV.`);
           }
-          const item = i as LDFeatureStoreItem;
-          callback(item[kindKey]);
+
+          const item = deserializePoll(i);
+          if (!item) {
+            throw new Error(`Error deserializing ${kindKey}`);
+          }
+
+          switch (namespace) {
+            case 'features':
+              callback(item.flags);
+              break;
+            case 'segments':
+              callback(item.segments);
+              break;
+            default:
+              throw new Error(`Unsupported DataKind: ${namespace}`);
+          }
         })
         .catch((err) => {
           logger.error(err);
