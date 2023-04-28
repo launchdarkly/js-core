@@ -8,9 +8,9 @@ describe('createFeatureStore', () => {
   const sdkKey = 'sdkKey';
   const kvKey = `LD-Env-${sdkKey}`;
   const {
-    testFlag1: { debugEventsUntilDate: d1, ...testFlag1Subset },
-    testFlag2: { debugEventsUntilDate: d2, ...testFlag2Subset },
-    testFlag3: { debugEventsUntilDate: d3, ...testFlag3Subset },
+    testFlag1: { ...testFlag1Subset },
+    testFlag2: { ...testFlag2Subset },
+    testFlag3: { ...testFlag3Subset },
   } = testData.flags;
   const testDataFlagsSubset = {
     testFlag1: testFlag1Subset,
@@ -38,11 +38,11 @@ describe('createFeatureStore', () => {
   });
 
   describe('get', () => {
-    test('get flag', async () => {
+    test.only('get flag', async () => {
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
-      expect(flag).toMatchObject(testFlag1Subset);
+      expect(flag).toEqual(testFlag1Subset);
     });
 
     test('invalid flag key', async () => {
