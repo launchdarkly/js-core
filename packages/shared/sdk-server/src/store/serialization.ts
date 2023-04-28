@@ -22,6 +22,7 @@ export function reviver(this: any, key: string, value: any): any {
 }
 
 interface FlagsAndSegments {
+  [key: string]: { [name: string]: Flag } | { [name: string]: Segment };
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
 }

@@ -7,6 +7,16 @@ import * as testData from './utils/testData.json';
 describe('createFeatureStore', () => {
   const sdkKey = 'sdkKey';
   const kvKey = `LD-Env-${sdkKey}`;
+  const {
+    testFlag1: { debugEventsUntilDate: d1, ...testFlag1Subset },
+    testFlag2: { debugEventsUntilDate: d2, ...testFlag2Subset },
+    testFlag3: { debugEventsUntilDate: d3, ...testFlag3Subset },
+  } = testData.flags;
+  const testDataFlagsSubset = {
+    testFlag1: testFlag1Subset,
+    testFlag2: testFlag2Subset,
+    testFlag3: testFlag3Subset,
+  };
   const mockLogger = {
     error: jest.fn(),
     warn: jest.fn(),
@@ -18,7 +28,7 @@ describe('createFeatureStore', () => {
   let asyncFeatureStore: AsyncStoreFacade;
 
   beforeEach(() => {
-    mockGet.mockImplementation(() => Promise.resolve(testData));
+    mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
     featureStore = createFeatureStore(mockKV, sdkKey, mockLogger);
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
@@ -31,8 +41,8 @@ describe('createFeatureStore', () => {
     test('get flag', async () => {
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
 
-      expect(mockGet).toHaveBeenCalledWith(kvKey, { type: 'json' });
-      expect(flag).toEqual(testData.flags.testFlag1);
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(flag).toMatchObject(testFlag1Subset);
     });
 
     test('invalid flag key', async () => {
@@ -44,8 +54,8 @@ describe('createFeatureStore', () => {
     test('get segment', async () => {
       const segment = await asyncFeatureStore.get({ namespace: 'segments' }, 'testSegment1');
 
-      expect(mockGet).toHaveBeenCalledWith(kvKey, { type: 'json' });
-      expect(segment).toEqual(testData.segments.testSegment1);
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(segment).toMatchObject(testData.segments.testSegment1);
     });
 
     test('invalid segment key', async () => {
@@ -66,15 +76,15 @@ describe('createFeatureStore', () => {
     test('all flags', async () => {
       const flag = await asyncFeatureStore.all({ namespace: 'features' });
 
-      expect(mockGet).toHaveBeenCalledWith(kvKey, { type: 'json' });
-      expect(flag).toEqual(testData.flags);
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(flag).toMatchObject(testDataFlagsSubset);
     });
 
     test('all segments', async () => {
       const segment = await asyncFeatureStore.all({ namespace: 'segments' });
 
-      expect(mockGet).toHaveBeenCalledWith(kvKey, { type: 'json' });
-      expect(segment).toEqual(testData.segments);
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(segment).toMatchObject(testData.segments);
     });
 
     test('invalid DataKind', async () => {

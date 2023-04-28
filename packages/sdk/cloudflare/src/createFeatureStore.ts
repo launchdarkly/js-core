@@ -7,6 +7,7 @@ import {
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
   noop,
+  deserializePoll,
 } from '@launchdarkly/js-server-sdk-common-edge';
 
 const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LDLogger) => {
@@ -17,15 +18,20 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
       flagKey: string,
       callback: (res: LDFeatureStoreItem | null) => void = noop
     ): void {
-      logger.debug(`Requesting ${flagKey} from ${key}`);
+      const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
+      logger.debug(`Requesting ${flagKey} from ${key}:${kindKey}`);
+
       kvNamespace
-        .get(key, { type: 'json' })
+        .get(key)
         .then((i) => {
           if (i === null) {
-            logger.error('Feature data not found in KV.');
+            throw new Error(`The ${kindKey} key: ${key} is not found in KV.`);
           }
-          const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-          const item = i as LDFeatureStoreItem;
+
+          const item = deserializePoll(i);
+          if (!item) {
+            throw new Error(`Error deserializing ${kindKey}`);
+          }
           callback(item[kindKey][flagKey]);
         })
         .catch((err) => {
@@ -35,14 +41,19 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
     },
     all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): void {
       const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-      logger.debug(`Requesting all ${kindKey} data from KV.`);
+      logger.debug(`Requesting all from ${key}:${kindKey}`);
       kvNamespace
-        .get(key, { type: 'json' })
+        .get(key)
         .then((i) => {
           if (i === null) {
-            logger.error('Feature data not found in KV.');
+            throw new Error(`The ${kindKey} key: ${key} is not found in KV.`);
           }
-          const item = i as LDFeatureStoreItem;
+
+          const item = deserializePoll(i);
+          if (!item) {
+            throw new Error(`Error deserializing ${kindKey}`);
+          }
+
           callback(item[kindKey]);
         })
         .catch((err) => {
