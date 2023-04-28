@@ -21,10 +21,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
     private readonly description: string,
     private logger: LDLogger
   ) {
-    this.edgeProvider = edgeProvider;
     this.rootKey = `LD-Env-${sdkKey}`;
-    this.description = description;
-    this.logger = logger;
   }
 
   async get(
