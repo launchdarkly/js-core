@@ -37,7 +37,8 @@ class VercelFeatureStore implements LDFeatureStore {
         throw new Error(`${this.configKey} is not found in Edge Config.`);
       }
 
-      const item = deserializePoll(config);
+      // We are serializing/deserialising here as deserializePoll replaces null with undefined (and we do get null values out of the Edge Config which can cause issues)
+      const item = deserializePoll(JSON.stringify(config));
       if (!item) {
         throw new Error(`Error deserializing ${this.configKey}`);
       }
@@ -57,7 +58,8 @@ class VercelFeatureStore implements LDFeatureStore {
         throw new Error(`${this.configKey} is not found in Edge Config.`);
       }
 
-      const item = deserializePoll(config);
+      // We are serializing/deserialising here as deserializePoll replaces null with undefined (and we do get null values out of the Edge Config which can cause issues)
+      const item = deserializePoll(JSON.stringify(config));
       if (!item) {
         throw new Error(`Error deserializing ${this.configKey}`);
       }
