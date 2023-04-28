@@ -28,7 +28,7 @@ describe('createFeatureStore', () => {
   });
 
   describe('get', () => {
-    test.only('get flag', async () => {
+    test('get flag', async () => {
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
