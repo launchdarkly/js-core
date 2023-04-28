@@ -76,9 +76,9 @@ describe('init', () => {
       expect(allFlags).toBeDefined();
       expect(allFlags.toJSON()).toEqual({
         $flagsState: {
-          testFlag1: { variation: 0, version: 2 },
-          testFlag2: { variation: 0, version: 2 },
-          testFlag3: { variation: 0, version: 2 },
+          testFlag1: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+          testFlag2: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+          testFlag3: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
         },
         $valid: true,
         testFlag1: true,

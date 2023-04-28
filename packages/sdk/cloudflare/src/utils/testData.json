@@ -38,7 +38,7 @@
       "salt": "aef830243d6640d0a973be89988e008d",
       "trackEvents": false,
       "trackEventsFallthrough": false,
-      "debugEventsUntilDate": null,
+      "debugEventsUntilDate": 2000,
       "version": 2,
       "deleted": false
     },
@@ -67,7 +67,7 @@
       "salt": "aef830243d6640d0a973be89988e008d",
       "trackEvents": false,
       "trackEventsFallthrough": false,
-      "debugEventsUntilDate": null,
+      "debugEventsUntilDate": 2000,
       "version": 2,
       "deleted": false
     },
@@ -103,7 +103,7 @@
       "salt": "aef830243d6640d0a973be89988e008d",
       "trackEvents": false,
       "trackEventsFallthrough": false,
-      "debugEventsUntilDate": null,
+      "debugEventsUntilDate": 2000,
       "version": 2,
       "deleted": false
     }

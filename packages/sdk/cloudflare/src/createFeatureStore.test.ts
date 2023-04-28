@@ -7,16 +7,6 @@ import * as testData from './utils/testData.json';
 describe('createFeatureStore', () => {
   const sdkKey = 'sdkKey';
   const kvKey = `LD-Env-${sdkKey}`;
-  const {
-    testFlag1: { ...testFlag1Subset },
-    testFlag2: { ...testFlag2Subset },
-    testFlag3: { ...testFlag3Subset },
-  } = testData.flags;
-  const testDataFlagsSubset = {
-    testFlag1: testFlag1Subset,
-    testFlag2: testFlag2Subset,
-    testFlag3: testFlag3Subset,
-  };
   const mockLogger = {
     error: jest.fn(),
     warn: jest.fn(),
@@ -42,7 +32,7 @@ describe('createFeatureStore', () => {
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
-      expect(flag).toEqual(testFlag1Subset);
+      expect(flag).toMatchObject(testData.flags.testFlag1);
     });
 
     test('invalid flag key', async () => {
@@ -77,7 +67,7 @@ describe('createFeatureStore', () => {
       const flag = await asyncFeatureStore.all({ namespace: 'features' });
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
-      expect(flag).toMatchObject(testDataFlagsSubset);
+      expect(flag).toMatchObject(testData);
     });
 
     test('all segments', async () => {
