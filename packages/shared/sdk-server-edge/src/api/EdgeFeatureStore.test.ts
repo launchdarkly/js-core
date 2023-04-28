@@ -1,10 +1,10 @@
-import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common-edge';
-import createFeatureStore from './createFeatureStore';
+import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
+import { EdgeFeatureStore } from './EdgeFeatureStore';
 
-import mockKV from './utils/mockKV';
-import * as testData from './utils/testData.json';
+import mockEdgeProvider from '../utils/mockEdgeProvider';
+import * as testData from '../utils/testData.json';
 
-describe('createFeatureStore', () => {
+describe('EdgeFeatureStore', () => {
   const sdkKey = 'sdkKey';
   const kvKey = `LD-Env-${sdkKey}`;
   const mockLogger = {
@@ -13,13 +13,13 @@ describe('createFeatureStore', () => {
     info: jest.fn(),
     debug: jest.fn(),
   };
-  const mockGet = mockKV.get as jest.Mock;
+  const mockGet = mockEdgeProvider.get as jest.Mock;
   let featureStore: LDFeatureStore;
   let asyncFeatureStore: AsyncStoreFacade;
 
   beforeEach(() => {
     mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
-    featureStore = createFeatureStore(mockKV, sdkKey, mockLogger);
+    featureStore = new EdgeFeatureStore(mockEdgeProvider, sdkKey, 'MockEdgeProvider', mockLogger);
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
 
@@ -119,7 +119,7 @@ describe('createFeatureStore', () => {
     test('getDescription', async () => {
       const description = featureStore.getDescription?.();
 
-      expect(description).toEqual('Cloudflare');
+      expect(description).toEqual('MockEdgeProvider');
     });
   });
 });

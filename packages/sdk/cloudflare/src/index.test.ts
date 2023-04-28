@@ -2,7 +2,7 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
 import { Miniflare } from 'miniflare';
 import { init } from './index';
-import * as allFlagsSegments from './utils/testData.json';
+import * as allFlagsSegments from './testData.json';
 
 const mf = new Miniflare({
   modules: true,
