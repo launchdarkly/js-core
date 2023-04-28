@@ -15,13 +15,12 @@ export interface EdgeProvider {
 export class EdgeFeatureStore implements LDFeatureStore {
   private readonly rootKey: string;
 
-  private readonly description: string;
-
-  private edgeProvider: EdgeProvider;
-
-  private logger: LDLogger;
-
-  constructor(edgeProvider: EdgeProvider, sdkKey: string, description: string, logger: LDLogger) {
+  constructor(
+    private readonly edgeProvider: EdgeProvider,
+    private readonly sdkKey: string,
+    private readonly description: string,
+    private logger: LDLogger
+  ) {
     this.edgeProvider = edgeProvider;
     this.rootKey = `LD-Env-${sdkKey}`;
     this.description = description;
