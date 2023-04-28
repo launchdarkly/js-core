@@ -15,11 +15,11 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
   const store: LDFeatureStore = {
     get(
       kind: DataKind,
-      flagKey: string,
+      dataKey: string,
       callback: (res: LDFeatureStoreItem | null) => void = noop
     ): void {
       const kindKey = kind.namespace === 'features' ? 'flags' : kind.namespace;
-      logger.debug(`Requesting ${flagKey} from ${key}.${kindKey}`);
+      logger.debug(`Requesting ${dataKey} from ${key}.${kindKey}`);
 
       kvNamespace
         .get(key)
@@ -32,7 +32,17 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
           if (!item) {
             throw new Error(`Error deserializing ${kindKey}`);
           }
-          callback(item[kindKey][flagKey]);
+          switch (kind.namespace) {
+            case 'features':
+              callback(item.flags[dataKey]);
+              break;
+            case 'segments':
+              callback(item.segments[dataKey]);
+              break;
+            default:
+              // Unsupported data kind.
+              callback(null);
+          }
         })
         .catch((err) => {
           logger.error(err);
@@ -54,7 +64,17 @@ const createFeatureStore = (kvNamespace: KVNamespace, sdkKey: string, logger: LD
             throw new Error(`Error deserializing ${kindKey}`);
           }
 
-          callback(item[kindKey]);
+          switch (kind.namespace) {
+            case 'features':
+              callback(item.flags);
+              break;
+            case 'segments':
+              callback(item.segments);
+              break;
+            default:
+              // Unsupported data kind.
+              callback({});
+          }
         })
         .catch((err) => {
           logger.error(err);

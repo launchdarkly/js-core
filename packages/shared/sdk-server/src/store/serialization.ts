@@ -22,7 +22,6 @@ export function reviver(this: any, key: string, value: any): any {
 }
 
 interface FlagsAndSegments {
-  [key: string]: { [name: string]: Flag } | { [name: string]: Segment };
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
 }
@@ -158,6 +157,14 @@ export function deserializeAll(data: string): AllData | undefined {
   return parsed;
 }
 
+/**
+ * This function is intended for usage inside LaunchDarkly SDKs.
+ * This function should NOT be used by customer applications.
+ * This function may be changed or removed without a major version.
+ *
+ * @param data String data from launchdarkly.
+ * @returns The parsed and processed data.
+ */
 export function deserializePoll(data: string): FlagsAndSegments | undefined {
   const parsed = tryParse(data) as FlagsAndSegments;
 
