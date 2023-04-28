@@ -34,6 +34,7 @@
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
+    "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
