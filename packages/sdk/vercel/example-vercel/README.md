@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Example test app for Vercel LaunchDarkly SDK
 
-## Getting Started
+This is an example test app to showcase the usage of the Vercel LaunchDarkly
+SDK. This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-First, run the development server:
+## Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+A node environment of version 16 and yarn are required to develop in this repository.
+You will also need the vercel cli installed and a Vercel account to setup
+the test data required by this example. See the [Vercel docs](https://vercel.com/docs/storage/edge-config/get-started) on how to setup your edge config store.
+
+## Usage
+
+1. Follow the [Vercel docs](https://vercel.com/docs/storage/edge-config/get-started) to insert [testData.json](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/vercel/testData.json) to your edge config store.
+
+2. After completing the guide above, you should have linked this example app to your Vercel project and created an `.env.development.local`.
+
+3. At the root of the js-core repo:
+
+```shell
+yarn && yarn build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Then back in this example folder:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-[http://localhost:3000/api/hello](http://localhost:3000/api/hello) is an endpoint that uses [Route Handlers](https://beta.nextjs.org/docs/routing/route-handlers). This endpoint can be edited in `app/api/hello/route.ts`.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```shell
+yarn dev
+```
