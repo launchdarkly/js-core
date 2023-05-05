@@ -27,4 +27,4 @@ yarn && yarn build
 yarn dev
 ```
 
-5. Open [http://localhost:3000/api/hello](http://localhost:3000/api/hello) in your browser.
+5. Open [http://localhost:3000/api/hello](http://localhost:3000/api/hello).
