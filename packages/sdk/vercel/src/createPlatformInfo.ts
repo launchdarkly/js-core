@@ -10,7 +10,7 @@ class VercelPlatformInfo implements Info {
   sdkData(): SdkData {
     return {
       name: '@launchdarkly/vercel-server-sdk',
-      version: '0.2.2', // {x-release-please-version}
+      version: '0.3.0', // {x-release-please-version}
     };
   }
 }
