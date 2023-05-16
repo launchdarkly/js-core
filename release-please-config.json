@@ -8,6 +8,9 @@
     },
     "packages/sdk/cloudflare": {},
     "packages/sdk/vercel": {
+      "extra-files": [
+        "src/createPlatformInfo.ts"
+      ],
       "bump-minor-pre-major": true
     }
   },
