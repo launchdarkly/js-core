@@ -9,6 +9,6 @@
  * @packageDocumentation
  */
 
-const init = () => 'Hello Workd';
+const init = () => 'Hello World';
 
 export default init;

@@ -98,7 +98,7 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-vercel-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [sdk-vercel-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [package-sdk-vercel-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fvercel%22+
-[//]: # 'sdk/vercel'
+[//]: # 'sdk/akamai'
 [sdk-akamai-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml/badge.svg
 [sdk-akamai-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml
 [sdk-akamai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-server-sdk.svg?style=flat-square
