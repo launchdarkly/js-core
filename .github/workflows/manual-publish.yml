@@ -14,6 +14,7 @@ on:
           - packages/sdk/cloudflare
           - packages/sdk/server-node
           - packages/sdk/vercel
+          - packages/sdk/akamai
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean

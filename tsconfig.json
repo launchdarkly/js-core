@@ -21,6 +21,9 @@
     },
     {
       "path": "./packages/sdk/vercel/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/akamai/tsconfig.ref.json"
     }
   ]
 }

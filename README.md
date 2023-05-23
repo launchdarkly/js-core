@@ -10,6 +10,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/cloudflare-server-sdk](packages/sdk/cloudflare/README.md) | [![NPM][sdk-cloudflare-npm-badge]][sdk-cloudflare-npm-link]   | [Cloudflare][package-sdk-cloudflare-issues]      | [![Actions Status][sdk-cloudflare-ci-badge]][sdk-cloudflare-ci]   |
 | [@launchdarkly/node-server-sdk](packages/sdk/server-node/README.md)      | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link] | [Node.js Server][package-sdk-server-node-issues] | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci] |
 | [@launchdarkly/vercel-server-sdk](packages/sdk/vercel/README.md)         | [![NPM][sdk-vercel-npm-badge]][sdk-vercel-npm-link]           | [Vercel][package-sdk-vercel-issues]              | [![Actions Status][sdk-vercel-ci-badge]][sdk-vercel-ci]           |
+| [@launchdarkly/akamai-server-sdk](packages/sdk/akamai/README.md)         | [![NPM][sdk-akamai-npm-badge]][sdk-akamai-npm-link]           | [Akamai][package-sdk-akamai-issues]              | [![Actions Status][sdk-akamai-ci-badge]][sdk-akamai-ci]           |
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -97,3 +98,13 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-vercel-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [sdk-vercel-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [package-sdk-vercel-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fvercel%22+
+[//]: # 'sdk/vercel'
+[sdk-akamai-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml/badge.svg
+[sdk-akamai-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml
+[sdk-akamai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-server-sdk.svg?style=flat-square
+[sdk-akamai-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-server-sdk
+[sdk-akamai-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-akamai-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai/docs/
+[sdk-akamai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-server-sdk.svg?style=flat-square
+[sdk-akamai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-server-sdk.svg?style=flat-square
+[package-sdk-akamai-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fakamai%22+
