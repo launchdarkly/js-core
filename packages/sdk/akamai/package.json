@@ -37,7 +37,9 @@
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@launchdarkly/js-server-sdk-common-edge": "^1.0.2"
+  },
   "devDependencies": {
     "@types/jest": "^29.5.1",
     "@typescript-eslint/eslint-plugin": "^5.57.0",

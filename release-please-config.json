@@ -7,11 +7,12 @@
       "bump-minor-pre-major": true
     },
     "packages/sdk/cloudflare": {},
-    "packages/sdk/akamai": {},
+    "packages/sdk/akamai": {
+      "extra-files": ["src/createPlatformInfo.ts"],
+      "bump-minor-pre-major": true
+    },
     "packages/sdk/vercel": {
-      "extra-files": [
-        "src/createPlatformInfo.ts"
-      ],
+      "extra-files": ["src/createPlatformInfo.ts"],
       "bump-minor-pre-major": true
     }
   },
