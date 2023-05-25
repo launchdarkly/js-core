@@ -20,5 +20,5 @@ jobs:
         name: Shared CI Steps
         uses: ./actions/ci
         with:
-          workspace_name: '@launchdarkly/akamai-server-sdk'
+          workspace_name: '@launchdarkly/akamai-edgeworker-sdk'
           workspace_path: packages/sdk/akamai

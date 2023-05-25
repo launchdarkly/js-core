@@ -13,7 +13,7 @@ For more information, see the [complete reference guide for this SDK](https://do
 ## Install
 
 ```shell
-npm i @launchdarkly/akamai-server-sdk
+npm i @launchdarkly/akamai-edgeworker-sdk
 ```
 
 Then turn on the Node.js compatibility flag in your `wrangler.toml`. This allows the SDK to use `node:events`:
@@ -53,9 +53,9 @@ yarn test
 
 [sdk-akamai-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml/badge.svg
 [sdk-akamai-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml
-[sdk-akamai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-server-sdk.svg?style=flat-square
-[sdk-akamai-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-server-sdk
+[sdk-akamai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-edgeworker-sdk.svg?style=flat-square
+[sdk-akamai-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-edgeworker-sdk
 [sdk-akamai-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
 [sdk-akamai-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai/docs/
-[sdk-akamai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-server-sdk.svg?style=flat-square
-[sdk-akamai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-server-sdk.svg?style=flat-square
+[sdk-akamai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-edgeworker-sdk.svg?style=flat-square
+[sdk-akamai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-edgeworker-sdk.svg?style=flat-square
