@@ -1,5 +1,5 @@
 {
-  "name": "@launchdarkly/akamai-server-sdk",
+  "name": "@launchdarkly/akamai-edgeworker-sdk",
   "version": "0.0.1",
   "description": "Akamai LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai",

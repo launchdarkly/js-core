@@ -7,7 +7,7 @@ describe('Akamai Platform Info', () => {
     const platformData = createPlatformInfo();
 
     expect(platformData.platformData()).toEqual({
-      name: 'Akamai Edge Worker',
+      name: 'Akamai EdgeWorker',
     });
   });
 
