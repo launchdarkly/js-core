@@ -27,7 +27,8 @@
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build": "../../../scripts/build-package.sh",
+    "build": "../../../scripts/build-package.sh npm run build-ts",
+    "build-ts": "rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
@@ -37,8 +38,11 @@
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@rollup/plugin-alias": "^5.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-typescript": "^11.1.1",
     "@types/jest": "^29.5.1",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",
@@ -52,6 +56,9 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^2.8.7",
     "rimraf": "^5.0.0",
+    "rollup": "^3.23.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
     "ts-jest": "^29.1.0",
     "typedoc": "0.24.7",
     "typescript": "^5.0.4"
