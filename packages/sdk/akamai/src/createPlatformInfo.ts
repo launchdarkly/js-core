@@ -1,5 +1,10 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common-edge';
 
+/*
+  TODO: 
+    Add to release-please-config.json when ready for release
+    This is needed to update the version number for sdkData
+*/
 class AkamaiPlatformInfo implements Info {
   platformData(): PlatformData {
     return {
