@@ -8,7 +8,7 @@ import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-co
 class AkamaiPlatformInfo implements Info {
   platformData(): PlatformData {
     return {
-      name: 'Akamai Edge',
+      name: 'Akamai Edge Worker',
     };
   }
 
