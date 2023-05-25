@@ -14,7 +14,7 @@ export default {
   /* Define external modules, which will be provided by the EdgeWorker platform */
   external: ['url-search-params', 'log'],
 
-  /* Define output format as an ES module and specify the output directory */
+  /* Define output format as an esm module and cjs module and specify the output directory */
   output: [
     {
       format: 'esm',
