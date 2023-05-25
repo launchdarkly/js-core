@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build": "../../../scripts/build-package.sh npm run build-ts",
+    "build": "../../../scripts/build-package.sh build-ts",
     "build-ts": "rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
