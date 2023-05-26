@@ -1,4 +1,4 @@
-import { EdgeProvider } from '@launchdarkly/js-server-sdk-common-edge';
+import { EdgeProvider } from './EdgeFeatureStore';
 import { EdgeKV } from './libs/edgekv';
 
 type EdgeKVProviderParams = {

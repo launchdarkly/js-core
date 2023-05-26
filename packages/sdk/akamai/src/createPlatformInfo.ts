@@ -1,4 +1,4 @@
-import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common-edge';
+import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
 /*
   TODO: 

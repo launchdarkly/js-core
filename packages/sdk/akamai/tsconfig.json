@@ -3,9 +3,9 @@
     // Uses "." so it can load package.json.
     "rootDir": ".",
     "outDir": "dist",
-    "target": "es6",
+    "target": "es5",
     "lib": ["es6"],
-    "module": "commonjs",
+    "module": "es6",
     "strict": true,
     "noImplicitOverride": true,
     "allowSyntheticDefaultImports": true,
