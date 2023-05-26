@@ -6,7 +6,7 @@ type EdgeKVProviderParams = {
   group: string;
 };
 
-export class EdgeKVProvider implements EdgeProvider {
+export default class EdgeKVProvider implements EdgeProvider {
   private edgeKv: EdgeKV;
 
   constructor({ namespace, group }: EdgeKVProviderParams) {
