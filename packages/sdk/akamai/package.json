@@ -17,11 +17,10 @@
   ],
   "type": "module",
   "exports": {
-    "require": "./dist/cjs/src/index.js",
-    "import": "./dist/esm/src/index.js"
+    "import": "./dist/esm/bundle.es.js"
   },
-  "main": "./dist/cjs/src/index.js",
-  "types": "./dist/cjs/src/index.d.ts",
+  "main": "./dist/esm/bundle.es.js",
+  "types": "./dist/esm/src/index.d.ts",
   "files": [
     "dist"
   ],
@@ -40,7 +39,9 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.1",
+    "@types/crypto-js": "^4.1.1",
     "@types/jest": "^29.5.1",
     "@typescript-eslint/eslint-plugin": "^5.57.0",
     "@typescript-eslint/parser": "^5.57.0",

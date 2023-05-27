@@ -3,7 +3,7 @@
     // Uses "." so it can load package.json.
     "rootDir": ".",
     "outDir": "dist",
-    "target": "es5",
+    "target": "es6",
     "lib": ["es6"],
     "module": "es6",
     "strict": true,
@@ -17,7 +17,7 @@
     "stripInternal": true,
     "moduleResolution": "node",
     "types": ["jest", "node"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
 }

@@ -1,5 +1,5 @@
-import { EdgeProvider } from './EdgeFeatureStore';
-import { EdgeKV } from './libs/edgekv';
+import { EdgeProvider } from './api/edgeFeatureStore';
+import { EdgeKV } from './edgekv';
 
 type EdgeKVProviderParams = {
   namespace: string;

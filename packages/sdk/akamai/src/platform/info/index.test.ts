@@ -1,4 +1,4 @@
-import createPlatformInfo from './createPlatformInfo';
+import createPlatformInfo from '.';
 
 const packageJson = require('../package.json');
 

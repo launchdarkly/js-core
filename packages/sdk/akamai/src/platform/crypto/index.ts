@@ -1,3 +1,5 @@
+// @ts-ignore. // this crypto is provided by Akamai's platform at runtime
+import { crypto as AkamaiCrypto } from 'crypto';
 import type { Crypto, Hasher, Hmac } from '@launchdarkly/js-server-sdk-common';
 import CryptoJSHasher from './cryptoJSHasher';
 import CryptoJSHmac from './cryptoJSHmac';
@@ -5,7 +7,7 @@ import { SupportedHashAlgorithm } from './types';
 
 /**
  * Uses crypto-js as substitute to node:crypto because the latter
- * is not yet supported in some runtimes.
+ * is not yet supported in Akamai runtimes.
  * https://cryptojs.gitbook.io/docs/
  */
 export default class EdgeCrypto implements Crypto {
@@ -18,6 +20,8 @@ export default class EdgeCrypto implements Crypto {
   }
 
   randomUUID(): string {
-    return 'crypto.randomUUID()';
+    let array = new Uint32Array(1);
+    AkamaiCrypto.getRandomValues(array);
+    return array.join();
   }
 }

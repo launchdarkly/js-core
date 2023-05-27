@@ -12,7 +12,7 @@ class NoopResponse implements Response {
   status: number;
 
   constructor() {
-    this.headers = {} as any;
+    this.headers = {} as Headers;
     this.status = 0;
   }
 

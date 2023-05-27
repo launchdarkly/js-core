@@ -9,16 +9,13 @@
  * @packageDocumentation
  */
 
-import {
-  BasicLogger,
-  EdgeFeatureStore,
-  init as initEdge,
-  LDOptions,
-  LDClient,
-} from '@launchdarkly/js-server-sdk-common-edge';
-import AkamaiClient from './AkamaiClient';
-import { EdgeProvider } from './EdgeFeatureStore';
+import { BasicLogger, LDOptions } from '@launchdarkly/js-server-sdk-common';
+import LDClient from './api/LDClient';
+import { EdgeFeatureStore, EdgeProvider } from './api/edgeFeatureStore';
 import EdgeKVProvider from './edgeKVProvider';
+import { validateOptions } from './utils';
+import EdgePlatform from './platform';
+import createPlatformInfo from './platform/info';
 
 export type { LDClient };
 
@@ -26,26 +23,32 @@ export type AkamaiClientParams = {
   sdkKey: string;
   namespace: string;
   group: string;
-  featureStoreProvider: EdgeProvider;
-  options: LDOptions;
+  featureStoreProvider?: EdgeProvider;
+  options?: LDOptions;
 };
 
 // eslint-disable-next-line import/prefer-default-export
 export const init = ({
   namespace,
   group,
-  options,
+  options = {},
   featureStoreProvider,
   sdkKey,
-}: AkamaiClientParams) => {
+}: AkamaiClientParams): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
-
   const edgekvProvider = featureStoreProvider ?? new EdgeKVProvider({ namespace, group });
-  return new AkamaiClient(sdkKey, {
+
+  const ldOptions = {
     featureStore: new EdgeFeatureStore(edgekvProvider, sdkKey, 'Akamai', logger),
     logger,
     ...options,
-  });
+  };
+
+  // this throws if options are invalid
+  validateOptions(sdkKey, ldOptions);
+
+  return new LDClient(sdkKey, new EdgePlatform(createPlatformInfo()), ldOptions);
 };
 
 export default init;
+

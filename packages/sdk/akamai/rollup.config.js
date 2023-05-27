@@ -1,6 +1,7 @@
 import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import common from '@rollup/plugin-commonjs';
+import terser from '@rollup/plugin-terser';
 import generatePackageJson from 'rollup-plugin-generate-package-json'
 
 export default {
@@ -11,29 +12,32 @@ export default {
   output: {
       format: 'es', 
       sourcemap: true,
-      file: 'dist/esm/bundle.es.js'
+      file: 'dist/esm/bundle.es.js',
+      intro: 'var setInterval = () => {}; var setTimeout = () => (callback) => { callback(); };'
     },
 
   /* Bundle all modules into a single output module */
   preserveModules: false,
-  external: ["text-encode-transform", "streams", "http-request", "./edgekv_tokens.js"],
+  external: ["text-encode-transform", "streams", "http-request", "./edgekv_tokens.js", "crypto"],
 
   plugins: [
     /* Each build output folder cjs and esm needs a package.json */
-    // generatePackageJson({
-    //   baseContents: (pkg) => ({...pkg})
-    // }),
+    generatePackageJson({
+      baseContents: (pkg) => ({...pkg})
+    }),
 
-    /* Convert to Typescript */
     typescript(),
     
     common({
       transformMixedEsModules: true, 
       esmExternals: true
     }),
-    /* Resolve modules from node_modules */
     resolve(),
-
-    /* Convert commonJS modules */
+    terser()
   ],
+  onwarn: (warning) => {
+    if (warning.code !== 'CIRCULAR_DEPENDENCY') {
+      console.error(`(!) ${warning.message}`);
+    }
+  }
 };
