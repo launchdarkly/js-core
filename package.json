@@ -10,7 +10,7 @@
     "packages/sdk/vercel",
     "packages/sdk/example-vercel",
     "packages/sdk/akamai",
-    "packages/sdk/example-akamai"
+    "packages/sdk/akamai/example"
   ],
   "private": true,
   "scripts": {

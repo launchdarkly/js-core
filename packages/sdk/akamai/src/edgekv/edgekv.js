@@ -12,7 +12,7 @@ import { httpRequest } from 'http-request';
  * You must include edgekv_tokens.js in your bundle for this class to function properly.
  * edgekv_tokens.js must include all namespaces you are going to use in the bundle.
  */
-import { edgekv_access_tokens } from './edgekv_tokens.js';
+import { edgekv_access_tokens } from 'edgekv_tokens.js';
 
 export class EdgeKV {
 	#namespace;

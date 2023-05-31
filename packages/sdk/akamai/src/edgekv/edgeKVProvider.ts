@@ -1,4 +1,4 @@
-import { EdgeProvider } from './api/edgeFeatureStore';
+import { EdgeProvider } from './edgeFeatureStore';
 import { EdgeKV } from './edgekv';
 
 type EdgeKVProviderParams = {

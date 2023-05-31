@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "es2015",
+    "target": "ES2015",
+    "noImplicitAny": false,
+    "outDir": "dist/ew",
+    "rootDir": ".",
+    "sourceMap": false,
+    "moduleResolution": "node"
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

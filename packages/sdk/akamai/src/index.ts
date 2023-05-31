@@ -9,37 +9,51 @@
  * @packageDocumentation
  */
 
-import { BasicLogger, LDOptions } from '@launchdarkly/js-server-sdk-common';
-import LDClient from './api/LDClient';
-import { EdgeFeatureStore, EdgeProvider } from './api/edgeFeatureStore';
-import EdgeKVProvider from './edgeKVProvider';
+import {
+  BasicLogger,
+  LDOptions,
+  LDContext,
+  LDMultiKindContext,
+  LDSingleKindContext,
+} from '@launchdarkly/js-server-sdk-common';
+import { EdgeFeatureStore, EdgeProvider } from './edgekv/edgeFeatureStore';
 import { validateOptions } from './utils';
+import LDClient from './api/LDClient';
+import EdgeKVProvider from './edgekv/edgeKVProvider';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
 
-export type { LDClient };
+export type { LDClient, EdgeProvider, LDContext, LDMultiKindContext, LDSingleKindContext };
 
-export type AkamaiClientParams = {
+type BaseClientParams = {
   sdkKey: string;
-  namespace: string;
-  group: string;
-  featureStoreProvider?: EdgeProvider;
   options?: LDOptions;
 };
 
-// eslint-disable-next-line import/prefer-default-export
-export const init = ({
+export type ClientWithEdgeKVParams = BaseClientParams & {
+  namespace: string;
+  group: string;
+};
+
+export type ClientWithFeatureStoreParams = BaseClientParams & {
+  featureStoreProvider: EdgeProvider;
+};
+
+/**
+ * Initialize Launchdarkly client using Akamai's Edge KV as a feature store
+ * @param params ClientWithEdgeKVParams
+ * @returns
+ */
+export const initWithEdgeKV = ({
   namespace,
   group,
   options = {},
-  featureStoreProvider,
   sdkKey,
-}: AkamaiClientParams): LDClient => {
+}: ClientWithEdgeKVParams): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
-  const edgekvProvider = featureStoreProvider ?? new EdgeKVProvider({ namespace, group });
-
+  const edgekvProvider = new EdgeKVProvider({ namespace, group });
   const ldOptions = {
-    featureStore: new EdgeFeatureStore(edgekvProvider, sdkKey, 'Akamai', logger),
+    featureStore: new EdgeFeatureStore(edgekvProvider!, sdkKey, 'Akamai', logger),
     logger,
     ...options,
   };
@@ -50,4 +64,26 @@ export const init = ({
   return new LDClient(sdkKey, new EdgePlatform(createPlatformInfo()), ldOptions);
 };
 
-export default init;
+/**
+ * Initialize LaunchDarkly client using a custom feature store provider.
+ * @param params ClientWithFeatureStoreParams
+ * @returns
+ */
+export const initWithFeatureStore = ({
+  sdkKey,
+  options = {},
+  featureStoreProvider,
+}: ClientWithFeatureStoreParams): LDClient => {
+  const logger = options.logger ?? BasicLogger.get();
+
+  const ldOptions = {
+    featureStore: new EdgeFeatureStore(featureStoreProvider, sdkKey, 'Akamai', logger),
+    logger,
+    ...options,
+  };
+
+  // this throws if options are invalid
+  validateOptions(sdkKey, ldOptions);
+
+  return new LDClient(sdkKey, new EdgePlatform(createPlatformInfo()), ldOptions);
+};

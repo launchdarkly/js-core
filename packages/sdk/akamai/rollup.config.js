@@ -18,7 +18,7 @@ export default {
 
   /* Bundle all modules into a single output module */
   preserveModules: false,
-  external: ['text-encode-transform', 'streams', 'http-request', './edgekv_tokens.js', 'crypto'],
+  external: ['text-encode-transform', 'streams', 'http-request', 'edgekv_tokens.js', 'crypto'],
 
   plugins: [
     /* Each build output folder cjs and esm needs a package.json */
