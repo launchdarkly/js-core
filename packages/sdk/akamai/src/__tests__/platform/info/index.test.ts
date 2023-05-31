@@ -1,6 +1,6 @@
-import createPlatformInfo from '.';
+import createPlatformInfo from '../../../platform/info';
 
-const packageJson = require('../package.json');
+const packageJson = require('../../../../package.json');
 
 describe('Akamai Platform Info', () => {
   it('platformData shows correct information', () => {
