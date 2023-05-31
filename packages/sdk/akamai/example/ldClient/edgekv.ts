@@ -8,9 +8,9 @@ export const evaluateFlagWithEdgeKV = async (
   defaultValue: boolean
 ) => {
   const client = initWithEdgeKV({
-    sdkKey: '61d8ad949ae37514e4930155',
-    namespace: 'cliff-ns-staging',
-    group: '0',
+    sdkKey: 'your-launchdarkly-client-id',
+    namespace: 'your-edgekv-namespace',
+    group: 'your-edgekv-group-id',
   });
   return await client.variation(flagKey, context, defaultValue);
 };
