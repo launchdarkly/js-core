@@ -10,6 +10,8 @@
     "packages/sdk/cloudflare/example",
     "packages/sdk/vercel",
     "packages/sdk/vercel/example-vercel",
+    "packages/sdk/akamai",
+    "packages/sdk/akamai/example",
     "packages/sdk/akamai-edgekv",
     "packages/sdk/akamai-edgekv/example"
   ],

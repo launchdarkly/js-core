@@ -1,5 +1,5 @@
 /**
- * This is the API reference for the Akamai LaunchDarkly SDK using EdgeKV as a feature store.
+ * This is the API reference for the Akamai LaunchDarkly SDK.
  *
  * In typical usage, you will call {@link init} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
@@ -16,19 +16,18 @@ import {
   LDMultiKindContext,
   LDSingleKindContext,
   LDOptions,
+  EdgeProvider,
   EdgeFeatureStore,
 } from '@launchdarkly/akamai-edgeworker-sdk-common';
 import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
-import EdgeKVProvider from './edgekv/edgeKVProvider';
 
 type AkamaiLDClientParams = {
   sdkKey: string;
   options?: LDOptions;
-  namespace: string;
-  group: string;
+  featureStoreProvider: EdgeProvider;
 };
 
-export type { LDClient, LDContext, LDMultiKindContext, LDSingleKindContext };
+export type { LDClient, LDContext, LDMultiKindContext, LDSingleKindContext, EdgeProvider };
 
 /**
  * Initialize Launchdarkly client using Akamai's Edge KV as a feature store
@@ -36,21 +35,18 @@ export type { LDClient, LDContext, LDMultiKindContext, LDSingleKindContext };
  * @returns
  */
 export const init = ({
-  namespace,
-  group,
   options = {},
   sdkKey,
+  featureStoreProvider,
 }: AkamaiLDClientParams): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
-  const edgekvProvider = new EdgeKVProvider({ namespace, group });
-  const featureStore = new EdgeFeatureStore(edgekvProvider, sdkKey, 'Akamai', logger);
 
   return initEdge({
     sdkKey,
     options,
-    edgeFeatureStore: featureStore,
+    edgeFeatureStore: new EdgeFeatureStore(featureStoreProvider, sdkKey, 'Akamai', logger),
     platformName: 'Akamai EdgeWorker',
-    sdkName: '@launchdarkly/akamai-server-edgekv-sdk',
+    sdkName: '@launchdarkly/akamai-server-sdk',
     sdkVersion: '0.1.0', // {x-release-please-version}
   });
 };

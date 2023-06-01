@@ -1,4 +1,4 @@
-import { EdgeProvider } from './edgeFeatureStore';
+import { EdgeProvider } from '@launchdarkly/akamai-edgeworker-sdk-common';
 import { EdgeKV } from './edgekv';
 
 type EdgeKVProviderParams = {

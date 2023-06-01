@@ -10,12 +10,18 @@ import { validateOptions } from './utils';
 import LDClient from './api/LDClient';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
+import type { EdgeProvider } from './featureStore';
 
-export interface EdgeProvider {
-  get: (rootKey: string) => Promise<string | null | undefined>;
-}
+export { EdgeFeatureStore } from './featureStore';
 
-export type { LDClient, LDContext, LDMultiKindContext, LDSingleKindContext, LDOptions };
+export type {
+  LDClient,
+  LDContext,
+  LDMultiKindContext,
+  LDSingleKindContext,
+  LDOptions,
+  EdgeProvider,
+};
 
 type BaseSDKParams = {
   sdkKey: string;

@@ -15,10 +15,17 @@
     },
     "packages/sdk/akamai": {
       "extra-files": [
-        "src/platform/info/index.ts"
+        "src/index.ts"
       ],
       "bump-minor-pre-major": true,
-      "release-as": "0.1.0-alpha"
+      "release-as": "0.1.0"
+    },
+    "packages/sdk/akamai-edgekv": {
+      "extra-files": [
+        "src/index.ts"
+      ],
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
     }
   },
   "plugins": ["node-workspace"]
