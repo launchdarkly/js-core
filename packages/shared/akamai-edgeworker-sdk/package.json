@@ -1,8 +1,7 @@
 {
-  "name": "@launchdarkly/akamai-edgeworker-sdk",
-  "version": "0.1.0-alpha",
-  "description": "Akamai LaunchDarkly SDK",
-  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai",
+  "name": "@launchdarkly/akamai-edgeworker-sdk-common",
+  "version": "0.0.1",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/akamai-edge-sdk",
   "repository": {
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"
@@ -17,9 +16,9 @@
   ],
   "type": "module",
   "exports": {
-    "import": "./dist/esm/bundle.es.js"
+    "import": "./dist/esm/index.es.js"
   },
-  "main": "./dist/esm/bundle.es.js",
+  "main": "./dist/esm/index.es.js",
   "types": "./dist/esm/src/index.d.ts",
   "files": [
     "dist"

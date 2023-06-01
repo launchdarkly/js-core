@@ -1,7 +1,6 @@
 import { logger } from 'log';
-import { LDMultiKindContext } from '@launchdarkly/akamai-edgeworker-sdk';
-import { evaluateFlagFromCustomFeatureStore } from './ldClient/customFeatureStore';
-// import { evaluateFlagWithEdgeKV } from './ldClient/edgekv';
+import { LDMultiKindContext } from '@launchdarkly/akamai-server-edgekv-sdk';
+import { evaluateFlagWithEdgeKV } from './ldClient';
 
 const createLDContext = (r: EW.IngressClientRequest): LDMultiKindContext => ({
   kind: 'multi',
@@ -15,12 +14,7 @@ const createResponse = (text: string) => `<html><body><h1>${text}</h1></body></h
 
 export async function onClientRequest(request: EW.IngressClientRequest) {
   try {
-    // const showAds = await evaluateFlagWithEdgeKV('enable-ads', createLDContext(request), false);
-    const showAds = await evaluateFlagFromCustomFeatureStore(
-      'enable-ads',
-      createLDContext(request),
-      false
-    );
+    const showAds = await evaluateFlagWithEdgeKV('enable-ads', createLDContext(request), false);
 
     let response = createResponse('Ads are hidden');
     if (showAds) {

@@ -1,4 +1,4 @@
-import { initWithEdgeKV, LDContext, LDMultiKindContext } from '@launchdarkly/akamai-edgeworker-sdk';
+import { init, LDContext, LDMultiKindContext } from '@launchdarkly/akamai-server-edgekv-sdk';
 
 export type { LDContext, LDMultiKindContext };
 
@@ -7,7 +7,7 @@ export const evaluateFlagWithEdgeKV = async (
   context: LDContext,
   defaultValue: boolean
 ) => {
-  const client = initWithEdgeKV({
+  const client = init({
     sdkKey: 'your-launchdarkly-client-id',
     namespace: 'your-edgekv-namespace',
     group: 'your-edgekv-group-id',

@@ -1,4 +1,4 @@
-# LaunchDarkly Akamai SDK
+# LaunchDarkly Akamai SDK for EdgeKV
 
 [![NPM][sdk-akamai-npm-badge]][sdk-akamai-npm-link]
 [![Actions Status][sdk-akamai-ci-badge]][sdk-akamai-ci]
@@ -13,25 +13,19 @@ For more information, see the [complete reference guide for this SDK](https://do
 ## Install
 
 ```shell
-npm i @launchdarkly/akamai-edgeworker-sdk
-```
-
-Then turn on the Node.js compatibility flag in your `wrangler.toml`. This allows the SDK to use `node:events`:
-
-```toml
-compatibility_flags = [ "nodejs_compat" ]
+npm i @launchdarkly/akamai-server-edgekv-sdk
 ```
 
 ## Quickstart
 
 
-See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai/example).
+See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-edgekv/example).
 
 ## Developing this SDK
 
 ```shell
 # at js-core repo root
-yarn && yarn build && cd packages/sdk/akamai
+yarn && yarn build && cd packages/sdk/akamai-edgekv
 
 # run tests
 yarn test
@@ -50,12 +44,3 @@ yarn test
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
-
-[sdk-akamai-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml/badge.svg
-[sdk-akamai-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai.yml
-[sdk-akamai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-edgeworker-sdk.svg?style=flat-square
-[sdk-akamai-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-edgeworker-sdk
-[sdk-akamai-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[sdk-akamai-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai/docs/
-[sdk-akamai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-edgeworker-sdk.svg?style=flat-square
-[sdk-akamai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-edgeworker-sdk.svg?style=flat-square
