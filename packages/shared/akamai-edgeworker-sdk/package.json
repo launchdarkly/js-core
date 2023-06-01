@@ -61,7 +61,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "^1.0.2",
     "crypto-js": "^4.1.1"
   }
 }
