@@ -1,4 +1,4 @@
-import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
+import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common';
 import { initWithEdgeKV, initWithFeatureStore } from '../index';
 import * as testData from './testData.json';
 import EdgeKVProvider from '../edgekv/edgeKVProvider';
