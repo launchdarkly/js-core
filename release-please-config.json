@@ -12,6 +12,13 @@
         "src/createPlatformInfo.ts"
       ],
       "bump-minor-pre-major": true
+    },
+    "packages/sdk/akamai": {
+      "extra-files": [
+        "src/platform/info/index.ts"
+      ],
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0-alpha"
     }
   },
   "plugins": ["node-workspace"]
