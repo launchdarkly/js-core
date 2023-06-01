@@ -1,12 +1,12 @@
-jest.mock('../../edgekv', () => ({
+jest.mock('../../edgekv/edgekv', () => ({
   EdgeKV: jest.fn().mockImplementation(() => {
     return { get: 'test' };
   }),
 }));
 
 import { LDOptionsInternal, validateOptions } from '../../utils/validateOptions';
-import { EdgeFeatureStore } from '../../api/edgeFeatureStore';
-import EdgeKvProvider from '../../edgeKVProvider';
+import { EdgeFeatureStore } from '../../edgekv/edgeFeatureStore';
+import EdgeKvProvider from '../../edgekv/edgeKVProvider';
 import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
 
 const SDK_KEY = 'test-key';

@@ -6,11 +6,9 @@ import { createCallbacks, createOptions } from '../utils';
 /**
  * The LaunchDarkly Akamai SDK edge client object.
  */
-export class LDClient extends LDClientImpl {
+export default class LDClient extends LDClientImpl {
   // sdkKey is only used to query featureStore, not to initialize with LD servers
   constructor(sdkKey: string, platform: EdgePlatform, options: LDOptions) {
     super(sdkKey, platform, createOptions(options), createCallbacks());
   }
 }
-
-export default LDClient;

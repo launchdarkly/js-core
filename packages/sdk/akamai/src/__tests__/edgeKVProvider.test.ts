@@ -1,9 +1,9 @@
-jest.mock('../edgekv', () => ({
+jest.mock('../edgekv/edgekv', () => ({
   EdgeKV: jest.fn(),
 }));
 
-import EdgeKVProvider from '../edgeKVProvider';
-import { EdgeKV } from '../edgekv';
+import EdgeKVProvider from '../edgekv/edgeKVProvider';
+import { EdgeKV } from '../edgekv/edgekv';
 
 const mockEdgeKV = EdgeKV as jest.Mock;
 

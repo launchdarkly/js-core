@@ -1,5 +1,11 @@
+jest.mock('../edgekv/edgekv', () => ({
+  EdgeKV: jest.fn(),
+}));
+
 import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
-import { init } from '../index';
+import { initWithEdgeKV, initWithFeatureStore } from '../index';
+import * as testData from './testData.json';
+import EdgeKVProvider from '../edgekv/edgeKVProvider';
 
 const sdkKey = 'test-sdk-key';
 const flagKey1 = 'testFlag1';
@@ -10,82 +16,175 @@ const context: LDContext = { kind: 'user', key: 'test-user-key-1' };
 describe('init', () => {
   let ldClient: LDClient;
 
-  beforeAll(async () => {
-    ldClient = init({ namespace: 'akamai-test', group: 'test', sdkKey });
-    await ldClient.waitForInitialization();
-  });
-
-  afterAll(() => {
-    ldClient.close();
-  });
-
-  describe('flags', () => {
-    test('variation default', async () => {
-      const value = await ldClient.variation(flagKey1, context, false);
-      expect(value).toBeTruthy();
+  describe('init with Edge KV', () => {
+    beforeAll(async () => {
+      ldClient = initWithEdgeKV({ namespace: 'akamai-test', group: 'Akamai', sdkKey });
+      await ldClient.waitForInitialization();
     });
-
-    test('variation default rollout', async () => {
-      const contextWithEmail = { ...context, email: 'test@yahoo.com' };
-      const value = await ldClient.variation(flagKey2, contextWithEmail, false);
-      const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
-
-      expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
-      expect(value).toBeTruthy();
+  
+    beforeEach(() => {
+      jest.spyOn(EdgeKVProvider.prototype, 'get').mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
+    })
+  
+    afterAll(() => {
+      ldClient.close();
     });
-
-    test('rule match', async () => {
-      const contextWithEmail = { ...context, email: 'test@gmail.com' };
-      const value = await ldClient.variation(flagKey1, contextWithEmail, false);
-      const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
-
-      expect(detail).toEqual({
-        reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
-        value: false,
-        variationIndex: 1,
+  
+    describe('flags', () => {
+      it('variation default', async () => {
+        const value = await ldClient.variation(flagKey1, context, false);
+        expect(value).toBeTruthy();
       });
-      expect(value).toBeFalsy();
-    });
-
-    test('fallthrough', async () => {
-      const contextWithEmail = { ...context, email: 'test@yahoo.com' };
-      const value = await ldClient.variation(flagKey1, contextWithEmail, false);
-      const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
-
-      expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
-      expect(value).toBeTruthy();
-    });
-
-    test('allFlags fallthrough', async () => {
-      const allFlags = await ldClient.allFlagsState(context);
-
-      expect(allFlags).toBeDefined();
-      expect(allFlags.toJSON()).toEqual({
-        $flagsState: {
-          testFlag1: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
-          testFlag2: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
-          testFlag3: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
-        },
-        $valid: true,
-        testFlag1: true,
-        testFlag2: true,
-        testFlag3: true,
+  
+      it('variation default rollout', async () => {
+        const contextWithEmail = { ...context, email: 'test@yahoo.com' };
+        const value = await ldClient.variation(flagKey2, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
+  
+        expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+        expect(value).toBeTruthy();
+      });
+  
+      it('rule match', async () => {
+        const contextWithEmail = { ...context, email: 'test@gmail.com' };
+        const value = await ldClient.variation(flagKey1, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+  
+        expect(detail).toEqual({
+          reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
+          value: false,
+          variationIndex: 1,
+        });
+        expect(value).toBeFalsy();
+      });
+  
+      it('fallthrough', async () => {
+        const contextWithEmail = { ...context, email: 'test@yahoo.com' };
+        const value = await ldClient.variation(flagKey1, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+  
+        expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+        expect(value).toBeTruthy();
+      });
+  
+      it('allFlags fallthrough', async () => {
+        const allFlags = await ldClient.allFlagsState(context);
+  
+        expect(allFlags).toBeDefined();
+        expect(allFlags.toJSON()).toEqual({
+          $flagsState: {
+            testFlag1: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+            testFlag2: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+            testFlag3: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+          },
+          $valid: true,
+          testFlag1: true,
+          testFlag2: true,
+          testFlag3: true,
+        });
       });
     });
-  });
-
-  describe('segments', () => {
-    test('segment by country', async () => {
-      const contextWithCountry = { ...context, country: 'australia' };
-      const value = await ldClient.variation(flagKey3, contextWithCountry, false);
-      const detail = await ldClient.variationDetail(flagKey3, contextWithCountry, false);
-
-      expect(detail).toEqual({
-        reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
-        value: false,
-        variationIndex: 1,
+  
+    describe('segments', () => {
+      it('segment by country', async () => {
+        const contextWithCountry = { ...context, country: 'australia' };
+        const value = await ldClient.variation(flagKey3, contextWithCountry, false);
+        const detail = await ldClient.variationDetail(flagKey3, contextWithCountry, false);
+  
+        expect(detail).toEqual({
+          reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
+          value: false,
+          variationIndex: 1,
+        });
+        expect(value).toBeFalsy();
       });
-      expect(value).toBeFalsy();
     });
-  });
+  })
+
+  describe('init with feature store', () => {
+    const edgekvProvider = new EdgeKVProvider({ namespace: 'akamai-test', group: 'Akamai' });
+    
+    beforeAll(async () => {
+      ldClient = initWithFeatureStore({ sdkKey, featureStoreProvider: edgekvProvider });
+      await ldClient.waitForInitialization();
+    });
+
+    beforeEach(() => {
+      jest.spyOn(EdgeKVProvider.prototype, 'get').mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
+    })
+  
+    afterAll(() => {
+      ldClient.close();
+    });
+  
+    describe('flags', () => {
+      it('variation default', async () => {
+        const value = await ldClient.variation(flagKey1, context, false);
+        expect(value).toBeTruthy();
+      });
+  
+      it('variation default rollout', async () => {
+        const contextWithEmail = { ...context, email: 'test@yahoo.com' };
+        const value = await ldClient.variation(flagKey2, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
+  
+        expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+        expect(value).toBeTruthy();
+      });
+  
+      it('rule match', async () => {
+        const contextWithEmail = { ...context, email: 'test@gmail.com' };
+        const value = await ldClient.variation(flagKey1, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+  
+        expect(detail).toEqual({
+          reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
+          value: false,
+          variationIndex: 1,
+        });
+        expect(value).toBeFalsy();
+      });
+  
+      it('fallthrough', async () => {
+        const contextWithEmail = { ...context, email: 'test@yahoo.com' };
+        const value = await ldClient.variation(flagKey1, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+  
+        expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+        expect(value).toBeTruthy();
+      });
+  
+      it('allFlags fallthrough', async () => {
+        const allFlags = await ldClient.allFlagsState(context);
+  
+        expect(allFlags).toBeDefined();
+        expect(allFlags.toJSON()).toEqual({
+          $flagsState: {
+            testFlag1: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+            testFlag2: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+            testFlag3: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+          },
+          $valid: true,
+          testFlag1: true,
+          testFlag2: true,
+          testFlag3: true,
+        });
+      });
+    });
+  
+    describe('segments', () => {
+      it('segment by country', async () => {
+        const contextWithCountry = { ...context, country: 'australia' };
+        const value = await ldClient.variation(flagKey3, contextWithCountry, false);
+        const detail = await ldClient.variationDetail(flagKey3, contextWithCountry, false);
+  
+        expect(detail).toEqual({
+          reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
+          value: false,
+          variationIndex: 1,
+        });
+        expect(value).toBeFalsy();
+      });
+    });
+  })
 });

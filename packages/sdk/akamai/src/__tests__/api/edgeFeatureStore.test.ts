@@ -1,5 +1,5 @@
 import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
-import { EdgeFeatureStore, EdgeProvider } from '../../api/edgeFeatureStore';
+import { EdgeFeatureStore, EdgeProvider } from '../../edgekv/edgeFeatureStore';
 
 import * as testData from '../testData.json';
 

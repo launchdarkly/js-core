@@ -15,7 +15,7 @@ class AkamaiPlatformInfo implements Info {
   sdkData(): SdkData {
     return {
       name: '@launchdarkly/akamai-edgeworker-sdk',
-      version: '0.0.1', // {x-release-please-version}
+      version: '0.0.1-alpha', // {x-release-please-version}
     };
   }
 }
