@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/akamai-edgeworker-sdk",
-  "version": "0.0.1-alpha",
+  "version": "0.1.0-alpha",
   "description": "Akamai LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai",
   "repository": {
