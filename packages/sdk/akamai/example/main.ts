@@ -11,9 +11,7 @@ const createLDContext = (r: EW.IngressClientRequest): LDMultiKindContext => ({
   },
 });
 
-const createResponse = (text: string) => {
-  return `<html><body><h1>${text}</h1></body></html>`;
-};
+const createResponse = (text: string) => `<html><body><h1>${text}</h1></body></html>`;
 
 export async function onClientRequest(request: EW.IngressClientRequest) {
   try {

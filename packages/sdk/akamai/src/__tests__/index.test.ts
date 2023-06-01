@@ -1,11 +1,11 @@
-jest.mock('../edgekv/edgekv', () => ({
-  EdgeKV: jest.fn(),
-}));
-
 import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
 import { initWithEdgeKV, initWithFeatureStore } from '../index';
 import * as testData from './testData.json';
 import EdgeKVProvider from '../edgekv/edgeKVProvider';
+
+jest.mock('../edgekv/edgekv', () => ({
+  EdgeKV: jest.fn(),
+}));
 
 const sdkKey = 'test-sdk-key';
 const flagKey1 = 'testFlag1';

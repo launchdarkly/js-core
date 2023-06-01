@@ -20,7 +20,7 @@ export default class EdgeCrypto implements Crypto {
   }
 
   randomUUID(): string {
-    let array = new Uint32Array(1);
+    const array = new Uint32Array(1);
     AkamaiCrypto.getRandomValues(array);
     return array.join();
   }

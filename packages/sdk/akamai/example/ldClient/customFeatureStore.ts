@@ -2,28 +2,6 @@ import { EdgeProvider, initWithFeatureStore, LDContext } from '@launchdarkly/aka
 
 export type { LDContext, EdgeProvider };
 
-class MyCustomStoreProvider implements EdgeProvider {
-  // root key is formatted as LD-Env-{Launchdarkly environment client ID}
-  async get(rootKey: string): Promise<string> {
-    // you should provide an implementation to retrieve your flags from launchdarkly's https://sdk.launchdarkly.com/sdk/latest-all endpoint.
-    // see https://docs.launchdarkly.com/sdk/features/flags-from-files for more information.
-    return flagData;
-  }
-}
-
-export const evaluateFlagFromCustomFeatureStore = async (
-  flagKey: string,
-  context: LDContext,
-  defaultValue: boolean
-) => {
-  const client = initWithFeatureStore({
-    sdkKey: 'Your-launchdarkly-environment-client-id',
-    featureStoreProvider: new MyCustomStoreProvider(),
-  });
-
-  return await client.variation(flagKey, context, defaultValue);
-};
-
 const flagData = `
 {
   "flags": {
@@ -58,3 +36,26 @@ const flagData = `
   "segments": {}
 }
 `;
+
+class MyCustomStoreProvider implements EdgeProvider {
+  // root key is formatted as LD-Env-{Launchdarkly environment client ID}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async get(rootKey: string): Promise<string> {
+    // you should provide an implementation to retrieve your flags from launchdarkly's https://sdk.launchdarkly.com/sdk/latest-all endpoint.
+    // see https://docs.launchdarkly.com/sdk/features/flags-from-files for more information.
+    return flagData;
+  }
+}
+
+export const evaluateFlagFromCustomFeatureStore = async (
+  flagKey: string,
+  context: LDContext,
+  defaultValue: boolean
+) => {
+  const client = initWithFeatureStore({
+    sdkKey: 'Your-launchdarkly-environment-client-id',
+    featureStoreProvider: new MyCustomStoreProvider(),
+  });
+
+  return client.variation(flagKey, context, defaultValue);
+};

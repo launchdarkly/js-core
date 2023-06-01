@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 import { Headers, NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
@@ -9,6 +10,7 @@ import type {
 
 class NoopResponse implements Response {
   headers: Headers;
+
   status: number;
 
   constructor() {
@@ -32,6 +34,7 @@ class NoopResponse implements Response {
 }
 
 export default class EdgeRequests implements Requests {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   fetch(url: string, options: Options = {}): Promise<Response> {
     return Promise.resolve(new NoopResponse());
   }

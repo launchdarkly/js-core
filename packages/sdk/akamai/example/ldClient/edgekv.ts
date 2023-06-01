@@ -12,5 +12,5 @@ export const evaluateFlagWithEdgeKV = async (
     namespace: 'your-edgekv-namespace',
     group: 'your-edgekv-group-id',
   });
-  return await client.variation(flagKey, context, defaultValue);
+  return client.variation(flagKey, context, defaultValue);
 };
