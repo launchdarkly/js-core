@@ -10,10 +10,12 @@ on:
           - packages/shared/common
           - packages/shared/sdk-server
           - packages/shared/sdk-server-edge
+          - packages/shared/akamai-edgeworker-sdk
           - packages/sdk/cloudflare
           - packages/sdk/server-node
           - packages/sdk/vercel
           - packages/sdk/akamai
+          - packages/sdk/akamai-edgekv
 name: Publish Documentation
 jobs:
   build-publish:

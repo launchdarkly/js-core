@@ -11,10 +11,12 @@ jobs:
       package-common-released: ${{ steps.release.outputs['packages/shared/common--release_created'] }}
       package-sdk-server-released: ${{ steps.release.outputs['packages/shared/sdk-server--release_created'] }}
       package-sdk-server-edge-released: ${{ steps.release.outputs['packages/shared/sdk-server-edge--release_created'] }}
+      package-akamai-edgeworker-sdk-released: ${{ steps.release.outputs['packages/shared/akamai-edgeworker-sdk--release_created'] }}
       package-cloudflare-released: ${{ steps.release.outputs['packages/sdk/cloudflare--release_created'] }}
       package-server-node-released: ${{ steps.release.outputs['packages/sdk/server-node--release_created'] }}
       package-vercel-released: ${{ steps.release.outputs['packages/sdk/vercel--release_created'] }}
       package-akamai-released: ${{ steps.release.outputs['packages/sdk/akamai--release_created'] }}
+      package-akamai-edgekv-released: ${{ steps.release.outputs['packages/sdk/akamai-edgekv--release_created'] }}
     steps:
       - uses: google-github-actions/release-please-action@v3
         id: release
@@ -83,6 +85,26 @@ jobs:
           workspace_path: packages/shared/sdk-server-edge
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
+  release-akamai-edgeworker-sdk:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-akamai-edgeworker-sdk-released }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-common
+        name: Full release of packages/shared/akamai-edgeworker-sdk
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/shared/akamai-edgeworker-sdk
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
   release-cloudflare:
     runs-on: ubuntu-latest
     needs: ['release-please']
@@ -122,7 +144,7 @@ jobs:
         with:
           workspace_path: packages/sdk/server-node
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-    
+
   release-vercel:
     runs-on: ubuntu-latest
     needs: ['release-please']
@@ -161,4 +183,24 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/akamai
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-akamai-edgekv:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-akamai-edgekv-released }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-common
+        name: Full release of packages/sdk/akamai-edgekv
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/sdk/akamai-edgekv
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}

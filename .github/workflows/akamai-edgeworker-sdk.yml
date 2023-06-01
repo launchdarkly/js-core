@@ -1,4 +1,4 @@
-name: sdk/akamai
+name: shared/akamai-edgeworker-sdk
 
 on:
   push:
@@ -11,14 +11,17 @@ on:
       - '**.md'
 
 jobs:
-  build-test-akamai:
+  build-test-akamai-edgeworker-sdk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: 'https://registry.npmjs.org'
       - id: shared
         name: Shared CI Steps
         uses: ./actions/ci
         with:
-          workspace_name: '@launchdarkly/akamai-server-sdk'
-          workspace_path: packages/sdk/akamai
+          workspace_name: '@launchdarkly/akamai-edgeworker-sdk-common'
+          workspace_path: packages/shared/akamai-edgeworker-sdk
