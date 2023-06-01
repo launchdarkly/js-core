@@ -1,4 +1,4 @@
-import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common';
+import { LDClient, LDContext } from '@launchdarkly/akamai-edgeworker-sdk-common';
 import { init as initWithEdgeKV } from '../index';
 import * as testData from './testData.json';
 import EdgeKVProvider from '../edgekv/edgeKVProvider';
