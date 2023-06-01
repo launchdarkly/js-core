@@ -8,7 +8,7 @@
 
 The LaunchDarkly Akamai SDK is designed primarily for use in Akamai Edgeworkers. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
-For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/akamai).
+For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/edge/akamai).
 
 ## Install
 
