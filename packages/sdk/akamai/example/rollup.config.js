@@ -39,7 +39,7 @@ export default {
           dest: OUT_DIR,
           transform: (contents) =>
             contents.toString().replace('__VERSION__', process.env.npm_package_version),
-        }
+        },
       ],
     }),
   ],
