@@ -15,7 +15,7 @@ jobs:
       package-cloudflare-released: ${{ steps.release.outputs['packages/sdk/cloudflare--release_created'] }}
       package-server-node-released: ${{ steps.release.outputs['packages/sdk/server-node--release_created'] }}
       package-vercel-released: ${{ steps.release.outputs['packages/sdk/vercel--release_created'] }}
-      package-akamai-released: ${{ steps.release.outputs['packages/sdk/akamai--release_created'] }}
+      package-akamai-base-released: ${{ steps.release.outputs['packages/sdk/akamai-base--release_created'] }}
       package-akamai-edgekv-released: ${{ steps.release.outputs['packages/sdk/akamai-edgekv--release_created'] }}
     steps:
       - uses: google-github-actions/release-please-action@v3
@@ -165,13 +165,13 @@ jobs:
           workspace_path: packages/sdk/vercel
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
-  release-akamai:
+  release-akamai-base:
     runs-on: ubuntu-latest
     needs: ['release-please']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-released }}
+    if: ${{ needs.release-please.outputs.package-akamai-base-released }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -179,10 +179,10 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-common
-        name: Full release of packages/sdk/akamai
+        name: Full release of packages/sdk/akamai-base
         uses: ./actions/full-release
         with:
-          workspace_path: packages/sdk/akamai
+          workspace_path: packages/sdk/akamai-base
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-akamai-edgekv:

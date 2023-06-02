@@ -29,7 +29,7 @@
       "path": "./packages/sdk/akamai-edgekv/tsconfig.ref.json"
     },
     {
-      "path": "./packages/sdk/akamai/tsconfig.ref.json"
+      "path": "./packages/sdk/akamai-base/tsconfig.ref.json"
     }
   ]
 }

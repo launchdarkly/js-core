@@ -13,7 +13,7 @@
       ],
       "bump-minor-pre-major": true
     },
-    "packages/sdk/akamai": {
+    "packages/sdk/akamai-base": {
       "extra-files": [
         "src/index.ts"
       ],

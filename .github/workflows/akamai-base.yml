@@ -1,4 +1,4 @@
-name: sdk/akamai
+name: sdk/akamai-base
 
 on:
   push:
@@ -20,5 +20,5 @@ jobs:
         name: Shared CI Steps
         uses: ./actions/ci
         with:
-          workspace_name: '@launchdarkly/akamai-server-sdk'
-          workspace_path: packages/sdk/akamai
+          workspace_name: '@launchdarkly/akamai-server-base-sdk'
+          workspace_path: packages/sdk/akamai-base

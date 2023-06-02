@@ -1,4 +1,4 @@
-import { EdgeProvider, init, LDContext } from '@launchdarkly/akamai-server-sdk';
+import { EdgeProvider, init, LDContext } from '@launchdarkly/akamai-server-base-sdk';
 
 export type { LDContext, EdgeProvider };
 

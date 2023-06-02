@@ -14,7 +14,7 @@ on:
           - packages/sdk/cloudflare
           - packages/sdk/server-node
           - packages/sdk/vercel
-          - packages/sdk/akamai
+          - packages/sdk/akamai-base
           - packages/sdk/akamai-edgekv
 name: Publish Documentation
 jobs:

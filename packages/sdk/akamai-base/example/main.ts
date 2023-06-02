@@ -1,5 +1,5 @@
 import { logger } from 'log';
-import { LDMultiKindContext } from '@launchdarkly/akamai-server-sdk';
+import { LDMultiKindContext } from '@launchdarkly/akamai-server-base-sdk';
 import { evaluateFlagFromCustomFeatureStore } from './ldClient';
 
 const createLDContext = (r: EW.IngressClientRequest): LDMultiKindContext => ({

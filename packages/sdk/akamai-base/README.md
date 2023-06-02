@@ -13,19 +13,19 @@ For more information, see the [complete reference guide for this SDK](https://do
 ## Install
 
 ```shell
-npm i @launchdarkly/akamai-server-edgekv-sdk
+npm i @launchdarkly/akamai-server-base-sdk
 ```
 
 ## Quickstart
 
 
-See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-edgekv/example).
+See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-base/example).
 
 ## Developing this SDK
 
 ```shell
 # at js-core repo root
-yarn && yarn build && cd packages/sdk/akamai-edgekv
+yarn && yarn build && cd packages/sdk/akamai-base
 
 # run tests
 yarn test
