@@ -17,7 +17,7 @@ For simplicity, we recommend [creating a new LaunchDarkly project](https://docs.
 
 - `test-flag` - (Boolean) - This flag is evaluated in [src/app/api/hello/route.ts](src/app/api/hello/route.ts).
 
-After creating your project, You will need to have the LaunchDarkly Vercel integration configured to push feature flag data to your Vercel Edge Config. Read [Vercel](https://docs.launchdarkly.com/integrations/vercel/) to set up the integration. Be sure to connect the **Test** environment for project you created above.
+After creating your project, you will need to configure the LaunchDarkly Vercel integration to push feature flag data to your Vercel Edge Config. Read the [Vercel integration documentation](https://docs.launchdarkly.com/integrations/vercel/) to set up the integration. Be sure to connect the **Test** environment from the project you created above.
 
 ## Setting up your development environment
 
