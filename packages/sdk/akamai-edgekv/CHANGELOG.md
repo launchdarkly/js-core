@@ -5,7 +5,7 @@
 
 ### Bug Fixes
 
-* Initial alpha release of the SDK with support for external data store ([0f839cf](https://github.com/launchdarkly/js-core/commit/0f839cf5afe341a19007ddbd6a6f83fb2a7db0ab))
+* Initial alpha release of the SDK with support for Akamai's EdgeKV store ([0f839cf](https://github.com/launchdarkly/js-core/commit/0f839cf5afe341a19007ddbd6a6f83fb2a7db0ab))
 
 ## Changelog
 
