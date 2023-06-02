@@ -2,36 +2,40 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@vercel/edge-config';
 import { init as initLD } from '@launchdarkly/vercel-server-sdk';
 
-export const config = {
-  runtime: 'edge',
-};
+export const runtime = 'edge';
 
 export async function GET() {
-  const sdkKey = 'test-sdk-key';
-  const flagKey = 'testFlag1';
+  const clientSideID = process.env.LD_CLIENT_SIDE_ID;
+  if (!clientSideID) {
+    return NextResponse.json(
+      {
+        error: 'LD_CLIENT_SIDE_ID environment variable is missing.',
+      },
+      { status: 500 }
+    );
+  }
+  const flagKey = 'test-flag';
 
-  // default fallthrough evaluates to true
-  const contextFallthrough = { kind: 'user', key: 'test-user-key-1' };
-
-  // matches email targeting rule evaluates to false
-  const contextEmailRule = { kind: 'user', key: 'test-user-key-1', email: 'test@gmail.com' };
+  // This is just a simple example context. You can also include request information such as headers and path or user ID
+  //  if the request is authenticated.
+  const flagContext = { kind: 'user', key: 'test-user-key-1' };
 
   const vercelClient = createClient(process.env.EDGE_CONFIG);
 
-  // start using ld
-  const client = initLD(sdkKey, vercelClient);
+  const client = initLD(clientSideID, vercelClient);
   await client.waitForInitialization();
-  const fallthrough = await client.variation(flagKey, contextFallthrough, false);
-  const emailRule = await client.variation(flagKey, contextEmailRule, false);
-  const flagDetail = await client.variationDetail(flagKey, contextEmailRule, false);
-  const allFlags = await client.allFlagsState(contextEmailRule);
+
+  // Use .variation() to evaluate a single feature flag for a given context.
+  const testFlagVariation = await client.variation(flagKey, flagContext, false);
+
+  // allFlagsState() returns an object containing the variations served for all feature flags for a given context.
+  // This is useful for bootstrapping flags for use in the LaunchDarkly React SDK or JS client-side SDK.
+  const allFlags = await client.allFlagsState(flagContext);
 
   return NextResponse.json({
     flagKey: `${flagKey}`,
-    contextKey: `${contextFallthrough.key}`,
-    fallthrough,
-    emailRule,
-    emailRuleDetail: `${JSON.stringify(flagDetail)}`,
-    allFlags: `${JSON.stringify(allFlags)}`,
+    context: flagContext,
+    variationServed: testFlagVariation,
+    allFlags: allFlags.toJSON(),
   });
 }
