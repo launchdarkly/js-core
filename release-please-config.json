@@ -12,6 +12,20 @@
         "src/createPlatformInfo.ts"
       ],
       "bump-minor-pre-major": true
+    },
+    "packages/sdk/akamai-base": {
+      "extra-files": [
+        "src/index.ts"
+      ],
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
+    },
+    "packages/sdk/akamai-edgekv": {
+      "extra-files": [
+        "src/index.ts"
+      ],
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
     }
   },
   "plugins": ["node-workspace"]

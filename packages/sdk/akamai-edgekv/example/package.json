@@ -1,0 +1,36 @@
+{
+  "name": "akamai-edgekv-playground",
+  "version": "1.0.4",
+  "description": "",
+  "main": "main.js",
+  "config": {
+    "ewid": "74943"
+  },
+  "scripts": {
+    "clean": "rimraf ./dist/ew",
+    "build": "npm run clean && npm run build-ts && npm run build-ew-tgz",
+    "build-ts": "rollup -c --bundleConfigAsCjs",
+    "build-ew-tgz": "cd dist/ew && tar czvf ../'ew_'$npm_package_version'.tgz' *",
+    "validate": "akamai edgeworkers validate ./dist/'ew_'$npm_package_version'.tgz'",
+    "dev": "npm run build && npm run validate && akamai sandbox add-edgeworker $npm_package_config_ewid ./dist/'ew_'$npm_package_version'.tgz' && akamai sandbox start"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rollup/plugin-alias": "^5.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-typescript": "^11.1.1",
+    "@types/akamai-edgeworkers": "^1.1.8",
+    "rimraf": "^5.0.1",
+    "rollup": "^3.22.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-copy-assets": "^2.0.3",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "tslib": "^2.5.2",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@launchdarkly/akamai-server-edgekv-sdk": "^0.1.0"
+  }
+}

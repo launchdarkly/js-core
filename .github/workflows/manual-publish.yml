@@ -11,10 +11,12 @@ on:
           - packages/shared/common
           - packages/shared/sdk-server
           - packages/shared/sdk-server-edge
+          - packages/shared/akamai-edgeworker-sdk
           - packages/sdk/cloudflare
           - packages/sdk/server-node
           - packages/sdk/vercel
-          - packages/sdk/akamai
+          - packages/sdk/akamai-base
+          - packages/sdk/akamai-edgekv
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean
