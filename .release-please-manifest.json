@@ -1,1 +1,1 @@
-{"packages/shared/common":"1.0.1","packages/shared/sdk-server":"1.0.2","packages/sdk/server-node":"0.4.2","packages/sdk/cloudflare":"2.0.3","packages/shared/sdk-server-edge":"1.0.2","packages/sdk/vercel":"0.4.0"}
+{"packages/shared/common":"1.0.1","packages/shared/sdk-server":"1.0.2","packages/sdk/server-node":"0.4.2","packages/sdk/cloudflare":"2.0.3","packages/shared/sdk-server-edge":"1.0.2","packages/sdk/vercel":"0.4.0","packages/sdk/akamai-base":"0.1.0","packages/sdk/akamai-edgekv":"0.1.0"}
