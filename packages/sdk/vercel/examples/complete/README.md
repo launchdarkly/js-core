@@ -1,4 +1,4 @@
-# LaunchDarkly Feature Flag Apple Store
+# Complete example app for Vercel LaunchDarkly SDK
 
 This example shows how to evaluate feature flags in Vercel's edge runtime using the [LaunchDarkly Vercel SDK](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/vercel). Two primary use cases are highlighted:
 
@@ -9,7 +9,7 @@ This example shows how to evaluate feature flags in Vercel's edge runtime using 
 
 https://hello-vercel-edge.vercel.app/
 
-## How to Use
+## Local development
 
 #### Create a new LaunchDarkly project and flags
 
@@ -27,26 +27,32 @@ You will need to have the LaunchDarkly Vercel integration configured to push fea
 
 #### Set up environment variables
 
-Copy the `.env.example` file in this directory to `.env.local` (which will be ignored by Git):
+1. Copy this directory in a new repository.
+2. Create a new Vercel project based on the new repository.
+3. [Add a new environment variable to your project](https://vercel.com/docs/concepts/projects/environment-variables) named `LD_CLIENT_SIDE_ID` and set it to the LaunchDarkly client-side ID for the **Test** environment in the project you created above.
+4. Follow [Vercel's documentation](https://vercel.com/docs/storage/edge-config/get-started) to connect an Edge Config to your new project.
+5. Run the following command to link your local codebase to your Vercel project:
 
-```bash
-cp .env.example .env.local
+```shell
+vercel link
 ```
 
-Set `LD_CLIENT_SIDE_ID` to the LaunchDarkly client-side ID from the same environment you used when configuring the LaunchDarkly + Vercel integration.
+6. Run the following command to sync your projects environment variables in your development environment:
 
-This example requires you to set up an Edge Config and store its connection string in the `EDGE_CONFIG` environment variable. You can specify the Edge Config connection string in `.env.local`, but it's probably easier to run the following command after linking the Edge Config to a project in vercel:
-
-```bash
+```shell
 vercel env pull .env.development.local
 ```
 
-#### Run the app locally
+7. After completing the guide above, you should have linked this example app to your Vercel project and created an `.env.development.local`.
+8. Verify the contents of `.env.development.local` have values for the `LD_CLIENT_SIDE_ID` and `EDGE_CONFIG`.
+9. Run the following command to install all dependencies:
 
-Next, run Next.js in development mode:
-
-```bash
-npm run dev
+```shell
+yarn
 ```
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=edge-middleware-eap) ([Documentation](https://nextjs.org/docs/deployment)).
+10. Run the following command to start your development environment:
+
+```shell
+yarn dev
+```
