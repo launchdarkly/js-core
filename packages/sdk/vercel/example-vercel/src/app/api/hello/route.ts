@@ -1,24 +1,24 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@vercel/edge-config";
-import { init as initLD } from "@launchdarkly/vercel-server-sdk";
+import { NextResponse } from 'next/server';
+import { createClient } from '@vercel/edge-config';
+import { init as initLD } from '@launchdarkly/vercel-server-sdk';
 
-export const runtime = "edge";
+export const runtime = 'edge';
 
 export async function GET() {
   const clientSideID = process.env.LD_CLIENT_SIDE_ID;
   if (!clientSideID) {
     return NextResponse.json(
       {
-        error: "LD_CLIENT_SIDE_ID environment variable is missing.",
+        error: 'LD_CLIENT_SIDE_ID environment variable is missing.',
       },
       { status: 500 }
     );
   }
-  const flagKey = "test-flag";
+  const flagKey = 'test-flag';
 
   // This is just a simple example context. You can also include request information such as headers and path or user ID
   //  if the request is authenticated.
-  const flagContext = { kind: "user", key: "test-user-key-1" };
+  const flagContext = { kind: 'user', key: 'test-user-key-1' };
 
   const vercelClient = createClient(process.env.EDGE_CONFIG);
 
