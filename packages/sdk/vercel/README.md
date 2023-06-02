@@ -6,9 +6,13 @@
 [![NPM][sdk-vercel-dm-badge]][sdk-vercel-npm-link]
 [![NPM][sdk-vercel-dt-badge]][sdk-vercel-npm-link]
 
-This library supports using Vercel [Edge Config](https://vercel.com/docs/concepts/edge-network/edge-config) to replace the default in-memory feature store of the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/vercel-server-sdk).
+This library supports using Vercel [Edge Config](https://vercel.com/docs/concepts/edge-network/edge-config) to replace the default in-memory feature store of the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/node-server-sdk).
 
-For more information, see the [SDK features guide](https://docs.launchdarkly.com/sdk/features/storing-data).
+## The LaunchDarkly Vercel integration is required
+
+This SDK requires [LaunchDarkly's Vercel integration](https://docs.launchdarkly.com/integrations/vercel?q=verc) to push feature flag data into a Vercel Edge Config. The Vercel integration is available to customers on an Enterprise plan. To learn more, [read about our pricing](https://launchdarkly.com/pricing/). To upgrade your plan, [contact Sales](https://launchdarkly.com/contact-sales/).
+
+For more information, see the [Vercel SDK reference](https://docs.launchdarkly.com/sdk/edge/vercel).
 
 ## Install
 
@@ -22,16 +26,16 @@ or yarn:
 yarn add -D @launchdarkly/vercel-server-sdk
 ```
 
-## Quickstart
+## Quick start
 
-Initialize the ldClient with the [Vercel Edge SDK](https://vercel.com/docs/concepts/edge-network/edge-config/edge-config-sdk) and your LaunchDarkly client side sdk key:
+Initialize the ldClient with the [Vercel Edge SDK](https://vercel.com/docs/concepts/edge-network/edge-config/edge-config-sdk) and your LaunchDarkly [client-side ID](https://docs.launchdarkly.com/sdk/concepts/client-side-server-side#client-side-id):
 
 ```typescript
-import init from '@launchdarkly/vercel-server-sdk';
+import { init } from '@launchdarkly/vercel-server-sdk';
 import { createClient } from '@vercel/edge-config';
 
 const edgeClient = createClient(process.env.EDGE_CONFIG);
-const ldClient = init('YOUR CLIENT-SIDE SDK KEY', edgeClient);
+const ldClient = init('YOUR CLIENT-SIDE ID', edgeClient);
 
 await ldClient.waitForInitialization();
 const ldContext = {
@@ -42,7 +46,7 @@ const ldContext = {
 const flagValue = await ldClient.variation('my-flag', ldContext, true);
 ```
 
-To learn more, head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/vercel).
+To learn more, see the [examples](examples/README.md) in this repository or head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/vercel).
 
 ## Developing this SDK
 
