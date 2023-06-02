@@ -28,7 +28,7 @@ export default function LaunchDarklyProvider({
     options: {
       bootstrap: bootstrappedFlags,
 
-      // Streaming is disabled for demo purposes. You can enable it if needed, but keep in flags in the Edge Config may be
+      // Streaming is disabled for demo purposes. You can enable it if needed, but keep in mind flags in the Edge Config may be
       // out of date by 10s, so users may experience a content flicker when loading a page immediately after a flag is changed.
       streaming: false,
     },

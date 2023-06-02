@@ -23,7 +23,7 @@ For simplicity, we recommend [creating a new LaunchDarkly project](https://docs.
 
 #### Set up the LaunchDarkly Vercel integration
 
-You will need to have the LaunchDarkly Vercel integration configured to push feature flag data to your Vercel Edge Config. Read [Vercel](https://docs.launchdarkly.com/integrations/vercel/) to set up the integration. Be sure to connect the project you created above.
+You will need to have the LaunchDarkly Vercel integration configured to push feature flag data to your Vercel Edge Config. Read the [Vercel documentation](https://docs.launchdarkly.com/integrations/vercel/) to set up the integration. Be sure to connect the project you created above.
 
 #### Set up environment variables
 
