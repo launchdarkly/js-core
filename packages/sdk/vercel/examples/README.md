@@ -16,4 +16,4 @@ https://hello-vercel-edge.vercel.app/
 ## [Route Handler example](route-handler/README.md)
 
 This is an example test app to showcase the usage of the Vercel LaunchDarkly
-SDK to evaluate a feature flag in a [Route Handler](https://nextjs.org/docs/app/building-your-application/routing/router-handlers) using [Vercel's edge runtime](https://nextjs.org/docs/app/building-your-application/routing/router-handlers#edge-and-nodejs-runtimes). This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+SDK to evaluate a feature flag in a [Route Handler](https://nextjs.org/docs/app/building-your-application/routing/router-handlers) using [Vercel's edge runtime](https://nextjs.org/docs/app/building-your-application/routing/router-handlers#edge-and-nodejs-runtimes).
