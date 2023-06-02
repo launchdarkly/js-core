@@ -19,6 +19,7 @@
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^13.4.4",
     "@types/node": "^18.15.5",
     "@types/react": "latest",
     "autoprefixer": "^10.4.14",
