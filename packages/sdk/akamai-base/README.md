@@ -1,4 +1,4 @@
-# LaunchDarkly Akamai SDK for EdgeKV
+# LaunchDarkly Akamai SDK
 
 [![NPM][sdk-akamai-npm-badge]][sdk-akamai-npm-link]
 [![Actions Status][sdk-akamai-ci-badge]][sdk-akamai-ci]
