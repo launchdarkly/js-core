@@ -11,17 +11,24 @@ import LDClient from './api/LDClient';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
 import type { EdgeProvider } from './featureStore';
+import { EdgeFeatureStore } from './featureStore';
+import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
-export { EdgeFeatureStore } from './featureStore';
+/**
+ * The Launchdarkly Edge SDKs configuration options. Only logger is officially
+ * supported. sendEvents is unsupported and is only included as a beta
+ * preview.
+ */
+type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
 
-export type {
-  LDClient,
-  LDContext,
-  LDMultiKindContext,
-  LDSingleKindContext,
-  LDOptions,
-  EdgeProvider,
-};
+/**
+ * The internal options include featureStore because that's how the LDClient
+ * implementation expects it.
+ */
+type LDOptionsInternal = LDOptions & Pick<LDOptionsCommon, 'featureStore'>;
+
+export * from '@launchdarkly/js-server-sdk-common';
+export { EdgeFeatureStore, EdgeProvider, LDOptions, LDOptionsInternal };
 
 type BaseSDKParams = {
   sdkKey: string;
