@@ -18,6 +18,10 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md)           | [![NPM][js-server-sdk-common-npm-badge]][js-server-sdk-common-npm-link]   | [Common Server][package-shared-sdk-server-issues]           | [![Actions Status][shared-sdk-server-ci-badge]][shared-sdk-server-ci]           |
 | [@launchdarkly/js-server-sdk-common-edge](packages/shared/sdk-server-edge/README.md) | [![NPM][js-server-sdk-common-edge-badge]][js-server-sdk-common-edge-link] | [Common Server Edge][package-shared-sdk-server-edge-issues] | [![Actions Status][shared-sdk-server-edge-ci-badge]][shared-sdk-server-edge-ci] |
 
+| Store Packages                                                                   | npm | issues                                              | tests                                                                                     |
+| -------------------------------------------------------------------------------------  | --------------------------------------------------- | ------------------------------- | ------------------------------------------------------- |
+| [@launchdarkly/node-server-sdk-redis](packages/store/node-server-sdk-redis/README.md) | [![NPM][node-redis-npm-badge]][node-redis-npm-link] | [Node Redis][node-redis-issues] | [![Actions Status][node-redis-ci-badge]][node-redis-ci] |
+
 ## Organization
 
 `packages` Top level directory containing package implementations.
@@ -25,6 +29,8 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 `packages/shared` Packages which are primarily intended for consumption by LaunchDarkly and are used in other packages types.
 
 `packages/sdk` SDK packages intended for use by application developers.
+
+`packages/store` Persistent store packages for use with SDKs in this repository.
 
 ## LaunchDarkly overview
 
@@ -108,3 +114,9 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-akamai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
 [sdk-akamai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
 [package-sdk-akamai-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fakamai-base%22+
+[//]: # 'store/node-server-sdk-redis'
+[node-redis-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-redis.yml/badge.svg
+[node-redis-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-redis.yml
+[node-redis-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-redis.svg?style=flat-square
+[node-redis-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-redis
+[node-redis-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+store%2Fnode-server-sdk-redis%22+
