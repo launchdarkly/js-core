@@ -60,7 +60,9 @@ By default, the store will try to connect to a local Redis instance on port 6379
 
 To reduce traffic to Redis, there is an optional in-memory cache that retains the last known data for a configurable amount of time. This is on by default; to turn it off (and guarantee that the latest feature flag data will always be retrieved from Redis for every flag evaluation), configure the store as follows:
 
-        const store = RedisFeatureStore({ cacheTTL: 0 });
+```typescriot
+const store = new RedisFeatureStore({ cacheTTL: 0 });
+```
 
 ## Contributing
 
