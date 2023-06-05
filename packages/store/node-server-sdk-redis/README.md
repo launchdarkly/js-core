@@ -40,7 +40,7 @@ npm install @launchdarkly/node-server-sdk-redis --save
 npm install ioredis --save
 ```
 
-3. Require the package:
+3. Import the package:
 
 ```typescript
 import { RedisFeatureStore } = from '@launchdarkly/node-server-sdk-redis';
@@ -48,13 +48,13 @@ import { RedisFeatureStore } = from '@launchdarkly/node-server-sdk-redis';
 
 4. When configuring your SDK client, add the Redis feature store:
 
-```
+```typescript
 const store = RedisFeatureStore();
 const config = { featureStore: store };
 const client = LaunchDarkly.init('YOUR SDK KEY', config);
 ```
 
-  By default, the store will try to connect to a local Redis instance on port 6379. You may specify an alternate configuration as described in the API documentation for `RedisFeatureStore`.
+By default, the store will try to connect to a local Redis instance on port 6379. You may specify an alternate configuration as described in the API documentation for `RedisFeatureStore`.
 
 ## Caching behavior
 
