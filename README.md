@@ -30,6 +30,8 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 `packages/sdk` SDK packages intended for use by application developers.
 
+`packages/store` Persistent store packages for use with SDKs in this repository.
+
 ## LaunchDarkly overview
 
 [LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
