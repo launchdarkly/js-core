@@ -43,25 +43,25 @@ npm install ioredis --save
 3. Import the package:
 
 ```typescript
-import { RedisFeatureStore } = from '@launchdarkly/node-server-sdk-redis';
+import { RedisFeatureStoreFactory } = from '@launchdarkly/node-server-sdk-redis';
 ```
 
 4. When configuring your SDK client, add the Redis feature store:
 
 ```typescript
-const store = new RedisFeatureStore();
-const config = { featureStore: store };
+const storeFactory = RedisFeatureStoreFactory();
+const config = { featureStore: storeFactory };
 const client = LaunchDarkly.init('YOUR SDK KEY', config);
 ```
 
-By default, the store will try to connect to a local Redis instance on port 6379. You may specify an alternate configuration as described in the API documentation for `RedisFeatureStore`.
+By default, the store will try to connect to a local Redis instance on port 6379. You may specify an alternate configuration as described in the API documentation for `RedisFeatureStoreFactory`.
 
 ## Caching behavior
 
 To reduce traffic to Redis, there is an optional in-memory cache that retains the last known data for a configurable amount of time. This is on by default; to turn it off (and guarantee that the latest feature flag data will always be retrieved from Redis for every flag evaluation), configure the store as follows:
 
 ```typescriot
-const store = new RedisFeatureStore({ cacheTTL: 0 });
+const factory = RedisFeatureStoreFactory({ cacheTTL: 0 });
 ```
 
 ## Contributing
