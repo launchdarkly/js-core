@@ -11,23 +11,26 @@ import {
 import Redis from 'ioredis';
 import LDRedisOptions from './LDRedisOptions';
 import RedisCore from './RedisCore';
+import RedisClientState from './RedisClientState';
 
 /**
  * The default TTL cache time in seconds.
  */
 const DEFAULT_CACHE_TTL_S = 30;
 
-function ClientFromOptions(options?: LDRedisOptions): Redis {
+const DEFAULT_PREFIX = 'launchdarkly';
+
+function ClientFromOptions(options?: LDRedisOptions): RedisClientState {
   // If a pre-configured client is provided, then use it.
   if (options?.client) {
-    return options.client;
+    return new RedisClientState(options!.client, false);
   }
   // If there are options for redis, then make a client using those options.
   if (options?.redisOpts) {
-    return new Redis(options!.redisOpts);
+    return new RedisClientState(new Redis(options!.redisOpts), true);
   }
   // There was no client, and there were no options.
-  return new Redis();
+  return new RedisClientState(new Redis(), true);
 }
 
 function TtlFromOptions(options?: LDRedisOptions): number {
@@ -38,12 +41,15 @@ function TtlFromOptions(options?: LDRedisOptions): number {
   return options!.cacheTTL;
 }
 
+/**
+ * Integration between the LaunchDarkly SDK and Redis.
+ */
 export default class RedisFeatureStore implements LDFeatureStore {
   private wrapper: PersistentDataStoreWrapper;
 
   constructor(options?: LDRedisOptions, private readonly logger?: LDLogger) {
     this.wrapper = new PersistentDataStoreWrapper(
-      new RedisCore(ClientFromOptions(options)),
+      new RedisCore(ClientFromOptions(options), options?.prefix || DEFAULT_PREFIX, logger),
       TtlFromOptions(options)
     );
   }
