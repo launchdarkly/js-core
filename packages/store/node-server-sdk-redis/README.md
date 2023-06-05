@@ -49,7 +49,7 @@ import { RedisFeatureStore } = from '@launchdarkly/node-server-sdk-redis';
 4. When configuring your SDK client, add the Redis feature store:
 
 ```typescript
-const store = RedisFeatureStore();
+const store = new RedisFeatureStore();
 const config = { featureStore: store };
 const client = LaunchDarkly.init('YOUR SDK KEY', config);
 ```
