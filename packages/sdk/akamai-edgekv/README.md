@@ -1,10 +1,10 @@
 # LaunchDarkly Akamai SDK for EdgeKV
 
-[![NPM][sdk-akamai-npm-badge]][sdk-akamai-npm-link]
-[![Actions Status][sdk-akamai-ci-badge]][sdk-akamai-ci]
-[![Documentation][sdk-akamai-ghp-badge]][sdk-akamai-ghp-link]
-[![NPM][sdk-akamai-dm-badge]][sdk-akamai-npm-link]
-[![NPM][sdk-akamai-dt-badge]][sdk-akamai-npm-link]
+[![NPM][sdk-akamai-edgekv-npm-badge]][sdk-akamai-edgekv-npm-link]
+[![Actions Status][sdk-akamai-edgekv-ci-badge]][sdk-akamai-edgekv-ci]
+[![Documentation][sdk-akamai-edgekv-ghp-badge]][sdk-akamai-edgekv-ghp-link]
+[![NPM][sdk-akamai-edgekv-dm-badge]][sdk-akamai-edgekv-npm-link]
+[![NPM][sdk-akamai-edgekv-dt-badge]][sdk-akamai-edgekv-npm-link]
 
 The LaunchDarkly Akamai SDK is designed primarily for use in Akamai Edgeworkers. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
@@ -44,3 +44,13 @@ yarn test
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[sdk-akamai-edgekv-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-edgekv.yml/badge.svg
+[sdk-akamai-edgekv-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-edgekv.yml
+[sdk-akamai-edgekv-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-server-edgekv-sdk.svg?style=flat-square
+[sdk-akamai-edgekv-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-server-edgekv-sdk
+[sdk-akamai-edgekv-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-akamai-edgekv-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai/docs/
+[sdk-akamai-edgekv-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-server-edgekv-sdk.svg?style=flat-square
+[sdk-akamai-edgekv-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-server-edgekv-sdk.svg?style=flat-square
+[package-sdk-akamai-edgekv-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fakamai-edgekv%22+
