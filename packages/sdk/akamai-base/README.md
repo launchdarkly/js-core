@@ -1,4 +1,4 @@
-# LaunchDarkly Akamai SDK
+# LaunchDarkly Akamai Base SDK
 
 [![NPM][sdk-akamai-base-npm-badge]][sdk-akamai-base-npm-link]
 [![Actions Status][sdk-akamai-base-ci-badge]][sdk-akamai-base-ci]
