@@ -156,34 +156,36 @@ export default class RedisCore implements interfaces.PersistentDataStore {
 
           callback(undefined, {
             version: deserializedOld!.version,
-            deleted: !!deserializedOld?.item, // If there is no item, then it is deleted.
+            deleted: !deserializedOld?.item, // If there is no item, then it is deleted.
             serializedItem: old.serializedItem,
           });
-        } else if (descriptor.deleted) {
-          multi.hset(
-            this.prefixedKey(kind.namespace),
-            key,
-            JSON.stringify({ version: descriptor.version, deleted: true })
-          );
-        } else if (descriptor.serializedItem) {
-          multi.hset(this.prefixedKey(kind.namespace), key, descriptor.serializedItem);
-        } else {
-          // This call violates the contract.
-          multi.discard();
-          this.logger?.error('Attempt to write a non-deleted item without data to Redis.');
-          callback(undefined, undefined);
           return;
         }
-        multi.exec((err, replies) => {
-          if (!err && (replies === null || replies === undefined)) {
-            // This means the EXEC failed because someone modified the watched key
-            this.logger?.debug('Concurrent modification detected, retrying');
-            this.upsert(kind, key, descriptor, callback);
-          } else {
-            callback(err || undefined, descriptor);
-          }
-        });
       }
+      if (descriptor.deleted) {
+        multi.hset(
+          this.prefixedKey(kind.namespace),
+          key,
+          JSON.stringify({ version: descriptor.version, deleted: true })
+        );
+      } else if (descriptor.serializedItem) {
+        multi.hset(this.prefixedKey(kind.namespace), key, descriptor.serializedItem);
+      } else {
+        // This call violates the contract.
+        multi.discard();
+        this.logger?.error('Attempt to write a non-deleted item without data to Redis.');
+        callback(undefined, undefined);
+        return;
+      }
+      multi.exec((err, replies) => {
+        if (!err && (replies === null || replies === undefined)) {
+          // This means the EXEC failed because someone modified the watched key
+          this.logger?.debug('Concurrent modification detected, retrying');
+          this.upsert(kind, key, descriptor, callback);
+        } else {
+          callback(err || undefined, descriptor);
+        }
+      });
     });
   }
 
