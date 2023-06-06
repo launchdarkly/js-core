@@ -146,11 +146,28 @@ describe('given a store with basic data', () => {
     expect(result).toEqual(ver2);
   });
 
-  it('deletes with newer version', async () => {});
+  it('deletes with newer version', async () => {
+    await facade.delete(dataKind.features, feature1.key, feature1.version + 1);
+    const result = await facade.get(dataKind.features, feature1.key);
+    expect(result).toBe(null);
+  });
 
-  it('does not delete with older version', async () => {});
+  it('does not delete with older version', async () => {
+    await facade.delete(dataKind.features, feature1.key, feature1.version - 1);
+    const result = await facade.get(dataKind.features, feature1.key);
+    expect(result).not.toBe(null);
+  });
 
-  it('allows deleting unknown feature', async () => {});
+  it('allows deleting unknown feature', async () => {
+    await facade.delete(dataKind.features, 'biz', 99);
+    const result = await facade.get(dataKind.features, 'biz');
+    expect(result).toBe(null);
+  });
 
-  it('does not upsert older version after delete', async () => {});
+  it('does not upsert older version after delete', async () => {
+    await facade.delete(dataKind.features, feature1.key, feature1.version + 1);
+    await facade.upsert(dataKind.features, feature1);
+    const result = await facade.get(dataKind.features, feature1.key);
+    expect(result).toBe(null);
+  });
 });
