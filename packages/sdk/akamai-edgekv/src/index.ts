@@ -12,23 +12,20 @@
 import {
   init as initEdge,
   LDClient,
-  LDContext,
-  LDMultiKindContext,
-  LDSingleKindContext,
   LDOptions,
   EdgeFeatureStore,
 } from '@launchdarkly/akamai-edgeworker-sdk-common';
 import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
 import EdgeKVProvider from './edgekv/edgeKVProvider';
 
-type AkamaiLDClientParams = {
+export * from '@launchdarkly/akamai-edgeworker-sdk-common';
+
+export type AkamaiLDClientParams = {
   sdkKey: string;
   options?: LDOptions;
   namespace: string;
   group: string;
 };
-
-export type { LDClient, LDContext, LDMultiKindContext, LDSingleKindContext };
 
 /**
  * Initialize Launchdarkly client using Akamai's Edge KV as a feature store
