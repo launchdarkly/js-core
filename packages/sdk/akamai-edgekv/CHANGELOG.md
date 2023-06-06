@@ -9,7 +9,6 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
 
 * Exported typescript types for Akamai SDK ([e7be20c](https://github.com/launchdarkly/js-core/commit/e7be20caa2f13abecf12a29ddc46a45a59fc7b5c))
 * Exported typescript types for Akamai SDK ([#135](https://github.com/launchdarkly/js-core/issues/135)) ([01da2a9](https://github.com/launchdarkly/js-core/commit/01da2a9abd203ed171497c92eab8abd0f9aa81c2))
-* Release akamai-edgeworker-sdk-common ([#138](https://github.com/launchdarkly/js-core/issues/138)) ([f22a680](https://github.com/launchdarkly/js-core/commit/f22a680be3eb8bb2af543ff1d5bc5198bb8a6a05))
 
 ## 0.1.0 (2023-06-02)
 
