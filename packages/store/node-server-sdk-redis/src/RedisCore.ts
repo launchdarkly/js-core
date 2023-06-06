@@ -144,6 +144,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
     // this without concerns for overlapping transactions.
     this.state.getClient().watch(this.prefixedKey(kind.namespace));
     const multi = this.state.getClient().multi();
+
     this.get(kind, key, (old) => {
       if (old && old.serializedItem) {
         // Here, unfortunately, we have to deserialize the old item just to find

@@ -17,8 +17,8 @@
   ],
   "private": true,
   "scripts": {
-    "clean": "yarn workspaces foreach -ptR run clean",
-    "build": "yarn workspaces foreach -ptR run build",
+    "clean": "yarn workspaces foreach -pt run clean",
+    "build": "yarn workspaces foreach -p --topological-dev run build",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/common' for example.",
     "build:doc": "./scripts/build-doc.sh $1",
     "lint": "npx eslint . --ext .ts",

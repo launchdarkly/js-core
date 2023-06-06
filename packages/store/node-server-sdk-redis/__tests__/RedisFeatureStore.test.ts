@@ -140,15 +140,8 @@ describe('given a store with basic data', () => {
     promises.push(facade.upsert(dataKind.features, ver2));
     promises.push(facade.upsert(dataKind.features, ver1));
 
-    // await facade.upsert(dataKind.features, ver2);
-    // await facade.upsert(dataKind.features, ver1);
-
     // Now wait until both have completed
-    try {
-      await Promise.all(promises);
-    } catch (e) {
-      console.log(e);
-    }
+    await Promise.all(promises);
     const result = await facade.get(dataKind.features, feature1.key);
     expect(result).toEqual(ver2);
   });
