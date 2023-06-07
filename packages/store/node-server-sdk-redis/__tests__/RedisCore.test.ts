@@ -84,7 +84,7 @@ describe('given an empty store', () => {
   beforeEach(async () => {
     await clearPrefix('launchdarkly');
     core = new RedisCore(
-      new RedisClientState(new Redis(), true, undefined),
+      new RedisClientState(),
       'launchdarkly',
       undefined
     );
@@ -176,8 +176,7 @@ describe('given a store with basic data', () => {
   beforeEach(async () => {
     await clearPrefix('launchdarkly');
     core = new RedisCore(
-      new RedisClientState(new Redis(), true, undefined),
-      'launchdarkly',
+      new RedisClientState(),
       undefined
     );
     const flags = [

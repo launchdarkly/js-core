@@ -1,10 +1,15 @@
 import { LDLogger } from '@launchdarkly/node-server-sdk';
 import { Redis } from 'ioredis';
+import LDRedisOptions from './LDRedisOptions';
+
+const DEFAULT_PREFIX = 'launchdarkly';
 
 /**
  * Class for managing the state of a redis connection.
  *
  * Used for the redis persistent store as well as the redis big segment store.
+ *
+ * @internal
  */
 export default class RedisClientState {
   private connected: boolean = false;
@@ -13,6 +18,12 @@ export default class RedisClientState {
 
   private initialConnection: boolean = true;
 
+  private client: Redis;
+
+  private owned: boolean;
+
+  private base_prefix: string;
+
   /**
    * Construct a state with the given client.
    *
@@ -20,15 +31,26 @@ export default class RedisClientState {
    * @param owned Is this client owned by the store integration, or was it
    * provided externally.
    */
-  constructor(
-    private readonly client: Redis,
-    private readonly owned: boolean,
-    private readonly logger?: LDLogger
-  ) {
+  constructor(options?: LDRedisOptions, private readonly logger?: LDLogger) {
+    if (options?.client) {
+      this.client = options!.client;
+      this.owned = false;
+    } else if (options?.redisOpts) {
+      this.client = new Redis(options!.redisOpts);
+      this.owned = true;
+    } else {
+      this.client = new Redis();
+      this.owned = true;
+    }
+
+    this.base_prefix = options?.prefix || DEFAULT_PREFIX;
+
     // If the client is not owned, then it should already be connected.
-    this.connected = !owned;
+    this.connected = !this.owned;
     // We don't want to log a message on the first connection, only when reconnecting.
     this.initialConnection = !this.connected;
+
+    const { client } = this;
 
     client.on('error', (err) => {
       logger?.error(`Redis error - ${err}`);
@@ -62,7 +84,7 @@ export default class RedisClientState {
    *
    * @returns True if currently connected.
    */
-  public isConnected(): boolean {
+  isConnected(): boolean {
     return this.connected;
   }
 
@@ -71,7 +93,7 @@ export default class RedisClientState {
    *
    * @returns True if using the initial connection.
    */
-  public isInitialConnection(): boolean {
+  isInitialConnection(): boolean {
     return this.initialConnection;
   }
 
@@ -80,16 +102,25 @@ export default class RedisClientState {
    *
    * @returns The redis client.
    */
-  public getClient(): Redis {
+  getClient(): Redis {
     return this.client;
   }
 
   /**
    * If the client is owned, then this will 'quit' the client.
    */
-  public close() {
+  close() {
     if (this.owned) {
       this.client.quit();
     }
+  }
+
+  /**
+   * Get a key with prefix prepended.
+   * @param key The key to prefix.
+   * @returns The prefixed key.
+   */
+  prefixedKey(key: string): string {
+    return `${this.base_prefix}:${key}`;
   }
 }

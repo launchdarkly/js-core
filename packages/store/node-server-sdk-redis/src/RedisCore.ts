@@ -19,20 +19,14 @@ import RedisClientState from './RedisClientState';
  * version in the updated descriptor will be correct.
  *
  * The special key "{prefix}:$inited" indicates that the store contains a complete data set.
+ *
+ * @internal
  */
 export default class RedisCore implements interfaces.PersistentDataStore {
   private initedKey: string;
 
-  constructor(
-    private readonly state: RedisClientState,
-    private readonly prefix: string,
-    private readonly logger?: LDLogger
-  ) {
-    this.initedKey = this.prefixedKey('$inited');
-  }
-
-  private prefixedKey(namespace: string): string {
-    return `${this.prefix}:${namespace}`;
+  constructor(private readonly state: RedisClientState, private readonly logger?: LDLogger) {
+    this.initedKey = this.state.prefixedKey('$inited');
   }
 
   init(
@@ -44,7 +38,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       const kind = keyedItems.key;
       const items = keyedItems.item;
 
-      const namespaceKey = this.prefixedKey(kind.namespace);
+      const namespaceKey = this.state.prefixedKey(kind.namespace);
 
       // Delete the namespace for the kind.
       multi.del(namespaceKey);
@@ -83,7 +77,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       return;
     }
 
-    this.state.getClient().hget(this.prefixedKey(kind.namespace), key, (err, val) => {
+    this.state.getClient().hget(this.state.prefixedKey(kind.namespace), key, (err, val) => {
       if (err) {
         this.logger?.error(`Error fetching key '${key}' from Redis in '${kind.namespace}' ${err}`);
         callback(undefined);
@@ -113,7 +107,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       return;
     }
 
-    this.state.getClient().hgetall(this.prefixedKey(kind.namespace), (err, values) => {
+    this.state.getClient().hgetall(this.state.prefixedKey(kind.namespace), (err, values) => {
       if (err) {
         this.logger?.error(`Error fetching '${kind.namespace}' from Redis ${err}`);
       } else if (values) {
@@ -142,7 +136,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   ): void {
     // The persistent store wrapper manages interactions with a queue, so we can use watch like
     // this without concerns for overlapping transactions.
-    this.state.getClient().watch(this.prefixedKey(kind.namespace));
+    this.state.getClient().watch(this.state.prefixedKey(kind.namespace));
     const multi = this.state.getClient().multi();
 
     this.get(kind, key, (old) => {
@@ -165,12 +159,12 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       }
       if (descriptor.deleted) {
         multi.hset(
-          this.prefixedKey(kind.namespace),
+          this.state.prefixedKey(kind.namespace),
           key,
           JSON.stringify({ version: descriptor.version, deleted: true })
         );
       } else if (descriptor.serializedItem) {
-        multi.hset(this.prefixedKey(kind.namespace), key, descriptor.serializedItem);
+        multi.hset(this.state.prefixedKey(kind.namespace), key, descriptor.serializedItem);
       } else {
         // This call violates the contract.
         multi.discard();
