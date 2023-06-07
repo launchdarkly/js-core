@@ -24,7 +24,7 @@
     "test": "npx jest --ci --runInBand",
     "build": "npx tsc",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix"
+    "lint:fix": "yarn run lint --fix"
   },
   "dependencies": {
     "ioredis": "^5.3.2"

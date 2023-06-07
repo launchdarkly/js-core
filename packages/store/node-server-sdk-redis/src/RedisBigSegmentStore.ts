@@ -19,6 +19,7 @@ export const KEY_USER_EXCLUDE = 'big_segment_exclude:';
 
 export default class RedisBigSegmentStore implements interfaces.BigSegmentStore {
   private state: RedisClientState;
+
   // Logger is not currently used, but is included to reduce the chance of a
   // compatibility break to add a log.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -31,17 +32,20 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
     // Value will be true if it is a string containing any characters, which is fine
     // for this check.
     if (value) {
-      return { lastUpToDate: parseInt(value) }
-    } else {
-      return {};
+      return { lastUpToDate: parseInt(value, 10) };
     }
+    return {};
   }
 
-  async getUserMembership(userHash: string): Promise<interfaces.BigSegmentStoreMembership | undefined> {
-    const includedRefs = await this.state.getClient().smembers(
-      this.state.prefixedKey(`${KEY_USER_INCLUDE}:${userHash}`));
-    const excludedRefs = await this.state.getClient().smembers(
-      this.state.prefixedKey(`${KEY_USER_EXCLUDE}:${userHash}`));
+  async getUserMembership(
+    userHash: string
+  ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
+    const includedRefs = await this.state
+      .getClient()
+      .smembers(this.state.prefixedKey(`${KEY_USER_INCLUDE}:${userHash}`));
+    const excludedRefs = await this.state
+      .getClient()
+      .smembers(this.state.prefixedKey(`${KEY_USER_EXCLUDE}:${userHash}`));
 
     // If there are no included/excluded refs, the don't return any membership.
     if ((!includedRefs || !includedRefs.length) && (!excludedRefs || !excludedRefs.length)) {
@@ -49,17 +53,14 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
     }
 
     const membership: interfaces.BigSegmentStoreMembership = {};
-    if (excludedRefs) {
-      for (const ref of excludedRefs) {
-        membership[ref] = false;
-      }
-    }
 
-    if (includedRefs) {
-      for (const ref of includedRefs) {
-        membership[ref] = true;
-      }
-    }
+    excludedRefs?.forEach((ref) => {
+      membership[ref] = false;
+    });
+    includedRefs?.forEach((ref) => {
+      membership[ref] = true;
+    });
+
     return membership;
   }
 

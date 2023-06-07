@@ -1,36 +1,55 @@
 import Redis from 'ioredis';
-import RedisBigSegmentStore, { KEY_LAST_SYNCHRONIZED, KEY_USER_INCLUDE, KEY_USER_EXCLUDE } from '../src/RedisBigSegmentStore';
-import clearPrefix from './clearPrefix';
 import { interfaces } from '@launchdarkly/node-server-sdk';
+import RedisBigSegmentStore, {
+  KEY_LAST_SYNCHRONIZED,
+  KEY_USER_INCLUDE,
+  KEY_USER_EXCLUDE,
+} from '../src/RedisBigSegmentStore';
+import clearPrefix from './clearPrefix';
 
 const FAKE_HASH = 'userhash';
+
+async function setMetadata(
+  prefix: string,
+  metadata: interfaces.BigSegmentStoreMetadata
+): Promise<void> {
+  const client = new Redis();
+  await client.set(
+    `${prefix}:${KEY_LAST_SYNCHRONIZED}`,
+    metadata.lastUpToDate ? metadata.lastUpToDate.toString() : ''
+  );
+  await client.quit();
+}
+
+async function setSegments(
+  prefix: string,
+  userHashKey: string,
+  included: string[],
+  excluded: string[]
+): Promise<void> {
+  const client = new Redis();
+
+  // Generators and await in a loop, both of which eslint doesn't like. This is a test, and this
+  // is simpler.
+  /* eslint-disable */
+  for (const ref of included) {
+    await client.sadd(`${prefix}:${KEY_USER_INCLUDE}:${userHashKey}`, ref);
+  }
+  for (const ref of excluded) {
+    await client.sadd(`${prefix}:${KEY_USER_EXCLUDE}:${userHashKey}`, ref);
+  }
+  /* eslint-enable */
+  await client.quit();
+}
 
 describe.each([undefined, 'app1'])('given a redis big segment store', (prefixParam) => {
   let store: RedisBigSegmentStore;
   const prefix = prefixParam || 'launchdarkly';
 
-  async function setMetadata(prefix: string, metadata: interfaces.BigSegmentStoreMetadata): Promise<void> {
-    const client = new Redis();
-    await client.set(`${prefix}:${KEY_LAST_SYNCHRONIZED}`, metadata.lastUpToDate ? metadata.lastUpToDate.toString() : '');
-    await client.quit();
-  }
-  
-  async function setSegments(prefix: string, userHashKey: string, included: string[], excluded: string[]): Promise<void> {
-    const client = new Redis();
-    for (const ref of included) {
-      await client.sadd(`${prefix}:${KEY_USER_INCLUDE}:${userHashKey}`, ref);
-    }
-    for (const ref of excluded) {
-      await client.sadd(`${prefix}:${KEY_USER_EXCLUDE}:${userHashKey}`, ref);
-    }
-    await client.quit();
-  }
-
   beforeEach(async () => {
-    console.log("Clearing prefix", prefix);
     await clearPrefix(prefix);
     // Use param directly to test undefined.
-    store = new RedisBigSegmentStore({prefix: prefixParam});
+    store = new RedisBigSegmentStore({ prefix: prefixParam });
   });
 
   afterEach(async () => {

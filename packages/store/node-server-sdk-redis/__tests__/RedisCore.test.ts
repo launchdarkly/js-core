@@ -1,4 +1,3 @@
-import { Redis } from 'ioredis';
 import { interfaces } from '@launchdarkly/node-server-sdk';
 import RedisCore from '../src/RedisCore';
 import RedisClientState from '../src/RedisClientState';
@@ -76,10 +75,7 @@ describe('given an empty store', () => {
 
   beforeEach(async () => {
     await clearPrefix('launchdarkly');
-    core = new RedisCore(
-      new RedisClientState(),
-      undefined
-    );
+    core = new RedisCore(new RedisClientState(), undefined);
     facade = new AsyncCoreFacade(core);
   });
 
@@ -167,10 +163,7 @@ describe('given a store with basic data', () => {
 
   beforeEach(async () => {
     await clearPrefix('launchdarkly');
-    core = new RedisCore(
-      new RedisClientState(),
-      undefined
-    );
+    core = new RedisCore(new RedisClientState(), undefined);
     const flags = [
       {
         key: 'foo',
