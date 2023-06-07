@@ -19,6 +19,12 @@ jobs:
         with:
           node-version: 16
           registry-url: 'https://registry.npmjs.org'
+      # We may want to consider moving this build to a docker container instead of installing it
+      # in the image.
+      - run: |
+          apt-get update
+          apt-get install redis-server
+          service redis-server start
       - id: shared
         name: Shared CI Steps
         uses: ./actions/ci
