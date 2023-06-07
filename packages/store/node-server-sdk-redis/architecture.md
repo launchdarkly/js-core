@@ -2,7 +2,9 @@
 
 ## Components
 
-RedisFeatureStoreFactory: Method which generates a factory which will build RedisFeatureStore instances. This is what is used by the end user in their SDK configuration.
+RedisFeatureStoreFactory: Method which generates a factory which will build RedisFeatureStore instances. This is what is used by the end user in their SDK configuration to configure persistence.
+
+RedisBigSegmentStoreFactory: Method which generates a factory which will build RedisBigSegmentStore instances. This is what is used by the end user in their SDK configuration to configure big segments.
 
 LDRedisOptions: Configuration options passed to the factory to configure a RedisFeatureStore.
 
@@ -27,4 +29,10 @@ RedisCore --* RedisClientState : Contains
 
 RedisFeatureStoreFactory --> RedisFeatureStore : Builds
 RedisFeatureStoreFactory --> LDRedisOptions : Uses
+
+RedisBigSegmentStoreFactory --> RedisBigSegmentStore : Builds
+RedisBigSegmentStoreFactory --> LDRedisOptions : Uses
+
+RedisBigSegmentStore --|> BigSegmentStore : Implements
+RedisBigSegmentStore --* RedisClientState : Contains
 ```
