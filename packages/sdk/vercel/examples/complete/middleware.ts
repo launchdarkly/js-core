@@ -14,8 +14,7 @@ export async function middleware(req: NextRequest, context: NextFetchEvent) {
     !process.env.LD_CLIENT_SIDE_ID ||
     !parseConnectionString(process.env.EDGE_CONFIG)
   ) {
-    req.nextUrl.pathname = '/missing-edge-config';
-    return NextResponse.rewrite(req.nextUrl);
+    return NextResponse.rewrite(new URL('/missing-edge-config', request.url));
   }
 
   try {
@@ -41,11 +40,10 @@ export async function middleware(req: NextRequest, context: NextFetchEvent) {
         flagContext,
         false
       );
-      if (hotDogFaviconEnabled) {
-        req.nextUrl.pathname = '/hot-dog.ico';
-      }
 
-      return NextResponse.rewrite(req.nextUrl);
+      return hotDogFaviconEnabled
+        ? NextResponse.rewrite(new URL('/hot-dog.ico', request.url))
+        : NextResponse.next()
     }
 
     const storeClosed = await client.variation('store-closed', flagContext, false);
