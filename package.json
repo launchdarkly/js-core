@@ -13,7 +13,8 @@
     "packages/sdk/akamai-base/example",
     "packages/sdk/akamai-edgekv",
     "packages/sdk/akamai-edgekv/example",
-    "packages/store/node-server-sdk-redis"
+    "packages/store/node-server-sdk-redis",
+    "packages/store/node-server-sdk-dynamodb"
   ],
   "private": true,
   "scripts": {

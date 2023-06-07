@@ -33,6 +33,9 @@
     },
     {
       "path": "./packages/store/node-server-sdk-redis/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/store/node-server-sdk-dynamodb/tsconfig.ref.json"
     }
   ]
 }
