@@ -27,7 +27,7 @@ runs:
     - name: Build
       shell: bash
       # This will build the package and its dependencies.
-      run: yarn workspaces foreach -ptR --from '${{ inputs.workspace_name }}' run build
+      run: yarn workspaces foreach -pR --topological-dev --from '${{ inputs.workspace_name }}' run build
 
     - name: Lint
       shell: bash
