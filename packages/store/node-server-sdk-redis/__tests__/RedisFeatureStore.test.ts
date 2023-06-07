@@ -1,27 +1,22 @@
-import { Redis } from 'ioredis';
 import { AsyncStoreFacade } from '@launchdarkly/node-server-sdk';
 import RedisFeatureStore from '../src/RedisFeatureStore';
-
-async function clearPrefix(prefix: string) {
-  const client = new Redis();
-  const keys = await client.keys(`${prefix}:*`);
-  const promises = keys.map((key) => client.del(key));
-  await Promise.all(promises);
-  client.quit();
-}
+import clearPrefix from './clearPrefix';
 
 const dataKind = {
   features: { namespace: 'features' },
   segments: { namespace: 'segments' },
 };
 
-describe('given an empty store', () => {
+describe.each([undefined, 'testing'])('given an empty store', (prefixParam) => {
   let store: RedisFeatureStore;
   let facade: AsyncStoreFacade;
 
+  const prefix = prefixParam || 'launchdarkly';
+
   beforeEach(async () => {
-    await clearPrefix('launchdarkly');
-    store = new RedisFeatureStore(undefined, undefined);
+    await clearPrefix(prefix);
+    // Use param directly to test undefined.
+    store = new RedisFeatureStore({ prefix: prefixParam }, undefined);
     facade = new AsyncStoreFacade(store);
   });
 
@@ -67,16 +62,19 @@ describe('given an empty store', () => {
   });
 });
 
-describe('given a store with basic data', () => {
+describe.each([undefined, 'testing'])('given a store with basic data', (prefixParam) => {
   let store: RedisFeatureStore;
   let facade: AsyncStoreFacade;
 
   const feature1 = { key: 'foo', version: 10 };
   const feature2 = { key: 'bar', version: 10 };
 
+  const prefix = prefixParam || 'launchdarkly';
+
   beforeEach(async () => {
-    await clearPrefix('launchdarkly');
-    store = new RedisFeatureStore(undefined, undefined);
+    await clearPrefix(prefix);
+    // Use param directly to test undefined.
+    store = new RedisFeatureStore({ prefix: prefixParam });
     facade = new AsyncStoreFacade(store);
     await facade.init({
       features: {

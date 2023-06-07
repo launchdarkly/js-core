@@ -2,14 +2,7 @@ import { Redis } from 'ioredis';
 import { interfaces } from '@launchdarkly/node-server-sdk';
 import RedisCore from '../src/RedisCore';
 import RedisClientState from '../src/RedisClientState';
-
-async function clearPrefix(prefix: string) {
-  const client = new Redis();
-  const keys = await client.keys(`${prefix}:*`);
-  const promises = keys.map((key) => client.del(key));
-  await Promise.all(promises);
-  client.quit();
-}
+import clearPrefix from './clearPrefix';
 
 const featuresKind = { namespace: 'features', deserialize: (data: string) => JSON.parse(data) };
 const segmentsKind = { namespace: 'segments', deserialize: (data: string) => JSON.parse(data) };
@@ -85,7 +78,6 @@ describe('given an empty store', () => {
     await clearPrefix('launchdarkly');
     core = new RedisCore(
       new RedisClientState(),
-      'launchdarkly',
       undefined
     );
     facade = new AsyncCoreFacade(core);

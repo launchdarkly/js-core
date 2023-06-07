@@ -2,9 +2,20 @@ import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
 import LDRedisOptions from './LDRedisOptions';
 import RedisClientState from './RedisClientState';
 
-const KEY_LAST_SYNCHRONIZED = 'big_segments_synchronized_on';
-const KEY_USER_INCLUDE = 'big_segment_include:';
-const KEY_USER_EXCLUDE = 'big_segment_exclude:';
+/**
+ * @internal
+ */
+export const KEY_LAST_SYNCHRONIZED = 'big_segments_synchronized_on';
+
+/**
+ * @internal
+ */
+export const KEY_USER_INCLUDE = 'big_segment_include:';
+
+/**
+ * @internal
+ */
+export const KEY_USER_EXCLUDE = 'big_segment_exclude:';
 
 export default class RedisBigSegmentStore implements interfaces.BigSegmentStore {
   private state: RedisClientState;
@@ -27,9 +38,9 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
   }
 
   async getUserMembership(userHash: string): Promise<interfaces.BigSegmentStoreMembership | undefined> {
-    const includedRefs = await this.state.getClient().get(
+    const includedRefs = await this.state.getClient().smembers(
       this.state.prefixedKey(`${KEY_USER_INCLUDE}:${userHash}`));
-    const excludedRefs = await this.state.getClient().get(
+    const excludedRefs = await this.state.getClient().smembers(
       this.state.prefixedKey(`${KEY_USER_EXCLUDE}:${userHash}`));
 
     // If there are no included/excluded refs, the don't return any membership.
