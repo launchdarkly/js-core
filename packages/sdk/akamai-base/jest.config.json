@@ -5,8 +5,5 @@
   "modulePathIgnorePatterns": ["dist"],
   "testEnvironment": "node",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-  "collectCoverageFrom": ["src/**/*.ts"],
-  "moduleNameMapper": {
-    "@launchdarkly/akamai-edgeworker-sdk-common": "<rootDir>../../shared/akamai-edgeworker-sdk/src"
-  }
+  "collectCoverageFrom": ["src/**/*.ts"]
 }
