@@ -22,12 +22,13 @@ export default class UpdateQueue {
         // count could hit 0, and overlapping execution chains could be started.
         this.queue.shift();
         // There is more work to do, so schedule an update.
-        if (this.enqueue.length > 0) {
+        if (this.queue.length > 0) {
           setTimeout(() => this.executePendingUpdates(), 0);
         }
         // Call the original callback.
         cb?.();
       };
+
       fn(newCb);
     }
   }
