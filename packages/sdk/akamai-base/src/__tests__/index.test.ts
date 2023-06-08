@@ -8,7 +8,7 @@ const flagKey3 = 'testFlag3';
 const context: any = { kind: 'user', key: 'test-user-key-1' };
 
 class FeatureStore implements EdgeProvider {
-  async get(rootKey: string): Promise<string> {
+  async get(): Promise<string> {
     return Promise.resolve(JSON.stringify(testData));
   }
 }
