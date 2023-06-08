@@ -29,7 +29,7 @@ export default class DynamoDBClientState {
     } else if(options.clientOptions) {
       this.client = new DynamoDBClient(options!.clientOptions);
     } else {
-      // TODO: Kaboom
+      logger?.error("Either a dynamoDBClient or clientOptions must be specified in the config.");
     }
 
     // Unlike some other database integrations, we don't need to keep track of whether we
