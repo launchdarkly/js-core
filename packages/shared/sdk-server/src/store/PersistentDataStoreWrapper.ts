@@ -86,8 +86,6 @@ function deserialize(
  * instance of {@link PersistentDataStore}. It provides optional caching behavior and other logic
  * that would otherwise be repeated in every data store implementation. This makes it easier to
  * create new database integrations by implementing only the database-specific logic.
- *
- * @internal
  */
 export default class PersistentDataStoreWrapper implements LDFeatureStore {
   private isInitialized = false;
