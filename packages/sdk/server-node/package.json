@@ -19,6 +19,7 @@
     "client"
   ],
   "scripts": {
+    "doc": "../../../scripts/build-doc.sh .",
     "clean": "npx tsc --build --clean",
     "//": "We run the tests in-band because the FS tests work best sequential.",
     "test": "npx jest --ci --runInBand",

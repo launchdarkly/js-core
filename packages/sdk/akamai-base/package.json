@@ -25,7 +25,7 @@
     "dist"
   ],
   "scripts": {
-    "doc": "../../../scripts/build-doc.sh .",
+    "doc": "npx typedoc --entryPointStrategy resolve src/index.ts",
     "build": "rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
