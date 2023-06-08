@@ -1,5 +1,5 @@
 ---
-name: '@launchdarkly/akamai-server-base-sdk'
+name: '@launchdarkly/akamai-server-base-sdk Bug Report'
 about: Create a report to help us improve
 title: ''
 labels: 'package: sdk/akamai-base, bug'

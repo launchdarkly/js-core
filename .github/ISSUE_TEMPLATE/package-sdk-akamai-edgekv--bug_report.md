@@ -1,5 +1,5 @@
 ---
-name: '@launchdarkly/akamai-server-edgekv-sdk'
+name: '@launchdarkly/akamai-server-edgekv-sdk Bug Report'
 about: Create a report to help us improve
 title: ''
 labels: 'package: sdk/akamai-edgekv, bug'
