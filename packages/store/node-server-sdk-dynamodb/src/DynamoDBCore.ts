@@ -1,23 +1,12 @@
 import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
 import { AttributeValue, QueryCommandInput, WriteRequest } from '@aws-sdk/client-dynamodb';
 import DynamoDBClientState from './DynamoDBClientState';
+import { stringValue, numberValue, boolValue } from './Value';
 
 // We won't try to store items whose total size exceeds this. The DynamoDB documentation says
 // only "400KB", which probably means 400*1024, but to avoid any chance of trying to store a
 // too-large item we are rounding it down.
 const DYNAMODB_MAX_SIZE = 400000;
-
-function stringValue(val: string): AttributeValue {
-  return { S: val };
-}
-
-function boolValue(val: boolean): AttributeValue {
-  return { BOOL: val };
-}
-
-function numberValue(val: number): AttributeValue {
-  return { N: val.toString(10) };
-}
 
 /**
  * Internal implementation of the DynamoDB feature store.
@@ -227,7 +216,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   }
 
   close(): void {
-    this.state.getClient().destroy();
+    this.state.close();
   }
 
   getDescription(): string {

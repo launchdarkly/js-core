@@ -86,14 +86,10 @@ describe('given an empty store', () => {
   let facade: AsyncCoreFacade;
 
   beforeEach(async () => {
-    try {
-      await setupTable(DEFAULT_TABLE_NAME, DEFAULT_CLIENT_OPTIONS);
-      await clearPrefix(DEFAULT_TABLE_NAME, 'launchdarkly');
-      core = new DynamoDBCore(DEFAULT_TABLE_NAME, new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS), undefined);
-      facade = new AsyncCoreFacade(core);
-    } catch (err) {
-      console.log("beforeEach error", err);
-    }
+    await setupTable(DEFAULT_TABLE_NAME, DEFAULT_CLIENT_OPTIONS);
+    await clearPrefix(DEFAULT_TABLE_NAME, 'launchdarkly');
+    core = new DynamoDBCore(DEFAULT_TABLE_NAME, new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS), undefined);
+    facade = new AsyncCoreFacade(core);
   });
 
   afterEach(() => {

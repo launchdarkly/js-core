@@ -19,7 +19,6 @@ export default async function setupTable(tableName: string, options: DynamoDBCli
       },
     }));
   } catch (err) {
-    console.log("Error", err);
     // Table probably existed.
   }
   client.destroy();

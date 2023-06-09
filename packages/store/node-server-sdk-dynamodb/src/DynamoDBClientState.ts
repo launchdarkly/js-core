@@ -33,19 +33,21 @@ export default class DynamoDBClientState {
 
   private client: DynamoDBClient;
 
+  private owned: boolean;
+
   constructor(options: LDDynamoDBOptions) {
     this.prefix = options?.prefix ? `${options!.prefix}:` : DEFAULT_PREFIX;
 
+    // We track if we own the client so that we can destroy clients that we own.
     if (options.dynamoDBClient) {
       this.client = options.dynamoDBClient;
+      this.owned = false;
     } else if (options.clientOptions) {
       this.client = new DynamoDBClient(options!.clientOptions);
+      this.owned = true;
     } else {
       throw new Error('Either a dynamoDBClient or clientOptions must be specified in the config.');
     }
-
-    // Unlike some other database integrations, we don't need to keep track of whether we
-    // created our own client so as to shut it down later; the AWS client is stateless.
   }
 
   /**
@@ -55,10 +57,6 @@ export default class DynamoDBClientState {
    */
   prefixedKey(key: string): string {
     return `${this.prefix}${key}`;
-  }
-
-  getClient(): DynamoDBClient {
-    return this.client;
   }
 
   async query(params: QueryCommandInput): Promise<Record<string, AttributeValue>[]> {
@@ -115,6 +113,12 @@ export default class DynamoDBClientState {
       if (!(err instanceof ConditionalCheckFailedException)) {
         throw err;
       }
+    }
+  }
+
+  close() {
+    if (this.owned) {
+      this.client.destroy();
     }
   }
 }

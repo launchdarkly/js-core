@@ -18,9 +18,7 @@ export default async function clearPrefix(table: string, prefix?: string) {
     TableName: table
   })) {
     page?.Items?.forEach((item) => {
-      console.log(JSON.stringify(item));
       if(item?.namespace?.S?.startsWith(actualPrefix)) {
-        console.log("potato");
         deleteOps.push({
           DeleteRequest: {
           Key: {
