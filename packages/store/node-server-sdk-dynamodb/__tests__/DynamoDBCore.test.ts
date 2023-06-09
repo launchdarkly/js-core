@@ -20,8 +20,8 @@ const DEFAULT_CLIENT_OPTIONS: LDDynamoDBOptions = {
     endpoint: 'http://localhost:8000',
     region: 'us-west-2',
     credentials: { accessKeyId: 'fake', secretAccessKey: 'fake' },
-  }
-}
+  },
+};
 
 function promisify<T>(method: (callback: (val: T) => void) => void): Promise<T> {
   return new Promise<T>((resolve) => {
@@ -37,7 +37,7 @@ type UpsertResult = {
 };
 
 class AsyncCoreFacade {
-  constructor(private readonly core: DynamoDBCore) { }
+  constructor(private readonly core: DynamoDBCore) {}
 
   init(allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>): Promise<void> {
     return promisify((cb) => this.core.init(allData, cb));
@@ -88,7 +88,11 @@ describe('given an empty store', () => {
   beforeEach(async () => {
     await setupTable(DEFAULT_TABLE_NAME, DEFAULT_CLIENT_OPTIONS);
     await clearPrefix(DEFAULT_TABLE_NAME, 'launchdarkly');
-    core = new DynamoDBCore(DEFAULT_TABLE_NAME, new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS), undefined);
+    core = new DynamoDBCore(
+      DEFAULT_TABLE_NAME,
+      new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS),
+      undefined
+    );
     facade = new AsyncCoreFacade(core);
   });
 
@@ -176,7 +180,11 @@ describe('given a store with basic data', () => {
 
   beforeEach(async () => {
     await clearPrefix(DEFAULT_TABLE_NAME, 'launchdarkly');
-    core = new DynamoDBCore(DEFAULT_TABLE_NAME, new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS), undefined);
+    core = new DynamoDBCore(
+      DEFAULT_TABLE_NAME,
+      new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS),
+      undefined
+    );
     const flags = [
       {
         key: 'foo',
@@ -217,16 +225,18 @@ describe('given a store with basic data', () => {
 
   it('gets all features', async () => {
     const result = await facade.getAll(dataKind.features);
-    expect(result).toEqual(expect.arrayContaining([
-      {
-        key: 'foo',
-        item: { version: 10, serializedItem: JSON.stringify(feature1), deleted: false },
-      },
-      {
-        key: 'bar',
-        item: { version: 10, serializedItem: JSON.stringify(feature2), deleted: false },
-      },
-    ]));
+    expect(result).toEqual(
+      expect.arrayContaining([
+        {
+          key: 'foo',
+          item: { version: 10, serializedItem: JSON.stringify(feature1), deleted: false },
+        },
+        {
+          key: 'bar',
+          item: { version: 10, serializedItem: JSON.stringify(feature2), deleted: false },
+        },
+      ])
+    );
   });
 
   it('upserts with newer version', async () => {

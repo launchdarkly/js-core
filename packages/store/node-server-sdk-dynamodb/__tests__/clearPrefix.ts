@@ -10,28 +10,33 @@ export default async function clearPrefix(table: string, prefix?: string) {
     credentials: { accessKeyId: 'fake', secretAccessKey: 'fake' },
   });
 
-  const state = new DynamoDBClientState({dynamoDBClient: client});
+  const state = new DynamoDBClientState({ dynamoDBClient: client });
 
   const deleteOps: WriteRequest[] = [];
 
-  for await (const page of paginateScan({ client }, {
-    TableName: table
-  })) {
+  // Using a generator here is a substantial ergonomic improvement and this is a test file.
+  // eslint-disable-next-line no-restricted-syntax
+  for await (const page of paginateScan(
+    { client },
+    {
+      TableName: table,
+    }
+  )) {
     page?.Items?.forEach((item) => {
-      if(item?.namespace?.S?.startsWith(actualPrefix)) {
+      if (item?.namespace?.S?.startsWith(actualPrefix)) {
         deleteOps.push({
           DeleteRequest: {
-          Key: {
-            namespace: item.namespace,
-            key: item.key
-          }
-        }
+            Key: {
+              namespace: item.namespace,
+              key: item.key,
+            },
+          },
         });
       }
     });
   }
 
-  if(deleteOps.length) {
+  if (deleteOps.length) {
     await state.batchWrite(table, deleteOps);
   }
 }

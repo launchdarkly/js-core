@@ -14,18 +14,24 @@ const DEFAULT_CLIENT_OPTIONS: LDDynamoDBOptions = {
     endpoint: 'http://localhost:8000',
     region: 'us-west-2',
     credentials: { accessKeyId: 'fake', secretAccessKey: 'fake' },
-  }
-}
+  },
+};
 
-
-describe.each([['test-table-1', undefined], ['test-table-2', 'testing']])('given an empty store', (table, prefixParam) => {
+describe.each([
+  ['test-table-1', undefined],
+  ['test-table-2', 'testing'],
+])('given an empty store', (table, prefixParam) => {
   let store: DynamoDBFeatureStore;
   let facade: AsyncStoreFacade;
 
   beforeEach(async () => {
     await setupTable(table, DEFAULT_CLIENT_OPTIONS.clientOptions!);
     await clearPrefix(table, prefixParam);
-    store = new DynamoDBFeatureStore(table, { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam }, undefined);
+    store = new DynamoDBFeatureStore(
+      table,
+      { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam },
+      undefined
+    );
     facade = new AsyncStoreFacade(store);
   });
 
@@ -71,7 +77,10 @@ describe.each([['test-table-1', undefined], ['test-table-2', 'testing']])('given
   });
 });
 
-describe.each([['test-table-1', undefined], ['test-table-2', 'testing']])('given an empty store', (table, prefixParam) => {
+describe.each([
+  ['test-table-1', undefined],
+  ['test-table-2', 'testing'],
+])('given an empty store', (table, prefixParam) => {
   let store: DynamoDBFeatureStore;
   let facade: AsyncStoreFacade;
 
@@ -80,7 +89,11 @@ describe.each([['test-table-1', undefined], ['test-table-2', 'testing']])('given
   beforeEach(async () => {
     await setupTable(table, DEFAULT_CLIENT_OPTIONS.clientOptions!);
     await clearPrefix(table, prefixParam);
-    store = new DynamoDBFeatureStore(table, { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam }, undefined);
+    store = new DynamoDBFeatureStore(
+      table,
+      { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam },
+      undefined
+    );
     facade = new AsyncStoreFacade(store);
     await facade.init({
       features: {

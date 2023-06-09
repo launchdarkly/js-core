@@ -34,13 +34,20 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
   // Logger is not currently used, but is included to reduce the chance of a
   // compatibility break to add a log.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(private readonly tableName: string, options: LDDynamoDBOptions, private readonly logger?: LDLogger) {
+  constructor(
+    private readonly tableName: string,
+    options: LDDynamoDBOptions,
+    private readonly logger?: LDLogger
+  ) {
     this.state = new DynamoDBClientState(options);
   }
 
   async getMetadata(): Promise<interfaces.BigSegmentStoreMetadata | undefined> {
     const key = this.state.prefixedKey(KEY_METADATA);
-    const data = await this.state.get(this.tableName, { namespace: stringValue(key), key: stringValue(key) });
+    const data = await this.state.get(this.tableName, {
+      namespace: stringValue(key),
+      key: stringValue(key),
+    });
     if (data) {
       const attr = data[ATTR_SYNC_ON];
       if (attr && attr.N) {
@@ -53,9 +60,10 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
   async getUserMembership(
     userHash: string
   ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
-    const data = await this.state.get(this.tableName,
-      { namespace: stringValue(this.state.prefixedKey(KEY_USER_DATA)), key: stringValue(userHash) }
-    );
+    const data = await this.state.get(this.tableName, {
+      namespace: stringValue(this.state.prefixedKey(KEY_USER_DATA)),
+      key: stringValue(userHash),
+    });
     if (data) {
       const excludedRefs = data[ATTR_EXCLUDED];
       const includedRefs = data[ATTR_INCLUDED];
@@ -70,6 +78,7 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
       });
       return membership;
     }
+    return undefined;
   }
 
   close(): void {

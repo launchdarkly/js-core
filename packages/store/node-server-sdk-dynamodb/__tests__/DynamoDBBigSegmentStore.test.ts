@@ -1,11 +1,11 @@
-import { CreateTableCommand, DynamoDBClient, DynamoDBClientConfig, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { interfaces } from '@launchdarkly/node-server-sdk';
 import DynamoDBBigSegmentStore, {
   KEY_METADATA,
   KEY_USER_DATA,
   ATTR_EXCLUDED,
   ATTR_INCLUDED,
-  ATTR_SYNC_ON
+  ATTR_SYNC_ON,
 } from '../src/DynamoDBBigSegmentStore';
 import clearPrefix from './clearPrefix';
 import setupTable from './setupTable';
@@ -21,8 +21,8 @@ const DEFAULT_CLIENT_OPTIONS: LDDynamoDBOptions = {
     endpoint: 'http://localhost:8000',
     region: 'us-west-2',
     credentials: { accessKeyId: 'fake', secretAccessKey: 'fake' },
-  }
-}
+  },
+};
 
 async function setMetadata(
   prefix: string | undefined,
@@ -30,14 +30,16 @@ async function setMetadata(
 ): Promise<void> {
   const client = new DynamoDBClient(DEFAULT_CLIENT_OPTIONS.clientOptions!);
   const key = prefix ? `${prefix}:${KEY_METADATA}` : KEY_METADATA;
-  await client.send(new PutItemCommand({
-    TableName: DEFAULT_TABLE_NAME,
-    Item: {
-      namespace: stringValue(key),
-      key: stringValue(key),
-      [ATTR_SYNC_ON]: numberValue(metadata.lastUpToDate!)
-    }
-  }));
+  await client.send(
+    new PutItemCommand({
+      TableName: DEFAULT_TABLE_NAME,
+      Item: {
+        namespace: stringValue(key),
+        key: stringValue(key),
+        [ATTR_SYNC_ON]: numberValue(metadata.lastUpToDate!),
+      },
+    })
+  );
   client.destroy();
 }
 
@@ -51,24 +53,26 @@ async function setSegments(
   const key = prefix ? `${prefix}:${KEY_USER_DATA}` : KEY_USER_DATA;
 
   async function addToSet(attrName: string, values: string[]) {
-    await client.send(new UpdateItemCommand({
-      TableName: DEFAULT_TABLE_NAME,
-      Key: {
-        namespace: stringValue(key),
-        key: stringValue(userHashKey)
-      },
-      UpdateExpression: `ADD ${attrName} :value`,
-      ExpressionAttributeValues: {
-        ':value': { SS: values }
-      }
-    }));
+    await client.send(
+      new UpdateItemCommand({
+        TableName: DEFAULT_TABLE_NAME,
+        Key: {
+          namespace: stringValue(key),
+          key: stringValue(userHashKey),
+        },
+        UpdateExpression: `ADD ${attrName} :value`,
+        ExpressionAttributeValues: {
+          ':value': { SS: values },
+        },
+      })
+    );
   }
 
-  if(included && included.length) {
+  if (included && included.length) {
     await addToSet(ATTR_INCLUDED, included);
   }
 
-  if(excluded && excluded.length) {
+  if (excluded && excluded.length) {
     await addToSet(ATTR_EXCLUDED, excluded);
   }
 
@@ -82,7 +86,10 @@ describe.each([undefined, 'app1'])('given a redis big segment store', (prefixPar
     await setupTable(DEFAULT_TABLE_NAME, DEFAULT_CLIENT_OPTIONS.clientOptions!);
     await clearPrefix(DEFAULT_TABLE_NAME, prefixParam);
     // Use param directly to test undefined.
-    store = new DynamoDBBigSegmentStore(DEFAULT_TABLE_NAME, { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam });
+    store = new DynamoDBBigSegmentStore(DEFAULT_TABLE_NAME, {
+      ...DEFAULT_CLIENT_OPTIONS,
+      prefix: prefixParam,
+    });
   });
 
   afterEach(async () => {
