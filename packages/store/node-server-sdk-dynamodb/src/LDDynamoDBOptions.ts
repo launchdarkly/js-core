@@ -4,7 +4,7 @@ import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 /**
  * Options for configuring {@link DynamoDBFeatureStoreFactory} or {@link DynamoDBBigSegmentStoreFactory}.
  */
-export interface LDDynamoDBOptions {
+export default interface LDDynamoDBOptions {
   /**
    * Options to be passed to the DynamoDB client constructor, as defined by the AWS SDK.
    */

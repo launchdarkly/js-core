@@ -1,12 +1,24 @@
-import { LDDynamoDBOptions } from './LDDynamoDBOptions';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { LDLogger } from '@launchdarkly/node-server-sdk';
+import {
+  AttributeValue,
+  BatchWriteItemCommand,
+  ConditionalCheckFailedException,
+  DynamoDBClient,
+  GetItemCommand,
+  PutItemCommand,
+  PutItemCommandInput,
+  QueryCommandInput,
+  WriteRequest,
+  paginateQuery,
+} from '@aws-sdk/client-dynamodb';
+import LDDynamoDBOptions from './LDDynamoDBOptions';
 
 // Unlike some other database integrations where the key prefix is mandatory and has
 // a default value, in DynamoDB it is fine to not have a prefix. If there is one, we
 // prepend it to keys with a ':' separator.
 const DEFAULT_PREFIX = '';
 
+// BatchWrite can only accept 25 items at a time, so split up the writes into batches of 25.
+const WRITE_BATCH_SIZE = 25;
 
 /**
  * Class for managing the state of a dynamodb client.
@@ -21,15 +33,15 @@ export default class DynamoDBClientState {
 
   private client: DynamoDBClient;
 
-  constructor(options: LDDynamoDBOptions, logger?: LDLogger) {
+  constructor(options: LDDynamoDBOptions) {
     this.prefix = options?.prefix ? `${options!.prefix}:` : DEFAULT_PREFIX;
 
-    if(options.dynamoDBClient) {
+    if (options.dynamoDBClient) {
       this.client = options.dynamoDBClient;
-    } else if(options.clientOptions) {
+    } else if (options.clientOptions) {
       this.client = new DynamoDBClient(options!.clientOptions);
     } else {
-      logger?.error("Either a dynamoDBClient or clientOptions must be specified in the config.");
+      throw new Error('Either a dynamoDBClient or clientOptions must be specified in the config.');
     }
 
     // Unlike some other database integrations, we don't need to keep track of whether we
@@ -43,5 +55,66 @@ export default class DynamoDBClientState {
    */
   prefixedKey(key: string): string {
     return `${this.prefix}${key}`;
+  }
+
+  getClient(): DynamoDBClient {
+    return this.client;
+  }
+
+  async query(params: QueryCommandInput): Promise<Record<string, AttributeValue>[]> {
+    const records: Record<string, AttributeValue>[] = [];
+    // Using a generator here is a substantial ergonomic improvement.
+    // eslint-disable-next-line no-restricted-syntax
+    for await (const page of paginateQuery({ client: this.client }, params)) {
+      if (page.Items) {
+        records.push(...page.Items);
+      }
+    }
+    return records;
+  }
+
+  async batchWrite(table: string, params: WriteRequest[]) {
+    const batches: WriteRequest[][] = [];
+    // Split into batches of at most 25 commands.
+    while (params.length) {
+      batches.push(params.splice(0, WRITE_BATCH_SIZE));
+    }
+
+    // Execute all the batches and wait for them to complete.
+    await Promise.all(
+      batches.map((batch) =>
+        this.client.send(
+          new BatchWriteItemCommand({
+            RequestItems: { [table]: batch },
+          })
+        )
+      )
+    );
+  }
+
+  async get(
+    table: string,
+    key: Record<string, AttributeValue>
+  ): Promise<Record<string, AttributeValue> | undefined> {
+    const res = await this.client.send(
+      new GetItemCommand({
+        TableName: table,
+        Key: key,
+      })
+    );
+
+    return res.Item;
+  }
+
+  async put(params: PutItemCommandInput): Promise<void> {
+    try {
+      await this.client.send(new PutItemCommand(params));
+    } catch (err) {
+      // If we couldn't upsert because of the version, then that is fine.
+      // Otherwise we return failure.
+      if (!(err instanceof ConditionalCheckFailedException)) {
+        throw err;
+      }
+    }
   }
 }

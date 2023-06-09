@@ -1,4 +1,23 @@
 import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
+import { AttributeValue, QueryCommandInput, WriteRequest } from '@aws-sdk/client-dynamodb';
+import DynamoDBClientState from './DynamoDBClientState';
+
+// We won't try to store items whose total size exceeds this. The DynamoDB documentation says
+// only "400KB", which probably means 400*1024, but to avoid any chance of trying to store a
+// too-large item we are rounding it down.
+const DYNAMODB_MAX_SIZE = 400000;
+
+function stringValue(val: string): AttributeValue {
+  return { S: val };
+}
+
+function boolValue(val: boolean): AttributeValue {
+  return { BOOL: val };
+}
+
+function numberValue(val: number): AttributeValue {
+  return { N: val.toString(10) };
+}
 
 /**
  * Internal implementation of the DynamoDB feature store.
@@ -7,15 +26,15 @@ import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
  *
  * Feature flags, segments, and any other kind of entity the LaunchDarkly client may wish
  * to store, are all put in the same table. The only two required attributes are "key" (which
- * is present in all storeable entities) and "namespace" (a parameter from the client that is
+ * is present in all store-able entities) and "namespace" (a parameter from the client that is
  * used to disambiguate between flags and segments).
- * 
+ *
  * Because of DynamoDB's restrictions on attribute values (e.g. empty strings are not
  * allowed), the standard DynamoDB marshaling mechanism with one attribute per object property
  * is not used. Instead, the entire object is serialized to JSON and stored in a single
  * attribute, "item". The "version" property is also stored as a separate attribute since it
  * is used for updates.
- * 
+ *
  * Since DynamoDB doesn't have transactions, the init method - which replaces the entire data
  * store - is not atomic, so there can be a race condition if another process is adding new data
  * via upsert. To minimize this, we don't delete all the data at the start; instead, we update
@@ -28,35 +47,145 @@ import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
  * stored as a single item, this mechanism will not work for extremely large flags or segments.
  * @internal
  */
-export default class RedisCore implements interfaces.PersistentDataStore {
-  constructor(private readonly logger?: LDLogger) {
+export default class DynamoDBCore implements interfaces.PersistentDataStore {
+  constructor(
+    private readonly tableName: string,
+    private readonly state: DynamoDBClientState,
+    private readonly logger?: LDLogger
+  ) {}
+
+  private initializedToken() {
+    const prefixed = stringValue(this.state.prefixedKey('$inited'));
+    return { namespace: prefixed, key: prefixed };
   }
 
-  init(
+  /**
+   * For a set of init data read all the existing data with matching namespaces.
+   * @param allData A set of init data.
+   * @returns A list of all data with matching namespaces.
+   */
+  private async readExistingItems(
+    allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>
+  ) {
+    const promises = allData.map((kind) => {
+      const { namespace } = kind.key;
+      return this.state.query(this.queryParamsForNamespace(namespace));
+    });
+
+    const records = (await Promise.all(promises)).flat();
+    return records;
+  }
+
+  /**
+   * Mashal a SerializedItemDescriptor into an item for the DB.
+   * @param kind The kind of the data.
+   * @param item The item to marshal.
+   * @returns The marshalled data.
+   */
+  private marshalItem(
+    kind: interfaces.PersistentStoreDataKind,
+    item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>
+  ): Record<string, AttributeValue> {
+    const dbItem: Record<string, AttributeValue> = {
+      namespace: stringValue(this.state.prefixedKey(kind.namespace)),
+      key: stringValue(item.key),
+      version: numberValue(item.item.version),
+    };
+    if (item.item.serializedItem) {
+      dbItem.item = stringValue(item.item.serializedItem);
+    }
+    return dbItem;
+  }
+
+  private unmarshalItem(
+    dbItem: Record<string, AttributeValue>
+  ): interfaces.SerializedItemDescriptor {
+    return {
+      // Version should exist.
+      version: parseInt(dbItem.version?.N || '0', 10),
+      // These fields may be undefined, and that is fine.
+      deleted: !!dbItem.deleted?.BOOL,
+      serializedItem: dbItem.item?.S,
+    };
+  }
+
+  async init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
     callback: () => void
-  ): void {
-    throw new Error("Not implemented");
+  ) {
+    const items = await this.readExistingItems(allData);
+
+    // Make a key from an existing DB item.
+    function makeNamespaceKey(item: Record<string, AttributeValue>) {
+      return `${item.namespace.S}$${item.key.S}`;
+    }
+
+    const existingNamespaceKeys: { [key: string]: boolean } = {};
+    items.forEach((item) => {
+      existingNamespaceKeys[makeNamespaceKey(item)] = true;
+    });
+    delete existingNamespaceKeys[makeNamespaceKey(this.initializedToken())];
+
+    // Generate a list of write operations, and then execute them in a batch.
+    const ops: WriteRequest[] = [];
+
+    allData.forEach((collection) => {
+      collection.item.forEach((item) => {
+        const dbItem = this.marshalItem(collection.key, item);
+        if (this.checkSizeLimit(dbItem)) {
+          delete existingNamespaceKeys[
+            `${this.state.prefixedKey(collection.key.namespace)}$${item.key}`
+          ];
+          ops.push({ PutRequest: { Item: dbItem } });
+        }
+      });
+    });
+
+    // Remove existing data that is not in the new list.
+    Object.keys(existingNamespaceKeys).forEach((namespaceKey) => {
+      const namespaceAndKey = namespaceKey.split('$');
+      ops.push({
+        DeleteRequest: {
+          Key: { namespace: stringValue(namespaceAndKey[0]), key: stringValue(namespaceAndKey[1]) },
+        },
+      });
+    });
+
+    // Always write the initialized token when we initialize.
+    ops.push({ PutRequest: { Item: this.initializedToken() } });
+
+    await this.state.batchWrite(this.tableName, ops);
+    callback();
   }
 
-  get(
+  async get(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
     callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void
-  ): void {
-    throw new Error("Not implemented");
+  ) {
+    const read = await this.state.get(this.tableName, {
+      namespace: stringValue(this.state.prefixedKey(kind.namespace)),
+      key: stringValue(key),
+    });
+    if (read) {
+      callback(this.unmarshalItem(read));
+    } else {
+      callback(undefined);
+    }
   }
 
-  getAll(
+  async getAll(
     kind: interfaces.PersistentStoreDataKind,
     callback: (
       descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined
     ) => void
-  ): void {
-    throw new Error("Not implemented");
+  ) {
+    const params = this.queryParamsForNamespace(kind.namespace);
+    const results = await this.state.query(params);
+    callback(results.map((record) => ({ key: record!.key!.S!, item: this.unmarshalItem(record) })));
   }
 
-  upsert(
+  async upsert(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
     descriptor: interfaces.SerializedItemDescriptor,
@@ -64,19 +193,85 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       err?: Error | undefined,
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined
     ) => void
-  ): void {
-    throw new Error("Not implemented");
+  ) {
+    const params = this.makeVersionedPutRequest(kind, { key, item: descriptor });
+    if (!this.checkSizeLimit(params.Item)) {
+      // We deliberately don't report this back to the SDK as an error, because we don't want to trigger any
+      // useless retry behavior. We just won't do the update.
+      callback();
+      return;
+    }
+
+    try {
+      await this.state.put(params);
+      this.get(kind, key, (readDescriptor) => {
+        callback(undefined, readDescriptor);
+      });
+    } catch (err) {
+      callback(err as Error, undefined);
+    }
   }
 
-  initialized(callback: (isInitialized: boolean) => void): void {
-    throw new Error("Not implemented");
+  async initialized(callback: (isInitialized: boolean) => void) {
+    let initialized = false;
+    try {
+      const token = this.initializedToken();
+      const data = await this.state.get(this.tableName, token);
+      initialized = !!(data?.key?.S === token.key.S);
+    } catch (err) {
+      this.logger?.error(`Error reading inited: ${err}`);
+      initialized = false;
+    }
+    // Callback outside the try. In case it raised an exception.
+    callback(initialized);
   }
 
   close(): void {
-    throw new Error("Not implemented");
+    this.state.getClient().destroy();
   }
 
   getDescription(): string {
-    return 'DynamoDB'
+    return 'DynamoDB';
+  }
+
+  private queryParamsForNamespace(namespace: string): QueryCommandInput {
+    return {
+      TableName: this.tableName,
+      KeyConditionExpression: 'namespace = :namespace',
+      FilterExpression: 'attribute_not_exists(deleted) OR deleted = :deleted',
+      ExpressionAttributeValues: {
+        ':namespace': stringValue(this.state.prefixedKey(namespace)),
+        ':deleted': boolValue(false),
+      },
+    };
+  }
+
+  private makeVersionedPutRequest(
+    kind: interfaces.PersistentStoreDataKind,
+    item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>
+  ) {
+    return {
+      TableName: this.tableName,
+      Item: this.marshalItem(kind, item),
+      ConditionExpression: 'attribute_not_exists(version) OR version < :new_version',
+      ExpressionAttributeValues: { ':new_version': numberValue(item.item.version) },
+    };
+  }
+
+  private checkSizeLimit(item: Record<string, AttributeValue>) {
+    // see: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/CapacityUnitCalculations.html
+
+    const size = Object.entries(item).reduce(
+      (prev, [key, value]) => prev + key.length + Buffer.byteLength(value.toString()),
+      100 // fixed overhead for index data
+    );
+
+    if (size <= DYNAMODB_MAX_SIZE) {
+      return true;
+    }
+    this.logger?.error(
+      `The item "${item.key.S}" in "${item.namespace.S}" was too large to store in DynamoDB and was dropped`
+    );
+    return false;
   }
 }
