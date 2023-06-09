@@ -15,7 +15,7 @@ import DynamoDBBigSegmentStore from './DynamoDBBigSegmentStore';
  * @returns A function which creates big segment stores based on the provided config.
  */
 export default function DynamoDBBigSegmentStoreFactory(
-  options?: LDDynamoDBOptions
+  options: LDDynamoDBOptions
 ): (config: LDOptions) => interfaces.BigSegmentStore {
   return (config: LDOptions) => new DynamoDBBigSegmentStore(options, config.logger);
 }
