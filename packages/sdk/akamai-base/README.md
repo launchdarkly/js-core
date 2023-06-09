@@ -52,7 +52,7 @@ yarn test
 [sdk-akamai-base-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
 [sdk-akamai-base-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-server-base-sdk
 [sdk-akamai-base-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[sdk-akamai-base-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai/docs/
+[sdk-akamai-base-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai-base/docs/
 [sdk-akamai-base-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
 [sdk-akamai-base-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
 [package-sdk-akamai-base-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fakamai-base%22+

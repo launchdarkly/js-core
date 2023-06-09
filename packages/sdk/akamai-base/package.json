@@ -25,7 +25,7 @@
     "dist"
   ],
   "scripts": {
-    "doc": "npx typedoc --entryPointStrategy resolve src/index.ts",
+    "doc": "npx typedoc --name \"Akamai LaunchDarkly EdgeWorker SDK ${npm_package_version}\" --readme none --entryPointStrategy resolve src/index.ts",
     "build": "rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
