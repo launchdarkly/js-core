@@ -19,7 +19,8 @@
     "packages/sdk/akamai-base": {
       "extra-files": [
         "src/index.ts"
-      ]
+      ],
+      "bump-minor-pre-major": true
     },
     "packages/sdk/akamai-edgekv": {
       "extra-files": [
