@@ -4,26 +4,31 @@ import DynamoDBClientState from './DynamoDBClientState';
 import { stringValue } from './Value';
 
 /**
+ * Exported for testing.
  * @internal
  */
 export const KEY_METADATA = 'big_segments_metadata';
 
 /**
+ * Exported for testing.
  * @internal
  */
 export const KEY_USER_DATA = 'big_segments_user';
 
 /**
+ * Exported for testing.
  * @internal
  */
 export const ATTR_SYNC_ON = 'synchronizedOn';
 
 /**
+ * Exported for testing.
  * @internal
  */
 export const ATTR_INCLUDED = 'included';
 
 /**
+ * Exported for testing.
  * @internal
  */
 export const ATTR_EXCLUDED = 'excluded';

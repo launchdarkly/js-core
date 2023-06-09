@@ -9,6 +9,28 @@ import { stringValue, numberValue, boolValue } from './Value';
 const DYNAMODB_MAX_SIZE = 400000;
 
 /**
+ * Exported for testing.
+ * @internal
+ */
+export function calculateSize(item: Record<string, AttributeValue>, logger?: LDLogger) {
+  return Object.entries(item).reduce((prev, [key, value]) => {
+    // see: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/CapacityUnitCalculations.html
+    if (value.S) {
+      return prev + key.length + Buffer.byteLength(value.S);
+    }
+    if (value.N) {
+      // Numeric values will be over-estimated compared to the DynamoDB size calculation.
+      return prev + key.length + Buffer.byteLength(value.N);
+    }
+    if (value.BOOL) {
+      return prev + key.length + 1;
+    }
+    logger?.warn('Unrecognized type in size calculation');
+    return prev;
+  }, 100);
+}
+
+/**
  * Internal implementation of the DynamoDB feature store.
  *
  * Implementation notes:
@@ -248,12 +270,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   }
 
   private checkSizeLimit(item: Record<string, AttributeValue>) {
-    // see: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/CapacityUnitCalculations.html
-
-    const size = Object.entries(item).reduce(
-      (prev, [key, value]) => prev + key.length + Buffer.byteLength(value.toString()),
-      100 // fixed overhead for index data
-    );
+    const size = calculateSize(item);
 
     if (size <= DYNAMODB_MAX_SIZE) {
       return true;

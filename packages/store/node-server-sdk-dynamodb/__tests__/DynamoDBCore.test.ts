@@ -1,5 +1,5 @@
 import { interfaces } from '@launchdarkly/node-server-sdk';
-import DynamoDBCore from '../src/DynamoDBCore';
+import DynamoDBCore, { calculateSize } from '../src/DynamoDBCore';
 import DynamoDBClientState from '../src/DynamoDBClientState';
 import clearPrefix from './clearPrefix';
 import LDDynamoDBOptions from '../src/LDDynamoDBOptions';
@@ -279,4 +279,34 @@ describe('given a store with basic data', () => {
     const result = await facade.get(dataKind.features, newFeature.key);
     expect(result).toEqual(descriptor);
   });
+});
+
+it('it can calculate size', () => {
+  const stringPayload = `{"key":"foo","version":10}`;
+
+  expect(
+    calculateSize({
+      test: { S: stringPayload },
+    })
+  ).toEqual(100 + 'test'.length + stringPayload.length);
+
+  expect(
+    calculateSize({
+      test: { N: '14' },
+    })
+  ).toEqual(100 + 'test'.length + 2);
+
+  expect(
+    calculateSize({
+      test: { BOOL: true },
+    })
+  ).toEqual(100 + 'test'.length + 1);
+
+  expect(
+    calculateSize({
+      bool: { BOOL: true },
+      string: { S: stringPayload },
+      number: { N: '14' },
+    })
+  ).toEqual(100 + 'test'.length + 'string'.length + 'number'.length + stringPayload.length + 2 + 1);
 });
