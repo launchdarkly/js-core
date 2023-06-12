@@ -102,7 +102,7 @@ export default class Evaluator {
     const state = new EvalState();
     const res = await this.evaluateInternal(flag, context, state, [], eventFactory);
     if (state.bigSegmentsStatus) {
-      res.detail.reason.bigSegmentsStatus = state.bigSegmentsStatus;
+      res.detail.reason = { ...res.detail.reason, bigSegmentsStatus: state.bigSegmentsStatus };
     }
     res.events = state.events;
     return res;
@@ -465,9 +465,11 @@ export default class Evaluator {
     state: EvalState,
     segmentsVisited: string[]
   ): Promise<MatchOrError> {
-    const includeExclude = matchSegmentTargets(segment, context);
-    if (includeExclude !== undefined) {
-      return new Match(includeExclude);
+    if (!segment.unbounded) {
+      const includeExclude = matchSegmentTargets(segment, context);
+      if (includeExclude !== undefined) {
+        return new Match(includeExclude);
+      }
     }
 
     let evalResult: EvalResult | undefined;
@@ -501,6 +503,13 @@ export default class Evaluator {
       return this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
     }
 
+    const bigSegmentKind = segment.unboundedContextKind || 'user';
+    const keyForBigSegment = context.key(bigSegmentKind);
+
+    if (keyForBigSegment === undefined) {
+      return new Match(false);
+    }
+
     if (!segment.generation) {
       // Big Segment queries can only be done if the generation is known. If it's unset,
       // that probably means the data store was populated by an older SDK that doesn't know
@@ -511,13 +520,6 @@ export default class Evaluator {
         state.bigSegmentsStatus,
         'NOT_CONFIGURED'
       );
-      return new Match(false);
-    }
-
-    const bigSegmentKind = segment.unboundedContextKind || 'user';
-    const keyForBigSegment = context.key(bigSegmentKind);
-
-    if (keyForBigSegment === undefined) {
       return new Match(false);
     }
 
@@ -572,8 +574,8 @@ export default class Evaluator {
   ): Promise<MatchOrError> {
     const segmentRef = makeBigSegmentRef(segment);
     const included = membership?.[segmentRef];
-    if (included) {
-      return new Match(true);
+    if (included !== undefined) {
+      return new Match(included);
     }
     return this.simpleSegmentMatchContext(segment, context, state, []);
   }
