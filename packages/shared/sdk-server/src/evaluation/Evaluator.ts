@@ -574,7 +574,10 @@ export default class Evaluator {
   ): Promise<MatchOrError> {
     const segmentRef = makeBigSegmentRef(segment);
     const included = membership?.[segmentRef];
-    if (included !== undefined) {
+    // Typically null is not checked because we filter it from the data
+    // we get in flag updates. Here it is checked because big segment data
+    // will be contingent on the store that implements it.
+    if (included !== undefined && included !== null) {
       return new Match(included);
     }
     return this.simpleSegmentMatchContext(segment, context, state, []);
