@@ -574,8 +574,8 @@ export default class Evaluator {
   ): Promise<MatchOrError> {
     const segmentRef = makeBigSegmentRef(segment);
     const included = membership?.[segmentRef];
-    if (included) {
-      return new Match(true);
+    if (included !== undefined) {
+      return new Match(included);
     }
     return this.simpleSegmentMatchContext(segment, context, state, []);
   }
