@@ -14,7 +14,6 @@ import {
   LDLogger,
   LDOptions,
 } from '@launchdarkly/js-server-sdk-common';
-import { EventEmitter } from 'events';
 import LDClientImpl from './LDClientNode';
 import { LDClient } from './api/LDClient';
 
