@@ -102,7 +102,7 @@ export default class Evaluator {
     const state = new EvalState();
     const res = await this.evaluateInternal(flag, context, state, [], eventFactory);
     if (state.bigSegmentsStatus) {
-      res.detail.reason.bigSegmentsStatus = state.bigSegmentsStatus;
+      res.detail.reason = { ...res.detail.reason, bigSegmentsStatus: state.bigSegmentsStatus };
     }
     res.events = state.events;
     return res;
