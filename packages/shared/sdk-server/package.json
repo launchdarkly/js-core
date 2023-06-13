@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,7 +29,7 @@
   "license": "Apache-2.0",
   "//": "Pinned semver because 7.5.0 introduced require('util') without the node: prefix",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "1.0.1",
+    "@launchdarkly/js-sdk-common": "1.0.2",
     "semver": "7.4.0"
   },
   "devDependencies": {

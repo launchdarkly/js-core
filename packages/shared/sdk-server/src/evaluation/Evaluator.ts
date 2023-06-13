@@ -506,7 +506,7 @@ export default class Evaluator {
     const bigSegmentKind = segment.unboundedContextKind || 'user';
     const keyForBigSegment = context.key(bigSegmentKind);
 
-    if (keyForBigSegment === undefined) {
+    if (!keyForBigSegment) {
       return new Match(false);
     }
 
