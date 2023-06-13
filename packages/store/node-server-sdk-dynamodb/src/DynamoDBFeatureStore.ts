@@ -19,7 +19,7 @@ import TtlFromOptions from './TtlFromOptions';
 export default class DynamoDBFeatureStore implements LDFeatureStore {
   private wrapper: PersistentDataStoreWrapper;
 
-  constructor(tableName: string, options: LDDynamoDBOptions, logger?: LDLogger) {
+  constructor(tableName: string, options?: LDDynamoDBOptions, logger?: LDLogger) {
     this.wrapper = new PersistentDataStoreWrapper(
       new DynamoDBCore(tableName, new DynamoDBClientState(options), logger),
       TtlFromOptions(options)

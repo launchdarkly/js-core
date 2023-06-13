@@ -35,18 +35,19 @@ export default class DynamoDBClientState {
 
   private owned: boolean;
 
-  constructor(options: LDDynamoDBOptions) {
+  constructor(options?: LDDynamoDBOptions) {
     this.prefix = options?.prefix ? `${options!.prefix}:` : DEFAULT_PREFIX;
 
     // We track if we own the client so that we can destroy clients that we own.
-    if (options.dynamoDBClient) {
+    if (options?.dynamoDBClient) {
       this.client = options.dynamoDBClient;
       this.owned = false;
-    } else if (options.clientOptions) {
+    } else if (options?.clientOptions) {
       this.client = new DynamoDBClient(options!.clientOptions);
       this.owned = true;
     } else {
-      throw new Error('Either a dynamoDBClient or clientOptions must be specified in the config.');
+      this.client = new DynamoDBClient({});
+      this.owned = true;
     }
   }
 

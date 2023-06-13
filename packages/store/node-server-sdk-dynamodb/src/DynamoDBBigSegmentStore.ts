@@ -41,7 +41,7 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(
     private readonly tableName: string,
-    options: LDDynamoDBOptions,
+    options?: LDDynamoDBOptions,
     private readonly logger?: LDLogger
   ) {
     this.state = new DynamoDBClientState(options);

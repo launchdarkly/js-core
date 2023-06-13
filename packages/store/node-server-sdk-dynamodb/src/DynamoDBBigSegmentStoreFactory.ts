@@ -16,7 +16,7 @@ import DynamoDBBigSegmentStore from './DynamoDBBigSegmentStore';
  */
 export default function DynamoDBBigSegmentStoreFactory(
   tableName: string,
-  options: LDDynamoDBOptions
+  options?: LDDynamoDBOptions
 ): (config: LDOptions) => interfaces.BigSegmentStore {
   return (config: LDOptions) => new DynamoDBBigSegmentStore(tableName, options, config.logger);
 }

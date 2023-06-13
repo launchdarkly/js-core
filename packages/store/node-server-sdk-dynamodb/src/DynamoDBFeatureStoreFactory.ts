@@ -10,12 +10,15 @@ import LDDynamoDBOptions from './LDDynamoDBOptions';
  *
  * @param tableName The table name in DynamoDB (required). The table must already exist.
  *   See: https://docs.launchdarkly.com/sdk/features/storing-data/dynamodb
- * @param options Optional configuration (required), please refer to {@link LDDynamoDBOptions}.
+ * @param options Optional configuration, please refer to {@link LDDynamoDBOptions}.
  *
  * @returns
  *   A factory function suitable for use in the SDK configuration (LDOptions).
  */
-export default function DynamoDBFeatureStoreFactory(tableName: string, options: LDDynamoDBOptions) {
+export default function DynamoDBFeatureStoreFactory(
+  tableName: string,
+  options?: LDDynamoDBOptions
+) {
   return (config: LDClientContext) =>
     new DynamoDBFeatureStore(tableName, options, config.basicConfiguration.logger);
 }
