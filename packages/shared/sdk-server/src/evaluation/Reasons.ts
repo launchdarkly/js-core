@@ -20,8 +20,3 @@ export default class Reasons {
 
   static readonly TargetMatch: LDEvaluationReason = { kind: 'TARGET_MATCH' };
 }
-
-Object.freeze(Reasons);
-Object.freeze(Reasons.Fallthrough);
-Object.freeze(Reasons.Off);
-Object.freeze(Reasons.TargetMatch);
