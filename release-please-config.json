@@ -3,6 +3,9 @@
     "packages/shared/common": {},
     "packages/shared/sdk-server": {},
     "packages/shared/sdk-server-edge": {},
+    "packages/shared/akamai-edgeworker-sdk": {
+      "bump-minor-pre-major": true
+    },
     "packages/sdk/server-node": {
       "bump-minor-pre-major": true
     },
@@ -17,15 +20,13 @@
       "extra-files": [
         "src/index.ts"
       ],
-      "bump-minor-pre-major": true,
-      "release-as": "0.1.0"
+      "bump-minor-pre-major": true
     },
     "packages/sdk/akamai-edgekv": {
       "extra-files": [
         "src/index.ts"
       ],
-      "bump-minor-pre-major": true,
-      "release-as": "0.1.0"
+      "bump-minor-pre-major": true
     }
   },
   "plugins": ["node-workspace"]
