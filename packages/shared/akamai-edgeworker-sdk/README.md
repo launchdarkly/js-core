@@ -1,8 +1,9 @@
-# LaunchDarkly SDK JavaScript Common Server Edge Code
+# LaunchDarkly Akamai Edgeworker SDK
+
+> This library is a beta version and should not be considered ready for production use while this message is visible.
 
 This project contains Typescript classes and interfaces that are applicable to Akamai's edge SDKs.
 
-This library is a beta version and should not be considered ready for production use while this message is visible.
 
 ## Contributing
 
