@@ -1,8 +1,8 @@
-const express = require('express');
-const bodyParser = require('body-parser');
+import express from 'express';
+import bodyParser from 'body-parser';
 
-const { Log } = require('./log');
-const { newSdkClientEntity, badCommandError } = require('./sdkClientEntity');
+import { Log } from './log.js';
+import { newSdkClientEntity, badCommandError } from './sdkClientEntity.js';
 
 const app = express();
 let server = null;
@@ -26,6 +26,7 @@ app.get('/', (req, res) => {
       'all-flags-details-only-for-tracked-flags',
       'all-flags-with-reasons',
       'tags',
+      'big-segments'
     ],
   });
 });

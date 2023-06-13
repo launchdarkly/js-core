@@ -48,11 +48,15 @@ describe('given a logger with a custom name', () => {
     logger.info('b');
     logger.warn('c');
     logger.error('d');
+    logger.debug('This %s is %s', 'log', 'working');
+    logger.debug('This %s is %s', 'log', 'working', 'extra');
     expect(strings).toEqual([
       'debug: [MyLDLogger] a',
       'info: [MyLDLogger] b',
       'warn: [MyLDLogger] c',
       'error: [MyLDLogger] d',
+      'debug: [MyLDLogger] This log is working',
+      'debug: [MyLDLogger] This log is working extra',
     ]);
   });
 });
