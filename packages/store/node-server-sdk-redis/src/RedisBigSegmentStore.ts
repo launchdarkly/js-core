@@ -10,12 +10,12 @@ export const KEY_LAST_SYNCHRONIZED = 'big_segments_synchronized_on';
 /**
  * @internal
  */
-export const KEY_USER_INCLUDE = 'big_segment_include:';
+export const KEY_USER_INCLUDE = 'big_segment_include';
 
 /**
  * @internal
  */
-export const KEY_USER_EXCLUDE = 'big_segment_exclude:';
+export const KEY_USER_EXCLUDE = 'big_segment_exclude';
 
 export default class RedisBigSegmentStore implements interfaces.BigSegmentStore {
   private state: RedisClientState;
