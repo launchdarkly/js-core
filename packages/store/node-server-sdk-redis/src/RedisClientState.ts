@@ -111,7 +111,9 @@ export default class RedisClientState {
    */
   close() {
     if (this.owned) {
-      this.client.quit();
+      this.client.quit().catch(() => {
+        // Not any action that can be taken for an error on quit.
+      });
     }
   }
 
