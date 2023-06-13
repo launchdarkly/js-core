@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-sdk-common",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,6 +19,7 @@
     "client"
   ],
   "scripts": {
+    "doc": "../../../scripts/build-doc.sh .",
     "test": "npx jest --ci",
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",

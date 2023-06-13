@@ -74,7 +74,7 @@ export default class BasicLogger implements LDLogger {
       const prefix = `${LevelNames[level]}: [${this.name}]`;
       try {
         if (this.destination) {
-          this.tryWrite(this.tryFormat(prefix, ...args));
+          this.tryWrite(`${prefix} ${this.tryFormat(...args)}`);
         } else {
           // `console.error` has its own formatter.
           // So we don't need to do anything.

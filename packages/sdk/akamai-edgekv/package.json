@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/akamai-server-edgekv-sdk",
-  "version": "0.1.0",
+  "version": "0.3.1",
   "description": "Akamai LaunchDarkly EdgeWorker SDK for EdgeKV feature store",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-edgekv",
   "repository": {
@@ -26,7 +26,7 @@
     "dist"
   ],
   "scripts": {
-    "doc": "../../../scripts/build-doc.sh .",
+    "doc": "npx typedoc --name \"$(../../../scripts/doc-name.sh .)\" --readme none --entryPointStrategy resolve src/index.ts",
     "build": "rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
@@ -63,7 +63,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@launchdarkly/akamai-edgeworker-sdk-common": "^0.0.1",
-    "@launchdarkly/js-server-sdk-common": "^1.0.2"
+    "@launchdarkly/akamai-edgeworker-sdk-common": "^0.2.1",
+    "@launchdarkly/js-server-sdk-common": "^1.0.4"
   }
 }

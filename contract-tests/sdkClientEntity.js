@@ -1,10 +1,12 @@
-const ld = require('node-server-sdk');
+import ld from 'node-server-sdk';
+import BigSegmentTestStore from './BigSegmentTestStore.js';
 
-const { Log, sdkLogger } = require('./log');
+import { Log, sdkLogger } from './log.js';
 
 const badCommandError = new Error('unsupported command');
+export { badCommandError };
 
-function makeSdkConfig(options, tag) {
+export function makeSdkConfig(options, tag) {
   const cf = {
     logger: sdkLogger(tag),
   };
@@ -33,17 +35,31 @@ function makeSdkConfig(options, tag) {
       version: options.tags.applicationVersion,
     };
   }
+  if (options.bigSegments) {
+    const bigSegmentsOptions = options.bigSegments;
+    cf.bigSegments = {
+      store: () =>
+        new BigSegmentTestStore(bigSegmentsOptions.callbackUri),
+      userCacheSize: bigSegmentsOptions.userCacheSize,
+      userCacheTime: bigSegmentsOptions.userCacheTimeMs ?
+        bigSegmentsOptions.userCacheTimeMs / 1000 : undefined,
+      statusPollInterval: bigSegmentsOptions.statusPollIntervalMs ?
+        bigSegmentsOptions.statusPollIntervalMs / 1000 : undefined,
+      staleAfter: bigSegmentsOptions.staleAfterMs ?
+        bigSegmentsOptions.staleAfterMs / 1000 : undefined,
+    };
+  }
   return cf;
 }
 
-async function newSdkClientEntity(options) {
+export async function newSdkClientEntity(options) {
   const c = {};
   const log = Log(options.tag);
 
   log.info('Creating client with configuration: ' + JSON.stringify(options.configuration));
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
+      options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
   const client = ld.init(
@@ -106,7 +122,7 @@ async function newSdkClientEntity(options) {
         return undefined;
 
       case 'getBigSegmentStoreStatus':
-        return undefined;
+        return await client.bigSegmentStoreStatusProvider.requireStatus();
 
       default:
         throw badCommandError;
@@ -115,6 +131,3 @@ async function newSdkClientEntity(options) {
 
   return c;
 }
-
-module.exports.newSdkClientEntity = newSdkClientEntity;
-module.exports.badCommandError = badCommandError;

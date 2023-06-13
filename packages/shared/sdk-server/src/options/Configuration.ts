@@ -199,11 +199,7 @@ export default class Configuration {
 
   public readonly diagnosticRecordingInterval: number;
 
-  // public readonly featureStore: LDFeatureStore;
-
   public readonly featureStoreFactory: (clientContext: LDClientContext) => LDFeatureStore;
-
-  // public readonly updateProcessor?: LDStreamProcessor;
 
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
