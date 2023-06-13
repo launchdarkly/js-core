@@ -1,6 +1,6 @@
-const ld = require('node-server-sdk');
+import ld from 'node-server-sdk';
 
-function Log(tag) {
+export function Log(tag) {
   function doLog(level, message) {
     console.log(new Date().toISOString() + ` [${tag}] ${level}: ${message}`);
   }
@@ -10,7 +10,7 @@ function Log(tag) {
   };
 }
 
-function sdkLogger(tag) {
+export function sdkLogger(tag) {
   return ld.basicLogger({
     level: 'debug',
     destination: (line) => {
@@ -18,6 +18,3 @@ function sdkLogger(tag) {
     },
   });
 }
-
-module.exports.Log = Log;
-module.exports.sdkLogger = sdkLogger;

@@ -9,6 +9,10 @@ const DEFAULT_STATUS_POLL_INTERVAL_SECONDS = 5;
 const DEFAULT_USER_CACHE_SIZE = 1000;
 const DEFAULT_USER_CACHE_TIME_SECONDS = 5;
 
+interface MembershipCacheItem {
+  membership: BigSegmentStoreMembership | undefined;
+}
+
 export default class BigSegmentsManager {
   private cache: LruCache | undefined;
 
@@ -68,15 +72,20 @@ export default class BigSegmentsManager {
     if (!this.store) {
       return undefined;
     }
-    let membership = this.cache?.get(userKey);
-    if (!membership) {
+    const memberCache: MembershipCacheItem | undefined = this.cache?.get(userKey);
+    let membership: BigSegmentStoreMembership | undefined;
+
+    if (!memberCache) {
       try {
         membership = await this.store.getUserMembership(this.hashForUserKey(userKey));
-        this.cache?.set(userKey, membership);
+        const cacheItem: MembershipCacheItem = { membership };
+        this.cache?.set(userKey, cacheItem);
       } catch (err) {
         this.logger?.error(`Big Segment store membership query returned error: ${err}`);
         return [null, 'STORE_ERROR'];
       }
+    } else {
+      membership = memberCache.membership;
     }
 
     if (!this.statusProvider.getStatus()) {
@@ -87,10 +96,10 @@ export default class BigSegmentsManager {
     const lastStatus = this.statusProvider.getStatus()!;
 
     if (!lastStatus.available) {
-      return [membership, 'STORE_ERROR'];
+      return [membership || null, 'STORE_ERROR'];
     }
 
-    return [membership, lastStatus.stale ? 'STALE' : 'HEALTHY'];
+    return [membership || null, lastStatus.stale ? 'STALE' : 'HEALTHY'];
   }
 
   private async pollStoreAndUpdateStatus() {
