@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common-edge",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server-edge",
   "repository": {
     "type": "git",
@@ -32,11 +32,12 @@
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
-    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand --coverage",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
+    "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "1.0.0",
+    "@launchdarkly/js-server-sdk-common": "1.0.4",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {

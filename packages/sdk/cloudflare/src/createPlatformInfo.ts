@@ -5,7 +5,7 @@ import { name, version } from '../package.json';
 class CloudflarePlatformInfo implements Info {
   platformData(): PlatformData {
     return {
-      name: 'Cloudflare worker',
+      name: 'Cloudflare',
     };
   }
 

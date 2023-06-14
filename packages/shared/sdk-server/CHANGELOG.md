@@ -2,6 +2,50 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.3...js-server-sdk-common-v1.0.4) (2023-06-13)
+
+
+### Bug Fixes
+
+* Correctly handle excluded big segments. ([#160](https://github.com/launchdarkly/js-core/issues/160)) ([e9cb45a](https://github.com/launchdarkly/js-core/commit/e9cb45a14ed6d3f931680dab0feb4b5cef350592))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 1.0.1 to 1.0.2
+
+## [1.0.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.2...js-server-sdk-common-v1.0.3) (2023-06-08)
+
+
+### Bug Fixes
+
+* Export PersistentDataStoreWrapper. ([#144](https://github.com/launchdarkly/js-core/issues/144)) ([2c2480d](https://github.com/launchdarkly/js-core/commit/2c2480d4d5cd6adf7ae276758fcf0a1cdcdd9a00))
+
+## [1.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.1...js-server-sdk-common-v1.0.2) (2023-04-28)
+
+
+### Bug Fixes
+
+* fixed bug where the feature store does not deserialize KV values… ([#107](https://github.com/launchdarkly/js-core/issues/107)) ([68113b7](https://github.com/launchdarkly/js-core/commit/68113b7ac39f70a92b291eb2c0eda3b7d78145fc))
+
+## [1.0.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.0...js-server-sdk-common-v1.0.1) (2023-04-27)
+
+
+### Bug Fixes
+
+* add licence and fix missing package.json fields. ([c586398](https://github.com/launchdarkly/js-core/commit/c5863980c5bf4ee2a7590dfc4f7c575045d669b0))
+* Ensure top level commands work correctly ([#105](https://github.com/launchdarkly/js-core/issues/105)) ([762571f](https://github.com/launchdarkly/js-core/commit/762571ff851558d229e4d29ba40a9c16b89f2a8d))
+* remove beta text from cloudflare sdk readme. ([c586398](https://github.com/launchdarkly/js-core/commit/c5863980c5bf4ee2a7590dfc4f7c575045d669b0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 1.0.0 to 1.0.1
+
 ## [1.0.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v0.3.1...js-server-sdk-common-v1.0.0) (2023-04-26)
 
 

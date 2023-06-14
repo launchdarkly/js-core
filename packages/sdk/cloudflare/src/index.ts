@@ -11,11 +11,11 @@
 import type { KVNamespace } from '@cloudflare/workers-types';
 import {
   BasicLogger,
+  EdgeFeatureStore,
   init as initEdge,
   LDClient,
   LDOptions,
 } from '@launchdarkly/js-server-sdk-common-edge';
-import createFeatureStore from './createFeatureStore';
 import createPlatformInfo from './createPlatformInfo';
 
 export * from '@launchdarkly/js-server-sdk-common-edge';
@@ -46,7 +46,7 @@ export type { LDClient };
 export const init = (sdkKey: string, kvNamespace: KVNamespace, options: LDOptions = {}) => {
   const logger = options.logger ?? BasicLogger.get();
   return initEdge(sdkKey, createPlatformInfo(), {
-    featureStore: createFeatureStore(kvNamespace, sdkKey, logger),
+    featureStore: new EdgeFeatureStore(kvNamespace, sdkKey, 'Cloudflare', logger),
     logger,
     ...options,
   });

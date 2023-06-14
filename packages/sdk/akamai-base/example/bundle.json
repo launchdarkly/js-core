@@ -1,0 +1,4 @@
+{
+  "edgeworker-version": "__VERSION__",
+  "description": "Akamai Edge SDK Example"
+}

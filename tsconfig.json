@@ -14,6 +14,9 @@
       "path": "./packages/shared/sdk-server-edge/tsconfig.ref.json"
     },
     {
+      "path": "./packages/shared/akamai-edgeworker-sdk/tsconfig.ref.json"
+    },
+    {
       "path": "./packages/sdk/server-node/tsconfig.ref.json"
     },
     {
@@ -21,6 +24,12 @@
     },
     {
       "path": "./packages/sdk/vercel/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/akamai-edgekv/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/akamai-base/tsconfig.ref.json"
     }
   ]
 }

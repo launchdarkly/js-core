@@ -10,6 +10,8 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/cloudflare-server-sdk](packages/sdk/cloudflare/README.md) | [![NPM][sdk-cloudflare-npm-badge]][sdk-cloudflare-npm-link]   | [Cloudflare][package-sdk-cloudflare-issues]      | [![Actions Status][sdk-cloudflare-ci-badge]][sdk-cloudflare-ci]   |
 | [@launchdarkly/node-server-sdk](packages/sdk/server-node/README.md)      | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link] | [Node.js Server][package-sdk-server-node-issues] | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci] |
 | [@launchdarkly/vercel-server-sdk](packages/sdk/vercel/README.md)         | [![NPM][sdk-vercel-npm-badge]][sdk-vercel-npm-link]           | [Vercel][package-sdk-vercel-issues]              | [![Actions Status][sdk-vercel-ci-badge]][sdk-vercel-ci]           |
+| [@launchdarkly/akamai-server-base-sdk](packages/sdk/akamai-base/README.md)         | [![NPM][sdk-akamai-base-npm-badge]][sdk-akamai-base-npm-link]           | [Akamai Base][package-sdk-akamai-base-issues]              | [![Actions Status][sdk-akamai-base-ci-badge]][sdk-akamai-base-ci]           |
+| [@launchdarkly/akamai-server-edgekv-sdk](packages/sdk/akamai-edgekv/README.md)         | [![NPM][sdk-akamai-edgekv-npm-badge]][sdk-akamai-edgekv-npm-link]           | [Akamai EdgeKV][package-sdk-akamai-edgekv-issues]              | [![Actions Status][sdk-akamai-edgekv-ci-badge]][sdk-akamai-edgekv-ci]           |
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -27,7 +29,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 ## LaunchDarkly overview
 
-[LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
+[LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves trillions of feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/intent/follow?screen_name=launchdarkly)
 
@@ -46,7 +48,7 @@ We encourage pull requests and other contributions from the community. Check out
   - Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).
   - Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.
   - Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). Disable parts of your application to facilitate maintenance, without taking everything offline.
-- LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Check out [our documentation](https://docs.launchdarkly.com/sdk) for a complete list.
+- LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Read [our documentation](https://docs.launchdarkly.com/sdk) for a complete list.
 - Explore LaunchDarkly
   - [launchdarkly.com](https://www.launchdarkly.com/ 'LaunchDarkly Main Website') for more information
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
@@ -97,3 +99,23 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-vercel-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [sdk-vercel-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [package-sdk-vercel-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fvercel%22+
+[//]: # 'sdk/akamai-base'
+[sdk-akamai-base-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-base.yml/badge.svg
+[sdk-akamai-base-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-base.yml
+[sdk-akamai-base-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
+[sdk-akamai-base-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-server-base-sdk
+[sdk-akamai-base-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-akamai-base-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai-base/docs/
+[sdk-akamai-base-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
+[sdk-akamai-base-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-server-base-sdk.svg?style=flat-square
+[package-sdk-akamai-base-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fakamai-base%22+
+[//]: # 'sdk/akamai-edgekv'
+[sdk-akamai-edgekv-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-edgekv.yml/badge.svg
+[sdk-akamai-edgekv-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-edgekv.yml
+[sdk-akamai-edgekv-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/akamai-server-edgekv-sdk.svg?style=flat-square
+[sdk-akamai-edgekv-npm-link]: https://www.npmjs.com/package/@launchdarkly/akamai-server-edgekv-sdk
+[sdk-akamai-edgekv-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-akamai-edgekv-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/akamai-edgekv/docs/
+[sdk-akamai-edgekv-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/akamai-server-edgekv-sdk.svg?style=flat-square
+[sdk-akamai-edgekv-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/akamai-server-edgekv-sdk.svg?style=flat-square
+[package-sdk-akamai-edgekv-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fakamai-edgekv%22+
