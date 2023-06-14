@@ -44,6 +44,6 @@ export const init = ({
     edgeFeatureStore: new EdgeFeatureStore(featureStoreProvider, sdkKey, 'Akamai', logger),
     platformName: 'Akamai EdgeWorker',
     sdkName: '@launchdarkly/akamai-server-base-sdk',
-    sdkVersion: '0.4.0', // {x-release-please-version}
+    sdkVersion: '__LD_VERSION__',
   });
 };
