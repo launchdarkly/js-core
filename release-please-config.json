@@ -20,13 +20,15 @@
       "extra-files": [
         "src/index.ts"
       ],
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "release-as": "0.3.2"
     },
     "packages/sdk/akamai-edgekv": {
       "extra-files": [
         "src/index.ts"
       ],
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "release-as": "0.3.2"
     }
   },
   "plugins": ["node-workspace"]
