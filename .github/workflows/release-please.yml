@@ -47,7 +47,7 @@ jobs:
 
   release-sdk-server:
     runs-on: ubuntu-latest
-    needs: ['release-please', 'release-common']
+    needs: ['release-please']
     permissions:
       id-token: write
       contents: write
@@ -67,7 +67,7 @@ jobs:
 
   release-sdk-server-edge:
     runs-on: ubuntu-latest
-    needs: ['release-please', 'release-sdk-server']
+    needs: ['release-please']
     permissions:
       id-token: write
       contents: write
@@ -107,7 +107,7 @@ jobs:
 
   release-cloudflare:
     runs-on: ubuntu-latest
-    needs: ['release-please', 'release-sdk-server-edge']
+    needs: ['release-please']
     permissions:
       id-token: write
       contents: write
@@ -127,7 +127,7 @@ jobs:
 
   release-server-node:
     runs-on: ubuntu-latest
-    needs: ['release-please', 'release-sdk-server']
+    needs: ['release-please']
     permissions:
       id-token: write
       contents: write
@@ -147,7 +147,7 @@ jobs:
 
   release-vercel:
     runs-on: ubuntu-latest
-    needs: ['release-please', 'release-sdk-server-edge']
+    needs: ['release-please']
     permissions:
       id-token: write
       contents: write
