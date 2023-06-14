@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "doc": "npx typedoc --name \"$(../../../scripts/doc-name.sh .)\" --readme none --entryPointStrategy resolve src/index.ts",
-    "build": "rollup -c rollup.config.js",
+    "build": "rollup -c rollup.config.js && ../../../scripts/replace-version.sh .",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
