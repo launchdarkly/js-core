@@ -18,10 +18,19 @@
   ],
   "type": "module",
   "exports": {
-    "import": "./dist/esm/bundle.es.js"
+    ".": {
+      "import": {
+        "types": "./dist/esm/src/index.d.ts",
+        "default": "./dist/esm/bundle.es.js"
+      },
+      "require": {
+        "types": "./dist/cjs/src/index.d.ts",
+        "default": "./dist/cjs/bundle.cjs.js"
+      }
+    }
   },
-  "main": "./dist/esm/bundle.es.js",
-  "types": "./dist/esm/src/index.d.ts",
+  "main": "./dist/cjs/bundle.cjs.js",
+  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "dist"
   ],
