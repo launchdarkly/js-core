@@ -16,6 +16,8 @@ on:
           - packages/sdk/vercel
           - packages/sdk/akamai-base
           - packages/sdk/akamai-edgekv
+          - packages/store/node-server-sdk-redis
+          - packages/store/node-server-sdk-dynamodb
 name: Publish Documentation
 jobs:
   build-publish:

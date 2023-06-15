@@ -17,6 +17,8 @@ jobs:
       package-vercel-released: ${{ steps.release.outputs['packages/sdk/vercel--release_created'] }}
       package-akamai-base-released: ${{ steps.release.outputs['packages/sdk/akamai-base--release_created'] }}
       package-akamai-edgekv-released: ${{ steps.release.outputs['packages/sdk/akamai-edgekv--release_created'] }}
+      package-node-server-sdk-redis-release: ${{ steps.release.outputs['packages/store/node-server-sdk-redis--release_created'] }}
+      package-node-server-sdk-dynamodb-release: ${{ steps.release.outputs['packages/store/node-server-sdk-dynamodb--release_created'] }}
     steps:
       - uses: google-github-actions/release-please-action@v3
         id: release
@@ -203,4 +205,44 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/akamai-edgekv
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-node-server-sdk-redis:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-node-server-sdk-redis-release }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-common
+        name: Full release of packages/store/node-server-sdk-redis
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/store/node-server-sdk-redis
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-node-server-sdk-dynamodb:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-node-server-sdk-dynamodb-release }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-common
+        name: Full release of packages/store/node-server-sdk-dynamodb
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/store/node-server-sdk-dynamodb
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
