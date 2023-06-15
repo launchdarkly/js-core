@@ -18,11 +18,11 @@ export default class RedisClientState {
 
   private initialConnection: boolean = true;
 
-  private client: Redis;
+  private readonly client: Redis;
 
-  private owned: boolean;
+  private readonly owned: boolean;
 
-  private base_prefix: string;
+  private readonly base_prefix: string;
 
   /**
    * Construct a state with the given client.
@@ -33,10 +33,10 @@ export default class RedisClientState {
    */
   constructor(options?: LDRedisOptions, private readonly logger?: LDLogger) {
     if (options?.client) {
-      this.client = options!.client;
+      this.client = options.client;
       this.owned = false;
     } else if (options?.redisOpts) {
-      this.client = new Redis(options!.redisOpts);
+      this.client = new Redis(options.redisOpts);
       this.owned = true;
     } else {
       this.client = new Redis();
@@ -111,8 +111,14 @@ export default class RedisClientState {
    */
   close() {
     if (this.owned) {
+<<<<<<< HEAD
       this.client.quit().catch(() => {
         // Not any action that can be taken for an error on quit.
+=======
+      this.client.quit().catch((err) => {
+        // Not any action that can be taken for an error on quit.
+        this.logger?.debug('Error closing ioredis client:', err);
+>>>>>>> main
       });
     }
   }
