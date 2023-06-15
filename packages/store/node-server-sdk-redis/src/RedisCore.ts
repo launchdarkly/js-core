@@ -140,7 +140,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
     const multi = this.state.getClient().multi();
 
     this.get(kind, key, (old) => {
-      if (old && old.serializedItem) {
+      if (old?.serializedItem) {
         // Here, unfortunately, we have to deserialize the old item just to find
         // out its version number. See notes on this class.
         // Do not look at the meta-data, as we do not read/write it independently
