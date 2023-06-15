@@ -29,10 +29,12 @@
       "bump-minor-pre-major": true
     },
     "packages/store/node-server-sdk-dynamodb": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
     },
     "packages/store/node-server-sdk-redis": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
     }
   },
   "plugins": ["node-workspace"]
