@@ -1,0 +1,33 @@
+name: store/node-server-sdk-redis
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-node-redis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: 'https://registry.npmjs.org'
+      # We may want to consider moving this build to a docker container instead of installing it
+      # in the image.
+      - run: |
+          sudo apt-get update
+          sudo apt-get install redis-server
+          sudo service redis-server start
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/node-server-sdk-redis'
+          workspace_path: packages/store/node-server-sdk-redis

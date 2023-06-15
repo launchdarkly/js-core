@@ -17,3 +17,5 @@ docs/
 !.yarn/versions
 yarn-error.log
 .DS_Store
+.vscode
+dump.rdb
