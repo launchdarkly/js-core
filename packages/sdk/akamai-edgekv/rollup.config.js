@@ -9,12 +9,19 @@ export default {
   input: 'src/index.ts',
 
   /* Define output format as an esm module and cjs module and specify the output directory */
-  output: {
+  output: [{
     format: 'es',
     sourcemap: true,
     file: 'dist/esm/bundle.es.js',
     intro: 'var setInterval = () => {}; var setTimeout = () => (callback) => { callback(); };',
   },
+  {
+    format: 'cjs',
+    sourcemap: true,
+    file: 'dist/cjs/bundle.cjs.js',
+    intro: 'var setInterval = () => {}; var setTimeout = () => (callback) => { callback(); };',
+  }
+],
 
   /* Bundle all modules into a single output module */
   preserveModules: false,

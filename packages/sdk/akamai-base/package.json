@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/akamai-server-base-sdk",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Akamai LaunchDarkly EdgeWorker SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-base",
   "repository": {
@@ -17,16 +17,25 @@
   ],
   "type": "module",
   "exports": {
-    "import": "./dist/esm/bundle.es.js"
+    ".": {
+      "import": {
+        "types": "./dist/esm/src/index.d.ts",
+        "default": "./dist/esm/bundle.es.js"
+      },
+      "require": {
+        "types": "./dist/cjs/src/index.d.ts",
+        "default": "./dist/cjs/bundle.cjs.js"
+      }
+    }
   },
-  "main": "./dist/esm/bundle.es.js",
-  "types": "./dist/esm/src/index.d.ts",
+  "main": "./dist/cjs/bundle.cjs.js",
+  "types": "./dist/cjs/src/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "doc": "npx typedoc --name \"$(../../../scripts/doc-name.sh .)\" --readme none --entryPointStrategy resolve src/index.ts",
-    "build": "rollup -c rollup.config.js",
+    "build": "rollup -c rollup.config.js && ../../../scripts/replace-version.sh .",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
