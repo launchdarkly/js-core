@@ -220,6 +220,10 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - run: |
+          sudo apt-get update
+          sudo apt-get install redis-server
+          sudo service redis-server start
       - id: release-common
         name: Full release of packages/store/node-server-sdk-redis
         uses: ./actions/full-release
@@ -240,6 +244,8 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - run: |
+          sudo docker run -d -p 8000:8000 amazon/dynamodb-local
       - id: release-common
         name: Full release of packages/store/node-server-sdk-dynamodb
         uses: ./actions/full-release
