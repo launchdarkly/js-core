@@ -111,14 +111,9 @@ export default class RedisClientState {
    */
   close() {
     if (this.owned) {
-<<<<<<< HEAD
-      this.client.quit().catch(() => {
-        // Not any action that can be taken for an error on quit.
-=======
       this.client.quit().catch((err) => {
         // Not any action that can be taken for an error on quit.
         this.logger?.debug('Error closing ioredis client:', err);
->>>>>>> main
       });
     }
   }
