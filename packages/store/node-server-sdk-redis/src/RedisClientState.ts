@@ -33,10 +33,10 @@ export default class RedisClientState {
    */
   constructor(options?: LDRedisOptions, private readonly logger?: LDLogger) {
     if (options?.client) {
-      this.client = options!.client;
+      this.client = options.client;
       this.owned = false;
     } else if (options?.redisOpts) {
-      this.client = new Redis(options!.redisOpts);
+      this.client = new Redis(options.redisOpts);
       this.owned = true;
     } else {
       this.client = new Redis();
