@@ -43,7 +43,7 @@ export default class DynamoDBClientState {
       this.client = options.dynamoDBClient;
       this.owned = false;
     } else if (options?.clientOptions) {
-      this.client = new DynamoDBClient(options!.clientOptions);
+      this.client = new DynamoDBClient(options.clientOptions);
       this.owned = true;
     } else {
       this.client = new DynamoDBClient({});
