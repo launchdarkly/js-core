@@ -1,4 +1,4 @@
-# LaunchDarkly Server-Side SDK for Node.js
+# LaunchDarkly Server-Side SDK for Node.js - DynamoDB integration
 
 [![NPM][node-dynamodb-npm-badge]][node-dynamodb-npm-link]
 [![Actions Status][node-dynamodb-ci-badge]][node-dynamodb-ci]

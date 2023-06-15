@@ -1,4 +1,4 @@
-# LaunchDarkly Server-Side SDK for Node.js
+# LaunchDarkly Server-Side SDK for Node.js - Redis integration
 
 [![NPM][node-redis-npm-badge]][node-redis-npm-link]
 [![Actions Status][node-redis-ci-badge]][node-redis-ci]
