@@ -1,0 +1,56 @@
+{
+  "name": "@launchdarkly/node-server-sdk-dynamodb",
+  "version": "0.0.0",
+  "description": "DynamoDB-backed feature store for the LaunchDarkly Server-Side SDK for Node.js",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/store/node-server-sdk-dynamodb",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "type": "commonjs",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "launchdarkly",
+    "analytics",
+    "client"
+  ],
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "npx tsc --build --clean",
+    "test": "npx jest --ci --runInBand",
+    "build": "npx tsc",
+    "lint": "npx eslint . --ext .ts",
+    "lint:fix": "yarn run lint --fix",
+    "doc": "../../../scripts/build-doc.sh ."
+  },
+  "dependencies": {
+    "ioredis": "^5.3.2"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-dynamodb": "3.348.0",
+    "@launchdarkly/node-server-sdk": "0.4.4"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.348.0",
+    "@launchdarkly/node-server-sdk": "0.4.4",
+    "@types/jest": "^29.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.22.0",
+    "@typescript-eslint/parser": "^5.22.0",
+    "eslint": "^8.14.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-config-prettier": "^8.7.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "jest": "^29.5.0",
+    "launchdarkly-js-test-helpers": "^2.2.0",
+    "prettier": "^2.8.4",
+    "ts-jest": "^29.0.5",
+    "typedoc": "0.23.26",
+    "typescript": "^4.6.3"
+  }
+}

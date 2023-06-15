@@ -1,0 +1,29 @@
+name: store/node-server-sdk-dynamodb
+
+on:
+  push:
+    branches: [main, rlamb/implement-dynamodb-store]
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-node-dynamo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: 'https://registry.npmjs.org'
+      - run: |
+          sudo docker run -d -p 8000:8000 amazon/dynamodb-local
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/node-server-sdk-dynamodb'
+          workspace_path: packages/store/node-server-sdk-dynamodb

@@ -22,6 +22,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | Store Packages                                                                   | npm | issues                                              | tests                                                                                     |
 | -------------------------------------------------------------------------------------  | --------------------------------------------------- | ------------------------------- | ------------------------------------------------------- |
 | [@launchdarkly/node-server-sdk-redis](packages/store/node-server-sdk-redis/README.md) | [![NPM][node-redis-npm-badge]][node-redis-npm-link] | [Node Redis][node-redis-issues] | [![Actions Status][node-redis-ci-badge]][node-redis-ci] |
+| [@launchdarkly/node-server-sdk-dynamodb](packages/store/node-server-sdk-dynamodb/README.md) | [![NPM][node-dynamodb-npm-badge]][node-dynamodb-npm-link] | [Node DynamoDB][node-dynamodb-issues] | [![Actions Status][node-dynamodb-ci-badge]][node-dynamodb-ci] |
 
 ## Organization
 
@@ -131,3 +132,9 @@ We encourage pull requests and other contributions from the community. Check out
 [node-redis-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-redis.svg?style=flat-square
 [node-redis-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-redis
 [node-redis-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+store%2Fnode-server-sdk-redis%22+
+[//]: # 'store/node-server-sdk-dynamodb'
+[node-dynamodb-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-dynamodb.yml/badge.svg
+[node-dynamodb-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-dynamodb.yml
+[node-dynamodb-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-dynamodb.svg?style=flat-square
+[node-dynamodb-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-dynamodb
+[node-dynamodb-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+store%2Fnode-server-sdk-dynamodb%22+
