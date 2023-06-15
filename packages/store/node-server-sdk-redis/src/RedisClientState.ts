@@ -18,11 +18,11 @@ export default class RedisClientState {
 
   private initialConnection: boolean = true;
 
-  private client: Redis;
+  private readonly client: Redis;
 
-  private owned: boolean;
+  private readonly owned: boolean;
 
-  private base_prefix: string;
+  private readonly base_prefix: string;
 
   /**
    * Construct a state with the given client.
