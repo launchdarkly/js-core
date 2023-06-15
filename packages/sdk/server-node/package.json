@@ -10,6 +10,21 @@
   "type": "commonjs",
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "default": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    },
+    "./integrations": {
+      "default": "./dist/src/integrations.js",
+      "types": "./dist/src/integrations.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "integrations": ["./dist/src/integrations.d.ts"]
+    }
+  },
   "files": [
     "dist"
   ],
@@ -25,7 +40,7 @@
     "test": "npx jest --ci --runInBand",
     "build": "npx tsc",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix"
+    "lint:fix": "yarn run lint --fix"
   },
   "license": "Apache-2.0",
   "dependencies": {
