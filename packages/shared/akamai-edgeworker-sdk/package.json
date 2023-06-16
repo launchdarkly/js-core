@@ -14,26 +14,19 @@
     "edge",
     "worker"
   ],
-  "type": "module",
-  "exports": {
-    "import": "./dist/esm/index.es.js"
-  },
-  "main": "./dist/esm/index.es.js",
-  "types": "./dist/esm/src/index.d.ts",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build": "rollup -c rollup.config.js",
-    "clean": "rimraf dist",
-    "tsw": "yarn tsc --watch",
-    "start": "rimraf dist && yarn tsw",
-    "lint": "eslint . --ext .ts",
-    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
-    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
-    "coverage": "yarn test --coverage",
-    "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
+    "test": "npx jest --ci",
+    "build": "npx tsc",
+    "clean": "npx tsc --build --clean",
+    "lint": "npx eslint . --ext .ts",
+    "lint:fix": "yarn run lint -- --fix"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",

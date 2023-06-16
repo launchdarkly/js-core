@@ -6,10 +6,11 @@
   "config": {
     "ewid": "74943"
   },
+  "type": "module",
   "scripts": {
     "clean": "rimraf ./dist/ew",
     "build": "npm run clean && npm run build-ts && npm run build-ew-tgz",
-    "build-ts": "rollup -c --bundleConfigAsCjs",
+    "build-ts": "rollup -c rollup.config.js",
     "build-ew-tgz": "cd dist/ew && tar czvf ../'ew_'$npm_package_version'.tgz' *",
     "validate": "akamai edgeworkers validate ./dist/'ew_'$npm_package_version'.tgz'",
     "dev": "npm run build && npm run validate && akamai sandbox add-edgeworker $npm_package_config_ewid ./dist/'ew_'$npm_package_version'.tgz' && akamai sandbox start"

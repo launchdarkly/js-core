@@ -15,7 +15,6 @@
     "edge",
     "worker"
   ],
-  "type": "module",
   "exports": {
     ".": {
       "import": {
@@ -28,6 +27,8 @@
       }
     }
   },
+  "type": "module",
+  "module": "./dist/esm/bundle.es.js",
   "main": "./dist/cjs/bundle.cjs.js",
   "types": "./dist/cjs/src/index.d.ts",
   "files": [

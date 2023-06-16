@@ -22,7 +22,9 @@
   },
   "typesVersions": {
     "*": {
-      "integrations": ["./dist/src/integrations.d.ts"]
+      "integrations": [
+        "./dist/src/integrations.d.ts"
+      ]
     }
   },
   "files": [

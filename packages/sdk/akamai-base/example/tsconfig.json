@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
-    "module": "es2015",
-    "target": "ES2015",
-    "noImplicitAny": false,
+    "incremental": true,
+    "strict": true,
+    "module": "NodeNext",
     "outDir": "dist/ew",
-    "rootDir": ".",
-    "sourceMap": false,
-    "moduleResolution": "node"
+    "target": "ESNext",
+    "lib": ["es2023", "DOM"],
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "exclude": ["node_modules"]
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "node_modules"]
 }

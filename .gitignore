@@ -3,6 +3,7 @@ yarn.lock
 dist/
 node_modules/
 **/*.tsbuildinfo
+**/*.rollup.cache
 coverage/
 **/tmp_test/
 docs/
