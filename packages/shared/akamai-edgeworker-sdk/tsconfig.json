@@ -1,23 +1,18 @@
 {
   "compilerOptions": {
-    // Uses "." so it can load package.json.
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist",
     "target": "es6",
     "lib": ["es6"],
-    "module": "es6",
+    "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "allowJs": true,
     "declaration": true,
     "declarationMap": true, // enables importers to jump to source
-    "resolveJsonModule": true,
     "stripInternal": true,
-    "moduleResolution": "node",
-    "types": ["jest", "node"],
-    "skipLibCheck": true
+    "resolveJsonModule": true
   },
-  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
 }

@@ -1,12 +1,12 @@
 import { logger } from 'log';
 import { LDMultiKindContext } from '@launchdarkly/akamai-server-base-sdk';
-import { evaluateFlagFromCustomFeatureStore } from './ldClient';
+import { evaluateFlagFromCustomFeatureStore } from './ldClient.js';
 
 const createLDContext = (r: EW.IngressClientRequest): LDMultiKindContext => ({
   kind: 'multi',
   location: {
     key: 'context-key',
-    country: r.userLocation.country,
+    country: r.userLocation?.country,
   },
 });
 
@@ -29,7 +29,7 @@ export async function onClientRequest(request: EW.IngressClientRequest) {
 
     request.respondWith(200, {}, response);
   } catch (err) {
-    request.respondWith(500, {}, `Something went wrong: ${err.toString()}`);
+    request.respondWith(500, {}, `Something went wrong: ${err?.toString()}`);
   }
 }
 
