@@ -93,8 +93,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
-    const config = await this.edgeProvider.get(this.rootKey);
-    const result = config !== null;
+    const result = true;
     this.logger.debug(`Is ${this.rootKey} initialized? ${result}`);
     callback(result);
   }
