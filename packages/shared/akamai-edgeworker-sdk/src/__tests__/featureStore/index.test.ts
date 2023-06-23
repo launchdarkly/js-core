@@ -95,8 +95,16 @@ describe('EdgeFeatureStore', () => {
     it('is initialized', async () => {
       const isInitialized = await asyncFeatureStore.initialized();
 
-      expect(mockGet).toHaveBeenCalledTimes(0);
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
       expect(isInitialized).toBeTruthy();
+    });
+
+    it('not initialized', async () => {
+      mockGet.mockImplementation(() => Promise.resolve(null));
+      const isInitialized = await asyncFeatureStore.initialized();
+
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(isInitialized).toBeFalsy();
     });
   });
 
