@@ -33,8 +33,8 @@ export const init = ({
   options = {},
   sdkKey,
   featureStoreProvider,
-}: AkamaiLDClientParams): LDClient => {
-  return initEdge({
+}: AkamaiLDClientParams): LDClient =>
+  initEdge({
     sdkKey,
     options,
     featureStoreProvider,
@@ -42,4 +42,3 @@ export const init = ({
     sdkName: '@launchdarkly/akamai-server-base-sdk',
     sdkVersion: '__LD_VERSION__',
   });
-};
