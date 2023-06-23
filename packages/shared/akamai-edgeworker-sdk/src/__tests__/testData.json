@@ -99,7 +99,7 @@
         "usingMobileKey": true,
         "usingEnvironmentId": true
       },
-      "clientSide": true,
+      "clientSide": false,
       "salt": "aef830243d6640d0a973be89988e008d",
       "trackEvents": false,
       "trackEventsFallthrough": false,
@@ -114,7 +114,7 @@
       "tags": [],
       "creationDate": 1676063792158,
       "key": "testSegment1",
-      "included": [],
+      "included": ["return-false-for-segment-target"],
       "excluded": [],
       "includedContexts": [],
       "excludedContexts": [],

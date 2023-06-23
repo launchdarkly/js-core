@@ -14,9 +14,7 @@ import {
   LDClient,
   LDOptions,
   EdgeProvider,
-  EdgeFeatureStore,
 } from '@launchdarkly/akamai-edgeworker-sdk-common';
-import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
 
 export * from '@launchdarkly/akamai-edgeworker-sdk-common';
 
@@ -36,12 +34,10 @@ export const init = ({
   sdkKey,
   featureStoreProvider,
 }: AkamaiLDClientParams): LDClient => {
-  const logger = options.logger ?? BasicLogger.get();
-
   return initEdge({
     sdkKey,
     options,
-    edgeFeatureStore: new EdgeFeatureStore(featureStoreProvider, sdkKey, 'Akamai', logger),
+    featureStoreProvider,
     platformName: 'Akamai EdgeWorker',
     sdkName: '@launchdarkly/akamai-server-base-sdk',
     sdkVersion: '__LD_VERSION__',

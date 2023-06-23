@@ -12,6 +12,13 @@ export interface EdgeProvider {
   get: (rootKey: string) => Promise<string | null | undefined>;
 }
 
+/**
+ * Builds the root key needed to retrieve environment payload from the feature store
+ * @param sdkKey string
+ * @returns 
+ */
+export const buildRootKey = (sdkKey: string) => `LD-Env-${sdkKey}`
+
 export class EdgeFeatureStore implements LDFeatureStore {
   private readonly rootKey: string;
 
@@ -21,7 +28,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
     private readonly description: string,
     private logger: LDLogger
   ) {
-    this.rootKey = `LD-Env-${sdkKey}`;
+    this.rootKey = buildRootKey(this.sdkKey);
   }
 
   async get(
@@ -93,7 +100,8 @@ export class EdgeFeatureStore implements LDFeatureStore {
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
-    const result = true;
+    const config = await this.edgeProvider.get(this.rootKey);
+    const result = config !== null;
     this.logger.debug(`Is ${this.rootKey} initialized? ${result}`);
     callback(result);
   }
