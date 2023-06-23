@@ -4,7 +4,7 @@ import { EdgeProvider } from '.';
  * Wraps around an edge provider to cache a copy of the sdk payload locally an explicit request is made to refetch data from the origin.
  * The wrapper is neccessary to ensure that we dont make redundant sub-requests from Akamai to fetch an entire environment payload.
  */
-export class CacheableStoreProvider implements EdgeProvider {
+export default class CacheableStoreProvider implements EdgeProvider {
   cache: string | null | undefined;
 
   constructor(private readonly edgeProvider: EdgeProvider, private readonly rootKey: string) {}
@@ -31,6 +31,6 @@ export class CacheableStoreProvider implements EdgeProvider {
    */
   async prefetchPayloadFromOriginStore(rootKey?: string): Promise<string | null | undefined> {
     this.cache = undefined; // clear the cache so that new data can be fetched from the origin
-    return await this.get(rootKey || this.rootKey);
+    return this.get(rootKey || this.rootKey);
   }
 }

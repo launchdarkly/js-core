@@ -1,6 +1,18 @@
-import { EdgeProvider, LDLogger, LDMultiKindContext, LDSingleKindContext, init } from '../../';
+import { EdgeProvider, LDLogger, LDMultiKindContext, LDSingleKindContext, init } from '../..';
 
 import * as testData from './testData.json';
+
+const createClient = (sdkKey: string, mockLogger: LDLogger, mockEdgeProvider: EdgeProvider) =>
+  init({
+    sdkKey,
+    options: {
+      logger: mockLogger,
+    },
+    featureStoreProvider: mockEdgeProvider,
+    platformName: 'platform-name',
+    sdkName: 'Akamai',
+    sdkVersion: '0.0.1',
+  });
 
 describe('EdgeWorker', () => {
   const sdkKey = 'sdkKey';
@@ -19,9 +31,7 @@ describe('EdgeWorker', () => {
   const mockGet = mockEdgeProvider.get as jest.Mock;
 
   beforeEach(() => {
-    mockGet.mockImplementation((k) => {
-      return Promise.resolve(JSON.stringify(testData));
-    });
+    mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
   });
 
   afterEach(() => {
@@ -100,15 +110,3 @@ describe('EdgeWorker', () => {
     expect(flagValue).toEqual(false);
   });
 });
-
-const createClient = (sdkKey: string, mockLogger: LDLogger, mockEdgeProvider: EdgeProvider) =>
-  init({
-    sdkKey,
-    options: {
-      logger: mockLogger,
-    },
-    featureStoreProvider: mockEdgeProvider,
-    platformName: 'platform-name',
-    sdkName: 'Akamai',
-    sdkVersion: '0.0.1',
-  });

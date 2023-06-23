@@ -15,9 +15,9 @@ export interface EdgeProvider {
 /**
  * Builds the root key needed to retrieve environment payload from the feature store
  * @param sdkKey string
- * @returns 
+ * @returns
  */
-export const buildRootKey = (sdkKey: string) => `LD-Env-${sdkKey}`
+export const buildRootKey = (sdkKey: string) => `LD-Env-${sdkKey}`;
 
 export class EdgeFeatureStore implements LDFeatureStore {
   private readonly rootKey: string;

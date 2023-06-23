@@ -1,15 +1,10 @@
-import {
-  BasicLogger,
-  LDFeatureStore,
-  LDOptions as LDOptionsCommon,
-} from '@launchdarkly/js-server-sdk-common';
+import { BasicLogger, LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 import { validateOptions } from './utils';
 import LDClient from './api/LDClient';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
-import { EdgeProvider, buildRootKey } from './featureStore';
-import { EdgeFeatureStore } from './featureStore';
-import { CacheableStoreProvider } from './featureStore/cacheableStoreProvider';
+import { EdgeProvider, buildRootKey, EdgeFeatureStore } from './featureStore';
+import CacheableStoreProvider from './featureStore/cacheableStoreProvider';
 
 /**
  * The Launchdarkly Edge SDKs configuration options. Only logger is officially

@@ -11,7 +11,7 @@ import {
 } from '@launchdarkly/js-server-sdk-common';
 import EdgePlatform from '../platform';
 import { createCallbacks, createOptions } from '../utils';
-import { CacheableStoreProvider } from '../featureStore/cacheableStoreProvider';
+import CacheableStoreProvider from '../featureStore/cacheableStoreProvider';
 
 export interface CustomLDOptions extends LDOptions {}
 
