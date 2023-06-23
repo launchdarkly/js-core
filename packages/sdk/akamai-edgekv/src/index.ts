@@ -9,13 +9,7 @@
  * @packageDocumentation
  */
 
-import {
-  init as initEdge,
-  LDClient,
-  LDOptions,
-  EdgeFeatureStore,
-} from '@launchdarkly/akamai-edgeworker-sdk-common';
-import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
+import { init as initEdge, LDClient, LDOptions } from '@launchdarkly/akamai-edgeworker-sdk-common';
 import EdgeKVProvider from './edgekv/edgeKVProvider';
 
 export * from '@launchdarkly/akamai-edgeworker-sdk-common';
@@ -38,14 +32,12 @@ export const init = ({
   options = {},
   sdkKey,
 }: AkamaiLDClientParams): LDClient => {
-  const logger = options.logger ?? BasicLogger.get();
   const edgekvProvider = new EdgeKVProvider({ namespace, group });
-  const featureStore = new EdgeFeatureStore(edgekvProvider, sdkKey, 'Akamai', logger);
 
   return initEdge({
     sdkKey,
     options,
-    edgeFeatureStore: featureStore,
+    featureStoreProvider: edgekvProvider,
     platformName: 'Akamai EdgeWorker',
     sdkName: '@launchdarkly/akamai-server-edgekv-sdk',
     sdkVersion: '__LD_VERSION__',
