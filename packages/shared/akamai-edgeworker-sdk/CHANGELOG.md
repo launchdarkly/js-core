@@ -14,6 +14,13 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from ^1.0.3 to ^1.0.4
 
+## [0.2.3](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v0.2.2...akamai-edgeworker-sdk-common-v0.2.3) (2023-06-23)
+
+
+### Bug Fixes
+
+* Fix issue that caused the feature store get function impl to be called twice ([#178](https://github.com/launchdarkly/js-core/issues/178)) ([68f1c78](https://github.com/launchdarkly/js-core/commit/68f1c784c2481f7c5dead9d13b8e16a54048aaa1))
+
 ## [0.2.2](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v0.2.1...akamai-edgeworker-sdk-common-v0.2.2) (2023-06-16)
 
 
