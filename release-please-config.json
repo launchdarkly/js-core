@@ -7,7 +7,6 @@
       "bump-minor-pre-major": true
     },
     "packages/sdk/server-node": {
-      "release-as": "8.0.0"
     },
     "packages/sdk/cloudflare": {},
     "packages/sdk/vercel": {
@@ -29,10 +28,8 @@
       "bump-minor-pre-major": true
     },
     "packages/store/node-server-sdk-dynamodb": {
-      "release-as": "5.0.0"
     },
     "packages/store/node-server-sdk-redis": {
-      "release-as": "3.0.0"
     }
   },
   "plugins": ["node-workspace"]
