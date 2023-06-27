@@ -32,7 +32,7 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "3.348.0",
-    "@launchdarkly/node-server-sdk": "0.4.4"
+    "@launchdarkly/node-server-sdk": "8.x"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "3.348.0",
