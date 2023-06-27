@@ -6,6 +6,13 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 8.0.0 to 8.0.1
 
+## [5.0.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v5.0.1...node-server-sdk-dynamodb-v5.0.2) (2023-06-27)
+
+
+### Bug Fixes
+
+* Fix peer dependency version for node store integrations. ([#186](https://github.com/launchdarkly/js-core/issues/186)) ([1e7548b](https://github.com/launchdarkly/js-core/commit/1e7548b01da4937a72b3d40264ab0238fd835b8b))
+
 ## [5.0.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v0.1.0...node-server-sdk-dynamodb-v5.0.0) (2023-06-26)
 
 
