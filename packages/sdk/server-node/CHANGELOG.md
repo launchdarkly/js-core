@@ -26,6 +26,12 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 1.0.2 to 1.0.3
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.4 to 1.0.5
+
 ## [8.0.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v0.5.0...node-server-sdk-v8.0.0) (2023-06-26)
 
 ### Introducing `@launchdarkly/node-server-sdk` as a replacement for `launchdarkly-node-server-sdk`.
