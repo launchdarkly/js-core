@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk-dynamodb",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "DynamoDB-backed feature store for the LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/store/node-server-sdk-dynamodb",
   "repository": {
