@@ -54,8 +54,9 @@ export default class EventSender implements subsystem.LDEventSender {
       status: subsystem.LDDeliveryStatus.Succeeded,
     };
 
-    const headers = {
+    const headers: Record<string, string> = {
       ...this.defaultHeaders,
+      'content-type': 'application/json',
     };
 
     if (payloadId) {
