@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@launchdarkly/vercel-server-sdk": "0.4.0",
+    "@launchdarkly/vercel-server-sdk": "1.0.0",
     "@vercel/edge-config": "^0.2.1",
     "next": "^13.4.4",
     "react": "^18.2.0",
