@@ -12,12 +12,12 @@
   "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/src/index.js",
-      "types": "./dist/src/index.d.ts"
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
     },
     "./integrations": {
-      "default": "./dist/src/integrations.js",
-      "types": "./dist/src/integrations.d.ts"
+      "types": "./dist/src/integrations.d.ts",
+      "default": "./dist/src/integrations.js"
     }
   },
   "typesVersions": {
