@@ -54,6 +54,7 @@ it('isOffline returns true in offline mode', (done) => {
 
 describe('when waiting for initialization', () => {
   let client: LDClientImpl;
+  let resolve: Function;
 
   beforeEach(() => {
     client = new LDClientImpl(
@@ -62,9 +63,7 @@ describe('when waiting for initialization', () => {
       {
         updateProcessor: {
           start: (fn: (err?: any) => void) => {
-            setTimeout(() => {
-              fn();
-            }, 0);
+            resolve = fn;
           },
           stop: () => {},
           close: () => {},
@@ -81,10 +80,12 @@ describe('when waiting for initialization', () => {
   });
 
   it('resolves when ready', async () => {
+    resolve();
     await client.waitForInitialization();
   });
 
   it('resolves immediately if the client is already ready', async () => {
+    resolve();
     await client.waitForInitialization();
     await client.waitForInitialization();
   });
@@ -92,6 +93,7 @@ describe('when waiting for initialization', () => {
   it('creates only one Promise', async () => {
     const p1 = client.waitForInitialization();
     const p2 = client.waitForInitialization();
+    resolve();
     expect(p2).toBe(p1);
   });
 });
