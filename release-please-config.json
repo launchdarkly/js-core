@@ -19,13 +19,13 @@
       "extra-files": [
         "src/index.ts"
       ],
-      "bump-minor-pre-major": true
+      "release-as": "1.0.0"
     },
     "packages/sdk/akamai-edgekv": {
       "extra-files": [
         "src/index.ts"
       ],
-      "bump-minor-pre-major": true
+      "release-as": "1.0.0"
     },
     "packages/store/node-server-sdk-dynamodb": {
     },
