@@ -48,7 +48,7 @@
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "1.0.6",
     "https-proxy-agent": "^5.0.1",
-    "launchdarkly-eventsource": "^1.4.4"
+    "launchdarkly-eventsource": "2.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
