@@ -37,7 +37,7 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
 
 ### Bug Fixes
 
-* move "default" conditional exports to be last ([#190](https://github.com/launchdarkly/js-core/issues/190)) ([49ca1a1](https://github.com/launchdarkly/js-core/commit/49ca1a1d47595b2c3ef449054ba6d76a8685a590))
+* move "default" conditional exports to be last ([#190](https://github.com/launchdarkly/js-core/issues/190)) ([49ca1a1](https://github.com/launchdarkly/js-core/commit/49ca1a1d47595b2c3ef449054ba6d76a8685a590)) (Thanks, [seanparmelee](https://github.com/launchdarkly/js-core/pull/190) and [Katona](https://github.com/launchdarkly/js-core/pull/191)!)
 
 
 ### Dependencies
