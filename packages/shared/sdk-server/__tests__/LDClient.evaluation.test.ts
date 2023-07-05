@@ -43,7 +43,7 @@ describe('given an LDClient with test data', () => {
     // Evaluate with no testId
     const flagsState = await client.allFlagsState({
       kind: 'user',
-      key: 'Global',
+      key: 'fake',
       testId: undefined,
     });
 
