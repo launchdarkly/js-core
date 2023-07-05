@@ -1,20 +1,23 @@
 import {
+  createSafeLogger,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
+  LDLogger,
   Platform,
 } from '@launchdarkly/js-sdk-common';
-import { LDClientDom } from '../api/LDClientDom';
-import { LDOptions } from '@launchdarkly/js-server-sdk-common';
+import { LDClientDom } from './api/LDClientDom';
+import { LDOptions } from './api/LDOptions';
 
-export default class LDClientDomImpl implements LDClientDomImpl {
-  constructor(
-    private sdkKey: string,
-    private platform: Platform,
-    options: LDOptions
-    // callbacks: LDClientCallbacks
-  ) {}
+export default class LDClientDomImpl implements LDClientDom {
+  logger?: LDLogger;
+
+  constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: Platform) {
+    const { logger } = options;
+
+    this.logger = createSafeLogger(logger);
+  }
 
   allFlags(): LDFlagSet {
     return undefined;
