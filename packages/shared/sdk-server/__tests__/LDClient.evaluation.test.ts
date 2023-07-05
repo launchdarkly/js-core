@@ -34,6 +34,33 @@ describe('given an LDClient with test data', () => {
     client.close();
   });
 
+  it('evaluates a flag which has a fallthrough and a rule', async () => {
+    const testId = 'abcd'.repeat(8);
+    const flagKey = 'testFlag';
+    await td.update(td.flag(flagKey).booleanFlag().variationForAll(true));
+    await td.update(td.flag(flagKey).ifMatch('user', 'testId', testId).thenReturn(false));
+
+    // Evaluate with no testId
+    const flagsState = await client.allFlagsState({
+      kind: 'user',
+      key: 'fake',
+      testId: undefined,
+    });
+
+    const features = flagsState.allValues();
+
+    expect(features[flagKey]).toBeTruthy();
+
+    const flagsStateWithTenant = await client.allFlagsState({
+      kind: 'user',
+      key: testId,
+      testId,
+    });
+
+    const featuresWithTenant = flagsStateWithTenant.allValues();
+    expect(featuresWithTenant[flagKey]).toBeFalsy();
+  });
+
   it('evaluates an existing flag', async () => {
     td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
     expect(await client.variation('flagkey', defaultUser, 'c')).toBe('b');
