@@ -1,5 +1,5 @@
 import { LDClientImpl } from '../src';
-import { LDFeatureStore } from '../src/api/subsystems';
+import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
@@ -158,6 +158,17 @@ describe('given an offline client', () => {
   });
 });
 
+class InertUpdateProcessor implements LDStreamProcessor {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  start(fn?: ((err?: any) => void) | undefined) {
+    // Never initialize.
+  }
+
+  stop() {}
+
+  close() {}
+}
+
 describe('given a client and store that are uninitialized', () => {
   let store: LDFeatureStore;
   let client: LDClientImpl;
@@ -178,7 +189,7 @@ describe('given a client and store that are uninitialized', () => {
       'sdk-key',
       basicPlatform,
       {
-        updateProcessor: new NullUpdateProcessor(),
+        updateProcessor: new InertUpdateProcessor(),
         sendEvents: false,
         featureStore: store,
       },
