@@ -18,14 +18,12 @@
     "packages/sdk/akamai-base": {
       "extra-files": [
         "src/index.ts"
-      ],
-      "release-as": "1.0.0"
+      ]
     },
     "packages/sdk/akamai-edgekv": {
       "extra-files": [
         "src/index.ts"
-      ],
-      "release-as": "1.0.0"
+      ]
     },
     "packages/store/node-server-sdk-dynamodb": {
     },
