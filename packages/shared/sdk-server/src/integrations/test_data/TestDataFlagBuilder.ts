@@ -42,7 +42,7 @@ export default class TestDataFlagBuilder {
         this.data.offVariation = data.offVariation;
       }
       if (data.fallthroughVariation !== undefined) {
-        this.data.offVariation = data.offVariation;
+        this.data.fallthroughVariation = data.fallthroughVariation;
       }
       if (data.targetsByVariation) {
         this.data.targetsByVariation = JSON.parse(JSON.stringify(data.targetsByVariation));
