@@ -90,9 +90,9 @@ export async function newSdkClientEntity(options) {
       case 'evaluate': {
         const pe = params.evaluate;
         if (pe.detail) {
-          return await client.variationDetail(pe.flagKey, pe.context, pe.defaultValue);
+          return await client.variationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
         } else {
-          const value = await client.variation(pe.flagKey, pe.context, pe.defaultValue);
+          const value = await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue);
           return { value };
         }
       }
@@ -104,16 +104,16 @@ export async function newSdkClientEntity(options) {
           detailsOnlyForTrackedFlags: pea.detailsOnlyForTrackedFlags,
           withReasons: pea.withReasons,
         };
-        return { state: await client.allFlagsState(pea.context, eao) };
+        return { state: await client.allFlagsState(pea.context || pea.user, eao) };
       }
 
       case 'identifyEvent':
-        client.identify(params.identifyEvent.context);
+        client.identify(params.identifyEvent.context || params.identifyEvent.user);
         return undefined;
 
       case 'customEvent': {
         const pce = params.customEvent;
-        client.track(pce.eventKey, pce.context, pce.data, pce.metricValue);
+        client.track(pce.eventKey, pce.context || pce.user, pce.data, pce.metricValue);
         return undefined;
       }
 
