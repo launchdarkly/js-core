@@ -20,7 +20,7 @@ export default class LDClientDomImpl implements LDClientDom {
   }
 
   allFlags(): LDFlagSet {
-    return undefined;
+    return {};
   }
 
   close(onDone?: () => void): Promise<void> {
@@ -32,7 +32,7 @@ export default class LDClientDomImpl implements LDClientDom {
   }
 
   getContext(): LDContext {
-    return undefined;
+    return { kind: 'user', key: 'test-context-1' };
   }
 
   identify(
@@ -40,7 +40,7 @@ export default class LDClientDomImpl implements LDClientDom {
     hash?: string,
     onDone?: (err: Error | null, flags: LDFlagSet | null) => void
   ): Promise<LDFlagSet> {
-    return Promise.resolve(undefined);
+    return Promise.resolve({});
   }
 
   off(key: string, callback: (...args: any[]) => void, context?: any): void {}
@@ -56,7 +56,12 @@ export default class LDClientDomImpl implements LDClientDom {
   }
 
   variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
-    return undefined;
+    const defaultDetail = {
+      value: defaultValue,
+      variationIndex: null,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+    };
+    return defaultDetail;
   }
 
   waitForInitialization(): Promise<void> {

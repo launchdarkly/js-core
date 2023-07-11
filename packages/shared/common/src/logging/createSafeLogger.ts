@@ -13,4 +13,4 @@ const createSafeLogger = (logger?: LDLogger) => {
   return logger ? new SafeLogger(logger, basicLogger) : basicLogger;
 };
 
-export default createSafeLogger();
+export default createSafeLogger;
