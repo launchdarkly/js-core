@@ -1,4 +1,4 @@
-import { LDLogger } from '../api';
+import type { LDLogger } from '../api';
 import { TypeValidators } from '../validators';
 
 const loggerRequirements = {

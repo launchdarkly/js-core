@@ -13,6 +13,14 @@ import { LDOptions } from './api/LDOptions';
 export default class LDClientDomImpl implements LDClientDom {
   logger?: LDLogger;
 
+  /**
+   * Immediately return an LDClient instance. No async or remote calls.
+   *
+   * @param clientSideId
+   * @param context
+   * @param options
+   * @param platform
+   */
   constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: Platform) {
     const { logger } = options;
 
