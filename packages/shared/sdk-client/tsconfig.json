@@ -3,7 +3,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "target": "es6",
-    "lib": ["es6"],
+    "lib": ["es6", "DOM"],
     "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
