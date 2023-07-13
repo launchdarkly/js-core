@@ -8,11 +8,14 @@ import {
   Platform,
 } from '@launchdarkly/js-sdk-common';
 import { LDClientDom } from './api/LDClientDom';
-import { LDOptions } from './api/LDOptions';
+import LDEventTarget from './api/LDEventTarget';
+import type { LDOptions } from './api/options/LDOptions';
+import { validateOptions } from './api/options/validateOptions';
 
 export default class LDClientDomImpl implements LDClientDom {
   logger?: LDLogger;
-
+  eventTarget: LDEventTarget;
+  options: LDOptions;
   /**
    * Immediately return an LDClient instance. No async or remote calls.
    *
@@ -22,10 +25,12 @@ export default class LDClientDomImpl implements LDClientDom {
    * @param platform
    */
   constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: Platform) {
-    const { logger } = options;
+    this.options = validateOptions(options);
 
-    this.logger = createSafeLogger(logger);
+    this.eventTarget = new LDEventTarget();
   }
+
+  start(): void {}
 
   allFlags(): LDFlagSet {
     return {};
