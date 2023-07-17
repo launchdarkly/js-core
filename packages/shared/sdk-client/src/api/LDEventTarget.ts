@@ -8,7 +8,8 @@ export type EventName = 'change' | 'internal-change' | 'ready' | 'initialized' |
  * because the react-native repo uses it too.
  * https://github.com/mysticatea/event-target-shim
  */
-export default class LDEventTarget extends EventTarget {
+export default class LDEventEmitter {
+  private et: EventTarget = new EventTarget();
   private listeners: Map<EventName, EventListener[]> = new Map();
 
   /**
@@ -27,22 +28,18 @@ export default class LDEventTarget extends EventTarget {
 
   public on(name: EventName, listener: Function) {
     const customListener = (e: Event) => {
-      const { detail } = e as CustomEvent;
-
       // invoke listener with additional args from CustomEvent.detail
-      listener(...listener.arguments, ...detail);
+      listener(...listener.arguments, ...(e as CustomEvent).detail);
     };
     this.saveListener(name, customListener);
-
-    super.addEventListener(name, customListener);
+    this.et.addEventListener(name, customListener);
   }
 
   public off(name: EventName) {
-    this.listeners.get(name)?.forEach((l) => super.removeEventListener(name, l));
+    this.listeners.get(name)?.forEach((l) => this.et.removeEventListener(name, l));
   }
 
-  public emit(name: EventName, ...detail: any[]): boolean {
-    const c = new CustomEvent(name, { detail });
-    return super.dispatchEvent(c);
+  public emit(name: EventName, ...detail: any[]) {
+    this.et.dispatchEvent(new CustomEvent(name, { detail }));
   }
 }
