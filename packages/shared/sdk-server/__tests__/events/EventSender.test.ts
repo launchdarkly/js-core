@@ -112,6 +112,7 @@ describe('given an event sender', () => {
       authorization: 'sdk-key',
       'user-agent': 'NodeJSClient/2.0.2',
       'x-launchDarkly-event-schema': '4',
+      'content-type': 'application/json',
     });
     expect(req1.options?.headers!['x-launchdarkly-payload-id']).toBeDefined();
   });
@@ -132,6 +133,7 @@ describe('given an event sender', () => {
     expect(req1.options?.headers).toEqual({
       authorization: 'sdk-key',
       'user-agent': 'NodeJSClient/2.0.2',
+      'content-type': 'application/json',
     });
   });
 

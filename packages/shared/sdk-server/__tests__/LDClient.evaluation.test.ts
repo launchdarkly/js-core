@@ -1,5 +1,5 @@
 import { LDClientImpl } from '../src';
-import { LDFeatureStore } from '../src/api/subsystems';
+import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
@@ -32,6 +32,33 @@ describe('given an LDClient with test data', () => {
 
   afterEach(() => {
     client.close();
+  });
+
+  it('evaluates a flag which has a fallthrough and a rule', async () => {
+    const testId = 'abcd'.repeat(8);
+    const flagKey = 'testFlag';
+    await td.update(td.flag(flagKey).booleanFlag().variationForAll(true));
+    await td.update(td.flag(flagKey).ifMatch('user', 'testId', testId).thenReturn(false));
+
+    // Evaluate with no testId
+    const flagsState = await client.allFlagsState({
+      kind: 'user',
+      key: 'fake',
+      testId: undefined,
+    });
+
+    const features = flagsState.allValues();
+
+    expect(features[flagKey]).toBeTruthy();
+
+    const flagsStateWithTenant = await client.allFlagsState({
+      kind: 'user',
+      key: testId,
+      testId,
+    });
+
+    const featuresWithTenant = flagsStateWithTenant.allValues();
+    expect(featuresWithTenant[flagKey]).toBeFalsy();
   });
 
   it('evaluates an existing flag', async () => {
@@ -158,6 +185,17 @@ describe('given an offline client', () => {
   });
 });
 
+class InertUpdateProcessor implements LDStreamProcessor {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  start(fn?: ((err?: any) => void) | undefined) {
+    // Never initialize.
+  }
+
+  stop() {}
+
+  close() {}
+}
+
 describe('given a client and store that are uninitialized', () => {
   let store: LDFeatureStore;
   let client: LDClientImpl;
@@ -178,7 +216,7 @@ describe('given a client and store that are uninitialized', () => {
       'sdk-key',
       basicPlatform,
       {
-        updateProcessor: new NullUpdateProcessor(),
+        updateProcessor: new InertUpdateProcessor(),
         sendEvents: false,
         featureStore: store,
       },
