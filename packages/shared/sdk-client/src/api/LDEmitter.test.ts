@@ -32,6 +32,7 @@ describe('LDEmitter', () => {
 
     expect(errorHandler1).not.toHaveBeenCalled();
     expect(errorHandler2).not.toHaveBeenCalled();
+    expect(emitter.listenerCount('error')).toEqual(0);
   });
 
   test('unsubscribing an event should not affect other events', () => {

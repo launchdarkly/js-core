@@ -38,7 +38,10 @@ export default class LDEmitter {
   }
 
   off(name: EventName) {
-    this.listeners.get(name)?.forEach((l) => this.et.removeEventListener(name, l));
+    this.listeners.get(name)?.forEach((l) => {
+      this.et.removeEventListener(name, l);
+    });
+    this.listeners.delete(name);
   }
 
   emit(name: EventName, ...detail: any[]) {
