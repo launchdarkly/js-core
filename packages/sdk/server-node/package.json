@@ -51,6 +51,7 @@
     "launchdarkly-eventsource": "2.0.0"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",

@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@launchdarkly/node-server-sdk": "8.1.0",
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
