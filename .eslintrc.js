@@ -12,5 +12,12 @@ module.exports = {
   rules: {
     'prettier/prettier': ['error'],
     'class-methods-use-this': 'off',
+    'import/no-extraneous-dependencies': [
+      'error',
+      {
+        // solves '@testing-library/jest-dom' should be listed in the project's dependencies, not devDependencies
+        devDependencies: ['**/jest*.ts'],
+      },
+    ],
   },
 };

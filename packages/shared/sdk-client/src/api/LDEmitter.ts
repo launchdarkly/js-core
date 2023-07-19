@@ -10,6 +10,7 @@ export type EventName = 'change' | 'internal-change' | 'ready' | 'initialized' |
  */
 export default class LDEmitter {
   private et: EventTarget = new EventTarget();
+
   private listeners: Map<EventName, EventListener[]> = new Map();
 
   /**

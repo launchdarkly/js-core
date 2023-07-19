@@ -24,10 +24,10 @@
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix"
+    "lint:fix": "yarn run lint -- --fix",
+    "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'"
   },
   "license": "Apache-2.0",
-  "//": "Pinned semver because 7.5.0 introduced require('util') without the node: prefix",
   "dependencies": {
     "@launchdarkly/js-sdk-common": "1.0.2",
     "semver": "7.5.4"
