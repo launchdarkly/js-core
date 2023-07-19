@@ -11,7 +11,7 @@ export async function GET() {
       {
         error: 'LD_CLIENT_SIDE_ID environment variable is missing.',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
   const flagKey = 'test-flag';

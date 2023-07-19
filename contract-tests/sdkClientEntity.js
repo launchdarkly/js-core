@@ -38,15 +38,17 @@ export function makeSdkConfig(options, tag) {
   if (options.bigSegments) {
     const bigSegmentsOptions = options.bigSegments;
     cf.bigSegments = {
-      store: () =>
-        new BigSegmentTestStore(bigSegmentsOptions.callbackUri),
+      store: () => new BigSegmentTestStore(bigSegmentsOptions.callbackUri),
       userCacheSize: bigSegmentsOptions.userCacheSize,
-      userCacheTime: bigSegmentsOptions.userCacheTimeMs ?
-        bigSegmentsOptions.userCacheTimeMs / 1000 : undefined,
-      statusPollInterval: bigSegmentsOptions.statusPollIntervalMs ?
-        bigSegmentsOptions.statusPollIntervalMs / 1000 : undefined,
-      staleAfter: bigSegmentsOptions.staleAfterMs ?
-        bigSegmentsOptions.staleAfterMs / 1000 : undefined,
+      userCacheTime: bigSegmentsOptions.userCacheTimeMs
+        ? bigSegmentsOptions.userCacheTimeMs / 1000
+        : undefined,
+      statusPollInterval: bigSegmentsOptions.statusPollIntervalMs
+        ? bigSegmentsOptions.statusPollIntervalMs / 1000
+        : undefined,
+      staleAfter: bigSegmentsOptions.staleAfterMs
+        ? bigSegmentsOptions.staleAfterMs / 1000
+        : undefined,
     };
   }
   return cf;
@@ -59,12 +61,12 @@ export async function newSdkClientEntity(options) {
   log.info('Creating client with configuration: ' + JSON.stringify(options.configuration));
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
-      options.configuration.startWaitTimeMs !== undefined
+    options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
   const client = ld.init(
     options.configuration.credential || 'unknown-sdk-key',
-    makeSdkConfig(options.configuration, options.tag)
+    makeSdkConfig(options.configuration, options.tag),
   );
   try {
     await Promise.race([

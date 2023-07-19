@@ -41,7 +41,7 @@ export default class FileDataSourceFactory {
 
   getFactory(): (
     ldClientContext: LDClientContext,
-    featureStore: LDFeatureStore
+    featureStore: LDFeatureStore,
   ) => LDStreamProcessor {
     return (ldClientContext, featureStore) => this.create(ldClientContext, featureStore);
   }

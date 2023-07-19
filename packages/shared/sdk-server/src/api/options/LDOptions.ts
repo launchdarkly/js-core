@@ -91,7 +91,7 @@ export interface LDOptions {
     | object
     | ((
         clientContext: LDClientContext,
-        dataSourceUpdates: LDDataSourceUpdates
+        dataSourceUpdates: LDDataSourceUpdates,
       ) => LDStreamProcessor);
 
   /**

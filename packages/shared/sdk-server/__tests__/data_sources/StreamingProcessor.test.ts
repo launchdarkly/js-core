@@ -79,7 +79,7 @@ describe('given a stream processor with mock event source', () => {
       requests,
       info,
       featureStore,
-      diagnosticsManager
+      diagnosticsManager,
     );
   });
 

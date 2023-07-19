@@ -28,10 +28,10 @@ export default class BigSegmentsManager {
     // it in the options at this stage.
     config: Omit<LDBigSegmentsOptions, 'store'>,
     private readonly logger: LDLogger | undefined,
-    private readonly crypto: Crypto
+    private readonly crypto: Crypto,
   ) {
     this.statusProvider = new BigSegmentStoreStatusProviderImpl(async () =>
-      this.pollStoreAndUpdateStatus()
+      this.pollStoreAndUpdateStatus(),
     );
 
     this.staleTimeMs =
@@ -67,7 +67,7 @@ export default class BigSegmentsManager {
   }
 
   public async getUserMembership(
-    userKey: string
+    userKey: string,
   ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
     if (!this.store) {
       return undefined;
@@ -133,7 +133,7 @@ export default class BigSegmentsManager {
       this.logger?.debug(
         'Big Segment store status changed from %s to %s',
         JSON.stringify(lastStatus),
-        JSON.stringify(newStatus)
+        JSON.stringify(newStatus),
       );
       this.statusProvider.setStatus(newStatus);
       this.statusProvider.notify();

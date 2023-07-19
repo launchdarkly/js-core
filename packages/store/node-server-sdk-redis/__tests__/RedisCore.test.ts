@@ -33,13 +33,13 @@ class AsyncCoreFacade {
 
   get(
     kind: interfaces.PersistentStoreDataKind,
-    key: string
+    key: string,
   ): Promise<interfaces.SerializedItemDescriptor | undefined> {
     return promisify((cb) => this.core.get(kind, key, cb));
   }
 
   getAll(
-    kind: interfaces.PersistentStoreDataKind
+    kind: interfaces.PersistentStoreDataKind,
   ): Promise<interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined> {
     return promisify((cb) => this.core.getAll(kind, cb));
   }
@@ -47,7 +47,7 @@ class AsyncCoreFacade {
   upsert(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
-    descriptor: interfaces.SerializedItemDescriptor
+    descriptor: interfaces.SerializedItemDescriptor,
   ): Promise<UpsertResult> {
     return new Promise<UpsertResult>((resolve) => {
       this.core.upsert(kind, key, descriptor, (err, updatedDescriptor) => {

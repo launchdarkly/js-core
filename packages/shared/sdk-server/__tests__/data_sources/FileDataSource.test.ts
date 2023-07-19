@@ -147,9 +147,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
     expect(await asyncFeatureStore.initialized()).toBeFalsy();
 
@@ -174,9 +174,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -204,9 +204,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async (err) => {
@@ -233,9 +233,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async (err) => {
@@ -265,9 +265,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -299,9 +299,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async (err) => {
@@ -328,9 +328,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -354,9 +354,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -371,7 +371,7 @@ describe('given a mock filesystem and memory feature store', () => {
       const flag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag2Key);
       const res = await evaluator.evaluate(
         flag as Flag,
-        Context.fromLDContext({ key: 'userkey' })!
+        Context.fromLDContext({ key: 'userkey' })!,
       );
       expect(res.detail.value).toEqual(flag2Value);
       done();
@@ -392,9 +392,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -409,7 +409,7 @@ describe('given a mock filesystem and memory feature store', () => {
       const flag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag1Key);
       const res = await evaluator.evaluate(
         flag as Flag,
-        Context.fromLDContext({ key: 'userkey' })!
+        Context.fromLDContext({ key: 'userkey' })!,
       );
       expect(res.detail.value).toEqual('on');
       done();
@@ -433,9 +433,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -467,9 +467,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -515,9 +515,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -566,9 +566,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     fds.start(async () => {
@@ -610,9 +610,9 @@ describe('given a mock filesystem and memory feature store', () => {
             featureStore,
             logger,
           }),
-          { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+          { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
         ),
-        featureStore
+        featureStore,
       );
 
       const err = await promisify((cb) => {
@@ -620,13 +620,13 @@ describe('given a mock filesystem and memory feature store', () => {
       });
 
       expect((err as any).message).toEqual(
-        `Attempted to parse yaml file (yamlfile.${ext}) without parser.`
+        `Attempted to parse yaml file (yamlfile.${ext}) without parser.`,
       );
       expect(await asyncFeatureStore.initialized()).toBeFalsy();
 
       expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
       expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
-    }
+    },
   );
 
   it.each([['yml'], ['yaml']])('uses the yaml parser when specified %s', async (ext) => {
@@ -647,9 +647,9 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem }
+        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
-      featureStore
+      featureStore,
     );
 
     const err = await promisify((cb) => {

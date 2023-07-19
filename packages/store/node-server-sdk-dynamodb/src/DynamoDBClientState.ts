@@ -85,21 +85,21 @@ export default class DynamoDBClientState {
         this.client.send(
           new BatchWriteItemCommand({
             RequestItems: { [table]: batch },
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
   }
 
   async get(
     table: string,
-    key: Record<string, AttributeValue>
+    key: Record<string, AttributeValue>,
   ): Promise<Record<string, AttributeValue> | undefined> {
     const res = await this.client.send(
       new GetItemCommand({
         TableName: table,
         Key: key,
-      })
+      }),
     );
 
     return res.Item;

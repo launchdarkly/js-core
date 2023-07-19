@@ -97,7 +97,7 @@ export default class DiagnosticsManager {
     sdkKey: string,
     private readonly config: Configuration,
     private readonly platform: Platform,
-    private readonly featureStore: LDFeatureStore
+    private readonly featureStore: LDFeatureStore,
   ) {
     this.startTime = Date.now();
     this.dataSinceDate = this.startTime;
@@ -177,7 +177,7 @@ export default class DiagnosticsManager {
   createStatsEventAndReset(
     droppedEvents: number,
     deduplicatedUsers: number,
-    eventsInLastBatch: number
+    eventsInLastBatch: number,
   ): DiagnosticStatsEvent {
     const currentTime = Date.now();
     const evt: DiagnosticStatsEvent = {

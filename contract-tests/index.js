@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
       'all-flags-with-reasons',
       'tags',
       'big-segments',
-      'user-type'
+      'user-type',
     ],
   });
 });

@@ -42,7 +42,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     requests: Requests,
     info: Info,
     private readonly featureStore: LDDataSourceUpdates,
-    private readonly diagnosticsManager?: DiagnosticsManager
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     this.headers = defaultHeaders(sdkKey, config, info);
     this.logger = config.logger;
@@ -61,7 +61,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
       this.diagnosticsManager.recordStreamInit(
         this.connectionAttemptStartTime,
         !success,
-        Date.now() - this.connectionAttemptStartTime
+        Date.now() - this.connectionAttemptStartTime,
       );
     }
 
@@ -177,7 +177,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
                 version: parsed.version,
                 deleted: true,
               },
-              () => {}
+              () => {},
             );
           }
         }

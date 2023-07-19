@@ -26,7 +26,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
     private readonly edgeProvider: EdgeProvider,
     private readonly sdkKey: string,
     private readonly description: string,
-    private logger: LDLogger
+    private logger: LDLogger,
   ) {
     this.rootKey = buildRootKey(this.sdkKey);
   }
@@ -34,7 +34,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
   async get(
     kind: DataKind,
     dataKey: string,
-    callback: (res: LDFeatureStoreItem | null) => void
+    callback: (res: LDFeatureStoreItem | null) => void,
   ): Promise<void> {
     const { namespace } = kind;
     const kindKey = namespace === 'features' ? 'flags' : namespace;

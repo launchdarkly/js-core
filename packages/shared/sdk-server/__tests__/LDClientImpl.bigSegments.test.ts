@@ -81,7 +81,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -120,7 +120,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -159,7 +159,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -185,7 +185,7 @@ describe('given test data with big segments', () => {
           updateProcessor: td.getFactory(),
           sendEvents: false,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();

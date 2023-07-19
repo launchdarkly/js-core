@@ -41,14 +41,14 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
-      - name: "Setup Redis"
+      - name: 'Setup Redis'
         if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-redis' }}
         run: |
           sudo apt-get update
           sudo apt-get install redis-server
           sudo service redis-server start
 
-      - name: "Setup DynamoDB"
+      - name: 'Setup DynamoDB'
         if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-dynamodb' }}
         run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local

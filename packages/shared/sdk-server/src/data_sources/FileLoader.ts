@@ -25,7 +25,7 @@ export default class FileLoader {
     private readonly filesystem: Filesystem,
     private readonly paths: string[],
     private readonly watch: boolean,
-    private readonly callback: (results: { path: string; data: string }[]) => void
+    private readonly callback: (results: { path: string; data: string }[]) => void,
   ) {}
 
   /**
@@ -80,8 +80,8 @@ export default class FileLoader {
               acc.push({ path, data });
               return acc;
             },
-            []
-          )
+            [],
+          ),
         );
       }, 10);
       // The 10ms delay above is arbitrary - we just don't want to have the number be zero,

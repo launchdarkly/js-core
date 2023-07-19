@@ -5,7 +5,7 @@ export type { LDContext, LDMultiKindContext };
 export const evaluateFlagWithEdgeKV = async (
   flagKey: string,
   context: LDContext,
-  defaultValue: boolean
+  defaultValue: boolean,
 ) => {
   const client = init({
     sdkKey: 'your-launchdarkly-client-id',

@@ -31,7 +31,7 @@ export default class EventSender implements subsystem.LDEventSender {
       ...defaultHeaders(
         clientContext.basicConfiguration.sdkKey,
         config,
-        clientContext.platform.info
+        clientContext.platform.info,
       ),
     };
 
@@ -48,7 +48,7 @@ export default class EventSender implements subsystem.LDEventSender {
     events: any,
     uri: string,
     payloadId: string | undefined,
-    canRetry: boolean
+    canRetry: boolean,
   ): Promise<subsystem.LDEventSenderResult> {
     const tryRes: subsystem.LDEventSenderResult = {
       status: subsystem.LDDeliveryStatus.Succeeded,
@@ -83,8 +83,8 @@ export default class EventSender implements subsystem.LDEventSender {
       error = new LDUnexpectedResponseError(
         httpErrorMessage(
           { status: res.status, message: 'some events were dropped' },
-          'event posting'
-        )
+          'event posting',
+        ),
       );
 
       if (!isHttpRecoverable(res.status)) {
@@ -110,7 +110,7 @@ export default class EventSender implements subsystem.LDEventSender {
 
   async sendEventData(
     type: subsystem.LDEventType,
-    data: any
+    data: any,
   ): Promise<subsystem.LDEventSenderResult> {
     const payloadId =
       type === subsystem.LDEventType.AnalyticsEvents ? this.crypto.randomUUID() : undefined;

@@ -54,7 +54,7 @@ describe('given a default instance of NodeRequests', () => {
     async () =>
       new Promise((resolveClose) => {
         server.close(resolveClose);
-      })
+      }),
   );
 
   const requests = new NodeRequests();

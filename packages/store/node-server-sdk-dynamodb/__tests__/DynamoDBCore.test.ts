@@ -45,13 +45,13 @@ class AsyncCoreFacade {
 
   get(
     kind: interfaces.PersistentStoreDataKind,
-    key: string
+    key: string,
   ): Promise<interfaces.SerializedItemDescriptor | undefined> {
     return promisify((cb) => this.core.get(kind, key, cb));
   }
 
   getAll(
-    kind: interfaces.PersistentStoreDataKind
+    kind: interfaces.PersistentStoreDataKind,
   ): Promise<interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined> {
     return promisify((cb) => this.core.getAll(kind, cb));
   }
@@ -59,7 +59,7 @@ class AsyncCoreFacade {
   upsert(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
-    descriptor: interfaces.SerializedItemDescriptor
+    descriptor: interfaces.SerializedItemDescriptor,
   ): Promise<UpsertResult> {
     return new Promise<UpsertResult>((resolve) => {
       this.core.upsert(kind, key, descriptor, (err, updatedDescriptor) => {
@@ -91,7 +91,7 @@ describe('given an empty store', () => {
     core = new DynamoDBCore(
       DEFAULT_TABLE_NAME,
       new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS),
-      undefined
+      undefined,
     );
     facade = new AsyncCoreFacade(core);
   });
@@ -183,7 +183,7 @@ describe('given a store with basic data', () => {
     core = new DynamoDBCore(
       DEFAULT_TABLE_NAME,
       new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS),
-      undefined
+      undefined,
     );
     const flags = [
       {
@@ -235,7 +235,7 @@ describe('given a store with basic data', () => {
           key: 'bar',
           item: { version: 10, serializedItem: JSON.stringify(feature2), deleted: false },
         },
-      ])
+      ]),
     );
   });
 
@@ -287,19 +287,19 @@ it('it can calculate size', () => {
   expect(
     calculateSize({
       test: { S: stringPayload },
-    })
+    }),
   ).toEqual(100 + 'test'.length + stringPayload.length);
 
   expect(
     calculateSize({
       test: { N: '14' },
-    })
+    }),
   ).toEqual(100 + 'test'.length + 2);
 
   expect(
     calculateSize({
       test: { BOOL: true },
-    })
+    }),
   ).toEqual(100 + 'test'.length + 1);
 
   expect(
@@ -307,6 +307,6 @@ it('it can calculate size', () => {
       bool: { BOOL: true },
       string: { S: stringPayload },
       number: { N: '14' },
-    })
+    }),
   ).toEqual(100 + 'test'.length + 'string'.length + 'number'.length + stringPayload.length + 2 + 1);
 });

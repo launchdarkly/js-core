@@ -14,7 +14,7 @@ export default class EvalResult {
   protected constructor(
     public readonly isError: boolean,
     public readonly detail: LDEvaluationDetail,
-    public readonly message?: string
+    public readonly message?: string,
   ) {
     this.isError = isError;
     this.detail = detail;
@@ -37,7 +37,7 @@ export default class EvalResult {
         variationIndex: null,
         reason: { kind: 'ERROR', errorKind },
       },
-      message
+      message,
     );
   }
 

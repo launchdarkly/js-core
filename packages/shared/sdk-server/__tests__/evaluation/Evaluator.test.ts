@@ -37,9 +37,9 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
     // @ts-ignore
     context.kind
   } targets: ${flag.targets?.map(
-    (t) => `${t.values}, ${t.variation}`
+    (t) => `${t.values}, ${t.variation}`,
   )} context targets: ${flag.contextTargets?.map(
-    (t) => `${t.contextKind}: ${t.values}, ${t.variation}`
+    (t) => `${t.contextKind}: ${t.values}, ${t.variation}`,
   )}`, async () => {
     const result = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(result?.isError).toEqual(expected?.isError);
@@ -140,9 +140,9 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
     // @ts-ignore
     context.kind
   } targets: ${flag.targets?.map(
-    (t) => `${t.values}, ${t.variation}`
+    (t) => `${t.values}, ${t.variation}`,
   )} context targets: ${flag.contextTargets?.map(
-    (t) => `${t.contextKind}: ${t.values}, ${t.variation}`
+    (t) => `${t.contextKind}: ${t.values}, ${t.variation}`,
   )}`, async () => {
     const result = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(result?.isError).toEqual(expected?.isError);

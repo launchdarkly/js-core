@@ -15,7 +15,7 @@ describe.each<
     salt: string,
     kindForRollout: string | undefined,
     seed: number | undefined,
-    expected: string
+    expected: string,
   ]
 >([
   [{ key: 'is-key' }, 'flag-key', 'key', 'salty', undefined, undefined, 'flag-key.salty.is-key'],
@@ -72,7 +72,7 @@ describe.each<
       attrRef,
       salt,
       kindForRollout,
-      seed
+      seed,
     );
 
     // The hasher always returns the same value. This just checks that it converts it to a number
@@ -111,7 +111,7 @@ describe.each([
       attrRef,
       'salty',
       'org',
-      undefined
+      undefined,
     );
     expect(bucket).toEqual(0);
     expect(hadContext).toEqual(kind === 'org');

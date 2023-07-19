@@ -65,7 +65,7 @@ function makeFeatureEvent(
   key: string = 'flagkey',
   variation: number = 1,
   def: string = 'default',
-  value: string = 'value'
+  value: string = 'value',
 ): any {
   return {
     kind: debug ? 'debug' : 'feature',
@@ -197,7 +197,7 @@ describe('given an event processor', () => {
       eventProcessorConfig,
       new ClientContext('sdk-key', basicConfiguration, platform),
       eventSender,
-      contextDeduplicator
+      contextDeduplicator,
     );
   });
 
@@ -247,8 +247,8 @@ describe('given an event processor', () => {
           name: 9,
           anonymous: false,
           custom: { age: 99 },
-        } as any)
-      )
+        } as any),
+      ),
     );
 
     await eventProcessor.flush();
@@ -704,7 +704,7 @@ describe('given an event processor', () => {
       newConfig,
       new ClientContext('sdk-key', basicConfiguration, platform),
       eventSender,
-      contextDeduplicator
+      contextDeduplicator,
     );
     eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
 

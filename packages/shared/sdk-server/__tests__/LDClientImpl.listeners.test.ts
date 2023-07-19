@@ -23,7 +23,7 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger: new TestLogger(),
       },
-      { ...makeCallbacks(true), onUpdate: (key: string) => queue.add(key) }
+      { ...makeCallbacks(true), onUpdate: (key: string) => queue.add(key) },
     );
   });
 

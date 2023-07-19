@@ -71,7 +71,7 @@ export class EdgeKV {
     handler_large_200,
     error_text,
     default_value,
-    num_retries_on_timeout
+    num_retries_on_timeout,
   ) {
     try {
       let response = await http_request();
@@ -105,7 +105,7 @@ export class EdgeKV {
           handler_large_200,
           error_text,
           default_value,
-          num_retries_on_timeout - 1
+          num_retries_on_timeout - 1,
         );
       }
       if (error.hasOwnProperty('status')) {
@@ -171,7 +171,7 @@ export class EdgeKV {
           result += chunk;
         },
       }),
-      { preventAbort: true }
+      { preventAbort: true },
     );
     return result;
   }
@@ -198,8 +198,8 @@ export class EdgeKV {
           body: typeof value === 'object' ? JSON.stringify(value) : value,
           headers: { 'X-Akamai-EdgeDB-Auth': [this.getNamespaceToken(namespace)] },
         },
-        timeout
-      )
+        timeout,
+      ),
     );
   }
 
@@ -234,7 +234,7 @@ export class EdgeKV {
       (response) => this.streamText(response.body),
       'PUT',
       null,
-      0
+      0,
     );
   }
 
@@ -286,7 +286,7 @@ export class EdgeKV {
       (response) => this.streamText(response.body),
       'PUT',
       null,
-      0
+      0,
     );
   }
 
@@ -323,8 +323,8 @@ export class EdgeKV {
           method: 'GET',
           headers: { 'X-Akamai-EdgeDB-Auth': [this.getNamespaceToken(namespace)] },
         },
-        timeout
-      )
+        timeout,
+      ),
     );
   }
 
@@ -354,7 +354,7 @@ export class EdgeKV {
       (response) => this.streamText(response.body),
       'GET TEXT',
       default_value,
-      num_retries_on_timeout ?? this.#num_retries_on_timeout
+      num_retries_on_timeout ?? this.#num_retries_on_timeout,
     );
   }
 
@@ -384,7 +384,7 @@ export class EdgeKV {
       (response) => this.streamJson(response.body),
       'GET JSON',
       default_value,
-      num_retries_on_timeout ?? this.#num_retries_on_timeout
+      num_retries_on_timeout ?? this.#num_retries_on_timeout,
     );
   }
 
@@ -399,8 +399,8 @@ export class EdgeKV {
           method: 'DELETE',
           headers: { 'X-Akamai-EdgeDB-Auth': [this.getNamespaceToken(namespace)] },
         },
-        timeout
-      )
+        timeout,
+      ),
     );
   }
 
@@ -422,7 +422,7 @@ export class EdgeKV {
       (response) => this.streamText(response.body),
       'DELETE',
       null,
-      0
+      0,
     );
   }
 

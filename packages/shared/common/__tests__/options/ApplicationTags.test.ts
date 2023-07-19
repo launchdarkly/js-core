@@ -73,7 +73,7 @@ describe.each([
         });
         if (expected.length) {
           throw new Error(
-            `Did not find expected messages: ${expected.map((item) => item.matches.toString())}`
+            `Did not find expected messages: ${expected.map((item) => item.matches.toString())}`,
           );
         }
       }

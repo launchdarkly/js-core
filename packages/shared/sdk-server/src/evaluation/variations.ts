@@ -46,7 +46,7 @@ export function getOffVariation(flag: Flag, reason: LDEvaluationReason): EvalRes
 
 export function getBucketBy(
   isExperiment: boolean,
-  bucketByAttributeReference: AttributeReference | undefined
+  bucketByAttributeReference: AttributeReference | undefined,
 ) {
   return (isExperiment ? undefined : bucketByAttributeReference) ?? KEY_ATTR_REF;
 }

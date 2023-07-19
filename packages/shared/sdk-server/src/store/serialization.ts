@@ -70,7 +70,7 @@ function processRollout(rollout?: Rollout) {
   if (rollout && rollout.bucketBy) {
     rollout.bucketByAttributeReference = new AttributeReference(
       rollout.bucketBy,
-      !rollout.contextKind
+      !rollout.contextKind,
     );
   }
 }
@@ -108,7 +108,7 @@ export function processSegment(segment: Segment) {
       // So use the rolloutContextKind to indicate if this is new or old data.
       rule.bucketByAttributeReference = new AttributeReference(
         rule.bucketBy,
-        !rule.rolloutContextKind
+        !rule.rolloutContextKind,
       );
     }
     rule?.clauses?.forEach((clause) => {

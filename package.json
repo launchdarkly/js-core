@@ -29,18 +29,19 @@
     "contract-test-service": "npm --prefix contract-tests install && npm --prefix contract-tests start",
     "contract-test-harness": "curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \\ | VERSION=v2 PARAMS=\"-url http://localhost:8000 -debug -stop-service-at-end $TEST_HARNESS_PARAMS\" sh",
     "contract-tests": "npm run contract-test-service & npm run contract-test-harness",
-    "prettier": "npx prettier --write \"**/*.{js,ts,tsx,json,yaml,yml,md}\" --loglevel warn"
+    "prettier": "npx prettier --write \"**/*.{js,ts,tsx,json,yaml,yml,md}\" --loglevel warn",
+    "check": "yarn && yarn prettier && yarn lint && yarn build"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
-    "eslint": "^8.14.0",
+    "eslint": "^8.45.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-config-prettier": "^8.7.0",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "prettier": "^2.8.4",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
     "typedoc": "0.23.26",
     "typescript": "^4.6.3"
   },

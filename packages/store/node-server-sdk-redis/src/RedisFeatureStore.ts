@@ -19,17 +19,20 @@ import TtlFromOptions from './TtlFromOptions';
 export default class RedisFeatureStore implements LDFeatureStore {
   private wrapper: PersistentDataStoreWrapper;
 
-  constructor(options?: LDRedisOptions, private readonly logger?: LDLogger) {
+  constructor(
+    options?: LDRedisOptions,
+    private readonly logger?: LDLogger,
+  ) {
     this.wrapper = new PersistentDataStoreWrapper(
       new RedisCore(new RedisClientState(options, logger), logger),
-      TtlFromOptions(options)
+      TtlFromOptions(options),
     );
   }
 
   get(
     kind: interfaces.DataKind,
     key: string,
-    callback: (res: LDFeatureStoreItem | null) => void
+    callback: (res: LDFeatureStoreItem | null) => void,
   ): void {
     this.wrapper.get(kind, key, callback);
   }

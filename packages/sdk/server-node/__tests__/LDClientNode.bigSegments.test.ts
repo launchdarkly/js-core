@@ -64,7 +64,7 @@ describe('given test data with big segments', () => {
           expect(status2!.stale).toEqual(false);
           expect(status2!.available).toEqual(true);
           done();
-        }
+        },
       );
     });
 
@@ -152,7 +152,7 @@ describe('given test data with big segments', () => {
             expect(status.available).toEqual(false);
             done();
           }
-        }
+        },
       );
     });
 

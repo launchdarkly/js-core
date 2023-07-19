@@ -20,7 +20,7 @@ export default async function clearPrefix(table: string, prefix?: string) {
     { client },
     {
       TableName: table,
-    }
+    },
   )) {
     page?.Items?.forEach((item) => {
       if (item?.namespace?.S?.startsWith(actualPrefix)) {

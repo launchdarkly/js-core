@@ -14,7 +14,7 @@ import RedisBigSegmentStore from './RedisBigSegmentStore';
  * @returns A function which creates big segment stores based on the provided config.
  */
 export default function RedisBigSegmentStoreFactory(
-  options?: LDRedisOptions
+  options?: LDRedisOptions,
 ): (config: LDOptions) => interfaces.BigSegmentStore {
   return (config: LDOptions) => new RedisBigSegmentStore(options, config.logger);
 }

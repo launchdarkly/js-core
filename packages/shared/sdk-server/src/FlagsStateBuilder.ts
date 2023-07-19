@@ -16,7 +16,10 @@ export default class FlagsStateBuilder {
 
   private flagMetadata: Record<string, FlagMeta> = {};
 
-  constructor(private valid: boolean, private withReasons: boolean) {}
+  constructor(
+    private valid: boolean,
+    private withReasons: boolean,
+  ) {}
 
   addFlag(
     flag: Flag,
@@ -25,7 +28,7 @@ export default class FlagsStateBuilder {
     reason: LDEvaluationReason,
     trackEvents: boolean,
     trackReason: boolean,
-    detailsOnlyIfTracked: boolean
+    detailsOnlyIfTracked: boolean,
   ) {
     this.flagValues[flag.key] = value;
     const meta: FlagMeta = {};

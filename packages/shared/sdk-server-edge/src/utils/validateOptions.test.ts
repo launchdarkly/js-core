@@ -27,7 +27,7 @@ describe('validateOptions', () => {
         featureStore: mockFeatureStore,
         logger: BasicLogger.get(),
         sendEvents: false,
-      })
+      }),
     ).toBeTruthy();
   });
 

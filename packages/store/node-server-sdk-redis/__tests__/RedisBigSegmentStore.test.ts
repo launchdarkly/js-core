@@ -11,12 +11,12 @@ const FAKE_HASH = 'userhash';
 
 async function setMetadata(
   prefix: string,
-  metadata: interfaces.BigSegmentStoreMetadata
+  metadata: interfaces.BigSegmentStoreMetadata,
 ): Promise<void> {
   const client = new Redis();
   await client.set(
     `${prefix}:${KEY_LAST_SYNCHRONIZED}`,
-    metadata.lastUpToDate ? metadata.lastUpToDate.toString() : ''
+    metadata.lastUpToDate ? metadata.lastUpToDate.toString() : '',
   );
   await client.quit();
 }
@@ -25,7 +25,7 @@ async function setSegments(
   prefix: string,
   userHashKey: string,
   included: string[],
-  excluded: string[]
+  excluded: string[],
 ): Promise<void> {
   const client = new Redis();
 

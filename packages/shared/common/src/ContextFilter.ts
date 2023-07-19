@@ -6,7 +6,7 @@ import Context from './Context';
 
 // These attributes cannot be removed via a private attribute.
 const protectedAttributes = ['key', 'kind', '_meta', 'anonymous'].map(
-  (str) => new AttributeReference(str, true)
+  (str) => new AttributeReference(str, true),
 );
 
 // Attributes that should be stringified for legacy users.
@@ -42,7 +42,7 @@ function cloneWithRedactions(target: LDContextCommon, references: AttributeRefer
       source: target,
       parent: cloned,
       visited: [target],
-    }))
+    })),
   );
 
   while (stack.length) {
@@ -78,7 +78,7 @@ function cloneWithRedactions(target: LDContextCommon, references: AttributeRefer
               source: value,
               parent: item.parent[item.key],
               visited: [...item.visited, value],
-            }))
+            })),
           );
         }
       } else {
@@ -94,7 +94,7 @@ function cloneWithRedactions(target: LDContextCommon, references: AttributeRefer
 export default class ContextFilter {
   constructor(
     private readonly allAttributesPrivate: boolean,
-    private readonly privateAttributes: AttributeReference[]
+    private readonly privateAttributes: AttributeReference[],
   ) {}
 
   filter(context: Context): any {
@@ -122,7 +122,7 @@ export default class ContextFilter {
   private filterSingleKind(context: Context, single: LDContextCommon, kind: string): any {
     const { cloned, excluded } = cloneWithRedactions(
       single,
-      this.getAttributesToFilter(context, single, kind)
+      this.getAttributesToFilter(context, single, kind),
     );
 
     if (context.legacy) {

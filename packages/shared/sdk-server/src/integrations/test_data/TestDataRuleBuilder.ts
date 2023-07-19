@@ -30,7 +30,7 @@ export default class TestDataRuleBuilder<BuilderType> {
       booleanFlag: () => BuilderType;
     },
     clauses?: Clause[],
-    variation?: number
+    variation?: number,
   ) {
     if (clauses) {
       this.clauses = [...clauses];

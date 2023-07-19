@@ -134,7 +134,7 @@ describe('given a store with a user cache size of 2', () => {
         userCacheSize: 2,
       },
       new TestLogger(),
-      crypto
+      crypto,
     );
   });
 
@@ -219,7 +219,7 @@ describe('given a store with a short poll interval.', () => {
         statusPollInterval: 0.01,
       },
       new TestLogger(),
-      crypto
+      crypto,
     );
 
     let count = 0;

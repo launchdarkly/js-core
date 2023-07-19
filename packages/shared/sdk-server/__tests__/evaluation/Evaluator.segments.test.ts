@@ -29,7 +29,7 @@ class TestQueries implements Queries {
     private readonly data: {
       flags?: Flag[];
       segments?: Segment[];
-    }
+    },
   ) {}
 
   async getFlag(key: string): Promise<Flag | undefined> {
@@ -41,7 +41,7 @@ class TestQueries implements Queries {
   }
 
   getBigSegmentsMembership(
-    userKey: string
+    userKey: string,
   ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
     throw new Error('Method not implemented.');
   }
@@ -62,7 +62,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
-    }
+    },
   );
 
   it.each([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -77,7 +77,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
-    }
+    },
   );
 
   it.each([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -92,7 +92,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
-    }
+    },
   );
 
   it('does not match segment with unknown user', async () => {
@@ -121,7 +121,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
-    }
+    },
   );
 
   it.each([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -142,7 +142,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
-    }
+    },
   );
 
   it('handles an invalid reference for bucketBy', async () => {
@@ -185,7 +185,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
-    }
+    },
   );
 
   it('matches segment with multiple matching clauses', async () => {
@@ -294,7 +294,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       bucketingPlatform,
       new TestQueries({
         segments: [segment1, segment2],
-      })
+      }),
     );
     const flag1 = makeFlagWithSegmentMatch(segment1);
     const flag2 = makeFlagWithSegmentMatch(segment2);
@@ -324,7 +324,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
-    }
+    },
   );
 
   it.each([singleKind, multiKind])('matches nested segments', async (context) => {
@@ -353,7 +353,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(
       basicPlatform,
-      new TestQueries({ segments: [segment1, segment2] })
+      new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
@@ -418,7 +418,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(
       basicPlatform,
-      new TestQueries({ segments: [segment1, segment2] })
+      new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind));
@@ -437,7 +437,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
-    }
+    },
   );
 
   it.each([singleKind, multiKind])(
@@ -452,7 +452,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
-    }
+    },
   );
 
   it.each([singleKind, multiKind])('does not match segment for wrong kind', async (context) => {

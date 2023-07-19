@@ -59,14 +59,14 @@ class LDClientNode extends LDClientImpl {
             .eventNames()
             .some(
               (name) =>
-                name === 'update' || (typeof name === 'string' && name.startsWith('update:'))
+                name === 'update' || (typeof name === 'string' && name.startsWith('update:')),
             ),
-      }
+      },
     );
     this.emitter = emitter;
 
     this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode(
-      this.bigSegmentStatusProviderInternal
+      this.bigSegmentStatusProviderInternal,
     ) as BigSegmentStoreStatusProvider;
   }
 }

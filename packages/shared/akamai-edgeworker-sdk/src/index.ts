@@ -38,7 +38,7 @@ export const init = (params: BaseSDKParams): LDClient => {
 
   const cachableStoreProvider = new CacheableStoreProvider(
     featureStoreProvider,
-    buildRootKey(sdkKey)
+    buildRootKey(sdkKey),
   );
   const featureStore = new EdgeFeatureStore(cachableStoreProvider, sdkKey, 'Akamai', logger);
 

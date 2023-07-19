@@ -22,14 +22,14 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
   constructor(tableName: string, options?: LDDynamoDBOptions, logger?: LDLogger) {
     this.wrapper = new PersistentDataStoreWrapper(
       new DynamoDBCore(tableName, new DynamoDBClientState(options), logger),
-      TtlFromOptions(options)
+      TtlFromOptions(options),
     );
   }
 
   get(
     kind: interfaces.DataKind,
     key: string,
-    callback: (res: LDFeatureStoreItem | null) => void
+    callback: (res: LDFeatureStoreItem | null) => void,
   ): void {
     this.wrapper.get(kind, key, callback);
   }

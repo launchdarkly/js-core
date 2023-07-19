@@ -23,7 +23,7 @@ function matchAny(op: string, value: any, values: any[]) {
  */
 export default function matchClauseWithoutSegmentOperations(
   clause: Clause,
-  context: Context
+  context: Context,
 ): boolean {
   const contextValue = context.valueForKind(clause.attributeReference, clause.contextKind);
   if (contextValue === null || contextValue === undefined) {
@@ -32,7 +32,7 @@ export default function matchClauseWithoutSegmentOperations(
   if (Array.isArray(contextValue)) {
     return maybeNegate(
       clause,
-      contextValue.some((value) => matchAny(clause.op, value, clause.values))
+      contextValue.some((value) => matchAny(clause.op, value, clause.values)),
     );
   }
   return maybeNegate(clause, matchAny(clause.op, contextValue, clause.values));

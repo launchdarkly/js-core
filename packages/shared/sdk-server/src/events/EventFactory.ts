@@ -13,7 +13,7 @@ export default class EventFactory {
     context: Context,
     detail: LDEvaluationDetail,
     defaultVal: any,
-    prereqOfFlag?: Flag
+    prereqOfFlag?: Flag,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
     return new internal.InputEvalEvent(
@@ -28,7 +28,7 @@ export default class EventFactory {
       flag.trackEvents || addExperimentData,
       prereqOfFlag?.key,
       this.withReasons || addExperimentData ? detail.reason : undefined,
-      flag.debugEventsUntilDate
+      flag.debugEventsUntilDate,
     );
   }
 

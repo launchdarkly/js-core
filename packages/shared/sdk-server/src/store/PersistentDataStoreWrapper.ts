@@ -56,7 +56,7 @@ function deletedDescriptor(version: number): ItemDescriptor {
  */
 function deserialize(
   kind: PersistentStoreDataKind,
-  descriptor: SerializedItemDescriptor
+  descriptor: SerializedItemDescriptor,
 ): ItemDescriptor {
   if (descriptor.deleted || !descriptor.serializedItem) {
     return deletedDescriptor(descriptor.version);
@@ -105,7 +105,10 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
    */
   private queue: UpdateQueue = new UpdateQueue();
 
-  constructor(private readonly core: PersistentDataStore, ttl: number) {
+  constructor(
+    private readonly core: PersistentDataStore,
+    ttl: number,
+  ) {
     if (ttl) {
       this.itemCache = new TtlCache({
         ttl,
@@ -239,7 +242,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
             }
           }
           cb();
-        }
+        },
       );
     }, callback);
   }

@@ -28,7 +28,7 @@ describe('given a client with mock event processor', () => {
       {
         updateProcessor: td.getFactory(),
       },
-      makeCallbacks(false)
+      makeCallbacks(false),
     );
     await client.waitForInitialization();
   });

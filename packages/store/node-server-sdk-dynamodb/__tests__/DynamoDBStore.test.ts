@@ -30,7 +30,7 @@ describe.each([
     store = new DynamoDBFeatureStore(
       table,
       { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam },
-      undefined
+      undefined,
     );
     facade = new AsyncStoreFacade(store);
   });
@@ -92,7 +92,7 @@ describe.each([
     store = new DynamoDBFeatureStore(
       table,
       { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam },
-      undefined
+      undefined,
     );
     facade = new AsyncStoreFacade(store);
     await facade.init({

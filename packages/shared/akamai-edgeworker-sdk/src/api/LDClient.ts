@@ -26,7 +26,7 @@ class LDClient extends LDClientImpl {
     sdkKey: string,
     platform: EdgePlatform,
     options: LDOptions,
-    storeProvider: CacheableStoreProvider
+    storeProvider: CacheableStoreProvider,
   ) {
     super(sdkKey, platform, createOptions(options), createCallbacks());
     this.cacheableStoreProvider = storeProvider;
@@ -42,7 +42,7 @@ class LDClient extends LDClientImpl {
     key: string,
     context: LDContext,
     defaultValue: LDFlagValue,
-    callback?: (err: any, res: LDFlagValue) => void
+    callback?: (err: any, res: LDFlagValue) => void,
   ): Promise<LDFlagValue> {
     await this.cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.variation(key, context, defaultValue, callback);
@@ -52,7 +52,7 @@ class LDClient extends LDClientImpl {
     key: string,
     context: LDContext,
     defaultValue: LDFlagValue,
-    callback?: (err: any, res: LDEvaluationDetail) => void
+    callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
     await this.cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.variationDetail(key, context, defaultValue, callback);
@@ -61,7 +61,7 @@ class LDClient extends LDClientImpl {
   override async allFlagsState(
     context: LDContext,
     options?: LDFlagsStateOptions,
-    callback?: (err: Error | null, res: LDFlagsState) => void
+    callback?: (err: Error | null, res: LDFlagsState) => void,
   ): Promise<LDFlagsState> {
     await this.cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.allFlagsState(context, options, callback);

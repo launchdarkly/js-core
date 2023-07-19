@@ -38,12 +38,12 @@ export async function middleware(req: NextRequest, context: NextFetchEvent) {
       const hotDogFaviconEnabled = await client.variation(
         'enable-hot-dog-favicon',
         flagContext,
-        false
+        false,
       );
 
       return hotDogFaviconEnabled
         ? NextResponse.rewrite(new URL('/hot-dog.ico', request.url))
-        : NextResponse.next()
+        : NextResponse.next();
     }
 
     const storeClosed = await client.variation('store-closed', flagContext, false);

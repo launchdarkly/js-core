@@ -46,7 +46,7 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
 
 function processProxyOptions(
   proxyOptions: LDProxyOptions,
-  additional: https.AgentOptions = {}
+  additional: https.AgentOptions = {},
 ): https.Agent | http.Agent {
   const protocol = proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http';
   const parsedOptions: HttpsProxyAgentOptions & { [index: string]: any } = {
@@ -74,7 +74,7 @@ function processProxyOptions(
 function createAgent(
   tlsOptions?: LDTLSOptions,
   proxyOptions?: LDProxyOptions,
-  logger?: LDLogger
+  logger?: LDLogger,
 ): https.Agent | http.Agent | undefined {
   if (!proxyOptions?.auth?.startsWith('https') && tlsOptions) {
     logger?.warn('Proxy configured with TLS options, but is not using an https auth.');
@@ -120,7 +120,7 @@ export default class NodeRequests implements platform.Requests {
           method: options.method,
           agent: this.agent,
         },
-        (res) => resolve(new NodeResponse(res))
+        (res) => resolve(new NodeResponse(res)),
       );
 
       if (options.body) {
@@ -137,7 +137,7 @@ export default class NodeRequests implements platform.Requests {
 
   createEventSource(
     url: string,
-    eventSourceInitDict: platform.EventSourceInitDict
+    eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
     const expandedOptions = {
       ...eventSourceInitDict,

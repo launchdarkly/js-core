@@ -90,7 +90,7 @@ describe('given user clauses and contexts', () => {
       const context = Context.fromLDContext(user);
       const res = await evaluator.evaluate(flag, context!);
       expect(res.detail.value).toBe(true);
-    }
+    },
   );
 
   it.each<LDContext>([
@@ -466,5 +466,5 @@ describe.each([
       const res2 = await evaluator.evaluate(flag, contextWArray);
       expect(res2.detail.value).toBe(true);
     });
-  }
+  },
 );
