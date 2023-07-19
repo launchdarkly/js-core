@@ -25,7 +25,8 @@
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
-    "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'"
+    "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'",
+    "check": "yarn && yarn prettier && yarn lint && tsc && yarn test"
   },
   "license": "Apache-2.0",
   "dependencies": {
