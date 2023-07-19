@@ -27,10 +27,9 @@
     "lint:fix": "yarn run lint -- --fix"
   },
   "license": "Apache-2.0",
-  "//": "Pinned semver because 7.5.0 introduced require('util') without the node: prefix",
   "dependencies": {
     "@launchdarkly/js-sdk-common": "1.0.2",
-    "semver": "7.4.0"
+    "semver": "7.5.4"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
