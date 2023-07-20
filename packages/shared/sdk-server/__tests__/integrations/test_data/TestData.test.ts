@@ -167,6 +167,9 @@ describe('given a TestData instance', () => {
   it('can clone a complex flag configuration', () => {
     const flag = td
       .flag('test-flag')
+      .offVariation(true)
+      .variationForAll(false)
+      .variationForUser('billy', true)
       .ifMatch('user', 'name', 'ben', 'christian')
       .andNotMatch('user', 'country', 'fr')
       .thenReturn(true);
@@ -199,7 +202,14 @@ describe('given a TestData instance', () => {
       },
     ];
 
-    expect(flagCopy.build(1).rules).toEqual(flagRules);
+    const builtFlag = flagCopy.build(1);
+    expect(builtFlag.fallthrough).toEqual({ variation: 1 });
+    expect(builtFlag.offVariation).toEqual(0);
+    expect(builtFlag.variations).toEqual([true, false]);
+    expect(builtFlag.contextTargets).toEqual([
+      { contextKind: 'user', values: ['billy'], variation: 0 },
+    ]);
+    expect(builtFlag.rules).toEqual(flagRules);
   });
 
   it('defaults a new flag to on', () => {

@@ -6,8 +6,6 @@
 [![NPM][sdk-akamai-base-dm-badge]][sdk-akamai-base-npm-link]
 [![NPM][sdk-akamai-base-dt-badge]][sdk-akamai-base-npm-link]
 
-> This library is a beta version and should not be considered ready for production use while this message is visible.
-
 The LaunchDarkly Akamai SDK is designed primarily for use in Akamai Edgeworkers. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
 For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/edge/akamai).

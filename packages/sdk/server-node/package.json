@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk",
-  "version": "8.0.0",
+  "version": "8.1.0",
   "description": "LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-node",
   "repository": {
@@ -12,12 +12,12 @@
   "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "default": "./dist/src/index.js",
-      "types": "./dist/src/index.d.ts"
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
     },
     "./integrations": {
-      "default": "./dist/src/integrations.js",
-      "types": "./dist/src/integrations.d.ts"
+      "types": "./dist/src/integrations.d.ts",
+      "default": "./dist/src/integrations.js"
     }
   },
   "typesVersions": {
@@ -46,9 +46,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "1.0.4",
+    "@launchdarkly/js-server-sdk-common": "1.0.6",
     "https-proxy-agent": "^5.0.1",
-    "launchdarkly-eventsource": "^1.4.4"
+    "launchdarkly-eventsource": "2.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.4.0",
