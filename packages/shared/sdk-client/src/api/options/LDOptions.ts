@@ -1,5 +1,5 @@
 import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
-import type { LDInspection } from './LDInspection';
+import type { LDInspection } from '../LDInspection';
 
 export interface LDOptions {
   /**
@@ -23,25 +23,25 @@ export interface LDOptions {
   bootstrap?: 'localStorage' | LDFlagSet;
 
   /**
-   * The base URL for the LaunchDarkly server.
+   * The base uri for the LaunchDarkly server.
    *
    * Most users should use the default value.
    */
-  baseUrl?: string;
+  baseUri?: string;
 
   /**
-   * The base URL for the LaunchDarkly events server.
+   * The base uri for the LaunchDarkly events server.
    *
    * Most users should use the default value.
    */
-  eventsUrl?: string;
+  eventsUri?: string;
 
   /**
-   * The base URL for the LaunchDarkly streaming server.
+   * The base uri for the LaunchDarkly streaming server.
    *
    * Most users should use the default value.
    */
-  streamUrl?: string;
+  streamUri?: string;
 
   /**
    * Whether or not to open a streaming connection to LaunchDarkly for live flag updates.
@@ -52,7 +52,7 @@ export interface LDOptions {
    *
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
-  streaming?: boolean;
+  stream?: boolean;
 
   /**
    * Whether or not to use the REPORT verb to fetch flag settings.
@@ -61,7 +61,7 @@ export interface LDOptions {
    * including a JSON entity body with the context object.
    *
    * Otherwise (by default) a GET request will be issued with the context passed as
-   * a base64 URL-encoded path parameter.
+   * a base64 uri-encoded path parameter.
    *
    * Do not use unless advised by LaunchDarkly.
    */
@@ -151,7 +151,7 @@ export interface LDOptions {
    *
    * The default value is 100.
    */
-  eventCapacity?: number;
+  capacity?: number;
 
   /**
    * The interval in between flushes of the analytics events queue, in milliseconds.

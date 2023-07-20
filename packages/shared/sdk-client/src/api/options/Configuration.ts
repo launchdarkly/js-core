@@ -1,0 +1,51 @@
+import { noop, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { LDOptions } from './LDOptions';
+import { LDInspection } from '../LDInspection';
+
+export const validations: Record<keyof LDOptions, TypeValidator> = {
+  baseUri: TypeValidators.String,
+  streamUri: TypeValidators.String,
+  eventsUri: TypeValidators.String,
+  capacity: TypeValidators.numberWithMin(1),
+  logger: TypeValidators.Object,
+  flushInterval: TypeValidators.numberWithMin(2000),
+  stream: TypeValidators.Boolean,
+  sendEvents: TypeValidators.Boolean,
+  allAttributesPrivate: TypeValidators.Boolean,
+  privateAttributes: TypeValidators.StringArray,
+  diagnosticOptOut: TypeValidators.Boolean,
+  diagnosticRecordingInterval: TypeValidators.numberWithMin(60),
+  wrapperName: TypeValidators.String,
+  wrapperVersion: TypeValidators.String,
+  application: TypeValidators.Object,
+  bootstrap: TypeValidators.Object,
+  useReport: TypeValidators.Boolean,
+  sendLDHeaders: TypeValidators.Boolean,
+  requestHeaderTransform: TypeValidators.Function,
+  evaluationReasons: TypeValidators.Boolean,
+  sendEventsOnlyForVariation: TypeValidators.Boolean,
+  streamReconnectDelay: TypeValidators.numberWithMin(0),
+  inspectors: TypeValidators.createTypeArray<LDInspection>('LDInspection[]', {
+    type: 'flag-used',
+    method: noop,
+    name: '',
+  }),
+};
+export const defaultValues: LDOptions = {
+  baseUri: 'https://sdk.launchdarkly.com',
+  streamUri: 'https://clientstream.launchdarkly.com',
+  eventsUri: 'https://events.launchdarkly.com',
+  sendEvents: true,
+  sendLDHeaders: true,
+  sendEventsOnlyForVariation: false,
+  useReport: false,
+  evaluationReasons: false,
+  allAttributesPrivate: false,
+  diagnosticOptOut: false,
+  flushInterval: 2000, //{ default: 2000, minimum: 2000 },
+  streamReconnectDelay: 1000, //{ default: 1000, minimum: 0 },
+  diagnosticRecordingInterval: 900000, //{ default: 900000, minimum: 2000 },
+  capacity: 100, //{ default: 100, minimum: 1 },
+  privateAttributes: [],
+  inspectors: [],
+};

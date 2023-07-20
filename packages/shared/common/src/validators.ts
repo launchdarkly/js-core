@@ -179,6 +179,10 @@ export class TypeValidators {
 
   static readonly Function = new Function();
 
+  static createTypeArray<T>(typeName: string, example: T) {
+    return new TypeArray<T>(typeName, example);
+  }
+
   static numberWithMin(min: number): NumberWithMinimum {
     return new NumberWithMinimum(min);
   }
