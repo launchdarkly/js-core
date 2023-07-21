@@ -1,7 +1,7 @@
-import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
-import type { LDInspection } from '../LDInspection';
+import { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDInspection } from '../api/LDInspection';
 
-export interface LDOptions {
+export default interface LDOptions {
   /**
    * An object that will perform logging for the client.
    *
@@ -14,7 +14,7 @@ export interface LDOptions {
    *
    * If `"localStorage"` is specified, the flags will be saved and retrieved from browser local
    * storage. Alternatively, an {@link LDFlagSet} can be specified which will be used as the initial
-   * source of flag values. In the latter case, the flag values will be available via {@link LDClient.variation}
+   * source of flag values. In the latter case, the flag values will be available via {@link LDClientDom.variation}
    * immediately after calling `initialize()` (normally they would not be available until the
    * client signals that it is ready).
    *
@@ -48,7 +48,7 @@ export interface LDOptions {
    *
    * If this is true, the client will always attempt to maintain a streaming connection; if false,
    * it never will. If you leave the value undefined (the default), the client will open a streaming
-   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
+   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClientDom.on}).
    *
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
@@ -94,7 +94,7 @@ export interface LDOptions {
    * calculated.
    *
    * The additional information will then be available through the client's
-   * {@link LDClient.variationDetail} method. Since this increases the size of network requests,
+   * {@link LDClientDom.variationDetail} method. Since this increases the size of network requests,
    * such information is not sent unless you set this option to true.
    */
   evaluationReasons?: boolean;
@@ -232,4 +232,7 @@ export interface LDOptions {
    * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
    */
   inspectors?: LDInspection[];
+
+  // Allow indexing this by a string for the validation step.
+  [index: string]: any;
 }

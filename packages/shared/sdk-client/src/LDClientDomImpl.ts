@@ -1,19 +1,18 @@
 // temporarily allow unused vars for the duration of the migration
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  createSafeLogger,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
-  LDLogger,
   Platform,
 } from '@launchdarkly/js-sdk-common';
 import { LDClientDom } from './api/LDClientDom';
-import { LDOptions } from './api/options/LDOptions';
+import Configuration from './options/Configuration';
+import LDOptions from './options/LDOptions';
 
 export default class LDClientDomImpl implements LDClientDom {
-  logger?: LDLogger;
+  config: Configuration;
 
   /**
    * Immediately return an LDClient instance. No async or remote calls.
@@ -24,9 +23,7 @@ export default class LDClientDomImpl implements LDClientDom {
    * @param platform
    */
   constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: Platform) {
-    const { logger } = options;
-
-    this.logger = createSafeLogger(logger);
+    this.config = new Configuration(options);
   }
 
   allFlags(): LDFlagSet {
