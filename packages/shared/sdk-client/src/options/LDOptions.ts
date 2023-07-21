@@ -44,6 +44,9 @@ export default interface LDOptions {
   streamUri?: string;
 
   /**
+   * TODO: do we really need a tribool for this? We need to simplify the complex
+   * logic of setting up streams and if anyone really cares about it so much.
+   *
    * Whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
    * If this is true, the client will always attempt to maintain a streaming connection; if false,

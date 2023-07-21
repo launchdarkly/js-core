@@ -34,13 +34,13 @@ export default class Configuration {
   // Allow indexing Configuration by a string
   [index: string]: any;
 
-  constructor(options: LDOptions) {
+  constructor(options: LDOptions = {}) {
     const { errors, validatedOptions } = validateTypesAndNames({ ...getDefaults(), ...options });
 
     Object.entries(validatedOptions).forEach(([k, v]) => {
       this[k] = v;
     });
 
-    errors.forEach(this.logger.warn);
+    errors.forEach((e) => this.logger.warn(e));
   }
 }
