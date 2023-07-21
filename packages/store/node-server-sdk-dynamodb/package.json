@@ -31,11 +31,11 @@
     "ioredis": "^5.3.2"
   },
   "peerDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.370.0",
+    "@aws-sdk/client-dynamodb": "^3.53.0",
     "@launchdarkly/node-server-sdk": "8.x"
   },
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "3.370.0",
+    "@aws-sdk/client-dynamodb": "3.348.0",
     "@launchdarkly/node-server-sdk": "8.1.0",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
