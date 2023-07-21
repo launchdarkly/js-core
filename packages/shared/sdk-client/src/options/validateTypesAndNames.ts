@@ -1,13 +1,20 @@
-import { NumberWithMinimum, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
+import {
+  createSafeLogger,
+  NumberWithMinimum,
+  OptionMessages,
+  TypeValidators,
+} from '@launchdarkly/js-sdk-common';
 import { defaultsAndValidators, getDefaults } from './defaultsAndValidators';
 import LDOptions from './LDOptions';
+import ValidatedOptions from './ValidatedOptions';
 
 export default function validateTypesAndNames(options: LDOptions): {
   errors: string[];
-  validatedOptions: LDOptions;
+  validatedOptions: ValidatedOptions;
 } {
   const errors: string[] = [];
   const validatedOptions = getDefaults();
+  validatedOptions.logger = createSafeLogger(options.logger);
 
   Object.entries(options).forEach(([k, v]) => {
     const validator = defaultsAndValidators[k]?.validator;
@@ -28,7 +35,7 @@ export default function validateTypesAndNames(options: LDOptions): {
         validatedOptions[k] = v;
       }
     } else {
-      options.logger?.warn(OptionMessages.unknownOption(k));
+      validatedOptions.logger?.warn(OptionMessages.unknownOption(k));
     }
   });
 

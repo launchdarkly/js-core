@@ -7,6 +7,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 import { LDInspection } from '../api/LDInspection';
 import LDOptions from './LDOptions';
+import ValidatedOptions from './ValidatedOptions';
 
 type KeyOf<T> = keyof T;
 type ValueOf<T> = T[keyof T];
@@ -123,5 +124,5 @@ export const getDefaults = () => {
   Object.entries(defaultsAndValidators).forEach(([k, v]) => {
     defaults[k] = v?.default;
   });
-  return defaults;
+  return defaults as ValidatedOptions;
 };

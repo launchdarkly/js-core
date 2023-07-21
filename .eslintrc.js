@@ -10,6 +10,7 @@ module.exports = {
   plugins: ['@typescript-eslint', 'prettier'],
   ignorePatterns: ['**/dist/**', '**/vercel/examples/**'],
   rules: {
+    '@typescript-eslint/lines-between-class-members': 'off',
     'prettier/prettier': ['error'],
     'class-methods-use-this': 'off',
     'import/no-extraneous-dependencies': [
