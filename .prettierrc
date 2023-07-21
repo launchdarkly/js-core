@@ -1,7 +1,6 @@
 {
   "singleQuote": true,
   "printWidth": 100,
-  "semi": false,
   "plugins": ["@trivago/prettier-plugin-sort-imports"],
   "importOrder": ["^@launchdarkly/(.*)$", "^[./]"],
   "importOrderCaseInsensitive": true,
