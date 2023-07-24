@@ -1,24 +1,30 @@
-import { LDErrorTracking, LDExecutionOrdering, LDLatencyTracking, LDMigration, LDSerialExecution } from '../../src';
+import {
+  LDErrorTracking,
+  LDExecutionOrdering,
+  LDLatencyTracking,
+  LDMigration,
+  LDSerialExecution,
+} from '../../src';
 
 it('full migration typing', () => {
   const migration: LDMigration<string> = {
     execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
     latencyTracking: LDLatencyTracking.Disabled,
     errorTracking: LDErrorTracking.Enabled,
-    readNew: function (): string {
-      return "potato";
+    readNew(): string {
+      return 'potato';
     },
-    writeNew: function (): string {
-      return "pomme de terre"
+    writeNew(): string {
+      return 'pomme de terre';
     },
-    readOld: function (): string {
-      return "potato";
+    readOld(): string {
+      return 'potato';
     },
-    writeOld: function (): string {
-      return "pomme de terre"
+    writeOld(): string {
+      return 'pomme de terre';
     },
     check(a, b) {
-      return a == b;
-    }
+      return a === b;
+    },
   };
 });

@@ -22,7 +22,7 @@ export enum LDErrorTracking {
 export class LDSerialExecution {
   readonly type: LDExecution = LDExecution.Serial;
 
-  constructor(public readonly ordering: LDExecutionOrdering) { }
+  constructor(public readonly ordering: LDExecutionOrdering) {}
 }
 
 export class LDConcurrentExecution {

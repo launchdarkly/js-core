@@ -1,12 +1,7 @@
-export enum LDMigrationStage {
-  Off = 'off',
-  DualWrite = 'dualwrite',
-  Shadow = 'shadow',
-  Live = 'live',
-  Rampdown = 'rampdown',
-  Complete = 'complete',
-}
+export type LDMigrationStage = 'off' | 'dualwrite' | 'shadow' | 'live' | 'rampdown' | 'complete';
+
+const stages = ['off', 'dualwrite', 'shadow', 'live', 'rampdown', 'complete'];
 
 export function IsMigrationStage(value: string): boolean {
-  return Object.values(LDMigrationStage).includes(value as LDMigrationStage);
+  return stages.includes(value);
 }
