@@ -22,27 +22,27 @@ export enum LDErrorTracking {
 export class LDSerialExecution {
   readonly type: LDExecution = LDExecution.Serial;
 
-  constructor(public readonly ordering: LDExecutionOrdering) {}
+  constructor(public readonly ordering: LDExecutionOrdering) { }
 }
 
 export class LDConcurrentExecution {
   readonly type: LDExecution = LDExecution.Concurrent;
 }
 
-export interface LDMigration<TMigration> {
-  execution: LDSerialExecution | LDConcurrentExecution;
-  latencyTracking: LDLatencyTracking;
-  errorTracking: LDErrorTracking;
-  readNew: () => TMigration;
-  writeNew: () => TMigration;
+export interface LDMigrationOptions<TMigration> {
+  execution?: LDSerialExecution | LDConcurrentExecution;
+  latencyTracking?: LDLatencyTracking;
+  errorTracking?: LDErrorTracking;
+  readNew: () => Promise<TMigration>;
+  writeNew: () => Promise<TMigration>;
 
-  readOld: () => TMigration;
-  writeOld: () => TMigration;
+  readOld: () => Promise<TMigration>;
+  writeOld: () => Promise<TMigration>;
 
   check?: (a: TMigration, b: TMigration) => boolean;
 }
 
-export type LDReadonlyMigration<TMigration> = Omit<
-  LDMigration<TMigration>,
+export type LDReadonlyMigrationOptions<TMigration> = Omit<
+  LDMigrationOptions<TMigration>,
   'writeNew' | 'writeOld'
 >;
