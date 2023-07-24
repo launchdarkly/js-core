@@ -275,7 +275,7 @@ export default class LDClientImpl implements LDClient {
     callback?: (err: any, res: LDMigrationStage) => void
   ): Promise<LDMigrationStage> {
     const stringValue = await this.variation(key, context, defaultValue as string);
-    if (stringValue && !IsMigrationStage(stringValue)) {
+    if (!IsMigrationStage(stringValue)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
       callback?.(error, defaultValue);
