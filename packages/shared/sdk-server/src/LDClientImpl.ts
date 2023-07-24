@@ -10,7 +10,15 @@ import {
   subsystem,
   internal,
 } from '@launchdarkly/js-sdk-common';
-import { LDClient, LDFlagsStateOptions, LDOptions, LDStreamProcessor, LDFlagsState } from './api';
+import {
+  LDClient,
+  LDFlagsStateOptions,
+  LDOptions,
+  LDStreamProcessor,
+  LDFlagsState,
+  LDMigrationStage,
+  IsMigrationStage,
+} from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -258,6 +266,23 @@ export default class LDClientImpl implements LDClient {
     );
     callback?.(null, res.detail);
     return res.detail;
+  }
+
+  async variationMigration(
+    key: string,
+    context: LDContext,
+    defaultValue: LDMigrationStage,
+    callback?: (err: any, res: LDMigrationStage) => void
+  ): Promise<LDMigrationStage> {
+    const stringValue = await this.variation(key, context, defaultValue as string);
+    if (!IsMigrationStage(stringValue)) {
+      const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
+      this.onError(error);
+      callback?.(error, defaultValue);
+      return defaultValue;
+    }
+    callback?.(null, stringValue as LDMigrationStage);
+    return stringValue as LDMigrationStage;
   }
 
   async allFlagsState(
