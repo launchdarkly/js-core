@@ -19,30 +19,30 @@ export enum LDErrorTracking {
   Disabled,
 }
 
+export interface LDMethodResult<TResult> {
+  result?: TResult;
+  error?: Error;
+}
+
 export class LDSerialExecution {
   readonly type: LDExecution = LDExecution.Serial;
 
-  constructor(public readonly ordering: LDExecutionOrdering) { }
+  constructor(public readonly ordering: LDExecutionOrdering) {}
 }
 
 export class LDConcurrentExecution {
   readonly type: LDExecution = LDExecution.Concurrent;
 }
 
-export interface LDMigrationOptions<TMigration> {
+export interface LDMigrationOptions<TMigrationRead, TMigrationWrite> {
   execution?: LDSerialExecution | LDConcurrentExecution;
   latencyTracking?: LDLatencyTracking;
   errorTracking?: LDErrorTracking;
-  readNew: () => Promise<TMigration>;
-  writeNew: () => Promise<TMigration>;
+  readNew: () => Promise<LDMethodResult<TMigrationRead>>;
+  writeNew: () => Promise<LDMethodResult<TMigrationWrite>>;
 
-  readOld: () => Promise<TMigration>;
-  writeOld: () => Promise<TMigration>;
+  readOld: () => Promise<LDMethodResult<TMigrationRead>>;
+  writeOld: () => Promise<LDMethodResult<TMigrationWrite>>;
 
-  check?: (a: TMigration, b: TMigration) => boolean;
+  check?: (a: TMigrationRead, b: TMigrationRead) => boolean;
 }
-
-export type LDReadonlyMigrationOptions<TMigration> = Omit<
-  LDMigrationOptions<TMigration>,
-  'writeNew' | 'writeOld'
->;
