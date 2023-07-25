@@ -19,10 +19,15 @@ export enum LDErrorTracking {
   Disabled,
 }
 
-export interface LDMethodResult<TResult> {
-  result?: TResult;
-  error?: Error;
-}
+export type LDMethodResult<TResult> =
+  | {
+      success: true;
+      result: TResult;
+    }
+  | {
+      success: false;
+      error: any;
+    };
 
 export class LDSerialExecution {
   readonly type: LDExecution = LDExecution.Serial;

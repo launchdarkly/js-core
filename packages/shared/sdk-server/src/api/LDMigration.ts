@@ -9,11 +9,17 @@ import { LDMigrationStage } from './data/LDMigrationStage';
  */
 export type LDMigrationOrigin = 'old' | 'new';
 
-export interface LDMigrationResult<TResult> {
-  origin: LDMigrationOrigin;
-  result?: TResult;
-  error?: Error;
-}
+export type LDMigrationResult<TResult> =
+  | {
+      success: true;
+      origin: LDMigrationOrigin;
+      result: TResult;
+    }
+  | {
+      success: false;
+      origin: LDMigrationOrigin;
+      error: any;
+    };
 
 export interface LDMigration<TMigrationRead, TMigrationWrite> {
   read(
