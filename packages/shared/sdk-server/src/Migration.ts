@@ -8,7 +8,7 @@ import {
   LDExecutionOrdering,
   LDMethodResult,
 } from './api/options/LDMigrationOptions';
-import { LDMigration, LDMigrationResult } from './api/LDMigration';
+import { LDMigration, LDMigrationReadResult, LDMigrationWriteResult } from './api/LDMigration';
 
 type MultipleReadResult<TMigrationRead> = {
   fromOld: LDMethodResult<TMigrationRead>;
@@ -102,7 +102,7 @@ export default class Migration<TMigrationRead, TMigrationWrite>
   private readonly readTable: {
     [index: string]: (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
-    ) => Promise<LDMigrationResult<TMigrationRead>>;
+    ) => Promise<LDMigrationReadResult<TMigrationRead>>;
   } = {
     [LDMigrationStage.Off]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
@@ -139,52 +139,78 @@ export default class Migration<TMigrationRead, TMigrationWrite>
   private readonly writeTable: {
     [index: string]: (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
-    ) => Promise<LDMigrationResult<TMigrationWrite>>;
+    ) => Promise<LDMigrationWriteResult<TMigrationWrite>>;
   } = {
     [LDMigrationStage.Off]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
-    ) => ({ origin: 'old', ...(await safeCall(() => config.writeOld())) }),
+    ) => ({ authoritative: { origin: 'old', ...(await safeCall(() => config.writeOld())) } }),
     [LDMigrationStage.DualWrite]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
     ) => {
       const fromOld = await safeCall(() => config.writeOld());
-      if (fromOld.success) {
-        await safeCall(() => config.writeNew());
+      if (!fromOld.success) {
+        return {
+          authoritative: { origin: 'old', ...fromOld },
+        };
       }
 
-      return { origin: 'old', ...fromOld };
+      const fromNew = await safeCall(() => config.writeNew());
+
+      return {
+        authoritative: { origin: 'old', ...fromOld },
+        nonAuthoritative: { origin: 'new', ...fromNew },
+      };
     },
     [LDMigrationStage.Shadow]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
     ) => {
       const fromOld = await safeCall(() => config.writeOld());
-      if (fromOld.success) {
-        await safeCall(() => config.writeNew());
+      if (!fromOld.success) {
+        return {
+          authoritative: { origin: 'old', ...fromOld },
+        };
       }
 
-      return { origin: 'old', ...fromOld };
+      const fromNew = await safeCall(() => config.writeNew());
+
+      return {
+        authoritative: { origin: 'old', ...fromOld },
+        nonAuthoritative: { origin: 'new', ...fromNew },
+      };
     },
     [LDMigrationStage.Live]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
     ) => {
       const fromNew = await safeCall(() => config.writeNew());
-      if (fromNew.success) {
-        await safeCall(() => config.writeOld());
+      if (!fromNew.success) {
+        return { authoritative: { origin: 'new', ...fromNew } };
       }
-      return { origin: 'new', ...fromNew };
+
+      const fromOld = await safeCall(() => config.writeOld());
+
+      return {
+        nonAuthoritative: { origin: 'old', ...fromOld },
+        authoritative: { origin: 'new', ...fromNew },
+      };
     },
     [LDMigrationStage.RampDown]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
     ) => {
       const fromNew = await safeCall(() => config.writeNew());
-      if (fromNew.success) {
-        await safeCall(() => config.writeOld());
+      if (!fromNew.success) {
+        return { authoritative: { origin: 'new', ...fromNew } };
       }
-      return { origin: 'new', ...fromNew };
+
+      const fromOld = await safeCall(() => config.writeOld());
+
+      return {
+        nonAuthoritative: { origin: 'old', ...fromOld },
+        authoritative: { origin: 'new', ...fromNew },
+      };
     },
     [LDMigrationStage.Complete]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
-    ) => ({ origin: 'new', ...(await safeCall(() => config.writeNew())) }),
+    ) => ({ authoritative: { origin: 'new', ...(await safeCall(() => config.writeNew())) } }),
   };
 
   constructor(
@@ -204,7 +230,7 @@ export default class Migration<TMigrationRead, TMigrationWrite>
     key: string,
     context: LDContext,
     defaultStage: LDMigrationStage
-  ): Promise<LDMigrationResult<TMigrationRead>> {
+  ): Promise<LDMigrationReadResult<TMigrationRead>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
     return this.readTable[stage](this.config);
   }
@@ -213,7 +239,7 @@ export default class Migration<TMigrationRead, TMigrationWrite>
     key: string,
     context: LDContext,
     defaultStage: LDMigrationStage
-  ): Promise<LDMigrationResult<TMigrationWrite>> {
+  ): Promise<LDMigrationWriteResult<TMigrationWrite>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
 
     return this.writeTable[stage](this.config);
