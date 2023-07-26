@@ -173,7 +173,7 @@ describe('given an LDClient with test data', () => {
         },
       ],
     ])(
-      'uses the correct authoritative source: %p, read: %p, write: %p.',
+      'uses the correct authoritative source: %p, read: %p, write: %j.',
       async (stage, readValue, writeMatch) => {
         const migration = new Migration<string, boolean>(client, {
           execution,
