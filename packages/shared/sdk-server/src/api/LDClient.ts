@@ -133,7 +133,7 @@ export interface LDClient {
    * @param defaultValue The default value of the flag, to be used if the value is not available
    *   from LaunchDarkly.
    * @returns
-   *   A Promise which will be resolved with the result (as an{@link LDMigrationStage}).
+   *   A Promise which will be resolved with the result (as an{@link LDMigrationDetail}).
    */
   variationMigration(
     key: string,

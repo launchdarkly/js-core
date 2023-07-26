@@ -3,12 +3,20 @@ import { LDMigrationStage } from './LDMigrationStage';
 import { LDMigrationOrigin } from '../LDMigration';
 import { LDMigrationOp, LDMigrationOpEvent } from './LDMigrationOpEvent';
 
+/**
+ * Used for reporting the state of a consistency check.
+ */
 export enum LDConsistencyCheck {
   Inconsistent = 0,
   Consistent = 1,
   NotChecked = 2,
 }
 
+/**
+ * Used to track information related to a migration operation.
+ *
+ * TKTK
+ */
 export interface LDMigrationTracker {
   op(op: LDMigrationOp): void;
   error(origin: LDMigrationOrigin): void;
@@ -17,6 +25,9 @@ export interface LDMigrationTracker {
   createEvent(): LDMigrationOpEvent | undefined;
 }
 
+/**
+ * Detailed information about a migration variation.
+ */
 export interface LDMigrationDetail {
   /**
    * The result of the flag evaluation. This will be either one of the flag's variations or
