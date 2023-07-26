@@ -112,6 +112,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
           value: this.stage,
           default: this.defaultStage,
           reason: this.reason,
+          variation: this.variation,
         },
         measurements,
       };
