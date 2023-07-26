@@ -69,15 +69,13 @@ it('includes errors if at least one is set', () => {
   tracker.error('old');
 
   const event = tracker.createEvent();
-  expect(event?.measurements).toContainEqual(
-    {
-      key: 'error',
-      values: {
-        old: 1,
-        new: 0
-      }
-    }
-  );
+  expect(event?.measurements).toContainEqual({
+    key: 'error',
+    values: {
+      old: 1,
+      new: 0,
+    },
+  });
 
   const trackerB = new MigrationOpTracker(
     'flag',
@@ -92,15 +90,13 @@ it('includes errors if at least one is set', () => {
   trackerB.error('new');
 
   const eventB = trackerB.createEvent();
-  expect(eventB?.measurements).toContainEqual(
-    {
-      key: 'error',
-      values: {
-        old: 0,
-        new: 1
-      }
-    }
-  );
+  expect(eventB?.measurements).toContainEqual({
+    key: 'error',
+    values: {
+      old: 0,
+      new: 1,
+    },
+  });
 });
 
 it('includes latency if at least one measurement exists', () => {
@@ -117,14 +113,12 @@ it('includes latency if at least one measurement exists', () => {
   tracker.latency('old', 100);
 
   const event = tracker.createEvent();
-  expect(event?.measurements).toContainEqual(
-    {
-      key: 'latency',
-      values: {
-        old: 100,
-      }
-    }
-  );
+  expect(event?.measurements).toContainEqual({
+    key: 'latency',
+    values: {
+      old: 100,
+    },
+  });
 
   const trackerB = new MigrationOpTracker(
     'flag',
@@ -139,14 +133,12 @@ it('includes latency if at least one measurement exists', () => {
   trackerB.latency('new', 150);
 
   const eventB = trackerB.createEvent();
-  expect(eventB?.measurements).toContainEqual(
-    {
-      key: 'latency',
-      values: {
-        new: 150
-      }
-    }
-  );
+  expect(eventB?.measurements).toContainEqual({
+    key: 'latency',
+    values: {
+      new: 150,
+    },
+  });
 });
 
 it('includes if the result was consistent', () => {
@@ -163,13 +155,11 @@ it('includes if the result was consistent', () => {
   tracker.consistency(LDConsistencyCheck.Consistent);
 
   const event = tracker.createEvent();
-  expect(event?.measurements).toContainEqual(
-    {
-      key: 'consistent',
-      value: 1,
-      samplingOdds: 0
-    }
-  );
+  expect(event?.measurements).toContainEqual({
+    key: 'consistent',
+    value: 1,
+    samplingOdds: 0,
+  });
 });
 
 it('includes if the result was inconsistent', () => {
@@ -186,11 +176,9 @@ it('includes if the result was inconsistent', () => {
   tracker.consistency(LDConsistencyCheck.Inconsistent);
 
   const event = tracker.createEvent();
-  expect(event?.measurements).toContainEqual(
-    {
-      key: 'consistent',
-      value: 0,
-      samplingOdds: 0
-    }
-  );
+  expect(event?.measurements).toContainEqual({
+    key: 'consistent',
+    value: 0,
+    samplingOdds: 0,
+  });
 });
