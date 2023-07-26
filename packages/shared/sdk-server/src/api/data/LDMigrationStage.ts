@@ -3,7 +3,7 @@ export enum LDMigrationStage {
   DualWrite = 'dualwrite',
   Shadow = 'shadow',
   Live = 'live',
-  Rampdown = 'rampdown',
+  RampDown = 'rampdown',
   Complete = 'complete',
 }
 

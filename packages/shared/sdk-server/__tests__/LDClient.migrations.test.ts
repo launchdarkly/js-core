@@ -71,7 +71,7 @@ describe('given an LDClient with test data', () => {
     LDMigrationStage.DualWrite,
     LDMigrationStage.Shadow,
     LDMigrationStage.Live,
-    LDMigrationStage.Rampdown,
+    LDMigrationStage.RampDown,
     LDMigrationStage.Complete,
   ])('returns the default value if the flag does not exist: default = %p', async (stage) => {
     const res = await client.variationMigration('no-flag', { key: 'test-key' }, stage);
