@@ -18,6 +18,7 @@ import {
   LDFlagsState,
   LDMigrationStage,
   IsMigrationStage,
+  LDMigrationDetail,
 } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
@@ -271,18 +272,24 @@ export default class LDClientImpl implements LDClient {
   async variationMigration(
     key: string,
     context: LDContext,
-    defaultValue: LDMigrationStage,
-    callback?: (err: any, res: LDMigrationStage) => void
-  ): Promise<LDMigrationStage> {
-    const stringValue = await this.variation(key, context, defaultValue as string);
-    if (!IsMigrationStage(stringValue)) {
+    defaultValue: LDMigrationStage
+  ): Promise<LDMigrationDetail> {
+    const detail = await this.variationDetail(key, context, defaultValue as string);
+    if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
-      callback?.(error, defaultValue);
-      return defaultValue;
+      return {
+        value: defaultValue,
+        reason: {
+          kind: 'ERROR',
+          errorKind: 'WRONG_TYPE',
+        },
+      };
     }
-    callback?.(null, stringValue as LDMigrationStage);
-    return stringValue as LDMigrationStage;
+    return {
+      ...detail,
+      value: detail.value as LDMigrationStage,
+    };
   }
 
   async allFlagsState(
