@@ -47,6 +47,7 @@ import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
+import MigrationOpTracker from './MigrationOpTracker';
 
 enum InitState {
   Initializing,
@@ -274,21 +275,33 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: LDMigrationStage
   ): Promise<LDMigrationDetail> {
+    const convertedContext = Context.fromLDContext(context);
     const detail = await this.variationDetail(key, context, defaultValue as string);
     if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
+      const reason = {
+        kind: 'ERROR',
+        errorKind: 'WRONG_TYPE',
+      };
       return {
         value: defaultValue,
-        reason: {
-          kind: 'ERROR',
-          errorKind: 'WRONG_TYPE',
-        },
+        reason,
+        tracker: new MigrationOpTracker(key, convertedContext, defaultValue, defaultValue, reason),
       };
     }
     return {
       ...detail,
       value: detail.value as LDMigrationStage,
+      tracker: new MigrationOpTracker(
+        key,
+        convertedContext,
+        defaultValue,
+        defaultValue,
+        detail.reason,
+        // Can be null for compatibility reasons.
+        detail.variationIndex === null ? undefined : detail.variationIndex
+      ),
     };
   }
 
