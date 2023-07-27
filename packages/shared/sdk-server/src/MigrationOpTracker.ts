@@ -40,28 +40,14 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     this.operation = op;
   }
 
-  /**
-   * Report that an error happened in either the 'new' or 'old' implementation.
-   *
-   * This just tracks errors that occur, not the details of the errors.
-   */
   error(origin: LDMigrationOrigin) {
     this.errors[origin] = true;
   }
 
-  /**
-   * Report if a consistency check was consistent, inconsistent, or not checked.
-   */
   consistency(result: LDConsistencyCheck) {
     this.consistencyCheck = result;
   }
 
-  /**
-   * Report the latency for an implementation.
-   *
-   * @param origin If the latency is for the 'old' or 'new' implementation.
-   * @param value The latency of the operation in milliseconds (TODO is it MS?).
-   */
   latency(origin: LDMigrationOrigin, value: number) {
     this.latencyMeasurement[origin] = value;
   }
