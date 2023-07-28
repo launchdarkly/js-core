@@ -12,6 +12,13 @@ type LaunchDarklyProviderProps = {
   children: ReactNode;
 };
 
+/**
+ * This returns a client-side component hence the "use client"
+ * above is necessary.
+ *
+ * See the nextjs docs for more info on the "use client" directive:
+ * https://nextjs.org/docs/getting-started/react-essentials#the-use-client-directive
+ */
 export default function LaunchDarklyProvider({
   envId,
   context,
