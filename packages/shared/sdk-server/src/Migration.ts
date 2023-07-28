@@ -1,5 +1,5 @@
 import { LDContext } from '@launchdarkly/js-sdk-common';
-import { LDClient, LDMigrationStage } from './api';
+import { LDClient, LDConsistencyCheck, LDMigrationStage, LDMigrationTracker } from './api';
 import {
   LDMigrationOptions,
   LDSerialExecution,
@@ -8,7 +8,12 @@ import {
   LDExecutionOrdering,
   LDMethodResult,
 } from './api/options/LDMigrationOptions';
-import { LDMigration, LDMigrationReadResult, LDMigrationWriteResult } from './api/LDMigration';
+import {
+  LDMigration,
+  LDMigrationOrigin,
+  LDMigrationReadResult,
+  LDMigrationWriteResult,
+} from './api/LDMigration';
 
 type MultipleReadResult<TMigrationRead> = {
   fromOld: LDMethodResult<TMigrationRead>;
@@ -113,18 +118,24 @@ export default class Migration<TMigrationRead, TMigrationWrite>
     [LDMigrationStage.Shadow]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
     ) => {
-      const { fromOld } = await read<TMigrationRead, TMigrationWrite>(config, this.execution);
+      const { fromOld, fromNew } = await read<TMigrationRead, TMigrationWrite>(
+        config,
+        this.execution
+      );
 
-      // TODO: Consistency check.
+      this.trackConsistency(fromOld, fromNew);
 
       return { origin: 'old', ...fromOld };
     },
     [LDMigrationStage.Live]: async (
       config: LDMigrationOptions<TMigrationRead, TMigrationWrite>
     ) => {
-      const { fromNew } = await read<TMigrationRead, TMigrationWrite>(config, this.execution);
+      const { fromOld, fromNew } = await read<TMigrationRead, TMigrationWrite>(
+        config,
+        this.execution
+      );
 
-      // TODO: Consistency check.
+      this.trackConsistency(fromOld, fromNew);
 
       return { origin: 'new', ...fromNew };
     },
@@ -215,6 +226,7 @@ export default class Migration<TMigrationRead, TMigrationWrite>
 
   constructor(
     private readonly client: LDClient,
+    private readonly tracker: LDMigrationTracker,
     private readonly config:
       | LDMigrationOptions<TMigrationRead, TMigrationWrite>
       | LDMigrationOptions<TMigrationRead, TMigrationWrite>
@@ -232,7 +244,9 @@ export default class Migration<TMigrationRead, TMigrationWrite>
     defaultStage: LDMigrationStage
   ): Promise<LDMigrationReadResult<TMigrationRead>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
-    return this.readTable[stage.value](this.config);
+    const res = await this.readTable[stage.value](this.config);
+    this.trackReadError(res);
+    return res;
   }
 
   async write(
@@ -241,7 +255,37 @@ export default class Migration<TMigrationRead, TMigrationWrite>
     defaultStage: LDMigrationStage
   ): Promise<LDMigrationWriteResult<TMigrationWrite>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
+    const res = await this.writeTable[stage.value](this.config);
+    this.trackWriteError(res);
+    return res;
+  }
 
-    return this.writeTable[stage.value](this.config);
+  private trackReadError(res: LDMigrationReadResult<TMigrationRead>) {
+    if (!res.success && this.config.errorTracking) {
+      this.tracker.error(res.origin);
+    }
+  }
+
+  private trackWriteError(res: LDMigrationWriteResult<TMigrationWrite>) {
+    if (!res.authoritative.success) {
+      this.tracker.error(res.authoritative.origin);
+    }
+    if (res.nonAuthoritative && !res.nonAuthoritative.success) {
+      this.tracker.error(res.nonAuthoritative.origin);
+    }
+  }
+
+  private trackConsistency(
+    oldValue: LDMethodResult<TMigrationRead>,
+    newValue: LDMethodResult<TMigrationRead>
+  ) {
+    if (this.config.check) {
+      if (oldValue.success && newValue.success) {
+        const res = this.config.check(oldValue.result, newValue.result);
+        this.tracker.consistency(
+          res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent
+        );
+      }
+    }
   }
 }

@@ -2,7 +2,7 @@ import { LDContext, LDEvaluationDetail, LDFlagValue } from '@launchdarkly/js-sdk
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDMigrationStage } from './data/LDMigrationStage';
-import { LDMigrationDetail } from './data';
+import { LDMigrationDetail, LDMigrationOpEvent } from './data';
 
 /**
  * The LaunchDarkly SDK client object.
@@ -217,6 +217,13 @@ export interface LDClient {
    *   will also be returned as part of the custom event for Data Export.
    */
   track(key: string, context: LDContext, data?: any, metricValue?: number): void;
+
+  /**
+   * Track the details of a migration.
+   *
+   * @param event Event containing information about the migration operation.
+   */
+  trackMigration(event: LDMigrationOpEvent): void;
 
   /**
    * Identifies a context to LaunchDarkly.

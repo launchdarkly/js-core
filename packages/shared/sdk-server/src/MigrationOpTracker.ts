@@ -29,7 +29,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
 
   constructor(
     private readonly flagKey: string,
-    private readonly context: Context,
+    private readonly contextKeys: Record<string, string>,
     private readonly defaultStage: LDMigrationStage,
     private readonly stage: LDMigrationStage,
     private readonly reason: LDEvaluationReason,
@@ -53,7 +53,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   }
 
   createEvent(): LDMigrationOpEvent | undefined {
-    if (this.operation && this.context.valid) {
+    if (this.operation && Object.keys(this.contextKeys).length) {
       const measurements: LDMigrationMeasurement[] = [];
 
       this.populateConsistency(measurements);
@@ -64,7 +64,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
         kind: 'migration_op',
         operation: this.operation,
         creationDate: Date.now(),
-        contextKeys: this.context.kindsAndKeys,
+        contextKeys: this.contextKeys,
         evaluation: {
           key: this.flagKey,
           value: this.stage,

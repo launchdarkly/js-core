@@ -5,13 +5,27 @@ import {
   LDExecutionOrdering,
   LDLatencyTracking,
   LDMigrationStage,
+  LDMigrationTracker,
   LDSerialExecution,
 } from '../src';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
+import MigrationOpTracker from '../src/MigrationOpTracker';
 import { TestData } from '../src/integrations';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
+
+function basicTracker(): LDMigrationTracker {
+  return new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    }
+  );
+}
 
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
@@ -175,7 +189,7 @@ describe('given an LDClient with test data', () => {
     ])(
       'uses the correct authoritative source: %p, read: %p, write: %j.',
       async (stage, readValue, writeMatch) => {
-        const migration = new Migration<string, boolean>(client, {
+        const migration = new Migration<string, boolean>(client, basicTracker(), {
           execution,
           latencyTracking: LDLatencyTracking.Disabled,
           errorTracking: LDErrorTracking.Disabled,
@@ -214,7 +228,7 @@ describe('given an LDClient with test data', () => {
     [LDMigrationStage.RampDown, 'new'],
     [LDMigrationStage.Complete, 'new'],
   ])('handles read errors for stage: %p', async (stage, authority) => {
-    const migration = new Migration<string, boolean>(client, {
+    const migration = new Migration<string, boolean>(client, basicTracker(), {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -247,7 +261,7 @@ describe('given an LDClient with test data', () => {
     [LDMigrationStage.RampDown, 'new'],
     [LDMigrationStage.Complete, 'new'],
   ])('handles exceptions for stage: %p', async (stage, authority) => {
-    const migration = new Migration<string, boolean>(client, {
+    const migration = new Migration<string, boolean>(client, basicTracker(), {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -343,7 +357,7 @@ describe('given an LDClient with test data', () => {
       let oldWriteCalled = false;
       let newWriteCalled = false;
 
-      const migration = new Migration<string, boolean>(client, {
+      const migration = new Migration<string, boolean>(client, basicTracker(), {
         execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
         latencyTracking: LDLatencyTracking.Disabled,
         errorTracking: LDErrorTracking.Disabled,
@@ -385,7 +399,7 @@ describe('given an LDClient with test data', () => {
     let oldWriteCalled = false;
     let newWriteCalled = false;
 
-    const migration = new Migration<string, boolean>(client, {
+    const migration = new Migration<string, boolean>(client, basicTracker(), {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -418,7 +432,7 @@ describe('given an LDClient with test data', () => {
   });
 
   it('handles the case where the authoritative write succeeds, but the non-authoritative fails', async () => {
-    const migrationA = new Migration<string, boolean>(client, {
+    const migrationA = new Migration<string, boolean>(client, basicTracker(), {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -465,7 +479,7 @@ describe('given an LDClient with test data', () => {
       },
     });
 
-    const migrationB = new Migration<string, boolean>(client, {
+    const migrationB = new Migration<string, boolean>(client, basicTracker(), {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,

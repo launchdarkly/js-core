@@ -19,6 +19,7 @@ import {
   LDMigrationStage,
   IsMigrationStage,
   LDMigrationDetail,
+  LDMigrationOpEvent,
 } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
@@ -277,6 +278,7 @@ export default class LDClientImpl implements LDClient {
   ): Promise<LDMigrationDetail> {
     const convertedContext = Context.fromLDContext(context);
     const detail = await this.variationDetail(key, context, defaultValue as string);
+    const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
     if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
@@ -287,7 +289,7 @@ export default class LDClientImpl implements LDClient {
       return {
         value: defaultValue,
         reason,
-        tracker: new MigrationOpTracker(key, convertedContext, defaultValue, defaultValue, reason),
+        tracker: new MigrationOpTracker(key, contextKeys, defaultValue, defaultValue, reason),
       };
     }
     return {
@@ -295,7 +297,7 @@ export default class LDClientImpl implements LDClient {
       value: detail.value as LDMigrationStage,
       tracker: new MigrationOpTracker(
         key,
-        convertedContext,
+        contextKeys,
         defaultValue,
         defaultValue,
         detail.reason,
@@ -408,6 +410,12 @@ export default class LDClientImpl implements LDClient {
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue)
     );
+  }
+
+  trackMigration(event: LDMigrationOpEvent): void {
+    // Validate event content.
+    // Transform into InputMigrationEvent.
+    // this.eventProcessor.sendEvent(event);
   }
 
   identify(context: LDContext): void {
