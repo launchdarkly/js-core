@@ -10,7 +10,7 @@ export default class SummaryCounter {
     public value: any,
     defValue: any,
     public version?: number,
-    public variation?: number
+    public variation?: number,
   ) {
     this.default = defValue;
   }

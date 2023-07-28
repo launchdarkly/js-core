@@ -1,4 +1,5 @@
 import { DynamoDBClient, paginateScan, WriteRequest } from '@aws-sdk/client-dynamodb';
+
 import DynamoDBClientState from '../src/DynamoDBClientState';
 
 export default async function clearPrefix(table: string, prefix?: string) {
@@ -20,7 +21,7 @@ export default async function clearPrefix(table: string, prefix?: string) {
     { client },
     {
       TableName: table,
-    }
+    },
   )) {
     page?.Items?.forEach((item) => {
       if (item?.namespace?.S?.startsWith(actualPrefix)) {

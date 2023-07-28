@@ -30,8 +30,8 @@ describe.each([
           '/~3': true,
           '': true,
           _meta: {},
-        })
-      )
+        }),
+      ),
     ).toBeUndefined();
   });
 });
@@ -77,6 +77,6 @@ describe.each([
 
 it('should not allow indexing an array', () => {
   expect(
-    new AttributeReference('/foo/0').get(AsContextCommon({ foo: ['bar', 'baz'] }))
+    new AttributeReference('/foo/0').get(AsContextCommon({ foo: ['bar', 'baz'] })),
   ).toBeUndefined();
 });

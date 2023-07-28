@@ -12,6 +12,6 @@ export interface Queries {
   getFlag(key: string): Promise<Flag | undefined>;
   getSegment(key: string): Promise<Segment | undefined>;
   getBigSegmentsMembership(
-    userKey: string
+    userKey: string,
   ): Promise<[BigSegmentStoreMembership | null, string] | undefined>;
 }

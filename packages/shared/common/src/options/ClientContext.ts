@@ -1,4 +1,4 @@
-import { LDLogger, LDClientContext, Platform } from '../api';
+import { LDClientContext, LDLogger, Platform } from '../api';
 import ServiceEndpoints from './ServiceEndpoints';
 
 /**
@@ -38,7 +38,7 @@ export default class ClientContext implements LDClientContext {
       offline: boolean;
       serviceEndpoints: ServiceEndpoints;
     },
-    public readonly platform: Platform
+    public readonly platform: Platform,
   ) {
     this.basicConfiguration = {
       logger: configuration.logger,

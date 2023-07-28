@@ -24,7 +24,7 @@ describe('given an LDClient with test data', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
       },
-      makeCallbacks(true)
+      makeCallbacks(true),
     );
 
     await client.waitForInitialization();
@@ -156,7 +156,7 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      makeCallbacks(true)
+      makeCallbacks(true),
     );
   });
 
@@ -220,7 +220,7 @@ describe('given a client and store that are uninitialized', () => {
         sendEvents: false,
         featureStore: store,
       },
-      makeCallbacks(true)
+      makeCallbacks(true),
     );
   });
 
@@ -269,7 +269,7 @@ describe('given a client that is un-initialized and store that is initialized', 
         sendEvents: false,
         featureStore: store,
       },
-      makeCallbacks(true)
+      makeCallbacks(true),
     );
   });
 

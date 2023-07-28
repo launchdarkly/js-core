@@ -1,6 +1,7 @@
 import { AttributeReference, TypeValidators } from '@launchdarkly/js-sdk-common';
-import { variationForBoolean } from './booleanVariation';
+
 import { Clause } from '../../evaluation/data/Clause';
+import { variationForBoolean } from './booleanVariation';
 
 /**
  * A builder for feature flag rules to be used with {@link TestDataFlagBuilder}.
@@ -30,7 +31,7 @@ export default class TestDataRuleBuilder<BuilderType> {
       booleanFlag: () => BuilderType;
     },
     clauses?: Clause[],
-    variation?: number
+    variation?: number,
   ) {
     if (clauses) {
       this.clauses = [...clauses];

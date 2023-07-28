@@ -11,7 +11,7 @@ export default class InputCustomEvent {
     context: Context,
     public readonly key: string,
     public readonly data?: any,
-    public readonly metricValue?: number
+    public readonly metricValue?: number,
   ) {
     this.creationDate = Date.now();
     this.context = context;

@@ -1,5 +1,7 @@
-import { integrations } from '@launchdarkly/js-server-sdk-common';
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
+
+import { integrations } from '@launchdarkly/js-server-sdk-common';
+
 import LDClientNode from '../src/LDClientNode';
 
 const flag1Key = 'flag1';

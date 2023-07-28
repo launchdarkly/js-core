@@ -11,7 +11,7 @@ export default class DependencyTracker {
   updateDependenciesFrom(
     namespace: string,
     key: string,
-    newDependencySet: NamespacedDataSet<boolean>
+    newDependencySet: NamespacedDataSet<boolean>,
   ) {
     const oldDependencySet = this.dependenciesFrom.get(namespace, key);
     oldDependencySet?.enumerate((depNs, depKey) => {
@@ -33,7 +33,7 @@ export default class DependencyTracker {
   updateModifiedItems(
     inDependencySet: NamespacedDataSet<boolean>,
     modifiedNamespace: string,
-    modifiedKey: string
+    modifiedKey: string,
   ) {
     if (!inDependencySet.get(modifiedNamespace, modifiedKey)) {
       inDependencySet.set(modifiedNamespace, modifiedKey, true);

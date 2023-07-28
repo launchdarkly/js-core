@@ -7,7 +7,7 @@ export interface DefaultHeaderOptions {
 export default function defaultHeaders(
   sdkKey: string,
   config: DefaultHeaderOptions,
-  info: Info
+  info: Info,
 ): { [key: string]: string } {
   const sdkData = info.sdkData();
   const headers: { [key: string]: string } = {

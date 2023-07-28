@@ -17,8 +17,8 @@ RedisCore: Implements persistent data store operations using Redis.
 
 RedisClientState: Manages the Redis connection and exposes the Redis client to the RedisCore/RedisBigSegmentStore.
 
-
 ## Architecture Diagram
+
 ```mermaid
 classDiagram
 RedisFeatureStore --|> LDFeatureStore : Implements

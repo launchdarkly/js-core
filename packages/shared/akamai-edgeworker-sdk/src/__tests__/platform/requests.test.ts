@@ -1,4 +1,5 @@
 import { EventSourceInitDict } from '@launchdarkly/js-server-sdk-common';
+
 import EdgeRequests from '../../platform/requests';
 
 const TEXT_RESPONSE = '';

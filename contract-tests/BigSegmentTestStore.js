@@ -16,14 +16,16 @@ export default class BigSegmentTestStore {
   }
 
   async getUserMembership(contextHash) {
-    const data = await got.post(`${this._callbackUri}/getMembership`, {
-      retry: { limit: 0 },
-      json: {
-        contextHash
-      }
-    }).json();
+    const data = await got
+      .post(`${this._callbackUri}/getMembership`, {
+        retry: { limit: 0 },
+        json: {
+          contextHash,
+        },
+      })
+      .json();
     return data?.values;
   }
 
-  close() { }
+  close() {}
 }

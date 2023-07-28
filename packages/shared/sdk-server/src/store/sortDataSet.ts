@@ -1,10 +1,10 @@
-import { Flag } from '../evaluation/data/Flag';
-import { PersistentStoreDataKindInternal, persistentStoreKinds } from './persistentStoreKinds';
-import { LDFeatureStoreDataStorage, LDFeatureStoreKindData } from '../api/subsystems';
 import KeyedItem from '../api/interfaces/persistent_store/KeyedItem';
+import { KindKeyedStore } from '../api/interfaces/persistent_store/PersistentDataStore';
 import PersistentStoreDataKind from '../api/interfaces/persistent_store/PersistentStoreDataKind';
 import SerializedItemDescriptor from '../api/interfaces/persistent_store/SerializedItemDescriptor';
-import { KindKeyedStore } from '../api/interfaces/persistent_store/PersistentDataStore';
+import { LDFeatureStoreDataStorage, LDFeatureStoreKindData } from '../api/subsystems';
+import { Flag } from '../evaluation/data/Flag';
+import { PersistentStoreDataKindInternal, persistentStoreKinds } from './persistentStoreKinds';
 
 function getDependencyKeys(flag: Flag): string[] {
   if (!flag.prerequisites || !flag.prerequisites.length) {
@@ -19,7 +19,7 @@ function getDependencyKeys(flag: Flag): string[] {
  */
 function topologicalSort(
   kind: PersistentStoreDataKindInternal,
-  itemsMap: LDFeatureStoreKindData
+  itemsMap: LDFeatureStoreKindData,
 ): KeyedItem<string, SerializedItemDescriptor>[] {
   const sortedItems: KeyedItem<string, SerializedItemDescriptor>[] = [];
   const unvisitedItems: Set<string> = new Set(Object.keys(itemsMap));
@@ -67,7 +67,7 @@ function topologicalSort(
  * if there are no flags.
  */
 export default function sortDataSet(
-  dataMap: LDFeatureStoreDataStorage
+  dataMap: LDFeatureStoreDataStorage,
 ): KindKeyedStore<PersistentStoreDataKind> {
   // We use a different type for collecting the results so that we have access
   // to the serialization methods and priorities.
