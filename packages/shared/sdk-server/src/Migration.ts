@@ -66,77 +66,65 @@ export default class Migration<
 
   private readonly readTable: {
     [index: string]: (
-      config: LDMigrationOptions<
-        TMigrationRead,
-        TMigrationWrite,
-        TMigrationReadInput,
-        TMigrationWriteInput
-      >,
       context: MigrationContext<TMigrationReadInput>
     ) => Promise<LDMigrationReadResult<TMigrationRead>>;
   } = {
-    [LDMigrationStage.Off]: async (config, context) => ({
+    [LDMigrationStage.Off]: async (context) => ({
       origin: 'old',
       ...(await this.trackLatency(context.tracker, 'old', () =>
-        safeCall(() => config.readOld(context.payload))
+        safeCall(() => this.config.readOld(context.payload))
       )),
     }),
-    [LDMigrationStage.DualWrite]: async (config, context) => ({
+    [LDMigrationStage.DualWrite]: async (context) => ({
       origin: 'old',
       ...(await this.trackLatency(context.tracker, 'old', () =>
-        safeCall(() => config.readOld(context.payload))
+        safeCall(() => this.config.readOld(context.payload))
       )),
     }),
-    [LDMigrationStage.Shadow]: async (config, context) => {
+    [LDMigrationStage.Shadow]: async (context) => {
       const { fromOld, fromNew } = await this.doRead(context);
 
       this.trackConsistency(context.tracker, fromOld, fromNew);
 
       return { origin: 'old', ...fromOld };
     },
-    [LDMigrationStage.Live]: async (config, context) => {
+    [LDMigrationStage.Live]: async (context) => {
       const { fromNew, fromOld } = await this.doRead(context);
 
       this.trackConsistency(context.tracker, fromOld, fromNew);
 
       return { origin: 'new', ...fromNew };
     },
-    [LDMigrationStage.RampDown]: async (config, context) => ({
+    [LDMigrationStage.RampDown]: async (context) => ({
       origin: 'new',
       ...(await this.trackLatency(context.tracker, 'new', () =>
-        safeCall(() => config.readNew(context.payload))
+        safeCall(() => this.config.readNew(context.payload))
       )),
     }),
-    [LDMigrationStage.Complete]: async (config, context) => ({
+    [LDMigrationStage.Complete]: async (context) => ({
       origin: 'new',
       ...(await this.trackLatency(context.tracker, 'new', () =>
-        safeCall(() => config.readNew(context.payload))
+        safeCall(() => this.config.readNew(context.payload))
       )),
     }),
   };
 
   private readonly writeTable: {
     [index: string]: (
-      config: LDMigrationOptions<
-        TMigrationRead,
-        TMigrationWrite,
-        TMigrationReadInput,
-        TMigrationWriteInput
-      >,
       context: MigrationContext<TMigrationWriteInput>
     ) => Promise<LDMigrationWriteResult<TMigrationWrite>>;
   } = {
-    [LDMigrationStage.Off]: async (config, context) => ({
+    [LDMigrationStage.Off]: async (context) => ({
       authoritative: {
         origin: 'old',
         ...(await this.trackLatency(context.tracker, 'old', () =>
-          safeCall(() => config.writeOld(context.payload))
+          safeCall(() => this.config.writeOld(context.payload))
         )),
       },
     }),
-    [LDMigrationStage.DualWrite]: async (config, context) => {
+    [LDMigrationStage.DualWrite]: async (context) => {
       const fromOld = await this.trackLatency(context.tracker, 'old', () =>
-        safeCall(() => config.writeOld(context.payload))
+        safeCall(() => this.config.writeOld(context.payload))
       );
       if (!fromOld.success) {
         return {
@@ -145,7 +133,7 @@ export default class Migration<
       }
 
       const fromNew = await this.trackLatency(context.tracker, 'new', () =>
-        safeCall(() => config.writeNew(context.payload))
+        safeCall(() => this.config.writeNew(context.payload))
       );
 
       return {
@@ -153,9 +141,9 @@ export default class Migration<
         nonAuthoritative: { origin: 'new', ...fromNew },
       };
     },
-    [LDMigrationStage.Shadow]: async (config, context) => {
+    [LDMigrationStage.Shadow]: async (context) => {
       const fromOld = await this.trackLatency(context.tracker, 'old', () =>
-        safeCall(() => config.writeOld(context.payload))
+        safeCall(() => this.config.writeOld(context.payload))
       );
       if (!fromOld.success) {
         return {
@@ -164,7 +152,7 @@ export default class Migration<
       }
 
       const fromNew = await this.trackLatency(context.tracker, 'new', () =>
-        safeCall(() => config.writeNew(context.payload))
+        safeCall(() => this.config.writeNew(context.payload))
       );
 
       return {
@@ -172,16 +160,16 @@ export default class Migration<
         nonAuthoritative: { origin: 'new', ...fromNew },
       };
     },
-    [LDMigrationStage.Live]: async (config, context) => {
+    [LDMigrationStage.Live]: async (context) => {
       const fromNew = await this.trackLatency(context.tracker, 'new', () =>
-        safeCall(() => config.writeNew(context.payload))
+        safeCall(() => this.config.writeNew(context.payload))
       );
       if (!fromNew.success) {
         return { authoritative: { origin: 'new', ...fromNew } };
       }
 
       const fromOld = await this.trackLatency(context.tracker, 'old', () =>
-        safeCall(() => config.writeOld(context.payload))
+        safeCall(() => this.config.writeOld(context.payload))
       );
 
       return {
@@ -189,16 +177,16 @@ export default class Migration<
         authoritative: { origin: 'new', ...fromNew },
       };
     },
-    [LDMigrationStage.RampDown]: async (config, context) => {
+    [LDMigrationStage.RampDown]: async (context) => {
       const fromNew = await this.trackLatency(context.tracker, 'new', () =>
-        safeCall(() => config.writeNew(context.payload))
+        safeCall(() => this.config.writeNew(context.payload))
       );
       if (!fromNew.success) {
         return { authoritative: { origin: 'new', ...fromNew } };
       }
 
       const fromOld = await this.trackLatency(context.tracker, 'old', () =>
-        safeCall(() => config.writeOld(context.payload))
+        safeCall(() => this.config.writeOld(context.payload))
       );
 
       return {
@@ -206,11 +194,11 @@ export default class Migration<
         authoritative: { origin: 'new', ...fromNew },
       };
     },
-    [LDMigrationStage.Complete]: async (config, context) => ({
+    [LDMigrationStage.Complete]: async (context) => ({
       authoritative: {
         origin: 'new',
         ...(await this.trackLatency(context.tracker, 'new', () =>
-          safeCall(() => config.writeNew(context.payload))
+          safeCall(() => this.config.writeNew(context.payload))
         )),
       },
     }),
@@ -225,8 +213,8 @@ export default class Migration<
       TMigrationWriteInput
     >
   ) {
-    if (config.execution) {
-      this.execution = config.execution;
+    if (this.config.execution) {
+      this.execution = this.config.execution;
     } else {
       this.execution = new LDConcurrentExecution();
     }
@@ -239,7 +227,7 @@ export default class Migration<
     payload?: TMigrationReadInput
   ): Promise<LDMigrationReadResult<TMigrationRead>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
-    const res = await this.readTable[stage.value](this.config, {
+    const res = await this.readTable[stage.value]({
       payload,
       tracker: stage.tracker,
     });
@@ -255,7 +243,7 @@ export default class Migration<
     payload?: TMigrationWriteInput
   ): Promise<LDMigrationWriteResult<TMigrationWrite>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
-    const res = await this.writeTable[stage.value](this.config, {
+    const res = await this.writeTable[stage.value]({
       payload,
       tracker: stage.tracker,
     });
@@ -337,20 +325,28 @@ export default class Migration<
 
     // Effectively flip a coin and do it on one order or the other.
     if (randomIndex === 0) {
-      const fromOld = await safeCall(() => this.config.readOld(context.payload));
-      const fromNew = await safeCall(() => this.config.readNew(context.payload));
+      const fromOld = await this.trackLatency(context.tracker, 'old', () =>
+        safeCall(() => this.config.readOld(context.payload))
+      );
+      const fromNew = await this.trackLatency(context.tracker, 'new', () =>
+        safeCall(() => this.config.readNew(context.payload))
+      );
       return { fromOld, fromNew };
     }
-    const fromNew = await safeCall(() => this.config.readNew(context.payload));
-    const fromOld = await safeCall(() => this.config.readOld(context.payload));
+    const fromNew = await this.trackLatency(context.tracker, 'new', () =>
+      safeCall(() => this.config.readNew(context.payload))
+    );
+    const fromOld = await this.trackLatency(context.tracker, 'old', () =>
+      safeCall(() => this.config.readOld(context.payload))
+    );
     return { fromOld, fromNew };
   }
 
   private async doRead(
     context: MigrationContext<TMigrationReadInput>
   ): Promise<MultipleReadResult<TMigrationRead>> {
-    if (this.config.execution?.type === LDExecution.Serial) {
-      const serial = this.config.execution as LDSerialExecution;
+    if (this.execution?.type === LDExecution.Serial) {
+      const serial = this.execution as LDSerialExecution;
       if (serial.ordering === LDExecutionOrdering.Fixed) {
         return this.readSequentialFixed(context);
       }
