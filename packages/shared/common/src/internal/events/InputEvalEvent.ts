@@ -24,6 +24,8 @@ export default class InputEvalEvent {
 
   public readonly version?: number;
 
+  public readonly excludeFromSummaries?: boolean;
+
   constructor(
     withReasons: boolean,
     context: Context,
@@ -35,7 +37,8 @@ export default class InputEvalEvent {
     trackEvents?: boolean,
     prereqOf?: string,
     reason?: LDEvaluationReason,
-    debugEventsUntilDate?: number
+    debugEventsUntilDate?: number,
+    excludeFromSummaries?: boolean
   ) {
     this.creationDate = Date.now();
     this.context = context;
@@ -65,6 +68,10 @@ export default class InputEvalEvent {
 
     if (debugEventsUntilDate !== undefined) {
       this.debugEventsUntilDate = debugEventsUntilDate;
+    }
+
+    if (excludeFromSummaries !== undefined) {
+      this.excludeFromSummaries = excludeFromSummaries;
     }
   }
 }

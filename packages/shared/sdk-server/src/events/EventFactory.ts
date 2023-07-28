@@ -28,7 +28,8 @@ export default class EventFactory {
       flag.trackEvents || addExperimentData,
       prereqOfFlag?.key,
       this.withReasons || addExperimentData ? detail.reason : undefined,
-      flag.debugEventsUntilDate
+      flag.debugEventsUntilDate,
+      flag.excludeFromSummaries
     );
   }
 
