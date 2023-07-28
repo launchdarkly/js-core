@@ -8,12 +8,11 @@
  *
  * @packageDocumentation
  */
-
 import {
+  EdgeProvider,
   init as initEdge,
   LDClient,
   LDOptions,
-  EdgeProvider,
 } from '@launchdarkly/akamai-edgeworker-sdk-common';
 
 export * from '@launchdarkly/akamai-edgeworker-sdk-common';

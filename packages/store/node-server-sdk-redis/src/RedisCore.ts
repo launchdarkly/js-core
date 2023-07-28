@@ -1,4 +1,5 @@
-import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
+import { interfaces, LDLogger } from '@launchdarkly/node-server-sdk';
+
 import RedisClientState from './RedisClientState';
 
 /**
@@ -25,13 +26,16 @@ import RedisClientState from './RedisClientState';
 export default class RedisCore implements interfaces.PersistentDataStore {
   private initedKey: string;
 
-  constructor(private readonly state: RedisClientState, private readonly logger?: LDLogger) {
+  constructor(
+    private readonly state: RedisClientState,
+    private readonly logger?: LDLogger,
+  ) {
     this.initedKey = this.state.prefixedKey('$inited');
   }
 
   init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
-    callback: () => void
+    callback: () => void,
   ): void {
     const multi = this.state.getClient().multi();
     allData.forEach((keyedItems) => {
@@ -69,7 +73,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   get(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void
+    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
   ): void {
     if (!this.state.isConnected() && !this.state.isInitialConnection()) {
       this.logger?.warn(`Attempted to fetch key '${key}' while Redis connection is down`);
@@ -98,8 +102,8 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   getAll(
     kind: interfaces.PersistentStoreDataKind,
     callback: (
-      descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined
-    ) => void
+      descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined,
+    ) => void,
   ): void {
     if (!this.state.isConnected() && !this.state.isInitialConnection()) {
       this.logger?.warn('Attempted to fetch all keys while Redis connection is down');
@@ -131,8 +135,8 @@ export default class RedisCore implements interfaces.PersistentDataStore {
     descriptor: interfaces.SerializedItemDescriptor,
     callback: (
       err?: Error | undefined,
-      updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined
-    ) => void
+      updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
+    ) => void,
   ): void {
     // The persistent store wrapper manages interactions with a queue, so we can use watch like
     // this without concerns for overlapping transactions.
@@ -161,7 +165,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
         multi.hset(
           this.state.prefixedKey(kind.namespace),
           key,
-          JSON.stringify({ version: descriptor.version, deleted: true })
+          JSON.stringify({ version: descriptor.version, deleted: true }),
         );
       } else if (descriptor.serializedItem) {
         multi.hset(this.state.prefixedKey(kind.namespace), key, descriptor.serializedItem);

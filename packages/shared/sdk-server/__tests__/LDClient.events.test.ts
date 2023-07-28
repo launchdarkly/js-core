@@ -1,4 +1,5 @@
 import { Context, internal } from '@launchdarkly/js-sdk-common';
+
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import basicPlatform from './evaluation/mocks/platform';
@@ -28,7 +29,7 @@ describe('given a client with mock event processor', () => {
       {
         updateProcessor: td.getFactory(),
       },
-      makeCallbacks(false)
+      makeCallbacks(false),
     );
     await client.waitForInitialization();
   });

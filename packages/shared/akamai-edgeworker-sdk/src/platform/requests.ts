@@ -4,8 +4,8 @@ import type {
   EventSource,
   EventSourceInitDict,
   Options,
-  Response,
   Requests,
+  Response,
 } from '@launchdarkly/js-server-sdk-common';
 
 class NoopResponse implements Response {

@@ -2,9 +2,9 @@
  * The common SDK has a number of bucketing tests, but it doesn't have a real hashing algorithm.
  * These tests exercise the hashing from the node platform.
  */
-
 import { integrations } from '@launchdarkly/js-server-sdk-common';
 import { TestData } from '@launchdarkly/js-server-sdk-common/dist/integrations';
+
 import { LDClient } from '../src';
 import LDClientNode from '../src/LDClientNode';
 

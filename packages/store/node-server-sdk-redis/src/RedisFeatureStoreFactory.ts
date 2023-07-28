@@ -1,6 +1,7 @@
 import { LDClientContext } from '@launchdarkly/node-server-sdk';
-import RedisFeatureStore from './RedisFeatureStore';
+
 import LDRedisOptions from './LDRedisOptions';
+import RedisFeatureStore from './RedisFeatureStore';
 
 /**
  * Configures a feature store backed by a Redis instance.

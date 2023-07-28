@@ -1,6 +1,6 @@
 'use client';
-// The "use client" is necessary here because the LaunchDarkly React SDK returns a client-side component
 
+// The "use client" is necessary here because the LaunchDarkly React SDK returns a client-side component
 import { LDContext, LDFlagSet } from 'launchdarkly-js-client-sdk';
 import { withLDProvider } from 'launchdarkly-react-client-sdk';
 import { ReactNode } from 'react';

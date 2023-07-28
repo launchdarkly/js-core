@@ -1,5 +1,5 @@
 /* eslint-disable class-methods-use-this */
-import { BigSegmentStoreStatusProvider, BigSegmentStoreStatus } from './api/interfaces';
+import { BigSegmentStoreStatus, BigSegmentStoreStatusProvider } from './api/interfaces';
 
 /**
  * @ignore

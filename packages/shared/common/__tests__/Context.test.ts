@@ -77,7 +77,7 @@ describe.each([
     expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName).toEqual(
-      new AttributeReference('/~1dog~0~0~1~1').redactionName
+      new AttributeReference('/~1dog~0~0~1~1').redactionName,
     );
   });
 
@@ -116,7 +116,7 @@ describe('given a valid legacy user without custom attributes', () => {
     expect(context?.valueForKind(new AttributeReference('anonymous'), 'user')).toBeTruthy();
     expect(context?.isMultiKind).toBeFalsy();
     expect(context?.privateAttributes('user')?.[0].redactionName).toEqual(
-      new AttributeReference('/~1dog~0~0~1~1').redactionName
+      new AttributeReference('/~1dog~0~0~1~1').redactionName,
     );
   });
 });

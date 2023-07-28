@@ -1,4 +1,5 @@
-import { LDLogger, LDClientContext } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, LDLogger } from '@launchdarkly/js-sdk-common';
+
 import { LDDataSourceUpdates, LDStreamProcessor } from '../subsystems';
 import { LDFeatureStore } from '../subsystems/LDFeatureStore';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
@@ -91,7 +92,7 @@ export interface LDOptions {
     | object
     | ((
         clientContext: LDClientContext,
-        dataSourceUpdates: LDDataSourceUpdates
+        dataSourceUpdates: LDDataSourceUpdates,
       ) => LDStreamProcessor);
 
   /**

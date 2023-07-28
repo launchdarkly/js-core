@@ -1,8 +1,8 @@
-import express from 'express';
 import bodyParser from 'body-parser';
+import express from 'express';
 
 import { Log } from './log.js';
-import { newSdkClientEntity, badCommandError } from './sdkClientEntity.js';
+import { badCommandError, newSdkClientEntity } from './sdkClientEntity.js';
 
 const app = express();
 let server = null;
@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
       'all-flags-with-reasons',
       'tags',
       'big-segments',
-      'user-type'
+      'user-type',
     ],
   });
 });

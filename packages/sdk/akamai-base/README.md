@@ -18,7 +18,6 @@ npm i @launchdarkly/akamai-server-base-sdk
 
 ## Quickstart
 
-
 See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-base/example).
 
 ## Developing this SDK

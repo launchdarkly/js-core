@@ -6,29 +6,20 @@
     "packages/shared/akamai-edgeworker-sdk": {
       "bump-minor-pre-major": true
     },
-    "packages/sdk/server-node": {
-    },
+    "packages/sdk/server-node": {},
     "packages/sdk/cloudflare": {},
     "packages/sdk/vercel": {
-      "extra-files": [
-        "src/createPlatformInfo.ts"
-      ],
+      "extra-files": ["src/createPlatformInfo.ts"],
       "release-as": "1.0.0"
     },
     "packages/sdk/akamai-base": {
-      "extra-files": [
-        "src/index.ts"
-      ]
+      "extra-files": ["src/index.ts"]
     },
     "packages/sdk/akamai-edgekv": {
-      "extra-files": [
-        "src/index.ts"
-      ]
+      "extra-files": ["src/index.ts"]
     },
-    "packages/store/node-server-sdk-dynamodb": {
-    },
-    "packages/store/node-server-sdk-redis": {
-    }
+    "packages/store/node-server-sdk-dynamodb": {},
+    "packages/store/node-server-sdk-redis": {}
   },
   "plugins": ["node-workspace"]
 }

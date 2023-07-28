@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
 import { createClient } from '@vercel/edge-config';
+import { NextResponse } from 'next/server';
+
 import { init as initLD } from '@launchdarkly/vercel-server-sdk';
 
 export const runtime = 'edge';
@@ -11,7 +12,7 @@ export async function GET() {
       {
         error: 'LD_CLIENT_SIDE_ID environment variable is missing.',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
   const flagKey = 'test-flag';

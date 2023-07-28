@@ -1,10 +1,11 @@
 import { Context } from '@launchdarkly/js-sdk-common';
+
+import { firstResult } from './collection';
 import { Flag } from './data/Flag';
 import { Target } from './data/Target';
 import EvalResult from './EvalResult';
-import { getVariation } from './variations';
 import Reasons from './Reasons';
-import { firstResult } from './collection';
+import { getVariation } from './variations';
 
 function evalTarget(flag: Flag, target: Target, context: Context): EvalResult | undefined {
   const contextKey = context.key(target.contextKind);

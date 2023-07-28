@@ -1,4 +1,5 @@
 import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
+
 import { BigSegmentStore } from '../src/api/interfaces';
 import { LDBigSegmentsOptions } from '../src/api/options/LDBigSegmentsOptions';
 import makeBigSegmentRef from '../src/evaluation/makeBigSegmentRef';
@@ -81,7 +82,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -120,7 +121,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -159,7 +160,7 @@ describe('given test data with big segments', () => {
           sendEvents: false,
           bigSegments: bigSegmentsConfig,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();
@@ -185,7 +186,7 @@ describe('given test data with big segments', () => {
           updateProcessor: td.getFactory(),
           sendEvents: false,
         },
-        makeCallbacks(true)
+        makeCallbacks(true),
       );
 
       await client.waitForInitialization();

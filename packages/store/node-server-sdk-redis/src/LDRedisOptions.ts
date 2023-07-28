@@ -1,4 +1,4 @@
-import { RedisOptions, Redis } from 'ioredis';
+import { Redis, RedisOptions } from 'ioredis';
 
 /**
  * The standard options supported for the LaunchDarkly Redis integration.

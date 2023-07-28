@@ -1,9 +1,11 @@
 import Redis from 'ioredis';
+
 import { interfaces } from '@launchdarkly/node-server-sdk';
+
 import RedisBigSegmentStore, {
   KEY_LAST_SYNCHRONIZED,
-  KEY_USER_INCLUDE,
   KEY_USER_EXCLUDE,
+  KEY_USER_INCLUDE,
 } from '../src/RedisBigSegmentStore';
 import clearPrefix from './clearPrefix';
 
@@ -11,12 +13,12 @@ const FAKE_HASH = 'userhash';
 
 async function setMetadata(
   prefix: string,
-  metadata: interfaces.BigSegmentStoreMetadata
+  metadata: interfaces.BigSegmentStoreMetadata,
 ): Promise<void> {
   const client = new Redis();
   await client.set(
     `${prefix}:${KEY_LAST_SYNCHRONIZED}`,
-    metadata.lastUpToDate ? metadata.lastUpToDate.toString() : ''
+    metadata.lastUpToDate ? metadata.lastUpToDate.toString() : '',
   );
   await client.quit();
 }
@@ -25,7 +27,7 @@ async function setSegments(
   prefix: string,
   userHashKey: string,
   included: string[],
-  excluded: string[]
+  excluded: string[],
 ): Promise<void> {
   const client = new Redis();
 

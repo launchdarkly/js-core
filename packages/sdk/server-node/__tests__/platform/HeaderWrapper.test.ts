@@ -1,6 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 // The header interface uses generators, so we are using restricted-syntax.
 import * as http from 'http';
+
 import HeaderWrapper from '../../src/platform/HeaderWrapper';
 
 describe('given header values', () => {

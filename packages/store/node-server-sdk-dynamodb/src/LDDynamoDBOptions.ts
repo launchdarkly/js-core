@@ -1,5 +1,6 @@
-import { LDLogger } from '@launchdarkly/node-server-sdk';
 import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
+
+import { LDLogger } from '@launchdarkly/node-server-sdk';
 
 /**
  * Options for configuring {@link DynamoDBFeatureStoreFactory} or {@link DynamoDBBigSegmentStoreFactory}.

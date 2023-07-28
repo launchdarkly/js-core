@@ -1,9 +1,10 @@
 import { TypeValidators } from '@launchdarkly/js-sdk-common';
+
 import { Flag } from '../../evaluation/data/Flag';
 import { Target } from '../../evaluation/data/Target';
 import {
-  TRUE_VARIATION_INDEX,
   FALSE_VARIATION_INDEX,
+  TRUE_VARIATION_INDEX,
   variationForBoolean,
 } from './booleanVariation';
 import TestDataRuleBuilder from './TestDataRuleBuilder';
@@ -31,7 +32,10 @@ export default class TestDataFlagBuilder {
   /**
    * @internal
    */
-  constructor(private readonly key: string, data?: BuilderData) {
+  constructor(
+    private readonly key: string,
+    data?: BuilderData,
+  ) {
     if (data) {
       // Not the fastest way to deep copy, but this is a testing mechanism.
       this.data = {
@@ -236,13 +240,13 @@ export default class TestDataFlagBuilder {
   variationForContext(
     contextKind: string,
     contextKey: string,
-    variation: number | boolean
+    variation: number | boolean,
   ): TestDataFlagBuilder {
     if (TypeValidators.Boolean.is(variation)) {
       return this.booleanFlag().variationForContext(
         contextKind,
         contextKey,
-        variationForBoolean(variation)
+        variationForBoolean(variation),
       );
     }
 
@@ -400,14 +404,14 @@ export default class TestDataFlagBuilder {
               variation: parseInt(variation, 10),
             });
           });
-        }
+        },
       );
       baseFlagObject.contextTargets = contextTargets;
     }
 
     if (this.data.rules) {
       baseFlagObject.rules = this.data.rules.map((rule, i) =>
-        (rule as TestDataRuleBuilder<TestDataFlagBuilder>).build(String(i))
+        (rule as TestDataRuleBuilder<TestDataFlagBuilder>).build(String(i)),
       );
     }
 

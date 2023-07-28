@@ -33,7 +33,7 @@ class MockPersistentStore implements PersistentDataStore {
   get(
     kind: PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: SerializedItemDescriptor | undefined) => void
+    callback: (descriptor: SerializedItemDescriptor | undefined) => void,
   ): void {
     const itemsForKind = this.allData?.find((kvp) => kvp.key.namespace === kind.namespace)?.item;
     callback(itemsForKind?.find((kvp) => kvp.key === key)?.item ?? undefined);
@@ -41,7 +41,7 @@ class MockPersistentStore implements PersistentDataStore {
 
   getAll(
     kind: PersistentStoreDataKind,
-    callback: (descriptors: KeyedItem<string, SerializedItemDescriptor>[] | undefined) => void
+    callback: (descriptors: KeyedItem<string, SerializedItemDescriptor>[] | undefined) => void,
   ): void {
     callback(this.allData?.find((kvp) => kvp.key.namespace === kind.namespace)?.item);
   }
@@ -52,8 +52,8 @@ class MockPersistentStore implements PersistentDataStore {
     descriptor: SerializedItemDescriptor,
     callback: (
       err?: Error | undefined,
-      updatedDescriptor?: SerializedItemDescriptor | undefined
-    ) => void
+      updatedDescriptor?: SerializedItemDescriptor | undefined,
+    ) => void,
   ): void {
     const itemsForKind = this.allData?.find((kvp) => kvp.key.namespace === kind.namespace)?.item;
     const slot = itemsForKind?.find((kvp) => kvp.key === key);
@@ -123,7 +123,7 @@ describe.each(['caching', 'non-caching'])(
         await asyncWrapper.initialized();
 
         expect(spy).toHaveBeenCalledTimes(1);
-      }
+      },
     );
 
     itif(!isCaching)(
@@ -135,7 +135,7 @@ describe.each(['caching', 'non-caching'])(
         await asyncWrapper.initialized();
 
         expect(spy).toHaveBeenCalledTimes(3);
-      }
+      },
     );
 
     it('becomes initialized if the underlying store is initialized', async () => {
@@ -159,7 +159,7 @@ describe.each(['caching', 'non-caching'])(
         await asyncWrapper.initialized();
 
         expect(spy).toHaveBeenCalledTimes(2);
-      }
+      },
     );
 
     it('if the ttl for initialization has passed, but initialization was complete, it will not check the store.', async () => {
@@ -499,5 +499,5 @@ describe.each(['caching', 'non-caching'])(
       const allValues = await asyncWrapper.all(VersionedDataKinds.Features);
       expect(allValues).toEqual({});
     });
-  }
+  },
 );
