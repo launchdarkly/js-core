@@ -79,7 +79,12 @@ export class LDConcurrentExecution {
 /**
  * Configuration for a migration.
  */
-export interface LDMigrationOptions<TMigrationRead, TMigrationWrite> {
+export interface LDMigrationOptions<
+  TMigrationRead,
+  TMigrationWrite,
+  TMigrationReadInput,
+  TMigrationWriteInput
+> {
   /**
    * Configure how the migration should execute. If omitted the execution will
    * be concurrent.
@@ -103,22 +108,22 @@ export interface LDMigrationOptions<TMigrationRead, TMigrationWrite> {
   /**
    * TKTK
    */
-  readNew: () => Promise<LDMethodResult<TMigrationRead>>;
+  readNew: (payload?: TMigrationReadInput) => Promise<LDMethodResult<TMigrationRead>>;
 
   /**
    * TKTK
    */
-  writeNew: () => Promise<LDMethodResult<TMigrationWrite>>;
+  writeNew: (payload?: TMigrationWriteInput) => Promise<LDMethodResult<TMigrationWrite>>;
 
   /**
    * TKTK
    */
-  readOld: () => Promise<LDMethodResult<TMigrationRead>>;
+  readOld: (payload?: TMigrationReadInput) => Promise<LDMethodResult<TMigrationRead>>;
 
   /**
    * TKTK
    */
-  writeOld: () => Promise<LDMethodResult<TMigrationWrite>>;
+  writeOld: (payload?: TMigrationWriteInput) => Promise<LDMethodResult<TMigrationWrite>>;
 
   /**
    * TKTK
