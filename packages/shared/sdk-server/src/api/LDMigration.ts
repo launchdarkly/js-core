@@ -54,7 +54,12 @@ export type LDMigrationWriteResult<TResult> = {
  *
  * TKTK
  */
-export interface LDMigration<TMigrationRead, TMigrationWrite> {
+export interface LDMigration<
+  TMigrationRead,
+  TMigrationWrite,
+  TMigrationReadInput,
+  TMigrationWriteInput
+> {
   /**
    * TKTK
    *
@@ -67,7 +72,8 @@ export interface LDMigration<TMigrationRead, TMigrationWrite> {
   read(
     key: string,
     context: LDContext,
-    defaultValue: LDMigrationStage
+    defaultValue: LDMigrationStage,
+    payload?: TMigrationReadInput
   ): Promise<LDMigrationReadResult<TMigrationRead>>;
 
   /**
@@ -82,6 +88,7 @@ export interface LDMigration<TMigrationRead, TMigrationWrite> {
   write(
     key: string,
     context: LDContext,
-    defaultValue: LDMigrationStage
+    defaultValue: LDMigrationStage,
+    payload?: TMigrationWriteInput
   ): Promise<LDMigrationWriteResult<TMigrationWrite>>;
 }

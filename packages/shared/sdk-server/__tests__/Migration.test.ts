@@ -137,7 +137,7 @@ describe('given an LDClient with test data', () => {
     [new LDSerialExecution(LDExecutionOrdering.Random), 'serial random'],
     [new LDConcurrentExecution(), 'concurrent'],
   ])('given different execution methods: %p %p', (execution) => {
-    it.each([
+    describe.each([
       [
         LDMigrationStage.Off,
         'old',
@@ -186,9 +186,8 @@ describe('given an LDClient with test data', () => {
           nonAuthoritative: undefined,
         },
       ],
-    ])(
-      'uses the correct authoritative source: %p, read: %p, write: %j.',
-      async (stage, readValue, writeMatch) => {
+    ])('given each migration step: %p, read: %p, write: %j.', (stage, readValue, writeMatch) => {
+      it('uses the correct authoritative source', async () => {
         const migration = new Migration<string, boolean>(client, basicTracker(), {
           execution,
           latencyTracking: LDLatencyTracking.Disabled,
@@ -216,8 +215,46 @@ describe('given an LDClient with test data', () => {
         const write = await migration.write(flagKey, { key: 'test-key' }, defaultStage!);
         // @ts-ignore Extended without writing types.
         expect(write).toMatchMigrationResult(writeMatch);
-      }
-    );
+      });
+
+      it('correctly forwards the payload for read and write operations', async () => {
+        let receivedReadPayload: string | undefined;
+        let receivedWritePayload: string | undefined;
+        const migration = new Migration<string, boolean, string, string>(client, basicTracker(), {
+          execution,
+          latencyTracking: LDLatencyTracking.Disabled,
+          errorTracking: LDErrorTracking.Disabled,
+          readNew: async (payload) => {
+            receivedReadPayload = payload;
+            return LDMigrationSuccess('new');
+          },
+          writeNew: async (payload) => {
+            receivedWritePayload = payload;
+            return LDMigrationSuccess(false);
+          },
+          readOld: async (payload) => {
+            receivedReadPayload = payload;
+            return LDMigrationSuccess('old');
+          },
+          writeOld: async (payload) => {
+            receivedWritePayload = payload;
+            return LDMigrationSuccess(true);
+          },
+        });
+
+        const flagKey = 'migration';
+        td.update(td.flag(flagKey).valueForAll(stage));
+
+        const payloadRead = Math.random().toString(10);
+        const payloadWrite = Math.random().toString(10);
+        await migration.read(flagKey, { key: 'test-key' }, LDMigrationStage.Off, payloadRead);
+
+        await migration.write(flagKey, { key: 'test-key' }, LDMigrationStage.Off, payloadWrite);
+
+        expect(receivedReadPayload).toEqual(payloadRead);
+        expect(receivedWritePayload).toEqual(payloadWrite);
+      });
+    });
   });
 
   it.each([
