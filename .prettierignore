@@ -8,3 +8,4 @@ docs/
 coverage
 .next
 .vscode
+**/*/CHANGELOG.md
