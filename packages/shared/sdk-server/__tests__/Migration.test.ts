@@ -5,27 +5,13 @@ import {
   LDExecutionOrdering,
   LDLatencyTracking,
   LDMigrationStage,
-  LDMigrationTracker,
   LDSerialExecution,
 } from '../src';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
-import MigrationOpTracker from '../src/MigrationOpTracker';
 import { TestData } from '../src/integrations';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
-
-function basicTracker(): LDMigrationTracker {
-  return new MigrationOpTracker(
-    'flag',
-    { user: 'bob' },
-    LDMigrationStage.Off,
-    LDMigrationStage.Off,
-    {
-      kind: 'FALLTHROUGH',
-    }
-  );
-}
 
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
@@ -188,7 +174,7 @@ describe('given an LDClient with test data', () => {
       ],
     ])('given each migration step: %p, read: %p, write: %j.', (stage, readValue, writeMatch) => {
       it('uses the correct authoritative source', async () => {
-        const migration = new Migration<string, boolean>(client, basicTracker(), {
+        const migration = new Migration<string, boolean>(client, {
           execution,
           latencyTracking: LDLatencyTracking.Disabled,
           errorTracking: LDErrorTracking.Disabled,
@@ -220,7 +206,7 @@ describe('given an LDClient with test data', () => {
       it('correctly forwards the payload for read and write operations', async () => {
         let receivedReadPayload: string | undefined;
         let receivedWritePayload: string | undefined;
-        const migration = new Migration<string, boolean, string, string>(client, basicTracker(), {
+        const migration = new Migration<string, boolean, string, string>(client, {
           execution,
           latencyTracking: LDLatencyTracking.Disabled,
           errorTracking: LDErrorTracking.Disabled,
@@ -265,7 +251,7 @@ describe('given an LDClient with test data', () => {
     [LDMigrationStage.RampDown, 'new'],
     [LDMigrationStage.Complete, 'new'],
   ])('handles read errors for stage: %p', async (stage, authority) => {
-    const migration = new Migration<string, boolean>(client, basicTracker(), {
+    const migration = new Migration<string, boolean>(client, {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -298,7 +284,7 @@ describe('given an LDClient with test data', () => {
     [LDMigrationStage.RampDown, 'new'],
     [LDMigrationStage.Complete, 'new'],
   ])('handles exceptions for stage: %p', async (stage, authority) => {
-    const migration = new Migration<string, boolean>(client, basicTracker(), {
+    const migration = new Migration<string, boolean>(client, {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -394,7 +380,7 @@ describe('given an LDClient with test data', () => {
       let oldWriteCalled = false;
       let newWriteCalled = false;
 
-      const migration = new Migration<string, boolean>(client, basicTracker(), {
+      const migration = new Migration<string, boolean>(client, {
         execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
         latencyTracking: LDLatencyTracking.Disabled,
         errorTracking: LDErrorTracking.Disabled,
@@ -436,7 +422,7 @@ describe('given an LDClient with test data', () => {
     let oldWriteCalled = false;
     let newWriteCalled = false;
 
-    const migration = new Migration<string, boolean>(client, basicTracker(), {
+    const migration = new Migration<string, boolean>(client, {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -469,7 +455,7 @@ describe('given an LDClient with test data', () => {
   });
 
   it('handles the case where the authoritative write succeeds, but the non-authoritative fails', async () => {
-    const migrationA = new Migration<string, boolean>(client, basicTracker(), {
+    const migrationA = new Migration<string, boolean>(client, {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
@@ -516,7 +502,7 @@ describe('given an LDClient with test data', () => {
       },
     });
 
-    const migrationB = new Migration<string, boolean>(client, basicTracker(), {
+    const migrationB = new Migration<string, boolean>(client, {
       execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
       latencyTracking: LDLatencyTracking.Disabled,
       errorTracking: LDErrorTracking.Disabled,
