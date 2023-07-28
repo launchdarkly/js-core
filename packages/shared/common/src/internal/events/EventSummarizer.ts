@@ -52,7 +52,7 @@ export default class EventSummarizer {
   private contextKinds: Record<string, Set<string>> = {};
 
   summarizeEvent(event: InputEvent) {
-    if (isFeature(event)) {
+    if (isFeature(event) && !event.excludeFromSummaries) {
       const countKey = counterKey(event);
       const counter = this.counters[countKey];
       let kinds = this.contextKinds[event.key];
