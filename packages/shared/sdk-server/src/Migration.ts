@@ -284,7 +284,7 @@ export default class Migration<
     payload?: TMigrationReadInput
   ): Promise<LDMigrationReadResult<TMigrationRead>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
-    return this.readTable[stage.value](this.config);
+    return this.readTable[stage.value](this.config, payload);
   }
 
   async write(
@@ -295,6 +295,6 @@ export default class Migration<
   ): Promise<LDMigrationWriteResult<TMigrationWrite>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
 
-    return this.writeTable[stage.value](this.config);
+    return this.writeTable[stage.value](this.config, payload);
   }
 }
