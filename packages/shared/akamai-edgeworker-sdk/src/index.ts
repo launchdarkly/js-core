@@ -1,10 +1,11 @@
 import { BasicLogger, LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
-import { validateOptions } from './utils';
+
 import LDClient from './api/LDClient';
+import { buildRootKey, EdgeFeatureStore, EdgeProvider } from './featureStore';
+import CacheableStoreProvider from './featureStore/cacheableStoreProvider';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
-import { EdgeProvider, buildRootKey, EdgeFeatureStore } from './featureStore';
-import CacheableStoreProvider from './featureStore/cacheableStoreProvider';
+import { validateOptions } from './utils';
 
 /**
  * The Launchdarkly Edge SDKs configuration options. Only logger is officially
@@ -38,7 +39,7 @@ export const init = (params: BaseSDKParams): LDClient => {
 
   const cachableStoreProvider = new CacheableStoreProvider(
     featureStoreProvider,
-    buildRootKey(sdkKey)
+    buildRootKey(sdkKey),
   );
   const featureStore = new EdgeFeatureStore(cachableStoreProvider, sdkKey, 'Akamai', logger);
 

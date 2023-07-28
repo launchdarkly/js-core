@@ -27,7 +27,7 @@ describe('given a logger that throws in logs', () => {
       destination: (...args: any) => {
         strings.push(args.join(' '));
       },
-    })
+    }),
   );
 
   it('uses the fallback logger', () => {

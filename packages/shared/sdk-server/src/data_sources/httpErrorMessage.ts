@@ -4,7 +4,7 @@ export default function httpErrorMessage(
     message: string;
   },
   context: string,
-  retryMessage?: string
+  retryMessage?: string,
 ): string {
   let desc;
   if (err.status) {

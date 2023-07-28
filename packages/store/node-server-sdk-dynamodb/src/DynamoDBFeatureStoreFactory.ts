@@ -1,4 +1,5 @@
 import { LDClientContext } from '@launchdarkly/node-server-sdk';
+
 import DynamoDBFeatureStore from './DynamoDBFeatureStore';
 import LDDynamoDBOptions from './LDDynamoDBOptions';
 
@@ -17,7 +18,7 @@ import LDDynamoDBOptions from './LDDynamoDBOptions';
  */
 export default function DynamoDBFeatureStoreFactory(
   tableName: string,
-  options?: LDDynamoDBOptions
+  options?: LDDynamoDBOptions,
 ) {
   return (config: LDClientContext) =>
     new DynamoDBFeatureStore(tableName, options, config.basicConfiguration.logger);

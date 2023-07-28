@@ -176,14 +176,14 @@ describe('when handling legacy user contexts', () => {
   it('converts fields to string types when needed', () => {
     const uf = new ContextFilter(false, []);
     expect(uf.filter(userWithNonStringsInStringRequiredFields)).toEqual(
-      userWithStringFieldsConverted
+      userWithStringFieldsConverted,
     );
   });
 
   it('it handles legacy names which had a preceding slash', () => {
     const uf = new ContextFilter(false, []);
     expect(uf.filter(userWithPrivateFieldsWithAPrecedingSlash)).toEqual(
-      userWithPrivateFieldsWithAPrecedingSlashFiltered
+      userWithPrivateFieldsWithAPrecedingSlashFiltered,
     );
   });
 
@@ -203,7 +203,7 @@ describe('when handling legacy user contexts', () => {
         country: value,
       })!;
       expect(cf.filter(nullUndefinedUser)).toEqual({ key: 'userKey', kind: 'user' });
-    }
+    },
   );
 });
 

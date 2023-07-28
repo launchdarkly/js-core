@@ -1,5 +1,7 @@
-import { platform } from '@launchdarkly/js-server-sdk-common';
 import * as http from 'http';
+
+import { platform } from '@launchdarkly/js-server-sdk-common';
+
 import HeaderWrapper from './HeaderWrapper';
 
 export default class NodeResponse implements platform.Response {

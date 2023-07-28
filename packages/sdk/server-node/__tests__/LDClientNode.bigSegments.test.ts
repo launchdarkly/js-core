@@ -4,6 +4,7 @@ import {
   LDBigSegmentsOptions,
   LDLogger,
 } from '@launchdarkly/js-server-sdk-common';
+
 import { basicLogger } from '../src';
 import { LDClient } from '../src/api/LDClient';
 import LDClientNode from '../src/LDClientNode';
@@ -64,7 +65,7 @@ describe('given test data with big segments', () => {
           expect(status2!.stale).toEqual(false);
           expect(status2!.available).toEqual(true);
           done();
-        }
+        },
       );
     });
 
@@ -152,7 +153,7 @@ describe('given test data with big segments', () => {
             expect(status.available).toEqual(false);
             done();
           }
-        }
+        },
       );
     });
 

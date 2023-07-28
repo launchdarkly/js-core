@@ -1,5 +1,7 @@
-import { LDLogger } from '@launchdarkly/node-server-sdk';
 import { Redis } from 'ioredis';
+
+import { LDLogger } from '@launchdarkly/node-server-sdk';
+
 import LDRedisOptions from './LDRedisOptions';
 
 const DEFAULT_PREFIX = 'launchdarkly';
@@ -31,7 +33,10 @@ export default class RedisClientState {
    * @param owned Is this client owned by the store integration, or was it
    * provided externally.
    */
-  constructor(options?: LDRedisOptions, private readonly logger?: LDLogger) {
+  constructor(
+    options?: LDRedisOptions,
+    private readonly logger?: LDLogger,
+  ) {
     if (options?.client) {
       this.client = options.client;
       this.owned = false;
@@ -59,7 +64,7 @@ export default class RedisClientState {
     client.on('reconnecting', (delay: number) => {
       this.attempt += 1;
       logger?.info(
-        `Attempting to reconnect to redis (attempt # ${this.attempt}, delay: ${delay}ms)`
+        `Attempting to reconnect to redis (attempt # ${this.attempt}, delay: ${delay}ms)`,
       );
     });
 

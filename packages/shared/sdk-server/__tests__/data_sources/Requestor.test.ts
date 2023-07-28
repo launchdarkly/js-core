@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  EventSource,
+  EventSourceInitDict,
+  Headers,
+  Options,
   Requests,
   Response,
-  Headers,
-  EventSourceInitDict,
-  EventSource,
-  Options,
 } from '@launchdarkly/js-sdk-common';
+
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';

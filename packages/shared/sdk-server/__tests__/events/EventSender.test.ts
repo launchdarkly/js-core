@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { AsyncQueue } from 'launchdarkly-js-test-helpers';
+
 import {
   ClientContext,
   EventSource,
@@ -12,7 +14,7 @@ import {
   SdkData,
 } from '@launchdarkly/js-sdk-common';
 import { LDDeliveryStatus, LDEventType } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
-import { AsyncQueue } from 'launchdarkly-js-test-helpers';
+
 import EventSender from '../../src/events/EventSender';
 import Configuration from '../../src/options/Configuration';
 import basicPlatform from '../evaluation/mocks/platform';
@@ -96,7 +98,7 @@ describe('given an event sender', () => {
     const config = new Configuration({});
     eventSender = new EventSender(
       config,
-      new ClientContext('sdk-key', config, { ...basicPlatform, requests, info })
+      new ClientContext('sdk-key', config, { ...basicPlatform, requests, info }),
     );
   });
 
@@ -143,7 +145,7 @@ describe('given an event sender', () => {
     await eventSender.sendEventData(LDEventType.AnalyticsEvents, { something: true });
     const req2 = await queue.take();
     expect(req1.options!.headers!['x-launchdarkly-payload-id']).not.toEqual(
-      req2.options!.headers!['x-launchdarkly-payload-id']
+      req2.options!.headers!['x-launchdarkly-payload-id'],
     );
   });
 

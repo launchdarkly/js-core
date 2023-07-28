@@ -6,7 +6,7 @@
 
 This library provides a Redis-backed persistence mechanism (feature store) for the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/js-core/packages/sdk/server-node), replacing the default in-memory feature store. The underlying Redis client implementation is [ioredis](https://github.com/luin/ioredis).
 
-The minimum version of the LaunchDarkly Server-Side SDK for Node for use with this library is 8.0.0. 
+The minimum version of the LaunchDarkly Server-Side SDK for Node for use with this library is 8.0.0.
 
 ## LaunchDarkly overview
 
@@ -82,6 +82,5 @@ We encourage pull requests and other contributions from the community. Check out
 
 [node-redis-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-redis.yml/badge.svg
 [node-redis-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-redis.yml
-
 [node-redis-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-redis.svg?style=flat-square
 [node-redis-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-redis

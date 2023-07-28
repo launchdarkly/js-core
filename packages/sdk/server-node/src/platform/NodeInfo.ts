@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
-import { platform } from '@launchdarkly/js-server-sdk-common';
-
 import * as os from 'os';
+
+import { platform } from '@launchdarkly/js-server-sdk-common';
 
 import * as packageJson from '../../package.json';
 

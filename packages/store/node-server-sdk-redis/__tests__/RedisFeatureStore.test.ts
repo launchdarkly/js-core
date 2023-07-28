@@ -1,4 +1,5 @@
 import { AsyncStoreFacade } from '@launchdarkly/node-server-sdk';
+
 import RedisFeatureStore from '../src/RedisFeatureStore';
 import clearPrefix from './clearPrefix';
 

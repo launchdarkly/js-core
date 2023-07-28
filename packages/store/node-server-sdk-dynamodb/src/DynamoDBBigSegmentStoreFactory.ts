@@ -1,6 +1,7 @@
-import { LDOptions, interfaces } from '@launchdarkly/node-server-sdk';
-import LDDynamoDBOptions from './LDDynamoDBOptions';
+import { interfaces, LDOptions } from '@launchdarkly/node-server-sdk';
+
 import DynamoDBBigSegmentStore from './DynamoDBBigSegmentStore';
+import LDDynamoDBOptions from './LDDynamoDBOptions';
 
 /**
  * Configures a big segment store factory backed by a DynamoDB instance.
@@ -16,7 +17,7 @@ import DynamoDBBigSegmentStore from './DynamoDBBigSegmentStore';
  */
 export default function DynamoDBBigSegmentStoreFactory(
   tableName: string,
-  options?: LDDynamoDBOptions
+  options?: LDDynamoDBOptions,
 ): (config: LDOptions) => interfaces.BigSegmentStore {
   return (config: LDOptions) => new DynamoDBBigSegmentStore(tableName, options, config.logger);
 }

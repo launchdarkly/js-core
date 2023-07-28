@@ -1,4 +1,5 @@
 import { Info, Options, Requests, Response } from '@launchdarkly/js-sdk-common';
+
 import { LDFeatureRequestor } from '../api/subsystems';
 import { LDStreamingError } from '../errors';
 import Configuration from '../options/Configuration';
@@ -24,7 +25,7 @@ export default class Requestor implements LDFeatureRequestor {
     sdkKey: string,
     config: Configuration,
     info: Info,
-    private readonly requests: Requests
+    private readonly requests: Requests,
   ) {
     this.headers = defaultHeaders(sdkKey, config, info);
     this.uri = `${config.serviceEndpoints.polling}/sdk/latest-all`;
@@ -36,7 +37,7 @@ export default class Requestor implements LDFeatureRequestor {
    */
   private async requestWithETagCache(
     requestUrl: string,
-    options: Options
+    options: Options,
   ): Promise<{
     res: Response;
     body: string;

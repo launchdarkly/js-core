@@ -1,4 +1,5 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
+
 import { LDFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
 import DataSourceUpdates from '../../src/data_sources/DataSourceUpdates';
@@ -19,7 +20,7 @@ describe.each([true, false])(
       updates = new DataSourceUpdates(
         store,
         () => listen,
-        (key) => queue.add(key)
+        (key) => queue.add(key),
       );
     });
 
@@ -35,7 +36,7 @@ describe.each([true, false])(
           },
           () => {
             cb(undefined);
-          }
+          },
         );
       });
 
@@ -101,7 +102,7 @@ describe.each([true, false])(
           },
           () => {
             cb(undefined);
-          }
+          },
         );
       });
 
@@ -146,7 +147,7 @@ describe.each([true, false])(
           },
           () => {
             cb(undefined);
-          }
+          },
         );
       });
 
@@ -163,7 +164,7 @@ describe.each([true, false])(
         updates.upsert(
           VersionedDataKinds.Features,
           { key: 'd', version: 2, prerequisites: [{ key: 'e' }] },
-          () => cb(undefined)
+          () => cb(undefined),
         );
       });
 
@@ -185,5 +186,5 @@ describe.each([true, false])(
       }
       expect(queue.isEmpty()).toBeTruthy();
     });
-  }
+  },
 );

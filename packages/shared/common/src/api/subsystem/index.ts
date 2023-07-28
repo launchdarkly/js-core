@@ -1,6 +1,6 @@
-import LDEventProcessor from './LDEventProcessor';
 import LDContextDeduplicator from './LDContextDeduplicator';
-import LDEventSender, { LDDeliveryStatus, LDEventType, LDEventSenderResult } from './LDEventSender';
+import LDEventProcessor from './LDEventProcessor';
+import LDEventSender, { LDDeliveryStatus, LDEventSenderResult, LDEventType } from './LDEventSender';
 
 export {
   LDEventProcessor,

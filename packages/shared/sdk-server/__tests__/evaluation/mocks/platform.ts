@@ -9,6 +9,7 @@ import {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
+
 import { crypto } from './hasher';
 
 const info: Info = {

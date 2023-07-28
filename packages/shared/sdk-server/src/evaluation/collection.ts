@@ -8,7 +8,7 @@
  */
 export function firstResult<T, U>(
   collection: T[] | undefined,
-  operator: (val: T, index: number) => U | undefined
+  operator: (val: T, index: number) => U | undefined,
 ): U | undefined {
   let res;
   collection?.some((item, index) => {
@@ -21,7 +21,7 @@ export function firstResult<T, U>(
 async function seriesAsync<T>(
   collection: T[] | undefined,
   check: (val: T, index: number) => Promise<boolean>,
-  all: boolean
+  all: boolean,
 ) {
   if (!collection) {
     return false;
@@ -56,7 +56,7 @@ async function seriesAsync<T>(
  */
 export async function allSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>
+  check: (val: T, index: number) => Promise<boolean>,
 ): Promise<boolean> {
   return seriesAsync(collection, check, true);
 }
@@ -70,7 +70,7 @@ export async function allSeriesAsync<T>(
  */
 export async function firstSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>
+  check: (val: T, index: number) => Promise<boolean>,
 ): Promise<boolean> {
   return seriesAsync(collection, check, false);
 }
