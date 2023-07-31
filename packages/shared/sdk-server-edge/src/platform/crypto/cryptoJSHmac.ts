@@ -1,5 +1,7 @@
 import CryptoJS from 'crypto-js';
+
 import { Hmac as LDHmac } from '@launchdarkly/js-server-sdk-common';
+
 import { SupportedHashAlgorithm, SupportedOutputEncoding } from './types';
 
 export default class CryptoJSHmac implements LDHmac {

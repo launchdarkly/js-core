@@ -71,21 +71,21 @@ export default class TestLogger implements LDLogger {
     expectedMessages.forEach((expectedMessage) => {
       const received = this.messages[expectedMessage.level];
       const index = received.findIndex((receivedMessage) =>
-        receivedMessage.match(expectedMessage.matches)
+        receivedMessage.match(expectedMessage.matches),
       );
       if (index < 0) {
         throw new Error(
           `Did not find expected message: ${JSON.stringify(
             expectedMessage,
-            replacer
-          )} received: ${JSON.stringify(this.messages)}`
+            replacer,
+          )} received: ${JSON.stringify(this.messages)}`,
         );
       } else if (matched[expectedMessage.level].indexOf(index) >= 0) {
         throw new Error(
           `Did not find expected message: ${JSON.stringify(
             expectedMessage,
-            replacer
-          )} received: ${JSON.stringify(this.messages)}`
+            replacer,
+          )} received: ${JSON.stringify(this.messages)}`,
         );
       } else {
         matched[expectedMessage.level].push(index);

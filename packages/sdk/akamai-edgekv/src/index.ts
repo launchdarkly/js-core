@@ -8,8 +8,8 @@
  *
  * @packageDocumentation
  */
-
 import { init as initEdge, LDClient, LDOptions } from '@launchdarkly/akamai-edgeworker-sdk-common';
+
 import EdgeKVProvider from './edgekv/edgeKVProvider';
 
 export * from '@launchdarkly/akamai-edgeworker-sdk-common';

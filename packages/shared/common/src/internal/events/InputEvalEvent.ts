@@ -1,4 +1,4 @@
-import { LDEvaluationReason, LDEvaluationDetail } from '../../api/data';
+import { LDEvaluationDetail, LDEvaluationReason } from '../../api/data';
 import Context from '../../Context';
 
 export default class InputEvalEvent {

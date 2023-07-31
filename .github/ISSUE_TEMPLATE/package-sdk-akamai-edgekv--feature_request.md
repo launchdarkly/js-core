@@ -4,7 +4,6 @@ about: Create a report to help us improve
 title: ''
 labels: 'package: sdk/akamai-edgekv, feature'
 assignees: ''
-
 ---
 
 **Is your feature request related to a problem? Please describe.**

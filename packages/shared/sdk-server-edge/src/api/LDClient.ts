@@ -1,8 +1,10 @@
 import { EventEmitter } from 'node:events';
+
 import { Info, LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
-import createOptions from './createOptions';
-import createCallbacks from './createCallbacks';
+
 import EdgePlatform from '../platform';
+import createCallbacks from './createCallbacks';
+import createOptions from './createOptions';
 
 /**
  * The LaunchDarkly SDK edge client object.

@@ -1,6 +1,7 @@
 import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
-import { LDOptionsInternal, validateOptions } from '../../utils/validateOptions';
+
 import { EdgeFeatureStore } from '../../featureStore';
+import { LDOptionsInternal, validateOptions } from '../../utils/validateOptions';
 
 const SDK_KEY = 'test-key';
 

@@ -70,7 +70,7 @@ export default interface PersistentDataStore {
   get(
     kind: PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: SerializedItemDescriptor | undefined) => void
+    callback: (descriptor: SerializedItemDescriptor | undefined) => void,
   ): void;
 
   /**
@@ -85,7 +85,7 @@ export default interface PersistentDataStore {
    */
   getAll(
     kind: PersistentStoreDataKind,
-    callback: (descriptors: KeyedItem<string, SerializedItemDescriptor>[] | undefined) => void
+    callback: (descriptors: KeyedItem<string, SerializedItemDescriptor>[] | undefined) => void,
   ): void;
 
   /**
@@ -115,7 +115,7 @@ export default interface PersistentDataStore {
     kind: PersistentStoreDataKind,
     key: string,
     descriptor: SerializedItemDescriptor,
-    callback: (err?: Error, updatedDescriptor?: SerializedItemDescriptor) => void
+    callback: (err?: Error, updatedDescriptor?: SerializedItemDescriptor) => void,
   ): void;
 
   /**

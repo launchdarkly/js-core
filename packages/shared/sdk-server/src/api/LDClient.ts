@@ -1,7 +1,8 @@
 import { LDContext, LDEvaluationDetail, LDFlagValue } from '@launchdarkly/js-sdk-common';
-import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
+
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDMigrationStage } from './data/LDMigrationStage';
+import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
 
 /**
  * The LaunchDarkly SDK client object.
@@ -89,7 +90,7 @@ export interface LDClient {
     key: string,
     context: LDContext,
     defaultValue: LDFlagValue,
-    callback?: (err: any, res: LDFlagValue) => void
+    callback?: (err: any, res: LDFlagValue) => void,
   ): Promise<LDFlagValue>;
 
   /**
@@ -117,7 +118,7 @@ export interface LDClient {
     key: string,
     context: LDContext,
     defaultValue: LDFlagValue,
-    callback?: (err: any, res: LDEvaluationDetail) => void
+    callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail>;
 
   /**
@@ -165,7 +166,7 @@ export interface LDClient {
   allFlagsState(
     context: LDContext,
     options?: LDFlagsStateOptions,
-    callback?: (err: Error | null, res: LDFlagsState | null) => void
+    callback?: (err: Error | null, res: LDFlagsState | null) => void,
   ): Promise<LDFlagsState>;
 
   /**

@@ -1,4 +1,5 @@
-import { Context, LDEvaluationDetail, internal } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
+
 import { Flag } from '../evaluation/data/Flag';
 import isExperiment from './isExperiment';
 
@@ -13,7 +14,7 @@ export default class EventFactory {
     context: Context,
     detail: LDEvaluationDetail,
     defaultVal: any,
-    prereqOfFlag?: Flag
+    prereqOfFlag?: Flag,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
     return new internal.InputEvalEvent(

@@ -22,7 +22,7 @@ describe('given an LDClient with test data', () => {
         sendEvents: false,
         logger,
       },
-      makeCallbacks(true)
+      makeCallbacks(true),
     );
 
     await client.waitForInitialization();
@@ -289,7 +289,7 @@ describe('given an offline client', () => {
         sendEvents: false,
         logger,
       },
-      makeCallbacks(true)
+      makeCallbacks(true),
     );
   });
 

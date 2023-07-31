@@ -1,4 +1,5 @@
 import { Context } from '@launchdarkly/js-sdk-common';
+
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 
 it('when contexts are processed to the capacity', () => {

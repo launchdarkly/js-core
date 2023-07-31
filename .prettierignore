@@ -8,3 +8,5 @@ docs/
 coverage
 .next
 .vscode
+**/*/CHANGELOG.md
+packages/sdk/akamai-edgekv/src/edgekv/edgekv.js

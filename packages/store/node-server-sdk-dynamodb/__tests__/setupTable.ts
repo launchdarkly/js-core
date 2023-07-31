@@ -18,7 +18,7 @@ export default async function setupTable(tableName: string, options: DynamoDBCli
           ReadCapacityUnits: 10,
           WriteCapacityUnits: 10,
         },
-      })
+      }),
     );
   } catch (err) {
     // Table probably existed.
