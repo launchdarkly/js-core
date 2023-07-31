@@ -36,17 +36,21 @@ export type { LDClient };
  * (`new LDClient()/new LDClientImpl()/new LDClient()`); the SDK does not currently support
  * this.
  *
- * @param sdkKey
- *  The client side SDK key. This is only used to query the edgeConfig above,
+ * @param clientSideID
+ *  The client-side ID. This is only used to query the edgeConfig above,
  *  not to connect with LaunchDarkly servers.
  * @param edgeConfig
  *  The Vercel Edge Config client configured for LaunchDarkly.
  * @param options
- *  Optional configuration settings. The only supported option is logger.
+ *  Optional configuration settings.
  * @return
  *  The new {@link LDClient} instance.
  */
-export const init = (sdkKey: string, edgeConfig: EdgeConfigClient, options: LDOptions = {}) => {
+export const init = (
+  clientSideID: string,
+  edgeConfig: EdgeConfigClient,
+  options: LDOptions = {},
+) => {
   const logger = options.logger ?? BasicLogger.get();
 
   // vercel does not support string gets so we have to stringify it
@@ -57,8 +61,8 @@ export const init = (sdkKey: string, edgeConfig: EdgeConfigClient, options: LDOp
     },
   };
 
-  return initEdge(sdkKey, createPlatformInfo(), {
-    featureStore: new EdgeFeatureStore(edgeProvider, sdkKey, 'Vercel', logger),
+  return initEdge(clientSideID, createPlatformInfo(), {
+    featureStore: new EdgeFeatureStore(edgeProvider, clientSideID, 'Vercel', logger),
     logger,
     ...options,
   });

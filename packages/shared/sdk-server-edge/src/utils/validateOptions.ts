@@ -1,11 +1,16 @@
 import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
+type EdgeOptions = {
+  // The LaunchDarkly server-side key. This option is required if sendEvents is enabled.
+  serverSideKey?: string;
+};
+
 /**
  * The Launchdarkly Edge SDKs configuration options. Only logger is officially
  * supported. sendEvents is unsupported and is only included as a beta
  * preview.
  */
-export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
+export type LDOptions = EdgeOptions & Pick<LDOptionsCommon, 'logger' | 'sendEvents' | 'eventsUri'>;
 
 /**
  * The internal options include featureStore because that's how the LDClient
@@ -14,7 +19,7 @@ export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
 export type LDOptionsInternal = LDOptions & Pick<LDOptionsCommon, 'featureStore'>;
 
 const validateOptions = (sdkKey: string, options: LDOptionsInternal) => {
-  const { featureStore, logger, sendEvents, ...rest } = options;
+  const { featureStore, logger, sendEvents, serverSideKey, eventsUri, ...rest } = options;
   if (!sdkKey) {
     throw new Error('You must configure the client with a client key');
   }
@@ -25,6 +30,10 @@ const validateOptions = (sdkKey: string, options: LDOptionsInternal) => {
 
   if (!logger) {
     throw new Error('You must configure the client with a logger');
+  }
+
+  if (sendEvents && !serverSideKey) {
+    throw new Error('You must provide the serverSideKey to enable events');
   }
 
   if (JSON.stringify(rest) !== '{}') {
