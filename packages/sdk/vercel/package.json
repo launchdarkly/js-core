@@ -37,7 +37,7 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common-edge": "1.0.6",
+    "@launchdarkly/js-server-sdk-common-edge": "1.1.0-alpha.0",
     "@vercel/edge-config": "^0.1.8",
     "crypto-js": "^4.1.1"
   },
