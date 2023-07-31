@@ -1,7 +1,11 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
 class AkamaiPlatformInfo implements Info {
-  constructor(private platformName: string, private sdkName: string, private sdkVersion: string) {}
+  constructor(
+    private platformName: string,
+    private sdkName: string,
+    private sdkVersion: string,
+  ) {}
 
   platformData(): PlatformData {
     return {

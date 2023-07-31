@@ -1,7 +1,8 @@
-import { NextFetchEvent, NextRequest, NextResponse } from 'next/server';
 import { parseConnectionString } from '@vercel/edge-config';
-import { LDMultiKindContext } from '@launchdarkly/vercel-server-sdk';
 import { ldEdgeClient } from 'lib/ldEdgeClient';
+import { NextFetchEvent, NextRequest, NextResponse } from 'next/server';
+
+import { LDMultiKindContext } from '@launchdarkly/vercel-server-sdk';
 
 export const config = {
   matcher: ['/', '/closed', '/favicon.ico'],
@@ -38,12 +39,12 @@ export async function middleware(req: NextRequest, context: NextFetchEvent) {
       const hotDogFaviconEnabled = await client.variation(
         'enable-hot-dog-favicon',
         flagContext,
-        false
+        false,
       );
 
       return hotDogFaviconEnabled
         ? NextResponse.rewrite(new URL('/hot-dog.ico', request.url))
-        : NextResponse.next()
+        : NextResponse.next();
     }
 
     const storeClosed = await client.variation('store-closed', flagContext, false);

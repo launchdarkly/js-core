@@ -1,6 +1,7 @@
 import { Context } from '@launchdarkly/js-sdk-common';
-import Operators from './Operations';
+
 import { Clause } from './data/Clause';
+import Operators from './Operations';
 
 function maybeNegate(clause: Clause, value: boolean): boolean {
   if (clause.negate) {
@@ -23,7 +24,7 @@ function matchAny(op: string, value: any, values: any[]) {
  */
 export default function matchClauseWithoutSegmentOperations(
   clause: Clause,
-  context: Context
+  context: Context,
 ): boolean {
   const contextValue = context.valueForKind(clause.attributeReference, clause.contextKind);
   if (contextValue === null || contextValue === undefined) {
@@ -32,7 +33,7 @@ export default function matchClauseWithoutSegmentOperations(
   if (Array.isArray(contextValue)) {
     return maybeNegate(
       clause,
-      contextValue.some((value) => matchAny(clause.op, value, clause.values))
+      contextValue.some((value) => matchAny(clause.op, value, clause.values)),
     );
   }
   return maybeNegate(clause, matchAny(clause.op, contextValue, clause.values));

@@ -1,10 +1,10 @@
 import { DataKind } from '../api/interfaces';
 import {
-  LDFeatureStoreDataStorage,
-  LDKeyedFeatureStoreItem,
   LDFeatureStore,
-  LDFeatureStoreKindData,
+  LDFeatureStoreDataStorage,
   LDFeatureStoreItem,
+  LDFeatureStoreKindData,
+  LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 
 export default class InMemoryFeatureStore implements LDFeatureStore {

@@ -1,7 +1,9 @@
-import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
 import { AttributeValue, QueryCommandInput, WriteRequest } from '@aws-sdk/client-dynamodb';
+
+import { interfaces, LDLogger } from '@launchdarkly/node-server-sdk';
+
 import DynamoDBClientState from './DynamoDBClientState';
-import { stringValue, numberValue, boolValue } from './Value';
+import { boolValue, numberValue, stringValue } from './Value';
 
 // We won't try to store items whose total size exceeds this. The DynamoDB documentation says
 // only "400KB", which probably means 400*1024, but to avoid any chance of trying to store a
@@ -62,7 +64,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   constructor(
     private readonly tableName: string,
     private readonly state: DynamoDBClientState,
-    private readonly logger?: LDLogger
+    private readonly logger?: LDLogger,
   ) {}
 
   private initializedToken() {
@@ -76,7 +78,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
    * @returns A list of all data with matching namespaces.
    */
   private async readExistingItems(
-    allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>
+    allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
   ) {
     const promises = allData.map((kind) => {
       const { namespace } = kind.key;
@@ -95,7 +97,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
    */
   private marshalItem(
     kind: interfaces.PersistentStoreDataKind,
-    item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>
+    item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>,
   ): Record<string, AttributeValue> {
     const dbItem: Record<string, AttributeValue> = {
       namespace: stringValue(this.state.prefixedKey(kind.namespace)),
@@ -109,7 +111,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   }
 
   private unmarshalItem(
-    dbItem: Record<string, AttributeValue>
+    dbItem: Record<string, AttributeValue>,
   ): interfaces.SerializedItemDescriptor {
     return {
       // Version should exist.
@@ -122,7 +124,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
 
   async init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
-    callback: () => void
+    callback: () => void,
   ) {
     const items = await this.readExistingItems(allData);
 
@@ -172,7 +174,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   async get(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void
+    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
   ) {
     const read = await this.state.get(this.tableName, {
       namespace: stringValue(this.state.prefixedKey(kind.namespace)),
@@ -188,8 +190,8 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   async getAll(
     kind: interfaces.PersistentStoreDataKind,
     callback: (
-      descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined
-    ) => void
+      descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined,
+    ) => void,
   ) {
     const params = this.queryParamsForNamespace(kind.namespace);
     const results = await this.state.query(params);
@@ -202,8 +204,8 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     descriptor: interfaces.SerializedItemDescriptor,
     callback: (
       err?: Error | undefined,
-      updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined
-    ) => void
+      updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
+    ) => void,
   ) {
     const params = this.makeVersionedPutRequest(kind, { key, item: descriptor });
     if (!this.checkSizeLimit(params.Item)) {
@@ -259,7 +261,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
 
   private makeVersionedPutRequest(
     kind: interfaces.PersistentStoreDataKind,
-    item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>
+    item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>,
   ) {
     return {
       TableName: this.tableName,
@@ -276,7 +278,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       return true;
     }
     this.logger?.error(
-      `The item "${item.key.S}" in "${item.namespace.S}" was too large to store in DynamoDB and was dropped`
+      `The item "${item.key.S}" in "${item.namespace.S}" was too large to store in DynamoDB and was dropped`,
     );
     return false;
   }

@@ -105,7 +105,7 @@ describe('when setting different options', () => {
   it('produces no logs when setting all URLs.', () => {
     // @ts-ignore
     const config = new Configuration(
-      withLogger({ eventsUri: 'cats', baseUri: 'cats', streamUri: 'cats' })
+      withLogger({ eventsUri: 'cats', baseUri: 'cats', streamUri: 'cats' }),
     );
     expect(config.serviceEndpoints.events).toEqual('cats');
     expect(config.serviceEndpoints.streaming).toEqual('cats');
@@ -116,7 +116,7 @@ describe('when setting different options', () => {
   it('Does not log a warning for the events URI if sendEvents is false..', () => {
     // @ts-ignore
     const config = new Configuration(
-      withLogger({ sendEvents: false, baseUri: 'cats', streamUri: 'cats' })
+      withLogger({ sendEvents: false, baseUri: 'cats', streamUri: 'cats' }),
     );
     expect(config.serviceEndpoints.streaming).toEqual('cats');
     expect(config.serviceEndpoints.polling).toEqual('cats');
@@ -126,7 +126,7 @@ describe('when setting different options', () => {
   it('Does log a warning for the events URI if sendEvents is true..', () => {
     // @ts-ignore
     const config = new Configuration(
-      withLogger({ sendEvents: true, baseUri: 'cats', streamUri: 'cats' })
+      withLogger({ sendEvents: true, baseUri: 'cats', streamUri: 'cats' }),
     );
     expect(config.serviceEndpoints.streaming).toEqual('cats');
     expect(config.serviceEndpoints.polling).toEqual('cats');

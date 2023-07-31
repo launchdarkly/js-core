@@ -1,4 +1,5 @@
 import { ClientContext } from '@launchdarkly/js-sdk-common';
+
 import { LDFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
@@ -34,7 +35,7 @@ describe('given an event processor', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform))
+      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
     );
   });
 
@@ -95,7 +96,7 @@ describe('given a polling processor with a short poll duration', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform))
+      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
     );
   });
 
@@ -122,8 +123,8 @@ describe('given a polling processor with a short poll duration', () => {
           {
             status,
           },
-          undefined
-        )
+          undefined,
+        ),
       );
       processor.start((e) => {
         expect(e).toBeUndefined();
@@ -136,7 +137,7 @@ describe('given a polling processor with a short poll duration', () => {
         expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
         (done as jest.DoneCallback)();
       }, 300);
-    }
+    },
   );
 
   it('continues polling after receiving invalid JSON', (done) => {
@@ -161,8 +162,8 @@ describe('given a polling processor with a short poll duration', () => {
           {
             status,
           },
-          undefined
-        )
+          undefined,
+        ),
       );
       processor.start((e) => {
         expect(e).toBeDefined();
@@ -174,6 +175,6 @@ describe('given a polling processor with a short poll duration', () => {
         expect(testLogger.getCount(LogLevel.Error)).toBe(1);
         (done as jest.DoneCallback)();
       }, 300);
-    }
+    },
   );
 });

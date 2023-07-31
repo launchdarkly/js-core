@@ -1,5 +1,4 @@
 'use client';
-// The "use client" is necessary here because the LaunchDarkly React SDK returns a client-side component
 
 import { LDContext, LDFlagSet } from 'launchdarkly-js-client-sdk';
 import { withLDProvider } from 'launchdarkly-react-client-sdk';
@@ -12,6 +11,13 @@ type LaunchDarklyProviderProps = {
   children: ReactNode;
 };
 
+/**
+ * This returns a client-side component hence the "use client"
+ * above is necessary.
+ *
+ * See the nextjs docs for more info on the "use client" directive:
+ * https://nextjs.org/docs/getting-started/react-essentials#the-use-client-directive
+ */
 export default function LaunchDarklyProvider({
   envId,
   context,

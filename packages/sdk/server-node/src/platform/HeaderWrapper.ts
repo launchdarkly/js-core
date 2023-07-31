@@ -1,5 +1,6 @@
-import { platform } from '@launchdarkly/js-server-sdk-common';
 import * as http from 'http';
+
+import { platform } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * Wraps the headers to match those used by fetch APIs.

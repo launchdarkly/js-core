@@ -1,16 +1,18 @@
 import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+
 import { interfaces } from '@launchdarkly/node-server-sdk';
+
 import DynamoDBBigSegmentStore, {
-  KEY_METADATA,
-  KEY_USER_DATA,
   ATTR_EXCLUDED,
   ATTR_INCLUDED,
   ATTR_SYNC_ON,
+  KEY_METADATA,
+  KEY_USER_DATA,
 } from '../src/DynamoDBBigSegmentStore';
-import clearPrefix from './clearPrefix';
-import setupTable from './setupTable';
 import LDDynamoDBOptions from '../src/LDDynamoDBOptions';
 import { numberValue, stringValue } from '../src/Value';
+import clearPrefix from './clearPrefix';
+import setupTable from './setupTable';
 
 const FAKE_HASH = 'userhash';
 
@@ -26,7 +28,7 @@ const DEFAULT_CLIENT_OPTIONS: LDDynamoDBOptions = {
 
 async function setMetadata(
   prefix: string | undefined,
-  metadata: interfaces.BigSegmentStoreMetadata
+  metadata: interfaces.BigSegmentStoreMetadata,
 ): Promise<void> {
   const client = new DynamoDBClient(DEFAULT_CLIENT_OPTIONS.clientOptions!);
   const key = prefix ? `${prefix}:${KEY_METADATA}` : KEY_METADATA;
@@ -38,7 +40,7 @@ async function setMetadata(
         key: stringValue(key),
         [ATTR_SYNC_ON]: numberValue(metadata.lastUpToDate!),
       },
-    })
+    }),
   );
   client.destroy();
 }
@@ -47,7 +49,7 @@ async function setSegments(
   prefix: string | undefined,
   userHashKey: string,
   included: string[],
-  excluded: string[]
+  excluded: string[],
 ): Promise<void> {
   const client = new DynamoDBClient(DEFAULT_CLIENT_OPTIONS.clientOptions!);
   const key = prefix ? `${prefix}:${KEY_USER_DATA}` : KEY_USER_DATA;
@@ -64,7 +66,7 @@ async function setSegments(
         ExpressionAttributeValues: {
           ':value': { SS: values },
         },
-      })
+      }),
     );
   }
 

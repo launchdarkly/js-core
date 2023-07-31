@@ -1,4 +1,5 @@
-import { LDLogger, EventSource, Info, Requests } from '@launchdarkly/js-sdk-common';
+import { EventSource, Info, LDLogger, Requests } from '@launchdarkly/js-sdk-common';
+
 import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
 import { isHttpRecoverable, LDStreamingError } from '../errors';
@@ -42,7 +43,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     requests: Requests,
     info: Info,
     private readonly featureStore: LDDataSourceUpdates,
-    private readonly diagnosticsManager?: DiagnosticsManager
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     this.headers = defaultHeaders(sdkKey, config, info);
     this.logger = config.logger;
@@ -61,7 +62,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
       this.diagnosticsManager.recordStreamInit(
         this.connectionAttemptStartTime,
         !success,
-        Date.now() - this.connectionAttemptStartTime
+        Date.now() - this.connectionAttemptStartTime,
       );
     }
 
@@ -177,7 +178,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
                 version: parsed.version,
                 deleted: true,
               },
-              () => {}
+              () => {},
             );
           }
         }

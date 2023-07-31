@@ -7,9 +7,9 @@ import {
   LDMigrationStage,
   LDSerialExecution,
 } from '../src';
+import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
-import { TestData } from '../src/integrations';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
 
@@ -28,7 +28,7 @@ describe('given an LDClient with test data', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
       },
-      callbacks
+      callbacks,
     );
 
     await client.waitForInitialization();
@@ -408,7 +408,7 @@ describe('given an LDClient with test data', () => {
 
       expect(oldWriteCalled).toEqual(oldWrite);
       expect(newWriteCalled).toEqual(newWrite);
-    }
+    },
   );
 
   it.each([

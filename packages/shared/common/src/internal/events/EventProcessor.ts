@@ -71,7 +71,7 @@ interface LDDiagnosticsManager {
   createStatsEventAndReset(
     droppedEvents: number,
     deduplicatedUsers: number,
-    eventsInLastBatch: number
+    eventsInLastBatch: number,
   ): DiagnosticEvent;
 }
 
@@ -111,14 +111,14 @@ export default class EventProcessor implements LDEventProcessor {
     clientContext: ClientContext,
     private readonly eventSender: LDEventSender,
     private readonly contextDeduplicator: LDContextDeduplicator,
-    private readonly diagnosticsManager?: LDDiagnosticsManager
+    private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
 
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,
-      config.privateAttributes.map((ref) => new AttributeReference(ref))
+      config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
     if (this.contextDeduplicator.flushInterval !== undefined) {
@@ -143,7 +143,7 @@ export default class EventProcessor implements LDEventProcessor {
         const statsEvent = this.diagnosticsManager!.createStatsEventAndReset(
           this.droppedEvents,
           this.deduplicatedUsers,
-          this.eventsInLastBatch
+          this.eventsInLastBatch,
         );
 
         this.droppedEvents = 0;
@@ -294,7 +294,7 @@ export default class EventProcessor implements LDEventProcessor {
       if (!this.exceededCapacity) {
         this.exceededCapacity = true;
         this.logger?.warn(
-          'Exceeded event queue capacity. Increase capacity to avoid dropping events.'
+          'Exceeded event queue capacity. Increase capacity to avoid dropping events.',
         );
       }
       this.droppedEvents += 1;

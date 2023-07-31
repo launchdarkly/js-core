@@ -1,7 +1,8 @@
 import { AttributeReference } from '@launchdarkly/js-sdk-common';
+
+import { SegmentRule } from './SegmentRule';
 import { SegmentTarget } from './SegmentTarget';
 import { Versioned } from './Versioned';
-import { SegmentRule } from './SegmentRule';
 
 export interface Segment extends Versioned {
   included?: string[];

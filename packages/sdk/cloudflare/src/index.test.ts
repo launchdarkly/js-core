@@ -1,6 +1,8 @@
 import type { KVNamespace } from '@cloudflare/workers-types';
-import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
 import { Miniflare } from 'miniflare';
+
+import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
+
 import { init } from './index';
 import * as allFlagsSegments from './testData.json';
 

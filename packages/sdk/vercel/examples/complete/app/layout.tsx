@@ -1,10 +1,11 @@
-import 'tailwindcss/tailwind.css';
-import Nav from 'components/nav';
-import { ReactElement } from 'react';
-import { headers } from 'next/headers';
-import { LDMultiKindContext } from '@launchdarkly/vercel-server-sdk';
 import LaunchDarklyProvider from 'components/launchdarklyProvider';
+import Nav from 'components/nav';
 import { ldEdgeClient } from 'lib/ldEdgeClient';
+import { headers } from 'next/headers';
+import { ReactElement } from 'react';
+import 'tailwindcss/tailwind.css';
+
+import { LDMultiKindContext } from '@launchdarkly/vercel-server-sdk';
 
 // Specify the `edge` runtime to use the LaunchDarkly Edge SDK in layouts
 export const runtime = 'edge';

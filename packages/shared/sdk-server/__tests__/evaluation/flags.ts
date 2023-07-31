@@ -1,4 +1,5 @@
 import { AttributeReference, LDContext } from '@launchdarkly/js-sdk-common';
+
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';

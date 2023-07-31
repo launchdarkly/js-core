@@ -4,7 +4,6 @@ about: Create a report to help us improve
 title: ''
 labels: 'package: sdk/akamai-edgeworker-sdk, bug'
 assignees: ''
-
 ---
 
 **Is this a support request?**

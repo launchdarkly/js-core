@@ -1,12 +1,14 @@
 // The deserialization will be updating parameter values, so we don't need this
 // warning in this file.
+
 /* eslint-disable no-param-reassign */
 import { AttributeReference } from '@launchdarkly/js-sdk-common';
-import { Flag } from '../evaluation/data/Flag';
-import { Segment } from '../evaluation/data/Segment';
+
 import { VersionedData } from '../api/interfaces';
-import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
+import { Flag } from '../evaluation/data/Flag';
 import { Rollout } from '../evaluation/data/Rollout';
+import { Segment } from '../evaluation/data/Segment';
+import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 
 /**
  * @internal
@@ -70,7 +72,7 @@ function processRollout(rollout?: Rollout) {
   if (rollout && rollout.bucketBy) {
     rollout.bucketByAttributeReference = new AttributeReference(
       rollout.bucketBy,
-      !rollout.contextKind
+      !rollout.contextKind,
     );
   }
 }
@@ -108,7 +110,7 @@ export function processSegment(segment: Segment) {
       // So use the rolloutContextKind to indicate if this is new or old data.
       rule.bucketByAttributeReference = new AttributeReference(
         rule.bucketBy,
-        !rule.rolloutContextKind
+        !rule.rolloutContextKind,
       );
     }
     rule?.clauses?.forEach((clause) => {

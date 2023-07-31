@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/store/node-server-sdk-dynamodb/docs/)
 
 This library provides a DynamoDB-backed persistence mechanism (feature store) for the [LaunchDarkly Node.js SDK](https://github.com/launchdarkly/js-core/packages/sdk/server-node), replacing the default in-memory feature store. It uses the AWS SDK for Node.js.
-The minimum version of the LaunchDarkly Server-Side SDK for Node for use with this library is 8.0.0. 
+The minimum version of the LaunchDarkly Server-Side SDK for Node for use with this library is 8.0.0.
 
 ## LaunchDarkly overview
 
@@ -59,7 +59,9 @@ const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME', { clientOptions: dy
 Alternatively, if you already have a fully configured DynamoDB client object, you can tell LaunchDarkly to use that:
 
 ```typescript
-const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME', { dynamoDBClient: myDynamoDBClientInstance });
+const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME', {
+  dynamoDBClient: myDynamoDBClientInstance,
+});
 ```
 
 6. If you are running a [LaunchDarkly Relay Proxy](https://github.com/launchdarkly/ld-relay) instance, or any other process that will pre-populate the DynamoDB table with feature flags from LaunchDarkly, you can use [daemon mode](https://github.com/launchdarkly/ld-relay#daemon-mode), so that the SDK retrieves flag data only from DynamoDB and does not communicate directly with LaunchDarkly. This is controlled by the SDK's `useLdd` option:
@@ -103,6 +105,5 @@ We encourage pull requests and other contributions from the community. Check out
 
 [node-dynamodb-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-dynamodb.yml/badge.svg
 [node-dynamodb-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-dynamodb.yml
-
 [node-dynamodb-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-dynamodb.svg?style=flat-square
 [node-dynamodb-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-dynamodb

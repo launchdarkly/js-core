@@ -1,6 +1,6 @@
 import { LDClientImpl, LDMigrationStage } from '../src';
-import { LDClientCallbacks } from '../src/LDClientImpl';
 import TestData from '../src/integrations/test_data/TestData';
+import { LDClientCallbacks } from '../src/LDClientImpl';
 import basicPlatform from './evaluation/mocks/platform';
 
 /**
@@ -38,7 +38,7 @@ describe('given an LDClient with test data', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
       },
-      callbacks
+      callbacks,
     );
 
     await client.waitForInitialization();
@@ -60,10 +60,10 @@ describe('given an LDClient with test data', () => {
       const res = await client.variationMigration(
         flagKey,
         { key: 'test-key' },
-        defaultValue as LDMigrationStage
+        defaultValue as LDMigrationStage,
       );
       expect(res.value).toEqual(value);
-    }
+    },
   );
 
   it.each([
@@ -86,7 +86,7 @@ describe('given an LDClient with test data', () => {
     expect(res.value).toEqual(LDMigrationStage.Off);
     expect(errors.length).toEqual(1);
     expect(errors[0].message).toEqual(
-      'Unrecognized MigrationState for "bad-migration"; returning default value.'
+      'Unrecognized MigrationState for "bad-migration"; returning default value.',
     );
   });
 });

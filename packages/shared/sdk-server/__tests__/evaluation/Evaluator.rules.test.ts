@@ -1,7 +1,7 @@
 // Tests of flag evaluation at the rule level. Clause-level behavior is covered
 // in detail in Evaluator.clause.tests and (TODO: File for segments).
-
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
+
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';
@@ -44,7 +44,7 @@ describe('when evaluating user equivalent contexts', () => {
         variationIndex: 2,
         reason: { kind: 'RULE_MATCH', ruleIndex: 1, ruleId: 'id1' },
       });
-    }
+    },
   );
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -60,7 +60,7 @@ describe('when evaluating user equivalent contexts', () => {
         variationIndex: null,
         reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' },
       });
-    }
+    },
   );
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -76,7 +76,7 @@ describe('when evaluating user equivalent contexts', () => {
         variationIndex: null,
         reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' },
       });
-    }
+    },
   );
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -92,7 +92,7 @@ describe('when evaluating user equivalent contexts', () => {
         variationIndex: null,
         reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' },
       });
-    }
+    },
   );
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -108,7 +108,7 @@ describe('when evaluating user equivalent contexts', () => {
         variationIndex: null,
         reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' },
       });
-    }
+    },
   );
 
   it.each<LDContext>([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -133,7 +133,7 @@ describe('when evaluating user equivalent contexts', () => {
       const res = await evaluator.evaluate(flag, Context.fromLDContext(userToTest));
       expect(res.isError).toBeFalsy();
       expect(res.detail.value).toEqual(false);
-    }
+    },
   );
 });
 
@@ -178,6 +178,6 @@ describe('when evaluating non-user contexts', () => {
         variationIndex: 2,
         reason: { kind: 'RULE_MATCH', ruleIndex: 1, ruleId: 'id1' },
       });
-    }
+    },
   );
 });
