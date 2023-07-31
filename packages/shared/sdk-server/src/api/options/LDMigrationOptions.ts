@@ -29,22 +29,6 @@ export enum LDExecution {
 }
 
 /**
- * Settings for latency tracking.
- */
-export enum LDLatencyTracking {
-  Enabled,
-  Disabled,
-}
-
-/**
- * Settings for error tracking.
- */
-export enum LDErrorTracking {
-  Enabled,
-  Disabled,
-}
-
-/**
  * Migration methods may return an LDMethodResult.
  * The implementation includes methods for creating results conveniently.
  *
@@ -94,16 +78,16 @@ export interface LDMigrationOptions<
   /**
    * Configure the latency tracking for the migration.
    *
-   * Defaults to {@link LDLatencyTracking.Enabled}.
+   * Defaults to {@link true}.
    */
-  latencyTracking?: LDLatencyTracking;
+  latencyTracking?: boolean;
 
   /**
    * Configure the error tracking for the migration.
    *
-   * Defaults to {@link LDErrorTracking.Enabled}.
+   * Defaults to {@link true}.
    */
-  errorTracking?: LDErrorTracking;
+  errorTracking?: boolean;
 
   /**
    * TKTK
