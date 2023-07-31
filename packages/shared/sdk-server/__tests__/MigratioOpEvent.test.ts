@@ -49,6 +49,70 @@ describe('given an LDClient with test data', () => {
     [new LDSerialExecution(LDExecutionOrdering.Random), 'serial random'],
     [new LDConcurrentExecution(), 'concurrent'],
   ])('given different execution methods: %p %p', (execution) => {
+    describe('given a migration which checks consistency and produces consistent results', () => {
+      let migration: Migration<string, string>;
+      beforeEach(() => {
+        migration = new Migration(client, {
+          execution,
+          latencyTracking: false,
+          errorTracking: false,
+          readNew: async (payload?: string) => LDMigrationSuccess(payload || 'default'),
+          writeNew: async (payload?: string) => LDMigrationSuccess(payload || 'default'),
+          readOld: async (payload?: string) => LDMigrationSuccess(payload || 'default'),
+          writeOld: async (payload?: string) => LDMigrationSuccess(payload || 'default'),
+          check: (a: string, b: string) => a === b,
+        });
+      });
+
+      it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
+        'finds the results consistent: %p',
+        async (stage) => {
+          const flagKey = 'migration';
+          td.update(td.flag(flagKey).valueForAll(stage));
+
+          await migration.read(flagKey, { key: 'test' }, stage);
+          expect(events.length).toBe(2);
+          // Only check the measurements component of the event.
+          const migrationEvent = events[1] as InputMigrationEvent;
+          expect(migrationEvent.measurements[0].key).toEqual('consistent');
+          // This isn't a precise check, but we should have non-zero values.
+          expect(migrationEvent.measurements[0].value).toEqual(1);
+        },
+      );
+    });
+
+    describe('given a migration which checks consistency and produces inconsistent results', () => {
+      let migration: Migration<string, string>;
+      beforeEach(() => {
+        migration = new Migration(client, {
+          execution,
+          latencyTracking: false,
+          errorTracking: false,
+          readNew: async () => LDMigrationSuccess('a'),
+          writeNew: async () => LDMigrationSuccess('b'),
+          readOld: async () => LDMigrationSuccess('c'),
+          writeOld: async () => LDMigrationSuccess('d'),
+          check: (a: string, b: string) => a === b,
+        });
+      });
+
+      it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
+        'finds the results consistent: %p',
+        async (stage) => {
+          const flagKey = 'migration';
+          td.update(td.flag(flagKey).valueForAll(stage));
+
+          await migration.read(flagKey, { key: 'test' }, stage);
+          expect(events.length).toBe(2);
+          // Only check the measurements component of the event.
+          const migrationEvent = events[1] as InputMigrationEvent;
+          expect(migrationEvent.measurements[0].key).toEqual('consistent');
+          // This isn't a precise check, but we should have non-zero values.
+          expect(migrationEvent.measurements[0].value).toEqual(0);
+        },
+      );
+    });
+
     describe('given a migration which takes time to execute and tracks latency', () => {
       let migration: Migration<string, string>;
 
