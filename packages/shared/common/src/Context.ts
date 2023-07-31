@@ -15,9 +15,6 @@ import { TypeValidators } from './validators';
 // This is to reduce work on the hot-path. Later, for event processing, deeper
 // cloning of the context will be done.
 
-// Validates a kind excluding check that it isn't "kind".
-const KindValidator = TypeValidators.stringMatchingRegex(/^(\w|\.|-)+$/);
-
 // When no kind is specified, then this kind will be used.
 const DEFAULT_KIND = 'user';
 
@@ -98,7 +95,7 @@ function isContextCommon(
  * @returns true if the kind is valid.
  */
 function validKind(kind: string) {
-  return KindValidator.is(kind) && kind !== 'kind';
+  return TypeValidators.Kind.is(kind);
 }
 
 /**

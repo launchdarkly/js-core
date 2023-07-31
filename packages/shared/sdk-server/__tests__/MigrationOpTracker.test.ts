@@ -5,7 +5,7 @@ import { LDConsistencyCheck, LDMigrationStage } from '../src';
 it('does not generate an event if an op is not set', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -17,15 +17,9 @@ it('does not generate an event if an op is not set', () => {
 });
 
 it('does not generate an event with missing context keys', () => {
-  const tracker = new MigrationOpTracker(
-    'flag',
-    {},
-    LDMigrationStage.Off,
-    LDMigrationStage.Off,
-    {
-      kind: 'FALLTHROUGH',
-    }
-  );
+  const tracker = new MigrationOpTracker('flag', {}, LDMigrationStage.Off, LDMigrationStage.Off, {
+    kind: 'FALLTHROUGH',
+  });
 
   // Set the op otherwise that would prevent an event as well.
   tracker.op('write');
@@ -36,7 +30,7 @@ it('does not generate an event with missing context keys', () => {
 it('generates an event if the minimal requirements are met.', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -58,7 +52,7 @@ it('generates an event if the minimal requirements are met.', () => {
 it('includes errors if at least one is set', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -79,7 +73,7 @@ it('includes errors if at least one is set', () => {
 
   const trackerB = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -102,7 +96,7 @@ it('includes errors if at least one is set', () => {
 it('includes latency if at least one measurement exists', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -122,7 +116,7 @@ it('includes latency if at least one measurement exists', () => {
 
   const trackerB = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -144,7 +138,7 @@ it('includes latency if at least one measurement exists', () => {
 it('includes if the result was consistent', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -165,7 +159,7 @@ it('includes if the result was consistent', () => {
 it('includes if the result was inconsistent', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    {user: 'bob'},
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {

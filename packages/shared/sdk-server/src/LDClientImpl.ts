@@ -49,6 +49,7 @@ import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 import MigrationOpTracker from './MigrationOpTracker';
+import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 
 enum InitState {
   Initializing,
@@ -413,9 +414,10 @@ export default class LDClientImpl implements LDClient {
   }
 
   trackMigration(event: LDMigrationOpEvent): void {
-    // Validate event content.
-    // Transform into InputMigrationEvent.
-    // this.eventProcessor.sendEvent(event);
+    const converted = MigrationOpEventToInputEvent(event);
+    if (converted) {
+      this.eventProcessor.sendEvent(converted);
+    }
   }
 
   identify(context: LDContext): void {

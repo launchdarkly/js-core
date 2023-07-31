@@ -231,6 +231,7 @@ export default class Migration<
       payload,
       tracker: stage.tracker,
     });
+    stage.tracker.op('read');
     this.trackReadError(stage.tracker, res);
     this.sendEvent(stage.tracker);
     return res;
@@ -247,6 +248,7 @@ export default class Migration<
       payload,
       tracker: stage.tracker,
     });
+    stage.tracker.op('write');
     this.trackWriteError(stage.tracker, res);
     this.sendEvent(stage.tracker);
     return res;
