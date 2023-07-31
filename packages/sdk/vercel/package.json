@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/vercel-server-sdk",
-  "version": "1.1.0-alpha.0",
+  "version": "1.0.1",
   "description": "LaunchDarkly Server-Side SDK for Vercel Edge",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/vercel",
   "repository": {
