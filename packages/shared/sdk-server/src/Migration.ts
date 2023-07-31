@@ -1,14 +1,15 @@
 import { LDContext } from '@launchdarkly/js-sdk-common';
+
 import { LDClient, LDMigrationStage } from './api';
+import { LDMigration, LDMigrationReadResult, LDMigrationWriteResult } from './api/LDMigration';
 import {
-  LDMigrationOptions,
-  LDSerialExecution,
   LDConcurrentExecution,
   LDExecution,
   LDExecutionOrdering,
   LDMethodResult,
+  LDMigrationOptions,
+  LDSerialExecution,
 } from './api/options/LDMigrationOptions';
-import { LDMigration, LDMigrationReadResult, LDMigrationWriteResult } from './api/LDMigration';
 
 type MultipleReadResult<TMigrationRead> = {
   fromOld: LDMethodResult<TMigrationRead>;
@@ -16,7 +17,7 @@ type MultipleReadResult<TMigrationRead> = {
 };
 
 async function safeCall<TResult>(
-  method: () => Promise<LDMethodResult<TResult>>
+  method: () => Promise<LDMethodResult<TResult>>,
 ): Promise<LDMethodResult<TResult>> {
   try {
     // Awaiting to allow catching.
@@ -34,7 +35,7 @@ async function readSequentialRandom<
   TMigrationRead,
   TMigrationWrite,
   TMigrationReadInput,
-  TMigrationWriteInput
+  TMigrationWriteInput,
 >(
   config: LDMigrationOptions<
     TMigrationRead,
@@ -42,7 +43,7 @@ async function readSequentialRandom<
     TMigrationReadInput,
     TMigrationWriteInput
   >,
-  payload?: TMigrationReadInput
+  payload?: TMigrationReadInput,
 ): Promise<MultipleReadResult<TMigrationRead>> {
   // This number is not used for a purpose requiring cryptographic security.
   const randomIndex = Math.floor(Math.random() * 2);
@@ -62,7 +63,7 @@ async function readSequentialFixed<
   TMigrationRead,
   TMigrationWrite,
   TMigrationReadInput,
-  TMigrationWriteInput
+  TMigrationWriteInput,
 >(
   config: LDMigrationOptions<
     TMigrationRead,
@@ -70,7 +71,7 @@ async function readSequentialFixed<
     TMigrationReadInput,
     TMigrationWriteInput
   >,
-  payload?: TMigrationReadInput
+  payload?: TMigrationReadInput,
 ): Promise<MultipleReadResult<TMigrationRead>> {
   const fromOld = await safeCall(() => config.readOld(payload));
   const fromNew = await safeCall(() => config.readNew(payload));
@@ -81,7 +82,7 @@ async function readConcurrent<
   TMigrationRead,
   TMigrationWrite,
   TMigrationReadInput,
-  TMigrationWriteInput
+  TMigrationWriteInput,
 >(
   config: LDMigrationOptions<
     TMigrationRead,
@@ -89,7 +90,7 @@ async function readConcurrent<
     TMigrationReadInput,
     TMigrationWriteInput
   >,
-  payload?: TMigrationReadInput
+  payload?: TMigrationReadInput,
 ): Promise<MultipleReadResult<TMigrationRead>> {
   const fromOldPromise = safeCall(() => config.readOld(payload));
   const fromNewPromise = safeCall(() => config.readNew(payload));
@@ -107,7 +108,7 @@ async function read<TMigrationRead, TMigrationWrite, TMigrationReadInput, TMigra
     TMigrationWriteInput
   >,
   execution: LDSerialExecution | LDConcurrentExecution,
-  payload?: TMigrationReadInput
+  payload?: TMigrationReadInput,
 ): Promise<MultipleReadResult<TMigrationRead>> {
   if (execution.type === LDExecution.Serial) {
     const serial = execution as LDSerialExecution;
@@ -137,7 +138,7 @@ export default class Migration<
   TMigrationRead,
   TMigrationWrite,
   TMigrationReadInput = any,
-  TMigrationWriteInput = any
+  TMigrationWriteInput = any,
 > implements
     LDMigration<TMigrationRead, TMigrationWrite, TMigrationReadInput, TMigrationWriteInput>
 {
@@ -151,7 +152,7 @@ export default class Migration<
         TMigrationReadInput,
         TMigrationWriteInput
       >,
-      payload?: TMigrationReadInput
+      payload?: TMigrationReadInput,
     ) => Promise<LDMigrationReadResult<TMigrationRead>>;
   } = {
     [LDMigrationStage.Off]: async (config, payload) => ({
@@ -194,7 +195,7 @@ export default class Migration<
         TMigrationReadInput,
         TMigrationWriteInput
       >,
-      payload?: TMigrationWriteInput
+      payload?: TMigrationWriteInput,
     ) => Promise<LDMigrationWriteResult<TMigrationWrite>>;
   } = {
     [LDMigrationStage.Off]: async (config, payload) => ({
@@ -268,7 +269,7 @@ export default class Migration<
       TMigrationWrite,
       TMigrationReadInput,
       TMigrationWriteInput
-    >
+    >,
   ) {
     if (config.execution) {
       this.execution = config.execution;
@@ -281,7 +282,7 @@ export default class Migration<
     key: string,
     context: LDContext,
     defaultStage: LDMigrationStage,
-    payload?: TMigrationReadInput
+    payload?: TMigrationReadInput,
   ): Promise<LDMigrationReadResult<TMigrationRead>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
     return this.readTable[stage](this.config, payload);
@@ -291,7 +292,7 @@ export default class Migration<
     key: string,
     context: LDContext,
     defaultStage: LDMigrationStage,
-    payload?: TMigrationWriteInput
+    payload?: TMigrationWriteInput,
   ): Promise<LDMigrationWriteResult<TMigrationWrite>> {
     const stage = await this.client.variationMigration(key, context, defaultStage);
 

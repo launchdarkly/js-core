@@ -1,8 +1,8 @@
 import { LDContext, LDEvaluationDetail, LDFlagValue } from '@launchdarkly/js-sdk-common';
 
 import { LDFlagsState } from './data/LDFlagsState';
-import { LDMigrationStage } from './data/LDMigrationStage';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
+import { LDMigrationStage } from './data/LDMigrationStage';
 
 /**
  * The LaunchDarkly SDK client object.
@@ -140,7 +140,7 @@ export interface LDClient {
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-    callback?: (err: any, res: LDMigrationStage) => void
+    callback?: (err: any, res: LDMigrationStage) => void,
   ): Promise<LDMigrationStage>;
 
   /**

@@ -38,7 +38,7 @@ export default class InputEvalEvent {
     prereqOf?: string,
     reason?: LDEvaluationReason,
     debugEventsUntilDate?: number,
-    excludeFromSummaries?: boolean
+    excludeFromSummaries?: boolean,
   ) {
     this.creationDate = Date.now();
     this.context = context;

@@ -12,7 +12,15 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { IsMigrationStage, LDClient, LDFlagsState, LDFlagsStateOptions, LDMigrationStage, LDOptions, LDStreamProcessor } from './api';
+import {
+  IsMigrationStage,
+  LDClient,
+  LDFlagsState,
+  LDFlagsStateOptions,
+  LDMigrationStage,
+  LDOptions,
+  LDStreamProcessor,
+} from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -266,7 +274,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-    callback?: (err: any, res: LDMigrationStage) => void
+    callback?: (err: any, res: LDMigrationStage) => void,
   ): Promise<LDMigrationStage> {
     const stringValue = await this.variation(key, context, defaultValue as string);
     if (!IsMigrationStage(stringValue)) {
