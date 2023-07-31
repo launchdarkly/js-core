@@ -83,7 +83,7 @@ export interface LDMigrationOptions<
   TMigrationRead,
   TMigrationWrite,
   TMigrationReadInput,
-  TMigrationWriteInput
+  TMigrationWriteInput,
 > {
   /**
    * Configure how the migration should execute. If omitted the execution will

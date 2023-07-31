@@ -14,8 +14,9 @@ import {
   LDLogger,
   LDOptions,
 } from '@launchdarkly/js-server-sdk-common';
-import LDClientImpl from './LDClientNode';
+
 import { LDClient } from './api/LDClient';
+import LDClientImpl from './LDClientNode';
 
 export * from '@launchdarkly/js-server-sdk-common';
 

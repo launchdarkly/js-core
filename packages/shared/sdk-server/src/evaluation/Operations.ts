@@ -1,5 +1,6 @@
-import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 import { parse, SemVer } from 'semver';
+
+import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 const VERSION_COMPONENTS_REGEX = /^\d+(\.\d+)?(\.\d+)?/;
 
@@ -50,7 +51,7 @@ function semVerOperator(fn: OperatorFn<SemVer>): OperatorFn<any> {
 function makeOperator<T>(
   fn: OperatorFn<T>,
   validator: TypeValidator,
-  converter?: (val: any) => T
+  converter?: (val: any) => T,
 ): OperatorFn<any> {
   return (a: any, b: any) => {
     if (validator.is(a) && validator.is(b)) {
@@ -90,7 +91,7 @@ const operators: OperatorsInterface = {
   startsWith: makeOperator<string>((a, b) => a.startsWith(b), TypeValidators.String),
   matches: makeOperator<string>(
     (value, pattern) => safeRegexMatch(pattern, value),
-    TypeValidators.String
+    TypeValidators.String,
   ),
   contains: makeOperator<string>((a, b) => a.indexOf(b) > -1, TypeValidators.String),
   lessThan: makeOperator<number>((a, b) => a < b, TypeValidators.Number),

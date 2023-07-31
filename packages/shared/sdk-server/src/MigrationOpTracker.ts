@@ -1,10 +1,11 @@
 import { Context, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
+
 import { LDMigrationStage, LDMigrationTracker } from './api';
 import {
-  LDMigrationOp,
-  LDMigrationOpEvent,
   LDConsistencyCheck,
   LDMigrationMeasurement,
+  LDMigrationOp,
+  LDMigrationOpEvent,
 } from './api/data';
 import { LDMigrationOrigin } from './api/LDMigration';
 
@@ -33,7 +34,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     private readonly defaultStage: LDMigrationStage,
     private readonly stage: LDMigrationStage,
     private readonly reason: LDEvaluationReason,
-    private readonly variation?: number
+    private readonly variation?: number,
   ) {}
 
   op(op: LDMigrationOp) {

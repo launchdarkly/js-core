@@ -50,7 +50,7 @@ class MyCustomStoreProvider implements EdgeProvider {
 export const evaluateFlagFromCustomFeatureStore = async (
   flagKey: string,
   context: LDContext,
-  defaultValue: boolean
+  defaultValue: boolean,
 ) => {
   const client = init({
     sdkKey: 'Your-launchdarkly-environment-client-id',

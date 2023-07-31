@@ -1,8 +1,9 @@
 import { AsyncStoreFacade } from '@launchdarkly/node-server-sdk';
+
 import DynamoDBFeatureStore from '../src/DynamoDBFeatureStore';
+import LDDynamoDBOptions from '../src/LDDynamoDBOptions';
 import clearPrefix from './clearPrefix';
 import setupTable from './setupTable';
-import LDDynamoDBOptions from '../src/LDDynamoDBOptions';
 
 const dataKind = {
   features: { namespace: 'features' },
@@ -30,7 +31,7 @@ describe.each([
     store = new DynamoDBFeatureStore(
       table,
       { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam },
-      undefined
+      undefined,
     );
     facade = new AsyncStoreFacade(store);
   });
@@ -92,7 +93,7 @@ describe.each([
     store = new DynamoDBFeatureStore(
       table,
       { ...DEFAULT_CLIENT_OPTIONS, prefix: prefixParam },
-      undefined
+      undefined,
     );
     facade = new AsyncStoreFacade(store);
     await facade.init({

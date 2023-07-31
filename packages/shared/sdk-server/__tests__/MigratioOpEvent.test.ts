@@ -1,4 +1,5 @@
 import {
+  internal,
   LDClientImpl,
   LDConcurrentExecution,
   LDErrorTracking,
@@ -6,11 +7,10 @@ import {
   LDLatencyTracking,
   LDMigrationStage,
   LDSerialExecution,
-  internal,
 } from '../src';
+import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
-import { TestData } from '../src/integrations';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
 
@@ -34,7 +34,7 @@ describe('given an LDClient with test data', () => {
       {
         updateProcessor: td.getFactory(),
       },
-      callbacks
+      callbacks,
     );
 
     await client.waitForInitialization();

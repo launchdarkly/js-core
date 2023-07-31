@@ -71,7 +71,7 @@ export default class EventSummarizer {
           event.value,
           event.default,
           event.version,
-          event.variation
+          event.variation,
         );
       }
 
@@ -113,7 +113,7 @@ export default class EventSummarizer {
 
         return acc;
       },
-      {}
+      {},
     );
 
     return {

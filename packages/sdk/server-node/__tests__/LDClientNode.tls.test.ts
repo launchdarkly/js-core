@@ -5,8 +5,8 @@ import {
   TestHttpHandlers,
   TestHttpServer,
 } from 'launchdarkly-js-test-helpers';
-import { basicLogger, LDClient, LDLogger } from '../src';
 
+import { basicLogger, LDClient, LDLogger } from '../src';
 import LDClientNode from '../src/LDClientNode';
 
 describe('When using a TLS connection', () => {

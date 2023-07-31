@@ -1,8 +1,9 @@
-import { TypeValidators, internal } from '@launchdarkly/js-sdk-common';
+import { internal, TypeValidators } from '@launchdarkly/js-sdk-common';
+
 import { LDMigrationOpEvent } from './api';
 
 export default function MigrationOpEventToInputEvent(
-  inEvent: LDMigrationOpEvent
+  inEvent: LDMigrationOpEvent,
 ): internal.InputMigrationEvent | undefined {
   if (inEvent.kind !== 'migration_op') {
     return undefined;

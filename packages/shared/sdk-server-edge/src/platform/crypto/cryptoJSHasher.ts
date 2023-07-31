@@ -1,5 +1,7 @@
 import CryptoJS from 'crypto-js';
+
 import { Hasher as LDHasher } from '@launchdarkly/js-server-sdk-common';
+
 import { SupportedHashAlgorithm, SupportedOutputEncoding } from './types';
 
 export default class CryptoJSHasher implements LDHasher {

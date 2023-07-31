@@ -10,6 +10,7 @@ import {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../../src/api/interfaces';
 import {
   LDFeatureStore,
@@ -82,7 +83,7 @@ describe('given a diagnostics manager', () => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
-      new InMemoryFeatureStore()
+      new InMemoryFeatureStore(),
     );
   });
 
@@ -100,7 +101,7 @@ describe('given a diagnostics manager', () => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
-      new InMemoryFeatureStore()
+      new InMemoryFeatureStore(),
     );
 
     const { id } = manager.createInitEvent();
@@ -275,7 +276,7 @@ describe.each([
       new Configuration(configIn),
       basicPlatform,
       // @ts-ignore
-      configIn.featureStore ?? new InMemoryFeatureStore()
+      configIn.featureStore ?? new InMemoryFeatureStore(),
     );
   });
 
@@ -300,7 +301,7 @@ describe.each([true, false])('Given proxy and proxy auth=%p', (auth) => {
       'my-sdk-key',
       new Configuration({}),
       basicPlatform,
-      new InMemoryFeatureStore()
+      new InMemoryFeatureStore(),
     );
   });
 

@@ -1,5 +1,6 @@
-import { init } from '@launchdarkly/vercel-server-sdk';
 import { createClient } from '@vercel/edge-config';
+
+import { init } from '@launchdarkly/vercel-server-sdk';
 
 const edgeConfigClient = createClient(process.env.EDGE_CONFIG);
 if (!edgeConfigClient) {

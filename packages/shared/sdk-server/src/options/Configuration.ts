@@ -1,13 +1,14 @@
 import {
+  ApplicationTags,
+  LDClientContext,
   LDLogger,
   NumberWithMinimum,
+  OptionMessages,
+  ServiceEndpoints,
   TypeValidator,
   TypeValidators,
-  ApplicationTags,
-  OptionMessages,
-  LDClientContext,
-  ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
+
 import {
   LDBigSegmentsOptions,
   LDOptions,
@@ -108,7 +109,7 @@ function validateTypesAndNames(options: LDOptions): {
           validatedOptions[optionName] = min;
         } else {
           errors.push(
-            OptionMessages.wrongOptionType(optionName, validator.getType(), typeof optionValue)
+            OptionMessages.wrongOptionType(optionName, validator.getType(), typeof optionValue),
           );
           validatedOptions[optionName] = defaultValues[optionName];
         }
@@ -203,7 +204,7 @@ export default class Configuration {
 
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
-    dataSourceUpdates: LDDataSourceUpdates
+    dataSourceUpdates: LDDataSourceUpdates,
   ) => LDStreamProcessor;
 
   public readonly bigSegments?: LDBigSegmentsOptions;
@@ -226,7 +227,7 @@ export default class Configuration {
     this.serviceEndpoints = new ServiceEndpoints(
       validatedOptions.streamUri,
       validatedOptions.baseUri,
-      validatedOptions.eventsUri
+      validatedOptions.eventsUri,
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;

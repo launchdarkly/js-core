@@ -4,8 +4,8 @@ import {
   TestHttpHandlers,
   TestHttpServer,
 } from 'launchdarkly-js-test-helpers';
-import { basicLogger, LDLogger } from '../src';
 
+import { basicLogger, LDLogger } from '../src';
 import LDClientNode from '../src/LDClientNode';
 
 const sdkKey = 'sdkKey';

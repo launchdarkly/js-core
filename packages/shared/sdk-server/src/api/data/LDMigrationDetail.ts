@@ -1,7 +1,8 @@
 import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
-import { LDMigrationStage } from './LDMigrationStage';
+
 import { LDMigrationOrigin } from '../LDMigration';
 import { LDMigrationOp, LDMigrationOpEvent } from './LDMigrationOpEvent';
+import { LDMigrationStage } from './LDMigrationStage';
 
 /**
  * Used for reporting the state of a consistency check.

@@ -23,7 +23,7 @@ interface TypeWithRuleClauses {
       // The shape of rules are different between flags and segments, but
       // both have clauses of the same shape.
       clauses?: Clause[];
-    }
+    },
   ];
 }
 
@@ -63,7 +63,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
   constructor(
     private readonly featureStore: LDFeatureStore,
     private readonly hasEventListeners: () => boolean,
-    private readonly onChange: (key: string) => void
+    private readonly onChange: (key: string) => void,
   ) {}
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
@@ -78,7 +78,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
             this.dependencyTracker.updateDependenciesFrom(
               namespace,
               key,
-              computeDependencies(namespace, item)
+              computeDependencies(namespace, item),
             );
           });
         });
@@ -95,7 +95,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
                 key,
                 oldDataForKind && oldDataForKind[key],
                 newDataForKind && newDataForKind[key],
-                updatedItems
+                updatedItems,
               );
             });
           });
@@ -129,7 +129,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
         this.dependencyTracker.updateDependenciesFrom(
           kind.namespace,
           key,
-          computeDependencies(kind.namespace, data)
+          computeDependencies(kind.namespace, data),
         );
         if (checkForChanges) {
           const updatedItems = new NamespacedDataSet<boolean>();
@@ -151,7 +151,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
     key: string,
     oldValue: LDFeatureStoreItem | null | undefined,
     newValue: LDFeatureStoreItem,
-    toDataSet: NamespacedDataSet<boolean>
+    toDataSet: NamespacedDataSet<boolean>,
   ) {
     if (newValue && oldValue && newValue.version <= oldValue.version) {
       return;

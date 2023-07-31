@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line max-classes-per-file
-import { LDSingleKindContext, LDMultiKindContext, LDUser, LDContextCommon } from './api/context';
+import { LDContextCommon, LDMultiKindContext, LDSingleKindContext, LDUser } from './api/context';
 import { LDContext } from './api/context/LDContext';
 import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
@@ -84,7 +84,7 @@ function isLegacyUser(context: LDContext): context is LDUser {
  * that as well.
  */
 function isContextCommon(
-  kindOrContext: 'multi' | LDContextCommon
+  kindOrContext: 'multi' | LDContextCommon,
 ): kindOrContext is LDContextCommon {
   return kindOrContext && TypeValidators.Object.is(kindOrContext);
 }
@@ -109,11 +109,11 @@ function validKey(key: string) {
 
 function processPrivateAttributes(
   privateAttributes?: string[],
-  literals: boolean = false
+  literals: boolean = false,
 ): AttributeReference[] {
   if (privateAttributes) {
     return privateAttributes.map(
-      (privateAttribute) => new AttributeReference(privateAttribute, literals)
+      (privateAttribute) => new AttributeReference(privateAttribute, literals),
     );
   }
   return [];
@@ -223,7 +223,7 @@ export default class Context {
 
   private static getValueFromContext(
     reference: AttributeReference,
-    context?: LDContextCommon
+    context?: LDContextCommon,
   ): any {
     if (!context || !reference.isValid) {
       return undefined;
@@ -252,7 +252,7 @@ export default class Context {
     if (!kinds.length) {
       return Context.contextForError(
         'multi',
-        'A multi-kind context must contain at least one kind'
+        'A multi-kind context must contain at least one kind',
       );
     }
 
@@ -430,7 +430,7 @@ export default class Context {
           acc[kind] = context.key;
           return acc;
         },
-        {}
+        {},
       );
     }
     return { [this.kind]: this.context!.key };

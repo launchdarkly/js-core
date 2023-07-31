@@ -1,4 +1,4 @@
-import { LDEvaluationReason, LDEvaluationDetail } from '../../api/data';
+import { LDEvaluationDetail, LDEvaluationReason } from '../../api/data';
 import Context from '../../Context';
 
 export default class InputEvalEvent {
@@ -38,7 +38,7 @@ export default class InputEvalEvent {
     prereqOf?: string,
     reason?: LDEvaluationReason,
     debugEventsUntilDate?: number,
-    excludeFromSummaries?: boolean
+    excludeFromSummaries?: boolean,
   ) {
     this.creationDate = Date.now();
     this.context = context;

@@ -1,4 +1,5 @@
 import { LDContext } from '@launchdarkly/js-sdk-common';
+
 import { LDMigrationStage } from './data/LDMigrationStage';
 
 /**
@@ -58,7 +59,7 @@ export interface LDMigration<
   TMigrationRead,
   TMigrationWrite,
   TMigrationReadInput,
-  TMigrationWriteInput
+  TMigrationWriteInput,
 > {
   /**
    * TKTK
@@ -73,7 +74,7 @@ export interface LDMigration<
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-    payload?: TMigrationReadInput
+    payload?: TMigrationReadInput,
   ): Promise<LDMigrationReadResult<TMigrationRead>>;
 
   /**
@@ -89,6 +90,6 @@ export interface LDMigration<
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-    payload?: TMigrationWriteInput
+    payload?: TMigrationWriteInput,
   ): Promise<LDMigrationWriteResult<TMigrationWrite>>;
 }

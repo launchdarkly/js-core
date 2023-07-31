@@ -1,4 +1,5 @@
 import { Context } from '@launchdarkly/js-sdk-common';
+
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Rollout } from '../../src/evaluation/data/Rollout';
 import Evaluator from '../../src/evaluation/Evaluator';

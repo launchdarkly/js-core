@@ -7,7 +7,10 @@ import { EdgeProvider } from '.';
 export default class CacheableStoreProvider implements EdgeProvider {
   cache: string | null | undefined;
 
-  constructor(private readonly edgeProvider: EdgeProvider, private readonly rootKey: string) {}
+  constructor(
+    private readonly edgeProvider: EdgeProvider,
+    private readonly rootKey: string,
+  ) {}
 
   /**
    * Get data from the edge provider feature store.

@@ -1,6 +1,7 @@
 import { Context } from '@launchdarkly/js-sdk-common';
-import MigrationOpTracker from '../src/MigrationOpTracker';
+
 import { LDConsistencyCheck, LDMigrationStage } from '../src';
+import MigrationOpTracker from '../src/MigrationOpTracker';
 
 it('does not generate an event if an op is not set', () => {
   const tracker = new MigrationOpTracker(
@@ -10,7 +11,7 @@ it('does not generate an event if an op is not set', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
 
   expect(tracker.createEvent()).toBeUndefined();
@@ -35,7 +36,7 @@ it('generates an event if the minimal requirements are met.', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
 
   tracker.op('write');
@@ -57,7 +58,7 @@ it('includes errors if at least one is set', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
   tracker.op('read');
   tracker.error('old');
@@ -78,7 +79,7 @@ it('includes errors if at least one is set', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
   trackerB.op('read');
   trackerB.error('new');
@@ -101,7 +102,7 @@ it('includes latency if at least one measurement exists', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
   tracker.op('read');
   tracker.latency('old', 100);
@@ -121,7 +122,7 @@ it('includes latency if at least one measurement exists', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
   trackerB.op('read');
   trackerB.latency('new', 150);
@@ -143,7 +144,7 @@ it('includes if the result was consistent', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
   tracker.op('read');
   tracker.consistency(LDConsistencyCheck.Consistent);
@@ -164,7 +165,7 @@ it('includes if the result was inconsistent', () => {
     LDMigrationStage.Off,
     {
       kind: 'FALLTHROUGH',
-    }
+    },
   );
   tracker.op('read');
   tracker.consistency(LDConsistencyCheck.Inconsistent);

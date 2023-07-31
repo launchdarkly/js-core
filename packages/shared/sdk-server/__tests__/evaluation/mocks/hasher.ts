@@ -1,5 +1,4 @@
 // Mock hashing implementation.
-
 import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
 
 export const hasher: Hasher = {
