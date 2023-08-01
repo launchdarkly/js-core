@@ -5,6 +5,7 @@ import {
   TypeValidator,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
+
 import { LDInspection } from '../api/LDInspection';
 import LDOptions from './LDOptions';
 import ValidatedOptions from './ValidatedOptions';

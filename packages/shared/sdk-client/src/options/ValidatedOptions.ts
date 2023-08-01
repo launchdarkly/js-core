@@ -1,4 +1,5 @@
 import { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
+
 import { LDInspection } from '../api/LDInspection';
 
 export default interface ValidatedOptions {

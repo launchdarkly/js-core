@@ -47,7 +47,7 @@ export default class LDClientDomImpl implements LDClientDom {
   identify(
     context: LDContext,
     hash?: string,
-    onDone?: (err: Error | null, flags: LDFlagSet | null) => void
+    onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> {
     return Promise.resolve({});
   }

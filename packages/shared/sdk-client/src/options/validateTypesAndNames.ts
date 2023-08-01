@@ -4,6 +4,7 @@ import {
   OptionMessages,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
+
 import { defaultsAndValidators, getDefaults } from './defaultsAndValidators';
 import LDOptions from './LDOptions';
 import ValidatedOptions from './ValidatedOptions';

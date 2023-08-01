@@ -1,8 +1,9 @@
 import { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
-import LDOptions from './LDOptions';
-import { getDefaults } from './defaultsAndValidators';
-import validateTypesAndNames from './validateTypesAndNames';
+
 import { LDInspection } from '../api/LDInspection';
+import { getDefaults } from './defaultsAndValidators';
+import LDOptions from './LDOptions';
+import validateTypesAndNames from './validateTypesAndNames';
 
 export default class Configuration {
   // these ! properties are initialized dynamically in the constructor
