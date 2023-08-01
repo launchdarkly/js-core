@@ -1,5 +1,3 @@
-import { Context } from '@launchdarkly/js-sdk-common';
-
 import { LDConsistencyCheck, LDMigrationStage } from '../src';
 import MigrationOpTracker from '../src/MigrationOpTracker';
 
