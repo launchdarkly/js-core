@@ -1,4 +1,5 @@
 import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
+
 import type { LDInspection } from './LDInspection';
 
 export interface LDOptions {

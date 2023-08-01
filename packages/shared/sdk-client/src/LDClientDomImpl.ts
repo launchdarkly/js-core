@@ -1,4 +1,5 @@
 // temporarily allow unused vars for the duration of the migration
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   createSafeLogger,
@@ -9,6 +10,7 @@ import {
   LDLogger,
   Platform,
 } from '@launchdarkly/js-sdk-common';
+
 import { LDClientDom } from './api/LDClientDom';
 import { LDOptions } from './api/LDOptions';
 
