@@ -1,4 +1,5 @@
 import { format } from 'util';
+
 import { LDLogger } from '../api';
 import BasicLogger from './BasicLogger';
 import SafeLogger from './SafeLogger';

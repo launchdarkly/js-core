@@ -1,7 +1,8 @@
 import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
+
 import { init } from './index';
-import * as testData from './utils/testData.json';
 import mockEdgeConfigClient from './utils/mockEdgeConfigClient';
+import * as testData from './utils/testData.json';
 
 const sdkKey = 'test-sdk-key';
 const flagKey1 = 'testFlag1';

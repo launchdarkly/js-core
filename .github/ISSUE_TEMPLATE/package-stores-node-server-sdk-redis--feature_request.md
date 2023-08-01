@@ -4,7 +4,6 @@ about: Suggest an idea for this project
 title: ''
 labels: 'package: store/node-server-sdk-redis, feature'
 assignees: ''
-
 ---
 
 **Is your feature request related to a problem? Please describe.**

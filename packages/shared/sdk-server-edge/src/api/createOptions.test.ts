@@ -1,4 +1,5 @@
 import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
+
 import createOptions, { defaultOptions } from './createOptions';
 
 describe('createOptions', () => {

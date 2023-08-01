@@ -1,12 +1,13 @@
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
+
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';
 import Evaluator from '../../src/evaluation/Evaluator';
 import {
   makeBooleanFlagWithOneClause,
-  makeClauseThatMatchesUser,
   makeBooleanFlagWithRules,
+  makeClauseThatMatchesUser,
 } from './flags';
 import noQueries from './mocks/noQueries';
 import basicPlatform from './mocks/platform';
@@ -90,7 +91,7 @@ describe('given user clauses and contexts', () => {
       const context = Context.fromLDContext(user);
       const res = await evaluator.evaluate(flag, context!);
       expect(res.detail.value).toBe(true);
-    }
+    },
   );
 
   it.each<LDContext>([
@@ -466,5 +467,5 @@ describe.each([
       const res2 = await evaluator.evaluate(flag, contextWArray);
       expect(res2.detail.value).toBe(true);
     });
-  }
+  },
 );

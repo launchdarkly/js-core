@@ -4,7 +4,6 @@ about: Create a report to help us improve
 title: ''
 labels: 'package: shared/sdk-server, bug'
 assignees: ''
-
 ---
 
 **Is this a support request?**

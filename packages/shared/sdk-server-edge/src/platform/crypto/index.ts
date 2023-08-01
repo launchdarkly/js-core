@@ -1,4 +1,5 @@
 import type { Crypto, Hasher, Hmac } from '@launchdarkly/js-server-sdk-common';
+
 import CryptoJSHasher from './cryptoJSHasher';
 import CryptoJSHmac from './cryptoJSHmac';
 import { SupportedHashAlgorithm } from './types';

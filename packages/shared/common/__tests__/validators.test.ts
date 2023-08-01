@@ -53,7 +53,7 @@ describe.each([
         expect(validator.is(invalidValue)).toBeFalsy();
       });
     });
-  }
+  },
 );
 
 describe.each([
@@ -81,7 +81,7 @@ describe.each([
         expect(validator.is(invalidValue)).toBeFalsy();
       });
     });
-  }
+  },
 );
 
 describe('given a regex validator', () => {

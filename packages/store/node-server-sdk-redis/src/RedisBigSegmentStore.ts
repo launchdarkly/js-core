@@ -1,4 +1,5 @@
-import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
+import { interfaces, LDLogger } from '@launchdarkly/node-server-sdk';
+
 import LDRedisOptions from './LDRedisOptions';
 import RedisClientState from './RedisClientState';
 
@@ -23,7 +24,10 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
   // Logger is not currently used, but is included to reduce the chance of a
   // compatibility break to add a log.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(options?: LDRedisOptions, private readonly logger?: LDLogger) {
+  constructor(
+    options?: LDRedisOptions,
+    private readonly logger?: LDLogger,
+  ) {
     this.state = new RedisClientState(options);
   }
 
@@ -38,7 +42,7 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
   }
 
   async getUserMembership(
-    userHash: string
+    userHash: string,
   ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
     const includedRefs = await this.state
       .getClient()

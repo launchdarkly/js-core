@@ -1,5 +1,7 @@
 import { logger } from 'log';
+
 import { LDMultiKindContext } from '@launchdarkly/akamai-server-edgekv-sdk';
+
 import { evaluateFlagWithEdgeKV } from './ldClient';
 
 const createLDContext = (r: EW.IngressClientRequest): LDMultiKindContext => ({
@@ -29,7 +31,7 @@ export async function onClientRequest(request: EW.IngressClientRequest) {
 
 export function onClientResponse(
   request: EW.EgressClientRequest,
-  response: EW.EgressClientResponse
+  response: EW.EgressClientResponse,
 ) {
   // Outputs a message to the X-Akamai-EdgeWorker-onClientResponse-Log header.
   logger.log('Adding a header in ClientResponse');

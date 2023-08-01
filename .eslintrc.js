@@ -16,8 +16,7 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        // solves '@testing-library/jest-dom' should be listed in the project's dependencies, not devDependencies
-        devDependencies: ['**/jest*.ts'],
+        devDependencies: ['**/jest*.ts', '**/*.test.ts'],
       },
     ],
   },

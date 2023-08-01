@@ -1,4 +1,5 @@
-import { LDEvaluationDetail, LDEvaluationReason, internal } from '@launchdarkly/js-sdk-common';
+import { internal, LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
+
 import ErrorKinds from './ErrorKinds';
 import Reasons from './Reasons';
 
@@ -14,7 +15,7 @@ export default class EvalResult {
   protected constructor(
     public readonly isError: boolean,
     public readonly detail: LDEvaluationDetail,
-    public readonly message?: string
+    public readonly message?: string,
   ) {
     this.isError = isError;
     this.detail = detail;
@@ -37,7 +38,7 @@ export default class EvalResult {
         variationIndex: null,
         reason: { kind: 'ERROR', errorKind },
       },
-      message
+      message,
     );
   }
 

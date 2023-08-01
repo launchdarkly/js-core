@@ -4,7 +4,6 @@
 
 This project contains Typescript classes and interfaces that are applicable to Akamai's edge SDKs.
 
-
 ## Contributing
 
 See [Contributing](../CONTRIBUTING.md).

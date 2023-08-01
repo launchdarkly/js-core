@@ -1,4 +1,5 @@
 import { LDClientContext } from '@launchdarkly/js-sdk-common';
+
 import { BigSegmentStore } from '../interfaces';
 
 /**

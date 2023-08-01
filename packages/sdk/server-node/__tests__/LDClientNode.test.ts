@@ -1,4 +1,5 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
+
 import { init } from '../src';
 
 it('fires ready event in offline mode', (done) => {

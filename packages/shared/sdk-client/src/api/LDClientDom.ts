@@ -102,7 +102,7 @@ export interface LDClientDom {
   identify(
     context: LDContext,
     hash?: string,
-    onDone?: (err: Error | null, flags: LDFlagSet | null) => void
+    onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet>;
 
   /**

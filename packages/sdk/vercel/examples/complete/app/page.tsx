@@ -1,9 +1,9 @@
 'use client';
 
-import { FC } from 'react';
-import Image from 'next/image';
 import { LDFlagSet } from 'launchdarkly-js-client-sdk';
 import { useFlags, useLDClient } from 'launchdarkly-react-client-sdk';
+import Image from 'next/image';
+import { FC } from 'react';
 
 type ProductCardProps = {
   src: string;

@@ -1,26 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  ClientContext,
+  Context,
   EventSource,
   EventSourceInitDict,
+  Hasher,
   Headers,
+  Hmac,
   Info,
+  internal,
   Options,
   PlatformData,
   Requests,
   Response,
   SdkData,
-  ClientContext,
-  Context,
-  internal,
-  Hmac,
-  Hasher,
 } from '@launchdarkly/js-sdk-common';
+
+import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
+import EventSender from '../../src/events/EventSender';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import basicPlatform from '../evaluation/mocks/platform';
-import ContextDeduplicator from '../../src/events/ContextDeduplicator';
-import EventSender from '../../src/events/EventSender';
 
 const SDK_KEY = 'sdk-key';
 
@@ -181,7 +182,7 @@ describe('given an event processor with diagnostics manager', () => {
         requests,
         crypto,
       },
-      store
+      store,
     );
 
     const clientContext = new ClientContext(SDK_KEY, testConfig, {
@@ -195,7 +196,7 @@ describe('given an event processor with diagnostics manager', () => {
       clientContext,
       new EventSender(config, clientContext),
       new ContextDeduplicator(config),
-      diagnosticsManager
+      diagnosticsManager,
     );
   });
 
@@ -314,11 +315,11 @@ describe('given an event processor with diagnostics manager', () => {
         expect.objectContaining({ kind: 'identify', creationDate: 1000 }),
         expect.objectContaining({ kind: 'identify', creationDate: 1001 }),
         expect.objectContaining({ kind: 'identify', creationDate: 1002 }),
-      ])
+      ]),
     );
 
     const diagnosticMessage = requestState.requestsMade.find(
-      (msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic')
+      (msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic'),
     );
     expect(diagnosticMessage).toBeDefined();
     const diagnosticMessageData = JSON.parse(diagnosticMessage!.options.body!);
@@ -332,7 +333,7 @@ describe('given an event processor with diagnostics manager', () => {
         droppedEvents: 1,
         deduplicatedUsers: 0,
         eventsInLastBatch: 3,
-      })
+      }),
     );
   });
 
@@ -361,11 +362,11 @@ describe('given an event processor with diagnostics manager', () => {
       expect.arrayContaining([
         expect.objectContaining({ kind: 'custom', creationDate: 1000 }),
         expect.objectContaining({ kind: 'custom', creationDate: 1001 }),
-      ])
+      ]),
     );
 
     const diagnosticMessage = requestState.requestsMade.find(
-      (msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic')
+      (msg, idx) => idx !== 0 && msg.url.endsWith('/diagnostic'),
     );
     expect(diagnosticMessage).toBeDefined();
     const diagnosticMessageData = JSON.parse(diagnosticMessage!.options.body!);
@@ -379,7 +380,7 @@ describe('given an event processor with diagnostics manager', () => {
         droppedEvents: 0,
         deduplicatedUsers: 1,
         eventsInLastBatch: 3,
-      })
+      }),
     );
   });
 });

@@ -1,4 +1,5 @@
 import { AttributeReference } from '@launchdarkly/js-sdk-common';
+
 import { Clause } from './Clause';
 
 export interface SegmentRule {
