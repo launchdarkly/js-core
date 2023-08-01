@@ -137,5 +137,11 @@ export default class FileDataSource implements LDStreamProcessor {
       processSegment(parsed.segments[key]);
       this.addItem(VersionedDataKinds.Segments, parsed.segments[key]);
     });
+    Object.keys(parsed.configurationOverrides || {}).forEach((key) => {
+      this.addItem(VersionedDataKinds.ConfigurationOverrides, parsed.configurationOverrides[key]);
+    });
+    Object.keys(parsed.metrics || {}).forEach((key) => {
+      this.addItem(VersionedDataKinds.Metrics, parsed.metrics[key]);
+    });
   }
 }

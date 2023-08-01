@@ -204,6 +204,10 @@ export function deserializePatch(data: string): PatchData | undefined {
   } else if (parsed.path.startsWith(VersionedDataKinds.Segments.streamApiPath)) {
     processSegment(parsed.data as VersionedSegment);
     parsed.kind = VersionedDataKinds.Segments;
+  } else if (parsed.path.startsWith(VersionedDataKinds.ConfigurationOverrides.streamApiPath)) {
+    parsed.kind = VersionedDataKinds.ConfigurationOverrides;
+  } else if (parsed.path.startsWith(VersionedDataKinds.Metrics.streamApiPath)) {
+    parsed.kind = VersionedDataKinds.Metrics;
   }
 
   return parsed;
