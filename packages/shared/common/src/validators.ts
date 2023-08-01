@@ -177,6 +177,11 @@ export class TypeValidators {
 
   static readonly Boolean = new Type<boolean>('boolean', true);
 
+  static readonly NullableBoolean = new Type<boolean | undefined | null>(
+    'boolean | undefined | null',
+    true,
+  );
+
   static readonly Function = new Function();
 
   static createTypeArray<T>(typeName: string, example: T) {

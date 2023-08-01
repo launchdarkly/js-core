@@ -1,10 +1,4 @@
-import {
-  createSafeLogger,
-  LDLogger,
-  noop,
-  TypeValidator,
-  TypeValidators,
-} from '@launchdarkly/js-sdk-common';
+import { BasicLogger, noop, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { LDInspection } from '../api/LDInspection';
 import LDOptions from './LDOptions';
@@ -39,7 +33,7 @@ export const defaultsAndValidators: Record<LDOptionKey, Validation> = {
     validator: TypeValidators.numberWithMin(1),
   },
   logger: {
-    default: createSafeLogger() as LDLogger,
+    default: BasicLogger.get(),
     validator: TypeValidators.Object,
   },
   flushInterval: {
@@ -48,7 +42,7 @@ export const defaultsAndValidators: Record<LDOptionKey, Validation> = {
   },
   stream: {
     default: undefined,
-    validator: TypeValidators.Boolean,
+    validator: TypeValidators.NullableBoolean,
   },
   sendEvents: {
     default: true,

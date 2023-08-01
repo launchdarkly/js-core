@@ -1,7 +1,6 @@
-import { format } from 'util';
-
 import { LDLogger } from '../api';
 import BasicLogger from './BasicLogger';
+import format from './format';
 import SafeLogger from './SafeLogger';
 
 const createSafeLogger = (logger?: LDLogger) => {
