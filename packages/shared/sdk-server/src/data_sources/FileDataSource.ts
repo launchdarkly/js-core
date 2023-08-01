@@ -1,4 +1,5 @@
-import { LDLogger, Filesystem } from '@launchdarkly/js-sdk-common';
+import { Filesystem, LDLogger } from '@launchdarkly/js-sdk-common';
+
 import { LDStreamProcessor } from '../api';
 import { FileDataSourceOptions } from '../api/integrations';
 import { DataKind } from '../api/interfaces';
@@ -37,7 +38,7 @@ export default class FileDataSource implements LDStreamProcessor {
   constructor(
     options: FileDataSourceOptions,
     filesystem: Filesystem,
-    private readonly featureStore: LDFeatureStore
+    private readonly featureStore: LDFeatureStore,
   ) {
     this.fileLoader = new FileLoader(
       filesystem,
@@ -53,7 +54,7 @@ export default class FileDataSource implements LDStreamProcessor {
           this.initCallback?.(err);
           this.logger?.error(`Error processing files: ${err}`);
         }
-      }
+      },
     );
 
     this.logger = options.logger;

@@ -4,12 +4,13 @@ import {
   ConditionalCheckFailedException,
   DynamoDBClient,
   GetItemCommand,
+  paginateQuery,
   PutItemCommand,
   PutItemCommandInput,
   QueryCommandInput,
   WriteRequest,
-  paginateQuery,
 } from '@aws-sdk/client-dynamodb';
+
 import LDDynamoDBOptions from './LDDynamoDBOptions';
 
 // Unlike some other database integrations where the key prefix is mandatory and has
@@ -85,21 +86,21 @@ export default class DynamoDBClientState {
         this.client.send(
           new BatchWriteItemCommand({
             RequestItems: { [table]: batch },
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
   }
 
   async get(
     table: string,
-    key: Record<string, AttributeValue>
+    key: Record<string, AttributeValue>,
   ): Promise<Record<string, AttributeValue> | undefined> {
     const res = await this.client.send(
       new GetItemCommand({
         TableName: table,
         Key: key,
-      })
+      }),
     );
 
     return res.Item;

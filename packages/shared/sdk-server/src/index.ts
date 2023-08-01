@@ -1,5 +1,5 @@
-import LDClientImpl from './LDClientImpl';
 import BigSegmentStoreStatusProviderImpl from './BigSegmentStatusProviderImpl';
+import LDClientImpl from './LDClientImpl';
 
 export * as integrations from './integrations';
 export * as platform from '@launchdarkly/js-sdk-common';

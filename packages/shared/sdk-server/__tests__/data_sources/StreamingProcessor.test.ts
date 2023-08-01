@@ -8,17 +8,18 @@ import {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
+
 import promisify from '../../src/async/promisify';
 import defaultHeaders from '../../src/data_sources/defaultHeaders';
 import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
+import NullEventSource from '../../src/events/NullEventSource';
 import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger, { LogLevel } from '../Logger';
-import NullEventSource from '../../src/events/NullEventSource';
 
 const sdkKey = 'my-sdk-key';
 
@@ -79,7 +80,7 @@ describe('given a stream processor with mock event source', () => {
       requests,
       info,
       featureStore,
-      diagnosticsManager
+      diagnosticsManager,
     );
   });
 

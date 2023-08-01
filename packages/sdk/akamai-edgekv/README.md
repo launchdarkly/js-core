@@ -18,7 +18,6 @@ npm i @launchdarkly/akamai-server-edgekv-sdk
 
 ## Quickstart
 
-
 See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-edgekv/example).
 
 ## Developing this SDK

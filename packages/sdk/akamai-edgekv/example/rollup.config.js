@@ -1,6 +1,6 @@
-import typescript from '@rollup/plugin-typescript';
-import resolve from '@rollup/plugin-node-resolve';
 import common from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
 import copy from 'rollup-plugin-copy';
 
 const OUT_DIR = 'dist/ew';

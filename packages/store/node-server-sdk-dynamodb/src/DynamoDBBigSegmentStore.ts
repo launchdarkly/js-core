@@ -1,6 +1,7 @@
-import { LDLogger, interfaces } from '@launchdarkly/node-server-sdk';
-import LDDynamoDBOptions from './LDDynamoDBOptions';
+import { interfaces, LDLogger } from '@launchdarkly/node-server-sdk';
+
 import DynamoDBClientState from './DynamoDBClientState';
+import LDDynamoDBOptions from './LDDynamoDBOptions';
 import { stringValue } from './Value';
 
 /**
@@ -42,7 +43,7 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
   constructor(
     private readonly tableName: string,
     options?: LDDynamoDBOptions,
-    private readonly logger?: LDLogger
+    private readonly logger?: LDLogger,
   ) {
     this.state = new DynamoDBClientState(options);
   }
@@ -63,7 +64,7 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
   }
 
   async getUserMembership(
-    userHash: string
+    userHash: string,
   ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
     const data = await this.state.get(this.tableName, {
       namespace: stringValue(this.state.prefixedKey(KEY_USER_DATA)),

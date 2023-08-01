@@ -1,7 +1,6 @@
 // The interfaces in this file are intended to be as close as possible to the
 // interfaces used for the `fetch` Web API. Doing so should allow implementations
 // which are more easily portable.
-
 import { EventSource, EventSourceInitDict } from './EventSource';
 
 // These are not full specifications of the interface, but instead subsets

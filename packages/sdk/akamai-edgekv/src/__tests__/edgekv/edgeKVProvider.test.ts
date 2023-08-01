@@ -1,5 +1,5 @@
-import EdgeKVProvider from '../../edgekv/edgeKVProvider';
 import { EdgeKV } from '../../edgekv/edgekv';
+import EdgeKVProvider from '../../edgekv/edgeKVProvider';
 
 jest.mock('../../edgekv/edgekv', () => ({
   EdgeKV: jest.fn(),
