@@ -1,12 +1,10 @@
-import { Context } from '@launchdarkly/js-sdk-common';
-
 import { LDConsistencyCheck, LDMigrationStage } from '../src';
 import MigrationOpTracker from '../src/MigrationOpTracker';
 
 it('does not generate an event if an op is not set', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -17,16 +15,10 @@ it('does not generate an event if an op is not set', () => {
   expect(tracker.createEvent()).toBeUndefined();
 });
 
-it('does not generate an event for an invalid context', () => {
-  const tracker = new MigrationOpTracker(
-    'flag',
-    Context.fromLDContext({ kind: 'kind', key: '' }),
-    LDMigrationStage.Off,
-    LDMigrationStage.Off,
-    {
-      kind: 'FALLTHROUGH',
-    },
-  );
+it('does not generate an event with missing context keys', () => {
+  const tracker = new MigrationOpTracker('flag', {}, LDMigrationStage.Off, LDMigrationStage.Off, {
+    kind: 'FALLTHROUGH',
+  });
 
   // Set the op otherwise that would prevent an event as well.
   tracker.op('write');
@@ -37,7 +29,7 @@ it('does not generate an event for an invalid context', () => {
 it('generates an event if the minimal requirements are met.', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -59,7 +51,7 @@ it('generates an event if the minimal requirements are met.', () => {
 it('includes errors if at least one is set', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -80,7 +72,7 @@ it('includes errors if at least one is set', () => {
 
   const trackerB = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -103,7 +95,7 @@ it('includes errors if at least one is set', () => {
 it('includes latency if at least one measurement exists', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -123,7 +115,7 @@ it('includes latency if at least one measurement exists', () => {
 
   const trackerB = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -145,7 +137,7 @@ it('includes latency if at least one measurement exists', () => {
 it('includes if the result was consistent', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -166,7 +158,7 @@ it('includes if the result was consistent', () => {
 it('includes if the result was inconsistent', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    Context.fromLDContext({ kind: 'user', key: 'bob' }),
+    { user: 'bob' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {

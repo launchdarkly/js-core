@@ -18,6 +18,7 @@ import {
   LDFlagsState,
   LDFlagsStateOptions,
   LDMigrationDetail,
+  LDMigrationOpEvent,
   LDMigrationStage,
   LDOptions,
   LDStreamProcessor,
@@ -46,6 +47,7 @@ import EventSender from './events/EventSender';
 import isExperiment from './events/isExperiment';
 import NullEventProcessor from './events/NullEventProcessor';
 import FlagsStateBuilder from './FlagsStateBuilder';
+import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
@@ -279,6 +281,7 @@ export default class LDClientImpl implements LDClient {
   ): Promise<LDMigrationDetail> {
     const convertedContext = Context.fromLDContext(context);
     const detail = await this.variationDetail(key, context, defaultValue as string);
+    const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
     if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
@@ -289,7 +292,7 @@ export default class LDClientImpl implements LDClient {
       return {
         value: defaultValue,
         reason,
-        tracker: new MigrationOpTracker(key, convertedContext, defaultValue, defaultValue, reason),
+        tracker: new MigrationOpTracker(key, contextKeys, defaultValue, defaultValue, reason),
       };
     }
     return {
@@ -297,7 +300,7 @@ export default class LDClientImpl implements LDClient {
       value: detail.value as LDMigrationStage,
       tracker: new MigrationOpTracker(
         key,
-        convertedContext,
+        contextKeys,
         defaultValue,
         defaultValue,
         detail.reason,
@@ -410,6 +413,13 @@ export default class LDClientImpl implements LDClient {
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
     );
+  }
+
+  trackMigration(event: LDMigrationOpEvent): void {
+    const converted = MigrationOpEventToInputEvent(event);
+    if (converted) {
+      this.eventProcessor.sendEvent(converted);
+    }
   }
 
   identify(context: LDContext): void {
