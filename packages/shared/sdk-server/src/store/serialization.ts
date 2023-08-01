@@ -8,6 +8,8 @@ import { VersionedData } from '../api/interfaces';
 import { Flag } from '../evaluation/data/Flag';
 import { Rollout } from '../evaluation/data/Rollout';
 import { Segment } from '../evaluation/data/Segment';
+import { Metric } from './Metric';
+import { Override } from './Override';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 
 /**
@@ -23,13 +25,15 @@ export function reviver(this: any, key: string, value: any): any {
   return value;
 }
 
-interface FlagsAndSegments {
+interface AllData {
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
+  configurationOverrides?: { [name: string]: Override };
+  metrics?: { [name: string]: Metric };
 }
 
-interface AllData {
-  data: FlagsAndSegments;
+interface AllDataStream {
+  data: AllData;
 }
 
 /**
@@ -136,14 +140,14 @@ function tryParse(data: string): any {
 /**
  * @internal
  */
-export function deserializeAll(data: string): AllData | undefined {
+export function deserializeAll(data: string): AllDataStream | undefined {
   // The reviver lacks the context of where a different key exists, being as it
   // starts at the deepest level and works outward. As a result attributes are
   // translated into references after the initial parsing. That way we can be sure
   // they are the correct ones. For instance if we added 'attribute' as a new field to
   // the schema for something that was NOT an attribute reference, then we wouldn't
   // want to construct an attribute reference out of it.
-  const parsed = tryParse(data) as AllData;
+  const parsed = tryParse(data) as AllDataStream;
 
   if (!parsed) {
     return undefined;
@@ -167,8 +171,8 @@ export function deserializeAll(data: string): AllData | undefined {
  * @param data String data from launchdarkly.
  * @returns The parsed and processed data.
  */
-export function deserializePoll(data: string): FlagsAndSegments | undefined {
-  const parsed = tryParse(data) as FlagsAndSegments;
+export function deserializePoll(data: string): AllData | undefined {
+  const parsed = tryParse(data) as AllData;
 
   if (!parsed) {
     return undefined;
