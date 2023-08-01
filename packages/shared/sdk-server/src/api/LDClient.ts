@@ -1,5 +1,6 @@
 import { LDContext, LDEvaluationDetail, LDFlagValue } from '@launchdarkly/js-sdk-common';
 
+import { LDMigrationDetail } from './data';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
 import { LDMigrationStage } from './data/LDMigrationStage';
@@ -132,16 +133,14 @@ export interface LDClient {
    *   register this context with LaunchDarkly if the context does not already exist.
    * @param defaultValue The default value of the flag, to be used if the value is not available
    *   from LaunchDarkly.
-   * @param callback A Node-style callback to receive the result (as an {@link LDMigrationStage}).
    * @returns
-   *   A Promise which will be resolved with the result (as an{@link LDMigrationStage}).
+   *   A Promise which will be resolved with the result (as an{@link LDMigrationDetail}).
    */
   variationMigration(
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-    callback?: (err: any, res: LDMigrationStage) => void,
-  ): Promise<LDMigrationStage>;
+  ): Promise<LDMigrationDetail>;
 
   /**
    * Builds an object that encapsulates the state of all feature flags for a given context.

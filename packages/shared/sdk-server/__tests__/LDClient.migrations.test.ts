@@ -62,7 +62,7 @@ describe('given an LDClient with test data', () => {
         { key: 'test-key' },
         defaultValue as LDMigrationStage,
       );
-      expect(res).toEqual(value);
+      expect(res.value).toEqual(value);
     },
   );
 
@@ -76,30 +76,17 @@ describe('given an LDClient with test data', () => {
   ])('returns the default value if the flag does not exist: default = %p', async (stage) => {
     const res = await client.variationMigration('no-flag', { key: 'test-key' }, stage);
 
-    expect(res).toEqual(stage);
+    expect(res.value).toEqual(stage);
   });
 
   it('produces an error event for a migration flag with an incorrect value', async () => {
     const flagKey = 'bad-migration';
     td.update(td.flag(flagKey).valueForAll('potato'));
     const res = await client.variationMigration(flagKey, { key: 'test-key' }, LDMigrationStage.Off);
-    expect(res).toEqual(LDMigrationStage.Off);
+    expect(res.value).toEqual(LDMigrationStage.Off);
     expect(errors.length).toEqual(1);
     expect(errors[0].message).toEqual(
       'Unrecognized MigrationState for "bad-migration"; returning default value.',
     );
-  });
-
-  it('includes an error in the node callback', (done) => {
-    const flagKey = 'bad-migration';
-    td.update(td.flag(flagKey).valueForAll('potato'));
-    client.variationMigration(flagKey, { key: 'test-key' }, LDMigrationStage.Off, (err, value) => {
-      const error = err as Error;
-      expect(error.message).toEqual(
-        'Unrecognized MigrationState for "bad-migration"; returning default value.',
-      );
-      expect(value).toEqual(LDMigrationStage.Off);
-      done();
-    });
   });
 });

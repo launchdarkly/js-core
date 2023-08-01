@@ -17,6 +17,7 @@ import {
   LDClient,
   LDFlagsState,
   LDFlagsStateOptions,
+  LDMigrationDetail,
   LDMigrationStage,
   LDOptions,
   LDStreamProcessor,
@@ -45,6 +46,7 @@ import EventSender from './events/EventSender';
 import isExperiment from './events/isExperiment';
 import NullEventProcessor from './events/NullEventProcessor';
 import FlagsStateBuilder from './FlagsStateBuilder';
+import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
@@ -274,17 +276,35 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-    callback?: (err: any, res: LDMigrationStage) => void,
-  ): Promise<LDMigrationStage> {
-    const stringValue = await this.variation(key, context, defaultValue as string);
-    if (!IsMigrationStage(stringValue)) {
+  ): Promise<LDMigrationDetail> {
+    const convertedContext = Context.fromLDContext(context);
+    const detail = await this.variationDetail(key, context, defaultValue as string);
+    if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
-      callback?.(error, defaultValue);
-      return defaultValue;
+      const reason = {
+        kind: 'ERROR',
+        errorKind: 'WRONG_TYPE',
+      };
+      return {
+        value: defaultValue,
+        reason,
+        tracker: new MigrationOpTracker(key, convertedContext, defaultValue, defaultValue, reason),
+      };
     }
-    callback?.(null, stringValue as LDMigrationStage);
-    return stringValue as LDMigrationStage;
+    return {
+      ...detail,
+      value: detail.value as LDMigrationStage,
+      tracker: new MigrationOpTracker(
+        key,
+        convertedContext,
+        defaultValue,
+        defaultValue,
+        detail.reason,
+        // Can be null for compatibility reasons.
+        detail.variationIndex === null ? undefined : detail.variationIndex,
+      ),
+    };
   }
 
   async allFlagsState(
