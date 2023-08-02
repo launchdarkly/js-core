@@ -2,7 +2,7 @@ import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import type { LDInspection } from './LDInspection';
 
-export interface LDOptions {
+export default interface LDOptions {
   /**
    * An object that will perform logging for the client.
    *
@@ -15,7 +15,7 @@ export interface LDOptions {
    *
    * If `"localStorage"` is specified, the flags will be saved and retrieved from browser local
    * storage. Alternatively, an {@link LDFlagSet} can be specified which will be used as the initial
-   * source of flag values. In the latter case, the flag values will be available via {@link LDClient.variation}
+   * source of flag values. In the latter case, the flag values will be available via {@link LDClientDom.variation}
    * immediately after calling `initialize()` (normally they would not be available until the
    * client signals that it is ready).
    *
@@ -24,36 +24,36 @@ export interface LDOptions {
   bootstrap?: 'localStorage' | LDFlagSet;
 
   /**
-   * The base URL for the LaunchDarkly server.
+   * The base uri for the LaunchDarkly server.
    *
    * Most users should use the default value.
    */
-  baseUrl?: string;
+  baseUri?: string;
 
   /**
-   * The base URL for the LaunchDarkly events server.
+   * The base uri for the LaunchDarkly events server.
    *
    * Most users should use the default value.
    */
-  eventsUrl?: string;
+  eventsUri?: string;
 
   /**
-   * The base URL for the LaunchDarkly streaming server.
+   * The base uri for the LaunchDarkly streaming server.
    *
    * Most users should use the default value.
    */
-  streamUrl?: string;
+  streamUri?: string;
 
   /**
    * Whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
    * If this is true, the client will always attempt to maintain a streaming connection; if false,
    * it never will. If you leave the value undefined (the default), the client will open a streaming
-   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
+   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClientDom.on}).
    *
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
-  streaming?: boolean;
+  stream?: boolean;
 
   /**
    * Whether or not to use the REPORT verb to fetch flag settings.
@@ -62,7 +62,7 @@ export interface LDOptions {
    * including a JSON entity body with the context object.
    *
    * Otherwise (by default) a GET request will be issued with the context passed as
-   * a base64 URL-encoded path parameter.
+   * a base64 uri-encoded path parameter.
    *
    * Do not use unless advised by LaunchDarkly.
    */
@@ -95,7 +95,7 @@ export interface LDOptions {
    * calculated.
    *
    * The additional information will then be available through the client's
-   * {@link LDClient.variationDetail} method. Since this increases the size of network requests,
+   * {@link LDClientDom.variationDetail} method. Since this increases the size of network requests,
    * such information is not sent unless you set this option to true.
    */
   evaluationReasons?: boolean;
@@ -152,7 +152,7 @@ export interface LDOptions {
    *
    * The default value is 100.
    */
-  eventCapacity?: number;
+  capacity?: number;
 
   /**
    * The interval in between flushes of the analytics events queue, in milliseconds.
