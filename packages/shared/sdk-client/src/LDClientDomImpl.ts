@@ -10,8 +10,8 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { LDClientDom } from './api/LDClientDom';
-import Configuration from './options/Configuration';
-import LDOptions from './options/LDOptions';
+import LDOptions from './api/LDOptions';
+import Configuration from './configuration';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
@@ -25,7 +25,7 @@ export default class LDClientDomImpl implements LDClientDom {
    * @param platform
    */
   constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: Platform) {
-    this.config = new Configuration(options);
+    this.config = new Configuration();
   }
 
   allFlags(): LDFlagSet {

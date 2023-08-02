@@ -1,6 +1,6 @@
 import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import type { LDInspection } from '../api/LDInspection';
+import type { LDInspection } from './LDInspection';
 
 export default interface LDOptions {
   /**
@@ -45,9 +45,6 @@ export default interface LDOptions {
   streamUri?: string;
 
   /**
-   * TODO: do we really need a tribool for this? We need to simplify the complex
-   * logic of setting up streams and if anyone really cares about it so much.
-   *
    * Whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
    * If this is true, the client will always attempt to maintain a streaming connection; if false,
@@ -236,7 +233,4 @@ export default interface LDOptions {
    * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
    */
   inspectors?: LDInspection[];
-
-  // Allow indexing this by a string for the validation step.
-  [index: string]: any;
 }
