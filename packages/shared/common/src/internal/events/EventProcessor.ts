@@ -7,7 +7,7 @@ import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import ClientContext from '../../options/ClientContext';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
-import { isFeature, isIdentify } from './guards';
+import { isFeature, isIdentify, isMigration } from './guards';
 import InputEvent from './InputEvent';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 
@@ -193,6 +193,16 @@ export default class EventProcessor implements LDEventProcessor {
 
   sendEvent(inputEvent: InputEvent) {
     if (this.shutdown) {
+      return;
+    }
+
+    if (isMigration(inputEvent)) {
+      // The contents of the migration op event have been validated
+      // before this point, so we can just send it.
+      // TODO: Implement sampling odds.
+      this.enqueue({
+        ...inputEvent,
+      });
       return;
     }
 
