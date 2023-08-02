@@ -20,23 +20,23 @@ function isOperation(value: LDMigrationOp) {
 }
 
 function isCustomMeasurement(value: LDMigrationMeasurement): value is LDMigrationCustomMeasurement {
-  return (value as any).type === 'custom';
+  return (value as any).kind === 'custom';
 }
 
 function isLatencyMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationLatencyMeasurement {
-  return (value as any).type === undefined && value.key === 'latency_ms';
+  return (value as any).kind === undefined && value.key === 'latency_ms';
 }
 
 function isErrorMeasurement(value: LDMigrationMeasurement): value is LDMigrationErrorMeasurement {
-  return (value as any).type === undefined && value.key === 'error';
+  return (value as any).kind === undefined && value.key === 'error';
 }
 
 function isConsistencyMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationConsistencyMeasurement {
-  return (value as any).type === undefined && value.key === 'consistent';
+  return (value as any).kind === undefined && value.key === 'consistent';
 }
 
 function areValidValues(values: { old?: number; new?: number }) {
@@ -66,7 +66,7 @@ function validateMeasurement(
       return undefined;
     }
     return {
-      type: measurement.type,
+      kind: measurement.kind,
       key: measurement.key,
       values: {
         old: measurement.values.old,

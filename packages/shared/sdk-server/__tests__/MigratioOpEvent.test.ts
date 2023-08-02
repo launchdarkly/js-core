@@ -5,12 +5,14 @@ import {
   LDClientImpl,
   LDConcurrentExecution,
   LDExecutionOrdering,
+  LDMigrationOpEvent,
   LDMigrationStage,
   LDSerialExecution,
 } from '../src';
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
+import MigrationOpEventConversion from '../src/MigrationOpEventConversion';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
 
@@ -377,5 +379,100 @@ describe('given an LDClient with test data', () => {
         },
       );
     });
+  });
+});
+
+// Out migrator doesn't create custom measurements. So we need an additional test to ensure
+// that custom measurements make it through the conversion process.
+
+it('can accept custom measurements', () => {
+  const inputEvent: LDMigrationOpEvent = {
+    kind: 'migration_op',
+    operation: 'read',
+    creationDate: 0,
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      key: 'potato',
+      value: LDMigrationStage.Off,
+      default: LDMigrationStage.Live,
+      reason: {
+        kind: 'FALLTHROUGH',
+      },
+    },
+    measurements: [
+      {
+        key: 'custom1',
+        kind: 'custom',
+        values: {
+          old: 1,
+          new: 2,
+        },
+      },
+      {
+        key: 'custom2',
+        kind: 'custom',
+        values: {
+          new: 2,
+        },
+      },
+      {
+        key: 'custom3',
+        kind: 'custom',
+        values: {
+          old: 2,
+        },
+      },
+      {
+        key: 'custom4',
+        kind: 'custom',
+        values: {},
+      },
+    ],
+  };
+  const validatedEvent = MigrationOpEventConversion(inputEvent);
+  expect(validatedEvent).toEqual(inputEvent);
+});
+
+it('removes bad custom measurements', () => {
+  const inputEvent: LDMigrationOpEvent = {
+    kind: 'migration_op',
+    operation: 'read',
+    creationDate: 0,
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      key: 'potato',
+      value: LDMigrationStage.Off,
+      default: LDMigrationStage.Live,
+      reason: {
+        kind: 'FALLTHROUGH',
+      },
+    },
+    measurements: [
+      {
+        key: 'custom1',
+        kind: 'custom',
+        values: {
+          // @ts-ignore
+          old: 'ham',
+          new: 2,
+        },
+      },
+    ],
+  };
+  const validatedEvent = MigrationOpEventConversion(inputEvent);
+  expect(validatedEvent).toEqual({
+    kind: 'migration_op',
+    operation: 'read',
+    creationDate: 0,
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      key: 'potato',
+      value: LDMigrationStage.Off,
+      default: LDMigrationStage.Live,
+      reason: {
+        kind: 'FALLTHROUGH',
+      },
+    },
+    measurements: [],
   });
 });

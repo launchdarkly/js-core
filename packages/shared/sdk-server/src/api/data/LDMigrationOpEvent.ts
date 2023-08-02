@@ -17,7 +17,7 @@ export interface LDMigrationEvaluation {
 }
 
 export interface LDMigrationCustomMeasurement {
-  type: 'custom';
+  kind: 'custom';
   key: string;
   values: {
     old?: number;
