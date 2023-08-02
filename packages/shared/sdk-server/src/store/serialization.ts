@@ -65,10 +65,12 @@ interface DeleteData extends Omit<VersionedData, 'key'> {
 
 type VersionedFlag = VersionedData & Flag;
 type VersionedSegment = VersionedData & Segment;
+type VersionedOverride = VersionedData & Override;
+type VersionedMetric = VersionedData & Metric;
 
 interface PatchData {
   path: string;
-  data: VersionedFlag | VersionedSegment;
+  data: VersionedFlag | VersionedSegment | VersionedOverride | VersionedMetric;
   kind?: VersionedDataKind;
 }
 
