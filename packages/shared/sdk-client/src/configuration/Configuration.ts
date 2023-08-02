@@ -56,9 +56,17 @@ export default class Configuration {
 
       if (validator) {
         if (!validator.is(v)) {
-          if (validator.getType() === 'boolean') {
+          const validatorType = validator.getType();
+
+          if (validatorType === 'boolean') {
             errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
             this[k] = !!v;
+          } else if (validatorType === 'boolean | undefined | null') {
+            errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
+
+            if (typeof v !== 'boolean' && typeof v !== 'undefined' && v !== null) {
+              this[k] = !!v;
+            }
           } else if (validator instanceof NumberWithMinimum && TypeValidators.Number.is(v)) {
             const { min } = validator as NumberWithMinimum;
             errors.push(OptionMessages.optionBelowMinimum(k, v, min));
@@ -67,7 +75,8 @@ export default class Configuration {
             errors.push(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
           }
         } else {
-          this[k] = v;
+          // if an option is explicitly null, coerce to undefined
+          this[k] = v ?? undefined;
         }
       } else {
         errors.push(OptionMessages.unknownOption(k));

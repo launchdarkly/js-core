@@ -139,6 +139,16 @@ export class Function implements TypeValidator {
   }
 }
 
+export class NullableBoolean implements TypeValidator {
+  is(u: unknown): boolean {
+    return typeof u === 'boolean' || typeof u === 'undefined' || u === null;
+  }
+
+  getType(): string {
+    return 'boolean | undefined | null';
+  }
+}
+
 // Our reference SDK, Go, parses date/time strings with the time.RFC3339Nano format.
 // This regex should match strings that are valid in that format, and no others.
 // Acceptable:
@@ -177,11 +187,6 @@ export class TypeValidators {
 
   static readonly Boolean = new Type<boolean>('boolean', true);
 
-  static readonly NullableBoolean = new Type<boolean | undefined | null>(
-    'boolean | undefined | null',
-    true,
-  );
-
   static readonly Function = new Function();
 
   static createTypeArray<T>(typeName: string, example: T) {
@@ -197,4 +202,6 @@ export class TypeValidators {
   }
 
   static readonly Date = new DateValidator();
+
+  static readonly NullableBoolean = new NullableBoolean();
 }

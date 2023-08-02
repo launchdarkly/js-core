@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import Configuration from './Configuration';
 
 describe('Configuration', () => {
@@ -43,46 +44,74 @@ describe('Configuration', () => {
   test('unknown option', () => {
     // @ts-ignore
     const config = new Configuration({ baseballUri: 1 });
+
+    expect(config.baseballUri).toBeUndefined();
     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('unknown config option'));
   });
 
-  test('wrong type for boolean', () => {
+  test('wrong type for boolean should be converted', () => {
     // @ts-ignore
-    const config = new Configuration({ stream: 1 });
+    const config = new Configuration({ sendEvents: 0 });
+
+    expect(config.stream).toBeFalsy();
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('should be of type boolean | undefined | null, got number'),
+      expect.stringContaining('should be a boolean, got number, converting'),
     );
-    expect(config.stream).toBeUndefined();
   });
 
-  test('wrong type for number', () => {
+  test('wrong type for number should use default', () => {
     // @ts-ignore
     const config = new Configuration({ capacity: true });
+
+    expect(config.capacity).toEqual(100);
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('should be of type number with minimum value of 1, got boolean'),
     );
-    expect(config.capacity).toEqual(100);
   });
 
   test('enforce minimum', () => {
     const config = new Configuration({ flushInterval: 1 });
 
+    expect(config.flushInterval).toEqual(2000);
     expect(console.error).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining(
         '"flushInterval" had invalid value of 1, using minimum of 2000 instead',
       ),
     );
-    expect(config.flushInterval).toEqual(2000);
   });
 
-  // test('TODO: nullable stream should not log warning', () => {
-  //   const config = new Configuration({ stream: undefined });
-  //   expect(console.error).not.toHaveBeenCalled();
-  // });
-  //
-  // test('TODO: test bootstrap', () => {
-  //   const config = new Configuration({ bootstrap: 'localStorage' });
-  //   expect(console.error).not.toHaveBeenCalled();
-  // });
+  test('undefined stream should not log warning', () => {
+    const config = new Configuration({ stream: undefined });
+
+    expect(config.stream).toBeUndefined();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  test('null stream should default to undefined', () => {
+    // @ts-ignore
+    const config = new Configuration({ stream: null });
+
+    expect(config.stream).toBeUndefined();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  test('wrong stream type should be converted to boolean', () => {
+    // @ts-ignore
+    const config = new Configuration({ stream: 1 });
+
+    expect(config.stream).toBeTruthy();
+    expect(console.error).toHaveBeenCalled();
+  });
+
+  test('invalid bootstrap should use default', () => {
+    // @ts-ignore
+    const config = new Configuration({ bootstrap: 'localStora' });
+
+    expect(config.bootstrap).toBeUndefined();
+    expect(console.error).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining(`should be of type 'localStorage' | LDFlagSet, got string`),
+    );
+  });
 });
