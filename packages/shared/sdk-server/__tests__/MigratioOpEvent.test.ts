@@ -144,7 +144,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
@@ -161,7 +161,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.new).toBeUndefined();
@@ -178,7 +178,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.old).toBeUndefined();
@@ -193,7 +193,7 @@ describe('given an LDClient with test data', () => {
         expect(events.length).toBe(2);
         // Only check the measurements component of the event.
         const migrationEvent = events[1] as InputMigrationEvent;
-        expect(migrationEvent.measurements[0].key).toEqual('latency');
+        expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
         // This isn't a precise check, but we should have non-zero values.
         expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
         expect(migrationEvent.measurements[0].values.new).toBeUndefined();
@@ -209,7 +209,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.old).toBeUndefined();
@@ -226,7 +226,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
@@ -241,7 +241,7 @@ describe('given an LDClient with test data', () => {
         expect(events.length).toBe(2);
         // Only check the measurements component of the event.
         const migrationEvent = events[1] as InputMigrationEvent;
-        expect(migrationEvent.measurements[0].key).toEqual('latency');
+        expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
         // This isn't a precise check, but we should have non-zero values.
         expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
         expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);

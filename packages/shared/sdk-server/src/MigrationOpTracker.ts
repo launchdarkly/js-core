@@ -117,7 +117,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
         values.old = this.latencyMeasurement.old;
       }
       measurements.push({
-        key: 'latency',
+        key: 'latency_ms',
         values,
       });
     }
