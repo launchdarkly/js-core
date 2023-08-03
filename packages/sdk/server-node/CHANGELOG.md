@@ -2,6 +2,18 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [8.1.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.1.0...node-server-sdk-v8.1.1) (2023-08-03)
+
+### Bug Fixes
+
+* Ensure that test data user targets are handled correctly. ([#223](https://github.com/launchdarkly/js-core/issues/223)) ([8a423b2](https://github.com/launchdarkly/js-core/commit/8a423b22282624627200dfda1ebe4207f9db69a6))
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.6 to 1.0.7
+
 ### Dependencies
 
 * The following workspace dependencies were updated
