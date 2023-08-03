@@ -45,6 +45,11 @@ export interface SdkData {
   version?: string;
 
   /**
+   * If this is a top-level (not a wrapper) SDK this will be the user agent string.
+   */
+  userAgent?: string;
+
+  /**
    * Name of the wrapper SDK if present.
    */
   wrapperName?: string;
