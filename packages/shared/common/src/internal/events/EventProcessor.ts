@@ -109,7 +109,7 @@ export default class EventProcessor implements LDEventProcessor {
     config: EventProcessorOptions,
     clientContext: ClientContext,
     private readonly eventSender: LDEventSender,
-    private readonly contextDeduplicator: LDContextDeduplicator,
+    private readonly contextDeduplicator?: LDContextDeduplicator,
     private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
@@ -120,9 +120,9 @@ export default class EventProcessor implements LDEventProcessor {
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
-    if (this.contextDeduplicator.flushInterval !== undefined) {
+    if (this.contextDeduplicator?.flushInterval !== undefined) {
       this.flushUsersTimer = setInterval(() => {
-        this.contextDeduplicator.flush();
+        this.contextDeduplicator?.flush();
       }, this.contextDeduplicator.flushInterval * 1000);
     }
 
@@ -202,7 +202,7 @@ export default class EventProcessor implements LDEventProcessor {
     const addDebugEvent = this.shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
-    const shouldNotDeduplicate = this.contextDeduplicator.processContext(inputEvent.context);
+    const shouldNotDeduplicate = this.contextDeduplicator?.processContext(inputEvent.context);
 
     // If there is no cache, then it will never be in the cache.
     if (!shouldNotDeduplicate) {
