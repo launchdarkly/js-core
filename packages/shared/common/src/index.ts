@@ -9,5 +9,6 @@ export * from './options';
 export * from './utils';
 
 export * as internal from './internal';
+export * from './errors';
 
 export { AttributeReference, Context, ContextFilter };

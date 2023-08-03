@@ -8,8 +8,8 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import defaultHeaders from '../data_sources/defaultHeaders';
-import httpErrorMessage from '../data_sources/httpErrorMessage';
+// import defaultHeaders from '../data_sources/defaultHeaders';
+// import httpErrorMessage from '../data_sources/httpErrorMessage';
 
 export interface EventSenderOptions {
   tags: ApplicationTags;
@@ -19,30 +19,23 @@ export default class EventSender implements subsystem.LDEventSender {
   private defaultHeaders: {
     [key: string]: string;
   };
-
   private eventsUri: string;
-
   private diagnosticEventsUri: string;
-
   private requests: Requests;
-
   private crypto: Crypto;
 
   constructor(config: EventSenderOptions, clientContext: ClientContext) {
     this.defaultHeaders = {
-      ...defaultHeaders(
-        clientContext.basicConfiguration.sdkKey,
-        config,
-        clientContext.platform.info,
-      ),
+      // ...defaultHeaders(
+      //   clientContext.basicConfiguration.sdkKey,
+      //   config,
+      //   clientContext.platform.info,
+      // ),
     };
 
     this.eventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/bulk`;
-
     this.diagnosticEventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/diagnostic`;
-
     this.requests = clientContext.platform.requests;
-
     this.crypto = clientContext.platform.crypto;
   }
 
@@ -83,10 +76,11 @@ export default class EventSender implements subsystem.LDEventSender {
       }
 
       error = new LDUnexpectedResponseError(
-        httpErrorMessage(
-          { status: res.status, message: 'some events were dropped' },
-          'event posting',
-        ),
+        // httpErrorMessage(
+        //   { status: res.status, message: 'some events were dropped' },
+        //   'event posting',
+        // ),
+        'TODO: unexpected error',
       );
 
       if (!isHttpRecoverable(res.status)) {

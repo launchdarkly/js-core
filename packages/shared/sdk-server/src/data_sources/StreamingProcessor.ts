@@ -1,8 +1,14 @@
-import { EventSource, Info, LDLogger, Requests } from '@launchdarkly/js-sdk-common';
+import {
+  EventSource,
+  Info,
+  isHttpRecoverable,
+  LDLogger,
+  LDStreamingError,
+  Requests,
+} from '@launchdarkly/js-sdk-common';
 
 import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
-import { isHttpRecoverable, LDStreamingError } from '../errors';
 import DiagnosticsManager from '../events/DiagnosticsManager';
 import Configuration from '../options/Configuration';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';

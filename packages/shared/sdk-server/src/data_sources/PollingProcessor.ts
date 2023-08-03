@@ -1,10 +1,9 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { isHttpRecoverable, LDLogger, LDPollingError } from '@launchdarkly/js-sdk-common';
 
 import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
-import { isHttpRecoverable, LDPollingError } from '../errors';
 import Configuration from '../options/Configuration';
-import { deserializePoll } from '../store/serialization';
+import { deserializePoll } from '../store';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import httpErrorMessage from './httpErrorMessage';
 import Requestor from './Requestor';

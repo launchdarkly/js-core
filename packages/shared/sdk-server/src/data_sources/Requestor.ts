@@ -1,7 +1,6 @@
-import { Info, Options, Requests, Response } from '@launchdarkly/js-sdk-common';
+import { Info, LDStreamingError, Options, Requests, Response } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureRequestor } from '../api/subsystems';
-import { LDStreamingError } from '../errors';
 import Configuration from '../options/Configuration';
 import defaultHeaders from './defaultHeaders';
 
