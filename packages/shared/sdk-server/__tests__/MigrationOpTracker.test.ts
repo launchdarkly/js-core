@@ -107,7 +107,7 @@ it('includes latency if at least one measurement exists', () => {
 
   const event = tracker.createEvent();
   expect(event?.measurements).toContainEqual({
-    key: 'latency',
+    key: 'latency_ms',
     values: {
       old: 100,
     },
@@ -127,7 +127,7 @@ it('includes latency if at least one measurement exists', () => {
 
   const eventB = trackerB.createEvent();
   expect(eventB?.measurements).toContainEqual({
-    key: 'latency',
+    key: 'latency_ms',
     values: {
       new: 150,
     },

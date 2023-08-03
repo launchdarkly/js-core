@@ -5,12 +5,14 @@ import {
   LDClientImpl,
   LDConcurrentExecution,
   LDExecutionOrdering,
+  LDMigrationOpEvent,
   LDMigrationStage,
   LDSerialExecution,
 } from '../src';
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
+import MigrationOpEventConversion from '../src/MigrationOpEventConversion';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
 
@@ -144,7 +146,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
@@ -161,7 +163,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.new).toBeUndefined();
@@ -178,7 +180,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.old).toBeUndefined();
@@ -193,7 +195,7 @@ describe('given an LDClient with test data', () => {
         expect(events.length).toBe(2);
         // Only check the measurements component of the event.
         const migrationEvent = events[1] as InputMigrationEvent;
-        expect(migrationEvent.measurements[0].key).toEqual('latency');
+        expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
         // This isn't a precise check, but we should have non-zero values.
         expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
         expect(migrationEvent.measurements[0].values.new).toBeUndefined();
@@ -209,7 +211,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.old).toBeUndefined();
@@ -226,7 +228,7 @@ describe('given an LDClient with test data', () => {
           expect(events.length).toBe(2);
           // Only check the measurements component of the event.
           const migrationEvent = events[1] as InputMigrationEvent;
-          expect(migrationEvent.measurements[0].key).toEqual('latency');
+          expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
@@ -241,7 +243,7 @@ describe('given an LDClient with test data', () => {
         expect(events.length).toBe(2);
         // Only check the measurements component of the event.
         const migrationEvent = events[1] as InputMigrationEvent;
-        expect(migrationEvent.measurements[0].key).toEqual('latency');
+        expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
         // This isn't a precise check, but we should have non-zero values.
         expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
         expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
@@ -377,5 +379,100 @@ describe('given an LDClient with test data', () => {
         },
       );
     });
+  });
+});
+
+// Out migrator doesn't create custom measurements. So we need an additional test to ensure
+// that custom measurements make it through the conversion process.
+
+it('can accept custom measurements', () => {
+  const inputEvent: LDMigrationOpEvent = {
+    kind: 'migration_op',
+    operation: 'read',
+    creationDate: 0,
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      key: 'potato',
+      value: LDMigrationStage.Off,
+      default: LDMigrationStage.Live,
+      reason: {
+        kind: 'FALLTHROUGH',
+      },
+    },
+    measurements: [
+      {
+        key: 'custom1',
+        kind: 'custom',
+        values: {
+          old: 1,
+          new: 2,
+        },
+      },
+      {
+        key: 'custom2',
+        kind: 'custom',
+        values: {
+          new: 2,
+        },
+      },
+      {
+        key: 'custom3',
+        kind: 'custom',
+        values: {
+          old: 2,
+        },
+      },
+      {
+        key: 'custom4',
+        kind: 'custom',
+        values: {},
+      },
+    ],
+  };
+  const validatedEvent = MigrationOpEventConversion(inputEvent);
+  expect(validatedEvent).toEqual(inputEvent);
+});
+
+it('removes bad custom measurements', () => {
+  const inputEvent: LDMigrationOpEvent = {
+    kind: 'migration_op',
+    operation: 'read',
+    creationDate: 0,
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      key: 'potato',
+      value: LDMigrationStage.Off,
+      default: LDMigrationStage.Live,
+      reason: {
+        kind: 'FALLTHROUGH',
+      },
+    },
+    measurements: [
+      {
+        key: 'custom1',
+        kind: 'custom',
+        values: {
+          // @ts-ignore
+          old: 'ham',
+          new: 2,
+        },
+      },
+    ],
+  };
+  const validatedEvent = MigrationOpEventConversion(inputEvent);
+  expect(validatedEvent).toEqual({
+    kind: 'migration_op',
+    operation: 'read',
+    creationDate: 0,
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      key: 'potato',
+      value: LDMigrationStage.Off,
+      default: LDMigrationStage.Live,
+      reason: {
+        kind: 'FALLTHROUGH',
+      },
+    },
+    measurements: [],
   });
 });
