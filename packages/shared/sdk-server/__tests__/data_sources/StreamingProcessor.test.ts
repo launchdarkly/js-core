@@ -118,10 +118,16 @@ describe('given a stream processor with mock event source', () => {
         segments: {
           segkey: { key: 'segkey', version: 2 },
         },
+        configurationOverrides: {
+          configKey: { key: 'configKey', version: 3 },
+        },
+        metrics: {
+          metricKey: { key: 'metricKey', version: 4 },
+        },
       },
     };
 
-    it('causes flags and segments to be stored', async () => {
+    it('causes flags/segments/configOverrides/metrics to be stored', async () => {
       streamProcessor.start();
       es.handlers.put({ data: JSON.stringify(putData) });
       const initialized = await asyncStore.initialized();
@@ -131,6 +137,10 @@ describe('given a stream processor with mock event source', () => {
       expect(f?.version).toEqual(1);
       const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
       expect(s?.version).toEqual(2);
+      const override = await asyncStore.get(VersionedDataKinds.ConfigurationOverrides, 'configKey');
+      expect(override?.version).toEqual(3);
+      const metric = await asyncStore.get(VersionedDataKinds.Metrics, 'metricKey');
+      expect(metric?.version).toEqual(4);
     });
 
     it('calls initialization callback', async () => {
@@ -164,30 +174,22 @@ describe('given a stream processor with mock event source', () => {
   });
 
   describe('when patching a message', () => {
-    it('updates a patched flag', async () => {
+    it.each([
+      VersionedDataKinds.Features,
+      VersionedDataKinds.Segments,
+      VersionedDataKinds.ConfigurationOverrides,
+      VersionedDataKinds.Metrics,
+    ])('patches a item of each kind: %j', async (kind) => {
       streamProcessor.start();
       const patchData = {
-        path: '/flags/flagkey',
-        data: { key: 'flagkey', version: 1 },
+        path: `${kind.streamApiPath}itemKey`,
+        data: { key: 'itemKey', version: 1 },
       };
 
       es.handlers.patch({ data: JSON.stringify(patchData) });
 
-      const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
+      const f = await asyncStore.get(kind, 'itemKey');
       expect(f!.version).toEqual(1);
-    });
-
-    it('updates a patched segment', async () => {
-      streamProcessor.start();
-      const patchData = {
-        path: '/segments/segkey',
-        data: { key: 'segkey', version: 1 },
-      };
-
-      es.handlers.patch({ data: JSON.stringify(patchData) });
-
-      const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-      expect(s!.version).toEqual(1);
     });
 
     it('passes error to callback if data is invalid', async () => {
@@ -201,34 +203,24 @@ describe('given a stream processor with mock event source', () => {
   });
 
   describe('when deleting a message', () => {
-    it('deletes a flag', async () => {
+    it.each([
+      VersionedDataKinds.Features,
+      VersionedDataKinds.Segments,
+      VersionedDataKinds.ConfigurationOverrides,
+      VersionedDataKinds.Metrics,
+    ])('deletes each data kind: %j', async (kind) => {
       streamProcessor.start();
-      const flag = { key: 'flagkey', version: 1 };
-      await asyncStore.upsert(VersionedDataKinds.Features, flag);
-      const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-      expect(f!.version).toEqual(1);
+      const item = { key: 'itemKey', version: 1 };
+      await asyncStore.upsert(kind, item);
+      const stored = await asyncStore.get(kind, 'itemKey');
+      expect(stored!.version).toEqual(1);
 
-      const deleteData = { path: `/flags/${flag.key}`, version: 2 };
+      const deleteData = { path: `${kind.streamApiPath}${item.key}`, version: 2 };
 
       es.handlers.delete({ data: JSON.stringify(deleteData) });
 
-      const f2 = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-      expect(f2).toBe(null);
-    });
-
-    it('deletes a segment', async () => {
-      streamProcessor.start();
-      const segment = { key: 'segkey', version: 1 };
-      await asyncStore.upsert(VersionedDataKinds.Segments, segment);
-      const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-      expect(s!.version).toEqual(1);
-
-      const deleteData = { path: `/segments/${segment.key}`, version: 2 };
-
-      es.handlers.delete({ data: JSON.stringify(deleteData) });
-
-      const s2 = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-      expect(s2).toBe(null);
+      const stored2 = await asyncStore.get(VersionedDataKinds.Features, 'itemKey');
+      expect(stored2).toBe(null);
     });
 
     it('passes error to callback if data is invalid', async () => {

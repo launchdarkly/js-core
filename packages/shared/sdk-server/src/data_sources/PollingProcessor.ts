@@ -69,6 +69,9 @@ export default class PollingProcessor implements LDStreamProcessor {
           const initData = {
             [VersionedDataKinds.Features.namespace]: parsed.flags,
             [VersionedDataKinds.Segments.namespace]: parsed.segments,
+            [VersionedDataKinds.ConfigurationOverrides.namespace]:
+              parsed.configurationOverrides || {},
+            [VersionedDataKinds.Metrics.namespace]: parsed.metrics || {},
           };
           this.featureStore.init(initData, () => {
             fn?.();

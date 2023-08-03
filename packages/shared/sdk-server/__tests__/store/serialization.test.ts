@@ -151,11 +151,13 @@ const segmentWithBucketBy = {
   deleted: false,
 };
 
-function makeAllData(flag?: any, segment?: any): any {
+function makeAllData(flag?: any, segment?: any, override?: any, metric?: any): any {
   const allData: any = {
     data: {
       flags: {},
       segments: {},
+      configurationOverrides: {},
+      metrics: {},
     },
   };
 
@@ -165,22 +167,38 @@ function makeAllData(flag?: any, segment?: any): any {
   if (segment) {
     allData.data.segments.segmentName = segment;
   }
+  if (override) {
+    allData.data.configurationOverrides.overrideName = override;
+  }
+  if (metric) {
+    allData.data.metrics.metricName = metric;
+  }
   return allData;
 }
 
-function makeSerializedAllData(flag?: any, segment?: any): string {
-  return JSON.stringify(makeAllData(flag, segment));
+function makeSerializedAllData(flag?: any, segment?: any, override?: any, metric?: any): string {
+  return JSON.stringify(makeAllData(flag, segment, override, metric));
 }
 
-function makePatchData(flag?: any, segment?: any): any {
+function makePatchData(flag?: any, segment?: any, override?: any, metric?: any): any {
+  let path = '/flags/flagName';
+  if (segment) {
+    path = '/segments/segmentName';
+  }
+  if (override) {
+    path = '/configurationOverrides/overrideName';
+  }
+  if (metric) {
+    path = '/metrics/metricName';
+  }
   return {
-    path: flag ? '/flags/flagName' : '/segments/segmentName',
-    data: flag ?? segment,
+    path,
+    data: flag ?? segment ?? override ?? metric,
   };
 }
 
-function makeSerializedPatchData(flag?: any, segment?: any): string {
-  return JSON.stringify(makePatchData(flag, segment));
+function makeSerializedPatchData(flag?: any, segment?: any, override?: any, metric?: any): string {
+  return JSON.stringify(makePatchData(flag, segment, override, metric));
 }
 
 describe('when deserializing all data', () => {
@@ -234,6 +252,28 @@ describe('when deserializing all data', () => {
     const ref = parsed?.data.flags.flagName.rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
+
+  it('handles a config override', () => {
+    const override = {
+      key: 'overrideName',
+      value: 'potato',
+      version: 1,
+    };
+    const jsonString = makeSerializedAllData(undefined, undefined, override, undefined);
+    const parsed = deserializeAll(jsonString);
+    expect(parsed).toMatchObject({ data: { configurationOverrides: { overrideName: override } } });
+  });
+
+  it('handles a metric', () => {
+    const metric = {
+      key: 'metricName',
+      samplingRatio: 42,
+      version: 1,
+    };
+    const jsonString = makeSerializedAllData(undefined, undefined, undefined, metric);
+    const parsed = deserializeAll(jsonString);
+    expect(parsed).toMatchObject({ data: { metrics: { metricName: metric } } });
+  });
 });
 
 describe('when deserializing patch data', () => {
@@ -284,6 +324,42 @@ describe('when deserializing patch data', () => {
     const parsed = deserializePatch(jsonString);
     const ref = (parsed?.data as Flag).rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
+  });
+
+  it('handles a config override', () => {
+    const override = {
+      key: 'overrideName',
+      value: 'potato',
+      version: 1,
+    };
+    const jsonString = makeSerializedPatchData(undefined, undefined, override, undefined);
+    const parsed = deserializePatch(jsonString);
+    expect(parsed).toEqual({
+      data: override,
+      path: '/configurationOverrides/overrideName',
+      kind: {
+        namespace: 'configurationOverrides',
+        streamApiPath: '/configurationOverrides/',
+      },
+    });
+  });
+
+  it('handles a metric', () => {
+    const metric = {
+      key: 'metricName',
+      samplingRatio: 42,
+      version: 1,
+    };
+    const jsonString = makeSerializedPatchData(undefined, undefined, undefined, metric);
+    const parsed = deserializePatch(jsonString);
+    expect(parsed).toEqual({
+      data: metric,
+      path: '/metrics/metricName',
+      kind: {
+        namespace: 'metrics',
+        streamApiPath: '/metrics/',
+      },
+    });
   });
 });
 
