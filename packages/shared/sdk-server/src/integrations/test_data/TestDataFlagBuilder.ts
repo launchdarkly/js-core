@@ -394,18 +394,24 @@ export default class TestDataFlagBuilder {
 
     if (this.data.targetsByVariation) {
       const contextTargets: Target[] = [];
+      const userTargets: Omit<Target, 'contextKind'>[] = [];
       Object.entries(this.data.targetsByVariation).forEach(
         ([variation, contextTargetsForVariation]) => {
           Object.entries(contextTargetsForVariation).forEach(([contextKind, values]) => {
+            const numberVariation = parseInt(variation, 10);
             contextTargets.push({
               contextKind,
-              values,
+              values: contextKind === 'user' ? [] : values,
               // Iterating the object it will be a string.
-              variation: parseInt(variation, 10),
+              variation: numberVariation,
             });
+            if (contextKind === 'user') {
+              userTargets.push({ values, variation: numberVariation });
+            }
           });
         },
       );
+      baseFlagObject.targets = userTargets;
       baseFlagObject.contextTargets = contextTargets;
     }
 
