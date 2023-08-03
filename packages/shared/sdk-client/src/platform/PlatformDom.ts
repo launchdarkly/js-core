@@ -1,9 +1,9 @@
 export interface Storage {
   get(key: string): Promise<string | null>;
 
-  set(key: string, value: string): void;
+  set(key: string, value: string): Promise<boolean>;
 
-  clear(): void;
+  clear(): Promise<void>;
 }
 
 export interface PlatformDom {
