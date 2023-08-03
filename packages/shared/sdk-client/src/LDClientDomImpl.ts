@@ -1,20 +1,16 @@
 // temporarily allow unused vars for the duration of the migration
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  LDContext,
-  LDEvaluationDetail,
-  LDFlagSet,
-  LDFlagValue,
-  Platform,
-} from '@launchdarkly/js-sdk-common';
+import { LDContext, LDEvaluationDetail, LDFlagSet, LDFlagValue } from '@launchdarkly/js-sdk-common';
 
 import { LDClientDom } from './api/LDClientDom';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
+import { PlatformDom, Storage } from './platform/PlatformDom';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
+  storage: Storage;
 
   /**
    * Immediately return an LDClient instance. No async or remote calls.
@@ -24,8 +20,9 @@ export default class LDClientDomImpl implements LDClientDom {
    * @param options
    * @param platform
    */
-  constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: Platform) {
-    this.config = new Configuration();
+  constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
+    this.config = new Configuration(options);
+    this.storage = platform.storage;
   }
 
   allFlags(): LDFlagSet {
