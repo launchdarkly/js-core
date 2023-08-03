@@ -1,5 +1,4 @@
-import { LDEvaluationReason } from '../../api/data/LDEvaluationReason';
-import { LDLogger } from '../../api/logging/LDLogger';
+import { LDEvaluationReason, LDLogger } from '../../api';
 import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
 import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';

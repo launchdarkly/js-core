@@ -35,7 +35,6 @@ import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
 import EventSender from './events/EventSender';
 import isExperiment from './events/isExperiment';
-import NullEventProcessor from './events/NullEventProcessor';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
@@ -155,7 +154,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     if (!config.sendEvents || config.offline) {
-      this.eventProcessor = new NullEventProcessor();
+      this.eventProcessor = new internal.NullEventProcessor();
     } else {
       this.eventProcessor = new internal.EventProcessor(
         config,
