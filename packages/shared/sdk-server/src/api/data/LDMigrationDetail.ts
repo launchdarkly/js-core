@@ -62,7 +62,7 @@ export interface LDMigrationTracker {
 
   /**
    * Create a migration op event. If the event could not be created, because of a missing
-   * operation, then an event will not be returned.
+   * operation, then undefined is returned.
    */
   createEvent(): LDMigrationOpEvent | undefined;
 }
