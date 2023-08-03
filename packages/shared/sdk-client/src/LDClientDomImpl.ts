@@ -2,11 +2,13 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  ClientContext,
   internal,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
+  ServiceEndpoints,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -24,15 +26,24 @@ export default class LDClientDomImpl implements LDClientDom {
   constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
     this.config = new Configuration(options);
     this.storage = platform.storage;
-    this.eventProcessor = new internal.NullEventProcessor(); //this.config.sendEvents
-    // ? new internal.EventProcessor(
-    //     config,
-    //     clientContext,
-    //     new EventSender(config, clientContext),
-    //     new ContextDeduplicator(config),
-    //     this.diagnosticsManager,
-    //   )
-    // : new internal.NullEventProcessor();
+
+    const { logger, streamUri, baseUri, eventsUri } = this.config;
+    const c = {
+      logger,
+      offline: false,
+      serviceEndpoints: new ServiceEndpoints(streamUri, baseUri, eventsUri),
+    };
+
+    this.eventProcessor = this.config.sendEvents
+      ? // ? new internal.EventProcessor(
+        //     config,
+        //     new ClientContext(clientSideId, c, null),
+        //     new EventSender(c, clientContext),
+        //     null // new ContextDeduplicator(config),
+        //     this.diagnosticsManager,
+        //   )
+        null
+      : new internal.NullEventProcessor();
   }
 
   allFlags(): LDFlagSet {
