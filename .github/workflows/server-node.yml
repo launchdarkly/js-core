@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         # Node versions to run on.
-        version: [16, 19]
+        version: [16, 18]
 
     env:
       TEST_HARNESS_PARAMS: '--skip-from=./contract-tests/testharness-suppressions.txt'
