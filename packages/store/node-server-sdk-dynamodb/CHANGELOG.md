@@ -18,6 +18,12 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 8.0.2 to 8.1.0
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 8.1.0 to 8.1.1
+
 ## [5.0.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v5.0.1...node-server-sdk-dynamodb-v5.0.2) (2023-06-27)
 
 
