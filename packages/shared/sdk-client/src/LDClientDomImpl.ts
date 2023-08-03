@@ -7,6 +7,7 @@ import {
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
+  subsystem,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDClientDom } from './api/LDClientDom';
@@ -17,21 +18,21 @@ import { PlatformDom, Storage } from './platform/PlatformDom';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
-  // eventProcessor: internal.EventProcessor;
+  eventProcessor: subsystem.LDEventProcessor;
   storage: Storage;
 
   constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
     this.config = new Configuration(options);
     this.storage = platform.storage;
-    // this.eventProcessor = this.config.sendEvents
-    //   ? new internal.EventProcessor(
-    //       config,
-    //       clientContext,
-    //       new EventSender(config, clientContext),
-    //       new ContextDeduplicator(config),
-    //       this.diagnosticsManager,
-    //     )
-    //   : new internal.NullEventProcessor();
+    this.eventProcessor = new internal.NullEventProcessor(); //this.config.sendEvents
+    // ? new internal.EventProcessor(
+    //     config,
+    //     clientContext,
+    //     new EventSender(config, clientContext),
+    //     new ContextDeduplicator(config),
+    //     this.diagnosticsManager,
+    //   )
+    // : new internal.NullEventProcessor();
   }
 
   allFlags(): LDFlagSet {
