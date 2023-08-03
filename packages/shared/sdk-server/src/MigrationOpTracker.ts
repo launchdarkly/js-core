@@ -62,7 +62,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
 
   createEvent(): LDMigrationOpEvent | undefined {
     if (this.operation && Object.keys(this.contextKeys).length) {
-      const measurements: LDMigrationMeasurement[] = [...this.customMeasurements];
+      const measurements = [...this.customMeasurements];
 
       this.populateConsistency(measurements);
       this.populateLatency(measurements);
