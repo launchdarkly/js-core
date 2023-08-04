@@ -233,7 +233,7 @@ export default class Migration<
   }
 
   private trackConsistency(
-    context: MigrationContext,
+    context: MigrationContext<TMigrationReadInput>,
     oldValue: LDMethodResult<TMigrationRead>,
     newValue: LDMethodResult<TMigrationRead>,
   ) {

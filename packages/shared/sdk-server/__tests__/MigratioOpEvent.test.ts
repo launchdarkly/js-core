@@ -6,6 +6,7 @@ import {
   internal,
   LDClientImpl,
   LDConcurrentExecution,
+  LDConsistencyCheck,
   LDExecutionOrdering,
   LDMigrationOpEvent,
   LDMigrationStage,
@@ -84,6 +85,35 @@ describe('given an LDClient with test data', () => {
           expect(migrationEvent.measurements[0].key).toEqual('consistent');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].value).toEqual(1);
+        },
+      );
+
+      it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
+        'it uses the check ratio: %p',
+        async (stage) => {
+          // eslint-disable-next-line no-await-in-loop
+          await (async () => {
+            let checkedCount = 0;
+            const trials = 1000;
+            for (let x = 0; x < trials; x += 1) {
+              const flagKey = 'migration';
+              td.update(td.flag(flagKey).valueForAll(stage).addCheckRatio(10));
+              // eslint-disable-next-line no-await-in-loop
+              await migration.read(flagKey, { key: 'test' }, stage);
+              // eslint-disable-next-line no-await-in-loop
+              await events.take();
+              // eslint-disable-next-line no-await-in-loop
+              const migrationEvent = (await events.take()) as InputMigrationEvent;
+              if (migrationEvent.measurements[0]?.value === LDConsistencyCheck.Consistent) {
+                checkedCount += 1;
+              }
+            }
+            expect(checkedCount).toBeGreaterThan(0);
+            expect(checkedCount).toBeLessThan(trials);
+            // This will likely always pass for 1000 trials, but if it does fail
+            // then either remove this check of increase the number of trails.
+            expect(checkedCount / trials).toBeCloseTo(0.1, 1);
+          })();
         },
       );
     });
