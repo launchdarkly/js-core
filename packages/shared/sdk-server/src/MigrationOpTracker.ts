@@ -34,6 +34,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     private readonly defaultStage: LDMigrationStage,
     private readonly stage: LDMigrationStage,
     private readonly reason: LDEvaluationReason,
+    private readonly checkRatio?: number,
     private readonly variation?: number,
   ) {}
 
@@ -87,8 +88,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
       measurements.push({
         key: 'consistent',
         value: this.consistencyCheck,
-        // TODO: Needs to come from someplace.
-        samplingOdds: 0,
+        samplingRatio: this.checkRatio ?? 1,
       });
     }
   }

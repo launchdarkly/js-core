@@ -1,4 +1,5 @@
 import { Context, internal, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
+import { LDEventOverrides } from '@launchdarkly/js-sdk-common/dist/internal';
 
 import { Flag } from '../evaluation/data/Flag';
 import isExperiment from './isExperiment';
@@ -7,7 +8,13 @@ import isExperiment from './isExperiment';
  * @internal
  */
 export default class EventFactory {
-  constructor(private readonly withReasons: boolean) {}
+  constructor(
+    private readonly withReasons: boolean,
+    private readonly eventConfig: LDEventOverrides = {
+      samplingRatio: () => 1,
+      indexEventSamplingRatio: () => 1,
+    },
+  ) {}
 
   evalEvent(
     flag: Flag,
@@ -31,6 +38,7 @@ export default class EventFactory {
       this.withReasons || addExperimentData ? detail.reason : undefined,
       flag.debugEventsUntilDate,
       flag.excludeFromSummaries,
+      flag.samplingRatio,
     );
   }
 
@@ -40,11 +48,18 @@ export default class EventFactory {
 
   /* eslint-disable-next-line class-methods-use-this */
   identifyEvent(context: Context) {
-    return new internal.InputIdentifyEvent(context);
+    // Currently sampling for identify events is always 1.
+    return new internal.InputIdentifyEvent(context, 1);
   }
 
   /* eslint-disable-next-line class-methods-use-this */
   customEvent(key: string, context: Context, data?: any, metricValue?: number) {
-    return new internal.InputCustomEvent(context, key, data ?? undefined, metricValue ?? undefined);
+    return new internal.InputCustomEvent(
+      context,
+      key,
+      data ?? undefined,
+      metricValue ?? undefined,
+      this.eventConfig.samplingRatio(key),
+    );
   }
 }

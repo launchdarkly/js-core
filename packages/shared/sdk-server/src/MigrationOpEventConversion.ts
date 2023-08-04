@@ -110,14 +110,14 @@ function validateMeasurement(
   if (isConsistencyMeasurement(measurement)) {
     if (
       !TypeValidators.Number.is(measurement.value) ||
-      !TypeValidators.Number.is(measurement.samplingOdds)
+      !TypeValidators.Number.is(measurement.samplingRatio)
     ) {
       return undefined;
     }
     return {
       key: measurement.key,
       value: measurement.value,
-      samplingOdds: measurement.samplingOdds,
+      samplingRatio: measurement.samplingRatio,
     };
   }
 
@@ -192,7 +192,8 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
  */
 export default function MigrationOpEventToInputEvent(
   inEvent: LDMigrationOpEvent,
-): internal.InputMigrationEvent | undefined {
+): Omit<internal.InputMigrationEvent, 'samplingRatio'> | undefined {
+  // The sampling ratio is omitted and needs populated by the track migration method.
   if (inEvent.kind !== 'migration_op') {
     return undefined;
   }

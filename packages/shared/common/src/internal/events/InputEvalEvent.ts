@@ -6,8 +6,6 @@ export default class InputEvalEvent {
 
   public readonly creationDate: number;
 
-  public readonly context: Context;
-
   public readonly default: any;
 
   public readonly trackEvents?: boolean;
@@ -27,8 +25,8 @@ export default class InputEvalEvent {
   public readonly excludeFromSummaries?: boolean;
 
   constructor(
-    withReasons: boolean,
-    context: Context,
+    public readonly withReasons: boolean, 
+    public readonly context: Context,
     public readonly key: string,
     defValue: any, // default is a reserved keyword in this context.
     detail: LDEvaluationDetail,
@@ -39,9 +37,10 @@ export default class InputEvalEvent {
     reason?: LDEvaluationReason,
     debugEventsUntilDate?: number,
     excludeFromSummaries?: boolean,
+    public readonly samplingRatio: number = 1,
+    public readonly indexSamplingRatio: number = 1,
   ) {
     this.creationDate = Date.now();
-    this.context = context;
     this.default = defValue;
     this.variation = detail.variationIndex ?? undefined;
     this.value = detail.value;

@@ -5,10 +5,7 @@ export default class InputIdentifyEvent {
 
   public readonly creationDate: number;
 
-  public readonly context: Context;
-
-  constructor(context: Context) {
+  constructor(public readonly context: Context, public readonly samplingRatio: number = 1) {
     this.creationDate = Date.now();
-    this.context = context;
   }
 }

@@ -151,7 +151,7 @@ it('includes if the result was consistent', () => {
   expect(event?.measurements).toContainEqual({
     key: 'consistent',
     value: 1,
-    samplingOdds: 0,
+    samplingRatio: 0,
   });
 });
 
@@ -172,6 +172,6 @@ it('includes if the result was inconsistent', () => {
   expect(event?.measurements).toContainEqual({
     key: 'consistent',
     value: 0,
-    samplingOdds: 0,
+    samplingRatio: 0,
   });
 });

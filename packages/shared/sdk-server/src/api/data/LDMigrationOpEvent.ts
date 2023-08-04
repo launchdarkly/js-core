@@ -28,7 +28,7 @@ export interface LDMigrationCustomMeasurement {
 export interface LDMigrationConsistencyMeasurement {
   key: 'consistent';
   value: number;
-  samplingOdds: number;
+  samplingRatio: number;
 }
 
 export interface LDMigrationLatencyMeasurement {

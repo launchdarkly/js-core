@@ -15,5 +15,15 @@ export interface LDMetricOverride {
  * specific custom events.
  */
 export interface LDEventOverrides {
-  
+  /**
+   * Get the sampling ratio for a custom event.
+   *
+   * @param key A key of a custom event.
+   */
+  samplingRatio(key: string): number;
+
+  /**
+   * Get the sampling ratio for index events.
+   */
+  indexEventSamplingRatio(): number;
 }
