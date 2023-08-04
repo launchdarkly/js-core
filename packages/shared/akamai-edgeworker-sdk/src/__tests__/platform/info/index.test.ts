@@ -20,7 +20,7 @@ describe('Akamai Platform Info', () => {
     expect(platformData.sdkData()).toEqual({
       name: packageJson.name,
       version: packageJson.version,
-      userAgent: 'AkamaiEdgeSDK',
+      userAgentBase: 'AkamaiEdgeSDK',
     });
   });
 });

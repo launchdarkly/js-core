@@ -3,14 +3,14 @@ import { Info, PlatformData, SdkData } from '@launchdarkly/js-sdk-common';
 import defaultHeaders from '../../src/data_sources/defaultHeaders';
 import Configuration from '../../src/options/Configuration';
 
-const makeInfo = (wrapperName?: string, wrapperVersion?: string, userAgent?: string): Info => ({
+const makeInfo = (wrapperName?: string, wrapperVersion?: string, userAgentBase?: string): Info => ({
   platformData(): PlatformData {
     return {};
   },
   sdkData(): SdkData {
     const sdkData: SdkData = {
       version: '2.2.2',
-      userAgent,
+      userAgentBase,
       wrapperName,
       wrapperVersion,
     };
