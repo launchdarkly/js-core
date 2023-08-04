@@ -76,33 +76,21 @@ interface LDDiagnosticsManager {
 
 export default class EventProcessor implements LDEventProcessor {
   private summarizer = new EventSummarizer();
-
   private queue: OutputEvent[] = [];
-
   private lastKnownPastTime = 0;
-
   private droppedEvents = 0;
-
   private deduplicatedUsers = 0;
-
   private exceededCapacity = false;
-
   private eventsInLastBatch = 0;
-
   private shutdown = false;
-
   private capacity: number;
-
   private logger?: LDLogger;
-
   private contextFilter: ContextFilter;
 
   // Using any here, because setInterval handles are not the same
   // between node and web.
   private diagnosticsTimer: any;
-
   private flushTimer: any;
-
   private flushUsersTimer: any = null;
 
   constructor(
