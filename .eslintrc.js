@@ -12,5 +12,11 @@ module.exports = {
   rules: {
     'prettier/prettier': ['error'],
     'class-methods-use-this': 'off',
+    'import/no-extraneous-dependencies': [
+      'error',
+      {
+        devDependencies: ['**/jest*.ts', '**/*.test.ts'],
+      },
+    ],
   },
 };
