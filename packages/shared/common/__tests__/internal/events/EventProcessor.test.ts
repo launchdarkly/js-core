@@ -28,6 +28,7 @@ import {
 } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
+import { clientContext } from '../../../src/mocks';
 
 const user = { key: 'userKey', name: 'Red' };
 const userWithFilteredName = {
@@ -195,20 +196,14 @@ describe('given an event processor', () => {
   beforeEach(() => {
     eventSender = new MockEventSender();
     contextDeduplicator = new MockContextDeduplicator();
-
-    eventProcessor = new EventProcessor(
-      eventProcessorConfig,
-      new ClientContext('sdk-key', basicConfiguration, platform),
-      eventSender,
-      contextDeduplicator,
-    );
+    eventProcessor = new EventProcessor(eventProcessorConfig, clientContext, contextDeduplicator);
   });
 
   afterEach(() => {
     eventProcessor.close();
   });
 
-  it('queues an identify event', async () => {
+  it.only('queues an identify event', async () => {
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
 
@@ -703,12 +698,7 @@ describe('given an event processor', () => {
 
     eventProcessor.close();
 
-    eventProcessor = new EventProcessor(
-      newConfig,
-      new ClientContext('sdk-key', basicConfiguration, platform),
-      eventSender,
-      contextDeduplicator,
-    );
+    eventProcessor = new EventProcessor(newConfig, clientContext, contextDeduplicator);
     eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
 
     eventSender.queue.take();

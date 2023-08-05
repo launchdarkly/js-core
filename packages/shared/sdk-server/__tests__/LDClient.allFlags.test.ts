@@ -1,6 +1,6 @@
+import basicPlatform from '../../common/src/mocks/platform';
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
 

@@ -1,12 +1,12 @@
 import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../common/src/mocks/platform';
 import { BigSegmentStore } from '../src/api/interfaces';
 import { LDBigSegmentsOptions } from '../src/api/options/LDBigSegmentsOptions';
 import makeBigSegmentRef from '../src/evaluation/makeBigSegmentRef';
 import TestData from '../src/integrations/test_data/TestData';
 import LDClientImpl from '../src/LDClientImpl';
 import { makeSegmentMatchClause } from './evaluation/flags';
-import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
 
 const user = { key: 'userkey' };

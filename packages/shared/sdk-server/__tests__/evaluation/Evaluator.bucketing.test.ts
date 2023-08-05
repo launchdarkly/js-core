@@ -1,10 +1,10 @@
 import { Context } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../common/src/mocks/platform';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Rollout } from '../../src/evaluation/data/Rollout';
 import Evaluator from '../../src/evaluation/Evaluator';
 import noQueries from './mocks/noQueries';
-import basicPlatform from './mocks/platform';
 
 const evaluator = new Evaluator(basicPlatform, noQueries);
 

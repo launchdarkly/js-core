@@ -1,4 +1,5 @@
 import { LDClientContext, LDLogger, Platform } from '../api';
+import ApplicationTags from './ApplicationTags';
 import ServiceEndpoints from './ServiceEndpoints';
 
 /**
@@ -6,12 +7,14 @@ import ServiceEndpoints from './ServiceEndpoints';
  * client SDKs.
  */
 interface BasicConfiguration {
+  tags?: ApplicationTags;
+
   logger?: LDLogger;
 
   /**
    * True if the SDK was configured to be completely offline.
    */
-  offline: boolean;
+  offline?: boolean;
 
   /**
    * The configured SDK key.
@@ -35,16 +38,18 @@ export default class ClientContext implements LDClientContext {
     sdkKey: string,
     configuration: {
       logger?: LDLogger;
-      offline: boolean;
+      offline?: boolean;
       serviceEndpoints: ServiceEndpoints;
+      tags?: ApplicationTags;
     },
     public readonly platform: Platform,
   ) {
     this.basicConfiguration = {
+      tags: configuration.tags,
       logger: configuration.logger,
       offline: configuration.offline,
-      sdkKey,
       serviceEndpoints: configuration.serviceEndpoints,
+      sdkKey,
     };
   }
 }

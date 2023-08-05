@@ -2,21 +2,18 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  ClientContext,
   internal,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
-  ServiceEndpoints,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDClientDom } from './api/LDClientDom';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
-import EventSender from './events/EventSender';
-// import EventSender from './events/EventSender';
+import createEventProcessor from './events/createEventProcessor';
 import { PlatformDom, Storage } from './platform/PlatformDom';
 
 export default class LDClientDomImpl implements LDClientDom {
@@ -26,24 +23,7 @@ export default class LDClientDomImpl implements LDClientDom {
 
   constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
     this.config = new Configuration(options);
-    this.storage = platform.storage;
-
-    const { logger, streamUri, baseUri, eventsUri, sendEvents } = this.config;
-    const c = {
-      logger,
-      offline: false,
-      serviceEndpoints: new ServiceEndpoints(streamUri, baseUri, eventsUri),
-    };
-
-    this.eventProcessor = this.config.sendEvents
-      ? new internal.EventProcessor(
-          this.config,
-          new ClientContext(clientSideId, c, null),
-          new EventSender(c, clientContext),
-          undefined,
-          this.diagnosticsManager,
-        )
-      : new internal.NullEventProcessor();
+    this.eventProcessor = this.storage = platform.storage;
   }
 
   allFlags(): LDFlagSet {

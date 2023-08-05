@@ -1,4 +1,5 @@
 import {
+  defaultHeaders,
   EventSource,
   EventSourceInitDict,
   Info,
@@ -9,8 +10,8 @@ import {
   SdkData,
 } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../common/src/mocks/platform';
 import promisify from '../../src/async/promisify';
-import defaultHeaders from '../../src/data_sources/defaultHeaders';
 import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import NullEventSource from '../../src/events/NullEventSource';
@@ -18,7 +19,6 @@ import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger, { LogLevel } from '../Logger';
 
 const sdkKey = 'my-sdk-key';
@@ -106,7 +106,7 @@ describe('given a stream processor with mock event source', () => {
 
   it('sets expected headers', () => {
     streamProcessor.start();
-    expect(es.options.headers).toMatchObject(defaultHeaders(sdkKey, config, info));
+    expect(es.options.headers).toMatchObject(defaultHeaders(sdkKey, info, config.tags));
   });
 
   describe('when putting a message', () => {

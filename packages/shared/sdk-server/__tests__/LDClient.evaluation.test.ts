@@ -1,3 +1,4 @@
+import basicPlatform from '../../common/src/mocks/platform';
 import { LDClientImpl } from '../src';
 import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
@@ -5,7 +6,6 @@ import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
-import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
 

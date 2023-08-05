@@ -1,10 +1,11 @@
 import { LDEvaluationReason, LDLogger } from '../../api';
+import { LDDeliveryStatus, LDEventSender, LDEventType } from '../../api/subsystem';
 import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
 import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
-import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
-import ClientContext from '../../options/ClientContext';
+import { ClientContext } from '../../options';
+import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
@@ -75,6 +76,7 @@ interface LDDiagnosticsManager {
 }
 
 export default class EventProcessor implements LDEventProcessor {
+  private eventSender: EventSender;
   private summarizer = new EventSummarizer();
   private queue: OutputEvent[] = [];
   private lastKnownPastTime = 0;
@@ -96,12 +98,12 @@ export default class EventProcessor implements LDEventProcessor {
   constructor(
     config: EventProcessorOptions,
     clientContext: ClientContext,
-    private readonly eventSender: LDEventSender,
     private readonly contextDeduplicator?: LDContextDeduplicator,
     private readonly diagnosticsManager?: LDDiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
+    this.eventSender = new EventSender(clientContext);
 
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,

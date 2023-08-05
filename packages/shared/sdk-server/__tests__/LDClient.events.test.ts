@@ -1,8 +1,8 @@
 import { Context, internal } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../common/src/mocks/platform';
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
 
 const defaultUser = { key: 'user' };

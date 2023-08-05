@@ -11,6 +11,7 @@ import {
   SdkData,
 } from '@launchdarkly/js-sdk-common';
 
+import { crypto } from '../../../common/src/mocks/hasher';
 import { DataKind } from '../../src/api/interfaces';
 import {
   LDFeatureStore,
@@ -22,7 +23,6 @@ import {
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-import { crypto } from '../evaluation/mocks/hasher';
 
 const info: Info = {
   platformData(): PlatformData {

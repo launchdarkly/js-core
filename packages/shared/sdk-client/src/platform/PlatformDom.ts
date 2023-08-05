@@ -1,3 +1,5 @@
+import { Platform } from '@launchdarkly/js-sdk-common';
+
 export interface Storage {
   get(key: string): Promise<string | null>;
 
@@ -6,6 +8,6 @@ export interface Storage {
   clear(): Promise<void>;
 }
 
-export interface PlatformDom {
+export interface PlatformDom extends Platform {
   storage: Storage;
 }

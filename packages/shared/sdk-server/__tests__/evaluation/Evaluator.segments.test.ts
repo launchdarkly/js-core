@@ -10,6 +10,7 @@ import {
   LDContext,
 } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../common/src/mocks/platform';
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
@@ -20,7 +21,6 @@ import {
   makeClauseThatMatchesUser,
   makeFlagWithSegmentMatch,
 } from './flags';
-import basicPlatform from './mocks/platform';
 
 const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };

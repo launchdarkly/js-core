@@ -33,7 +33,6 @@ import { Queries } from './evaluation/Queries';
 import ContextDeduplicator from './events/ContextDeduplicator';
 import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
-import EventSender from './events/EventSender';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
@@ -159,7 +158,6 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor = new internal.EventProcessor(
         config,
         clientContext,
-        new EventSender(config, clientContext),
         new ContextDeduplicator(config),
         this.diagnosticsManager,
       );

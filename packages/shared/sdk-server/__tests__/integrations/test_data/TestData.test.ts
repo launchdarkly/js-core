@@ -1,5 +1,6 @@
 import { ClientContext } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../../common/src/mocks/platform';
 import { AttributeReference } from '../../../src';
 import { Flag } from '../../../src/evaluation/data/Flag';
 import { FlagRule } from '../../../src/evaluation/data/FlagRule';
@@ -8,7 +9,6 @@ import Configuration from '../../../src/options/Configuration';
 import AsyncStoreFacade from '../../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../../src/store/VersionedDataKinds';
-import basicPlatform from '../../evaluation/mocks/platform';
 
 const basicBooleanFlag: Flag = {
   fallthrough: {

@@ -4,8 +4,8 @@
 // Testing here can only validate we are providing correct inputs to the hashing algorithm.
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
 
+import { crypto, hasher } from '../../../common/src/mocks/hasher';
 import Bucketer from '../../src/evaluation/Bucketer';
-import { crypto, hasher } from './mocks/hasher';
 
 describe.each<
   [

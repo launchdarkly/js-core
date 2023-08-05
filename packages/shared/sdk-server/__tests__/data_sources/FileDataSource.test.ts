@@ -1,5 +1,6 @@
 import { ClientContext, Context, Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../common/src/mocks/platform';
 import promisify from '../../src/async/promisify';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
@@ -9,7 +10,6 @@ import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger from '../Logger';
 
 const flag1Key = 'flag1';

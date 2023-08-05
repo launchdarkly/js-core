@@ -2,6 +2,7 @@
 // in detail in Evaluator.clause.tests and (TODO: File for segments).
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../common/src/mocks/platform';
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';
@@ -12,7 +13,6 @@ import {
   makeFlagWithRules,
 } from './flags';
 import noQueries from './mocks/noQueries';
-import basicPlatform from './mocks/platform';
 
 const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };

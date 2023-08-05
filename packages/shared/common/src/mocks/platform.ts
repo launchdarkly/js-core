@@ -8,8 +8,7 @@ import {
   Requests,
   Response,
   SdkData,
-} from '@launchdarkly/js-sdk-common';
-
+} from '../api';
 import { crypto } from './hasher';
 
 const info: Info = {

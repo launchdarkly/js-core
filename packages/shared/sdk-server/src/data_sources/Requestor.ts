@@ -1,8 +1,14 @@
-import { Info, LDStreamingError, Options, Requests, Response } from '@launchdarkly/js-sdk-common';
+import {
+  defaultHeaders,
+  Info,
+  LDStreamingError,
+  Options,
+  Requests,
+  Response,
+} from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureRequestor } from '../api/subsystems';
 import Configuration from '../options/Configuration';
-import defaultHeaders from './defaultHeaders';
 
 /**
  * @internal
@@ -26,7 +32,7 @@ export default class Requestor implements LDFeatureRequestor {
     info: Info,
     private readonly requests: Requests,
   ) {
-    this.headers = defaultHeaders(sdkKey, config, info);
+    this.headers = defaultHeaders(sdkKey, info, config.tags);
     this.uri = `${config.serviceEndpoints.polling}/sdk/latest-all`;
   }
 

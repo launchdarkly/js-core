@@ -1,5 +1,7 @@
 import {
+  defaultHeaders,
   EventSource,
+  httpErrorMessage,
   Info,
   isHttpRecoverable,
   LDLogger,
@@ -13,8 +15,6 @@ import DiagnosticsManager from '../events/DiagnosticsManager';
 import Configuration from '../options/Configuration';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
 import VersionedDataKinds, { VersionedDataKind } from '../store/VersionedDataKinds';
-import defaultHeaders from './defaultHeaders';
-import httpErrorMessage from './httpErrorMessage';
 
 const STREAM_READ_TIMEOUT_MS = 5 * 60 * 1000;
 const RETRY_RESET_INTERVAL_MS = 60 * 1000;
@@ -51,7 +51,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     private readonly featureStore: LDDataSourceUpdates,
     private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
-    this.headers = defaultHeaders(sdkKey, config, info);
+    this.headers = defaultHeaders(sdkKey, info, config.tags);
     this.logger = config.logger;
     this.streamInitialReconnectDelay = config.streamInitialReconnectDelay;
     this.requests = requests;

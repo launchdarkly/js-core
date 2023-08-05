@@ -17,7 +17,7 @@ export interface LDBasicConfiguration {
   /**
    * True if the SDK was configured to be completely offline.
    */
-  offline: boolean;
+  offline?: boolean;
 
   /**
    * The configured SDK key.

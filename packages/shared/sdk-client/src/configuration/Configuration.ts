@@ -3,6 +3,7 @@ import {
   LDFlagSet,
   NumberWithMinimum,
   OptionMessages,
+  ServiceEndpoints,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
@@ -40,12 +41,16 @@ export default class Configuration {
   public readonly wrapperName?: string;
   public readonly wrapperVersion?: string;
 
+  public readonly serviceEndpoints: ServiceEndpoints;
+
   // Allow indexing Configuration by a string
   [index: string]: any;
 
   constructor(pristineOptions: LDOptions = {}) {
     const errors = this.validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
+
+    this.serviceEndpoints = new ServiceEndpoints(this.streamUri, this.baseUri, this.eventsUri);
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {

@@ -16,12 +16,11 @@ import {
   SdkData,
 } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../common/src/mocks/platform';
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
-import EventSender from '../../src/events/EventSender';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-import basicPlatform from '../evaluation/mocks/platform';
 
 const SDK_KEY = 'sdk-key';
 
@@ -194,7 +193,6 @@ describe('given an event processor with diagnostics manager', () => {
     eventProcessor = new internal.EventProcessor(
       testConfig,
       clientContext,
-      new EventSender(config, clientContext),
       new ContextDeduplicator(config),
       diagnosticsManager,
     );

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import basicPlatform from '../../common/src/mocks/platform';
 import { LDClientImpl } from '../src';
-import basicPlatform from './evaluation/mocks/platform';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';
 

@@ -1,23 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
-import {
-  ClientContext,
-  EventSource,
-  EventSourceInitDict,
-  Headers,
-  Info,
-  Options,
-  PlatformData,
-  Requests,
-  Response,
-  SdkData,
-} from '@launchdarkly/js-sdk-common';
-import { LDDeliveryStatus, LDEventType } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
-
-import EventSender from '../../src/events/EventSender';
-import Configuration from '../../src/options/Configuration';
-import basicPlatform from '../evaluation/mocks/platform';
+import { EventSourceInitDict, Info, Options, PlatformData, Requests, SdkData } from '../../api';
+import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
+import basicPlatform from '../../mocks/platform';
+import { ClientContext } from '../../options';
+import EventSender from './EventSender';
 
 describe('given an event sender', () => {
   let queue: AsyncQueue<{ url: string; options?: Options }>;
@@ -95,9 +83,8 @@ describe('given an event sender', () => {
       },
     };
 
-    const config = new Configuration({});
+    const config = { serviceEndpoints: { events: '', streaming: '', polling: '' } };
     eventSender = new EventSender(
-      config,
       new ClientContext('sdk-key', config, { ...basicPlatform, requests, info }),
     );
   });

@@ -1,5 +1,6 @@
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
 
+import basicPlatform from '../../../common/src/mocks/platform';
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';
@@ -10,7 +11,6 @@ import {
   makeClauseThatMatchesUser,
 } from './flags';
 import noQueries from './mocks/noQueries';
-import basicPlatform from './mocks/platform';
 
 const evaluator = new Evaluator(basicPlatform, noQueries);
 
