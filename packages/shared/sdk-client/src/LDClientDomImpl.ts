@@ -2,7 +2,6 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  internal,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
