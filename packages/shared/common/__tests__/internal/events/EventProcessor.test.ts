@@ -2,14 +2,14 @@ import { Context } from '../../../src';
 import { LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
+import BasicLogger from '../../../src/logging/BasicLogger';
+import format from '../../../src/logging/format';
 import { clientContext } from '../../../src/mocks';
 import ContextDeduplicator from '../../../src/mocks/contextDeduplicator';
 
-const mockSendEventData = jest.fn(() =>
-  Promise.resolve({
-    status: LDDeliveryStatus.Succeeded,
-  }),
-);
+const mockSendEventData = jest.fn();
+
+jest.useFakeTimers();
 
 jest.mock('../../../src/internal/events/EventSender', () => ({
   default: jest.fn(() => ({
@@ -97,6 +97,11 @@ describe('given an event processor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSendEventData.mockImplementation(() =>
+      Promise.resolve({
+        status: LDDeliveryStatus.Succeeded,
+      }),
+    );
     contextDeduplicator = new ContextDeduplicator();
     eventProcessor = new EventProcessor(eventProcessorConfig, clientContext, contextDeduplicator);
   });
@@ -568,21 +573,34 @@ describe('given an event processor', () => {
     await expect(eventProcessor.flush()).rejects.toThrow(/SDK key is invalid/);
   });
 
-  // TODO:
-  // it('swallows errors from failed background flush', async () => {
-  //   mockSendEventData.mockImplementation(() =>
-  //     Promise.resolve({
-  //       status: LDDeliveryStatus.Failed,
-  //       error: new Error('some error'),
-  //     }),
-  //   );
-  //
-  //   // Make a new client that flushes fast.
-  //   const newConfig = { ...eventProcessorConfig, flushInterval: 0.1 };
-  //   eventProcessor.close();
-  //   eventProcessor = new EventProcessor(newConfig, clientContext, contextDeduplicator);
-  //   eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
-  //
-  //   eventSender.queue.take();
-  // });
+  it('swallows errors from failed background flush', async () => {
+    mockSendEventData.mockImplementation(() =>
+      Promise.resolve({
+        status: LDDeliveryStatus.Failed,
+        error: new Error('some error'),
+      }),
+    );
+    const mockConsole = jest.fn();
+    const clientContextWithDebug = { ...clientContext };
+    clientContextWithDebug.basicConfiguration.logger = new BasicLogger({
+      level: 'debug',
+      destination: mockConsole,
+      formatter: format,
+    });
+    eventProcessor = new EventProcessor(
+      eventProcessorConfig,
+      clientContextWithDebug,
+      contextDeduplicator,
+    );
+
+    eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
+    await jest.advanceTimersByTimeAsync(eventProcessorConfig.flushInterval * 1000);
+
+    expect(mockConsole).toBeCalledTimes(2);
+    expect(mockConsole).toHaveBeenNthCalledWith(1, 'debug: [LaunchDarkly] Flushing 1 events');
+    expect(mockConsole).toHaveBeenNthCalledWith(
+      2,
+      'debug: [LaunchDarkly] Flush failed: Error: some error',
+    );
+  });
 });

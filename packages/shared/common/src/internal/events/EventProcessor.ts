@@ -119,8 +119,9 @@ export default class EventProcessor implements LDEventProcessor {
     this.flushTimer = setInterval(async () => {
       try {
         await this.flush();
-      } catch {
-        // Eat the errors.
+      } catch (e) {
+        // Log errors and swallow them
+        this.logger?.debug(`Flush failed: ${e}`);
       }
     }, config.flushInterval * 1000);
 
