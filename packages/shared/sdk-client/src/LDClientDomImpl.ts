@@ -21,9 +21,10 @@ export default class LDClientDomImpl implements LDClientDom {
   eventProcessor: subsystem.LDEventProcessor;
   storage: Storage;
 
-  constructor(clientSideId: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
+  constructor(clientSideID: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
     this.config = new Configuration(options);
-    this.eventProcessor = this.storage = platform.storage;
+    this.eventProcessor = createEventProcessor(clientSideID, this.config, platform);
+    this.storage = platform.storage;
   }
 
   allFlags(): LDFlagSet {

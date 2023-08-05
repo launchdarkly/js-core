@@ -1,12 +1,19 @@
-import { ClientContext, internal, LDEvent, Platform, subsystem } from '@launchdarkly/js-sdk-common';
+import { ClientContext, internal, subsystem } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
-import EventSender from './EventSender';
+import { PlatformDom } from '../platform/PlatformDom';
 
-const createEventProcessor = (config: Configuration): subsystem.LDEventProcessor => {
-  return config.sendEvents
-    ? new internal.EventProcessor(config, eventSender)
+const createEventProcessor = (
+  clientSideID: string,
+  config: Configuration,
+  platform: PlatformDom,
+): subsystem.LDEventProcessor =>
+  config.sendEvents
+    ? new internal.EventProcessor(
+        // TODO: optimise config/clientcontext overlap
+        { ...config, eventsCapacity: config.capacity },
+        new ClientContext(clientSideID, config, platform),
+      )
     : new internal.NullEventProcessor();
-};
 
 export default createEventProcessor;
