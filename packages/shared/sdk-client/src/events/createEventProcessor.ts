@@ -10,7 +10,6 @@ const createEventProcessor = (
 ): subsystem.LDEventProcessor =>
   config.sendEvents
     ? new internal.EventProcessor(
-        // TODO: optimise config/clientcontext overlap
         { ...config, eventsCapacity: config.capacity },
         new ClientContext(clientSideID, config, platform),
       )
