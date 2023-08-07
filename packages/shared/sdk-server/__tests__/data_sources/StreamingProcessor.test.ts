@@ -3,6 +3,7 @@ import {
   EventSource,
   EventSourceInitDict,
   Info,
+  mocks,
   Options,
   PlatformData,
   Requests,
@@ -10,7 +11,6 @@ import {
   SdkData,
 } from '@launchdarkly/js-sdk-common';
 
-import basicPlatform from '../../../common/src/mocks/platform';
 import promisify from '../../src/async/promisify';
 import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
@@ -73,7 +73,12 @@ describe('given a stream processor with mock event source', () => {
       featureStore,
       logger,
     });
-    diagnosticsManager = new DiagnosticsManager('sdk-key', config, basicPlatform, featureStore);
+    diagnosticsManager = new DiagnosticsManager(
+      'sdk-key',
+      config,
+      mocks.basicPlatform,
+      featureStore,
+    );
     streamProcessor = new StreamingProcessor(
       sdkKey,
       config,

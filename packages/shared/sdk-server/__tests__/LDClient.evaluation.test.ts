@@ -1,4 +1,5 @@
-import basicPlatform from '../../common/src/mocks/platform';
+import { mocks } from '@launchdarkly/js-sdk-common';
+
 import { LDClientImpl } from '../src';
 import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
@@ -19,7 +20,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -149,7 +150,7 @@ describe('given an offline client', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         offline: true,
         updateProcessor: td.getFactory(),
@@ -214,7 +215,7 @@ describe('given a client and store that are uninitialized', () => {
 
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: new InertUpdateProcessor(),
         sendEvents: false,
@@ -263,7 +264,7 @@ describe('given a client that is un-initialized and store that is initialized', 
 
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: new NullUpdateProcessor(),
         sendEvents: false,

@@ -10,5 +10,6 @@ export * from './utils';
 
 export * as internal from './internal';
 export * from './errors';
+export * as mocks from './mocks';
 
 export { AttributeReference, Context, ContextFilter };

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import basicPlatform from '../../common/src/mocks/platform';
+import { mocks } from '@launchdarkly/js-sdk-common';
+
 import { LDClientImpl } from '../src';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';
@@ -7,7 +8,7 @@ import makeCallbacks from './makeCallbacks';
 it('fires ready event in offline mode', (done) => {
   const client = new LDClientImpl(
     'sdk-key',
-    basicPlatform,
+    mocks.basicPlatform,
     { offline: true },
     { ...makeCallbacks(false), onReady: () => done() },
   );
@@ -17,7 +18,7 @@ it('fires ready event in offline mode', (done) => {
 it('fires the failed event if initialization fails', (done) => {
   const client = new LDClientImpl(
     'sdk-key',
-    basicPlatform,
+    mocks.basicPlatform,
     {
       updateProcessor: {
         start: (fn: (err: any) => void) => {
@@ -38,7 +39,7 @@ it('fires the failed event if initialization fails', (done) => {
 it('isOffline returns true in offline mode', (done) => {
   const client = new LDClientImpl(
     'sdk-key',
-    basicPlatform,
+    mocks.basicPlatform,
     { offline: true },
     {
       ...makeCallbacks(false),
@@ -59,7 +60,7 @@ describe('when waiting for initialization', () => {
   beforeEach(() => {
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: {
           start: (fn: (err?: any) => void) => {
@@ -101,7 +102,7 @@ describe('when waiting for initialization', () => {
 it('does not crash when closing an offline client', () => {
   const client = new LDClientImpl(
     'sdk-key',
-    basicPlatform,
+    mocks.basicPlatform,
     { offline: true },
     makeCallbacks(false),
   );
@@ -113,7 +114,7 @@ it('does not crash when closing an offline client', () => {
 it('the wait for initialization promise is rejected if initialization fails', (done) => {
   const client = new LDClientImpl(
     'sdk-key',
-    basicPlatform,
+    mocks.basicPlatform,
     {
       updateProcessor: {
         start: (fn: (err: any) => void) => {

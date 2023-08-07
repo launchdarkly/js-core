@@ -3,12 +3,12 @@ import {
   EventSource,
   EventSourceInitDict,
   Headers,
+  mocks,
   Options,
   Requests,
   Response,
 } from '@launchdarkly/js-sdk-common';
 
-import basicPlatform from '../../../common/src/mocks/platform';
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
@@ -80,7 +80,7 @@ describe('given a requestor', () => {
       },
     };
 
-    requestor = new Requestor('sdkKey', new Configuration({}), basicPlatform.info, requests);
+    requestor = new Requestor('sdkKey', new Configuration({}), mocks.basicPlatform.info, requests);
   });
 
   it('gets data', (done) => {

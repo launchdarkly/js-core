@@ -1,6 +1,5 @@
-import { ClientContext } from '@launchdarkly/js-sdk-common';
+import { ClientContext, mocks } from '@launchdarkly/js-sdk-common';
 
-import basicPlatform from '../../../../common/src/mocks/platform';
 import { AttributeReference } from '../../../src';
 import { Flag } from '../../../src/evaluation/data/Flag';
 import { FlagRule } from '../../../src/evaluation/data/FlagRule';
@@ -27,7 +26,7 @@ it('initializes the data store with flags configured the data store is created',
 
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), basicPlatform),
+    new ClientContext('', new Configuration({}), mocks.basicPlatform),
     store,
   );
 
@@ -43,7 +42,7 @@ it('updates the data store when update is called', async () => {
   const td = new TestData();
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), basicPlatform),
+    new ClientContext('', new Configuration({}), mocks.basicPlatform),
     store,
   );
 
@@ -63,7 +62,7 @@ it('can include pre-configured items', async () => {
 
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), basicPlatform),
+    new ClientContext('', new Configuration({}), mocks.basicPlatform),
     store,
   );
 
@@ -109,7 +108,7 @@ it.each([true, false])('does not update the store after stop/close is called', a
 
   const store = new InMemoryFeatureStore();
   const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), basicPlatform),
+    new ClientContext('', new Configuration({}), mocks.basicPlatform),
     store,
   );
 
@@ -137,7 +136,7 @@ it('can update a flag that already exists in the store', async () => {
   const store = new InMemoryFeatureStore();
 
   const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), basicPlatform),
+    new ClientContext('', new Configuration({}), mocks.basicPlatform),
     store,
   );
 

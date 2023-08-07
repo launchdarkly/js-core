@@ -1,6 +1,11 @@
-import { ClientContext, Context, Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
+import {
+  ClientContext,
+  Context,
+  Filesystem,
+  mocks,
+  WatchHandle,
+} from '@launchdarkly/js-sdk-common';
 
-import basicPlatform from '../../../common/src/mocks/platform';
 import promisify from '../../src/async/promisify';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
@@ -148,7 +153,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -175,7 +180,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -205,7 +210,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -234,7 +239,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -266,7 +271,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -300,7 +305,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -329,7 +334,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -355,13 +360,13 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
 
     fds.start(async () => {
-      const evaluator = new Evaluator(basicPlatform, {
+      const evaluator = new Evaluator(mocks.basicPlatform, {
         getFlag: async (key) =>
           ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
         getSegment: async (key) =>
@@ -393,13 +398,13 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
 
     fds.start(async () => {
-      const evaluator = new Evaluator(basicPlatform, {
+      const evaluator = new Evaluator(mocks.basicPlatform, {
         getFlag: async (key) =>
           ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
         getSegment: async (key) =>
@@ -434,7 +439,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -468,7 +473,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -516,7 +521,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -567,7 +572,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );
@@ -611,7 +616,7 @@ describe('given a mock filesystem and memory feature store', () => {
             featureStore,
             logger,
           }),
-          { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+          { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
         ),
         featureStore,
       );
@@ -648,7 +653,7 @@ describe('given a mock filesystem and memory feature store', () => {
           featureStore,
           logger,
         }),
-        { ...basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
       ),
       featureStore,
     );

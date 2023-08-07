@@ -1,6 +1,5 @@
-import { Context, LDContext } from '@launchdarkly/js-sdk-common';
+import { Context, LDContext, mocks } from '@launchdarkly/js-sdk-common';
 
-import basicPlatform from '../../../common/src/mocks/platform';
 import { Flag } from '../../src/evaluation/data/Flag';
 import EvalResult from '../../src/evaluation/EvalResult';
 import Evaluator from '../../src/evaluation/Evaluator';
@@ -32,7 +31,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
     EvalResult.forSuccess('two', Reasons.Off, 2),
   ],
 ])('Given off flags and an evaluator', (flag, context, expected) => {
-  const evaluator = new Evaluator(basicPlatform, noQueries);
+  const evaluator = new Evaluator(mocks.basicPlatform, noQueries);
 
   it(`produces the expected evaluation result for context: ${context.key} ${
     // @ts-ignore
@@ -136,7 +135,7 @@ describe.each<[Flag, LDContext, EvalResult | undefined]>([
     EvalResult.forSuccess('one', Reasons.TargetMatch, 1),
   ],
 ])('given flag configurations with different targets that match', (flag, context, expected) => {
-  const evaluator = new Evaluator(basicPlatform, noQueries);
+  const evaluator = new Evaluator(mocks.basicPlatform, noQueries);
   it(`produces the expected evaluation result for context: ${context.key} ${
     // @ts-ignore
     context.kind

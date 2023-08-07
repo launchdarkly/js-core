@@ -1,6 +1,5 @@
-import { ClientContext } from '@launchdarkly/js-sdk-common';
+import { ClientContext, mocks } from '@launchdarkly/js-sdk-common';
 
-import basicPlatform from '../../../common/src/mocks/platform';
 import { LDFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
@@ -35,7 +34,7 @@ describe('given an event processor', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, mocks.basicPlatform)),
     );
   });
 
@@ -96,7 +95,7 @@ describe('given a polling processor with a short poll duration', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, mocks.basicPlatform)),
     );
   });
 

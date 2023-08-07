@@ -3,6 +3,7 @@ import {
   EventSource,
   EventSourceInitDict,
   Info,
+  mocks,
   Options,
   Platform,
   PlatformData,
@@ -11,15 +12,14 @@ import {
   SdkData,
 } from '@launchdarkly/js-sdk-common';
 
-import { crypto } from '../../../common/src/mocks/hasher';
-import { DataKind } from '../../src/api/interfaces';
 import {
+  DataKind,
   LDFeatureStore,
   LDFeatureStoreDataStorage,
   LDFeatureStoreItem,
   LDFeatureStoreKindData,
   LDKeyedFeatureStoreItem,
-} from '../../src/api/subsystems';
+} from '../../src';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
@@ -70,7 +70,7 @@ const requests: Requests = {
 
 const basicPlatform: Platform = {
   info,
-  crypto,
+  crypto: mocks.crypto,
   requests,
 };
 

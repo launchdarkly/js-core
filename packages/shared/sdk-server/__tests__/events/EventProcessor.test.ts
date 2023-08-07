@@ -9,6 +9,7 @@ import {
   Hmac,
   Info,
   internal,
+  mocks,
   Options,
   PlatformData,
   Requests,
@@ -16,7 +17,6 @@ import {
   SdkData,
 } from '@launchdarkly/js-sdk-common';
 
-import basicPlatform from '../../../common/src/mocks/platform';
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
@@ -175,7 +175,7 @@ describe('given an event processor with diagnostics manager', () => {
       'sdk-key',
       testConfig,
       {
-        ...basicPlatform,
+        ...mocks.basicPlatform,
         // Replace info and requests.
         info,
         requests,
@@ -185,7 +185,7 @@ describe('given an event processor with diagnostics manager', () => {
     );
 
     const clientContext = new ClientContext(SDK_KEY, testConfig, {
-      ...basicPlatform,
+      ...mocks.basicPlatform,
       info,
       requests,
     });

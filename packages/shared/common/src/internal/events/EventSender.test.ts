@@ -3,7 +3,7 @@ import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
 import { EventSourceInitDict, Info, Options, PlatformData, Requests, SdkData } from '../../api';
 import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
-import basicPlatform from '../../mocks/platform';
+import { basicPlatform } from '../../mocks';
 import { ClientContext } from '../../options';
 import EventSender from './EventSender';
 
