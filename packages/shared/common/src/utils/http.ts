@@ -9,11 +9,11 @@ export type LDHeaders = {
 };
 
 export function defaultHeaders(sdkKey: string, info: Info, tags?: ApplicationTags): LDHeaders {
-  const { name, version, wrapperName, wrapperVersion } = info.sdkData();
+  const { name, userAgentBase, version, wrapperName, wrapperVersion } = info.sdkData();
 
   const headers: LDHeaders = {
     authorization: sdkKey,
-    'user-agent': `${name}/${version}`,
+    'user-agent': `${userAgentBase ? userAgentBase : 'NodeJSClient'}/${version}`,
   };
 
   let wrapper = wrapperName;
