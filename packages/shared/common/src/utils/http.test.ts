@@ -1,6 +1,6 @@
-import { defaultHeaders, Info, PlatformData, SdkData } from '@launchdarkly/js-sdk-common';
-
+import { Info, PlatformData, SdkData } from '../api';
 import { ApplicationTags } from '../options';
+import { defaultHeaders } from './http';
 
 describe('defaultHeaders', () => {
   const makeInfo = (
