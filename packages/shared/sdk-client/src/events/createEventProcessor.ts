@@ -7,12 +7,22 @@ const createEventProcessor = (
   clientSideID: string,
   config: Configuration,
   platform: PlatformDom,
-): subsystem.LDEventProcessor =>
-  config.sendEvents
+): subsystem.LDEventProcessor => {
+  const { capacity, diagnosticOptOut, sendEvents } = config;
+  const diagnosticsManager =
+    sendEvents && !diagnosticOptOut
+      ? // TODO:
+        new DiagnosticsManager(clientSideID, config, platform, featureStore)
+      : undefined;
+
+  return sendEvents
     ? new internal.EventProcessor(
-        { ...config, eventsCapacity: config.capacity },
+        { ...config, eventsCapacity: capacity },
         new ClientContext(clientSideID, config, platform),
+        undefined,
+        diagnosticsManager,
       )
     : new internal.NullEventProcessor();
+};
 
 export default createEventProcessor;
