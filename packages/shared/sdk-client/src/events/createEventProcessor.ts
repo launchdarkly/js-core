@@ -2,6 +2,7 @@ import { ClientContext, internal, subsystem } from '@launchdarkly/js-sdk-common'
 
 import Configuration from '../configuration';
 import { PlatformDom } from '../platform/PlatformDom';
+import DiagnosticsManager from './DiagnosticsManager';
 
 const createEventProcessor = (
   clientSideID: string,
@@ -11,8 +12,7 @@ const createEventProcessor = (
   const { capacity, diagnosticOptOut, sendEvents } = config;
   const diagnosticsManager =
     sendEvents && !diagnosticOptOut
-      ? // TODO:
-        new DiagnosticsManager(clientSideID, config, platform, featureStore)
+      ? new DiagnosticsManager(clientSideID, config, platform, platform.storage)
       : undefined;
 
   return sendEvents

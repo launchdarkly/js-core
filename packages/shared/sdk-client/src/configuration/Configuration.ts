@@ -11,12 +11,16 @@ import { LDInspection } from '../api/LDInspection';
 import type LDOptions from '../api/LDOptions';
 import validators from './validators';
 
+export const DEFAULT_BASE_URI = 'https://sdk.launchdarkly.com';
+export const DEFAULT_EVENTS_URI = 'https://events.launchdarkly.com';
+export const DEFAULT_STREAM_URI = 'https://clientstream.launchdarkly.com';
+
 export default class Configuration {
   public readonly logger = createSafeLogger();
 
-  public readonly baseUri = 'https://sdk.launchdarkly.com';
-  public readonly eventsUri = 'https://events.launchdarkly.com';
-  public readonly streamUri = 'https://clientstream.launchdarkly.com';
+  public readonly baseUri = DEFAULT_BASE_URI;
+  public readonly eventsUri = DEFAULT_EVENTS_URI;
+  public readonly streamUri = DEFAULT_STREAM_URI;
 
   public readonly capacity = 100;
   public readonly diagnosticRecordingInterval = 900000;
