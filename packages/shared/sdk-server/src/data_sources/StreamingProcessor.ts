@@ -3,6 +3,7 @@ import {
   EventSource,
   httpErrorMessage,
   Info,
+  internal,
   isHttpRecoverable,
   LDLogger,
   LDStreamingError,
@@ -11,7 +12,6 @@ import {
 
 import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
-import DiagnosticsManager from '../events/DiagnosticsManager';
 import Configuration from '../options/Configuration';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
 import VersionedDataKinds, { VersionedDataKind } from '../store/VersionedDataKinds';
@@ -49,7 +49,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     requests: Requests,
     info: Info,
     private readonly featureStore: LDDataSourceUpdates,
-    private readonly diagnosticsManager?: DiagnosticsManager,
+    private readonly diagnosticsManager?: internal.LDDiagnosticsManager,
   ) {
     this.headers = defaultHeaders(sdkKey, info, config.tags);
     this.logger = config.logger;

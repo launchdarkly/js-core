@@ -3,6 +3,7 @@ import {
   EventSource,
   EventSourceInitDict,
   Info,
+  internal,
   mocks,
   Options,
   PlatformData,
@@ -13,7 +14,6 @@ import {
 
 import promisify from '../../src/async/promisify';
 import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
-import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import NullEventSource from '../../src/events/NullEventSource';
 import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
@@ -57,7 +57,7 @@ describe('given a stream processor with mock event source', () => {
   let config: Configuration;
   let asyncStore: AsyncStoreFacade;
   let logger: TestLogger;
-  let diagnosticsManager: DiagnosticsManager;
+  let diagnosticsManager: internal.LDDiagnosticsManager;
 
   beforeEach(() => {
     requests = createRequests((nes) => {
@@ -73,11 +73,10 @@ describe('given a stream processor with mock event source', () => {
       featureStore,
       logger,
     });
-    diagnosticsManager = new DiagnosticsManager(
+    diagnosticsManager = new internal.DiagnosticsManager(
       'sdk-key',
-      config,
+      { ...config, dataStoreType: featureStore.getDescription?.() ?? 'memory' },
       mocks.basicPlatform,
-      featureStore,
     );
     streamProcessor = new StreamingProcessor(
       sdkKey,

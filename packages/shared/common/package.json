@@ -22,7 +22,8 @@
     "doc": "../../../scripts/build-doc.sh .",
     "test": "npx jest --ci",
     "build": "npx tsc",
-    "clean": "npx tsc --build --clean",
+    "clean": "npx tsc --build --clean && find ./src \\( -name \\*.d.ts -o -name \\*.map -o -name \\*.js \\) -type f -delete",
+    "nuke": "yarn clean && rm -rf dist && rm -rf node_modules && yarn && yarn build",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix"
   },

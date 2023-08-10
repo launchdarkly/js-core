@@ -18,7 +18,6 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
-import DiagnosticsManager from '../../src/events/DiagnosticsManager';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 
@@ -171,9 +170,9 @@ describe('given an event processor with diagnostics manager', () => {
     // we need to make an object and replace the value.
     const testConfig = { ...config, diagnosticRecordingInterval: 0.1 };
 
-    const diagnosticsManager = new DiagnosticsManager(
+    const diagnosticsManager = new internal.DiagnosticsManager(
       'sdk-key',
-      testConfig,
+      { ...testConfig, dataStoreType: store.getDescription?.() ?? 'memory' },
       {
         ...mocks.basicPlatform,
         // Replace info and requests.
@@ -181,7 +180,6 @@ describe('given an event processor with diagnostics manager', () => {
         requests,
         crypto,
       },
-      store,
     );
 
     const clientContext = new ClientContext(SDK_KEY, testConfig, {

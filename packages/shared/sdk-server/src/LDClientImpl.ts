@@ -31,7 +31,6 @@ import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
 import ContextDeduplicator from './events/ContextDeduplicator';
-import DiagnosticsManager from './events/DiagnosticsManager';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
@@ -92,7 +91,7 @@ export default class LDClientImpl implements LDClient {
 
   private onReady: () => void;
 
-  private diagnosticsManager?: DiagnosticsManager;
+  private diagnosticsManager?: internal.LDDiagnosticsManager;
 
   /**
    * Intended for use by platform specific client implementations.
@@ -126,7 +125,11 @@ export default class LDClientImpl implements LDClient {
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
     if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
-      this.diagnosticsManager = new DiagnosticsManager(sdkKey, config, platform, featureStore);
+      this.diagnosticsManager = new internal.DiagnosticsManager(
+        sdkKey,
+        { ...config, dataStoreType: featureStore.getDescription?.() ?? 'memory' },
+        platform,
+      );
     }
 
     const makeDefaultProcessor = () =>

@@ -5,6 +5,7 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
+import { type LDDiagnosticsManager } from '../diagnostics';
 import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
@@ -64,15 +65,6 @@ export interface EventProcessorOptions {
   eventsCapacity: number;
   flushInterval: number;
   diagnosticRecordingInterval: number;
-}
-
-interface LDDiagnosticsManager {
-  createInitEvent(): DiagnosticEvent;
-  createStatsEventAndReset(
-    droppedEvents: number,
-    deduplicatedUsers: number,
-    eventsInLastBatch: number,
-  ): DiagnosticEvent;
 }
 
 export default class EventProcessor implements LDEventProcessor {

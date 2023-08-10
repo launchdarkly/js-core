@@ -1,30 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  EventSource,
-  EventSourceInitDict,
-  Info,
-  mocks,
-  Options,
-  Platform,
-  PlatformData,
-  Requests,
-  Response,
-  SdkData,
-} from '@launchdarkly/js-sdk-common';
+import { PlatformData, SdkData } from '../../api';
+import { basicPlatform } from '../../mocks';
+import DiagnosticsManager from './DiagnosticsManager';
 
-import {
-  DataKind,
-  LDFeatureStore,
-  LDFeatureStoreDataStorage,
-  LDFeatureStoreItem,
-  LDFeatureStoreKindData,
-  LDKeyedFeatureStoreItem,
-} from '../../src';
-import DiagnosticsManager from '../../src/events/DiagnosticsManager';
-import Configuration from '../../src/options/Configuration';
-import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-
-const info: Info = {
+basicPlatform.info = {
   platformData(): PlatformData {
     return {
       os: {
@@ -46,45 +24,12 @@ const info: Info = {
   },
 };
 
-const requests: Requests = {
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  fetch(url: string, options?: Options): Promise<Response> {
-    throw new Error('Function not implemented.');
-  },
-
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-    throw new Error('Function not implemented.');
-  },
-
-  /**
-   * Returns true if a proxy is configured.
-   */
-  usingProxy: () => false,
-
-  /**
-   * Returns true if the proxy uses authentication.
-   */
-  usingProxyAuth: () => false,
-};
-
-const basicPlatform: Platform = {
-  info,
-  crypto: mocks.crypto,
-  requests,
-};
-
 describe('given a diagnostics manager', () => {
   let manager: DiagnosticsManager;
 
   beforeEach(() => {
     jest.spyOn(Date, 'now').mockImplementation(() => 7777);
-    manager = new DiagnosticsManager(
-      'my-sdk-key',
-      new Configuration({}),
-      basicPlatform,
-      new InMemoryFeatureStore(),
-    );
+    manager = new DiagnosticsManager('my-sdk-key', {}, basicPlatform);
   });
 
   afterEach(() => {
@@ -97,14 +42,9 @@ describe('given a diagnostics manager', () => {
   });
 
   it('creates random UUID', () => {
-    const manager2 = new DiagnosticsManager(
-      'my-sdk-key',
-      new Configuration({}),
-      basicPlatform,
-      new InMemoryFeatureStore(),
-    );
-
     const { id } = manager.createInitEvent();
+
+    const manager2 = new DiagnosticsManager('my-sdk-key', {}, basicPlatform);
     const { id: id2 } = manager2.createInitEvent();
     expect(id.diagnosticId).toBeTruthy();
     expect(id2.diagnosticId).toBeTruthy();
@@ -181,29 +121,8 @@ describe('given a diagnostics manager', () => {
   });
 });
 
-const fakeStore: LDFeatureStore = {
+const fakeStore = {
   getDescription: () => 'WeirdStore',
-  get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
-    throw new Error('Function not implemented.');
-  },
-  all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void): void {
-    throw new Error('Function not implemented.');
-  },
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    throw new Error('Function not implemented.');
-  },
-  delete(kind: DataKind, key: string, version: number, callback: () => void): void {
-    throw new Error('Function not implemented.');
-  },
-  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    throw new Error('Function not implemented.');
-  },
-  initialized(callback: (isInitialized: boolean) => void): void {
-    throw new Error('Function not implemented.');
-  },
-  close(): void {
-    throw new Error('Function not implemented.');
-  },
 };
 
 describe.each([
@@ -271,13 +190,7 @@ describe.each([
 
   beforeEach(() => {
     jest.spyOn(Date, 'now').mockImplementation(() => 7777);
-    manager = new DiagnosticsManager(
-      'my-sdk-key',
-      new Configuration(configIn),
-      basicPlatform,
-      // @ts-ignore
-      configIn.featureStore ?? new InMemoryFeatureStore(),
-    );
+    manager = new DiagnosticsManager('my-sdk-key', configIn, basicPlatform);
   });
 
   afterEach(() => {
@@ -297,12 +210,7 @@ describe.each([true, false])('Given proxy and proxy auth=%p', (auth) => {
     jest.spyOn(Date, 'now').mockImplementation(() => 7777);
     jest.spyOn(basicPlatform.requests, 'usingProxy').mockImplementation(() => true);
     jest.spyOn(basicPlatform.requests, 'usingProxyAuth').mockImplementation(() => auth);
-    manager = new DiagnosticsManager(
-      'my-sdk-key',
-      new Configuration({}),
-      basicPlatform,
-      new InMemoryFeatureStore(),
-    );
+    manager = new DiagnosticsManager('my-sdk-key', {}, basicPlatform);
   });
 
   afterEach(() => {
