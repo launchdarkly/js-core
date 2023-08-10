@@ -310,6 +310,7 @@ export default class LDClientImpl implements LDClient {
           const flag = storeItem as Flag;
           if (clientOnly && !flag.clientSide) {
             innerCB(true);
+            return;
           }
           const res = await this.evaluator.evaluate(flag, evalContext);
           if (res.isError) {

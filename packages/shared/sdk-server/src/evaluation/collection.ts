@@ -26,11 +26,8 @@ function seriesAsync<T>(
   cb: (res: boolean) => void,
   depth: number = 0,
 ): void {
-  if (!collection) {
+  if (!collection || !collection.length) {
     cb(false);
-    return;
-  }
-  if (!collection.length) {
     return;
   }
   if (index < collection?.length) {
@@ -53,7 +50,7 @@ function seriesAsync<T>(
       }
     });
   } else {
-    cb(true);
+    cb(all);
   }
 }
 
