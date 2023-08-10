@@ -36,6 +36,20 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 1.0.6 to 1.0.7
 
+## [1.0.8](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.7...js-server-sdk-common-edge-v1.0.8) (2023-08-10)
+
+
+### Bug Fixes
+
+* Switch to es2017 target to ensure native async/await. ([a83e4e6](https://github.com/launchdarkly/js-core/commit/a83e4e62d04c66105a1b0e8893640a7ca2d641e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.7 to 1.0.8
+
 ## [1.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.1...js-server-sdk-common-edge-v1.0.2) (2023-04-28)
 
 

@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.3](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v1.0.2...js-sdk-common-v1.0.3) (2023-08-10)
+
+
+### Bug Fixes
+
+* Switch to es2017 target to ensure native async/await. ([a83e4e6](https://github.com/launchdarkly/js-core/commit/a83e4e62d04c66105a1b0e8893640a7ca2d641e4))
+
 ## [1.0.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v1.0.1...js-sdk-common-v1.0.2) (2023-06-13)
 
 
