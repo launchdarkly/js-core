@@ -12,7 +12,14 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, LDFlagsState, LDFlagsStateOptions, LDOptions, LDStreamProcessor } from './api';
+import {
+  LDClient,
+  LDFeatureStore,
+  LDFlagsState,
+  LDFlagsStateOptions,
+  LDOptions,
+  LDStreamProcessor,
+} from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -38,7 +45,7 @@ import isExperiment from './events/isExperiment';
 import NullEventProcessor from './events/NullEventProcessor';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
-import AsyncStoreFacade from './store/AsyncStoreFacade';
+import { AsyncStoreFacade } from './store';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 enum InitState {
@@ -64,7 +71,9 @@ export interface LDClientCallbacks {
 export default class LDClientImpl implements LDClient {
   private initState: InitState = InitState.Initializing;
 
-  private featureStore: AsyncStoreFacade;
+  private featureStore: LDFeatureStore;
+
+  private asyncFeatureStore: AsyncStoreFacade;
 
   private updateProcessor: LDStreamProcessor;
 
@@ -125,6 +134,7 @@ export default class LDClientImpl implements LDClient {
 
     const clientContext = new ClientContext(sdkKey, config, platform);
     const featureStore = config.featureStoreFactory(clientContext);
+    this.asyncFeatureStore = new AsyncStoreFacade(featureStore);
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
     if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
@@ -166,9 +176,9 @@ export default class LDClientImpl implements LDClient {
       );
     }
 
-    const asyncFacade = new AsyncStoreFacade(featureStore);
+    // const asyncFacade = new AsyncStoreFacade(featureStore);
 
-    this.featureStore = asyncFacade;
+    this.featureStore = featureStore;
 
     const manager = new BigSegmentsManager(
       config.bigSegments?.store?.(clientContext),
@@ -180,11 +190,11 @@ export default class LDClientImpl implements LDClient {
     this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
 
     const queries: Queries = {
-      async getFlag(key: string): Promise<Flag | undefined> {
-        return ((await asyncFacade.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined;
+      getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
+        featureStore.get(VersionedDataKinds.Features, key, (item) => cb(item as Flag));
       },
-      async getSegment(key: string): Promise<Segment | undefined> {
-        return ((await asyncFacade.get(VersionedDataKinds.Segments, key)) as Segment) ?? undefined;
+      getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
+        featureStore.get(VersionedDataKinds.Segments, key, (item) => cb(item as Segment));
       },
       getBigSegmentsMembership(
         userKey: string,
@@ -282,7 +292,8 @@ export default class LDClientImpl implements LDClient {
 
     let valid = true;
     if (!this.initialized()) {
-      const storeInitialized = await this.featureStore.initialized();
+      const storeInitialized = await this.asyncFeatureStore.initialized();
+
       if (storeInitialized) {
         this.logger?.warn(
           'Called allFlagsState before client initialization; using last known' +
@@ -301,44 +312,43 @@ export default class LDClientImpl implements LDClient {
     const clientOnly = !!options?.clientSideOnly;
     const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
 
-    const allFlags = await this.featureStore.all(VersionedDataKinds.Features);
-
     return new Promise<LDFlagsState>((resolve) => {
-      allSeriesAsync(
-        Object.values(allFlags),
-        async (storeItem, _index, innerCB) => {
-          const flag = storeItem as Flag;
-          if (clientOnly && !flag.clientSide) {
-            innerCB(true);
-            return;
-          }
-          const res = await this.evaluator.evaluate(flag, evalContext);
-          if (res.isError) {
-            this.onError(
-              new Error(
-                `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
-              ),
+      this.featureStore.all(VersionedDataKinds.Features, (allFlags) => {
+        allSeriesAsync(
+          Object.values(allFlags),
+          async (storeItem, _index, innerCB) => {
+            const flag = storeItem as Flag;
+            if (clientOnly && !flag.clientSide) {
+              innerCB(true);
+              return;
+            }
+            const res = await this.evaluator.evaluate(flag, evalContext);
+            if (res.isError) {
+              this.onError(
+                new Error(
+                  `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
+                ),
+              );
+            }
+            const requireExperimentData = isExperiment(flag, res.detail.reason);
+            builder.addFlag(
+              flag,
+              res.detail.value,
+              res.detail.variationIndex ?? undefined,
+              res.detail.reason,
+              flag.trackEvents || requireExperimentData,
+              requireExperimentData,
+              detailsOnlyIfTracked,
             );
-          }
-          const requireExperimentData = isExperiment(flag, res.detail.reason);
-          builder.addFlag(
-            flag,
-            res.detail.value,
-            res.detail.variationIndex ?? undefined,
-            res.detail.reason,
-            flag.trackEvents || requireExperimentData,
-            requireExperimentData,
-            detailsOnlyIfTracked,
-          );
-
-          innerCB(true);
-        },
-        () => {
-          const res = builder.build();
-          callback?.(null, res);
-          resolve(res);
-        },
-      );
+            innerCB(true);
+          },
+          () => {
+            const res = builder.build();
+            callback?.(null, res);
+            resolve(res);
+          },
+        );
+      });
     });
   }
 
@@ -413,7 +423,7 @@ export default class LDClientImpl implements LDClient {
       return EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue);
     }
 
-    const flag = (await this.featureStore.get(VersionedDataKinds.Features, flagKey)) as Flag;
+    const flag = (await this.asyncFeatureStore.get(VersionedDataKinds.Features, flagKey)) as Flag;
     if (!flag) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
       this.onError(error);
@@ -444,7 +454,7 @@ export default class LDClientImpl implements LDClient {
     eventFactory: EventFactory,
   ): Promise<EvalResult> {
     if (!this.initialized()) {
-      const storeInitialized = await this.featureStore.initialized();
+      const storeInitialized = await this.asyncFeatureStore.initialized();
       if (storeInitialized) {
         this.logger?.warn(
           'Variation called before LaunchDarkly client initialization completed' +

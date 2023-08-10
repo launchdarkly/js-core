@@ -107,6 +107,7 @@ export default class Evaluator {
         flag,
         context,
         state,
+        [],
         (res) => {
           if (state.bigSegmentsStatus) {
             res.detail.reason = {
@@ -137,7 +138,7 @@ export default class Evaluator {
     context: Context,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
-    // visitedFlags: string[],
+    visitedFlags: string[],
     cb: (res: EvalResult) => void,
     eventFactory?: EventFactory,
   ): void {
@@ -150,7 +151,7 @@ export default class Evaluator {
       flag,
       context,
       state,
-      // visitedFlags,
+      visitedFlags,
       (res) => {
         // If there is a prereq result, then prereqs have failed, or there was
         // an error.
@@ -191,7 +192,7 @@ export default class Evaluator {
     flag: Flag,
     context: Context,
     state: EvalState,
-    // visitedFlags: string[],
+    visitedFlags: string[],
     cb: (res: EvalResult | undefined) => void,
     eventFactory?: EventFactory,
   ): void {
@@ -206,52 +207,53 @@ export default class Evaluator {
     // the result of the series evaluation.
     allSeriesAsync(
       flag.prerequisites,
-      async (prereq, _index, prereq_cb) => {
-        // if (visitedFlags.indexOf(prereq.key) !== -1) {
-        //   prereqResult = EvalResult.forError(
-        //     ErrorKinds.MalformedFlag,
-        //     `Prerequisite of ${flag.key} causing a circular reference.` +
-        //       ' This is probably a temporary condition due to an incomplete update.',
-        //   );
-        //   return false;
-        // }
-        // const updatedVisitedFlags = [...visitedFlags, prereq.key];
-        const prereqFlag = await this.queries.getFlag(prereq.key);
-
-        if (!prereqFlag) {
-          prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-          prereq_cb(false);
+      (prereq, _index, prereq_cb) => {
+        if (visitedFlags.indexOf(prereq.key) !== -1) {
+          prereqResult = EvalResult.forError(
+            ErrorKinds.MalformedFlag,
+            `Prerequisite of ${flag.key} causing a circular reference.` +
+              ' This is probably a temporary condition due to an incomplete update.',
+          );
+          prereq_cb(true);
           return;
         }
+        const updatedVisitedFlags = [...visitedFlags, prereq.key];
+        this.queries.getFlag(prereq.key, (prereqFlag) => {
+          if (!prereqFlag) {
+            prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+            prereq_cb(false);
+            return;
+          }
 
-        this.evaluateInternal(
-          prereqFlag,
-          context,
-          state,
-          // updatedVisitedFlags,
-          (res) => {
-            // eslint-disable-next-line no-param-reassign
-            state.events = state.events ?? [];
+          this.evaluateInternal(
+            prereqFlag,
+            context,
+            state,
+            updatedVisitedFlags,
+            (res) => {
+              // eslint-disable-next-line no-param-reassign
+              state.events = state.events ?? [];
 
-            if (eventFactory) {
-              state.events.push(
-                eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag),
-              );
-            }
+              if (eventFactory) {
+                state.events.push(
+                  eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag),
+                );
+              }
 
-            if (res.isError) {
-              prereqResult = res;
-              return prereq_cb(false);
-            }
+              if (res.isError) {
+                prereqResult = res;
+                return prereq_cb(false);
+              }
 
-            if (res.isOff || res.detail.variationIndex !== prereq.variation) {
-              prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-              return prereq_cb(false);
-            }
-            return prereq_cb(true);
-          },
-          eventFactory,
-        );
+              if (res.isOff || res.detail.variationIndex !== prereq.variation) {
+                prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+                return prereq_cb(false);
+              }
+              return prereq_cb(true);
+            },
+            eventFactory,
+          );
+        });
       },
       () => {
         cb(prereqResult);
@@ -298,31 +300,32 @@ export default class Evaluator {
     if (clause.op === 'segmentMatch') {
       firstSeriesAsync(
         clause.values,
-        async (value, _index, innerCB) => {
-          const segment = await this.queries.getSegment(value);
-          if (segment) {
-            if (segmentsVisited.includes(segment.key)) {
-              errorResult = EvalResult.forError(
-                ErrorKinds.MalformedFlag,
-                `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
-                  'This is probably a temporary condition due to an incomplete update',
-              );
-              // There was an error, so stop checking further segments.
-              innerCB(true);
-              return;
-            }
-
-            const newVisited = [...segmentsVisited, segment?.key];
-            this.segmentMatchContext(segment, context, state, newVisited, (res) => {
-              if (res.error) {
-                errorResult = res.result;
+        (value, _index, innerCB) => {
+          this.queries.getSegment(value, (segment) => {
+            if (segment) {
+              if (segmentsVisited.includes(segment.key)) {
+                errorResult = EvalResult.forError(
+                  ErrorKinds.MalformedFlag,
+                  `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
+                    'This is probably a temporary condition due to an incomplete update',
+                );
+                // There was an error, so stop checking further segments.
+                innerCB(true);
+                return;
               }
-              innerCB(res.error || res.isMatch);
-              // innerCB(true);
-            });
-          } else {
-            innerCB(false);
-          }
+
+              const newVisited = [...segmentsVisited, segment?.key];
+              this.segmentMatchContext(segment, context, state, newVisited, (res) => {
+                if (res.error) {
+                  errorResult = res.result;
+                }
+                innerCB(res.error || res.isMatch);
+                // innerCB(true);
+              });
+            } else {
+              innerCB(false);
+            }
+          });
         },
         (match) => {
           if (errorResult) {
