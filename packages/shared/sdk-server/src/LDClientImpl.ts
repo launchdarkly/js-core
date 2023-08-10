@@ -302,36 +302,43 @@ export default class LDClientImpl implements LDClient {
     const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
 
     const allFlags = await this.featureStore.all(VersionedDataKinds.Features);
-    await allSeriesAsync(Object.values(allFlags), async (storeItem) => {
-      const flag = storeItem as Flag;
-      if (clientOnly && !flag.clientSide) {
-        return true;
-      }
-      const res = await this.evaluator.evaluate(flag, evalContext);
-      if (res.isError) {
-        this.onError(
-          new Error(
-            `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
-          ),
-        );
-      }
-      const requireExperimentData = isExperiment(flag, res.detail.reason);
-      builder.addFlag(
-        flag,
-        res.detail.value,
-        res.detail.variationIndex ?? undefined,
-        res.detail.reason,
-        flag.trackEvents || requireExperimentData,
-        requireExperimentData,
-        detailsOnlyIfTracked,
+
+    return new Promise<LDFlagsState>((resolve) => {
+      allSeriesAsync(
+        Object.values(allFlags),
+        async (storeItem) => {
+          const flag = storeItem as Flag;
+          if (clientOnly && !flag.clientSide) {
+            return true;
+          }
+          const res = await this.evaluator.evaluate(flag, evalContext);
+          if (res.isError) {
+            this.onError(
+              new Error(
+                `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
+              ),
+            );
+          }
+          const requireExperimentData = isExperiment(flag, res.detail.reason);
+          builder.addFlag(
+            flag,
+            res.detail.value,
+            res.detail.variationIndex ?? undefined,
+            res.detail.reason,
+            flag.trackEvents || requireExperimentData,
+            requireExperimentData,
+            detailsOnlyIfTracked,
+          );
+
+          return true;
+        },
+        () => {
+          const res = builder.build();
+          callback?.(null, res);
+          resolve(res);
+        },
       );
-
-      return true;
     });
-
-    const res = builder.build();
-    callback?.(null, res);
-    return res;
   }
 
   secureModeHash(context: LDContext): string {

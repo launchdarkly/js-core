@@ -18,34 +18,33 @@ export function firstResult<T, U>(
   return res;
 }
 
-async function seriesAsync<T>(
+function seriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>,
+  check: (val: T, index: number, cb: (res: boolean) => void) => void,
   all: boolean,
-) {
+  index: number,
+  cb: (res: boolean) => void,
+): void {
   if (!collection) {
-    return false;
+    cb(false);
+    return;
   }
-  for (let index = 0; index < collection.length; index += 1) {
-    // This warning is to encourage starting many operations at once.
-    // In this case we only want to evaluate until we encounter something that
-    // doesn't match. Versus starting all the evaluations and then letting them
-    // all resolve.
-    // eslint-disable-next-line no-await-in-loop
-    const res = await check(collection[index], index);
-    // If we want all checks to pass, then we return on any failed check.
-    // If we want only a single result to pass, then we return on a true result.
+  const item = collection[index];
+  const resHandler = (res: boolean) => {
     if (all) {
       if (!res) {
-        return false;
+        return cb(false);
       }
     } else if (res) {
-      return true;
+      return cb(true);
     }
-  }
-  // In the case of 'all', getting here means all checks passed.
-  // In the case of 'first', this means no checks passed.
-  return all;
+    const nextIndex = index + 1;
+    if (nextIndex < collection?.length) {
+      seriesAsync(collection, check, all, nextIndex, resHandler);
+    }
+    return cb(true);
+  };
+  check(item, index, resHandler);
 }
 
 /**
@@ -54,11 +53,12 @@ async function seriesAsync<T>(
  * @param check The check to perform for each item in the container.
  * @returns True if all items pass the check.
  */
-export async function allSeriesAsync<T>(
+export function allSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>,
-): Promise<boolean> {
-  return seriesAsync(collection, check, true);
+  check: (val: T, index: number, cb: (res: boolean) => void) => void,
+  cb: (res: boolean) => void,
+): void {
+  seriesAsync(collection, check, true, 0, cb);
 }
 
 /**
@@ -68,9 +68,10 @@ export async function allSeriesAsync<T>(
  * @returns True on the first item that passes the check. False if no items
  * pass.
  */
-export async function firstSeriesAsync<T>(
+export function firstSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>,
-): Promise<boolean> {
-  return seriesAsync(collection, check, false);
+  check: (val: T, index: number, cb: (res: boolean) => void) => void,
+  cb: (res: boolean) => void,
+): void {
+  seriesAsync(collection, check, false, 0, cb);
 }
