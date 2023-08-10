@@ -21,6 +21,7 @@ interface BuilderData {
   migration?: {
     checkRatio?: number;
   };
+  samplingRatio?: number;
 }
 
 /**
@@ -370,9 +371,14 @@ export default class TestDataFlagBuilder {
     return flagRuleBuilder.andNotMatch(contextKind, attribute, ...values);
   }
 
-  addCheckRatio(ratio: number): TestDataFlagBuilder {
+  checkRatio(ratio: number): TestDataFlagBuilder {
     this.data.migration = this.data.migration ?? {};
     this.data.migration.checkRatio = ratio;
+    return this;
+  }
+
+  samplingRatio(ratio: number): TestDataFlagBuilder {
+    this.data.samplingRatio = ratio;
     return this;
   }
 
@@ -400,6 +406,7 @@ export default class TestDataFlagBuilder {
       },
       variations: [...this.data.variations],
       migration: this.data.migration,
+      samplingRatio: this.data.samplingRatio,
     };
 
     if (this.data.targetsByVariation) {

@@ -1,17 +1,16 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
-import { InputMigrationEvent } from '@launchdarkly/js-sdk-common/dist/internal';
-
 import {
   internal,
   LDClientImpl,
   LDConcurrentExecution,
-  LDConsistencyCheck,
   LDExecutionOrdering,
   LDMigrationOpEvent,
   LDMigrationStage,
   LDSerialExecution,
+  shouldSample,
 } from '../src';
+import * as mockable from '../src';
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
@@ -80,7 +79,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
           expect(migrationEvent.measurements[0].key).toEqual('consistent');
           // This isn't a precise check, but we should have non-zero values.
@@ -89,31 +88,42 @@ describe('given an LDClient with test data', () => {
       );
 
       it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
-        'it uses the check ratio: %p',
+        'it uses the check ratio and does a consistency check when it should sample: %p',
         async (stage) => {
+          const spy = jest.spyOn(mockable, 'shouldSample').mockImplementation(() => true);
+
+          const flagKey = 'migration';
+          td.update(td.flag(flagKey).valueForAll(stage).checkRatio(10));
           // eslint-disable-next-line no-await-in-loop
-          await (async () => {
-            let checkedCount = 0;
-            const trials = 1000;
-            for (let x = 0; x < trials; x += 1) {
-              const flagKey = 'migration';
-              td.update(td.flag(flagKey).valueForAll(stage).addCheckRatio(10));
-              // eslint-disable-next-line no-await-in-loop
-              await migration.read(flagKey, { key: 'test' }, stage);
-              // eslint-disable-next-line no-await-in-loop
-              await events.take();
-              // eslint-disable-next-line no-await-in-loop
-              const migrationEvent = (await events.take()) as InputMigrationEvent;
-              if (migrationEvent.measurements[0]?.value === LDConsistencyCheck.Consistent) {
-                checkedCount += 1;
-              }
-            }
-            expect(checkedCount).toBeGreaterThan(0);
-            expect(checkedCount).toBeLessThan(trials);
-            // This will likely always pass for 1000 trials, but if it does fail
-            // then either remove this check of increase the number of trails.
-            expect(checkedCount / trials).toBeCloseTo(0.1, 1);
-          })();
+          await migration.read(flagKey, { key: 'test' }, stage);
+          // Feature event.
+          await events.take();
+          // Migration event.
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
+          // Only check the measurements component of the event.
+          expect(migrationEvent.measurements[0].key).toEqual('consistent');
+          // This isn't a precise check, but we should have non-zero values.
+          expect(migrationEvent.measurements[0].value).toEqual(1);
+          expect(spy).toHaveBeenCalledWith(10);
+        },
+      );
+
+      it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
+        'it uses the check ratio and does not do a consistency check when it should not: %p',
+        async (stage) => {
+          const spy = jest.spyOn(mockable, 'shouldSample').mockImplementation(() => true);
+
+          const flagKey = 'migration';
+          td.update(td.flag(flagKey).valueForAll(stage).checkRatio(12));
+          // eslint-disable-next-line no-await-in-loop
+          await migration.read(flagKey, { key: 'test' }, stage);
+          // Feature event.
+          await events.take();
+          // Migration event.
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
+          // Only check the measurements component of the event.
+          expect(migrationEvent.measurements.length).toEqual(0);
+          expect(spy).toHaveBeenCalledWith(12);
         },
       );
     });
