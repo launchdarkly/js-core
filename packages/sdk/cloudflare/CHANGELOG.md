@@ -38,6 +38,20 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.6 to 1.0.7
 
+## [2.0.9](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.0.8...cloudflare-server-sdk-v2.0.9) (2023-08-10)
+
+
+### Bug Fixes
+
+* Switch to es2017 target to ensure native async/await. ([a83e4e6](https://github.com/launchdarkly/js-core/commit/a83e4e62d04c66105a1b0e8893640a7ca2d641e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.7 to 1.0.8
+
 ## [2.0.3](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.0.2...cloudflare-server-sdk-v2.0.3) (2023-05-01)
 
 

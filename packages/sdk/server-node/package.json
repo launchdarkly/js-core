@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk",
-  "version": "8.1.1",
+  "version": "8.1.2",
   "description": "LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-node",
   "repository": {
@@ -46,7 +46,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "1.0.7",
+    "@launchdarkly/js-server-sdk-common": "1.0.8",
     "https-proxy-agent": "^5.0.1",
     "launchdarkly-eventsource": "2.0.0"
   },
