@@ -40,7 +40,6 @@ describe('given an event sender', () => {
     };
 
     const requests: Requests = {
-      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       fetch(url: string, options?: Options): Promise<Response> {
         queue.add({ url, options });
 
@@ -49,12 +48,15 @@ describe('given an event sender', () => {
             get(name: string): string | null {
               return requestHeaders[name] ?? null;
             },
+            // @ts-ignore
             keys(): Iterable<string> {
               throw new Error('Function not implemented.');
             },
+            // @ts-ignore
             values(): Iterable<string> {
               throw new Error('Function not implemented.');
             },
+            // @ts-ignore
             entries(): Iterable<[string, string]> {
               throw new Error('Function not implemented.');
             },
@@ -63,6 +65,7 @@ describe('given an event sender', () => {
             },
           };
 
+          // @ts-ignore
           const res: Response = {
             headers,
             status: requestStatus,
@@ -77,7 +80,7 @@ describe('given an event sender', () => {
         });
       },
 
-      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+      // @ts-ignore
       createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
         throw new Error('Function not implemented.');
       },
