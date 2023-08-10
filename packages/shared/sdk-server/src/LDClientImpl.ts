@@ -306,10 +306,10 @@ export default class LDClientImpl implements LDClient {
     return new Promise<LDFlagsState>((resolve) => {
       allSeriesAsync(
         Object.values(allFlags),
-        async (storeItem) => {
+        async (storeItem, _index, innerCB) => {
           const flag = storeItem as Flag;
           if (clientOnly && !flag.clientSide) {
-            return true;
+            innerCB(true);
           }
           const res = await this.evaluator.evaluate(flag, evalContext);
           if (res.isError) {
@@ -330,7 +330,7 @@ export default class LDClientImpl implements LDClient {
             detailsOnlyIfTracked,
           );
 
-          return true;
+          innerCB(true);
         },
         () => {
           const res = builder.build();

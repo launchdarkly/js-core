@@ -24,27 +24,37 @@ function seriesAsync<T>(
   all: boolean,
   index: number,
   cb: (res: boolean) => void,
+  depth: number = 0,
 ): void {
   if (!collection) {
     cb(false);
     return;
   }
-  const item = collection[index];
-  const resHandler = (res: boolean) => {
-    if (all) {
-      if (!res) {
-        return cb(false);
+  if (!collection.length) {
+    return;
+  }
+  if (index < collection?.length) {
+    check(collection[index], index, (res) => {
+      if (all) {
+        if (!res) {
+          cb(false);
+          return;
+        }
+      } else if (res) {
+        cb(true);
+        return;
       }
-    } else if (res) {
-      return cb(true);
-    }
-    const nextIndex = index + 1;
-    if (nextIndex < collection?.length) {
-      seriesAsync(collection, check, all, nextIndex, resHandler);
-    }
-    return cb(true);
-  };
-  check(item, index, resHandler);
+      if (depth > 50) {
+        setImmediate(() => {
+          seriesAsync(collection, check, all, index + 1, cb, 0);
+        });
+      } else {
+        seriesAsync(collection, check, all, index + 1, cb, depth + 1);
+      }
+    });
+  } else {
+    cb(true);
+  }
 }
 
 /**

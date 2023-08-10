@@ -143,6 +143,7 @@ export default class Evaluator {
   ): void {
     if (!flag.on) {
       cb(getOffVariation(flag, Reasons.Off));
+      return;
     }
 
     this.checkPrerequisites(
@@ -317,7 +318,9 @@ export default class Evaluator {
                 errorResult = res.result;
               }
               innerCB(res.error || res.isMatch);
+              // innerCB(true);
             });
+          } else {
             innerCB(false);
           }
         },
