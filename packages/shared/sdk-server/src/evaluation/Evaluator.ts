@@ -123,6 +123,32 @@ export default class Evaluator {
     });
   }
 
+  evaluateCb(
+    flag: Flag,
+    context: Context,
+    cb: (res: EvalResult) => void,
+    eventFactory?: EventFactory,
+  ) {
+    const state = new EvalState();
+    this.evaluateInternal(
+      flag,
+      context,
+      state,
+      [],
+      (res) => {
+        if (state.bigSegmentsStatus) {
+          res.detail.reason = {
+            ...res.detail.reason,
+            bigSegmentsStatus: state.bigSegmentsStatus,
+          };
+        }
+        res.events = state.events;
+        cb(res);
+      },
+      eventFactory,
+    );
+  }
+
   /**
    * Evaluate the given flag against the given context. This internal method is entered
    * initially from the external evaluation method, but may be recursively executed during

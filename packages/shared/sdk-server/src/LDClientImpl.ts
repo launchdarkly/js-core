@@ -248,12 +248,12 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
-    const res = await this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault);
-    if (!callback) {
-      return res.detail.value;
-    }
-    callback(null, res.detail.value);
-    return undefined;
+    return new Promise<any>((resolve) => {
+      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryWithReasons, (res) => {
+        resolve(res.detail.value);
+        callback?.(null, res.detail.value);
+      });
+    });
   }
 
   async variationDetail(
@@ -262,14 +262,12 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    const res = await this.evaluateIfPossible(
-      key,
-      context,
-      defaultValue,
-      this.eventFactoryWithReasons,
-    );
-    callback?.(null, res.detail);
-    return res.detail;
+    return new Promise<LDEvaluationDetail>((resolve) => {
+      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryWithReasons, (res) => {
+        resolve(res.detail);
+        callback?.(null, res.detail);
+      });
+    });
   }
 
   async allFlagsState(
@@ -322,25 +320,26 @@ export default class LDClientImpl implements LDClient {
               innerCB(true);
               return;
             }
-            const res = await this.evaluator.evaluate(flag, evalContext);
-            if (res.isError) {
-              this.onError(
-                new Error(
-                  `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
-                ),
+            this.evaluator.evaluateCb(flag, evalContext, (res) => {
+              if (res.isError) {
+                this.onError(
+                  new Error(
+                    `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
+                  ),
+                );
+              }
+              const requireExperimentData = isExperiment(flag, res.detail.reason);
+              builder.addFlag(
+                flag,
+                res.detail.value,
+                res.detail.variationIndex ?? undefined,
+                res.detail.reason,
+                flag.trackEvents || requireExperimentData,
+                requireExperimentData,
+                detailsOnlyIfTracked,
               );
-            }
-            const requireExperimentData = isExperiment(flag, res.detail.reason);
-            builder.addFlag(
-              flag,
-              res.detail.value,
-              res.detail.variationIndex ?? undefined,
-              res.detail.reason,
-              flag.trackEvents || requireExperimentData,
-              requireExperimentData,
-              detailsOnlyIfTracked,
-            );
-            innerCB(true);
+              innerCB(true);
+            });
           },
           () => {
             const res = builder.build();
@@ -403,15 +402,17 @@ export default class LDClientImpl implements LDClient {
     callback?.(null, true);
   }
 
-  private async variationInternal(
+  private variationInternal(
     flagKey: string,
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-  ): Promise<EvalResult> {
+    cb: (res: EvalResult) => void,
+  ): void {
     if (this.config.offline) {
       this.logger?.info('Variation called in offline mode. Returning default value.');
-      return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
+      cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
+      return;
     }
     const evalContext = Context.fromLDContext(context);
     if (!evalContext.valid) {
@@ -420,54 +421,72 @@ export default class LDClientImpl implements LDClient {
           `${evalContext.message ?? 'Context not valid;'} returning default value.`,
         ),
       );
-      return EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue);
+      cb(EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue));
+      return;
     }
 
-    const flag = (await this.asyncFeatureStore.get(VersionedDataKinds.Features, flagKey)) as Flag;
-    if (!flag) {
-      const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
-      this.onError(error);
-      const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
-      this.eventProcessor.sendEvent(
-        this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
+    this.featureStore.get(VersionedDataKinds.Features, flagKey, (item) => {
+      const flag = item as Flag;
+      if (!flag) {
+        const error = new LDClientError(
+          `Unknown feature flag "${flagKey}"; returning default value`,
+        );
+        this.onError(error);
+        const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
+        this.eventProcessor.sendEvent(
+          this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
+        );
+        cb(result);
+        return;
+      }
+      this.evaluator.evaluateCb(
+        flag,
+        evalContext,
+        (evalRes) => {
+          if (
+            evalRes.detail.variationIndex === undefined ||
+            evalRes.detail.variationIndex === null
+          ) {
+            this.logger?.debug('Result value is null in variation');
+            evalRes.setDefault(defaultValue);
+          }
+          evalRes.events?.forEach((event) => {
+            this.eventProcessor.sendEvent(event);
+          });
+          this.eventProcessor.sendEvent(
+            eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue),
+          );
+          cb(evalRes);
+        },
+        eventFactory,
       );
-      return result;
-    }
-    const evalRes = await this.evaluator.evaluate(flag, evalContext, eventFactory);
-    if (evalRes.detail.variationIndex === undefined || evalRes.detail.variationIndex === null) {
-      this.logger?.debug('Result value is null in variation');
-      evalRes.setDefault(defaultValue);
-    }
-    evalRes.events?.forEach((event) => {
-      this.eventProcessor.sendEvent(event);
     });
-    this.eventProcessor.sendEvent(
-      eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue),
-    );
-    return evalRes;
   }
 
-  private async evaluateIfPossible(
+  private evaluateIfPossible(
     flagKey: string,
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-  ): Promise<EvalResult> {
+    cb: (res: EvalResult) => void,
+  ): void {
     if (!this.initialized()) {
-      const storeInitialized = await this.asyncFeatureStore.initialized();
-      if (storeInitialized) {
+      this.featureStore.initialized((storeInitialized) => {
+        if (storeInitialized) {
+          this.logger?.warn(
+            'Variation called before LaunchDarkly client initialization completed' +
+              " (did you wait for the 'ready' event?) - using last known values from feature store",
+          );
+          this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
+          return;
+        }
         this.logger?.warn(
-          'Variation called before LaunchDarkly client initialization completed' +
-            " (did you wait for the 'ready' event?) - using last known values from feature store",
+          'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
+            "'ready' event?) - using default value",
         );
-        return this.variationInternal(flagKey, context, defaultValue, eventFactory);
-      }
-      this.logger?.warn(
-        'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
-          "'ready' event?) - using default value",
-      );
-      return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
+        cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
+      });
     }
-    return this.variationInternal(flagKey, context, defaultValue, eventFactory);
+    this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
   }
 }
