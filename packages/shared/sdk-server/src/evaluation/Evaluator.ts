@@ -395,6 +395,7 @@ export default class Evaluator {
     cb: (res: EvalResult | undefined) => void,
   ): void {
     if (!rule.clauses) {
+      cb(undefined);
       return;
     }
     let errorResult: EvalResult | undefined;
