@@ -632,6 +632,7 @@ export default class Evaluator {
         context,
         state,
       ).then(cb);
+      return;
     }
 
     this.queries.getBigSegmentsMembership(keyForBigSegment).then((result) => {

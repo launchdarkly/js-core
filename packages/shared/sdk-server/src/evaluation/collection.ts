@@ -26,7 +26,6 @@ function seriesAsync<T>(
   all: boolean,
   index: number,
   cb: (res: boolean) => void,
-  depth: number = 0,
 ): void {
   if (!collection) {
     cb(false);
@@ -43,15 +42,15 @@ function seriesAsync<T>(
         cb(true);
         return;
       }
-      if (depth > ITERATION_RECURSION_LIMIT) {
+      if (collection.length > ITERATION_RECURSION_LIMIT) {
         // When we hit the recursion limit we defer execution
         // by using a resolved promise. This is similar to using setImmediate
         // but more portable.
         Promise.resolve().then(() => {
-          seriesAsync(collection, check, all, index + 1, cb, 0);
+          seriesAsync(collection, check, all, index + 1, cb);
         });
       } else {
-        seriesAsync(collection, check, all, index + 1, cb, depth + 1);
+        seriesAsync(collection, check, all, index + 1, cb);
       }
     });
   } else {

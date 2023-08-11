@@ -249,7 +249,7 @@ export default class LDClientImpl implements LDClient {
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
     return new Promise<any>((resolve) => {
-      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryWithReasons, (res) => {
+      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
         resolve(res.detail.value);
         callback?.(null, res.detail.value);
       });
