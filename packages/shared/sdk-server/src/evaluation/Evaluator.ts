@@ -192,9 +192,9 @@ export default class Evaluator {
           return;
         }
 
-        this.evaluateRules(flag, context, state, (eval_res) => {
-          if (eval_res) {
-            cb(eval_res);
+        this.evaluateRules(flag, context, state, (evalRes) => {
+          if (evalRes) {
+            cb(evalRes);
             return;
           }
 
@@ -233,21 +233,21 @@ export default class Evaluator {
     // the result of the series evaluation.
     allSeriesAsync(
       flag.prerequisites,
-      (prereq, _index, prereq_cb) => {
+      (prereq, _index, prereqCb) => {
         if (visitedFlags.indexOf(prereq.key) !== -1) {
           prereqResult = EvalResult.forError(
             ErrorKinds.MalformedFlag,
             `Prerequisite of ${flag.key} causing a circular reference.` +
               ' This is probably a temporary condition due to an incomplete update.',
           );
-          prereq_cb(true);
+          prereqCb(true);
           return;
         }
         const updatedVisitedFlags = [...visitedFlags, prereq.key];
         this.queries.getFlag(prereq.key, (prereqFlag) => {
           if (!prereqFlag) {
             prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-            prereq_cb(false);
+            prereqCb(false);
             return;
           }
 
@@ -268,14 +268,14 @@ export default class Evaluator {
 
               if (res.isError) {
                 prereqResult = res;
-                return prereq_cb(false);
+                return prereqCb(false);
               }
 
               if (res.isOff || res.detail.variationIndex !== prereq.variation) {
                 prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-                return prereq_cb(false);
+                return prereqCb(false);
               }
-              return prereq_cb(true);
+              return prereqCb(true);
             },
             eventFactory,
           );
@@ -326,7 +326,7 @@ export default class Evaluator {
     if (clause.op === 'segmentMatch') {
       firstSeriesAsync(
         clause.values,
-        (value, _index, innerCB) => {
+        (value, _index, innerCb) => {
           this.queries.getSegment(value, (segment) => {
             if (segment) {
               if (segmentsVisited.includes(segment.key)) {
@@ -336,7 +336,7 @@ export default class Evaluator {
                     'This is probably a temporary condition due to an incomplete update',
                 );
                 // There was an error, so stop checking further segments.
-                innerCB(true);
+                innerCb(true);
                 return;
               }
 
@@ -345,11 +345,11 @@ export default class Evaluator {
                 if (res.error) {
                   errorResult = res.result;
                 }
-                innerCB(res.error || res.isMatch);
-                // innerCB(true);
+                innerCb(res.error || res.isMatch);
+                // innerCb(true);
               });
             } else {
-              innerCB(false);
+              innerCb(false);
             }
           });
         },
