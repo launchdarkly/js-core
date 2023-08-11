@@ -401,10 +401,10 @@ export default class Evaluator {
     let errorResult: EvalResult | undefined;
     allSeriesAsync(
       rule.clauses,
-      (clause, _index, rule_cb) => {
+      (clause, _index, ruleCb) => {
         this.clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
           errorResult = res.result;
-          return rule_cb(res.error || res.isMatch);
+          return ruleCb(res.error || res.isMatch);
         });
       },
       (match) => {
