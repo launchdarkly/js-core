@@ -243,21 +243,21 @@ export default class Evaluator {
     // the result of the series evaluation.
     allSeriesAsync(
       flag.prerequisites,
-      (prereq, _index, prereqCb) => {
+      (prereq, _index, iterCb) => {
         if (visitedFlags.indexOf(prereq.key) !== -1) {
           prereqResult = EvalResult.forError(
             ErrorKinds.MalformedFlag,
             `Prerequisite of ${flag.key} causing a circular reference.` +
               ' This is probably a temporary condition due to an incomplete update.',
           );
-          prereqCb(true);
+          iterCb(true);
           return;
         }
         const updatedVisitedFlags = [...visitedFlags, prereq.key];
         this.queries.getFlag(prereq.key, (prereqFlag) => {
           if (!prereqFlag) {
             prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-            prereqCb(false);
+            iterCb(false);
             return;
           }
 
@@ -278,14 +278,14 @@ export default class Evaluator {
 
               if (res.isError) {
                 prereqResult = res;
-                return prereqCb(false);
+                return iterCb(false);
               }
 
               if (res.isOff || res.detail.variationIndex !== prereq.variation) {
                 prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-                return prereqCb(false);
+                return iterCb(false);
               }
-              return prereqCb(true);
+              return iterCb(true);
             },
             eventFactory,
           );
@@ -316,10 +316,10 @@ export default class Evaluator {
 
     firstSeriesAsync(
       flag.rules,
-      (rule, ruleIndex, ruleCb: (res: boolean) => void) => {
+      (rule, ruleIndex, iterCb: (res: boolean) => void) => {
         this.ruleMatchContext(flag, rule, ruleIndex, context, state, [], (res) => {
           ruleResult = res;
-          ruleCb(!!res);
+          iterCb(!!res);
         });
       },
       () => cb(ruleResult),
@@ -337,7 +337,7 @@ export default class Evaluator {
     if (clause.op === 'segmentMatch') {
       firstSeriesAsync(
         clause.values,
-        (value, _index, innerCb) => {
+        (value, _index, iterCb) => {
           this.queries.getSegment(value, (segment) => {
             if (segment) {
               if (segmentsVisited.includes(segment.key)) {
@@ -347,7 +347,7 @@ export default class Evaluator {
                     'This is probably a temporary condition due to an incomplete update',
                 );
                 // There was an error, so stop checking further segments.
-                innerCb(true);
+                iterCb(true);
                 return;
               }
 
@@ -356,11 +356,10 @@ export default class Evaluator {
                 if (res.error) {
                   errorResult = res.result;
                 }
-                innerCb(res.error || res.isMatch);
-                // innerCb(true);
+                iterCb(res.error || res.isMatch);
               });
             } else {
-              innerCb(false);
+              iterCb(false);
             }
           });
         },
@@ -413,10 +412,10 @@ export default class Evaluator {
     let errorResult: EvalResult | undefined;
     allSeriesAsync(
       rule.clauses,
-      (clause, _index, ruleCb) => {
+      (clause, _index, iterCb) => {
         this.clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
           errorResult = res.result;
-          return ruleCb(res.error || res.isMatch);
+          return iterCb(res.error || res.isMatch);
         });
       },
       (match) => {
@@ -519,10 +518,10 @@ export default class Evaluator {
     let errorResult: EvalResult | undefined;
     allSeriesAsync(
       rule.clauses,
-      (clause, _index, innerCb) => {
+      (clause, _index, iterCb) => {
         this.clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
           errorResult = res.result;
-          innerCb(res.error || res.isMatch);
+          iterCb(res.error || res.isMatch);
         });
       },
       (match) => {
@@ -580,10 +579,10 @@ export default class Evaluator {
     let evalResult: EvalResult | undefined;
     firstSeriesAsync(
       segment.rules,
-      (rule, _index, innerCb) => {
+      (rule, _index, iterCb) => {
         this.segmentRuleMatchContext(segment, rule, context, state, segmentsVisited, (res) => {
           evalResult = res.result;
-          return innerCb(res.error || res.isMatch);
+          return iterCb(res.error || res.isMatch);
         });
       },
       (matched) => {
