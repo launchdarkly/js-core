@@ -176,8 +176,6 @@ export default class LDClientImpl implements LDClient {
       );
     }
 
-    // const asyncFacade = new AsyncStoreFacade(featureStore);
-
     this.featureStore = featureStore;
 
     const manager = new BigSegmentsManager(

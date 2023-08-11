@@ -1,8 +1,6 @@
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
 
-import { deserializePoll } from '../../src';
 import { Flag } from '../../src/evaluation/data/Flag';
-import { Segment } from '../../src/evaluation/data/Segment';
 import EvalResult from '../../src/evaluation/EvalResult';
 import Evaluator from '../../src/evaluation/Evaluator';
 import Reasons from '../../src/evaluation/Reasons';
