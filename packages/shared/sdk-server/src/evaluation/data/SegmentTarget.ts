@@ -1,4 +1,5 @@
 export interface SegmentTarget {
   contextKind: string;
   values: string[];
+  valuesSet?: Set<string>;
 }

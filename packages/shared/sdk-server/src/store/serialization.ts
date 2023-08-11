@@ -51,6 +51,30 @@ export function replacer(this: any, key: string, value: any): any {
       return undefined;
     }
   }
+  if (value.includedSet) {
+    value.included = [...value.includedSet];
+    delete value.includedSet;
+  }
+  if (value.excludedSet) {
+    value.excluded = [...value.excludedSet];
+    delete value.excludedSet;
+  }
+  if (value.includedContexts) {
+    value.includedContexts.forEach((target: any) => {
+      if (target.valuesSet) {
+        target.values = [...target.valuesSet];
+      }
+      delete target.valuesSet;
+    });
+  }
+  if (value.excludedContexts) {
+    value.excludedContexts.forEach((target: any) => {
+      if (target.valuesSet) {
+        target.values = [...target.valuesSet];
+      }
+      delete target.valuesSet;
+    });
+  }
   return value;
 }
 
@@ -104,6 +128,33 @@ export function processFlag(flag: Flag) {
  * @internal
  */
 export function processSegment(segment: Segment) {
+  if (segment?.included?.length && segment.included.length > 100) {
+    segment.includedSet = new Set(segment.included);
+    delete segment.included;
+  }
+  if (segment?.excluded?.length && segment.excluded.length > 100) {
+    segment.excludedSet = new Set(segment.excluded);
+    delete segment.excluded;
+  }
+
+  if (segment?.includedContexts?.length && segment.includedContexts.length > 100) {
+    segment.includedContexts.forEach((target) => {
+      if (target?.values?.length && target.values.length > 100) {
+        target.valuesSet = new Set(target.values);
+        target.values = [];
+      }
+    });
+  }
+
+  if (segment?.excludedContexts?.length && segment.excludedContexts.length > 100) {
+    segment.excludedContexts.forEach((target) => {
+      if (target?.values?.length && target.values.length > 100) {
+        target.valuesSet = new Set(target.values);
+        target.values = [];
+      }
+    });
+  }
+
   segment?.rules?.forEach((rule) => {
     if (rule.bucketBy) {
       // Rules before U2C would have had literals for attributes.

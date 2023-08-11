@@ -7,18 +7,33 @@ function segmentSearch(
   context: Context,
   contextTargets?: SegmentTarget[],
   userTargets?: string[],
+  userTargetSet?: Set<string>,
 ): boolean {
   if (contextTargets) {
     for (let targetIndex = 0; targetIndex < contextTargets.length; targetIndex += 1) {
       const target = contextTargets[targetIndex];
       const key = context.key(target.contextKind);
-      if (key && target.values.includes(key)) {
-        return true;
+      if (key) {
+        if (target.valuesSet) {
+          // Only check valuesSet if present.
+          if (target.valuesSet.has(key)) {
+            return true;
+          }
+        } else if (target.values.includes(key)) {
+          return true;
+        }
       }
     }
   }
 
-  if (userTargets) {
+  if (userTargetSet) {
+    const userKey = context.key('user');
+    if (userKey) {
+      if (userTargetSet.has(userKey)) {
+        return true;
+      }
+    }
+  } else if (userTargets) {
     const userKey = context.key('user');
     if (userKey) {
       if (userTargets.includes(userKey)) {
@@ -33,11 +48,21 @@ export default function matchSegmentTargets(
   segment: Segment,
   context: Context,
 ): boolean | undefined {
-  const included = segmentSearch(context, segment.includedContexts, segment.included);
+  const included = segmentSearch(
+    context,
+    segment.includedContexts,
+    segment.included,
+    segment.includedSet,
+  );
   if (included) {
     return true;
   }
-  const excluded = segmentSearch(context, segment.excludedContexts, segment.excluded);
+  const excluded = segmentSearch(
+    context,
+    segment.excludedContexts,
+    segment.excluded,
+    segment.excludedSet,
+  );
   if (excluded) {
     // The match was an exclusion, so it should be negated.
     return !excluded;
