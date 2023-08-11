@@ -7,7 +7,7 @@ import {
 } from '../../api/subsystem';
 import { isHttpRecoverable, LDUnexpectedResponseError } from '../../errors';
 import { ClientContext } from '../../options';
-import { defaultHeaders, httpErrorMessage } from '../../utils';
+import { defaultHeaders, httpErrorMessage, sleep } from '../../utils';
 
 export default class EventSender implements LDEventSender {
   private crypto: Crypto;
@@ -86,10 +86,9 @@ export default class EventSender implements LDEventSender {
       return tryRes;
     }
 
-    // retry
-    await new Promise((r) => {
-      setTimeout(r, 1000);
-    });
+    // wait 1 second before retrying
+    await sleep();
+
     return this.tryPostingEvents(events, this.eventsUri, payloadId, false);
   }
 

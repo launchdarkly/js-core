@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Info, PlatformData, SdkData } from '../../api';
-import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
+import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../api/subsystem';
 import { basicPlatform } from '../../mocks';
 import { ApplicationTags, ClientContext } from '../../options';
 import EventSender from './EventSender';
+
+jest.mock('../../utils', () => {
+  const actual = jest.requireActual('../../utils');
+  return { ...actual, sleep: jest.fn() };
+});
 
 const basicConfig = {
   tags: new ApplicationTags({ application: { id: 'testApplication1', version: '1.0.0' } }),
@@ -58,12 +63,19 @@ const diagnosticHeaders = {
 
 describe('given an event sender', () => {
   let eventSender: EventSender;
-  let requestStatus: number;
   let mockFetch: jest.Mock;
   let mockHeadersGet: jest.Mock;
   let mockRandomUuid: jest.Mock<string>;
   let uuid: number;
   const dateNowString = '2023-08-10';
+  let eventSenderResult: LDEventSenderResult;
+
+  const setupMockFetch = (responseStatusCode: number) => {
+    mockFetch = jest
+      .fn()
+      .mockResolvedValue({ headers: { get: mockHeadersGet }, status: responseStatusCode });
+    basicPlatform.requests.fetch = mockFetch;
+  };
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -74,31 +86,29 @@ describe('given an event sender', () => {
     jest.useRealTimers();
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
-    requestStatus = 200;
     mockHeadersGet = jest.fn((key) => (key === 'date' ? new Date() : undefined));
-    mockFetch = jest
-      .fn()
-      .mockResolvedValue({ headers: { get: mockHeadersGet }, status: requestStatus });
     uuid = 0;
     mockRandomUuid = jest.fn(() => {
       uuid += 1;
       return `${uuid}`;
     });
-
-    basicPlatform.requests.fetch = mockFetch;
+    setupMockFetch(200);
     basicPlatform.crypto.randomUUID = mockRandomUuid;
+
     eventSender = new EventSender(
       new ClientContext('sdk-key', basicConfig, { ...basicPlatform, info }),
+    );
+
+    eventSenderResult = await eventSender.sendEventData(
+      LDEventType.AnalyticsEvents,
+      testEventData1,
     );
   });
 
   it('includes the correct headers for analytics', async () => {
-    const { status, serverTime, error } = await eventSender.sendEventData(
-      LDEventType.AnalyticsEvents,
-      testEventData1,
-    );
+    const { status, serverTime, error } = eventSenderResult;
 
     expect(status).toEqual(LDDeliveryStatus.Succeeded);
     expect(serverTime).toEqual(Date.now());
@@ -112,10 +122,7 @@ describe('given an event sender', () => {
   });
 
   it('includes the payload', async () => {
-    const { status: status1 } = await eventSender.sendEventData(
-      LDEventType.AnalyticsEvents,
-      testEventData1,
-    );
+    const { status: status1 } = eventSenderResult;
     const { status: status2 } = await eventSender.sendEventData(
       LDEventType.DiagnosticEvent,
       testEventData2,
@@ -141,7 +148,7 @@ describe('given an event sender', () => {
   });
 
   it('sends a unique payload for analytics events', async () => {
-    await eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1);
+    // send the same request again to assert unique uuids
     await eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1);
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
@@ -161,27 +168,47 @@ describe('given an event sender', () => {
     );
   });
 
-  // describe.each([400, 408, 429, 503])('given recoverable errors', (status) => {
-  describe.each([400])('given recoverable errors', (responseStatusCode) => {
-    it.only(`retries - ${responseStatusCode}`, async () => {
-      const { status, error } = await eventSender.sendEventData(
+  describe.each([400, 408, 429, 503])('given recoverable errors', (responseStatusCode) => {
+    beforeEach(async () => {
+      setupMockFetch(responseStatusCode);
+      eventSenderResult = await eventSender.sendEventData(
         LDEventType.AnalyticsEvents,
         testEventData1,
       );
+    });
 
+    it(`retries - ${responseStatusCode}`, async () => {
+      const { status, error } = eventSenderResult;
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(status).toEqual(LDDeliveryStatus.Failed);
-      // expect(error).toBeDefined();
-
-      // expect(queue.length()).toEqual(2);
+      expect(error.name).toEqual('LaunchDarklyUnexpectedResponseError');
+      expect(error.message).toEqual(
+        `Received error ${responseStatusCode} for event posting - giving up permanently`,
+      );
     });
   });
 
-  // describe.each([401, 403])('given unrecoverable errors', (status) => {
-  //   it(`does not retry - ${status}`, async () => {
-  //     requestStatus = status;
-  //     const res = await eventSender.sendEventData(LDEventType.AnalyticsEvents, { something: true });
-  //     expect(res.status).toEqual(LDDeliveryStatus.FailedAndMustShutDown);
-  //     expect(queue.length()).toEqual(1);
-  //   });
-  // });
+  describe.each([401, 403])('given unrecoverable errors', (responseStatusCode) => {
+    beforeEach(async () => {
+      setupMockFetch(responseStatusCode);
+      eventSenderResult = await eventSender.sendEventData(
+        LDEventType.AnalyticsEvents,
+        testEventData1,
+      );
+    });
+
+    it(`does not retry - ${responseStatusCode}`, async () => {
+      const errorMessage = `Received error ${
+        responseStatusCode === 401 ? '401 (invalid SDK key)' : responseStatusCode
+      } for event posting - giving up permanently`;
+
+      const { status, error } = eventSenderResult;
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(status).toEqual(LDDeliveryStatus.FailedAndMustShutDown);
+      expect(error.name).toEqual('LaunchDarklyUnexpectedResponseError');
+      expect(error.message).toEqual(errorMessage);
+    });
+  });
 });
