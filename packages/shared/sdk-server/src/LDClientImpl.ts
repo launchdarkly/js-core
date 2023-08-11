@@ -240,7 +240,7 @@ export default class LDClientImpl implements LDClient {
     return this.initializedPromise;
   }
 
-  async variation(
+  variation(
     key: string,
     context: LDContext,
     defaultValue: any,
@@ -254,7 +254,7 @@ export default class LDClientImpl implements LDClient {
     });
   }
 
-  async variationDetail(
+  variationDetail(
     key: string,
     context: LDContext,
     defaultValue: any,
