@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.0.8](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.7...js-server-sdk-common-v1.0.8) (2023-08-10)
+
+
+### Bug Fixes
+
+* Switch to es2017 target to ensure native async/await. ([a83e4e6](https://github.com/launchdarkly/js-core/commit/a83e4e62d04c66105a1b0e8893640a7ca2d641e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 1.0.2 to 1.0.3
+
 ## [1.0.7](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.6...js-server-sdk-common-v1.0.7) (2023-08-03)
 
 
