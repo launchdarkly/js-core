@@ -162,16 +162,20 @@ describe('given an event sender', () => {
   });
 
   // describe.each([400, 408, 429, 503])('given recoverable errors', (status) => {
-  //   it(`retries - ${status}`, async () => {
-  //     requestStatus = status;
-  //     const res = await eventSender.sendEventData(LDEventType.AnalyticsEvents, { something: true });
-  //     expect(res.status).toEqual(LDDeliveryStatus.Failed);
-  //     expect(res.error).toBeDefined();
-  //
-  //     expect(queue.length()).toEqual(2);
-  //   });
-  // });
-  //
+  describe.each([400])('given recoverable errors', (responseStatusCode) => {
+    it.only(`retries - ${responseStatusCode}`, async () => {
+      const { status, error } = await eventSender.sendEventData(
+        LDEventType.AnalyticsEvents,
+        testEventData1,
+      );
+
+      expect(status).toEqual(LDDeliveryStatus.Failed);
+      // expect(error).toBeDefined();
+
+      // expect(queue.length()).toEqual(2);
+    });
+  });
+
   // describe.each([401, 403])('given unrecoverable errors', (status) => {
   //   it(`does not retry - ${status}`, async () => {
   //     requestStatus = status;
