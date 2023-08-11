@@ -23,6 +23,15 @@ import { Queries } from './Queries';
 import Reasons from './Reasons';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
 
+/**
+ * PERFORMANCE NOTE: The evaluation algorithm uses callbacks instead of async/await to optimize
+ * performance. This is most important for collections where iterating through rules/clauses
+ * has substantial overhead if each iteration involves a promise. For evaluations which do not
+ * involve large collections the evaluation should not have to defer execution. Large collections
+ * cannot be iterated recursively because stack could become exhausted, when a collection is large
+ * we defer the execution of the iterations to prevent stack overflows.
+ */
+
 type BigSegmentStoreStatusString = 'HEALTHY' | 'STALE' | 'STORE_ERROR' | 'NOT_CONFIGURED';
 
 const bigSegmentsStatusPriority: Record<BigSegmentStoreStatusString, number> = {
@@ -211,7 +220,8 @@ export default class Evaluator {
    * @param context The context to evaluate the prerequisites against.
    * @param state used to accumulate prerequisite events.
    * @param visitedFlags Used to detect cycles in prerequisite evaluation.
-   * @returns An {@link EvalResult} containing an error result or `undefined` if the prerequisites
+   * @param cb A callback which is executed when prerequisite checks are complete it is called with
+   * an {@link EvalResult} containing an error result or `undefined` if the prerequisites
    * are met.
    */
   private checkPrerequisites(
@@ -293,7 +303,8 @@ export default class Evaluator {
    * @param flag The flag to evaluate rules for.
    * @param context The context to evaluate the rules against.
    * @param state The current evaluation state.
-   * @returns
+   * @param cb Callback called when rule evaluation is complete, it will be called with either
+   * an {@link EvalResult} or 'undefined'.
    */
   private evaluateRules(
     flag: Flag,
@@ -383,7 +394,8 @@ export default class Evaluator {
    * @param rule The rule to match.
    * @param rule The index of the rule.
    * @param context The context to match the rule against.
-   * @returns An {@link EvalResult} or `undefined` if there are no matches or errors.
+   * @param cb Called when matching is complete with an {@link EvalResult} or `undefined` if there
+   * are no matches or errors.
    */
   private ruleMatchContext(
     flag: Flag,

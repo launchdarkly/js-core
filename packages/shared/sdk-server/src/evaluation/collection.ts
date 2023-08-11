@@ -62,7 +62,7 @@ function seriesAsync<T>(
  * Iterate a collection in series awaiting each check operation.
  * @param collection The collection to iterate.
  * @param check The check to perform for each item in the container.
- * @returns True if all items pass the check.
+ * @param cb Called with true if all items pass the check.
  */
 export function allSeriesAsync<T>(
   collection: T[] | undefined,
@@ -76,8 +76,8 @@ export function allSeriesAsync<T>(
  * Iterate a collection in series awaiting each check operation.
  * @param collection The collection to iterate.
  * @param check The check to perform for each item in the container.
- * @returns True on the first item that passes the check. False if no items
- * pass.
+ * @param cb called with true on the first item that passes the check. False
+ * means no items passed the check.
  */
 export function firstSeriesAsync<T>(
   collection: T[] | undefined,
