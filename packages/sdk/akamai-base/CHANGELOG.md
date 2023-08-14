@@ -2,6 +2,12 @@
 
 All notable changes to the LaunchDarkly SDK for Akamai Workers will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.0.3](https://github.com/launchdarkly/js-core/compare/akamai-server-base-sdk-v1.0.2...akamai-server-base-sdk-v1.0.3)  (2023-08-14)
+
+### Bug Fixes
+
+* Allow for negation of segment match clauses. ([#237](https://github.com/launchdarkly/js-core/issues/237)) ([d8e469a](https://github.com/launchdarkly/js-core/commit/d8e469a5e58b90c791fbbee80f7c0fc447c4e42f))
+
 ### Dependencies
 
 * The following workspace dependencies were updated
