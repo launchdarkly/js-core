@@ -312,10 +312,10 @@ export default class LDClientImpl implements LDClient {
       this.featureStore.all(VersionedDataKinds.Features, (allFlags) => {
         allSeriesAsync(
           Object.values(allFlags),
-          async (storeItem, _index, innerCB) => {
+          async (storeItem, _index, iterCb) => {
             const flag = storeItem as Flag;
             if (clientOnly && !flag.clientSide) {
-              innerCB(true);
+              iterCb(true);
               return;
             }
             this.evaluator.evaluateCb(flag, evalContext, (res) => {
@@ -336,7 +336,7 @@ export default class LDClientImpl implements LDClient {
                 requireExperimentData,
                 detailsOnlyIfTracked,
               );
-              innerCB(true);
+              iterCb(true);
             });
           },
           () => {
