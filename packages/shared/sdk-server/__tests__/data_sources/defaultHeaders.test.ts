@@ -3,13 +3,14 @@ import { Info, PlatformData, SdkData } from '@launchdarkly/js-sdk-common';
 import defaultHeaders from '../../src/data_sources/defaultHeaders';
 import Configuration from '../../src/options/Configuration';
 
-const makeInfo = (wrapperName?: string, wrapperVersion?: string): Info => ({
+const makeInfo = (wrapperName?: string, wrapperVersion?: string, userAgentBase?: string): Info => ({
   platformData(): PlatformData {
     return {};
   },
   sdkData(): SdkData {
     const sdkData: SdkData = {
       version: '2.2.2',
+      userAgentBase,
       wrapperName,
       wrapperVersion,
     };
@@ -23,10 +24,16 @@ it('sets SDK key', () => {
   expect(h).toMatchObject({ authorization: 'my-sdk-key' });
 });
 
-it('sets user agent', () => {
+it('sets the default user agent', () => {
   const config = new Configuration({});
   const h = defaultHeaders('my-sdk-key', config, makeInfo());
   expect(h).toMatchObject({ 'user-agent': 'NodeJSClient/2.2.2' });
+});
+
+it('sets the SDK specific user agent', () => {
+  const config = new Configuration({});
+  const h = defaultHeaders('my-sdk-key', config, makeInfo(undefined, undefined, 'CATS'));
+  expect(h).toMatchObject({ 'user-agent': 'CATS/2.2.2' });
 });
 
 it('does not include wrapper header by default', () => {

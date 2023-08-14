@@ -2,6 +2,12 @@
 
 All notable changes to the LaunchDarkly SDK for Akamai Workers will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.0.3](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.0.2...akamai-server-edgekv-sdk-v1.0.3)  (2023-08-14)
+
+### Bug Fixes
+
+* Allow for negation of segment match clauses. ([#237](https://github.com/launchdarkly/js-core/issues/237)) ([d8e469a](https://github.com/launchdarkly/js-core/commit/d8e469a5e58b90c791fbbee80f7c0fc447c4e42f))
+
 ### Dependencies
 
 * The following workspace dependencies were updated
@@ -29,6 +35,13 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^0.2.5 to ^0.2.6
     * @launchdarkly/js-server-sdk-common bumped from ^1.0.6 to ^1.0.7
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^0.2.7 to ^0.3.0
+    * @launchdarkly/js-server-sdk-common bumped from ^1.0.8 to ^1.1.0
 
 ## [1.0.2](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.0.1...akamai-server-edgekv-sdk-v1.0.2) (2023-08-10)
 

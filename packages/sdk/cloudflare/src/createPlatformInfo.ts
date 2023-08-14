@@ -13,6 +13,7 @@ class CloudflarePlatformInfo implements Info {
     return {
       name,
       version,
+      userAgentBase: 'CloudflareEdgeSDK',
     };
   }
 }

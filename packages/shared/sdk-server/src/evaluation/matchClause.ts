@@ -3,7 +3,7 @@ import { Context } from '@launchdarkly/js-sdk-common';
 import { Clause } from './data/Clause';
 import Operators from './Operations';
 
-function maybeNegate(clause: Clause, value: boolean): boolean {
+export function maybeNegate(clause: Clause, value: boolean): boolean {
   if (clause.negate) {
     return !value;
   }
