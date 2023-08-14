@@ -12,7 +12,9 @@ export default function defaultHeaders(
   const sdkData = info.sdkData();
   const headers: { [key: string]: string } = {
     authorization: sdkKey,
-    'user-agent': `NodeJSClient/${sdkData.version}`,
+    'user-agent': `${sdkData.userAgentBase ? sdkData.userAgentBase : 'NodeJSClient'}/${
+      sdkData.version
+    }`,
   };
 
   if (sdkData.wrapperName) {
