@@ -17,7 +17,7 @@ import ErrorKinds from './ErrorKinds';
 import EvalResult from './EvalResult';
 import evalTargets from './evalTargets';
 import makeBigSegmentRef from './makeBigSegmentRef';
-import matchClauseWithoutSegmentOperations from './matchClause';
+import matchClauseWithoutSegmentOperations, { maybeNegate } from './matchClause';
 import matchSegmentTargets from './matchSegmentTargets';
 import { Queries } from './Queries';
 import Reasons from './Reasons';
@@ -296,7 +296,7 @@ export default class Evaluator {
         return new MatchError(errorResult);
       }
 
-      return new Match(match);
+      return new Match(maybeNegate(clause, match));
     }
     // This is after segment matching, which does not use the reference.
     if (!clause.attributeReference.isValid) {
