@@ -38,6 +38,20 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.6 to 1.0.7
 
+## [2.1.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.0.9...cloudflare-server-sdk-v2.1.0) (2023-08-14)
+
+
+### Features
+
+* Allow specifying the user agent per-sdk implementation. ([#226](https://github.com/launchdarkly/js-core/issues/226)) ([e57716f](https://github.com/launchdarkly/js-core/commit/e57716f3f6f0ba8568e32b0937903ca46e5470ad))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.8 to 1.0.9
+
 ## [2.0.9](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.0.8...cloudflare-server-sdk-v2.0.9) (2023-08-10)
 
 
