@@ -65,7 +65,7 @@ function computeUpdatedBigSegmentsStatus(
   return latest;
 }
 
-class EvalState {
+interface EvalState {
   events?: internal.InputEvalEvent[];
 
   bigSegmentsStatus?: BigSegmentStoreStatusString;
@@ -73,20 +73,24 @@ class EvalState {
   bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
 }
 
-class Match {
-  public readonly error = false;
-
-  public readonly result?: EvalResult;
-
-  constructor(public readonly isMatch: boolean) {}
+interface Match {
+  error: false;
+  isMatch: boolean;
+  result: undefined;
 }
 
-class MatchError {
-  public readonly error = true;
+interface MatchError {
+  error: true;
+  isMatch: false;
+  result?: EvalResult;
+}
 
-  public readonly isMatch = false;
+function makeMatch(match: boolean): Match {
+  return { error: false, isMatch: match, result: undefined };
+}
 
-  constructor(public readonly result: EvalResult) {}
+function makeError(result: EvalResult): MatchError {
+  return { error: true, isMatch: false, result };
 }
 
 /**
@@ -111,7 +115,7 @@ export default class Evaluator {
 
   async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
     return new Promise<EvalResult>((resolve) => {
-      const state = new EvalState();
+      const state: EvalState = {};
       this.evaluateInternal(
         flag,
         context,
@@ -138,7 +142,7 @@ export default class Evaluator {
     cb: (res: EvalResult) => void,
     eventFactory?: EventFactory,
   ) {
-    const state = new EvalState();
+    const state: EvalState = {};
     this.evaluateInternal(
       flag,
       context,
@@ -365,10 +369,10 @@ export default class Evaluator {
         },
         (match) => {
           if (errorResult) {
-            return cb(new MatchError(errorResult));
+            return cb(makeError(errorResult));
           }
 
-          return cb(new Match(match));
+          return cb(makeMatch(match));
         },
       );
       // TODO: Should this return here?
@@ -377,14 +381,14 @@ export default class Evaluator {
     // This is after segment matching, which does not use the reference.
     if (!clause.attributeReference.isValid) {
       cb(
-        new MatchError(
+        makeError(
           EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'),
         ),
       );
       return;
     }
 
-    cb(new Match(matchClauseWithoutSegmentOperations(clause, context)));
+    cb(makeMatch(matchClauseWithoutSegmentOperations(clause, context)));
   }
 
   /**
@@ -526,17 +530,17 @@ export default class Evaluator {
       },
       (match) => {
         if (errorResult) {
-          return cb(new MatchError(errorResult));
+          return cb(makeError(errorResult));
         }
 
         if (match) {
           if (rule.weight === undefined) {
-            return cb(new Match(match));
+            return cb(makeMatch(match));
           }
           const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
           if (!bucketBy.isValid) {
             return cb(
-              new MatchError(
+              makeError(
                 EvalResult.forError(
                   ErrorKinds.MalformedFlag,
                   'Invalid attribute reference in clause',
@@ -552,10 +556,10 @@ export default class Evaluator {
             segment.salt || '',
             rule.rolloutContextKind,
           );
-          return cb(new Match(bucket < rule.weight / 100000.0));
+          return cb(makeMatch(bucket < rule.weight / 100000.0));
         }
 
-        return cb(new Match(false));
+        return cb(makeMatch(false));
       },
     );
   }
@@ -571,7 +575,7 @@ export default class Evaluator {
     if (!segment.unbounded) {
       const includeExclude = matchSegmentTargets(segment, context);
       if (includeExclude !== undefined) {
-        cb(new Match(includeExclude));
+        cb(makeMatch(includeExclude));
         return;
       }
     }
@@ -587,10 +591,10 @@ export default class Evaluator {
       },
       (matched) => {
         if (evalResult) {
-          return cb(new MatchError(evalResult));
+          return cb(makeError(evalResult));
         }
 
-        return cb(new Match(matched));
+        return cb(makeMatch(matched));
       },
     );
   }
@@ -613,7 +617,7 @@ export default class Evaluator {
     const keyForBigSegment = context.key(bigSegmentKind);
 
     if (!keyForBigSegment) {
-      cb(new Match(false));
+      cb(makeMatch(false));
       return;
     }
 
@@ -627,7 +631,7 @@ export default class Evaluator {
         state.bigSegmentsStatus,
         'NOT_CONFIGURED',
       );
-      cb(new Match(false));
+      cb(makeMatch(false));
       return;
     }
 
@@ -688,7 +692,7 @@ export default class Evaluator {
       // we get in flag updates. Here it is checked because big segment data
       // will be contingent on the store that implements it.
       if (included !== undefined && included !== null) {
-        resolve(new Match(included));
+        resolve(makeMatch(included));
         return;
       }
       this.simpleSegmentMatchContext(segment, context, state, [], resolve);
