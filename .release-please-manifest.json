@@ -4,7 +4,7 @@
   "packages/sdk/server-node": "8.1.2",
   "packages/sdk/cloudflare": "2.0.9",
   "packages/shared/sdk-server-edge": "1.0.8",
-  "packages/sdk/vercel": "1.0.0",
+  "packages/sdk/vercel": "1.0.2",
   "packages/sdk/akamai-base": "1.0.2",
   "packages/sdk/akamai-edgekv": "1.0.2",
   "packages/shared/akamai-edgeworker-sdk": "0.2.7",
