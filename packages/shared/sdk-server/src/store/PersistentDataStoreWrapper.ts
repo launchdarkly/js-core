@@ -166,6 +166,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         const value = deserialize(persistKind, descriptor);
         this.itemCache?.set(cacheKey(kind, key), value);
         callback(itemIfNotDeleted(value));
+        return;
       }
       callback(null);
     });
