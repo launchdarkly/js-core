@@ -52,7 +52,7 @@ const client = LaunchDarkly.init('YOUR SDK KEY', config);
 By default, the DynamoDB client will try to get your AWS credentials and region name from environment variables and/or local configuration files, as described in the AWS SDK documentation. You can also specify any valid [DynamoDB client options](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property) like this:
 
 ```typescript
-const dynamoDBOptions = { accessKeyId: 'YOUR KEY', secretAccessKey: 'YOUR SECRET' };
+const dynamoDBOptions = { credentials: { accessKeyId: 'YOUR KEY', secretAccessKey: 'YOUR SECRET' }};
 const store = DynamoDBFeatureStore('YOUR TABLE NAME', { clientOptions: dynamoDBOptions });
 ```
 
