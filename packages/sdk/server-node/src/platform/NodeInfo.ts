@@ -37,6 +37,7 @@ export default class NodeInfo implements platform.Info {
     return {
       name: packageJson.name,
       version: packageJson.version,
+      userAgentBase: 'NodeJSClient',
       // No wrapper name/version at the moment.
     };
   }

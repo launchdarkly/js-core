@@ -86,3 +86,34 @@ export function firstSeriesAsync<T>(
 ): void {
   seriesAsync(collection, check, false, 0, cb);
 }
+
+/**
+ * Iterate a collection and execute the the given check operation
+ * for all items concurrently.
+ * @param collection The collection to iterate.
+ * @param check The check to run for each item.
+ * @param cb Callback executed when all items have been checked. The callback
+ * will be called with true if each item resulted in true, otherwise it will
+ * be called with false.
+ */
+export function allAsync<T>(
+  collection: T[] | undefined,
+  check: (val: T, cb: (res: boolean) => void) => void,
+  cb: (res: boolean | null | undefined) => void,
+): void {
+  if (!collection) {
+    cb(false);
+    return;
+  }
+
+  Promise.all(
+    collection?.map(
+      (item) =>
+        new Promise((resolve) => {
+          check(item, resolve);
+        }),
+    ),
+  ).then((results) => {
+    cb(results.every((success) => success));
+  });
+}
