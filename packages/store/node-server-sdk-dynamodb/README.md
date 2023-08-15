@@ -53,7 +53,7 @@ By default, the DynamoDB client will try to get your AWS credentials and region 
 
 ```typescript
 const dynamoDBOptions = { accessKeyId: 'YOUR KEY', secretAccessKey: 'YOUR SECRET' };
-const store = DynamoDBFeatureStore('YOUR TABLE NAME', { clientOptions: dynamoDBOptions });
+const store = DynamoDBFeatureStore('YOUR TABLE NAME', { clientOpts: dynamoDBOptions });
 ```
 
 Alternatively, if you already have a fully configured DynamoDB client object, you can tell LaunchDarkly to use that:
