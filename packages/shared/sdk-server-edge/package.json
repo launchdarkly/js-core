@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common-edge",
-  "version": "1.0.9",
+  "version": "1.1.0-alpha.1",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server-edge",
   "repository": {
     "type": "git",
