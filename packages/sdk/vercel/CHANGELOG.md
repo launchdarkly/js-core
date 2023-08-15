@@ -2,6 +2,26 @@
 
 All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.1.0](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.0.2...vercel-server-sdk-v1.1.0) (2023-08-14)
+
+
+### Features
+
+* Allow specifying the user agent per-sdk implementation. ([#226](https://github.com/launchdarkly/js-core/issues/226)) ([e57716f](https://github.com/launchdarkly/js-core/commit/e57716f3f6f0ba8568e32b0937903ca46e5470ad))
+
+
+### Bug Fixes
+
+* Allow for negation of segment match clauses. ([#237](https://github.com/launchdarkly/js-core/issues/237)) ([d8e469a](https://github.com/launchdarkly/js-core/commit/d8e469a5e58b90c791fbbee80f7c0fc447c4e42f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.8 to 1.0.9
+
+
 ### Dependencies
 
 * The following workspace dependencies were updated
@@ -31,6 +51,20 @@ All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be docum
 * The following workspace dependencies were updated
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.6 to 1.0.7
+
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.0.2...vercel-server-sdk-v1.0.0) (2023-08-10)
+
+
+### Bug Fixes
+
+* Switch to es2017 target to ensure native async/await. ([a83e4e6](https://github.com/launchdarkly/js-core/commit/a83e4e62d04c66105a1b0e8893640a7ca2d641e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.7 to 1.0.8
 
 ## [1.0.0](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v0.4.4...vercel-server-sdk-v1.0.0) (2023-06-28)
 

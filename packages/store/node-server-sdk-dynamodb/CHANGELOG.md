@@ -24,6 +24,26 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 8.1.0 to 8.1.1
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 8.1.2 to 8.2.0
+
+## [5.0.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v5.0.5...node-server-sdk-dynamodb-v5.0.6) (2023-08-10)
+
+
+### Bug Fixes
+
+* Switch to es2017 target to ensure native async/await. ([a83e4e6](https://github.com/launchdarkly/js-core/commit/a83e4e62d04c66105a1b0e8893640a7ca2d641e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 8.1.1 to 8.1.2
+
 ## [5.0.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v5.0.1...node-server-sdk-dynamodb-v5.0.2) (2023-06-27)
 
 

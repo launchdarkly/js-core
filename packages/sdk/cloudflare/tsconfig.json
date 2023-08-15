@@ -3,7 +3,7 @@
     // Uses "." so it can load package.json.
     "rootDir": ".",
     "outDir": "dist",
-    "target": "es6",
+    "target": "es2017",
     "lib": ["es6"],
     "module": "commonjs",
     "strict": true,
