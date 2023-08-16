@@ -53,13 +53,16 @@ export default class EventFactory {
   }
 
   /* eslint-disable-next-line class-methods-use-this */
-  customEvent(key: string, context: Context, data?: any, metricValue?: number) {
+  customEvent(key: string, context: Context, data?: any, metricValue?: number, 
+    samplingRatio: number = 1, indexSamplingRatio: number = 1) {
     return new internal.InputCustomEvent(
       context,
       key,
       data ?? undefined,
       metricValue ?? undefined,
       this.eventConfig.samplingRatio(key),
+      samplingRatio,
+      indexSamplingRatio
     );
   }
 }
