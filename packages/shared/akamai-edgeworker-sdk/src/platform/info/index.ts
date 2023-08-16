@@ -17,6 +17,7 @@ class AkamaiPlatformInfo implements Info {
     return {
       name: this.sdkName,
       version: this.sdkVersion,
+      userAgentBase: 'AkamaiEdgeSDK',
     };
   }
 }

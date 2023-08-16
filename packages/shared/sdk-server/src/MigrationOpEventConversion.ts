@@ -2,7 +2,6 @@ import { internal, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import {
   LDMigrationConsistencyMeasurement,
-  LDMigrationCustomMeasurement,
   LDMigrationErrorMeasurement,
   LDMigrationEvaluation,
   LDMigrationLatencyMeasurement,
@@ -17,10 +16,6 @@ function isOperation(value: LDMigrationOp) {
   }
 
   return value === 'read' || value === 'write';
-}
-
-function isCustomMeasurement(value: LDMigrationMeasurement): value is LDMigrationCustomMeasurement {
-  return (value as any).kind === 'custom';
 }
 
 function isLatencyMeasurement(
@@ -54,25 +49,11 @@ function areValidValues(values: { old?: number; new?: number }) {
 function validateMeasurement(
   measurement: LDMigrationMeasurement,
 ): LDMigrationMeasurement | undefined {
+  // Here we are protecting ourselves from JS callers. TypeScript says that
+  // it cannot be an empty string, but those using JS can do what they want.
+  // @ts-ignore
   if (!TypeValidators.String.is(measurement.key) || measurement.key === '') {
     return undefined;
-  }
-
-  if (isCustomMeasurement(measurement)) {
-    if (!TypeValidators.Object.is(measurement.values)) {
-      return undefined;
-    }
-    if (!areValidValues(measurement.values)) {
-      return undefined;
-    }
-    return {
-      kind: measurement.kind,
-      key: measurement.key,
-      values: {
-        old: measurement.values.old,
-        new: measurement.values.new,
-      },
-    };
   }
 
   if (isLatencyMeasurement(measurement)) {
@@ -121,6 +102,7 @@ function validateMeasurement(
     };
   }
 
+  // Not a supported measurement type.
   return undefined;
 }
 

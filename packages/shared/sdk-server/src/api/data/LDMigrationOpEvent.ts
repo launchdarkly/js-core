@@ -16,15 +16,6 @@ export interface LDMigrationEvaluation {
   reason: LDEvaluationReason;
 }
 
-export interface LDMigrationCustomMeasurement {
-  kind: 'custom';
-  key: string;
-  values: {
-    old?: number;
-    new?: number;
-  };
-}
-
 export interface LDMigrationConsistencyMeasurement {
   key: 'consistent';
   value: number;
@@ -53,8 +44,7 @@ export interface LDMigrationErrorMeasurement {
 export type LDMigrationMeasurement =
   | LDMigrationLatencyMeasurement
   | LDMigrationErrorMeasurement
-  | LDMigrationConsistencyMeasurement
-  | LDMigrationCustomMeasurement;
+  | LDMigrationConsistencyMeasurement;
 
 /**
  * Event used to track information about a migration operation.
