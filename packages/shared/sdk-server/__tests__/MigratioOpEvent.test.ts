@@ -382,10 +382,7 @@ describe('given an LDClient with test data', () => {
   });
 });
 
-// Out migrator doesn't create custom measurements. So we need an additional test to ensure
-// that custom measurements make it through the conversion process.
-
-it('can accept custom measurements', () => {
+it('ignores invalid measurement keys', () => {
   const inputEvent: LDMigrationOpEvent = {
     kind: 'migration_op',
     operation: 'read',
@@ -401,39 +398,20 @@ it('can accept custom measurements', () => {
     },
     measurements: [
       {
-        key: 'custom1',
-        kind: 'custom',
+        // @ts-ignore
+        key: 'bad',
         values: {
           old: 1,
           new: 2,
         },
       },
-      {
-        key: 'custom2',
-        kind: 'custom',
-        values: {
-          new: 2,
-        },
-      },
-      {
-        key: 'custom3',
-        kind: 'custom',
-        values: {
-          old: 2,
-        },
-      },
-      {
-        key: 'custom4',
-        kind: 'custom',
-        values: {},
-      },
     ],
   };
   const validatedEvent = MigrationOpEventConversion(inputEvent);
-  expect(validatedEvent).toEqual(inputEvent);
+  expect(validatedEvent).toEqual({ ...inputEvent, measurements: [] });
 });
 
-it('removes bad custom measurements', () => {
+it('invalid data types are filtered', () => {
   const inputEvent: LDMigrationOpEvent = {
     kind: 'migration_op',
     operation: 'read',
@@ -449,11 +427,23 @@ it('removes bad custom measurements', () => {
     },
     measurements: [
       {
-        key: 'custom1',
-        kind: 'custom',
+        key: 'latency_ms',
         values: {
           // @ts-ignore
           old: 'ham',
+          new: 2,
+        },
+      },
+      {
+        key: 'consistent',
+        // @ts-ignore
+        value: undefined,
+      },
+      {
+        key: 'error',
+        values: {
+          // @ts-ignore
+          old: {},
           new: 2,
         },
       },
