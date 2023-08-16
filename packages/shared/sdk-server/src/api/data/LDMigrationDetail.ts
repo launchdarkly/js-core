@@ -2,7 +2,6 @@ import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationOrigin } from '../LDMigration';
 import {
-  LDMigrationCustomMeasurement,
   LDMigrationOp,
   LDMigrationOpEvent,
 } from './LDMigrationOpEvent';
@@ -51,14 +50,6 @@ export interface LDMigrationTracker {
    * @param value The latency, in milliseconds, of the operation.
    */
   latency(origin: LDMigrationOrigin, value: number): void;
-
-  /**
-   * Report a custom measurement. Unlike other methods on the tracker multiple custom
-   * measurements can be reported.
-   *
-   * @param measurement The custom measurement to track.
-   */
-  custom(measurement: LDMigrationCustomMeasurement): void;
 
   /**
    * Create a migration op event. If the event could not be created, because of a missing
