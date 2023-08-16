@@ -1,4 +1,5 @@
-import { LDContext, shouldSample } from '@launchdarkly/js-sdk-common';
+import { LDContext, internal } from '@launchdarkly/js-sdk-common';
+const { shouldSample } = internal;
 
 import { LDClient, LDConsistencyCheck, LDMigrationStage, LDMigrationTracker } from './api';
 import {

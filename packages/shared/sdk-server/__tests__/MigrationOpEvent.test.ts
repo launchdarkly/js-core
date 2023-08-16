@@ -1,22 +1,29 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
 import {
-  internal,
   LDClientImpl,
   LDConcurrentExecution,
   LDExecutionOrdering,
   LDMigrationOpEvent,
   LDMigrationStage,
   LDSerialExecution,
-  shouldSample,
 } from '../src';
-import * as mockable from '../src';
+
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
 import MigrationOpEventConversion from '../src/MigrationOpEventConversion';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
+
+jest.mock('@launchdarkly/js-sdk-common', () => ({
+  __esModule: true,
+  // @ts-ignore
+  ...jest.requireActual('@launchdarkly/js-sdk-common'),
+  internal: { ...jest.requireActual('@launchdarkly/js-sdk-common').internal, shouldSample: jest.fn().mockReturnValue(true) }
+}));
 
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
@@ -72,6 +79,7 @@ describe('given an LDClient with test data', () => {
       it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
         'finds the results consistent: %p',
         async (stage) => {
+          jest.spyOn(internal, 'shouldSample').mockReturnValue(true);
           const flagKey = 'migration';
           td.update(td.flag(flagKey).valueForAll(stage));
 
@@ -90,8 +98,7 @@ describe('given an LDClient with test data', () => {
       it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
         'it uses the check ratio and does a consistency check when it should sample: %p',
         async (stage) => {
-          const spy = jest.spyOn(mockable, 'shouldSample').mockImplementation(() => true);
-
+          jest.spyOn(internal, 'shouldSample').mockReturnValue(true);
           const flagKey = 'migration';
           td.update(td.flag(flagKey).valueForAll(stage).checkRatio(10));
           // eslint-disable-next-line no-await-in-loop
@@ -104,15 +111,14 @@ describe('given an LDClient with test data', () => {
           expect(migrationEvent.measurements[0].key).toEqual('consistent');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].value).toEqual(1);
-          expect(spy).toHaveBeenCalledWith(10);
+          expect(internal.shouldSample).toHaveBeenCalledWith(10);
         },
       );
 
       it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
         'it uses the check ratio and does not do a consistency check when it should not: %p',
         async (stage) => {
-          const spy = jest.spyOn(mockable, 'shouldSample').mockImplementation(() => true);
-
+          jest.spyOn(internal, 'shouldSample').mockReturnValue(false);
           const flagKey = 'migration';
           td.update(td.flag(flagKey).valueForAll(stage).checkRatio(12));
           // eslint-disable-next-line no-await-in-loop
@@ -123,7 +129,7 @@ describe('given an LDClient with test data', () => {
           const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
           expect(migrationEvent.measurements.length).toEqual(0);
-          expect(spy).toHaveBeenCalledWith(12);
+          expect(internal.shouldSample).toHaveBeenCalledWith(12);
         },
       );
     });
@@ -146,6 +152,7 @@ describe('given an LDClient with test data', () => {
       it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
         'finds the results consistent: %p',
         async (stage) => {
+          jest.spyOn(internal, 'shouldSample').mockReturnValue(true);
           const flagKey = 'migration';
           td.update(td.flag(flagKey).valueForAll(stage));
 
@@ -153,7 +160,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent.measurements[0].key).toEqual('consistent');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].value).toEqual(0);
@@ -192,7 +199,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
@@ -210,7 +217,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
@@ -228,7 +235,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
@@ -244,7 +251,7 @@ describe('given an LDClient with test data', () => {
         // Feature event.
         await events.take();
         // Migration event.
-        const migrationEvent = (await events.take()) as InputMigrationEvent;
+        const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
         expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
         // This isn't a precise check, but we should have non-zero values.
         expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
@@ -261,7 +268,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.new).toBeGreaterThanOrEqual(1);
@@ -279,7 +286,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
           // This isn't a precise check, but we should have non-zero values.
           expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
@@ -295,7 +302,7 @@ describe('given an LDClient with test data', () => {
         // Feature event.
         await events.take();
         // Migration event.
-        const migrationEvent = (await events.take()) as InputMigrationEvent;
+        const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
         expect(migrationEvent.measurements[0].key).toEqual('latency_ms');
         // This isn't a precise check, but we should have non-zero values.
         expect(migrationEvent.measurements[0].values.old).toBeGreaterThanOrEqual(1);
@@ -327,7 +334,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
           expect(migrationEvent).toMatchObject({
             measurements: [
@@ -353,7 +360,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent).toMatchObject({
             measurements: [
               {
@@ -378,7 +385,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
           expect(migrationEvent).toMatchObject({
             measurements: [
@@ -404,7 +411,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent).toMatchObject({
             measurements: [
               {
@@ -429,7 +436,7 @@ describe('given an LDClient with test data', () => {
           // Feature event.
           await events.take();
           // Migration event.
-          const migrationEvent = (await events.take()) as InputMigrationEvent;
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
           expect(migrationEvent).toMatchObject({
             measurements: [

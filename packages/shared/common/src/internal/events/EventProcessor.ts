@@ -5,8 +5,8 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
+import shouldSample from '../../internal/events/sampling';
 import ClientContext from '../../options/ClientContext';
-import shouldSample from '../../utils/sampling';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify, isMigration } from './guards';
 import InputEvent from './InputEvent';
@@ -226,30 +226,21 @@ export default class EventProcessor implements LDEventProcessor {
     const addDebugEvent = wouldSampleFeature && this.shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
-    // If this would generate an index event, then this value determines if that index
-    // event is sampled.
-    const wouldSampleIndex = !isIdentifyEvent ? shouldSample(inputEvent.indexSamplingRatio) : 1;
-
-    // TODO: May need some more handling if we want to sample identify events.
 
     // We only want to notify the de-duplicator if we would sample the index event.
     // Otherwise we could deduplicate and then not send the event.
-    const shouldNotDeduplicate = wouldSampleIndex
-      ? this.contextDeduplicator.processContext(inputEvent.context)
-      : true;
+    const shouldNotDeduplicate = this.contextDeduplicator.processContext(inputEvent.context);
 
     // If there is no cache, then it will never be in the cache.
-    // Because index events can be sampled this number will only be events that were both
-    // sampled and deduplicated.
     if (!shouldNotDeduplicate) {
       if (!isIdentifyEvent) {
         this.deduplicatedUsers += 1;
       }
     }
 
-    const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent && wouldSampleIndex;
+    const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
-    if (addIndexEvent) {
+    if (addIndexEvent && shouldSample(inputEvent.indexSamplingRatio)) {
       this.enqueue({
         kind: 'index',
         creationDate: inputEvent.creationDate,
