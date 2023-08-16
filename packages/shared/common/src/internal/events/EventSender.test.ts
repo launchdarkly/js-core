@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Info, PlatformData, SdkData } from '../../api';
 import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../api/subsystem';
-import { basicPlatform } from '../../mocks';
 import { ApplicationTags, ClientContext } from '../../options';
+import { basicPlatform } from '../mocks';
 import EventSender from './EventSender';
 
 jest.mock('../../utils', () => {

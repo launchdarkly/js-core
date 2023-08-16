@@ -2,10 +2,10 @@ import { Context } from '../../../src';
 import { LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
+import { clientContext } from '../../../src/internal/mocks';
+import ContextDeduplicator from '../../../src/internal/mocks/contextDeduplicator';
 import BasicLogger from '../../../src/logging/BasicLogger';
 import format from '../../../src/logging/format';
-import { clientContext } from '../../../src/mocks';
-import ContextDeduplicator from '../../../src/mocks/contextDeduplicator';
 
 const mockSendEventData = jest.fn();
 
