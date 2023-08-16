@@ -110,6 +110,20 @@ describe('when evaluating user equivalent contexts for segments', () => {
     expect(res.detail.value).toBe(false);
   });
 
+  it('can negate a segment match op', async () => {
+    const segment = {
+      key: 'test',
+      included: ['foo'],
+      version: 1,
+    };
+    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const flag = makeFlagWithSegmentMatch(segment);
+    flag.rules[0].clauses![0].negate = true;
+    const user = { key: 'bar' };
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
+    expect(res.detail.value).toBe(true);
+  });
+
   it.each([basicUser, basicSingleKindUser, basicMultiKindUser])(
     'matches segment with user who is both included and excluded',
     async (context) => {
