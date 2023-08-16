@@ -177,9 +177,9 @@ export interface LDClient {
   /**
    * Tracks that a context performed an event.
    *
-   * LaunchDarkly automatically tracks pageviews and clicks that are specified in the Goals section
-   * of the dashboard. This can be used to track custom goals or other events that do not currently
-   * have goals.
+   * LaunchDarkly automatically tracks pageviews and clicks that are specified in the Metrics section
+   * of the dashboard. This can be used to track custom metrics (goals) or other events that do not currently
+   * have metrics.
    *
    * Note that event delivery is asynchronous, so the event may not actually be sent until later;
    * see {@link flush}.
@@ -187,7 +187,7 @@ export interface LDClient {
    * If the context is omitted or has no key, the client will log a warning and will not send an
    * event.
    *
-   * @param key The name of the event, which may correspond to a goal in A/B tests.
+   * @param key The name of the event, which may correspond to a metric in Experimentation.
    * @param context The context to track.
    * @param data Optional additional information to associate with the event.
    * @param metricValue A numeric value used by the LaunchDarkly experimentation feature in numeric
