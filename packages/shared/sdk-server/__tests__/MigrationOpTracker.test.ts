@@ -175,3 +175,50 @@ it('includes if the result was inconsistent', () => {
     samplingRatio: 1,
   });
 });
+
+it('allows for the addition of custom measurements', () => {
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+  );
+  tracker.op('read');
+
+  tracker.custom({
+    kind: 'custom',
+    key: 'cats',
+    values: {
+      old: 3,
+      new: 10,
+    },
+  });
+
+  tracker.custom({
+    kind: 'custom',
+    key: 'badgers',
+    values: {
+      new: 10,
+    },
+  });
+
+  const event = tracker.createEvent();
+  expect(event?.measurements).toContainEqual({
+    key: 'cats',
+    kind: 'custom',
+    values: {
+      old: 3,
+      new: 10,
+    },
+  });
+  expect(event?.measurements).toContainEqual({
+    key: 'badgers',
+    kind: 'custom',
+    values: {
+      new: 10,
+    },
+  });
+});

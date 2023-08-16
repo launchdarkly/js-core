@@ -3,6 +3,7 @@ import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 import { LDMigrationStage, LDMigrationTracker } from './api';
 import {
   LDConsistencyCheck,
+  LDMigrationCustomMeasurement,
   LDMigrationMeasurement,
   LDMigrationOp,
   LDMigrationOpEvent,
@@ -27,6 +28,8 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   };
 
   private operation?: LDMigrationOp;
+
+  private customMeasurements: LDMigrationCustomMeasurement[] = [];
 
   constructor(
     private readonly flagKey: string,
@@ -54,9 +57,13 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     this.latencyMeasurement[origin] = value;
   }
 
+  custom(measurement: LDMigrationCustomMeasurement) {
+    this.customMeasurements.push(measurement);
+  }
+
   createEvent(): LDMigrationOpEvent | undefined {
     if (this.operation && Object.keys(this.contextKeys).length) {
-      const measurements: LDMigrationMeasurement[] = [];
+      const measurements = [...this.customMeasurements];
 
       this.populateConsistency(measurements);
       this.populateLatency(measurements);
