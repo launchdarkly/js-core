@@ -1,10 +1,7 @@
 import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationOrigin } from '../LDMigration';
-import {
-  LDMigrationOp,
-  LDMigrationOpEvent,
-} from './LDMigrationOpEvent';
+import { LDMigrationOp, LDMigrationOpEvent } from './LDMigrationOpEvent';
 import { LDMigrationStage } from './LDMigrationStage';
 
 /**

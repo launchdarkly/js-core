@@ -408,7 +408,7 @@ it('ignores invalid measurement keys', () => {
     ],
   };
   const validatedEvent = MigrationOpEventConversion(inputEvent);
-  expect(validatedEvent).toEqual({...inputEvent, measurements: []});
+  expect(validatedEvent).toEqual({ ...inputEvent, measurements: [] });
 });
 
 it('invalid data types are filtered', () => {
@@ -437,7 +437,7 @@ it('invalid data types are filtered', () => {
       {
         key: 'consistent',
         // @ts-ignore
-        value: undefined
+        value: undefined,
       },
       {
         key: 'error',
@@ -446,7 +446,7 @@ it('invalid data types are filtered', () => {
           old: {},
           new: 2,
         },
-      }
+      },
     ],
   };
   const validatedEvent = MigrationOpEventConversion(inputEvent);
