@@ -20,6 +20,3 @@ yarn-error.log
 .DS_Store
 .vscode
 dump.rdb
-packages/shared/common/src/**/*.d.ts
-packages/shared/common/src/**/*.js
-packages/shared/common/src/**/*.map
