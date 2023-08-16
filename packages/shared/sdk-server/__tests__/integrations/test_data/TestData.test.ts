@@ -207,9 +207,8 @@ describe('given a TestData instance', () => {
     expect(builtFlag.fallthrough).toEqual({ variation: 1 });
     expect(builtFlag.offVariation).toEqual(0);
     expect(builtFlag.variations).toEqual([true, false]);
-    expect(builtFlag.contextTargets).toEqual([
-      { contextKind: 'user', values: ['billy'], variation: 0 },
-    ]);
+    expect(builtFlag.contextTargets).toEqual([{ contextKind: 'user', values: [], variation: 0 }]);
+    expect(builtFlag.targets).toEqual([{ values: ['billy'], variation: 0 }]);
     expect(builtFlag.rules).toEqual(flagRules);
   });
 
@@ -249,16 +248,32 @@ describe('given a TestData instance', () => {
   it('can set boolean values for a specific user target', () => {
     const flag = td.flag('test-flag').variationForContext('user', 'potato', false);
     const flag2 = td.flag('test-flag').variationForUser('potato', true);
-    expect(flag.build(0).contextTargets).toEqual([
+    const builtFlag1 = flag.build(0);
+    const builtFlag2 = flag2.build(0);
+    // User targets order by the context targets, but use values from
+    // the legacy targets.
+    expect(builtFlag1.contextTargets).toEqual([
       {
         contextKind: 'user',
+        variation: 1,
+        values: [],
+      },
+    ]);
+    expect(builtFlag1.targets).toEqual([
+      {
         variation: 1,
         values: ['potato'],
       },
     ]);
-    expect(flag2.build(0).contextTargets).toEqual([
+    expect(builtFlag2.contextTargets).toEqual([
       {
         contextKind: 'user',
+        variation: 0,
+        values: [],
+      },
+    ]);
+    expect(builtFlag2.targets).toEqual([
+      {
         variation: 0,
         values: ['potato'],
       },
@@ -347,13 +362,32 @@ describe('given a TestData instance', () => {
   it('can move a targeted context from one variation to another', () => {
     const flag = td
       .flag('test-flag')
-      .variationForContext('user', 'ben', false)
-      .variationForContext('user', 'ben', true);
+      .variationForContext('org', 'ben', false)
+      .variationForContext('org', 'ben', true);
+    // Because there was only one target in the first variation there will be only
+    // a single variation after that target is removed.
+    expect(flag.build(1).contextTargets).toEqual([
+      {
+        contextKind: 'org',
+        variation: 0,
+        values: ['ben'],
+      },
+    ]);
+  });
+
+  it('can move a targeted user from one variation to another', () => {
+    const flag = td.flag('test-flag').variationForUser('ben', false).variationForUser('ben', true);
     // Because there was only one target in the first variation there will be only
     // a single variation after that target is removed.
     expect(flag.build(1).contextTargets).toEqual([
       {
         contextKind: 'user',
+        variation: 0,
+        values: [],
+      },
+    ]);
+    expect(flag.build(1).targets).toEqual([
+      {
         variation: 0,
         values: ['ben'],
       },
@@ -363,18 +397,50 @@ describe('given a TestData instance', () => {
   it('if a targeted context is moved from one variation to another, then other targets remain for that variation', () => {
     const flag = td
       .flag('test-flag')
-      .variationForContext('user', 'ben', false)
-      .variationForContext('user', 'joe', false)
-      .variationForContext('user', 'ben', true);
+      .variationForUser('ben', false)
+      .variationForUser('joe', false)
+      .variationForUser('ben', true);
 
     expect(flag.build(1).contextTargets).toEqual([
       {
         contextKind: 'user',
         variation: 0,
-        values: ['ben'],
+        values: [],
       },
       {
         contextKind: 'user',
+        variation: 1,
+        values: [],
+      },
+    ]);
+
+    expect(flag.build(1).targets).toEqual([
+      {
+        variation: 0,
+        values: ['ben'],
+      },
+      {
+        variation: 1,
+        values: ['joe'],
+      },
+    ]);
+  });
+
+  it('if a targeted user is moved from one variation to another, then other targets remain for that variation', () => {
+    const flag = td
+      .flag('test-flag')
+      .variationForContext('org', 'ben', false)
+      .variationForContext('org', 'joe', false)
+      .variationForContext('org', 'ben', true);
+
+    expect(flag.build(1).contextTargets).toEqual([
+      {
+        contextKind: 'org',
+        variation: 0,
+        values: ['ben'],
+      },
+      {
+        contextKind: 'org',
         variation: 1,
         values: ['joe'],
       },
@@ -393,7 +459,7 @@ describe('given a TestData instance', () => {
       {
         contextKind: 'user',
         variation: 1,
-        values: ['ben'],
+        values: [],
       },
       {
         contextKind: 'potato',
@@ -401,5 +467,6 @@ describe('given a TestData instance', () => {
         values: ['russet', 'yukon'],
       },
     ]);
+    expect(flag.build(0).targets).toEqual([{ variation: 1, values: ['ben'] }]);
   });
 });
