@@ -58,21 +58,22 @@ describe('given a diagnostics manager', () => {
     });
   });
 
-  // TODO: fix this using fake timers
-  it.only('creates periodic event from stats, then resets', () => {
-    const streamInit1 = Date.now() + 1;
-    const streamInit2 = Date.now() + 2;
-    const statsCreationTime = Date.now() + 3;
+  it('creates periodic event from stats, then resets', () => {
+    const originalDate = Date.now();
+    const streamInit1 = originalDate + 1;
+    const streamInit2 = originalDate + 2;
+    const statsCreation1 = originalDate + 3;
+    const statsCreation2 = originalDate + 4;
 
     manager.recordStreamInit(streamInit1, true, 1000);
     manager.recordStreamInit(streamInit2, false, 550);
-    jest.setSystemTime(statsCreationTime);
-    const statsEvent = manager.createStatsEventAndReset(4, 5, 6);
+    jest.setSystemTime(statsCreation1);
+    const statsEvent1 = manager.createStatsEventAndReset(4, 5, 6);
 
-    expect(statsEvent).toMatchObject({
-      creationTime: statsCreationTime,
+    expect(statsEvent1).toMatchObject({
       kind: 'diagnostic',
-      dataSinceDate: statsCreationTime - 3,
+      creationDate: statsCreation1,
+      dataSinceDate: originalDate,
       droppedEvents: 4,
       deduplicatedUsers: 5,
       eventsInLastBatch: 6,
@@ -90,19 +91,18 @@ describe('given a diagnostics manager', () => {
       ],
     });
 
-    // jest.spyOn(Date, 'now').mockImplementation(() => 9999);
-    // const event2 = manager.createStatsEventAndReset(1, 2, 3);
-    //
-    // expect(event2).toMatchObject({
-    //   kind: 'diagnostic',
-    //   dataSinceDate: statsEvent.creationDate,
-    //   droppedEvents: 1,
-    //   deduplicatedUsers: 2,
-    //   eventsInLastBatch: 3,
-    //   streamInits: [],
-    // });
-    //
-    // expect(event2.creationDate).toEqual(9999);
+    jest.setSystemTime(statsCreation2);
+    const statsEvent2 = manager.createStatsEventAndReset(1, 2, 3);
+
+    expect(statsEvent2).toMatchObject({
+      kind: 'diagnostic',
+      creationDate: statsCreation2,
+      dataSinceDate: statsCreation1,
+      droppedEvents: 1,
+      deduplicatedUsers: 2,
+      eventsInLastBatch: 3,
+      streamInits: [],
+    });
   });
 });
 
