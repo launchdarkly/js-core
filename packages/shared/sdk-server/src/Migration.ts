@@ -333,7 +333,7 @@ export default class Migration<
 
     // Performance timer is in ms, but may have a microsecond resolution
     // fractional component.
-    const latency = Math.floor(end - start);
+    const latency = end - start;
     tracker.latency(origin, latency);
     return result;
   }

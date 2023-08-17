@@ -541,12 +541,13 @@ export default class LDClientImpl implements LDClient {
     }
     // Immediately invoked function expression to take this processing out of the variation path.
     (async () => {
-      const indexEventSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
+      const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
       evalRes.events?.forEach((event) => {
-        this.eventProcessor.sendEvent({ ...event, indexEventSamplingRatio });
+        this.eventProcessor.sendEvent({ ...event, indexSamplingRatio });
       });
       this.eventProcessor.sendEvent(
-        eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue, indexEventSamplingRatio),
+        eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue,
+          undefined, indexSamplingRatio),
       );
     })();
     return [evalRes, flag];
