@@ -1,4 +1,4 @@
-import { mocks } from '@launchdarkly/js-sdk-common';
+import { internal } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl } from '../src';
 import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
@@ -9,6 +9,8 @@ import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
+
+const { mocks } = internal;
 
 const defaultUser = { key: 'user' };
 

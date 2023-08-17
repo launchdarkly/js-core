@@ -1,5 +1,5 @@
-import { LDContextDeduplicator } from '../api/subsystem/index';
-import { Context } from '../index';
+import { LDContextDeduplicator } from '../../api/subsystem';
+import { Context } from '../../index';
 
 export default class ContextDeduplicator implements LDContextDeduplicator {
   flushInterval?: number | undefined = 0.1;

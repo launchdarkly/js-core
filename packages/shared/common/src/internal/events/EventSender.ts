@@ -7,7 +7,7 @@ import {
 } from '../../api/subsystem';
 import { isHttpRecoverable, LDUnexpectedResponseError } from '../../errors';
 import { ClientContext } from '../../options';
-import { defaultHeaders, httpErrorMessage } from '../../utils';
+import { defaultHeaders, httpErrorMessage, sleep } from '../../utils';
 
 export default class EventSender implements LDEventSender {
   private crypto: Crypto;
@@ -51,29 +51,26 @@ export default class EventSender implements LDEventSender {
     }
     let error;
     try {
-      const res = await this.requests.fetch(uri, {
+      const { status, headers: resHeaders } = await this.requests.fetch(uri, {
         headers,
         body: JSON.stringify(events),
         method: 'POST',
       });
 
-      const serverDate = Date.parse(res.headers.get('date') || '');
+      const serverDate = Date.parse(resHeaders.get('date') || '');
       if (serverDate) {
         tryRes.serverTime = serverDate;
       }
 
-      if (res.status <= 204) {
+      if (status <= 204) {
         return tryRes;
       }
 
       error = new LDUnexpectedResponseError(
-        httpErrorMessage(
-          { status: res.status, message: 'some events were dropped' },
-          'event posting',
-        ),
+        httpErrorMessage({ status, message: 'some events were dropped' }, 'event posting'),
       );
 
-      if (!isHttpRecoverable(res.status)) {
+      if (!isHttpRecoverable(status)) {
         tryRes.status = LDDeliveryStatus.FailedAndMustShutDown;
         tryRes.error = error;
         return tryRes;
@@ -82,15 +79,16 @@ export default class EventSender implements LDEventSender {
       error = err;
     }
 
+    // recoverable but not retrying
     if (error && !canRetry) {
       tryRes.status = LDDeliveryStatus.Failed;
       tryRes.error = error;
       return tryRes;
     }
 
-    await new Promise((r) => {
-      setTimeout(r, 1000);
-    });
+    // wait 1 second before retrying
+    await sleep();
+
     return this.tryPostingEvents(events, this.eventsUri, payloadId, false);
   }
 

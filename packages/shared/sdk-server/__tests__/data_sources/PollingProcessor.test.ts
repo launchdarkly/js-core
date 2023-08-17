@@ -1,4 +1,4 @@
-import { ClientContext, mocks } from '@launchdarkly/js-sdk-common';
+import { ClientContext, internal } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
@@ -9,6 +9,8 @@ import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import TestLogger, { LogLevel } from '../Logger';
+
+const { mocks } = internal;
 
 describe('given an event processor', () => {
   const requestor = {

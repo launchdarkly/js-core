@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { mocks } from '@launchdarkly/js-sdk-common';
+import { internal } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl } from '../src';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';
+
+const { mocks } = internal;
 
 it('fires ready event in offline mode', (done) => {
   const client = new LDClientImpl(

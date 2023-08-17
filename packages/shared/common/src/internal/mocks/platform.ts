@@ -8,7 +8,7 @@ import {
   Requests,
   Response,
   SdkData,
-} from '../api';
+} from '../../api';
 import { crypto } from './hasher';
 
 const info: Info = {

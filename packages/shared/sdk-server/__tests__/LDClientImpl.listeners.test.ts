@@ -1,6 +1,6 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
-import { mocks } from '@launchdarkly/js-sdk-common';
+import { internal } from '@launchdarkly/js-sdk-common';
 
 import { AttributeReference, LDClientImpl } from '../src';
 import { Op } from '../src/evaluation/data/Clause';
@@ -8,6 +8,8 @@ import TestData from '../src/integrations/test_data/TestData';
 import { makeFlagWithSegmentMatch } from './evaluation/flags';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';
+
+const { mocks } = internal;
 
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;

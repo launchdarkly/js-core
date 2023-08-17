@@ -2,9 +2,11 @@
 // We cannot fully validate bucketing in the common tests. Platform implementations
 // should contain a consistency test.
 // Testing here can only validate we are providing correct inputs to the hashing algorithm.
-import { AttributeReference, Context, LDContext, mocks } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, Context, internal, LDContext } from '@launchdarkly/js-sdk-common';
 
 import Bucketer from '../../src/evaluation/Bucketer';
+
+const { mocks } = internal;
 
 describe.each<
   [
