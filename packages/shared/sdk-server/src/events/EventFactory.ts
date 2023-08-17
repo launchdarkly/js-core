@@ -1,5 +1,4 @@
 import { Context, internal, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
-import { LDEventOverrides } from '@launchdarkly/js-sdk-common/dist/internal';
 
 import { Flag } from '../evaluation/data/Flag';
 import isExperiment from './isExperiment';
@@ -10,10 +9,6 @@ import isExperiment from './isExperiment';
 export default class EventFactory {
   constructor(
     private readonly withReasons: boolean,
-    private readonly eventConfig: LDEventOverrides = {
-      samplingRatio: () => 1,
-      indexEventSamplingRatio: () => 1,
-    },
   ) {}
 
   evalEvent(
@@ -60,9 +55,8 @@ export default class EventFactory {
       key,
       data ?? undefined,
       metricValue ?? undefined,
-      this.eventConfig.samplingRatio(key),
       samplingRatio,
-      indexSamplingRatio
+      indexSamplingRatio,
     );
   }
 }

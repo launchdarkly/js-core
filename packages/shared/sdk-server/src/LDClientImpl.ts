@@ -11,7 +11,6 @@ import {
   Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
-import { InputMigrationEvent } from '@launchdarkly/js-sdk-common/dist/internal';
 
 import {
   IsMigrationStage,
@@ -53,6 +52,8 @@ import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
+import { Metric } from './store/Metric';
+import { Override } from './store/Override';
 
 enum InitState {
   Initializing,
@@ -108,6 +109,8 @@ export default class LDClientImpl implements LDClient {
   private onReady: () => void;
 
   private diagnosticsManager?: DiagnosticsManager;
+
+  private eventConfig: internal.LDEventOverrides;
 
   /**
    * Intended for use by platform specific client implementations.
@@ -226,6 +229,23 @@ export default class LDClientImpl implements LDClient {
         this.onReady();
       }
     });
+
+    this.eventConfig = {
+      samplingRatio: async (key: string) => {
+        const ratioItem = await asyncFacade.get(VersionedDataKinds.Metrics, key);
+        if (ratioItem && !ratioItem.deleted) {
+          return (ratioItem as Metric).samplingRatio ?? 1;
+        }
+        return 1;
+      },
+      indexEventSamplingRatio: async () => {
+        const indexSampling = await asyncFacade.get(VersionedDataKinds.ConfigurationOverrides, "indexSamplingRatio");
+        if (indexSampling && !indexSampling.deleted) {
+          return (indexSampling as Override).value ?? 1;
+        }
+        return 1;
+      }
+    };
   }
 
   initialized(): boolean {
@@ -436,10 +456,10 @@ export default class LDClientImpl implements LDClient {
     // Async immediately invoking function expression to get the flag from the store
     // without requiring track to be async.
     (async () => {
-      const samplingRatio = await this.featureStore.get(VersionedDataKinds.Metrics, key);
-      const indexSamplingRatio = await this.featureStore.get(VersionedDataKinds.ConfigurationOverrides, 'indexSamplingRatio');
       this.eventProcessor.sendEvent(
-        this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
+        this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue, 
+          await this.eventConfig.samplingRatio(key), 
+          await this.eventConfig.indexEventSamplingRatio()),
       );
     })();
   }
@@ -452,12 +472,13 @@ export default class LDClientImpl implements LDClient {
     // Async immediately invoking function expression to get the flag from the store
     // without requiring track to be async.
     (async () => {
+      // TODO: Would it be better to pass this through.
       const sampling = await this.featureStore.get(
         VersionedDataKinds.Features,
         event.evaluation.key,
       );
       const samplingRatio = (sampling as Flag)?.samplingRatio ?? 1;
-      const inputEvent: InputMigrationEvent = {
+      const inputEvent: internal.InputMigrationEvent = {
         ...converted,
         samplingRatio,
       };

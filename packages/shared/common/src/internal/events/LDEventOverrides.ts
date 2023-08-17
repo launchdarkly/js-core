@@ -20,10 +20,10 @@ export interface LDEventOverrides {
    *
    * @param key A key of a custom event.
    */
-  samplingRatio(key: string): number;
+  samplingRatio(key: string): Promise<number>;
 
   /**
    * Get the sampling ratio for index events.
    */
-  indexEventSamplingRatio(): number;
+  indexEventSamplingRatio(): Promise<number>;
 }
