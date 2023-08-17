@@ -1,5 +1,5 @@
 import { PlatformData, SdkData } from '../../api';
-import { basicPlatform } from '../../mocks';
+import { basicPlatform } from '../mocks';
 import DiagnosticsManager from './DiagnosticsManager';
 
 basicPlatform.info = {
