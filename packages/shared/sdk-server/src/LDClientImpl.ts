@@ -457,8 +457,8 @@ export default class LDClientImpl implements LDClient {
     // without requiring track to be async.
     (async () => {
       this.eventProcessor.sendEvent(
-        this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue, 
-          await this.eventConfig.samplingRatio(key), 
+        this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue,
+          await this.eventConfig.samplingRatio(key),
           await this.eventConfig.indexEventSamplingRatio()),
       );
     })();
@@ -539,12 +539,16 @@ export default class LDClientImpl implements LDClient {
       this.logger?.debug('Result value is null in variation');
       evalRes.setDefault(defaultValue);
     }
-    evalRes.events?.forEach((event) => {
-      this.eventProcessor.sendEvent(event);
-    });
-    this.eventProcessor.sendEvent(
-      eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue),
-    );
+    // Immediately invoked function expression to take this processing out of the variation path.
+    (async () => {
+      const indexEventSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
+      evalRes.events?.forEach((event) => {
+        this.eventProcessor.sendEvent({ ...event, indexEventSamplingRatio });
+      });
+      this.eventProcessor.sendEvent(
+        eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue, indexEventSamplingRatio),
+      );
+    })();
     return [evalRes, flag];
   }
 

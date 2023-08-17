@@ -17,6 +17,7 @@ export default class EventFactory {
     detail: LDEvaluationDetail,
     defaultVal: any,
     prereqOfFlag?: Flag,
+    indexEventSamplingRatio?: number,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
     return new internal.InputEvalEvent(
@@ -34,6 +35,7 @@ export default class EventFactory {
       flag.debugEventsUntilDate,
       flag.excludeFromSummaries,
       flag.samplingRatio,
+      indexEventSamplingRatio ?? 1,
     );
   }
 
