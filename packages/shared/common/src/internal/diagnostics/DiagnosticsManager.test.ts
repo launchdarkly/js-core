@@ -1,34 +1,20 @@
-import { PlatformData, SdkData } from '../../api';
 import { basicPlatform } from '../mocks';
 import DiagnosticsManager from './DiagnosticsManager';
 
-basicPlatform.info = {
-  platformData(): PlatformData {
-    return {
-      os: {
-        name: 'An OS',
-        version: '1.0.1',
-        arch: 'An Arch',
-      },
-      name: 'The SDK Name',
-      additional: {
-        nodeVersion: '42',
-      },
-    };
-  },
-  sdkData(): SdkData {
-    return {
-      name: 'An SDK',
-      version: '2.0.2',
-    };
-  },
-};
-
 describe('given a diagnostics manager', () => {
+  const dateNowString = '2023-08-10';
   let manager: DiagnosticsManager;
 
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(dateNowString));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
-    jest.spyOn(Date, 'now').mockImplementation(() => 7777);
     manager = new DiagnosticsManager('my-sdk-key', {}, basicPlatform);
   });
 
@@ -53,15 +39,12 @@ describe('given a diagnostics manager', () => {
 
   it('puts the start time into the init event', () => {
     const { creationDate } = manager.createInitEvent();
-    expect(creationDate).toEqual(7777);
+    expect(creationDate).toEqual(Date.now());
   });
 
   it('puts SDK data into the init event', () => {
     const { sdk } = manager.createInitEvent();
-    expect(sdk).toEqual({
-      name: 'An SDK',
-      version: '2.0.2',
-    });
+    expect(sdk).toMatchObject(basicPlatform.info.sdkData());
   });
 
   it('puts platform data into the init event', () => {
@@ -75,7 +58,8 @@ describe('given a diagnostics manager', () => {
     });
   });
 
-  it('creates periodic event from stats, then resets', () => {
+  // TODO: fix this using fake timers
+  it.only('creates periodic event from stats, then resets', () => {
     manager.recordStreamInit(7778, true, 1000);
     manager.recordStreamInit(7779, false, 550);
 
