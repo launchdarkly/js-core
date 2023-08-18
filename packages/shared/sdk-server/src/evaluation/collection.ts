@@ -62,7 +62,7 @@ function seriesAsync<T>(
  * Iterate a collection in series awaiting each check operation.
  * @param collection The collection to iterate.
  * @param check The check to perform for each item in the container.
- * @returns True if all items pass the check.
+ * @param cb Called with true if all items pass the check.
  */
 export function allSeriesAsync<T>(
   collection: T[] | undefined,
@@ -76,8 +76,8 @@ export function allSeriesAsync<T>(
  * Iterate a collection in series awaiting each check operation.
  * @param collection The collection to iterate.
  * @param check The check to perform for each item in the container.
- * @returns True on the first item that passes the check. False if no items
- * pass.
+ * @param cb called with true on the first item that passes the check. False
+ * means no items passed the check.
  */
 export function firstSeriesAsync<T>(
   collection: T[] | undefined,
@@ -85,4 +85,35 @@ export function firstSeriesAsync<T>(
   cb: (res: boolean) => void,
 ): void {
   seriesAsync(collection, check, false, 0, cb);
+}
+
+/**
+ * Iterate a collection and execute the the given check operation
+ * for all items concurrently.
+ * @param collection The collection to iterate.
+ * @param check The check to run for each item.
+ * @param cb Callback executed when all items have been checked. The callback
+ * will be called with true if each item resulted in true, otherwise it will
+ * be called with false.
+ */
+export function allAsync<T>(
+  collection: T[] | undefined,
+  check: (val: T, cb: (res: boolean) => void) => void,
+  cb: (res: boolean | null | undefined) => void,
+): void {
+  if (!collection) {
+    cb(false);
+    return;
+  }
+
+  Promise.all(
+    collection?.map(
+      (item) =>
+        new Promise((resolve) => {
+          check(item, resolve);
+        }),
+    ),
+  ).then((results) => {
+    cb(results.every((success) => success));
+  });
 }

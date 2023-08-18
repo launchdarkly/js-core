@@ -15,6 +15,7 @@ import {
 import {
   LDClient,
   LDFeatureStore,
+  LDFeatureStoreKindData,
   LDFlagsState,
   LDFlagsStateOptions,
   LDOptions,
@@ -30,7 +31,7 @@ import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
 import StreamingProcessor from './data_sources/StreamingProcessor';
 import { LDClientError } from './errors';
-import { allSeriesAsync } from './evaluation/collection';
+import { allAsync, allSeriesAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
 import ErrorKinds from './evaluation/ErrorKinds';
@@ -268,7 +269,7 @@ export default class LDClientImpl implements LDClient {
     });
   }
 
-  async allFlagsState(
+  allFlagsState(
     context: LDContext,
     options?: LDFlagsStateOptions,
     callback?: (err: Error | null, res: LDFlagsState) => void,
@@ -277,75 +278,78 @@ export default class LDClientImpl implements LDClient {
       this.logger?.info('allFlagsState() called in offline mode. Returning empty state.');
       const allFlagState = new FlagsStateBuilder(false, false).build();
       callback?.(null, allFlagState);
-      return allFlagState;
+      return Promise.resolve(allFlagState);
     }
 
     const evalContext = Context.fromLDContext(context);
     if (!evalContext.valid) {
       this.logger?.info(`${evalContext.message ?? 'Invalid context.'}. Returning empty state.`);
-      return new FlagsStateBuilder(false, false).build();
+      return Promise.resolve(new FlagsStateBuilder(false, false).build());
     }
-
-    let valid = true;
-    if (!this.initialized()) {
-      const storeInitialized = await this.asyncFeatureStore.initialized();
-
-      if (storeInitialized) {
-        this.logger?.warn(
-          'Called allFlagsState before client initialization; using last known' +
-            ' values from data store',
-        );
-      } else {
-        this.logger?.warn(
-          'Called allFlagsState before client initialization. Data store not available; ' +
-            'returning empty state',
-        );
-        valid = false;
-      }
-    }
-
-    const builder = new FlagsStateBuilder(valid, !!options?.withReasons);
-    const clientOnly = !!options?.clientSideOnly;
-    const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
 
     return new Promise<LDFlagsState>((resolve) => {
-      this.featureStore.all(VersionedDataKinds.Features, (allFlags) => {
-        allSeriesAsync(
-          Object.values(allFlags),
-          async (storeItem, _index, innerCB) => {
-            const flag = storeItem as Flag;
-            if (clientOnly && !flag.clientSide) {
-              innerCB(true);
-              return;
-            }
-            this.evaluator.evaluateCb(flag, evalContext, (res) => {
-              if (res.isError) {
-                this.onError(
-                  new Error(
-                    `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
-                  ),
-                );
+      const doEval = (valid: boolean) =>
+        this.featureStore.all(VersionedDataKinds.Features, (allFlags) => {
+          const builder = new FlagsStateBuilder(valid, !!options?.withReasons);
+          const clientOnly = !!options?.clientSideOnly;
+          const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
+
+          allAsync(
+            Object.values(allFlags),
+            (storeItem, iterCb) => {
+              const flag = storeItem as Flag;
+              if (clientOnly && !flag.clientSide) {
+                iterCb(true);
+                return;
               }
-              const requireExperimentData = isExperiment(flag, res.detail.reason);
-              builder.addFlag(
-                flag,
-                res.detail.value,
-                res.detail.variationIndex ?? undefined,
-                res.detail.reason,
-                flag.trackEvents || requireExperimentData,
-                requireExperimentData,
-                detailsOnlyIfTracked,
-              );
-              innerCB(true);
-            });
-          },
-          () => {
-            const res = builder.build();
-            callback?.(null, res);
-            resolve(res);
-          },
-        );
-      });
+              this.evaluator.evaluateCb(flag, evalContext, (res) => {
+                if (res.isError) {
+                  this.onError(
+                    new Error(
+                      `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
+                    ),
+                  );
+                }
+                const requireExperimentData = isExperiment(flag, res.detail.reason);
+                builder.addFlag(
+                  flag,
+                  res.detail.value,
+                  res.detail.variationIndex ?? undefined,
+                  res.detail.reason,
+                  flag.trackEvents || requireExperimentData,
+                  requireExperimentData,
+                  detailsOnlyIfTracked,
+                );
+                iterCb(true);
+              });
+            },
+            () => {
+              const res = builder.build();
+              callback?.(null, res);
+              resolve(res);
+            },
+          );
+        });
+      if (!this.initialized()) {
+        this.featureStore.initialized((storeInitialized) => {
+          let valid = true;
+          if (storeInitialized) {
+            this.logger?.warn(
+              'Called allFlagsState before client initialization; using last known' +
+                ' values from data store',
+            );
+          } else {
+            this.logger?.warn(
+              'Called allFlagsState before client initialization. Data store not available; ' +
+                'returning empty state',
+            );
+            valid = false;
+          }
+          doEval(valid);
+        });
+      } else {
+        doEval(true);
+      }
     });
   }
 
