@@ -1,15 +1,15 @@
+import got from 'got';
 import ld, {
   LDExecution,
   LDExecutionOrdering,
   LDMigrationError,
   LDMigrationSuccess,
+  LDSerialExecution,
   Migration,
-  LDSerialExecution
 } from 'node-server-sdk';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
-import got from 'got';
 
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
@@ -69,7 +69,7 @@ export async function newSdkClientEntity(options) {
   log.info('Creating client with configuration: ' + JSON.stringify(options.configuration));
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
-      options.configuration.startWaitTimeMs !== undefined
+    options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
   const client = ld.init(
@@ -136,9 +136,11 @@ export async function newSdkClientEntity(options) {
 
       case 'migrationVariation':
         const migrationVariation = params.migrationVariation;
-        const res = await client.variationMigration(migrationVariation.key,
+        const res = await client.variationMigration(
+          migrationVariation.key,
           migrationVariation.context,
-          migrationVariation.defaultStage);
+          migrationVariation.defaultStage,
+        );
         return { result: res.value };
 
       case 'migrationOperation':
@@ -151,7 +153,7 @@ export async function newSdkClientEntity(options) {
           readNew: async () => {
             try {
               const res = await got.post(migrationOperation.newEndpoint, {});
-              return LDMigrationSuccess(res.body)
+              return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
             }
@@ -159,7 +161,7 @@ export async function newSdkClientEntity(options) {
           writeNew: async () => {
             try {
               const res = await got.post(migrationOperation.newEndpoint, {});
-              return LDMigrationSuccess(res.body)
+              return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
             }
@@ -167,7 +169,7 @@ export async function newSdkClientEntity(options) {
           readOld: async () => {
             try {
               const res = await got.post(migrationOperation.oldEndpoint, {});
-              return LDMigrationSuccess(res.body)
+              return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
             }
@@ -175,7 +177,7 @@ export async function newSdkClientEntity(options) {
           writeOld: async () => {
             try {
               const res = await got.post(migrationOperation.oldEndpoint, {});
-              return LDMigrationSuccess(res.body)
+              return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
             }
@@ -184,25 +186,29 @@ export async function newSdkClientEntity(options) {
 
         switch (migrationOperation.operation) {
           case 'read': {
-            const res = await migration.read(migrationOperation.key,
+            const res = await migration.read(
+              migrationOperation.key,
               migrationOperation.context,
-              migrationOperation.defaultStage);
-            if(res.success) {
+              migrationOperation.defaultStage,
+            );
+            if (res.success) {
               return { result: res.result };
             } else {
               return { result: res.error };
             }
           }
           case 'write': {
-            const res = await migration.write(migrationOperation.key,
+            const res = await migration.write(
+              migrationOperation.key,
               migrationOperation.context,
-              migrationOperation.defaultStage);
+              migrationOperation.defaultStage,
+            );
 
-              if(res.authoritative.success) {
-                return { result: res.authoritative.result };
-              } else {
-                return { result: res.authoritative.error };
-              }
+            if (res.authoritative.success) {
+              return { result: res.authoritative.result };
+            } else {
+              return { result: res.authoritative.error };
+            }
           }
         }
         return undefined;

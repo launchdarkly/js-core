@@ -52,7 +52,7 @@ interface FeatureOutputEvent {
 }
 
 interface IndexInputEvent extends Omit<InputIdentifyEvent, 'kind'> {
-  kind: 'index'
+  kind: 'index';
 }
 
 /**
@@ -220,7 +220,7 @@ export default class EventProcessor implements LDEventProcessor {
         const migrationEvent: MigrationOutputEvent = {
           ...inputEvent,
         };
-        if(migrationEvent.samplingRatio === 1) {
+        if (migrationEvent.samplingRatio === 1) {
           delete migrationEvent.samplingRatio;
         }
         this.enqueue(migrationEvent);
@@ -232,9 +232,7 @@ export default class EventProcessor implements LDEventProcessor {
 
     const isFeatureEvent = isFeature(inputEvent);
 
-    const addFullEvent =
-      (isFeatureEvent && inputEvent.trackEvents) ||
-      !isFeatureEvent;
+    const addFullEvent = (isFeatureEvent && inputEvent.trackEvents) || !isFeatureEvent;
 
     const addDebugEvent = this.shouldDebugEvent(inputEvent);
 
@@ -254,12 +252,17 @@ export default class EventProcessor implements LDEventProcessor {
     const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
     if (addIndexEvent && shouldSample(inputEvent.indexSamplingRatio)) {
-      this.enqueue(this.makeOutputEvent({
-        kind: 'index',
-        creationDate: inputEvent.creationDate,
-        context: inputEvent.context,
-        samplingRatio: inputEvent.indexSamplingRatio,
-      }, false));
+      this.enqueue(
+        this.makeOutputEvent(
+          {
+            kind: 'index',
+            creationDate: inputEvent.creationDate,
+            context: inputEvent.context,
+            samplingRatio: inputEvent.indexSamplingRatio,
+          },
+          false,
+        ),
+      );
     }
     if (addFullEvent && shouldSample(inputEvent.samplingRatio)) {
       this.enqueue(this.makeOutputEvent(inputEvent, false));

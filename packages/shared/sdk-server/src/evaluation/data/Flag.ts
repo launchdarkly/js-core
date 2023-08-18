@@ -29,5 +29,5 @@ export interface Flag extends Versioned {
   samplingRatio?: number;
   migration?: {
     checkRatio?: number;
-  }
+  };
 }

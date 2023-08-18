@@ -1,5 +1,7 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import {
   LDClientImpl,
   LDConcurrentExecution,
@@ -8,9 +10,6 @@ import {
   LDMigrationStage,
   LDSerialExecution,
 } from '../src';
-
-import { internal } from '@launchdarkly/js-sdk-common';
-
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
@@ -22,7 +21,10 @@ jest.mock('@launchdarkly/js-sdk-common', () => ({
   __esModule: true,
   // @ts-ignore
   ...jest.requireActual('@launchdarkly/js-sdk-common'),
-  internal: { ...jest.requireActual('@launchdarkly/js-sdk-common').internal, shouldSample: jest.fn().mockReturnValue(true) }
+  internal: {
+    ...jest.requireActual('@launchdarkly/js-sdk-common').internal,
+    shouldSample: jest.fn().mockReturnValue(true),
+  },
 }));
 
 describe('given an LDClient with test data', () => {

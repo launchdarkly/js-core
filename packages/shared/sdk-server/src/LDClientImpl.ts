@@ -51,9 +51,9 @@ import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
-import VersionedDataKinds from './store/VersionedDataKinds';
 import { Metric } from './store/Metric';
 import { Override } from './store/Override';
+import VersionedDataKinds from './store/VersionedDataKinds';
 
 enum InitState {
   Initializing,
@@ -150,18 +150,18 @@ export default class LDClientImpl implements LDClient {
     const makeDefaultProcessor = () =>
       config.stream
         ? new StreamingProcessor(
-          sdkKey,
-          config,
-          this.platform.requests,
-          this.platform.info,
-          dataSourceUpdates,
-          this.diagnosticsManager,
-        )
+            sdkKey,
+            config,
+            this.platform.requests,
+            this.platform.info,
+            dataSourceUpdates,
+            this.diagnosticsManager,
+          )
         : new PollingProcessor(
-          config,
-          new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
-          dataSourceUpdates,
-        );
+            config,
+            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+            dataSourceUpdates,
+          );
 
     if (config.offline || config.useLdd) {
       this.updateProcessor = new NullUpdateProcessor();
@@ -239,12 +239,15 @@ export default class LDClientImpl implements LDClient {
         return 1;
       },
       indexEventSamplingRatio: async () => {
-        const indexSampling = await asyncFacade.get(VersionedDataKinds.ConfigurationOverrides, "indexSamplingRatio");
+        const indexSampling = await asyncFacade.get(
+          VersionedDataKinds.ConfigurationOverrides,
+          'indexSamplingRatio',
+        );
         if (indexSampling && !indexSampling.deleted) {
           return (indexSampling as Override).value ?? 1;
         }
         return 1;
-      }
+      },
     };
   }
 
@@ -377,12 +380,12 @@ export default class LDClientImpl implements LDClient {
       if (storeInitialized) {
         this.logger?.warn(
           'Called allFlagsState before client initialization; using last known' +
-          ' values from data store',
+            ' values from data store',
         );
       } else {
         this.logger?.warn(
           'Called allFlagsState before client initialization. Data store not available; ' +
-          'returning empty state',
+            'returning empty state',
         );
         valid = false;
       }
@@ -457,9 +460,14 @@ export default class LDClientImpl implements LDClient {
     // without requiring track to be async.
     (async () => {
       this.eventProcessor.sendEvent(
-        this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue,
+        this.eventFactoryDefault.customEvent(
+          key,
+          checkedContext!,
+          data,
+          metricValue,
           await this.eventConfig.samplingRatio(key),
-          await this.eventConfig.indexEventSamplingRatio()),
+          await this.eventConfig.indexEventSamplingRatio(),
+        ),
       );
     })();
   }
@@ -480,7 +488,7 @@ export default class LDClientImpl implements LDClient {
       const samplingRatio = (sampling as Flag)?.samplingRatio ?? 1;
       const inputEvent: internal.InputMigrationEvent = {
         ...converted,
-        samplingRatio
+        samplingRatio,
       };
       this.eventProcessor.sendEvent(inputEvent);
     })();
@@ -546,8 +554,14 @@ export default class LDClientImpl implements LDClient {
         this.eventProcessor.sendEvent({ ...event, indexSamplingRatio });
       });
       this.eventProcessor.sendEvent(
-        eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue,
-          undefined, indexSamplingRatio),
+        eventFactory.evalEvent(
+          flag,
+          evalContext,
+          evalRes.detail,
+          defaultValue,
+          undefined,
+          indexSamplingRatio,
+        ),
       );
     })();
     return [evalRes, flag];
@@ -564,13 +578,13 @@ export default class LDClientImpl implements LDClient {
       if (storeInitialized) {
         this.logger?.warn(
           'Variation called before LaunchDarkly client initialization completed' +
-          " (did you wait for the 'ready' event?) - using last known values from feature store",
+            " (did you wait for the 'ready' event?) - using last known values from feature store",
         );
         return this.variationInternal(flagKey, context, defaultValue, eventFactory);
       }
       this.logger?.warn(
         'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
-        "'ready' event?) - using default value",
+          "'ready' event?) - using default value",
       );
       return [EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue), undefined];
     }

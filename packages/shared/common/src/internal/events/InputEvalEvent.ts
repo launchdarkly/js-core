@@ -25,7 +25,7 @@ export default class InputEvalEvent {
   public readonly excludeFromSummaries?: boolean;
 
   constructor(
-    public readonly withReasons: boolean, 
+    public readonly withReasons: boolean,
     public readonly context: Context,
     public readonly key: string,
     defValue: any, // default is a reserved keyword in this context.

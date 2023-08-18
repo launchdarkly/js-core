@@ -1,5 +1,4 @@
-import { LDContext, internal } from '@launchdarkly/js-sdk-common';
-const { shouldSample } = internal;
+import { internal, LDContext } from '@launchdarkly/js-sdk-common';
 
 import { LDClient, LDConsistencyCheck, LDMigrationStage, LDMigrationTracker } from './api';
 import {
@@ -17,6 +16,8 @@ import {
   LDMigrationOptions,
   LDSerialExecution,
 } from './api/options/LDMigrationOptions';
+
+const { shouldSample } = internal;
 
 type MultipleReadResult<TMigrationRead> = {
   fromOld: LDMigrationReadResult<TMigrationRead>;

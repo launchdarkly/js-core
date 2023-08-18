@@ -1,4 +1,5 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
+
 import { Context, internal } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl } from '../src';

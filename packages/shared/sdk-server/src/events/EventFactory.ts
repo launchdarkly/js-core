@@ -7,9 +7,7 @@ import isExperiment from './isExperiment';
  * @internal
  */
 export default class EventFactory {
-  constructor(
-    private readonly withReasons: boolean,
-  ) {}
+  constructor(private readonly withReasons: boolean) {}
 
   evalEvent(
     flag: Flag,
@@ -50,8 +48,14 @@ export default class EventFactory {
   }
 
   /* eslint-disable-next-line class-methods-use-this */
-  customEvent(key: string, context: Context, data?: any, metricValue?: number, 
-    samplingRatio: number = 1, indexSamplingRatio: number = 1) {
+  customEvent(
+    key: string,
+    context: Context,
+    data?: any,
+    metricValue?: number,
+    samplingRatio: number = 1,
+    indexSamplingRatio: number = 1,
+  ) {
     return new internal.InputCustomEvent(
       context,
       key,

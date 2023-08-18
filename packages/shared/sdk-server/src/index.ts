@@ -14,5 +14,7 @@ export * from '@launchdarkly/js-sdk-common';
 export {
   LDClientImpl,
   BigSegmentStoreStatusProviderImpl,
-  LDMigrationError, LDMigrationSuccess, Migration
+  LDMigrationError,
+  LDMigrationSuccess,
+  Migration,
 };
