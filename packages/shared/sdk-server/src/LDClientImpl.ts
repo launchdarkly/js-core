@@ -348,9 +348,7 @@ export default class LDClientImpl implements LDClient {
           doEval(valid);
         });
       } else {
-        this.featureStore.all(VersionedDataKinds.Features, (allFlags) => {
-          doEval(true);
-        });
+        doEval(true);
       }
     });
   }
