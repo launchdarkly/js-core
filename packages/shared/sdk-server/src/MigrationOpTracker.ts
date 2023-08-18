@@ -3,6 +3,7 @@ import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 import { LDMigrationStage, LDMigrationTracker } from './api';
 import {
   LDConsistencyCheck,
+  LDMigrationErrorMeasurement,
   LDMigrationMeasurement,
   LDMigrationOp,
   LDMigrationOpEvent,
@@ -87,7 +88,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     ) {
       measurements.push({
         key: 'consistent',
-        value: this.consistencyCheck,
+        value: this.consistencyCheck === LDConsistencyCheck.Consistent,
         samplingRatio: this.checkRatio ?? 1,
       });
     }
@@ -95,10 +96,17 @@ export default class MigrationOpTracker implements LDMigrationTracker {
 
   private populateErrors(measurements: LDMigrationMeasurement[]) {
     if (this.errors.new || this.errors.old) {
-      measurements.push({
+      const measurement: LDMigrationErrorMeasurement = {
         key: 'error',
-        values: {...this.errors},
-      });
+        values: {},
+      };
+      if(this.errors.new) {
+        measurement.values.new = true;
+      }
+      if(this.errors.old) {
+        measurement.values.old = true;
+      }
+      measurements.push(measurement);
     }
   }
 

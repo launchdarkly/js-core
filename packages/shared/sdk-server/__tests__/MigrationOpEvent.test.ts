@@ -91,7 +91,7 @@ describe('given an LDClient with test data', () => {
           // Only check the measurements component of the event.
           expect(migrationEvent.measurements[0].key).toEqual('consistent');
           // This isn't a precise check, but we should have non-zero values.
-          expect(migrationEvent.measurements[0].value).toEqual(1);
+          expect(migrationEvent.measurements[0].value).toEqual(true);
         },
       );
 
@@ -110,7 +110,7 @@ describe('given an LDClient with test data', () => {
           // Only check the measurements component of the event.
           expect(migrationEvent.measurements[0].key).toEqual('consistent');
           // This isn't a precise check, but we should have non-zero values.
-          expect(migrationEvent.measurements[0].value).toEqual(1);
+          expect(migrationEvent.measurements[0].value).toEqual(true);
           expect(internal.shouldSample).toHaveBeenCalledWith(10);
         },
       );
@@ -163,7 +163,7 @@ describe('given an LDClient with test data', () => {
           const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           expect(migrationEvent.measurements[0].key).toEqual('consistent');
           // This isn't a precise check, but we should have non-zero values.
-          expect(migrationEvent.measurements[0].value).toEqual(0);
+          expect(migrationEvent.measurements[0].value).toEqual(false);
         },
       );
     });
@@ -342,7 +342,6 @@ describe('given an LDClient with test data', () => {
                 key: 'error',
                 values: {
                   old: true,
-                  new: false,
                 },
               },
             ],
@@ -366,7 +365,6 @@ describe('given an LDClient with test data', () => {
               {
                 key: 'error',
                 values: {
-                  old: false,
                   new: true,
                 },
               },
@@ -418,7 +416,6 @@ describe('given an LDClient with test data', () => {
                 key: 'error',
                 values: {
                   old: true,
-                  new: false,
                 },
               },
             ],
@@ -443,7 +440,6 @@ describe('given an LDClient with test data', () => {
               {
                 key: 'error',
                 values: {
-                  old: false,
                   new: true,
                 },
               },
@@ -475,7 +471,6 @@ it('ignores invalid measurement keys', () => {
         key: 'bad',
         values: {
           old: true,
-          new: false,
         },
       },
     ],

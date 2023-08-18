@@ -102,7 +102,7 @@ function validateMeasurement(
 
   if (isConsistencyMeasurement(measurement)) {
     if (
-      !TypeValidators.Number.is(measurement.value) ||
+      !TypeValidators.Boolean.is(measurement.value) ||
       !TypeValidators.Number.is(measurement.samplingRatio)
     ) {
       return undefined;
@@ -169,7 +169,7 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
     outReason.bigSegmentsStatus = inReason.bigSegmentsStatus;
   }
 
-  if (evaluation.variation && TypeValidators.Number.is(evaluation.variation)) {
+  if (evaluation.variation !== undefined && TypeValidators.Number.is(evaluation.variation)) {
     validated.variation = evaluation.variation;
   }
 

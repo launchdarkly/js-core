@@ -223,7 +223,7 @@ export default class EventProcessor implements LDEventProcessor {
         if(migrationEvent.samplingRatio === 1) {
           delete migrationEvent.samplingRatio;
         }
-        this.enqueue(inputEvent);
+        this.enqueue(migrationEvent);
       }
       return;
     }

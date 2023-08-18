@@ -18,7 +18,7 @@ export interface LDMigrationEvaluation {
 
 export interface LDMigrationConsistencyMeasurement {
   key: 'consistent';
-  value: number;
+  value: boolean;
   samplingRatio: number;
 }
 
