@@ -11,6 +11,7 @@ import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify, isMigration } from './guards';
 import InputEvent from './InputEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
+import InputMigrationEvent from './InputMigrationEvent';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 
 type FilteredContext = any;
@@ -60,12 +61,18 @@ interface IndexInputEvent extends Omit<InputIdentifyEvent, 'kind'> {
  */
 type DiagnosticEvent = any;
 
+interface MigrationOutputEvent extends Omit<InputMigrationEvent, 'samplingRatio'> {
+  // Make the sampling ratio optional so we can omit it when it is one.
+  samplingRatio?: number;
+}
+
 type OutputEvent =
   | IdentifyOutputEvent
   | CustomOutputEvent
   | FeatureOutputEvent
   | SummarizedFlagsEvent
-  | DiagnosticEvent;
+  | DiagnosticEvent
+  | MigrationOutputEvent;
 
 export interface EventProcessorOptions {
   allAttributesPrivate: boolean;
@@ -210,9 +217,13 @@ export default class EventProcessor implements LDEventProcessor {
       // processing at this point for a migration event. It cannot generate
       // an index event or debug event.
       if (shouldSample(inputEvent.samplingRatio)) {
-        this.enqueue({
+        const migrationEvent: MigrationOutputEvent = {
           ...inputEvent,
-        });
+        };
+        if(migrationEvent.samplingRatio === 1) {
+          delete migrationEvent.samplingRatio;
+        }
+        this.enqueue(inputEvent);
       }
       return;
     }

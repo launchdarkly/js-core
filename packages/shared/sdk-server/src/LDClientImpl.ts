@@ -344,7 +344,7 @@ export default class LDClientImpl implements LDClient {
         key,
         contextKeys,
         defaultValue,
-        defaultValue,
+        detail.value,
         detail.reason,
         checkRatio,
         // Can be null for compatibility reasons.
@@ -480,7 +480,7 @@ export default class LDClientImpl implements LDClient {
       const samplingRatio = (sampling as Flag)?.samplingRatio ?? 1;
       const inputEvent: internal.InputMigrationEvent = {
         ...converted,
-        samplingRatio,
+        samplingRatio
       };
       this.eventProcessor.sendEvent(inputEvent);
     })();
