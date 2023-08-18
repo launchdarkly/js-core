@@ -23,6 +23,4 @@ export interface Segment extends Versioned {
   // we put them into sets during de-serialization.
   includedSet?: Set<string>;
   excludedSet?: Set<string>;
-  // includedContextsSet?: Set<string>;
-  // excludedContextsSet?: Set<string>;
 }
