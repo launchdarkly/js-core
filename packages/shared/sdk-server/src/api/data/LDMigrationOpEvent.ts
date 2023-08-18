@@ -33,8 +33,8 @@ export interface LDMigrationLatencyMeasurement {
 export interface LDMigrationErrorMeasurement {
   key: 'error';
   values: {
-    old?: number;
-    new?: number;
+    old?: boolean;
+    new?: boolean;
   };
 }
 

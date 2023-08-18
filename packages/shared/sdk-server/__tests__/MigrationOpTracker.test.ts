@@ -65,8 +65,8 @@ it('includes errors if at least one is set', () => {
   expect(event?.measurements).toContainEqual({
     key: 'error',
     values: {
-      old: 1,
-      new: 0,
+      old: true,
+      new: false,
     },
   });
 
@@ -86,8 +86,8 @@ it('includes errors if at least one is set', () => {
   expect(eventB?.measurements).toContainEqual({
     key: 'error',
     values: {
-      old: 0,
-      new: 1,
+      old: false,
+      new: true,
     },
   });
 });

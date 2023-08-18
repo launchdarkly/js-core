@@ -97,10 +97,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     if (this.errors.new || this.errors.old) {
       measurements.push({
         key: 'error',
-        values: {
-          old: this.errors.old ? 1 : 0,
-          new: this.errors.new ? 1 : 0,
-        },
+        values: {...this.errors},
       });
     }
   }

@@ -341,8 +341,8 @@ describe('given an LDClient with test data', () => {
               {
                 key: 'error',
                 values: {
-                  old: 1,
-                  new: 0,
+                  old: true,
+                  new: false,
                 },
               },
             ],
@@ -366,8 +366,8 @@ describe('given an LDClient with test data', () => {
               {
                 key: 'error',
                 values: {
-                  old: 0,
-                  new: 1,
+                  old: false,
+                  new: true,
                 },
               },
             ],
@@ -392,8 +392,8 @@ describe('given an LDClient with test data', () => {
               {
                 key: 'error',
                 values: {
-                  old: 1,
-                  new: 1,
+                  old: true,
+                  new: true,
                 },
               },
             ],
@@ -417,8 +417,8 @@ describe('given an LDClient with test data', () => {
               {
                 key: 'error',
                 values: {
-                  old: 1,
-                  new: 0,
+                  old: true,
+                  new: false,
                 },
               },
             ],
@@ -443,8 +443,8 @@ describe('given an LDClient with test data', () => {
               {
                 key: 'error',
                 values: {
-                  old: 0,
-                  new: 1,
+                  old: false,
+                  new: true,
                 },
               },
             ],
@@ -474,8 +474,8 @@ it('ignores invalid measurement keys', () => {
         // @ts-ignore
         key: 'bad',
         values: {
-          old: 1,
-          new: 2,
+          old: true,
+          new: false,
         },
       },
     ],
@@ -517,7 +517,7 @@ it('invalid data types are filtered', () => {
         values: {
           // @ts-ignore
           old: {},
-          new: 2,
+          new: true,
         },
       },
     ],
