@@ -10,6 +10,9 @@ import { Rollout } from '../evaluation/data/Rollout';
 import { Segment } from '../evaluation/data/Segment';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 
+// The max size where we use an array instead of a set.
+const TARGET_LIST_ARRAY_CUTOFF = 100;
+
 /**
  * @internal
  */
@@ -128,27 +131,27 @@ export function processFlag(flag: Flag) {
  * @internal
  */
 export function processSegment(segment: Segment) {
-  if (segment?.included?.length && segment.included.length > 100) {
+  if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
     segment.includedSet = new Set(segment.included);
     delete segment.included;
   }
-  if (segment?.excluded?.length && segment.excluded.length > 100) {
+  if (segment?.excluded?.length && segment.excluded.length > TARGET_LIST_ARRAY_CUTOFF) {
     segment.excludedSet = new Set(segment.excluded);
     delete segment.excluded;
   }
 
-  if (segment?.includedContexts?.length && segment.includedContexts.length > 100) {
+  if (segment?.includedContexts?.length) {
     segment.includedContexts.forEach((target) => {
-      if (target?.values?.length && target.values.length > 100) {
+      if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
         target.valuesSet = new Set(target.values);
         target.values = [];
       }
     });
   }
 
-  if (segment?.excludedContexts?.length && segment.excludedContexts.length > 100) {
+  if (segment?.excludedContexts?.length) {
     segment.excludedContexts.forEach((target) => {
-      if (target?.values?.length && target.values.length > 100) {
+      if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
         target.valuesSet = new Set(target.values);
         target.values = [];
       }
