@@ -27,7 +27,7 @@ Refer to [Using DynamoDB as a persistent feature store](https://docs.launchdarkl
 
 2. Install this package with `npm` or `yarn`:
 
-`npm install launchdarkly-node-server-sdk-dynamodb --save`
+`npm install @launchdarkly/node-server-sdk-dynamodb --save`
 
 3. If your application does not already have its own dependency on the `@aws-sdk/client-dynamodb` package, and if it will _not_ be running in AWS Lambda, add `@aws-sdk/client-dynamodb` as well:
 
@@ -38,13 +38,13 @@ The `launchdarkly-node-server-sdk-dynamodb` package does not provide `@aws-sdk/c
 4. Import the package:
 
 ```typescript
-const { DynamoDBFeatureStoreFactory } = require('launchdarkly-node-server-sdk-dynamodb');
+const { DynamoDBFeatureStore } = require('launchdarkly-node-server-sdk-dynamodb');
 ```
 
 5. When configuring your SDK client, add the DynamoDB feature store:
 
 ```typescript
-const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME');
+const store = DynamoDBFeatureStore('YOUR TABLE NAME');
 const config = { featureStore: store };
 const client = LaunchDarkly.init('YOUR SDK KEY', config);
 ```
@@ -52,14 +52,14 @@ const client = LaunchDarkly.init('YOUR SDK KEY', config);
 By default, the DynamoDB client will try to get your AWS credentials and region name from environment variables and/or local configuration files, as described in the AWS SDK documentation. You can also specify any valid [DynamoDB client options](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property) like this:
 
 ```typescript
-const dynamoDBOptions = { accessKeyId: 'YOUR KEY', secretAccessKey: 'YOUR SECRET' };
-const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME', { clientOptions: dynamoDBOptions });
+const dynamoDBOptions = { credentials: { accessKeyId: 'YOUR KEY', secretAccessKey: 'YOUR SECRET' }};
+const store = DynamoDBFeatureStore('YOUR TABLE NAME', { clientOptions: dynamoDBOptions });
 ```
 
 Alternatively, if you already have a fully configured DynamoDB client object, you can tell LaunchDarkly to use that:
 
 ```typescript
-const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME', {
+const store = DynamoDBFeatureStore('YOUR TABLE NAME', {
   dynamoDBClient: myDynamoDBClientInstance,
 });
 ```
@@ -74,7 +74,7 @@ const client = LaunchDarkly.init('YOUR SDK KEY', config);
 7. If the same DynamoDB table is being shared by SDK clients for different LaunchDarkly environments, set the `prefix` option to a different short string for each one to keep the keys from colliding:
 
 ```typescript
-const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME', { prefix: 'env1' });
+const store = DynamoDBFeatureStore('YOUR TABLE NAME', { prefix: 'env1' });
 ```
 
 ## Caching behavior
@@ -82,7 +82,7 @@ const store = DynamoDBFeatureStoreFactory('YOUR TABLE NAME', { prefix: 'env1' })
 To reduce traffic to DynamoDB, there is an optional in-memory cache that retains the last known data for a configurable amount of time. This is on by default; to turn it off (and guarantee that the latest feature flag data will always be retrieved from DynamoDB for every flag evaluation), configure the store as follows:
 
 ```typescript
-const factory = DynamoDBFeatureStoreFactory({ cacheTTL: 0 });
+const factory = DynamoDBFeatureStore({ cacheTTL: 0 });
 ```
 
 ## Contributing
