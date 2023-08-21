@@ -2,15 +2,15 @@ import { Platform } from '../../api';
 import { DiagnosticId, DiagnosticInitEvent, DiagnosticStatsEvent, StreamInitData } from './types';
 
 export default class DiagnosticsManager {
-  private startTime: number;
+  private readonly startTime: number;
   private streamInits: StreamInitData[] = [];
-  private id: DiagnosticId;
+  private readonly id: DiagnosticId;
   private dataSinceDate: number;
 
   constructor(
     sdkKey: string,
-    private readonly config: any,
     private readonly platform: Platform,
+    private readonly diagnosticInitConfig: any,
   ) {
     this.startTime = Date.now();
     this.dataSinceDate = this.startTime;
@@ -33,30 +33,7 @@ export default class DiagnosticsManager {
       id: this.id,
       creationDate: this.startTime,
       sdk: sdkData,
-      configuration: this.config,
-      // configuration: {
-      //   customBaseURI: this.config.serviceEndpoints.polling !== defaultBaseUri,
-      //   customStreamURI: this.config.serviceEndpoints.streaming !== defaultStreamUri,
-      //   customEventsURI: this.config.serviceEndpoints.events !== defaultEventsUri,
-      //   eventsCapacity: this.config.eventsCapacity,
-      //   // Node doesn't distinguish between these two kinds of timeouts. It is unlikely other web
-      //   // based implementations would be able to either.
-      //   connectTimeoutMillis: secondsToMillis(this.config.timeout),
-      //   socketTimeoutMillis: secondsToMillis(this.config.timeout),
-      //   eventsFlushIntervalMillis: secondsToMillis(this.config.flushInterval),
-      //   pollingIntervalMillis: secondsToMillis(this.config.pollInterval),
-      //   reconnectTimeMillis: secondsToMillis(this.config.streamInitialReconnectDelay),
-      //   streamingDisabled: !this.config.stream,
-      //   usingRelayDaemon: this.config.useLdd,
-      //   offline: this.config.offline,
-      //   allAttributesPrivate: this.config.allAttributesPrivate,
-      //   contextKeysCapacity: this.config.contextKeysCapacity,
-      //   contextKeysFlushIntervalMillis: secondsToMillis(this.config.contextKeysFlushInterval),
-      //   usingProxy: !!this.platform.requests.usingProxy?.(),
-      //   usingProxyAuthenticator: !!this.platform.requests.usingProxyAuth?.(),
-      //   diagnosticRecordingIntervalMillis: secondsToMillis(this.config.diagnosticRecordingInterval),
-      //   dataStoreType: this.featureStore.getDescription?.() ?? 'memory',
-      // },
+      configuration: this.diagnosticInitConfig,
       platform: {
         name: platformData.name,
         osArch: platformData.os?.arch,

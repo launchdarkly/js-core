@@ -15,7 +15,8 @@ describe('given a diagnostics manager', () => {
   });
 
   beforeEach(() => {
-    manager = new DiagnosticsManager('my-sdk-key', {}, basicPlatform);
+    const diagnosticInitConfig = {};
+    manager = new DiagnosticsManager('my-sdk-key', basicPlatform, diagnosticInitConfig);
   });
 
   afterEach(() => {
@@ -29,8 +30,8 @@ describe('given a diagnostics manager', () => {
 
   it('creates random UUID', () => {
     const { id } = manager.createInitEvent();
-
-    const manager2 = new DiagnosticsManager('my-sdk-key', {}, basicPlatform);
+    const diagnosticInitConfig2 = {};
+    const manager2 = new DiagnosticsManager('my-sdk-key', basicPlatform, diagnosticInitConfig2);
     const { id: id2 } = manager2.createInitEvent();
     expect(id.diagnosticId).toBeTruthy();
     expect(id2.diagnosticId).toBeTruthy();
@@ -175,7 +176,7 @@ describe.each([
 
   beforeEach(() => {
     jest.spyOn(Date, 'now').mockImplementation(() => 7777);
-    manager = new DiagnosticsManager('my-sdk-key', configIn, basicPlatform);
+    manager = new DiagnosticsManager('my-sdk-key', basicPlatform, configIn);
   });
 
   afterEach(() => {
@@ -195,7 +196,7 @@ describe.each([true, false])('Given proxy and proxy auth=%p', (auth) => {
     jest.spyOn(Date, 'now').mockImplementation(() => 7777);
     jest.spyOn(basicPlatform.requests, 'usingProxy').mockImplementation(() => true);
     jest.spyOn(basicPlatform.requests, 'usingProxyAuth').mockImplementation(() => auth);
-    manager = new DiagnosticsManager('my-sdk-key', {}, basicPlatform);
+    manager = new DiagnosticsManager('my-sdk-key', basicPlatform, {});
   });
 
   afterEach(() => {
