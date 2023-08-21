@@ -5,7 +5,6 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
-import shouldSample from '../../internal/events/sampling';
 import ClientContext from '../../options/ClientContext';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify, isMigration } from './guards';
@@ -13,6 +12,7 @@ import InputEvent from './InputEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
 import InputMigrationEvent from './InputMigrationEvent';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
+import shouldSample from './sampling';
 
 type FilteredContext = any;
 

@@ -30,12 +30,10 @@ import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
 import shouldSample from '../../../src/internal/events/sampling';
 
-jest.mock('../../../src/internal/events/sampling', () => {
-  return {
-    __esModule: true,
-    default: jest.fn(() => true),
-  };
-});
+jest.mock('../../../src/internal/events/sampling', () => ({
+  __esModule: true,
+  default: jest.fn(() => true),
+}));
 
 const user = { key: 'userKey', name: 'Red' };
 const userWithFilteredName = {
@@ -349,7 +347,7 @@ describe('given an event processor', () => {
 
   it('excludes feature events that are not sampled', async () => {
     // @ts-ignore
-    shouldSample.mockImplementation((ratio) => (ratio === 2 ? false : true));
+    shouldSample.mockImplementation((ratio) => ratio !== 2);
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent({
       kind: 'feature',
@@ -383,7 +381,7 @@ describe('given an event processor', () => {
 
   it('excludes index events that are not sampled', async () => {
     // @ts-ignore
-    shouldSample.mockImplementation((ratio) => (ratio === 2 ? true : false));
+    shouldSample.mockImplementation((ratio) => ratio === 2);
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent({
       kind: 'feature',
@@ -737,7 +735,7 @@ describe('given an event processor', () => {
 
   it('does not queue a custom event that is not sampled', async () => {
     // @ts-ignore
-    shouldSample.mockImplementation((ratio) => (ratio === 2 ? false : true));
+    shouldSample.mockImplementation((ratio) => ratio !== 2);
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent({
       kind: 'custom',
@@ -763,7 +761,7 @@ describe('given an event processor', () => {
 
   it('does not queue a index event that is not sampled with a custom event', async () => {
     // @ts-ignore
-    shouldSample.mockImplementation((ratio) => (ratio === 2 ? true : false));
+    shouldSample.mockImplementation((ratio) => ratio === 2);
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent({
       kind: 'custom',
