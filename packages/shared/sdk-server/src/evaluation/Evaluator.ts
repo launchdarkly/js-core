@@ -145,7 +145,9 @@ export default class Evaluator {
     return new Promise<EvalResult>((resolve) => {
       // If a cache is provided, then ensure it can be populated.
       if (cache) {
+        // eslint-disable-next-line no-param-reassign
         cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined; res: EvalResult }>();
+        // eslint-disable-next-line no-param-reassign
         cache.segments = cache.segments ?? new Map<string, MatchOrError | MissingMarker>();
       }
       const state: EvalState = {
@@ -180,7 +182,9 @@ export default class Evaluator {
   ) {
     // If a cache is provided, then ensure it can be populated.
     if (cache) {
+      // eslint-disable-next-line no-param-reassign
       cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined; res: EvalResult }>();
+      // eslint-disable-next-line no-param-reassign
       cache.segments = cache.segments ?? new Map<string, MatchOrError | MissingMarker>();
     }
     const state: EvalState = {
@@ -310,14 +314,17 @@ export default class Evaluator {
 
           if (res.isError) {
             prereqResult = res;
-            return iterCb(false);
+            iterCb(false);
+            return;
           }
 
           if (res.isOff || res.detail.variationIndex !== prereq.variation) {
             prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-            return iterCb(false);
+            iterCb(false);
+            return;
           }
-          return iterCb(true);
+          iterCb(true);
+          return;
         }
         if (visitedFlags.indexOf(prereq.key) !== -1) {
           prereqResult = EvalResult.forError(
