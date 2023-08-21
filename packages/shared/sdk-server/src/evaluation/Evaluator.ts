@@ -89,6 +89,11 @@ interface EvalState {
 
   bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
 
+  /**
+   * Caches result of segment and flag evaluations. Must ONLY be used for `allFlagsState`. This
+   * is because `allFlagsState` does not emit events. Using the eval cache would cause prerequisites
+   * of prerequisites to not emit events after the first evaluation.
+   */
   cache?: EvalCache
 }
 
