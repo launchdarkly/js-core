@@ -7,8 +7,8 @@ import {
   Crypto,
   Hasher,
   Hmac,
+  internal,
   LDContext,
-  mocks,
 } from '@launchdarkly/js-sdk-common';
 
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
@@ -21,6 +21,8 @@ import {
   makeClauseThatMatchesUser,
   makeFlagWithSegmentMatch,
 } from './flags';
+
+const { mocks } = internal;
 
 const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };

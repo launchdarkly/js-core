@@ -4,7 +4,6 @@ import {
   EventSourceInitDict,
   Info,
   internal,
-  mocks,
   Options,
   PlatformData,
   Requests,
@@ -20,6 +19,8 @@ import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import TestLogger, { LogLevel } from '../Logger';
+
+const { mocks } = internal;
 
 const sdkKey = 'my-sdk-key';
 

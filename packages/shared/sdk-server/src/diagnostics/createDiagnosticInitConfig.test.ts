@@ -1,12 +1,15 @@
 import { internal } from '@launchdarkly/js-sdk-common';
-import platform from '@launchdarkly/js-sdk-common/dist/internal/mocks/platform';
 
+import { LDOptions } from '../api';
+import Configuration from '../options/Configuration';
 import createDiagnosticInitConfig from './createDiagnosticInitConfig';
 
-const { mocks } = internal;
+const {
+  mocks: { basicPlatform },
+} = internal;
 
 const mockFeatureStore = {
-  getDescription: () => 'Mock Feature Store',
+  getDescription: jest.fn(() => 'Mock Feature Store'),
 };
 
 describe.only.each([
@@ -18,7 +21,7 @@ describe.only.each([
       customBaseURI: false,
       customEventsURI: false,
       customStreamURI: false,
-      dataStoreType: 'memory',
+      dataStoreType: 'Mock Feature Store',
       diagnosticRecordingIntervalMillis: 900000,
       eventsCapacity: 10000,
       eventsFlushIntervalMillis: 5000,
@@ -68,10 +71,13 @@ describe.only.each([
   [{ contextKeysCapacity: 111 }, { contextKeysCapacity: 111 }],
   [{ contextKeysFlushInterval: 33 }, { contextKeysFlushIntervalMillis: 33000 }],
   [{ useLdd: true }, { usingRelayDaemon: true }],
-  [{ featureStore: mockFeatureStore }, { dataStoreType: 'Mock Feature Store' }],
-])('given diagnostics managers with different configurations', (configIn, configOut) => {
+  [{ featureStore: undefined }, { dataStoreType: 'memory' }],
+])('given diagnostics managers with different configurations', (optionsIn, configOut) => {
+  let configuration: Configuration;
+
   beforeEach(() => {
     jest.spyOn(Date, 'now').mockImplementation(() => 7777);
+    configuration = new Configuration(optionsIn as LDOptions);
   });
 
   afterEach(() => {
@@ -79,9 +85,9 @@ describe.only.each([
   });
 
   it('translates the configuration correctly', () => {
-    // @ts-ignore
-    const initConfig = createDiagnosticInitConfig(configIn, platform, mockFeatureStore);
-    expect(initConfig).toMatchObject(configOut);
+    const c = createDiagnosticInitConfig(configuration, basicPlatform, mockFeatureStore as any);
+
+    expect(c).toMatchObject(configOut);
   });
 });
 
@@ -99,7 +105,7 @@ describe.only.each([
 //     jest.resetAllMocks();
 //   });
 //
-//   it('it gets the proxy configuration from the platform', () => {
+//   it('it gets the proxy configuration from the basicPlatform', () => {
 //     const event = manager.createInitEvent();
 //     expect(event.configuration).toMatchObject({
 //       usingProxy: true,

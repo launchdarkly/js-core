@@ -3,7 +3,7 @@ import {
   EventSource,
   EventSourceInitDict,
   Headers,
-  mocks,
+  internal,
   Options,
   Requests,
   Response,
@@ -12,6 +12,8 @@ import {
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
+
+const { mocks } = internal;
 
 describe('given a requestor', () => {
   let requestor: Requestor;

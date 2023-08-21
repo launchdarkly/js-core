@@ -9,7 +9,6 @@ import {
   Hmac,
   Info,
   internal,
-  mocks,
   Options,
   PlatformData,
   Requests,
@@ -20,6 +19,8 @@ import {
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
+
+const { mocks } = internal;
 
 const SDK_KEY = 'sdk-key';
 
