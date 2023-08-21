@@ -21,6 +21,6 @@ export interface Segment extends Versioned {
 
   // When there are a large number targets for a segment then
   // we put them into sets during de-serialization.
-  includedSet?: Set<string>;
-  excludedSet?: Set<string>;
+  generated_includedSet?: Set<string>;
+  generated_excludedSet?: Set<string>;
 }

@@ -54,28 +54,28 @@ export function replacer(this: any, key: string, value: any): any {
       return undefined;
     }
   }
-  if (value.includedSet) {
-    value.included = [...value.includedSet];
-    delete value.includedSet;
+  if (value.generated_includedSet) {
+    value.included = [...value.generated_includedSet];
+    delete value.generated_includedSet;
   }
-  if (value.excludedSet) {
-    value.excluded = [...value.excludedSet];
-    delete value.excludedSet;
+  if (value.generated_excludedSet) {
+    value.excluded = [...value.generated_excludedSet];
+    delete value.generated_excludedSet;
   }
   if (value.includedContexts) {
     value.includedContexts.forEach((target: any) => {
-      if (target.valuesSet) {
-        target.values = [...target.valuesSet];
+      if (target.generated_valuesSet) {
+        target.values = [...target.generated_valuesSet];
       }
-      delete target.valuesSet;
+      delete target.generated_valuesSet;
     });
   }
   if (value.excludedContexts) {
     value.excludedContexts.forEach((target: any) => {
-      if (target.valuesSet) {
-        target.values = [...target.valuesSet];
+      if (target.generated_valuesSet) {
+        target.values = [...target.generated_valuesSet];
       }
-      delete target.valuesSet;
+      delete target.generated_valuesSet;
     });
   }
   return value;
@@ -132,18 +132,18 @@ export function processFlag(flag: Flag) {
  */
 export function processSegment(segment: Segment) {
   if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
-    segment.includedSet = new Set(segment.included);
+    segment.generated_includedSet = new Set(segment.included);
     delete segment.included;
   }
   if (segment?.excluded?.length && segment.excluded.length > TARGET_LIST_ARRAY_CUTOFF) {
-    segment.excludedSet = new Set(segment.excluded);
+    segment.generated_excludedSet = new Set(segment.excluded);
     delete segment.excluded;
   }
 
   if (segment?.includedContexts?.length) {
     segment.includedContexts.forEach((target) => {
       if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
-        target.valuesSet = new Set(target.values);
+        target.generated_valuesSet = new Set(target.values);
         target.values = [];
       }
     });
@@ -152,7 +152,7 @@ export function processSegment(segment: Segment) {
   if (segment?.excludedContexts?.length) {
     segment.excludedContexts.forEach((target) => {
       if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
-        target.valuesSet = new Set(target.values);
+        target.generated_valuesSet = new Set(target.values);
         target.values = [];
       }
     });

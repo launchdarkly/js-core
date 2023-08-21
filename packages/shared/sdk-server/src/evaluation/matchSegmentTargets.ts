@@ -14,9 +14,9 @@ function segmentSearch(
       const target = contextTargets[targetIndex];
       const key = context.key(target.contextKind);
       if (key) {
-        if (target.valuesSet) {
-          // Only check valuesSet if present.
-          if (target.valuesSet.has(key)) {
+        if (target.generated_valuesSet) {
+          // Only check generated_valuesSet if present.
+          if (target.generated_valuesSet.has(key)) {
             return true;
           }
         } else if (target.values.includes(key)) {
@@ -52,7 +52,7 @@ export default function matchSegmentTargets(
     context,
     segment.includedContexts,
     segment.included,
-    segment.includedSet,
+    segment.generated_includedSet,
   );
   if (included) {
     return true;
@@ -61,7 +61,7 @@ export default function matchSegmentTargets(
     context,
     segment.excludedContexts,
     segment.excluded,
-    segment.excludedSet,
+    segment.generated_excludedSet,
   );
   if (excluded) {
     // The match was an exclusion, so it should be negated.
