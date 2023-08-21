@@ -304,26 +304,32 @@ export default class LDClientImpl implements LDClient {
                 iterCb(true);
                 return;
               }
-              this.evaluator.evaluateCb(flag, evalContext, (res) => {
-                if (res.isError) {
-                  this.onError(
-                    new Error(
-                      `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
-                    ),
+              this.evaluator.evaluateCb(
+                flag,
+                evalContext,
+                (res) => {
+                  if (res.isError) {
+                    this.onError(
+                      new Error(
+                        `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
+                      ),
+                    );
+                  }
+                  const requireExperimentData = isExperiment(flag, res.detail.reason);
+                  builder.addFlag(
+                    flag,
+                    res.detail.value,
+                    res.detail.variationIndex ?? undefined,
+                    res.detail.reason,
+                    flag.trackEvents || requireExperimentData,
+                    requireExperimentData,
+                    detailsOnlyIfTracked,
                   );
-                }
-                const requireExperimentData = isExperiment(flag, res.detail.reason);
-                builder.addFlag(
-                  flag,
-                  res.detail.value,
-                  res.detail.variationIndex ?? undefined,
-                  res.detail.reason,
-                  flag.trackEvents || requireExperimentData,
-                  requireExperimentData,
-                  detailsOnlyIfTracked,
-                );
-                iterCb(true);
-              }, undefined, cache);
+                  iterCb(true);
+                },
+                undefined,
+                cache,
+              );
             },
             () => {
               const res = builder.build();

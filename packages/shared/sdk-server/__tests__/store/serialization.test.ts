@@ -342,8 +342,8 @@ it('given bad json', () => {
 });
 
 it('deserialization creates a set for a large number of includes/excludes', () => {
-  const included = [ ...Array(500).keys() ].map(i => (i+1).toString());
-  const excluded = [ ...Array(500).keys() ].map(i => (i+10).toString());
+  const included = [...Array(500).keys()].map((i) => (i + 1).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 10).toString());
 
   const jsonString = makeSerializedPatchData(undefined, {
     key: 'test-segment-1',
@@ -367,15 +367,15 @@ it('deserialization creates a set for a large number of includes/excludes', () =
 });
 
 it('deserialization creates a set for a large number of included/excluded context values', () => {
-  const included = [ ...Array(500).keys() ].map(i => (i+10).toString());
-  const excluded = [ ...Array(500).keys() ].map(i => (i+1).toString());
+  const included = [...Array(500).keys()].map((i) => (i + 10).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 1).toString());
 
   const jsonString = makeSerializedPatchData(undefined, {
     key: 'test-segment-1',
     included: [],
     excluded: [],
-    includedContexts: [{contextKind: 'org', values: included}],
-    excludedContexts: [{contextKind: 'user', values: excluded}],
+    includedContexts: [{ contextKind: 'org', values: included }],
+    excludedContexts: [{ contextKind: 'user', values: excluded }],
     salt: 'saltyA',
     rules: [],
     version: 0,
@@ -390,8 +390,8 @@ it('deserialization creates a set for a large number of included/excluded contex
 });
 
 it('serialization converts sets back to arrays for included/excluded', () => {
-  const included = [ ...Array(500).keys() ].map(i => (i+1).toString());
-  const excluded = [ ...Array(500).keys() ].map(i => (i+10).toString());
+  const included = [...Array(500).keys()].map((i) => (i + 1).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 10).toString());
 
   const jsonString = makeSerializedPatchData(undefined, {
     key: 'test-segment-1',
@@ -419,15 +419,15 @@ it('serialization converts sets back to arrays for included/excluded', () => {
 });
 
 it('serialization converts sets back to arrays for includedContexts/excludedContexts', () => {
-  const included = [ ...Array(500).keys() ].map(i => (i+1).toString());
-  const excluded = [ ...Array(500).keys() ].map(i => (i+10).toString());
+  const included = [...Array(500).keys()].map((i) => (i + 1).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 10).toString());
 
   const jsonString = makeSerializedPatchData(undefined, {
     key: 'test-segment-1',
     included: [],
     excluded: [],
-    includedContexts: [{contextKind: 'org', values: included}],
-    excludedContexts: [{contextKind: 'user', values: excluded}],
+    includedContexts: [{ contextKind: 'org', values: included }],
+    excludedContexts: [{ contextKind: 'user', values: excluded }],
     salt: 'saltyA',
     rules: [],
     version: 0,
@@ -446,4 +446,3 @@ it('serialization converts sets back to arrays for includedContexts/excludedCont
   expect(jsonDeserialized.includedContexts[0].generated_valuesSet).toBeUndefined();
   expect(jsonDeserialized.excludedContexts[0].generated_valuesSet).toBeUndefined();
 });
-

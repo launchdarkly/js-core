@@ -65,7 +65,6 @@ function computeUpdatedBigSegmentsStatus(
   return latest;
 }
 
-
 interface MissingMarker {
   isMissing: true;
 }
@@ -78,7 +77,7 @@ function isMissingMarker(u: unknown): u is MissingMarker {
 }
 
 export interface EvalCache {
-  flags?: Map<string, { flag: Flag | undefined, res: EvalResult }>;
+  flags?: Map<string, { flag: Flag | undefined; res: EvalResult }>;
   segments?: Map<string, MatchOrError | MissingMarker>;
 }
 
@@ -94,7 +93,7 @@ interface EvalState {
    * is because `allFlagsState` does not emit events. Using the eval cache would cause prerequisites
    * of prerequisites to not emit events after the first evaluation.
    */
-  cache?: EvalCache
+  cache?: EvalCache;
 }
 
 interface Match {
@@ -137,15 +136,20 @@ export default class Evaluator {
     this.bucketer = new Bucketer(platform.crypto);
   }
 
-  async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory, cache?: EvalCache,): Promise<EvalResult> {
+  async evaluate(
+    flag: Flag,
+    context: Context,
+    eventFactory?: EventFactory,
+    cache?: EvalCache,
+  ): Promise<EvalResult> {
     return new Promise<EvalResult>((resolve) => {
       // If a cache is provided, then ensure it can be populated.
       if (cache) {
-        cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined, res: EvalResult }>();
+        cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined; res: EvalResult }>();
         cache.segments = cache.segments ?? new Map<string, MatchOrError | MissingMarker>();
       }
       const state: EvalState = {
-        cache
+        cache,
       };
       this.evaluateInternal(
         flag,
@@ -176,11 +180,11 @@ export default class Evaluator {
   ) {
     // If a cache is provided, then ensure it can be populated.
     if (cache) {
-      cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined, res: EvalResult }>();
+      cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined; res: EvalResult }>();
       cache.segments = cache.segments ?? new Map<string, MatchOrError | MissingMarker>();
     }
     const state: EvalState = {
-      cache
+      cache,
     };
     this.evaluateInternal(
       flag,
@@ -301,9 +305,7 @@ export default class Evaluator {
           state.events = state.events ?? [];
 
           if (eventFactory) {
-            state.events.push(
-              eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag),
-            );
+            state.events.push(eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag));
           }
 
           if (res.isError) {
@@ -321,7 +323,7 @@ export default class Evaluator {
           prereqResult = EvalResult.forError(
             ErrorKinds.MalformedFlag,
             `Prerequisite of ${flag.key} causing a circular reference.` +
-            ' This is probably a temporary condition due to an incomplete update.',
+              ' This is probably a temporary condition due to an incomplete update.',
           );
           iterCb(true);
           return;
@@ -431,7 +433,7 @@ export default class Evaluator {
                 errorResult = EvalResult.forError(
                   ErrorKinds.MalformedFlag,
                   `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
-                  'This is probably a temporary condition due to an incomplete update',
+                    'This is probably a temporary condition due to an incomplete update',
                 );
                 // There was an error, so stop checking further segments.
                 iterCb(true);
