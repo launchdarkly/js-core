@@ -144,6 +144,7 @@ export function processSegment(segment: Segment) {
     segment.includedContexts.forEach((target) => {
       if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
         target.generated_valuesSet = new Set(target.values);
+        // Currently typing is non-optional, so we don't delete it.
         target.values = [];
       }
     });
@@ -153,6 +154,7 @@ export function processSegment(segment: Segment) {
     segment.excludedContexts.forEach((target) => {
       if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
         target.generated_valuesSet = new Set(target.values);
+        // Currently typing is non-optional, so we don't delete it.
         target.values = [];
       }
     });
