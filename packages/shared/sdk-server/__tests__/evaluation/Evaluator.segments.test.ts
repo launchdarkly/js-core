@@ -34,12 +34,14 @@ class TestQueries implements Queries {
     },
   ) {}
 
-  async getFlag(key: string): Promise<Flag | undefined> {
-    return this.data.flags?.find((flag) => flag.key === key);
+  getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
+    const res = this.data.flags?.find((flag) => flag.key === key);
+    cb(res);
   }
 
-  async getSegment(key: string): Promise<Segment | undefined> {
-    return this.data.segments?.find((segment) => segment.key === key);
+  getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
+    const res = this.data.segments?.find((segment) => segment.key === key);
+    cb(res);
   }
 
   getBigSegmentsMembership(

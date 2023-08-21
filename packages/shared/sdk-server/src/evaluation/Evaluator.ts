@@ -23,6 +23,15 @@ import { Queries } from './Queries';
 import Reasons from './Reasons';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
 
+/**
+ * PERFORMANCE NOTE: The evaluation algorithm uses callbacks instead of async/await to optimize
+ * performance. This is most important for collections where iterating through rules/clauses
+ * has substantial overhead if each iteration involves a promise. For evaluations which do not
+ * involve large collections the evaluation should not have to defer execution. Large collections
+ * cannot be iterated recursively because stack could become exhausted, when a collection is large
+ * we defer the execution of the iterations to prevent stack overflows.
+ */
+
 type BigSegmentStoreStatusString = 'HEALTHY' | 'STALE' | 'STORE_ERROR' | 'NOT_CONFIGURED';
 
 const bigSegmentsStatusPriority: Record<BigSegmentStoreStatusString, number> = {
@@ -56,7 +65,7 @@ function computeUpdatedBigSegmentsStatus(
   return latest;
 }
 
-class EvalState {
+interface EvalState {
   events?: internal.InputEvalEvent[];
 
   bigSegmentsStatus?: BigSegmentStoreStatusString;
@@ -64,20 +73,24 @@ class EvalState {
   bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
 }
 
-class Match {
-  public readonly error = false;
-
-  public readonly result?: EvalResult;
-
-  constructor(public readonly isMatch: boolean) {}
+interface Match {
+  error: false;
+  isMatch: boolean;
+  result: undefined;
 }
 
-class MatchError {
-  public readonly error = true;
+interface MatchError {
+  error: true;
+  isMatch: false;
+  result?: EvalResult;
+}
 
-  public readonly isMatch = false;
+function makeMatch(match: boolean): Match {
+  return { error: false, isMatch: match, result: undefined };
+}
 
-  constructor(public readonly result: EvalResult) {}
+function makeError(result: EvalResult): MatchError {
+  return { error: true, isMatch: false, result };
 }
 
 /**
@@ -101,13 +114,52 @@ export default class Evaluator {
   }
 
   async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
-    const state = new EvalState();
-    const res = await this.evaluateInternal(flag, context, state, [], eventFactory);
-    if (state.bigSegmentsStatus) {
-      res.detail.reason = { ...res.detail.reason, bigSegmentsStatus: state.bigSegmentsStatus };
-    }
-    res.events = state.events;
-    return res;
+    return new Promise<EvalResult>((resolve) => {
+      const state: EvalState = {};
+      this.evaluateInternal(
+        flag,
+        context,
+        state,
+        [],
+        (res) => {
+          if (state.bigSegmentsStatus) {
+            res.detail.reason = {
+              ...res.detail.reason,
+              bigSegmentsStatus: state.bigSegmentsStatus,
+            };
+          }
+          res.events = state.events;
+          resolve(res);
+        },
+        eventFactory,
+      );
+    });
+  }
+
+  evaluateCb(
+    flag: Flag,
+    context: Context,
+    cb: (res: EvalResult) => void,
+    eventFactory?: EventFactory,
+  ) {
+    const state: EvalState = {};
+    this.evaluateInternal(
+      flag,
+      context,
+      state,
+      [],
+      (res) => {
+        if (state.bigSegmentsStatus) {
+          res.detail.reason = {
+            ...res.detail.reason,
+            bigSegmentsStatus: state.bigSegmentsStatus,
+          };
+        }
+        res.events = state.events;
+        cb(res);
+      },
+      eventFactory,
+    );
   }
 
   /**
@@ -120,42 +172,50 @@ export default class Evaluator {
    * @param visitedFlags The flags that have been visited during this evaluation.
    * This is not part of the state, because it needs to be forked during prerequisite evaluations.
    */
-  private async evaluateInternal(
+  private evaluateInternal(
     flag: Flag,
     context: Context,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     visitedFlags: string[],
+    cb: (res: EvalResult) => void,
     eventFactory?: EventFactory,
-  ): Promise<EvalResult> {
+  ): void {
     if (!flag.on) {
-      return getOffVariation(flag, Reasons.Off);
+      cb(getOffVariation(flag, Reasons.Off));
+      return;
     }
 
-    const prereqResult = await this.checkPrerequisites(
+    this.checkPrerequisites(
       flag,
       context,
       state,
       visitedFlags,
+      (res) => {
+        // If there is a prereq result, then prereqs have failed, or there was
+        // an error.
+        if (res) {
+          cb(res);
+          return;
+        }
+
+        const targetRes = evalTargets(flag, context);
+        if (targetRes) {
+          cb(targetRes);
+          return;
+        }
+
+        this.evaluateRules(flag, context, state, (evalRes) => {
+          if (evalRes) {
+            cb(evalRes);
+            return;
+          }
+
+          cb(this.variationForContext(flag.fallthrough, context, flag, Reasons.Fallthrough));
+        });
+      },
       eventFactory,
     );
-    // If there is a prereq result, then prereqs have failed, or there was
-    // an error.
-    if (prereqResult) {
-      return prereqResult;
-    }
-
-    const targetRes = evalTargets(flag, context);
-    if (targetRes) {
-      return targetRes;
-    }
-
-    const ruleRes = await this.evaluateRules(flag, context, state);
-    if (ruleRes) {
-      return ruleRes;
-    }
-
-    return this.variationForContext(flag.fallthrough, context, flag, Reasons.Fallthrough);
   }
 
   /**
@@ -164,77 +224,81 @@ export default class Evaluator {
    * @param context The context to evaluate the prerequisites against.
    * @param state used to accumulate prerequisite events.
    * @param visitedFlags Used to detect cycles in prerequisite evaluation.
-   * @returns An {@link EvalResult} containing an error result or `undefined` if the prerequisites
+   * @param cb A callback which is executed when prerequisite checks are complete it is called with
+   * an {@link EvalResult} containing an error result or `undefined` if the prerequisites
    * are met.
    */
-  private async checkPrerequisites(
+  private checkPrerequisites(
     flag: Flag,
     context: Context,
     state: EvalState,
     visitedFlags: string[],
+    cb: (res: EvalResult | undefined) => void,
     eventFactory?: EventFactory,
-  ): Promise<EvalResult | undefined> {
+  ): void {
     let prereqResult: EvalResult | undefined;
 
     if (!flag.prerequisites || !flag.prerequisites.length) {
-      return undefined;
+      cb(undefined);
+      return;
     }
 
     // On any error conditions the prereq result will be set, so we do not need
     // the result of the series evaluation.
-    await allSeriesAsync(flag.prerequisites, async (prereq) => {
-      if (visitedFlags.indexOf(prereq.key) !== -1) {
-        prereqResult = EvalResult.forError(
-          ErrorKinds.MalformedFlag,
-          `Prerequisite of ${flag.key} causing a circular reference.` +
-            ' This is probably a temporary condition due to an incomplete update.',
-        );
-        return false;
-      }
-      const updatedVisitedFlags = [...visitedFlags, prereq.key];
-      const prereqFlag = await this.queries.getFlag(prereq.key);
+    allSeriesAsync(
+      flag.prerequisites,
+      (prereq, _index, iterCb) => {
+        if (visitedFlags.indexOf(prereq.key) !== -1) {
+          prereqResult = EvalResult.forError(
+            ErrorKinds.MalformedFlag,
+            `Prerequisite of ${flag.key} causing a circular reference.` +
+              ' This is probably a temporary condition due to an incomplete update.',
+          );
+          iterCb(true);
+          return;
+        }
+        const updatedVisitedFlags = [...visitedFlags, prereq.key];
+        this.queries.getFlag(prereq.key, (prereqFlag) => {
+          if (!prereqFlag) {
+            prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+            iterCb(false);
+            return;
+          }
 
-      if (!prereqFlag) {
-        prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-        return false;
-      }
+          this.evaluateInternal(
+            prereqFlag,
+            context,
+            state,
+            updatedVisitedFlags,
+            (res) => {
+              // eslint-disable-next-line no-param-reassign
+              state.events = state.events ?? [];
 
-      const evalResult = await this.evaluateInternal(
-        prereqFlag,
-        context,
-        state,
-        updatedVisitedFlags,
-        eventFactory,
-      );
+              if (eventFactory) {
+                state.events.push(
+                  eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag),
+                );
+              }
 
-      // eslint-disable-next-line no-param-reassign
-      state.events = state.events ?? [];
+              if (res.isError) {
+                prereqResult = res;
+                return iterCb(false);
+              }
 
-      if (eventFactory) {
-        state.events.push(
-          eventFactory.evalEvent(prereqFlag, context, evalResult.detail, null, flag),
-        );
-      }
-
-      if (evalResult.isError) {
-        prereqResult = evalResult;
-        return false;
-      }
-
-      if (evalResult.isOff || evalResult.detail.variationIndex !== prereq.variation) {
-        prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-        return false;
-      }
-      return true;
-    });
-
-    if (prereqResult) {
-      return prereqResult;
-    }
-
-    // There were no prereqResults for errors or failed prerequisites.
-    // So they have all passed.
-    return undefined;
+              if (res.isOff || res.detail.variationIndex !== prereq.variation) {
+                prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+                return iterCb(false);
+              }
+              return iterCb(true);
+            },
+            eventFactory,
+          );
+        });
+      },
+      () => {
+        cb(prereqResult);
+      },
+    );
   }
 
   /**
@@ -243,69 +307,87 @@ export default class Evaluator {
    * @param flag The flag to evaluate rules for.
    * @param context The context to evaluate the rules against.
    * @param state The current evaluation state.
-   * @returns
+   * @param cb Callback called when rule evaluation is complete, it will be called with either
+   * an {@link EvalResult} or 'undefined'.
    */
-  private async evaluateRules(
+  private evaluateRules(
     flag: Flag,
     context: Context,
     state: EvalState,
-  ): Promise<EvalResult | undefined> {
+    cb: (res: EvalResult | undefined) => void,
+  ): void {
     let ruleResult: EvalResult | undefined;
 
-    await firstSeriesAsync(flag.rules, async (rule, ruleIndex) => {
-      ruleResult = await this.ruleMatchContext(flag, rule, ruleIndex, context, state, []);
-      return !!ruleResult;
-    });
-
-    return ruleResult;
+    firstSeriesAsync(
+      flag.rules,
+      (rule, ruleIndex, iterCb: (res: boolean) => void) => {
+        this.ruleMatchContext(flag, rule, ruleIndex, context, state, [], (res) => {
+          ruleResult = res;
+          iterCb(!!res);
+        });
+      },
+      () => cb(ruleResult),
+    );
   }
 
-  private async clauseMatchContext(
+  private clauseMatchContext(
     clause: Clause,
     context: Context,
     segmentsVisited: string[],
     state: EvalState,
-  ): Promise<MatchOrError> {
+    cb: (res: MatchOrError) => void,
+  ): void {
     let errorResult: EvalResult | undefined;
     if (clause.op === 'segmentMatch') {
-      const match = await firstSeriesAsync(clause.values, async (value) => {
-        const segment = await this.queries.getSegment(value);
-        if (segment) {
-          if (segmentsVisited.includes(segment.key)) {
-            errorResult = EvalResult.forError(
-              ErrorKinds.MalformedFlag,
-              `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
-                'This is probably a temporary condition due to an incomplete update',
-            );
-            // There was an error, so stop checking further segments.
-            return true;
+      firstSeriesAsync(
+        clause.values,
+        (value, _index, iterCb) => {
+          this.queries.getSegment(value, (segment) => {
+            if (segment) {
+              if (segmentsVisited.includes(segment.key)) {
+                errorResult = EvalResult.forError(
+                  ErrorKinds.MalformedFlag,
+                  `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
+                    'This is probably a temporary condition due to an incomplete update',
+                );
+                // There was an error, so stop checking further segments.
+                iterCb(true);
+                return;
+              }
+
+              const newVisited = [...segmentsVisited, segment?.key];
+              this.segmentMatchContext(segment, context, state, newVisited, (res) => {
+                if (res.error) {
+                  errorResult = res.result;
+                }
+                iterCb(res.error || res.isMatch);
+              });
+            } else {
+              iterCb(false);
+            }
+          });
+        },
+        (match) => {
+          if (errorResult) {
+            return cb(makeError(errorResult));
           }
 
-          const newVisited = [...segmentsVisited, segment?.key];
-          const res = await this.segmentMatchContext(segment, context, state, newVisited);
-          if (res.error) {
-            errorResult = res.result;
-          }
-          return res.error || res.isMatch;
-        }
-
-        return false;
-      });
-
-      if (errorResult) {
-        return new MatchError(errorResult);
-      }
-
-      return new Match(maybeNegate(clause, match));
+          return cb(makeMatch(maybeNegate(clause, match)));
+        },
+      );
+      return;
     }
     // This is after segment matching, which does not use the reference.
     if (!clause.attributeReference.isValid) {
-      return new MatchError(
-        EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'),
+      cb(
+        makeError(
+          EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'),
+        ),
       );
+      return;
     }
 
-    return new Match(matchClauseWithoutSegmentOperations(clause, context));
+    cb(makeMatch(matchClauseWithoutSegmentOperations(clause, context)));
   }
 
   /**
@@ -314,34 +396,44 @@ export default class Evaluator {
    * @param rule The rule to match.
    * @param rule The index of the rule.
    * @param context The context to match the rule against.
-   * @returns An {@link EvalResult} or `undefined` if there are no matches or errors.
+   * @param cb Called when matching is complete with an {@link EvalResult} or `undefined` if there
+   * are no matches or errors.
    */
-  private async ruleMatchContext(
+  private ruleMatchContext(
     flag: Flag,
     rule: FlagRule,
     ruleIndex: number,
     context: Context,
     state: EvalState,
     segmentsVisited: string[],
-  ): Promise<EvalResult | undefined> {
+    cb: (res: EvalResult | undefined) => void,
+  ): void {
     if (!rule.clauses) {
-      return undefined;
+      cb(undefined);
+      return;
     }
     let errorResult: EvalResult | undefined;
-    const match = await allSeriesAsync(rule.clauses, async (clause) => {
-      const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
-      errorResult = res.result;
-      return res.error || res.isMatch;
-    });
+    allSeriesAsync(
+      rule.clauses,
+      (clause, _index, iterCb) => {
+        this.clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
+          errorResult = res.result;
+          return iterCb(res.error || res.isMatch);
+        });
+      },
+      (match) => {
+        if (errorResult) {
+          return cb(errorResult);
+        }
 
-    if (errorResult) {
-      return errorResult;
-    }
-
-    if (match) {
-      return this.variationForContext(rule, context, flag, Reasons.ruleMatch(rule.id, ruleIndex));
-    }
-    return undefined;
+        if (match) {
+          return cb(
+            this.variationForContext(rule, context, flag, Reasons.ruleMatch(rule.id, ruleIndex)),
+          );
+        }
+        return cb(undefined);
+      },
+    );
   }
 
   private variationForContext(
@@ -418,98 +510,114 @@ export default class Evaluator {
     );
   }
 
-  async segmentRuleMatchContext(
+  segmentRuleMatchContext(
     segment: Segment,
     rule: SegmentRule,
     context: Context,
     state: EvalState,
     segmentsVisited: string[],
-  ): Promise<MatchOrError> {
+    cb: (res: MatchOrError) => void,
+  ): void {
     let errorResult: EvalResult | undefined;
-    const match = await allSeriesAsync(rule.clauses, async (clause) => {
-      const res = await this.clauseMatchContext(clause, context, segmentsVisited, state);
-      errorResult = res.result;
-      return res.error || res.isMatch;
-    });
+    allSeriesAsync(
+      rule.clauses,
+      (clause, _index, iterCb) => {
+        this.clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
+          errorResult = res.result;
+          iterCb(res.error || res.isMatch);
+        });
+      },
+      (match) => {
+        if (errorResult) {
+          return cb(makeError(errorResult));
+        }
 
-    if (errorResult) {
-      return new MatchError(errorResult);
-    }
+        if (match) {
+          if (rule.weight === undefined) {
+            return cb(makeMatch(match));
+          }
+          const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
+          if (!bucketBy.isValid) {
+            return cb(
+              makeError(
+                EvalResult.forError(
+                  ErrorKinds.MalformedFlag,
+                  'Invalid attribute reference in clause',
+                ),
+              ),
+            );
+          }
 
-    if (match) {
-      if (rule.weight === undefined) {
-        return new Match(match);
-      }
-      const bucketBy = getBucketBy(false, rule.bucketByAttributeReference);
-      if (!bucketBy.isValid) {
-        return new MatchError(
-          EvalResult.forError(ErrorKinds.MalformedFlag, 'Invalid attribute reference in clause'),
-        );
-      }
+          const [bucket] = this.bucketer.bucket(
+            context,
+            segment.key,
+            bucketBy,
+            segment.salt || '',
+            rule.rolloutContextKind,
+          );
+          return cb(makeMatch(bucket < rule.weight / 100000.0));
+        }
 
-      const [bucket] = this.bucketer.bucket(
-        context,
-        segment.key,
-        bucketBy,
-        segment.salt || '',
-        rule.rolloutContextKind,
-      );
-      return new Match(bucket < rule.weight / 100000.0);
-    }
-
-    return new Match(false);
+        return cb(makeMatch(false));
+      },
+    );
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async simpleSegmentMatchContext(
+  simpleSegmentMatchContext(
     segment: Segment,
     context: Context,
     state: EvalState,
     segmentsVisited: string[],
-  ): Promise<MatchOrError> {
+    cb: (res: MatchOrError) => void,
+  ): void {
     if (!segment.unbounded) {
       const includeExclude = matchSegmentTargets(segment, context);
       if (includeExclude !== undefined) {
-        return new Match(includeExclude);
+        cb(makeMatch(includeExclude));
+        return;
       }
     }
 
     let evalResult: EvalResult | undefined;
-    const matched = await firstSeriesAsync(segment.rules, async (rule) => {
-      const res = await this.segmentRuleMatchContext(
-        segment,
-        rule,
-        context,
-        state,
-        segmentsVisited,
-      );
-      evalResult = res.result;
-      return res.error || res.isMatch;
-    });
-    if (evalResult) {
-      return new MatchError(evalResult);
-    }
+    firstSeriesAsync(
+      segment.rules,
+      (rule, _index, iterCb) => {
+        this.segmentRuleMatchContext(segment, rule, context, state, segmentsVisited, (res) => {
+          evalResult = res.result;
+          return iterCb(res.error || res.isMatch);
+        });
+      },
+      (matched) => {
+        if (evalResult) {
+          return cb(makeError(evalResult));
+        }
 
-    return new Match(matched);
+        return cb(makeMatch(matched));
+      },
+    );
   }
 
-  async segmentMatchContext(
+  segmentMatchContext(
     segment: Segment,
     context: Context,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     segmentsVisited: string[],
-  ): Promise<MatchOrError> {
+    cb: (res: MatchOrError) => void,
+  ): void {
     if (!segment.unbounded) {
-      return this.simpleSegmentMatchContext(segment, context, state, segmentsVisited);
+      this.simpleSegmentMatchContext(segment, context, state, segmentsVisited, cb);
+      return;
     }
 
     const bigSegmentKind = segment.unboundedContextKind || 'user';
     const keyForBigSegment = context.key(bigSegmentKind);
 
     if (!keyForBigSegment) {
-      return new Match(false);
+      cb(makeMatch(false));
+      return;
     }
 
     if (!segment.generation) {
@@ -522,7 +630,8 @@ export default class Evaluator {
         state.bigSegmentsStatus,
         'NOT_CONFIGURED',
       );
-      return new Match(false);
+      cb(makeMatch(false));
+      return;
     }
 
     if (state.bigSegmentsMembership && state.bigSegmentsMembership[keyForBigSegment]) {
@@ -531,44 +640,45 @@ export default class Evaluator {
       // again. Even if multiple Big Segments are being referenced, the membership includes
       // *all* of the user's segment memberships.
 
-      return this.bigSegmentMatchContext(
+      this.bigSegmentMatchContext(
         state.bigSegmentsMembership[keyForBigSegment],
         segment,
         context,
         state,
-      );
+      ).then(cb);
+      return;
     }
 
-    const result = await this.queries.getBigSegmentsMembership(keyForBigSegment);
-
-    // eslint-disable-next-line no-param-reassign
-    state.bigSegmentsMembership = state.bigSegmentsMembership || {};
-    if (result) {
-      const [membership, status] = result;
+    this.queries.getBigSegmentsMembership(keyForBigSegment).then((result) => {
       // eslint-disable-next-line no-param-reassign
-      state.bigSegmentsMembership[keyForBigSegment] = membership;
-      // eslint-disable-next-line no-param-reassign
-      state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
-        state.bigSegmentsStatus,
-        status as BigSegmentStoreStatusString,
-      );
-    } else {
-      // eslint-disable-next-line no-param-reassign
-      state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
-        state.bigSegmentsStatus,
-        'NOT_CONFIGURED',
-      );
-    }
-    /* eslint-enable no-param-reassign */
-    return this.bigSegmentMatchContext(
-      state.bigSegmentsMembership[keyForBigSegment],
-      segment,
-      context,
-      state,
-    );
+      state.bigSegmentsMembership = state.bigSegmentsMembership || {};
+      if (result) {
+        const [membership, status] = result;
+        // eslint-disable-next-line no-param-reassign
+        state.bigSegmentsMembership[keyForBigSegment] = membership;
+        // eslint-disable-next-line no-param-reassign
+        state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
+          state.bigSegmentsStatus,
+          status as BigSegmentStoreStatusString,
+        );
+      } else {
+        // eslint-disable-next-line no-param-reassign
+        state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
+          state.bigSegmentsStatus,
+          'NOT_CONFIGURED',
+        );
+      }
+      /* eslint-enable no-param-reassign */
+      this.bigSegmentMatchContext(
+        state.bigSegmentsMembership[keyForBigSegment],
+        segment,
+        context,
+        state,
+      ).then(cb);
+    });
   }
 
-  async bigSegmentMatchContext(
+  bigSegmentMatchContext(
     membership: BigSegmentStoreMembership | null,
     segment: Segment,
     context: Context,
@@ -576,12 +686,15 @@ export default class Evaluator {
   ): Promise<MatchOrError> {
     const segmentRef = makeBigSegmentRef(segment);
     const included = membership?.[segmentRef];
-    // Typically null is not checked because we filter it from the data
-    // we get in flag updates. Here it is checked because big segment data
-    // will be contingent on the store that implements it.
-    if (included !== undefined && included !== null) {
-      return new Match(included);
-    }
-    return this.simpleSegmentMatchContext(segment, context, state, []);
+    return new Promise<MatchOrError>((resolve) => {
+      // Typically null is not checked because we filter it from the data
+      // we get in flag updates. Here it is checked because big segment data
+      // will be contingent on the store that implements it.
+      if (included !== undefined && included !== null) {
+        resolve(makeMatch(included));
+        return;
+      }
+      this.simpleSegmentMatchContext(segment, context, state, [], resolve);
+    });
   }
 }
