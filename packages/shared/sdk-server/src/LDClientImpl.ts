@@ -36,7 +36,7 @@ import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
 import ErrorKinds from './evaluation/ErrorKinds';
 import EvalResult from './evaluation/EvalResult';
-import Evaluator from './evaluation/Evaluator';
+import Evaluator, { EvalCache } from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
 import ContextDeduplicator from './events/ContextDeduplicator';
 import DiagnosticsManager from './events/DiagnosticsManager';
@@ -287,6 +287,8 @@ export default class LDClientImpl implements LDClient {
       return Promise.resolve(new FlagsStateBuilder(false, false).build());
     }
 
+    const cache: EvalCache = {};
+
     return new Promise<LDFlagsState>((resolve) => {
       const doEval = (valid: boolean) =>
         this.featureStore.all(VersionedDataKinds.Features, (allFlags) => {
@@ -321,7 +323,7 @@ export default class LDClientImpl implements LDClient {
                   detailsOnlyIfTracked,
                 );
                 iterCb(true);
-              });
+              }, undefined, cache);
             },
             () => {
               const res = builder.build();

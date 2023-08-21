@@ -13,7 +13,7 @@ import {
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
-import Evaluator from '../../src/evaluation/Evaluator';
+import Evaluator, { EvalCache } from '../../src/evaluation/Evaluator';
 import { Queries } from '../../src/evaluation/Queries';
 import {
   makeClauseThatDoesNotMatchUser,
@@ -26,13 +26,17 @@ const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };
 const basicMultiKindUser: LDContext = { kind: 'multi', user: { key: 'userkey' } };
 
+function withCache(cache: boolean): EvalCache | undefined {
+  return cache ? {} : undefined;
+}
+
 class TestQueries implements Queries {
   constructor(
     private readonly data: {
       flags?: Flag[];
       segments?: Segment[];
     },
-  ) {}
+  ) { }
 
   getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
     const res = this.data.flags?.find((flag) => flag.key === key);
@@ -51,7 +55,7 @@ class TestQueries implements Queries {
   }
 }
 
-describe('when evaluating user equivalent contexts for segments', () => {
+describe.each([true, false])('when evaluating user equivalent contexts for segments, cache: %p', (cache) => {
   const matchClause = makeClauseThatMatchesUser(basicUser);
 
   it.each([basicUser, basicSingleKindUser, basicMultiKindUser])(
@@ -64,7 +68,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(true);
     },
   );
@@ -79,7 +83,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(false);
     },
   );
@@ -94,7 +98,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(false);
     },
   );
@@ -108,7 +112,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const user = { key: 'bar' };
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user), undefined, withCache(cache));
     expect(res.detail.value).toBe(false);
   });
 
@@ -122,7 +126,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     const flag = makeFlagWithSegmentMatch(segment);
     flag.rules[0].clauses![0].negate = true;
     const user = { key: 'bar' };
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user), undefined, withCache(cache));
     expect(res.detail.value).toBe(true);
   });
 
@@ -137,7 +141,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(true);
     },
   );
@@ -158,7 +162,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(true);
     },
   );
@@ -201,7 +205,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(false);
     },
   );
@@ -233,7 +237,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user), undefined, withCache(cache));
     expect(res.detail.value).toBe(true);
   });
 
@@ -251,7 +255,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user), undefined, withCache(cache));
     expect(res.detail.value).toBe(false);
   });
 
@@ -329,7 +333,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
 const singleKind: LDContext = { kind: 'org', key: 'orgKey' };
 const multiKind: LDContext = { kind: 'multi', org: { key: 'orgKey' } };
 
-describe('Evaluator - segment match for non-user contexts', () => {
+describe.each([true, false])('Evaluator - segment match for non-user contexts, withCache(cache): %p', (cache) => {
   it.each([singleKind, multiKind])(
     'matches segment with explicitly included context',
     async (context) => {
@@ -340,7 +344,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(true);
     },
   );
@@ -374,7 +378,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
     expect(res.detail.value).toBe(true);
   });
 
@@ -399,7 +403,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind), undefined, withCache(cache));
     expect(res.detail.reason).toEqual({ kind: 'ERROR', errorKind: 'MALFORMED_FLAG' });
     expect(res.detail.value).toBe(null);
   });
@@ -439,7 +443,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind), undefined, withCache(cache));
     expect(res.detail.value).toBe(true);
   });
 
@@ -453,7 +457,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(false);
     },
   );
@@ -468,7 +472,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       };
       const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
       const flag = makeFlagWithSegmentMatch(segment);
-      const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+      const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
       expect(res.detail.value).toBe(false);
     },
   );
@@ -481,7 +485,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
     };
     const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
-    const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(context), undefined, withCache(cache));
     expect(res.detail.value).toBe(false);
   });
 });

@@ -65,12 +65,31 @@ function computeUpdatedBigSegmentsStatus(
   return latest;
 }
 
+
+interface MissingMarker {
+  isMissing: true;
+}
+
+function isMissingMarker(u: unknown): u is MissingMarker {
+  if ((u as any).isMissing) {
+    return true;
+  }
+  return false;
+}
+
+export interface EvalCache {
+  flags?: Map<string, { flag: Flag | undefined, res: EvalResult }>;
+  segments?: Map<string, MatchOrError | MissingMarker>;
+}
+
 interface EvalState {
   events?: internal.InputEvalEvent[];
 
   bigSegmentsStatus?: BigSegmentStoreStatusString;
 
   bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
+
+  cache?: EvalCache
 }
 
 interface Match {
@@ -113,9 +132,16 @@ export default class Evaluator {
     this.bucketer = new Bucketer(platform.crypto);
   }
 
-  async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
+  async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory, cache?: EvalCache,): Promise<EvalResult> {
     return new Promise<EvalResult>((resolve) => {
-      const state: EvalState = {};
+      // If a cache is provided, then ensure it can be populated.
+      if (cache) {
+        cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined, res: EvalResult }>();
+        cache.segments = cache.segments ?? new Map<string, MatchOrError | MissingMarker>();
+      }
+      const state: EvalState = {
+        cache
+      };
       this.evaluateInternal(
         flag,
         context,
@@ -141,8 +167,16 @@ export default class Evaluator {
     context: Context,
     cb: (res: EvalResult) => void,
     eventFactory?: EventFactory,
+    cache?: EvalCache,
   ) {
-    const state: EvalState = {};
+    // If a cache is provided, then ensure it can be populated.
+    if (cache) {
+      cache.flags = cache.flags ?? new Map<string, { flag: Flag | undefined, res: EvalResult }>();
+      cache.segments = cache.segments ?? new Map<string, MatchOrError | MissingMarker>();
+    }
+    const state: EvalState = {
+      cache
+    };
     this.evaluateInternal(
       flag,
       context,
@@ -248,11 +282,41 @@ export default class Evaluator {
     allSeriesAsync(
       flag.prerequisites,
       (prereq, _index, iterCb) => {
+        if (state.cache?.flags?.has(prereq.key)) {
+          // TODO: See if this can be more de-duplicated.
+          const { flag: prereqFlag, res } = state.cache.flags.get(prereq.key)!;
+
+          if (!prereqFlag) {
+            prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+            iterCb(false);
+            return;
+          }
+
+          // eslint-disable-next-line no-param-reassign
+          state.events = state.events ?? [];
+
+          if (eventFactory) {
+            state.events.push(
+              eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag),
+            );
+          }
+
+          if (res.isError) {
+            prereqResult = res;
+            return iterCb(false);
+          }
+
+          if (res.isOff || res.detail.variationIndex !== prereq.variation) {
+            prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+            return iterCb(false);
+          }
+          return iterCb(true);
+        }
         if (visitedFlags.indexOf(prereq.key) !== -1) {
           prereqResult = EvalResult.forError(
             ErrorKinds.MalformedFlag,
             `Prerequisite of ${flag.key} causing a circular reference.` +
-              ' This is probably a temporary condition due to an incomplete update.',
+            ' This is probably a temporary condition due to an incomplete update.',
           );
           iterCb(true);
           return;
@@ -261,6 +325,7 @@ export default class Evaluator {
         this.queries.getFlag(prereq.key, (prereqFlag) => {
           if (!prereqFlag) {
             prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+            state.cache?.flags?.set(prereq.key, { flag: undefined, res: prereqResult });
             iterCb(false);
             return;
           }
@@ -273,6 +338,8 @@ export default class Evaluator {
             (res) => {
               // eslint-disable-next-line no-param-reassign
               state.events = state.events ?? [];
+
+              state.cache?.flags?.set(prereq.key, { res, flag: prereqFlag });
 
               if (eventFactory) {
                 state.events.push(
@@ -342,13 +409,24 @@ export default class Evaluator {
       firstSeriesAsync(
         clause.values,
         (value, _index, iterCb) => {
+          if (state.cache?.segments?.has(value)) {
+            const matchOrError = state.cache.segments.get(value);
+            if (!isMissingMarker(matchOrError)) {
+              // The segment has previously evaluated already.
+              iterCb(matchOrError!.error || matchOrError!.isMatch);
+              return;
+            }
+            // Segment did not exist, move on.
+            iterCb(false);
+            return;
+          }
           this.queries.getSegment(value, (segment) => {
             if (segment) {
               if (segmentsVisited.includes(segment.key)) {
                 errorResult = EvalResult.forError(
                   ErrorKinds.MalformedFlag,
                   `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
-                    'This is probably a temporary condition due to an incomplete update',
+                  'This is probably a temporary condition due to an incomplete update',
                 );
                 // There was an error, so stop checking further segments.
                 iterCb(true);
@@ -360,9 +438,11 @@ export default class Evaluator {
                 if (res.error) {
                   errorResult = res.result;
                 }
+                state.cache?.segments?.set(value, res);
                 iterCb(res.error || res.isMatch);
               });
             } else {
+              state.cache?.segments?.set(value, { isMissing: true });
               iterCb(false);
             }
           });
