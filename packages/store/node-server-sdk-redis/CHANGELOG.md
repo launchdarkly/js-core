@@ -30,6 +30,12 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 8.1.2 to 8.2.0
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 8.2.0 to 8.2.1
+
 ## [3.0.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v3.0.5...node-server-sdk-redis-v3.0.6) (2023-08-10)
 
 
