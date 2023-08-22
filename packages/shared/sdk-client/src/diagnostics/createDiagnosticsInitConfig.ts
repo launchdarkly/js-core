@@ -1,10 +1,11 @@
+import { ServiceEndpoints } from '@launchdarkly/js-sdk-common';
+
 import Configuration from '../configuration';
 
 const createDiagnosticsInitConfig = (config: Configuration) => ({
-  // TODO: figure out default values
-  // customBaseURI: config.baseUrl !== defaultValues.baseUri,
-  // customStreamURI: config.streamUrl !== baseOptionDefs.streamUrl.default,
-  // customEventsURI: config.eventsUrl !== baseOptionDefs.eventsUrl.default,
+  customBaseURI: config.baseUrl !== ServiceEndpoints.DEFAULT_POLLING,
+  customStreamURI: config.streamUrl !== Configuration.DEFAULT_STREAM,
+  customEventsURI: config.eventsUrl !== ServiceEndpoints.DEFAULT_EVENTS,
   eventsCapacity: config.eventCapacity,
   eventsFlushIntervalMillis: config.flushInterval,
   reconnectTimeMillis: config.streamReconnectDelay,

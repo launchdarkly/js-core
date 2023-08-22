@@ -12,11 +12,13 @@ import type LDOptions from '../api/LDOptions';
 import validators from './validators';
 
 export default class Configuration {
+  public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
+
   public readonly logger = createSafeLogger();
 
-  public readonly baseUri = 'https://sdk.launchdarkly.com';
-  public readonly eventsUri = 'https://events.launchdarkly.com';
-  public readonly streamUri = 'https://clientstream.launchdarkly.com';
+  public readonly baseUri = ServiceEndpoints.DEFAULT_POLLING;
+  public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
+  public readonly streamUri = Configuration.DEFAULT_STREAM;
 
   public readonly capacity = 100;
   public readonly diagnosticRecordingInterval = 900000;
