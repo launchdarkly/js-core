@@ -2,6 +2,10 @@
 
 All notable changes to the LaunchDarkly SDK for Akamai Workers will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.0.4](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.0.3...akamai-server-edgekv-sdk-v1.0.4)  (2023-08-14)
+
+Updated common dependency includes performance improvements.
+
 ### Dependencies
 
 * The following workspace dependencies were updated
