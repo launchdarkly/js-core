@@ -77,7 +77,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
           variation: this.variation,
         },
         measurements,
-        samplingRatio: this.samplingRatio ?? 1
+        samplingRatio: this.samplingRatio ?? 1,
       };
     }
     return undefined;

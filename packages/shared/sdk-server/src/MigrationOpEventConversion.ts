@@ -210,7 +210,7 @@ export default function MigrationOpEventToInputEvent(
 
   const samplingRatio = inEvent.samplingRatio ?? 1;
 
-  if(!TypeValidators.Number.is(samplingRatio)) {
+  if (!TypeValidators.Number.is(samplingRatio)) {
     return undefined;
   }
 

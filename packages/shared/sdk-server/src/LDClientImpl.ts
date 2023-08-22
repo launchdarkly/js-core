@@ -150,18 +150,18 @@ export default class LDClientImpl implements LDClient {
     const makeDefaultProcessor = () =>
       config.stream
         ? new StreamingProcessor(
-          sdkKey,
-          config,
-          this.platform.requests,
-          this.platform.info,
-          dataSourceUpdates,
-          this.diagnosticsManager,
-        )
+            sdkKey,
+            config,
+            this.platform.requests,
+            this.platform.info,
+            dataSourceUpdates,
+            this.diagnosticsManager,
+          )
         : new PollingProcessor(
-          config,
-          new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
-          dataSourceUpdates,
-        );
+            config,
+            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+            dataSourceUpdates,
+          );
 
     if (config.offline || config.useLdd) {
       this.updateProcessor = new NullUpdateProcessor();
@@ -338,7 +338,7 @@ export default class LDClientImpl implements LDClient {
           reason,
           checkRatio,
           undefined,
-          samplingRatio
+          samplingRatio,
         ),
       };
     }
@@ -355,7 +355,7 @@ export default class LDClientImpl implements LDClient {
         checkRatio,
         // Can be null for compatibility reasons.
         detail.variationIndex === null ? undefined : detail.variationIndex,
-        samplingRatio
+        samplingRatio,
       ),
     };
   }
@@ -384,12 +384,12 @@ export default class LDClientImpl implements LDClient {
       if (storeInitialized) {
         this.logger?.warn(
           'Called allFlagsState before client initialization; using last known' +
-          ' values from data store',
+            ' values from data store',
         );
       } else {
         this.logger?.warn(
           'Called allFlagsState before client initialization. Data store not available; ' +
-          'returning empty state',
+            'returning empty state',
         );
         valid = false;
       }
@@ -569,13 +569,13 @@ export default class LDClientImpl implements LDClient {
       if (storeInitialized) {
         this.logger?.warn(
           'Variation called before LaunchDarkly client initialization completed' +
-          " (did you wait for the 'ready' event?) - using last known values from feature store",
+            " (did you wait for the 'ready' event?) - using last known values from feature store",
         );
         return this.variationInternal(flagKey, context, defaultValue, eventFactory);
       }
       this.logger?.warn(
         'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
-        "'ready' event?) - using default value",
+          "'ready' event?) - using default value",
       );
       return [EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue), undefined];
     }
