@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  internal,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
@@ -12,17 +13,32 @@ import {
 import { LDClientDom } from './api/LDClientDom';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
+import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import createEventProcessor from './events/createEventProcessor';
 import { PlatformDom, Storage } from './platform/PlatformDom';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
+  diagnosticsManager?: internal.LDDiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
   storage: Storage;
 
   constructor(clientSideID: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
     this.config = new Configuration(options);
-    this.eventProcessor = createEventProcessor(clientSideID, this.config, platform);
+
+    if (this.config.sendEvents && !this.config.diagnosticOptOut) {
+      this.diagnosticsManager = new internal.DiagnosticsManager(
+        clientSideID,
+        platform,
+        createDiagnosticsInitConfig(this.config),
+      );
+    }
+    this.eventProcessor = createEventProcessor(
+      clientSideID,
+      this.config,
+      platform,
+      this.diagnosticsManager,
+    );
     this.storage = platform.storage;
   }
 
