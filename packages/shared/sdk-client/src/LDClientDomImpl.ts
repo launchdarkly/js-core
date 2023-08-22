@@ -13,7 +13,7 @@ import {
 import { LDClientDom } from './api/LDClientDom';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
-import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
+import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import { PlatformDom, Storage } from './platform/PlatformDom';
 
@@ -25,21 +25,14 @@ export default class LDClientDomImpl implements LDClientDom {
 
   constructor(clientSideID: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
     this.config = new Configuration(options);
-
-    if (this.config.sendEvents && !this.config.diagnosticOptOut) {
-      this.diagnosticsManager = new internal.DiagnosticsManager(
-        clientSideID,
-        platform,
-        createDiagnosticsInitConfig(this.config),
-      );
-    }
+    this.storage = platform.storage;
+    this.diagnosticsManager = createDiagnosticsManager(clientSideID, this.config, platform);
     this.eventProcessor = createEventProcessor(
       clientSideID,
       this.config,
       platform,
       this.diagnosticsManager,
     );
-    this.storage = platform.storage;
   }
 
   allFlags(): LDFlagSet {
