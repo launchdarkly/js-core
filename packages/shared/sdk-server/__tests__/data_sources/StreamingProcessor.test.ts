@@ -74,11 +74,7 @@ describe('given a stream processor with mock event source', () => {
       featureStore,
       logger,
     });
-    diagnosticsManager = new internal.DiagnosticsManager(
-      'sdk-key',
-      { ...config, dataStoreType: featureStore.getDescription?.() ?? 'memory' },
-      mocks.basicPlatform,
-    );
+    diagnosticsManager = new internal.DiagnosticsManager('sdk-key', mocks.basicPlatform, {});
     streamProcessor = new StreamingProcessor(
       sdkKey,
       config,
