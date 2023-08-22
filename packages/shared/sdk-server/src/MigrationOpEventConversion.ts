@@ -1,4 +1,4 @@
-import { internal, Type, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { internal, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import {
   LDMigrationConsistencyMeasurement,
