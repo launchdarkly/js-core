@@ -12,7 +12,7 @@ const mockFeatureStore = {
   getDescription: jest.fn(() => 'Mock Feature Store'),
 };
 
-describe.only.each([
+describe.each([
   [
     {},
     {
@@ -101,7 +101,7 @@ describe.each([true, false])('Given proxy && proxyAuth = %p', (auth) => {
     jest.resetAllMocks();
   });
 
-  it.only('it gets the proxy configuration from the basicPlatform', () => {
+  it('it gets the proxy configuration from the basicPlatform', () => {
     const c = createDiagnosticsInitConfig(
       new Configuration(),
       basicPlatform,
