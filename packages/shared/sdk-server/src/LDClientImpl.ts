@@ -23,7 +23,7 @@ import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
 import StreamingProcessor from './data_sources/StreamingProcessor';
-import createDiagnosticInitConfig from './diagnostics/createDiagnosticInitConfig';
+import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allSeriesAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
@@ -129,7 +129,7 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager = new internal.DiagnosticsManager(
         sdkKey,
         platform,
-        createDiagnosticInitConfig(config, platform, featureStore),
+        createDiagnosticsInitConfig(config, platform, featureStore),
       );
     }
 

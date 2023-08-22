@@ -2,7 +2,7 @@ import { internal } from '@launchdarkly/js-sdk-common';
 
 import { LDOptions } from '../api';
 import Configuration from '../options/Configuration';
-import createDiagnosticInitConfig from './createDiagnosticInitConfig';
+import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
 
 const {
   mocks: { basicPlatform },
@@ -85,7 +85,7 @@ describe.only.each([
   });
 
   it('translates the configuration correctly', () => {
-    const c = createDiagnosticInitConfig(configuration, basicPlatform, mockFeatureStore as any);
+    const c = createDiagnosticsInitConfig(configuration, basicPlatform, mockFeatureStore as any);
 
     expect(c).toMatchObject(configOut);
   });
@@ -102,7 +102,7 @@ describe.each([true, false])('Given proxy && proxyAuth = %p', (auth) => {
   });
 
   it.only('it gets the proxy configuration from the basicPlatform', () => {
-    const c = createDiagnosticInitConfig(
+    const c = createDiagnosticsInitConfig(
       new Configuration(),
       basicPlatform,
       mockFeatureStore as any,

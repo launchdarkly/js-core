@@ -3,7 +3,7 @@ import { Platform, secondsToMillis } from '@launchdarkly/js-sdk-common';
 import { LDFeatureStore } from '../api';
 import Configuration, { defaultValues } from '../options/Configuration';
 
-const createDiagnosticInitConfig = (
+const createDiagnosticsInitConfig = (
   config: Configuration,
   platform: Platform,
   featureStore: LDFeatureStore,
@@ -34,4 +34,4 @@ const createDiagnosticInitConfig = (
   dataStoreType: featureStore.getDescription?.() ?? 'memory',
 });
 
-export default createDiagnosticInitConfig;
+export default createDiagnosticsInitConfig;
