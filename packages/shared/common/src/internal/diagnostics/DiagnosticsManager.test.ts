@@ -15,8 +15,7 @@ describe('given a diagnostics manager', () => {
   });
 
   beforeEach(() => {
-    const diagnosticInitConfig = {};
-    manager = new DiagnosticsManager('my-sdk-key', basicPlatform, diagnosticInitConfig);
+    manager = new DiagnosticsManager('my-sdk-key', basicPlatform, { test1: 'value1' });
   });
 
   afterEach(() => {
@@ -30,9 +29,9 @@ describe('given a diagnostics manager', () => {
 
   it('creates random UUID', () => {
     const { id } = manager.createInitEvent();
-    const diagnosticInitConfig2 = {};
-    const manager2 = new DiagnosticsManager('my-sdk-key', basicPlatform, diagnosticInitConfig2);
+    const manager2 = new DiagnosticsManager('my-sdk-key', basicPlatform, {});
     const { id: id2 } = manager2.createInitEvent();
+
     expect(id.diagnosticId).toBeTruthy();
     expect(id2.diagnosticId).toBeTruthy();
     expect(id.diagnosticId).not.toEqual(id2.diagnosticId);
@@ -46,6 +45,11 @@ describe('given a diagnostics manager', () => {
   it('puts SDK data into the init event', () => {
     const { sdk } = manager.createInitEvent();
     expect(sdk).toMatchObject(basicPlatform.info.sdkData());
+  });
+
+  it('puts config data into the init event', () => {
+    const { configuration } = manager.createInitEvent();
+    expect(configuration).toEqual({ test1: 'value1' });
   });
 
   it('puts platform data into the init event', () => {

@@ -91,25 +91,26 @@ describe.only.each([
   });
 });
 
-// describe.each([true, false])('Given proxy and proxy auth=%p', (auth) => {
-//   let manager: DiagnosticsManager;
-//
-//   beforeEach(() => {
-//     jest.spyOn(Date, 'now').mockImplementation(() => 7777);
-//     jest.spyOn(basicPlatform.requests, 'usingProxy').mockImplementation(() => true);
-//     jest.spyOn(basicPlatform.requests, 'usingProxyAuth').mockImplementation(() => auth);
-//     manager = new DiagnosticsManager('my-sdk-key', basicPlatform, {});
-//   });
-//
-//   afterEach(() => {
-//     jest.resetAllMocks();
-//   });
-//
-//   it('it gets the proxy configuration from the basicPlatform', () => {
-//     const event = manager.createInitEvent();
-//     expect(event.configuration).toMatchObject({
-//       usingProxy: true,
-//       usingProxyAuthenticator: auth,
-//     });
-//   });
-// });
+describe.each([true, false])('Given proxy && proxyAuth = %p', (auth) => {
+  beforeEach(() => {
+    basicPlatform.requests.usingProxy = jest.fn(() => auth);
+    basicPlatform.requests.usingProxyAuth = jest.fn(() => auth);
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it.only('it gets the proxy configuration from the basicPlatform', () => {
+    const c = createDiagnosticInitConfig(
+      new Configuration(),
+      basicPlatform,
+      mockFeatureStore as any,
+    );
+
+    expect(c).toMatchObject({
+      usingProxy: auth,
+      usingProxyAuthenticator: auth,
+    });
+  });
+});
