@@ -1,4 +1,4 @@
-import { internal, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { internal, Type, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import {
   LDMigrationConsistencyMeasurement,
@@ -186,7 +186,7 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
  */
 export default function MigrationOpEventToInputEvent(
   inEvent: LDMigrationOpEvent,
-): Omit<internal.InputMigrationEvent, 'samplingRatio'> | undefined {
+): internal.InputMigrationEvent | undefined {
   // The sampling ratio is omitted and needs populated by the track migration method.
   if (inEvent.kind !== 'migration_op') {
     return undefined;
@@ -205,6 +205,12 @@ export default function MigrationOpEventToInputEvent(
   }
 
   if (!Object.keys(inEvent.contextKeys).every((key) => TypeValidators.Kind.is(key))) {
+    return undefined;
+  }
+
+  const samplingRatio = inEvent.samplingRatio ?? 1;
+
+  if(!TypeValidators.Number.is(samplingRatio)) {
     return undefined;
   }
 
@@ -229,5 +235,6 @@ export default function MigrationOpEventToInputEvent(
     contextKeys: { ...inEvent.contextKeys },
     measurements: validateMeasurements(inEvent.measurements),
     evaluation,
+    samplingRatio,
   };
 }

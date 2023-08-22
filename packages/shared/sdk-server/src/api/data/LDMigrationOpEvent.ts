@@ -59,4 +59,5 @@ export interface LDMigrationOpEvent {
   contextKeys: Record<string, string>;
   evaluation: LDMigrationEvaluation;
   measurements: LDMigrationMeasurement[];
+  samplingRatio: number;
 }

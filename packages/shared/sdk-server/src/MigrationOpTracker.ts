@@ -37,6 +37,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     private readonly reason: LDEvaluationReason,
     private readonly checkRatio?: number,
     private readonly variation?: number,
+    private readonly samplingRatio?: number,
   ) {}
 
   op(op: LDMigrationOp) {
@@ -76,6 +77,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
           variation: this.variation,
         },
         measurements,
+        samplingRatio: this.samplingRatio ?? 1
       };
     }
     return undefined;

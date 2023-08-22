@@ -150,18 +150,18 @@ export default class LDClientImpl implements LDClient {
     const makeDefaultProcessor = () =>
       config.stream
         ? new StreamingProcessor(
-            sdkKey,
-            config,
-            this.platform.requests,
-            this.platform.info,
-            dataSourceUpdates,
-            this.diagnosticsManager,
-          )
+          sdkKey,
+          config,
+          this.platform.requests,
+          this.platform.info,
+          dataSourceUpdates,
+          this.diagnosticsManager,
+        )
         : new PollingProcessor(
-            config,
-            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
-            dataSourceUpdates,
-          );
+          config,
+          new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+          dataSourceUpdates,
+        );
 
     if (config.offline || config.useLdd) {
       this.updateProcessor = new NullUpdateProcessor();
@@ -318,6 +318,7 @@ export default class LDClientImpl implements LDClient {
 
     const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
     const checkRatio = flag?.migration?.checkRatio;
+    const samplingRatio = flag?.samplingRatio;
     if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
@@ -336,6 +337,8 @@ export default class LDClientImpl implements LDClient {
           defaultValue,
           reason,
           checkRatio,
+          undefined,
+          samplingRatio
         ),
       };
     }
@@ -352,6 +355,7 @@ export default class LDClientImpl implements LDClient {
         checkRatio,
         // Can be null for compatibility reasons.
         detail.variationIndex === null ? undefined : detail.variationIndex,
+        samplingRatio
       ),
     };
   }
@@ -380,12 +384,12 @@ export default class LDClientImpl implements LDClient {
       if (storeInitialized) {
         this.logger?.warn(
           'Called allFlagsState before client initialization; using last known' +
-            ' values from data store',
+          ' values from data store',
         );
       } else {
         this.logger?.warn(
           'Called allFlagsState before client initialization. Data store not available; ' +
-            'returning empty state',
+          'returning empty state',
         );
         valid = false;
       }
@@ -477,21 +481,8 @@ export default class LDClientImpl implements LDClient {
     if (!converted) {
       return;
     }
-    // Async immediately invoking function expression to get the flag from the store
-    // without requiring track to be async.
-    (async () => {
-      // TODO: Would it be better to pass this through.
-      const sampling = await this.featureStore.get(
-        VersionedDataKinds.Features,
-        event.evaluation.key,
-      );
-      const samplingRatio = (sampling as Flag)?.samplingRatio ?? 1;
-      const inputEvent: internal.InputMigrationEvent = {
-        ...converted,
-        samplingRatio,
-      };
-      this.eventProcessor.sendEvent(inputEvent);
-    })();
+
+    this.eventProcessor.sendEvent(converted);
   }
 
   identify(context: LDContext): void {
@@ -578,13 +569,13 @@ export default class LDClientImpl implements LDClient {
       if (storeInitialized) {
         this.logger?.warn(
           'Variation called before LaunchDarkly client initialization completed' +
-            " (did you wait for the 'ready' event?) - using last known values from feature store",
+          " (did you wait for the 'ready' event?) - using last known values from feature store",
         );
         return this.variationInternal(flagKey, context, defaultValue, eventFactory);
       }
       this.logger?.warn(
         'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
-          "'ready' event?) - using default value",
+        "'ready' event?) - using default value",
       );
       return [EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue), undefined];
     }
