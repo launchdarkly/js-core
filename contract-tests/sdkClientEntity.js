@@ -1,5 +1,6 @@
 import got from 'got';
 import ld, {
+  LDConcurrentExecution,
   LDExecution,
   LDExecutionOrdering,
   LDMigrationError,
@@ -60,6 +61,23 @@ export function makeSdkConfig(options, tag) {
     };
   }
   return cf;
+}
+
+function getExecution(order) {
+  switch(order) {
+    case 'serial': {
+      return new LDSerialExecution(LDExecutionOrdering.Fixed);
+    }
+    case 'random': {
+      return new LDSerialExecution(LDExecutionOrdering.Random);
+    }
+    case 'concurrent': {
+      return new LDConcurrentExecution();
+    }
+    default: {
+      throw new Error('Unsupported execution order.');
+    }
+  }
 }
 
 export async function newSdkClientEntity(options) {
@@ -145,8 +163,10 @@ export async function newSdkClientEntity(options) {
 
       case 'migrationOperation':
         const migrationOperation = params.migrationOperation;
+        const readExecutionOrder = migrationOperation.readExecutionOrder;
+        
         const migration = new Migration(client, {
-          execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
+          execution: getExecution(readExecutionOrder),
           latencyTracking: migrationOperation.trackLatency,
           errorTracking: migrationOperation.trackErrors,
           check: migrationOperation.trackConsistency ? (a, b) => a === b : undefined,
