@@ -28,6 +28,7 @@ export default class Configuration {
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
   public readonly evaluationReasons = false;
+  public readonly fetchGoals = true;
   public readonly sendEvents = true;
   public readonly sendEventsOnlyForVariation = false;
   public readonly sendLDHeaders = true;
@@ -40,6 +41,7 @@ export default class Configuration {
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
   public readonly stream?: boolean;
+  public readonly hash?: string;
   public readonly wrapperName?: string;
   public readonly wrapperVersion?: string;
 
