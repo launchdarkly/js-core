@@ -89,7 +89,7 @@ export interface LDMigrationDetail {
   checkRatio?: number;
 
   /**
-   * Sampling ratio for the migration event.
+   * Sampling ratio for the migration event. Defaults to 1 if not specified.
    */
   samplingRatio?: number;
 }
