@@ -2,6 +2,19 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.1.0...js-server-sdk-common-v1.2.0) (2023-08-21)
+
+
+### Features
+
+* Optimize segment lookup for large segments. ([#235](https://github.com/launchdarkly/js-core/issues/235)) ([ac575d0](https://github.com/launchdarkly/js-core/commit/ac575d011d64f1833fc4c61bbbb7e4542b42e568))
+* Use callbacks for evaluation hotpath. ([#234](https://github.com/launchdarkly/js-core/issues/234)) ([27e5454](https://github.com/launchdarkly/js-core/commit/27e54543f70e554eb452616f44ed19fbd9086bd2))
+
+
+### Bug Fixes
+
+* Correct double callback in persistent store wrapper. ([#240](https://github.com/launchdarkly/js-core/issues/240)) ([243729d](https://github.com/launchdarkly/js-core/commit/243729d258b81f71f88328fa0d406f3d5f3f1f80))
+
 ## [1.1.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.0.8...js-server-sdk-common-v1.1.0) (2023-08-14)
 
 
