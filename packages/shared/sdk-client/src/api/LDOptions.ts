@@ -133,14 +133,6 @@ export default interface LDOptions {
   privateAttributes?: Array<string>;
 
   /**
-   * Whether analytics events should be sent only when you call variation (true), or also when you
-   * call allFlags (false).
-   *
-   * By default, this is false (events will be sent in both cases).
-   */
-  sendEventsOnlyForVariation?: boolean;
-
-  /**
    * The capacity of the analytics events queue.
    *
    * The client buffers up to this many events in memory before flushing. If the capacity is exceeded
@@ -233,4 +225,12 @@ export default interface LDOptions {
    * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
    */
   inspectors?: LDInspection[];
+
+  /**
+   * The signed context key for Secure Mode.
+   *
+   * For more information, see the JavaScript SDK Reference Guide on
+   * [Secure mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
+   */
+  hash?: string;
 }

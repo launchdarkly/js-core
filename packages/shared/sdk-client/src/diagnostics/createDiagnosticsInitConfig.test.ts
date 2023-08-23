@@ -20,16 +20,14 @@ describe('createDiagnosticsInitConfig', () => {
       diagnosticRecordingIntervalMillis: 900000,
       eventsCapacity: 100,
       eventsFlushIntervalMillis: 2000,
-      fetchGoalsDisabled: false,
       reconnectTimeMillis: 1000,
-      sendEventsOnlyForVariation: false,
       streamingDisabled: true,
       usingSecureMode: false,
     });
   });
 
-  test.only('non-default config', () => {
-    const initWithCustomUris = createDiagnosticsInitConfig(
+  test('non-default config', () => {
+    const custom = createDiagnosticsInitConfig(
       new Configuration({
         baseUri: 'https://dev.ld.com',
         streamUri: 'https://stream.ld.com',
@@ -40,13 +38,11 @@ describe('createDiagnosticsInitConfig', () => {
         diagnosticRecordingInterval: 4444,
         stream: true,
         allAttributesPrivate: true,
-        // hash: 'test-hash',
+        hash: 'test-hash',
         bootstrap: 'localStorage',
-        // fetchGoals: false,
-        sendEventsOnlyForVariation: true,
       }),
     );
-    expect(initWithCustomUris).toEqual({
+    expect(custom).toEqual({
       allAttributesPrivate: true,
       bootstrapMode: true,
       customBaseURI: true,
@@ -55,9 +51,7 @@ describe('createDiagnosticsInitConfig', () => {
       diagnosticRecordingIntervalMillis: 4444,
       eventsCapacity: 1111,
       eventsFlushIntervalMillis: 2222,
-      fetchGoalsDisabled: true,
       reconnectTimeMillis: 3333,
-      sendEventsOnlyForVariation: true,
       streamingDisabled: false,
       usingSecureMode: true,
     });

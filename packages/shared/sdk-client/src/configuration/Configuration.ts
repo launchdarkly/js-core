@@ -28,9 +28,7 @@ export default class Configuration {
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
   public readonly evaluationReasons = false;
-  public readonly fetchGoals = true;
   public readonly sendEvents = true;
-  public readonly sendEventsOnlyForVariation = false;
   public readonly sendLDHeaders = true;
   public readonly useReport = false;
 

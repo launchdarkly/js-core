@@ -29,7 +29,6 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   diagnosticOptOut: TypeValidators.Boolean,
   evaluationReasons: TypeValidators.Boolean,
   sendEvents: TypeValidators.Boolean,
-  sendEventsOnlyForVariation: TypeValidators.Boolean,
   sendLDHeaders: TypeValidators.Boolean,
   useReport: TypeValidators.Boolean,
 
@@ -46,6 +45,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   stream: TypeValidators.NullableBoolean,
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
+  hash: TypeValidators.String,
 };
 
 export default validators;

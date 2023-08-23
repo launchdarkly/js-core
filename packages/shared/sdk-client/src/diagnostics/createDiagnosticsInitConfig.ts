@@ -3,6 +3,7 @@ import { ServiceEndpoints } from '@launchdarkly/js-sdk-common';
 import Configuration from '../configuration';
 
 export type DiagnosticsInitConfig = {
+  // dom & server common properties
   customBaseURI: boolean;
   customStreamURI: boolean;
   customEventsURI: boolean;
@@ -13,11 +14,9 @@ export type DiagnosticsInitConfig = {
   streamingDisabled: boolean;
   allAttributesPrivate: boolean;
 
-  // The following extra properties are only provided by client-side JS SDKs:
+  // dom specific properties
   usingSecureMode: boolean;
   bootstrapMode: boolean;
-  fetchGoalsDisabled: boolean;
-  sendEventsOnlyForVariation: boolean;
 };
 const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConfig => ({
   customBaseURI: config.baseUri !== ServiceEndpoints.DEFAULT_POLLING,
@@ -29,12 +28,8 @@ const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConf
   diagnosticRecordingIntervalMillis: config.diagnosticRecordingInterval,
   streamingDisabled: !config.stream,
   allAttributesPrivate: config.allAttributesPrivate,
-
-  // The following extra properties are only provided by client-side JS SDKs:
   usingSecureMode: !!config.hash,
   bootstrapMode: !!config.bootstrap,
-  fetchGoalsDisabled: !config.fetchGoals,
-  sendEventsOnlyForVariation: config.sendEventsOnlyForVariation,
 });
 
 export default createDiagnosticsInitConfig;
