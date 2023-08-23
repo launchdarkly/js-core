@@ -26,5 +26,8 @@ export interface Flag extends Versioned {
   trackEventsFallthrough?: boolean;
   debugEventsUntilDate?: number;
   excludeFromSummaries?: boolean;
-  sampleWeight?: number;
+  samplingRatio?: number;
+  migration?: {
+    checkRatio?: number;
+  };
 }

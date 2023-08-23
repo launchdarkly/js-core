@@ -80,4 +80,11 @@ export interface LDMigrationDetail {
    * A tracker which which can be used to generate analytics for the migration.
    */
   tracker: LDMigrationTracker;
+
+  /**
+   * When present represents a 1 in X ratio indicating the probability that a given operation
+   * should have its consistency checked. A 1 indicates that it should always be sampled and
+   * 0 indicates that it never should be sampled.
+   */
+  checkRatio?: number;
 }

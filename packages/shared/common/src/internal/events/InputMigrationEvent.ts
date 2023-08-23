@@ -10,4 +10,5 @@ export default interface InputMigrationEvent {
   contextKeys: Record<string, string>;
   evaluation: any;
   measurements: any[];
+  samplingRatio: number;
 }

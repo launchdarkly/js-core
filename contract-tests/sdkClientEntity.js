@@ -1,4 +1,12 @@
-import ld from 'node-server-sdk';
+import got from 'got';
+import ld, {
+  LDExecution,
+  LDExecutionOrdering,
+  LDMigrationError,
+  LDMigrationSuccess,
+  LDSerialExecution,
+  Migration,
+} from 'node-server-sdk';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
@@ -125,6 +133,85 @@ export async function newSdkClientEntity(options) {
 
       case 'getBigSegmentStoreStatus':
         return await client.bigSegmentStoreStatusProvider.requireStatus();
+
+      case 'migrationVariation':
+        const migrationVariation = params.migrationVariation;
+        const res = await client.variationMigration(
+          migrationVariation.key,
+          migrationVariation.context,
+          migrationVariation.defaultStage,
+        );
+        return { result: res.value };
+
+      case 'migrationOperation':
+        const migrationOperation = params.migrationOperation;
+        const migration = new Migration(client, {
+          execution: new LDSerialExecution(LDExecutionOrdering.Fixed),
+          latencyTracking: migrationOperation.trackLatency,
+          errorTracking: migrationOperation.trackErrors,
+          check: migrationOperation.trackConsistency ? (a, b) => a === b : undefined,
+          readNew: async () => {
+            try {
+              const res = await got.post(migrationOperation.newEndpoint, {});
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+          writeNew: async () => {
+            try {
+              const res = await got.post(migrationOperation.newEndpoint, {});
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+          readOld: async () => {
+            try {
+              const res = await got.post(migrationOperation.oldEndpoint, {});
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+          writeOld: async () => {
+            try {
+              const res = await got.post(migrationOperation.oldEndpoint, {});
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+        });
+
+        switch (migrationOperation.operation) {
+          case 'read': {
+            const res = await migration.read(
+              migrationOperation.key,
+              migrationOperation.context,
+              migrationOperation.defaultStage,
+            );
+            if (res.success) {
+              return { result: res.result };
+            } else {
+              return { result: res.error };
+            }
+          }
+          case 'write': {
+            const res = await migration.write(
+              migrationOperation.key,
+              migrationOperation.context,
+              migrationOperation.defaultStage,
+            );
+
+            if (res.authoritative.success) {
+              return { result: res.authoritative.result };
+            } else {
+              return { result: res.authoritative.error };
+            }
+          }
+        }
+        return undefined;
 
       default:
         throw badCommandError;

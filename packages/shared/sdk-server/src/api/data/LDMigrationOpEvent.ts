@@ -18,8 +18,8 @@ export interface LDMigrationEvaluation {
 
 export interface LDMigrationConsistencyMeasurement {
   key: 'consistent';
-  value: number;
-  samplingOdds: number;
+  value: boolean;
+  samplingRatio: number;
 }
 
 export interface LDMigrationLatencyMeasurement {
@@ -33,8 +33,8 @@ export interface LDMigrationLatencyMeasurement {
 export interface LDMigrationErrorMeasurement {
   key: 'error';
   values: {
-    old?: number;
-    new?: number;
+    old?: boolean;
+    new?: boolean;
   };
 }
 

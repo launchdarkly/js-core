@@ -15,6 +15,7 @@ export default class EventFactory {
     detail: LDEvaluationDetail,
     defaultVal: any,
     prereqOfFlag?: Flag,
+    indexEventSamplingRatio?: number,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
     return new internal.InputEvalEvent(
@@ -31,6 +32,8 @@ export default class EventFactory {
       this.withReasons || addExperimentData ? detail.reason : undefined,
       flag.debugEventsUntilDate,
       flag.excludeFromSummaries,
+      flag.samplingRatio,
+      indexEventSamplingRatio ?? 1,
     );
   }
 
@@ -40,11 +43,26 @@ export default class EventFactory {
 
   /* eslint-disable-next-line class-methods-use-this */
   identifyEvent(context: Context) {
-    return new internal.InputIdentifyEvent(context);
+    // Currently sampling for identify events is always 1.
+    return new internal.InputIdentifyEvent(context, 1);
   }
 
   /* eslint-disable-next-line class-methods-use-this */
-  customEvent(key: string, context: Context, data?: any, metricValue?: number) {
-    return new internal.InputCustomEvent(context, key, data ?? undefined, metricValue ?? undefined);
+  customEvent(
+    key: string,
+    context: Context,
+    data?: any,
+    metricValue?: number,
+    samplingRatio: number = 1,
+    indexSamplingRatio: number = 1,
+  ) {
+    return new internal.InputCustomEvent(
+      context,
+      key,
+      data ?? undefined,
+      metricValue ?? undefined,
+      samplingRatio,
+      indexSamplingRatio,
+    );
   }
 }

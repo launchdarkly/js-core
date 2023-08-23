@@ -65,8 +65,7 @@ it('includes errors if at least one is set', () => {
   expect(event?.measurements).toContainEqual({
     key: 'error',
     values: {
-      old: 1,
-      new: 0,
+      old: true,
     },
   });
 
@@ -86,8 +85,7 @@ it('includes errors if at least one is set', () => {
   expect(eventB?.measurements).toContainEqual({
     key: 'error',
     values: {
-      old: 0,
-      new: 1,
+      new: true,
     },
   });
 });
@@ -150,8 +148,8 @@ it('includes if the result was consistent', () => {
   const event = tracker.createEvent();
   expect(event?.measurements).toContainEqual({
     key: 'consistent',
-    value: 1,
-    samplingOdds: 0,
+    value: true,
+    samplingRatio: 1,
   });
 });
 
@@ -171,7 +169,7 @@ it('includes if the result was inconsistent', () => {
   const event = tracker.createEvent();
   expect(event?.measurements).toContainEqual({
     key: 'consistent',
-    value: 0,
-    samplingOdds: 0,
+    value: false,
+    samplingRatio: 1,
   });
 });

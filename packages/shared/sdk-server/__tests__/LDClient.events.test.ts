@@ -1,3 +1,5 @@
+import { AsyncQueue } from 'launchdarkly-js-test-helpers';
+
 import { Context, internal } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl } from '../src';
@@ -10,14 +12,14 @@ const anonymousUser = { key: 'anon-user', anonymous: true };
 
 describe('given a client with mock event processor', () => {
   let client: LDClientImpl;
-  let events: internal.InputEvent[];
+  let events: AsyncQueue<internal.InputEvent>;
   let td: TestData;
 
   beforeEach(async () => {
-    events = [];
+    events = new AsyncQueue<internal.InputEvent>();
     jest
       .spyOn(internal.EventProcessor.prototype, 'sendEvent')
-      .mockImplementation((evt) => events.push(evt));
+      .mockImplementation((evt) => events.add(evt));
     jest
       .spyOn(internal.EventProcessor.prototype, 'flush')
       .mockImplementation(() => Promise.resolve());
@@ -43,8 +45,7 @@ describe('given a client with mock event processor', () => {
 
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       key: 'flagkey',
@@ -60,8 +61,7 @@ describe('given a client with mock event processor', () => {
     td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
     await client.variation('flagkey', anonymousUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       key: 'flagkey',
@@ -77,8 +77,7 @@ describe('given a client with mock event processor', () => {
     td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
     await client.variationDetail('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       key: 'flagkey',
@@ -111,8 +110,7 @@ describe('given a client with mock event processor', () => {
     });
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       creationDate: e.creationDate,
@@ -145,8 +143,7 @@ describe('given a client with mock event processor', () => {
     });
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       creationDate: e.creationDate,
@@ -172,8 +169,7 @@ describe('given a client with mock event processor', () => {
     });
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       creationDate: e.creationDate,
@@ -210,8 +206,7 @@ describe('given a client with mock event processor', () => {
     });
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       creationDate: e.creationDate,
@@ -250,8 +245,7 @@ describe('given a client with mock event processor', () => {
 
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       creationDate: e.creationDate,
@@ -268,8 +262,7 @@ describe('given a client with mock event processor', () => {
     td.update(td.flag('flagkey').on(true).variations('a', 'b').fallthroughVariation(1));
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       creationDate: e.creationDate,
@@ -285,8 +278,7 @@ describe('given a client with mock event processor', () => {
   it('generates event for unknown feature', async () => {
     await client.variation('flagkey', defaultUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       key: 'flagkey',
@@ -299,8 +291,7 @@ describe('given a client with mock event processor', () => {
   it('generates event for unknown feature when user is anonymous', async () => {
     await client.variation('flagkey', anonymousUser, 'c');
 
-    expect(events).toHaveLength(1);
-    const e = events[0];
+    const e = await events.take();
     expect(e).toMatchObject({
       kind: 'feature',
       key: 'flagkey',

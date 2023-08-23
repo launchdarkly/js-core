@@ -1,4 +1,4 @@
-import { LDContext } from '@launchdarkly/js-sdk-common';
+import { internal, LDContext } from '@launchdarkly/js-sdk-common';
 
 import { LDClient, LDConsistencyCheck, LDMigrationStage, LDMigrationTracker } from './api';
 import {
@@ -16,6 +16,8 @@ import {
   LDMigrationOptions,
   LDSerialExecution,
 } from './api/options/LDMigrationOptions';
+
+const { shouldSample } = internal;
 
 type MultipleReadResult<TMigrationRead> = {
   fromOld: LDMigrationReadResult<TMigrationRead>;
@@ -54,6 +56,7 @@ export function LDMigrationError(error: Error): { success: false; error: Error }
 interface MigrationContext<TPayload> {
   payload?: TPayload;
   tracker: LDMigrationTracker;
+  checkRatio?: number;
 }
 
 export default class Migration<
@@ -82,14 +85,14 @@ export default class Migration<
     [LDMigrationStage.Shadow]: async (context) => {
       const { fromOld, fromNew } = await this.doRead(context);
 
-      this.trackConsistency(context.tracker, fromOld, fromNew);
+      this.trackConsistency(context, fromOld, fromNew);
 
       return fromOld;
     },
     [LDMigrationStage.Live]: async (context) => {
       const { fromNew, fromOld } = await this.doRead(context);
 
-      this.trackConsistency(context.tracker, fromOld, fromNew);
+      this.trackConsistency(context, fromOld, fromNew);
 
       return fromNew;
     },
@@ -201,6 +204,7 @@ export default class Migration<
     const res = await this.readTable[stage.value]({
       payload,
       tracker: stage.tracker,
+      checkRatio: stage.checkRatio,
     });
     stage.tracker.op('read');
     this.sendEvent(stage.tracker);
@@ -231,14 +235,16 @@ export default class Migration<
   }
 
   private trackConsistency(
-    tracker: LDMigrationTracker,
+    context: MigrationContext<TMigrationReadInput>,
     oldValue: LDMethodResult<TMigrationRead>,
     newValue: LDMethodResult<TMigrationRead>,
   ) {
-    if (this.config.check) {
+    if (this.config.check && shouldSample(context.checkRatio ?? 1)) {
       if (oldValue.success && newValue.success) {
         const res = this.config.check(oldValue.result, newValue.result);
-        tracker.consistency(res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent);
+        context.tracker.consistency(
+          res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent,
+        );
       }
     }
   }
@@ -328,7 +334,7 @@ export default class Migration<
 
     // Performance timer is in ms, but may have a microsecond resolution
     // fractional component.
-    const latency = Math.floor(end - start);
+    const latency = end - start;
     tracker.latency(origin, latency);
     return result;
   }

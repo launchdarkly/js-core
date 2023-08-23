@@ -51,6 +51,8 @@ import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
+import { Metric } from './store/Metric';
+import { Override } from './store/Override';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 enum InitState {
@@ -107,6 +109,8 @@ export default class LDClientImpl implements LDClient {
   private onReady: () => void;
 
   private diagnosticsManager?: DiagnosticsManager;
+
+  private eventConfig: internal.LDEventOverrides;
 
   /**
    * Intended for use by platform specific client implementations.
@@ -225,6 +229,26 @@ export default class LDClientImpl implements LDClient {
         this.onReady();
       }
     });
+
+    this.eventConfig = {
+      samplingRatio: async (key: string) => {
+        const ratioItem = await asyncFacade.get(VersionedDataKinds.Metrics, key);
+        if (ratioItem && !ratioItem.deleted) {
+          return (ratioItem as Metric).samplingRatio ?? 1;
+        }
+        return 1;
+      },
+      indexEventSamplingRatio: async () => {
+        const indexSampling = await asyncFacade.get(
+          VersionedDataKinds.ConfigurationOverrides,
+          'indexSamplingRatio',
+        );
+        if (indexSampling && !indexSampling.deleted) {
+          return (indexSampling as Override).value ?? 1;
+        }
+        return 1;
+      },
+    };
   }
 
   initialized(): boolean {
@@ -250,7 +274,12 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
-    const res = await this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault);
+    const [res] = await this.evaluateIfPossible(
+      key,
+      context,
+      defaultValue,
+      this.eventFactoryDefault,
+    );
     if (!callback) {
       return res.detail.value;
     }
@@ -264,7 +293,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    const res = await this.evaluateIfPossible(
+    const [res] = await this.evaluateIfPossible(
       key,
       context,
       defaultValue,
@@ -280,8 +309,15 @@ export default class LDClientImpl implements LDClient {
     defaultValue: LDMigrationStage,
   ): Promise<LDMigrationDetail> {
     const convertedContext = Context.fromLDContext(context);
-    const detail = await this.variationDetail(key, context, defaultValue as string);
+    const [{ detail }, flag] = await this.evaluateIfPossible(
+      key,
+      context,
+      defaultValue,
+      this.eventFactoryWithReasons,
+    );
+
     const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
+    const checkRatio = flag?.migration?.checkRatio;
     if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
@@ -292,18 +328,28 @@ export default class LDClientImpl implements LDClient {
       return {
         value: defaultValue,
         reason,
-        tracker: new MigrationOpTracker(key, contextKeys, defaultValue, defaultValue, reason),
+        checkRatio,
+        tracker: new MigrationOpTracker(
+          key,
+          contextKeys,
+          defaultValue,
+          defaultValue,
+          reason,
+          checkRatio,
+        ),
       };
     }
     return {
       ...detail,
       value: detail.value as LDMigrationStage,
+      checkRatio,
       tracker: new MigrationOpTracker(
         key,
         contextKeys,
         defaultValue,
-        defaultValue,
+        detail.value,
         detail.reason,
+        checkRatio,
         // Can be null for compatibility reasons.
         detail.variationIndex === null ? undefined : detail.variationIndex,
       ),
@@ -410,16 +456,42 @@ export default class LDClientImpl implements LDClient {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
-    this.eventProcessor.sendEvent(
-      this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
-    );
+    // Async immediately invoking function expression to get the flag from the store
+    // without requiring track to be async.
+    (async () => {
+      this.eventProcessor.sendEvent(
+        this.eventFactoryDefault.customEvent(
+          key,
+          checkedContext!,
+          data,
+          metricValue,
+          await this.eventConfig.samplingRatio(key),
+          await this.eventConfig.indexEventSamplingRatio(),
+        ),
+      );
+    })();
   }
 
   trackMigration(event: LDMigrationOpEvent): void {
     const converted = MigrationOpEventToInputEvent(event);
-    if (converted) {
-      this.eventProcessor.sendEvent(converted);
+    if (!converted) {
+      return;
     }
+    // Async immediately invoking function expression to get the flag from the store
+    // without requiring track to be async.
+    (async () => {
+      // TODO: Would it be better to pass this through.
+      const sampling = await this.featureStore.get(
+        VersionedDataKinds.Features,
+        event.evaluation.key,
+      );
+      const samplingRatio = (sampling as Flag)?.samplingRatio ?? 1;
+      const inputEvent: internal.InputMigrationEvent = {
+        ...converted,
+        samplingRatio,
+      };
+      this.eventProcessor.sendEvent(inputEvent);
+    })();
   }
 
   identify(context: LDContext): void {
@@ -445,10 +517,10 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-  ): Promise<EvalResult> {
+  ): Promise<[EvalResult, Flag?]> {
     if (this.config.offline) {
       this.logger?.info('Variation called in offline mode. Returning default value.');
-      return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
+      return [EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue), undefined];
     }
     const evalContext = Context.fromLDContext(context);
     if (!evalContext.valid) {
@@ -457,7 +529,7 @@ export default class LDClientImpl implements LDClient {
           `${evalContext.message ?? 'Context not valid;'} returning default value.`,
         ),
       );
-      return EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue);
+      return [EvalResult.forError(ErrorKinds.UserNotSpecified, undefined, defaultValue), undefined];
     }
 
     const flag = (await this.featureStore.get(VersionedDataKinds.Features, flagKey)) as Flag;
@@ -468,20 +540,31 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
       );
-      return result;
+      return [result, undefined];
     }
     const evalRes = await this.evaluator.evaluate(flag, evalContext, eventFactory);
     if (evalRes.detail.variationIndex === undefined || evalRes.detail.variationIndex === null) {
       this.logger?.debug('Result value is null in variation');
       evalRes.setDefault(defaultValue);
     }
-    evalRes.events?.forEach((event) => {
-      this.eventProcessor.sendEvent(event);
-    });
-    this.eventProcessor.sendEvent(
-      eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue),
-    );
-    return evalRes;
+    // Immediately invoked function expression to take this processing out of the variation path.
+    (async () => {
+      const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
+      evalRes.events?.forEach((event) => {
+        this.eventProcessor.sendEvent({ ...event, indexSamplingRatio });
+      });
+      this.eventProcessor.sendEvent(
+        eventFactory.evalEvent(
+          flag,
+          evalContext,
+          evalRes.detail,
+          defaultValue,
+          undefined,
+          indexSamplingRatio,
+        ),
+      );
+    })();
+    return [evalRes, flag];
   }
 
   private async evaluateIfPossible(
@@ -489,7 +572,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-  ): Promise<EvalResult> {
+  ): Promise<[EvalResult, Flag?]> {
     if (!this.initialized()) {
       const storeInitialized = await this.featureStore.initialized();
       if (storeInitialized) {
@@ -503,7 +586,7 @@ export default class LDClientImpl implements LDClient {
         'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
           "'ready' event?) - using default value",
       );
-      return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
+      return [EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue), undefined];
     }
     return this.variationInternal(flagKey, context, defaultValue, eventFactory);
   }

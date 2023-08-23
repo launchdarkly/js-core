@@ -34,13 +34,25 @@ function isConsistencyMeasurement(
   return (value as any).kind === undefined && value.key === 'consistent';
 }
 
-function areValidValues(values: { old?: number; new?: number }) {
+function areValidNumbers(values: { old?: number; new?: number }) {
   const oldValue = values.old;
   const newValue = values.new;
   if (oldValue !== undefined && !TypeValidators.Number.is(oldValue)) {
     return false;
   }
   if (newValue !== undefined && !TypeValidators.Number.is(newValue)) {
+    return false;
+  }
+  return true;
+}
+
+function areValidBooleans(values: { old?: boolean; new?: boolean }) {
+  const oldValue = values.old;
+  const newValue = values.new;
+  if (oldValue !== undefined && !TypeValidators.Boolean.is(oldValue)) {
+    return false;
+  }
+  if (newValue !== undefined && !TypeValidators.Boolean.is(newValue)) {
     return false;
   }
   return true;
@@ -60,7 +72,7 @@ function validateMeasurement(
     if (!TypeValidators.Object.is(measurement.values)) {
       return undefined;
     }
-    if (!areValidValues(measurement.values)) {
+    if (!areValidNumbers(measurement.values)) {
       return undefined;
     }
     return {
@@ -76,7 +88,7 @@ function validateMeasurement(
     if (!TypeValidators.Object.is(measurement.values)) {
       return undefined;
     }
-    if (!areValidValues(measurement.values)) {
+    if (!areValidBooleans(measurement.values)) {
       return undefined;
     }
     return {
@@ -90,15 +102,15 @@ function validateMeasurement(
 
   if (isConsistencyMeasurement(measurement)) {
     if (
-      !TypeValidators.Number.is(measurement.value) ||
-      !TypeValidators.Number.is(measurement.samplingOdds)
+      !TypeValidators.Boolean.is(measurement.value) ||
+      !TypeValidators.Number.is(measurement.samplingRatio)
     ) {
       return undefined;
     }
     return {
       key: measurement.key,
       value: measurement.value,
-      samplingOdds: measurement.samplingOdds,
+      samplingRatio: measurement.samplingRatio,
     };
   }
 
@@ -157,7 +169,7 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
     outReason.bigSegmentsStatus = inReason.bigSegmentsStatus;
   }
 
-  if (evaluation.variation && TypeValidators.Number.is(evaluation.variation)) {
+  if (evaluation.variation !== undefined && TypeValidators.Number.is(evaluation.variation)) {
     validated.variation = evaluation.variation;
   }
 
@@ -174,7 +186,8 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
  */
 export default function MigrationOpEventToInputEvent(
   inEvent: LDMigrationOpEvent,
-): internal.InputMigrationEvent | undefined {
+): Omit<internal.InputMigrationEvent, 'samplingRatio'> | undefined {
+  // The sampling ratio is omitted and needs populated by the track migration method.
   if (inEvent.kind !== 'migration_op') {
     return undefined;
   }

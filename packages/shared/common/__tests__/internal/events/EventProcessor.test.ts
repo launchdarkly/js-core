@@ -28,6 +28,12 @@ import {
 } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
+import shouldSample from '../../../src/internal/events/sampling';
+
+jest.mock('../../../src/internal/events/sampling', () => ({
+  __esModule: true,
+  default: jest.fn(() => true),
+}));
 
 const user = { key: 'userKey', name: 'Red' };
 const userWithFilteredName = {
@@ -195,6 +201,8 @@ describe('given an event processor', () => {
   beforeEach(() => {
     eventSender = new MockEventSender();
     contextDeduplicator = new MockContextDeduplicator();
+    // @ts-ignore
+    shouldSample.mockImplementation(() => true);
 
     eventProcessor = new EventProcessor(
       eventProcessorConfig,
@@ -286,6 +294,9 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: true,
       default: 'default',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -302,6 +313,102 @@ describe('given an event processor', () => {
     ]);
   });
 
+  it('uses sampling ratio for feature events', async () => {
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      key: 'flagkey',
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      default: 'default',
+      samplingRatio: 2,
+      indexSamplingRatio: 1, // Disable the index events.
+      withReasons: true,
+    });
+
+    await eventProcessor.flush();
+    const request = await eventSender.queue.take();
+    expect(shouldSample).toHaveBeenCalledWith(2);
+
+    expect(request.data).toEqual([
+      {
+        kind: 'index',
+        creationDate: 1000,
+        context: { ...user, kind: 'user' },
+      },
+      { ...makeFeatureEvent(1000, 11), samplingRatio: 2 },
+      makeSummary(1000, 1000, 1, 11),
+    ]);
+  });
+
+  it('excludes feature events that are not sampled', async () => {
+    // @ts-ignore
+    shouldSample.mockImplementation((ratio) => ratio !== 2);
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      key: 'flagkey',
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      default: 'default',
+      samplingRatio: 2,
+      indexSamplingRatio: 1, // Disable the index events.
+      withReasons: true,
+    });
+
+    await eventProcessor.flush();
+    const request = await eventSender.queue.take();
+    expect(shouldSample).toHaveBeenCalledWith(2);
+    expect(shouldSample).toHaveBeenCalledWith(1);
+
+    expect(request.data).toEqual([
+      {
+        kind: 'index',
+        creationDate: 1000,
+        context: { ...user, kind: 'user' },
+      },
+      makeSummary(1000, 1000, 1, 11),
+    ]);
+  });
+
+  it('excludes index events that are not sampled', async () => {
+    // @ts-ignore
+    shouldSample.mockImplementation((ratio) => ratio === 2);
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      key: 'flagkey',
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      default: 'default',
+      samplingRatio: 2,
+      indexSamplingRatio: 1, // Disable the index events.
+      withReasons: true,
+    });
+
+    await eventProcessor.flush();
+    const request = await eventSender.queue.take();
+    expect(shouldSample).toHaveBeenCalledWith(2);
+    expect(shouldSample).toHaveBeenCalledWith(1);
+
+    expect(request.data).toEqual([
+      { ...makeFeatureEvent(1000, 11), samplingRatio: 2 },
+      makeSummary(1000, 1000, 1, 11),
+    ]);
+  });
+
   it('handles the version being 0', async () => {
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent({
@@ -314,6 +421,9 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: true,
       default: 'default',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -344,6 +454,9 @@ describe('given an event processor', () => {
       trackEvents: false,
       debugEventsUntilDate: 2000,
       default: 'default',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -373,6 +486,9 @@ describe('given an event processor', () => {
       trackEvents: true,
       debugEventsUntilDate: 2000,
       default: 'default',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -409,6 +525,9 @@ describe('given an event processor', () => {
       trackEvents: false,
       debugEventsUntilDate: 1500,
       default: 'default',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -438,6 +557,9 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: true,
       default: 'default',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
     eventProcessor.sendEvent({
       kind: 'feature',
@@ -449,6 +571,9 @@ describe('given an event processor', () => {
       value: 'carrot',
       trackEvents: true,
       default: 'potato',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -511,6 +636,9 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: false,
       default: 'default',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
     eventProcessor.sendEvent({
       kind: 'feature',
@@ -522,6 +650,9 @@ describe('given an event processor', () => {
       value: 'carrot',
       trackEvents: false,
       default: 'potato',
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -577,6 +708,8 @@ describe('given an event processor', () => {
       context: Context.fromLDContext(user),
       key: 'eventkey',
       data: { thing: 'stuff' },
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -600,6 +733,63 @@ describe('given an event processor', () => {
     ]);
   });
 
+  it('does not queue a custom event that is not sampled', async () => {
+    // @ts-ignore
+    shouldSample.mockImplementation((ratio) => ratio !== 2);
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'custom',
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      key: 'eventkey',
+      data: { thing: 'stuff' },
+      samplingRatio: 2,
+      indexSamplingRatio: 1,
+    });
+
+    await eventProcessor.flush();
+    const request = await eventSender.queue.take();
+
+    expect(request.data).toEqual([
+      {
+        kind: 'index',
+        creationDate: 1000,
+        context: { ...user, kind: 'user' },
+      },
+    ]);
+  });
+
+  it('does not queue a index event that is not sampled with a custom event', async () => {
+    // @ts-ignore
+    shouldSample.mockImplementation((ratio) => ratio === 2);
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'custom',
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      key: 'eventkey',
+      data: { thing: 'stuff' },
+      samplingRatio: 2,
+      indexSamplingRatio: 1,
+    });
+
+    await eventProcessor.flush();
+    const request = await eventSender.queue.take();
+
+    expect(request.data).toEqual([
+      {
+        kind: 'custom',
+        key: 'eventkey',
+        data: { thing: 'stuff' },
+        creationDate: 1000,
+        contextKeys: {
+          user: 'userKey',
+        },
+        samplingRatio: 2,
+      },
+    ]);
+  });
+
   it('queues custom event with anonymous user', async () => {
     eventProcessor.sendEvent({
       kind: 'custom',
@@ -607,6 +797,8 @@ describe('given an event processor', () => {
       context: Context.fromLDContext(anonUser),
       key: 'eventkey',
       data: { thing: 'stuff' },
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -639,6 +831,8 @@ describe('given an event processor', () => {
       key: 'eventkey',
       data: { thing: 'stuff' },
       metricValue: 1.5,
+      samplingRatio: 1,
+      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();

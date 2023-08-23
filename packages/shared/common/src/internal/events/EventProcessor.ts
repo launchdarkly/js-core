@@ -9,7 +9,10 @@ import ClientContext from '../../options/ClientContext';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify, isMigration } from './guards';
 import InputEvent from './InputEvent';
+import InputIdentifyEvent from './InputIdentifyEvent';
+import InputMigrationEvent from './InputMigrationEvent';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
+import shouldSample from './sampling';
 
 type FilteredContext = any;
 
@@ -20,6 +23,7 @@ interface IdentifyOutputEvent {
   kind: 'identify' | 'index';
   creationDate: number;
   context: FilteredContext;
+  samplingRatio?: number;
 }
 
 interface CustomOutputEvent {
@@ -29,6 +33,7 @@ interface CustomOutputEvent {
   contextKeys: Record<string, string>;
   data?: any;
   metricValue?: number;
+  samplingRatio?: number;
 }
 
 interface FeatureOutputEvent {
@@ -43,6 +48,11 @@ interface FeatureOutputEvent {
   reason?: LDEvaluationReason;
   context?: FilteredContext;
   contextKeys?: Record<string, string>;
+  samplingRatio?: number;
+}
+
+interface IndexInputEvent extends Omit<InputIdentifyEvent, 'kind'> {
+  kind: 'index';
 }
 
 /**
@@ -51,12 +61,18 @@ interface FeatureOutputEvent {
  */
 type DiagnosticEvent = any;
 
+interface MigrationOutputEvent extends Omit<InputMigrationEvent, 'samplingRatio'> {
+  // Make the sampling ratio optional so we can omit it when it is one.
+  samplingRatio?: number;
+}
+
 type OutputEvent =
   | IdentifyOutputEvent
   | CustomOutputEvent
   | FeatureOutputEvent
   | SummarizedFlagsEvent
-  | DiagnosticEvent;
+  | DiagnosticEvent
+  | MigrationOutputEvent;
 
 export interface EventProcessorOptions {
   allAttributesPrivate: boolean;
@@ -197,22 +213,33 @@ export default class EventProcessor implements LDEventProcessor {
     }
 
     if (isMigration(inputEvent)) {
-      // The contents of the migration op event have been validated
-      // before this point, so we can just send it.
-      // TODO: Implement sampling odds.
-      this.enqueue({
-        ...inputEvent,
-      });
+      // These conditions are not combined, because we always want to stop
+      // processing at this point for a migration event. It cannot generate
+      // an index event or debug event.
+      if (shouldSample(inputEvent.samplingRatio)) {
+        const migrationEvent: MigrationOutputEvent = {
+          ...inputEvent,
+        };
+        if (migrationEvent.samplingRatio === 1) {
+          delete migrationEvent.samplingRatio;
+        }
+        this.enqueue(migrationEvent);
+      }
       return;
     }
 
     this.summarizer.summarizeEvent(inputEvent);
 
     const isFeatureEvent = isFeature(inputEvent);
+
     const addFullEvent = (isFeatureEvent && inputEvent.trackEvents) || !isFeatureEvent;
+
     const addDebugEvent = this.shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
+
+    // We only want to notify the de-duplicator if we would sample the index event.
+    // Otherwise we could deduplicate and then not send the event.
     const shouldNotDeduplicate = this.contextDeduplicator.processContext(inputEvent.context);
 
     // If there is no cache, then it will never be in the cache.
@@ -224,22 +251,28 @@ export default class EventProcessor implements LDEventProcessor {
 
     const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
-    if (addIndexEvent) {
-      this.enqueue({
-        kind: 'index',
-        creationDate: inputEvent.creationDate,
-        context: this.contextFilter.filter(inputEvent.context),
-      });
+    if (addIndexEvent && shouldSample(inputEvent.indexSamplingRatio)) {
+      this.enqueue(
+        this.makeOutputEvent(
+          {
+            kind: 'index',
+            creationDate: inputEvent.creationDate,
+            context: inputEvent.context,
+            samplingRatio: inputEvent.indexSamplingRatio,
+          },
+          false,
+        ),
+      );
     }
-    if (addFullEvent) {
+    if (addFullEvent && shouldSample(inputEvent.samplingRatio)) {
       this.enqueue(this.makeOutputEvent(inputEvent, false));
     }
-    if (addDebugEvent) {
+    if (addDebugEvent && shouldSample(inputEvent.samplingRatio)) {
       this.enqueue(this.makeOutputEvent(inputEvent, true));
     }
   }
 
-  private makeOutputEvent(event: InputEvent, debug: boolean): OutputEvent {
+  private makeOutputEvent(event: InputEvent | IndexInputEvent, debug: boolean): OutputEvent {
     switch (event.kind) {
       case 'feature': {
         const out: FeatureOutputEvent = {
@@ -248,8 +281,13 @@ export default class EventProcessor implements LDEventProcessor {
           key: event.key,
           value: event.value,
           default: event.default,
-          prereqOf: event.prereqOf,
         };
+        if (event.samplingRatio !== 1) {
+          out.samplingRatio = event.samplingRatio;
+        }
+        if (event.prereqOf) {
+          out.prereqOf = event.prereqOf;
+        }
         if (event.variation !== undefined) {
           out.variation = event.variation;
         }
@@ -266,12 +304,17 @@ export default class EventProcessor implements LDEventProcessor {
         }
         return out;
       }
+      case 'index': // Intentional fallthrough.
       case 'identify': {
-        return {
-          kind: 'identify',
+        const out: IdentifyOutputEvent = {
+          kind: event.kind,
           creationDate: event.creationDate,
           context: this.contextFilter.filter(event.context),
         };
+        if (event.samplingRatio !== 1) {
+          out.samplingRatio = event.samplingRatio;
+        }
+        return out;
       }
       case 'custom': {
         const out: CustomOutputEvent = {
@@ -280,6 +323,10 @@ export default class EventProcessor implements LDEventProcessor {
           key: event.key,
           contextKeys: event.context.kindsAndKeys,
         };
+
+        if (event.samplingRatio !== 1) {
+          out.samplingRatio = event.samplingRatio;
+        }
 
         if (event.data !== undefined) {
           out.data = event.data;
