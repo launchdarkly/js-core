@@ -87,4 +87,9 @@ export interface LDMigrationDetail {
    * 0 indicates that it never should be sampled.
    */
   checkRatio?: number;
+
+  /**
+   * Sampling ratio for the migration event. Defaults to 1 if not specified.
+   */
+  samplingRatio?: number;
 }

@@ -318,6 +318,7 @@ export default class LDClientImpl implements LDClient {
 
     const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
     const checkRatio = flag?.migration?.checkRatio;
+    const samplingRatio = flag?.samplingRatio;
     if (!IsMigrationStage(detail.value)) {
       const error = new Error(`Unrecognized MigrationState for "${key}"; returning default value.`);
       this.onError(error);
@@ -336,6 +337,8 @@ export default class LDClientImpl implements LDClient {
           defaultValue,
           reason,
           checkRatio,
+          undefined,
+          samplingRatio,
         ),
       };
     }
@@ -352,6 +355,7 @@ export default class LDClientImpl implements LDClient {
         checkRatio,
         // Can be null for compatibility reasons.
         detail.variationIndex === null ? undefined : detail.variationIndex,
+        samplingRatio,
       ),
     };
   }
@@ -477,21 +481,8 @@ export default class LDClientImpl implements LDClient {
     if (!converted) {
       return;
     }
-    // Async immediately invoking function expression to get the flag from the store
-    // without requiring track to be async.
-    (async () => {
-      // TODO: Would it be better to pass this through.
-      const sampling = await this.featureStore.get(
-        VersionedDataKinds.Features,
-        event.evaluation.key,
-      );
-      const samplingRatio = (sampling as Flag)?.samplingRatio ?? 1;
-      const inputEvent: internal.InputMigrationEvent = {
-        ...converted,
-        samplingRatio,
-      };
-      this.eventProcessor.sendEvent(inputEvent);
-    })();
+
+    this.eventProcessor.sendEvent(converted);
   }
 
   identify(context: LDContext): void {

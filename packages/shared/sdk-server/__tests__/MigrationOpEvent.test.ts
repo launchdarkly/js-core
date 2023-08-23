@@ -478,7 +478,7 @@ it('ignores invalid measurement keys', () => {
     ],
   };
   const validatedEvent = MigrationOpEventConversion(inputEvent);
-  expect(validatedEvent).toEqual({ ...inputEvent, measurements: [] });
+  expect(validatedEvent).toEqual({ ...inputEvent, measurements: [], samplingRatio: 1 });
 });
 
 it('invalid data types are filtered', () => {
@@ -534,5 +534,6 @@ it('invalid data types are filtered', () => {
       },
     },
     measurements: [],
+    samplingRatio: 1,
   });
 });
