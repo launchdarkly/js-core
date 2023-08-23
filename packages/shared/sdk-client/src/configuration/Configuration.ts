@@ -21,9 +21,9 @@ export default class Configuration {
   public readonly streamUri = Configuration.DEFAULT_STREAM;
 
   public readonly capacity = 100;
-  public readonly diagnosticRecordingInterval = 900000;
-  public readonly flushInterval = 2000;
-  public readonly streamReconnectDelay = 1000;
+  public readonly diagnosticRecordingInterval = 900;
+  public readonly flushInterval = 2;
+  public readonly streamReconnectDelay = 1;
 
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;

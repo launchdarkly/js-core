@@ -1,3 +1,5 @@
+import { secondsToMillis } from '@launchdarkly/js-sdk-common';
+
 import Configuration from '../configuration';
 import createDiagnosticsInitConfig, {
   type DiagnosticsInitConfig,
@@ -17,10 +19,10 @@ describe('createDiagnosticsInitConfig', () => {
       customBaseURI: false,
       customEventsURI: false,
       customStreamURI: false,
-      diagnosticRecordingIntervalMillis: 900000,
+      diagnosticRecordingIntervalMillis: secondsToMillis(900),
       eventsCapacity: 100,
-      eventsFlushIntervalMillis: 2000,
-      reconnectTimeMillis: 1000,
+      eventsFlushIntervalMillis: secondsToMillis(2),
+      reconnectTimeMillis: secondsToMillis(1),
       streamingDisabled: true,
       usingSecureMode: false,
     });
@@ -32,10 +34,10 @@ describe('createDiagnosticsInitConfig', () => {
         baseUri: 'https://dev.ld.com',
         streamUri: 'https://stream.ld.com',
         eventsUri: 'https://events.ld.com',
-        capacity: 1111,
-        flushInterval: 2222,
-        streamReconnectDelay: 3333,
-        diagnosticRecordingInterval: 4444,
+        capacity: 1,
+        flushInterval: 2,
+        streamReconnectDelay: 3,
+        diagnosticRecordingInterval: 4,
         stream: true,
         allAttributesPrivate: true,
         hash: 'test-hash',
@@ -48,10 +50,10 @@ describe('createDiagnosticsInitConfig', () => {
       customBaseURI: true,
       customEventsURI: true,
       customStreamURI: true,
-      diagnosticRecordingIntervalMillis: 4444,
-      eventsCapacity: 1111,
-      eventsFlushIntervalMillis: 2222,
-      reconnectTimeMillis: 3333,
+      diagnosticRecordingIntervalMillis: 4000,
+      eventsCapacity: 1,
+      eventsFlushIntervalMillis: 2000,
+      reconnectTimeMillis: 3000,
       streamingDisabled: false,
       usingSecureMode: true,
     });

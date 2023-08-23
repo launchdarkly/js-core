@@ -147,18 +147,18 @@ export default interface LDOptions {
   capacity?: number;
 
   /**
-   * The interval in between flushes of the analytics events queue, in milliseconds.
+   * The interval in between flushes of the analytics events queue, in seconds.
    *
-   * The default value is 2000ms.
+   * The default value is 2s.
    */
   flushInterval?: number;
 
   /**
-   * How long (in milliseconds) to wait after a failure of the stream connection before trying to
+   * How long (in seconds) to wait after a failure of the stream connection before trying to
    * reconnect.
    *
    * This only applies if streaming has been enabled by setting {@link streaming} to true or
-   * subscribing to `"change"` events. The default is 1000ms.
+   * subscribing to `"change"` events. The default is 1s.
    */
   streamReconnectDelay?: number;
 
@@ -174,9 +174,9 @@ export default interface LDOptions {
   diagnosticOptOut?: boolean;
 
   /**
-   * The interval at which periodic diagnostic data is sent, in milliseconds.
+   * The interval at which periodic diagnostic data is sent, in seconds.
    *
-   * The default is 900000 (every 15 minutes) and the minimum value is 6000. See {@link diagnosticOptOut}
+   * The default is 900 (every 15 minutes) and the minimum value is 6. See {@link diagnosticOptOut}
    * for more information on the diagnostics data being sent.
    */
   diagnosticRecordingInterval?: number;

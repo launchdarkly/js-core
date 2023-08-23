@@ -1,4 +1,4 @@
-import { ServiceEndpoints } from '@launchdarkly/js-sdk-common';
+import { secondsToMillis, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
 
@@ -23,9 +23,9 @@ const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConf
   customStreamURI: config.streamUri !== Configuration.DEFAULT_STREAM,
   customEventsURI: config.eventsUri !== ServiceEndpoints.DEFAULT_EVENTS,
   eventsCapacity: config.capacity,
-  eventsFlushIntervalMillis: config.flushInterval,
-  reconnectTimeMillis: config.streamReconnectDelay,
-  diagnosticRecordingIntervalMillis: config.diagnosticRecordingInterval,
+  eventsFlushIntervalMillis: secondsToMillis(config.flushInterval),
+  reconnectTimeMillis: secondsToMillis(config.streamReconnectDelay),
+  diagnosticRecordingIntervalMillis: secondsToMillis(config.diagnosticRecordingInterval),
   streamingDisabled: !config.stream,
   allAttributesPrivate: config.allAttributesPrivate,
   usingSecureMode: !!config.hash,

@@ -21,8 +21,8 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   eventsUri: TypeValidators.String,
 
   capacity: TypeValidators.numberWithMin(1),
-  diagnosticRecordingInterval: TypeValidators.numberWithMin(2000),
-  flushInterval: TypeValidators.numberWithMin(2000),
+  diagnosticRecordingInterval: TypeValidators.numberWithMin(2),
+  flushInterval: TypeValidators.numberWithMin(2),
   streamReconnectDelay: TypeValidators.numberWithMin(0),
 
   allAttributesPrivate: TypeValidators.Boolean,
