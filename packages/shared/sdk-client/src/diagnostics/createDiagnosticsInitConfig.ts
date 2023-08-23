@@ -19,7 +19,7 @@ export type DiagnosticsInitConfig = {
   bootstrapMode: boolean;
 };
 const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConfig => ({
-  customBaseURI: config.baseUri !== ServiceEndpoints.DEFAULT_POLLING,
+  customBaseURI: config.baseUri !== Configuration.DEFAULT_POLLING,
   customStreamURI: config.streamUri !== Configuration.DEFAULT_STREAM,
   customEventsURI: config.eventsUri !== ServiceEndpoints.DEFAULT_EVENTS,
   eventsCapacity: config.capacity,

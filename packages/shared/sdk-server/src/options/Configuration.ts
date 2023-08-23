@@ -63,7 +63,7 @@ const validations: Record<string, TypeValidator> = {
  * @internal
  */
 export const defaultValues: ValidatedOptions = {
-  baseUri: ServiceEndpoints.DEFAULT_POLLING,
+  baseUri: 'https://sdk.launchdarkly.com',
   streamUri: 'https://stream.launchdarkly.com',
   eventsUri: ServiceEndpoints.DEFAULT_EVENTS,
   stream: true,
