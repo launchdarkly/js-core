@@ -49,7 +49,7 @@ export default class StreamingProcessor implements LDStreamProcessor {
     requests: Requests,
     info: Info,
     private readonly featureStore: LDDataSourceUpdates,
-    private readonly diagnosticsManager?: internal.LDDiagnosticsManager,
+    private readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.headers = defaultHeaders(sdkKey, info, config.tags);
     this.logger = config.logger;
