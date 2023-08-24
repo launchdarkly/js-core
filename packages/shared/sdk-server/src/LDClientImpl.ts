@@ -488,6 +488,7 @@ export default class LDClientImpl implements LDClient {
         );
         cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
       });
+      return;
     }
     this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
   }
