@@ -18,6 +18,7 @@ import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import ClientMessages from './ClientMessages';
+import createStreamingProcessor from './data_sources/createStreamingProcessor';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import PollingProcessor from './data_sources/PollingProcessor';
@@ -135,14 +136,7 @@ export default class LDClientImpl implements LDClient {
 
     const makeDefaultProcessor = () =>
       config.stream
-        ? new StreamingProcessor(
-            sdkKey,
-            config,
-            this.platform.requests,
-            this.platform.info,
-            dataSourceUpdates,
-            this.diagnosticsManager,
-          )
+        ? createStreamingProcessor(sdkKey, clientContext, this.diagnosticsManager)
         : new PollingProcessor(
             config,
             new Requestor(sdkKey, config, this.platform.info, this.platform.requests),

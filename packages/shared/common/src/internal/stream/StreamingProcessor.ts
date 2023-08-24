@@ -1,4 +1,4 @@
-import { EventListener, EventName, EventSource, LDLogger, Requests } from '../../api';
+import { EventName, EventSource, LDLogger, ProcessStreamResponse, Requests } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem/LDStreamProcessor';
 import { isHttpRecoverable, LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
@@ -8,10 +8,16 @@ import { DiagnosticsManager } from '../diagnostics';
 const STREAM_READ_TIMEOUT_MS = 5 * 60 * 1000;
 const RETRY_RESET_INTERVAL_MS = 60 * 1000;
 
+const reportJsonError = (type: string, data: string, logger?: LDLogger, errorHandler?: any) => {
+  logger?.error(`Stream received invalid data in "${type}" message`);
+  logger?.debug(`Invalid JSON follows: ${data}`);
+  errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
+};
+
 /**
  * @internal
  */
-export default class StreamingProcessor implements LDStreamProcessor {
+class StreamingProcessor implements LDStreamProcessor {
   private readonly headers: { [key: string]: string | string[] };
   private readonly streamInitialReconnectDelay: number;
   private readonly streamUri: string;
@@ -24,8 +30,9 @@ export default class StreamingProcessor implements LDStreamProcessor {
   constructor(
     sdkKey: string,
     clientContext: ClientContext,
-    private readonly listeners: Map<EventName, EventListener>,
+    private readonly listeners: Map<EventName, ProcessStreamResponse>,
     private readonly diagnosticsManager?: DiagnosticsManager,
+    private readonly errorHandler?: (err?: any) => void,
   ) {
     const { basicConfiguration, platform } = clientContext;
     const { logger, tags, streamInitialReconnectDelay } = basicConfiguration;
@@ -54,13 +61,13 @@ export default class StreamingProcessor implements LDStreamProcessor {
     this.connectionAttemptStartTime = undefined;
   }
 
-  start(fn?: ((err?: any) => void) | undefined) {
+  start() {
     this.logConnectionStarted();
 
     const errorFilter = (err: { status: number; message: string }): boolean => {
       if (err.status && !isHttpRecoverable(err.status)) {
         this.logConnectionResult(false);
-        fn?.(new LDStreamingError(err.message, err.status));
+        this.errorHandler?.(new LDStreamingError(err.message, err.status));
         this.logger?.error(httpErrorMessage(err, 'streaming request'));
         return false;
       }
@@ -70,13 +77,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
       this.logConnectionStarted();
       return true;
     };
-
-    // TODO: figure out how to report errors
-    // const reportJsonError = (type: string, data: string) => {
-    //   this.logger?.error(`Stream received invalid data in "${type}" message`);
-    //   this.logger?.debug(`Invalid JSON follows: ${data}`);
-    //   fn?.(new LDStreamingError('Malformed JSON data in event stream'));
-    // };
 
     // TLS is handled by the platform implementation.
 
@@ -105,8 +105,25 @@ export default class StreamingProcessor implements LDStreamProcessor {
       this.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
     };
 
-    this.listeners.forEach((listener, eventName) => {
-      eventSource.addEventListener(eventName, listener);
+    this.listeners.forEach(({ deserialize, processJson }, eventName) => {
+      eventSource.addEventListener(eventName, (event) => {
+        this.logger?.debug(`Received ${eventName} event`);
+
+        if (event?.data) {
+          this.logConnectionResult(true);
+          const { data } = event;
+          const parsed = deserialize(data);
+
+          if (!parsed) {
+            reportJsonError(eventName, data, this.logger, this.errorHandler);
+            return;
+          }
+
+          processJson(parsed);
+        } else {
+          this.errorHandler?.(new LDStreamingError('Unexpected payload from event stream'));
+        }
+      });
     });
   }
 
@@ -119,3 +136,5 @@ export default class StreamingProcessor implements LDStreamProcessor {
     this.stop();
   }
 }
+
+export default StreamingProcessor;

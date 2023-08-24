@@ -23,12 +23,12 @@ export function reviver(this: any, key: string, value: any): any {
   return value;
 }
 
-interface FlagsAndSegments {
+export interface FlagsAndSegments {
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
 }
 
-interface AllData {
+export interface AllData {
   data: FlagsAndSegments;
 }
 
