@@ -5,7 +5,7 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
-import { type LDDiagnosticsManager } from '../diagnostics';
+import { DiagnosticsManager } from '../diagnostics';
 import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
@@ -91,7 +91,7 @@ export default class EventProcessor implements LDEventProcessor {
     config: EventProcessorOptions,
     clientContext: ClientContext,
     private readonly contextDeduplicator?: LDContextDeduplicator,
-    private readonly diagnosticsManager?: LDDiagnosticsManager,
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;

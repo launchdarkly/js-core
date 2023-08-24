@@ -1,4 +1,4 @@
 import DiagnosticsManager from './DiagnosticsManager';
-import { LDDiagnosticsManager } from './types';
 
-export { DiagnosticsManager, type LDDiagnosticsManager };
+// eslint-disable-next-line import/prefer-default-export
+export { DiagnosticsManager };

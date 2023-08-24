@@ -92,7 +92,7 @@ export default class LDClientImpl implements LDClient {
 
   private onReady: () => void;
 
-  private diagnosticsManager?: internal.LDDiagnosticsManager;
+  private diagnosticsManager?: internal.DiagnosticsManager;
 
   /**
    * Intended for use by platform specific client implementations.

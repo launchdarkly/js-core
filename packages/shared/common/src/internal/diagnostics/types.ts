@@ -70,13 +70,3 @@ export interface DiagnosticStatsEvent {
   eventsInLastBatch: number;
   streamInits: StreamInitData[];
 }
-
-export interface LDDiagnosticsManager {
-  createInitEvent(): DiagnosticInitEvent;
-  createStatsEventAndReset(
-    droppedEvents: number,
-    deduplicatedUsers: number,
-    eventsInLastBatch: number,
-  ): DiagnosticStatsEvent;
-  recordStreamInit(timestamp: number, failed: boolean, durationMillis: number): void;
-}

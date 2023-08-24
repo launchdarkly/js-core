@@ -19,7 +19,7 @@ import { PlatformDom, Storage } from './platform/PlatformDom';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
-  diagnosticsManager?: internal.LDDiagnosticsManager;
+  diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
   storage: Storage;
 

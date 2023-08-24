@@ -58,7 +58,7 @@ describe('given a stream processor with mock event source', () => {
   let config: Configuration;
   let asyncStore: AsyncStoreFacade;
   let logger: TestLogger;
-  let diagnosticsManager: internal.LDDiagnosticsManager;
+  let diagnosticsManager: internal.DiagnosticsManager;
 
   beforeEach(() => {
     requests = createRequests((nes) => {
