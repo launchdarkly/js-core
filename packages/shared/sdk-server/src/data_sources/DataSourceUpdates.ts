@@ -70,38 +70,40 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
     const checkForChanges = this.hasEventListeners();
     const doInit = (oldData?: LDFeatureStoreDataStorage) => {
       this.featureStore.init(allData, () => {
-        this.dependencyTracker.reset();
+        // Defer change events so they execute after the callback.
+        Promise.resolve().then(() => {
+          this.dependencyTracker.reset();
 
-        Object.entries(allData).forEach(([namespace, items]) => {
-          Object.keys(items || {}).forEach((key) => {
-            const item = items[key];
-            this.dependencyTracker.updateDependenciesFrom(
-              namespace,
-              key,
-              computeDependencies(namespace, item),
-            );
-          });
-        });
-
-        if (checkForChanges) {
-          const updatedItems = new NamespacedDataSet<boolean>();
-          Object.keys(allData).forEach((namespace) => {
-            const oldDataForKind = oldData?.[namespace] || {};
-            const newDataForKind = allData[namespace];
-            const mergedData = { ...oldDataForKind, ...newDataForKind };
-            Object.keys(mergedData).forEach((key) => {
-              this.addIfModified(
+          Object.entries(allData).forEach(([namespace, items]) => {
+            Object.keys(items || {}).forEach((key) => {
+              const item = items[key];
+              this.dependencyTracker.updateDependenciesFrom(
                 namespace,
                 key,
-                oldDataForKind && oldDataForKind[key],
-                newDataForKind && newDataForKind[key],
-                updatedItems,
+                computeDependencies(namespace, item),
               );
             });
           });
-          this.sendChangeEvents(updatedItems);
-        }
 
+          if (checkForChanges) {
+            const updatedItems = new NamespacedDataSet<boolean>();
+            Object.keys(allData).forEach((namespace) => {
+              const oldDataForKind = oldData?.[namespace] || {};
+              const newDataForKind = allData[namespace];
+              const mergedData = { ...oldDataForKind, ...newDataForKind };
+              Object.keys(mergedData).forEach((key) => {
+                this.addIfModified(
+                  namespace,
+                  key,
+                  oldDataForKind && oldDataForKind[key],
+                  newDataForKind && newDataForKind[key],
+                  updatedItems,
+                );
+              });
+            });
+            this.sendChangeEvents(updatedItems);
+          }
+        });
         callback?.();
       });
     };
@@ -126,16 +128,20 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
     const checkForChanges = this.hasEventListeners();
     const doUpsert = (oldItem?: LDFeatureStoreItem | null) => {
       this.featureStore.upsert(kind, data, () => {
-        this.dependencyTracker.updateDependenciesFrom(
-          kind.namespace,
-          key,
-          computeDependencies(kind.namespace, data),
-        );
-        if (checkForChanges) {
-          const updatedItems = new NamespacedDataSet<boolean>();
-          this.addIfModified(kind.namespace, key, oldItem, data, updatedItems);
-          this.sendChangeEvents(updatedItems);
-        }
+        // Defer change events so they execute after the callback.
+        Promise.resolve().then(() => {
+          this.dependencyTracker.updateDependenciesFrom(
+            kind.namespace,
+            key,
+            computeDependencies(kind.namespace, data),
+          );
+          if (checkForChanges) {
+            const updatedItems = new NamespacedDataSet<boolean>();
+            this.addIfModified(kind.namespace, key, oldItem, data, updatedItems);
+            this.sendChangeEvents(updatedItems);
+          }
+        });
+
         callback?.();
       });
     };
