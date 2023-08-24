@@ -2,11 +2,11 @@
   "compilerOptions": {
     "incremental": true,
     "strict": true,
-    "module": "NodeNext",
+    "module": "node",
     "outDir": "dist/ew",
     "target": "ESNext",
     "lib": ["es2023", "DOM"],
-    "moduleResolution": "nodenext",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
