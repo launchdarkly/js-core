@@ -1,15 +1,9 @@
-import {
-  EventListener,
-  EventName,
-  EventSource,
-  LDClientContext,
-  LDLogger,
-  Requests,
-} from '../../api';
+import { EventListener, EventName, EventSource, LDLogger, Requests } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem/LDStreamProcessor';
 import { isHttpRecoverable, LDStreamingError } from '../../errors';
+import { ClientContext } from '../../options';
 import { defaultHeaders, httpErrorMessage } from '../../utils';
-import { LDDiagnosticsManager } from '../diagnostics';
+import { DiagnosticsManager } from '../diagnostics';
 
 const STREAM_READ_TIMEOUT_MS = 5 * 60 * 1000;
 const RETRY_RESET_INTERVAL_MS = 60 * 1000;
@@ -29,9 +23,9 @@ export default class StreamingProcessor implements LDStreamProcessor {
 
   constructor(
     sdkKey: string,
-    clientContext: LDClientContext,
+    clientContext: ClientContext,
     private readonly listeners: Map<EventName, EventListener>,
-    private readonly diagnosticsManager?: LDDiagnosticsManager,
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     const { basicConfiguration, platform } = clientContext;
     const { logger, tags, streamInitialReconnectDelay } = basicConfiguration;
@@ -77,11 +71,12 @@ export default class StreamingProcessor implements LDStreamProcessor {
       return true;
     };
 
-    const reportJsonError = (type: string, data: string) => {
-      this.logger?.error(`Stream received invalid data in "${type}" message`);
-      this.logger?.debug(`Invalid JSON follows: ${data}`);
-      fn?.(new LDStreamingError('Malformed JSON data in event stream'));
-    };
+    // TODO: figure out how to report errors
+    // const reportJsonError = (type: string, data: string) => {
+    //   this.logger?.error(`Stream received invalid data in "${type}" message`);
+    //   this.logger?.debug(`Invalid JSON follows: ${data}`);
+    //   fn?.(new LDStreamingError('Malformed JSON data in event stream'));
+    // };
 
     // TLS is handled by the platform implementation.
 
@@ -110,9 +105,9 @@ export default class StreamingProcessor implements LDStreamProcessor {
       this.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
     };
 
-    for (let [key, value] of this.listeners) {
-      eventSource.addEventListener(key, value);
-    }
+    this.listeners.forEach((listener, eventName) => {
+      eventSource.addEventListener(eventName, listener);
+    });
   }
 
   stop() {

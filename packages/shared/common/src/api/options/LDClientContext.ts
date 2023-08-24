@@ -1,4 +1,3 @@
-import { ApplicationTags } from '../../options';
 import { LDLogger } from '../logging';
 import { Platform } from '../platform';
 
@@ -7,9 +6,6 @@ import { Platform } from '../platform';
  */
 export interface LDServiceEndpoints {
   // Properties are for internal SDK components.
-  polling: string;
-  streaming: string;
-  events: string;
 }
 
 /**
@@ -26,6 +22,9 @@ export interface LDBasicConfiguration {
    */
   serviceEndpoints: LDServiceEndpoints;
 
+  /**
+   * Sets the initial reconnect delay for the streaming connection, in seconds.
+   */
   streamInitialReconnectDelay?: number;
 
   /**
@@ -35,7 +34,7 @@ export interface LDBasicConfiguration {
 
   logger?: LDLogger;
 
-  tags?: ApplicationTags;
+  tags?: { value?: string };
 }
 
 /**
