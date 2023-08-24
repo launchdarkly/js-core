@@ -1,10 +1,8 @@
-import { VoidFunction } from '../../utils';
-
 export type EventName = 'delete' | 'patch' | 'ping' | 'put';
 export type EventListener = (event?: { data?: any }) => void;
 export type ProcessStreamResponse = {
-  deserialize: <T>(responseJson: string) => T;
-  processJson: <T>(json: T) => void;
+  deserialize: (response: string) => any;
+  process: (json: any) => void;
 };
 
 export interface EventSource {

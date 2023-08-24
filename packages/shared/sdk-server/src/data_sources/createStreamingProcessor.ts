@@ -15,20 +15,15 @@ const createStreamingProcessor = (
   featureStore: LDDataSourceUpdates,
   diagnosticsManager?: internal.DiagnosticsManager,
 ) => {
-  const {
-    basicConfiguration: { logger },
-  } = clientContext;
   const listeners = new Map<EventName, ProcessStreamResponse>();
 
   listeners.set('put', {
-    // TODO: fix types
     deserialize: deserializeAll,
-    processJson: (json: AllData) => {
+    process: (json: AllData) => {
       const initData = {
         [VersionedDataKinds.Features.namespace]: json.data.flags,
         [VersionedDataKinds.Segments.namespace]: json.data.segments,
       };
-
       featureStore.init(initData, () => fn?.());
     },
   });

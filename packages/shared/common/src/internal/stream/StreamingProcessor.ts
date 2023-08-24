@@ -105,7 +105,7 @@ class StreamingProcessor implements LDStreamProcessor {
       this.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
     };
 
-    this.listeners.forEach(({ deserialize, processJson }, eventName) => {
+    this.listeners.forEach(({ deserialize, process }, eventName) => {
       eventSource.addEventListener(eventName, (event) => {
         this.logger?.debug(`Received ${eventName} event`);
 
@@ -119,7 +119,7 @@ class StreamingProcessor implements LDStreamProcessor {
             return;
           }
 
-          processJson(parsed);
+          process(parsed);
         } else {
           this.errorHandler?.(new LDStreamingError('Unexpected payload from event stream'));
         }
