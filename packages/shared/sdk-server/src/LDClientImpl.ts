@@ -214,8 +214,11 @@ export default class LDClientImpl implements LDClient {
 
         this.onError(error);
         this.onFailed(error);
-        this.initReject?.(error);
-        this.initState = InitState.Failed;
+
+        if (!this.initialized()) {
+          this.initState = InitState.Failed;
+          this.initReject?.(error);
+        }
       } else if (!this.initialized()) {
         this.initState = InitState.Initialized;
         this.initResolve?.(this);
