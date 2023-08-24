@@ -3,7 +3,7 @@ export * from './options';
 export * from './LDClient';
 export * from './interfaces/DataKind';
 export * from './subsystems/LDFeatureStore';
-export * from './subsystems/LDStreamProcessor';
+export * from '../../../common/src/api/subsystem/LDStreamProcessor';
 
 // These are items that should be less frequently used, and therefore they
 // are namespaced to reduce clutter amongst the top level exports.

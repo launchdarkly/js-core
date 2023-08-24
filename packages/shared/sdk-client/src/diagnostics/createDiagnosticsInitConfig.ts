@@ -24,7 +24,7 @@ const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConf
   customEventsURI: config.eventsUri !== ServiceEndpoints.DEFAULT_EVENTS,
   eventsCapacity: config.capacity,
   eventsFlushIntervalMillis: secondsToMillis(config.flushInterval),
-  reconnectTimeMillis: secondsToMillis(config.streamReconnectDelay),
+  reconnectTimeMillis: secondsToMillis(config.streamInitialReconnectDelay),
   diagnosticRecordingIntervalMillis: secondsToMillis(config.diagnosticRecordingInterval),
   streamingDisabled: !config.stream,
   allAttributesPrivate: config.allAttributesPrivate,

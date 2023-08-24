@@ -1,10 +1,13 @@
+export type EventName = 'delete' | 'patch' | 'ping' | 'put';
+export type EventListener = (event?: { data?: any }) => void;
+
 export interface EventSource {
   onclose: (() => void) | undefined;
   onerror: (() => void) | undefined;
   onopen: (() => void) | undefined;
   onretrying: ((e: { delayMillis: number }) => void) | undefined;
 
-  addEventListener(type: string, listener: (event?: { data?: any }) => void): void;
+  addEventListener(type: EventName, listener: EventListener): void;
   close(): void;
 }
 

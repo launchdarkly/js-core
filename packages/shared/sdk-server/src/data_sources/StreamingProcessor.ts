@@ -29,18 +29,13 @@ function getKeyFromPath(kind: VersionedDataKind, path: string): string | undefin
  * @internal
  */
 export default class StreamingProcessor implements LDStreamProcessor {
-  private headers: { [key: string]: string | string[] };
+  private readonly headers: { [key: string]: string | string[] };
+  private readonly streamUri: string;
+  private readonly streamInitialReconnectDelay: number;
 
   private eventSource?: EventSource;
-
   private logger?: LDLogger;
-
-  private streamUri: string;
-
-  private streamInitialReconnectDelay: number;
-
   private requests: Requests;
-
   private connectionAttemptStartTime?: number;
 
   constructor(

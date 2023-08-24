@@ -1,3 +1,4 @@
+import { ApplicationTags } from '../../options';
 import { LDLogger } from '../logging';
 import { Platform } from '../platform';
 
@@ -6,19 +7,15 @@ import { Platform } from '../platform';
  */
 export interface LDServiceEndpoints {
   // Properties are for internal SDK components.
+  polling: string;
+  streaming: string;
+  events: string;
 }
 
 /**
  * The most basic properties of the SDK client that are available to all SDK component factories.
  */
 export interface LDBasicConfiguration {
-  logger?: LDLogger;
-
-  /**
-   * True if the SDK was configured to be completely offline.
-   */
-  offline?: boolean;
-
   /**
    * The configured SDK key.
    */
@@ -28,6 +25,17 @@ export interface LDBasicConfiguration {
    * Defines the base service URIs used by SDK components.
    */
   serviceEndpoints: LDServiceEndpoints;
+
+  streamInitialReconnectDelay?: number;
+
+  /**
+   * True if the SDK was configured to be completely offline.
+   */
+  offline?: boolean;
+
+  logger?: LDLogger;
+
+  tags?: ApplicationTags;
 }
 
 /**
