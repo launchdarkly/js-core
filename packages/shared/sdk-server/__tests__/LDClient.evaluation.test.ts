@@ -1,7 +1,7 @@
-import { internal } from '@launchdarkly/js-sdk-common';
+import { internal, subsystem } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl } from '../src';
-import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
+import { LDFeatureStore } from '../src/api/subsystems';
 import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
@@ -188,7 +188,7 @@ describe('given an offline client', () => {
   });
 });
 
-class InertUpdateProcessor implements LDStreamProcessor {
+class InertUpdateProcessor implements subsystem.LDStreamProcessor {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   start(fn?: ((err?: any) => void) | undefined) {
     // Never initialize.

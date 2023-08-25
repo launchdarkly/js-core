@@ -52,7 +52,6 @@ function createRequests(cb: (es: NullEventSource) => void): Requests {
 
 describe('given a stream processor with mock event source', () => {
   let es: NullEventSource;
-  // let requests: Requests;
   let featureStore: InMemoryFeatureStore;
   let streamProcessor: subsystem.LDStreamProcessor;
   let config: Configuration;
@@ -61,7 +60,7 @@ describe('given a stream processor with mock event source', () => {
   let diagnosticsManager: internal.DiagnosticsManager;
 
   beforeEach(() => {
-    requests = createRequests((nes) => {
+    mocks.clientContext.platform.requests = createRequests((nes) => {
       es = nes;
     });
     featureStore = new InMemoryFeatureStore();
@@ -75,7 +74,6 @@ describe('given a stream processor with mock event source', () => {
       logger,
     });
     diagnosticsManager = new internal.DiagnosticsManager('sdk-key', mocks.basicPlatform, {});
-
     streamProcessor = new internal.StreamingProcessor(
       sdkKey,
       mocks.clientContext,
