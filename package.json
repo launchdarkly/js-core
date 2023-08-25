@@ -4,6 +4,7 @@
     "packages/shared/common",
     "packages/shared/sdk-client",
     "packages/shared/sdk-server",
+    "packages/shared/sdk-server-edge",
     "packages/shared/akamai-edgeworker-sdk",
     "packages/sdk/server-node",
     "packages/sdk/cloudflare",
@@ -20,6 +21,7 @@
   "scripts": {
     "clean": "yarn workspaces foreach -pt run clean",
     "build": "yarn workspaces foreach -p --topological-dev run build",
+    "bs": "yarn workspaces foreach -ptR --from '{@launchdarkly/js-client-sdk-common,@launchdarkly/js-server-sdk-common}' run build",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/common' for example.",
     "build:doc": "./scripts/build-doc.sh $1",
     "lint": "npx eslint . --ext .ts",
@@ -43,8 +45,8 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
-    "typedoc": "0.23.26",
-    "typescript": "^5.1.6"
+    "typedoc": "0.24.8",
+    "typescript": "5.1.6"
   },
   "packageManager": "yarn@3.4.1"
 }
