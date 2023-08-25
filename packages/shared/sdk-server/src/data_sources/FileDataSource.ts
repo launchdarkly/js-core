@@ -1,6 +1,5 @@
-import { Filesystem, LDLogger } from '@launchdarkly/js-sdk-common';
+import { Filesystem, LDLogger, subsystem } from '@launchdarkly/js-sdk-common';
 
-import { LDStreamProcessor } from '../api';
 import { FileDataSourceOptions } from '../api/integrations';
 import { DataKind } from '../api/interfaces';
 import { LDFeatureStore, LDFeatureStoreDataStorage } from '../api/subsystems';
@@ -19,7 +18,7 @@ function makeFlagWithValue(key: string, value: any): Flag {
   };
 }
 
-export default class FileDataSource implements LDStreamProcessor {
+export default class FileDataSource implements subsystem.LDStreamProcessor {
   private logger?: LDLogger;
 
   private yamlParser?: (data: string) => any;

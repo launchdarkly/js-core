@@ -17,6 +17,7 @@ const createStreamingProcessor = (
 ) => {
   const listeners = new Map<EventName, ProcessStreamResponse>();
 
+  // TODO: simplify the way we add listeners to StreamingProcessor
   listeners.set('put', {
     deserialize: deserializeAll,
     process: (json: AllData) => {
@@ -24,7 +25,10 @@ const createStreamingProcessor = (
         [VersionedDataKinds.Features.namespace]: json.data.flags,
         [VersionedDataKinds.Segments.namespace]: json.data.segments,
       };
-      featureStore.init(initData, () => fn?.());
+
+      // TODO: fix errorHandler function
+      // featureStore.init(initData, () => fn?.());
+      featureStore.init(initData, () => '');
     },
   });
 

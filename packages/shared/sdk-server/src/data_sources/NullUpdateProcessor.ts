@@ -6,9 +6,9 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { LDStreamProcessor } from '../api';
+import { subsystem } from '@launchdarkly/js-sdk-common';
 
-export default class NullUpdateProcessor implements LDStreamProcessor {
+export default class NullUpdateProcessor implements subsystem.LDStreamProcessor {
   start(fn?: ((err?: any) => void) | undefined) {
     // Deferring the start callback should allow client construction to complete before we start
     // emitting events. Allowing the client an opportunity to register events.

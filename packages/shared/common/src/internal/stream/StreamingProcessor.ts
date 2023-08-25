@@ -14,9 +14,6 @@ const reportJsonError = (type: string, data: string, logger?: LDLogger, errorHan
   errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
 };
 
-/**
- * @internal
- */
 class StreamingProcessor implements LDStreamProcessor {
   private readonly headers: { [key: string]: string | string[] };
   private readonly streamInitialReconnectDelay: number;

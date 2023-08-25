@@ -1,6 +1,5 @@
-import { LDClientContext } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, subsystem } from '@launchdarkly/js-sdk-common';
 
-import { LDStreamProcessor } from '../../api';
 import { LDFeatureStore } from '../../api/subsystems';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
@@ -58,7 +57,7 @@ export default class TestData {
   getFactory(): (
     clientContext: LDClientContext,
     featureStore: LDFeatureStore,
-  ) => LDStreamProcessor {
+  ) => subsystem.LDStreamProcessor {
     // Provides an arrow function to prevent needed to bind the method to
     // maintain `this`.
     return (

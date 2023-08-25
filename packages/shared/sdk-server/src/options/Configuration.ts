@@ -5,17 +5,12 @@ import {
   NumberWithMinimum,
   OptionMessages,
   ServiceEndpoints,
+  subsystem,
   TypeValidator,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import {
-  LDBigSegmentsOptions,
-  LDOptions,
-  LDProxyOptions,
-  LDStreamProcessor,
-  LDTLSOptions,
-} from '../api';
+import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
@@ -205,7 +200,7 @@ export default class Configuration {
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
     dataSourceUpdates: LDDataSourceUpdates,
-  ) => LDStreamProcessor;
+  ) => subsystem.LDStreamProcessor;
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 

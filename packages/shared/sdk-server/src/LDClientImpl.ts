@@ -13,7 +13,7 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, LDFlagsState, LDFlagsStateOptions, LDOptions, LDStreamProcessor } from './api';
+import { LDClient, LDFlagsState, LDFlagsStateOptions, LDOptions } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -23,7 +23,6 @@ import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
-import StreamingProcessor from './data_sources/StreamingProcessor';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allSeriesAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
@@ -65,7 +64,7 @@ export default class LDClientImpl implements LDClient {
 
   private featureStore: AsyncStoreFacade;
 
-  private updateProcessor: LDStreamProcessor;
+  private updateProcessor: subsystem.LDStreamProcessor;
 
   private eventFactoryDefault = new EventFactory(false);
 
@@ -136,7 +135,12 @@ export default class LDClientImpl implements LDClient {
 
     const makeDefaultProcessor = () =>
       config.stream
-        ? createStreamingProcessor(sdkKey, clientContext, this.diagnosticsManager)
+        ? createStreamingProcessor(
+            sdkKey,
+            clientContext,
+            this.featureStore,
+            this.diagnosticsManager,
+          )
         : new PollingProcessor(
             config,
             new Requestor(sdkKey, config, this.platform.info, this.platform.requests),

@@ -3,9 +3,9 @@ import {
   isHttpRecoverable,
   LDLogger,
   LDPollingError,
+  subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
 import Configuration from '../options/Configuration';
 import { deserializePoll } from '../store';
@@ -15,7 +15,7 @@ import Requestor from './Requestor';
 /**
  * @internal
  */
-export default class PollingProcessor implements LDStreamProcessor {
+export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private stopped = false;
 
   private logger?: LDLogger;

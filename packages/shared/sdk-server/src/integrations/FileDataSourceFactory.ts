@@ -1,7 +1,7 @@
-import { LDClientContext, LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, LDLogger, subsystem } from '@launchdarkly/js-sdk-common';
 
 import { FileDataSourceOptions } from '../api/integrations';
-import { LDFeatureStore, LDStreamProcessor } from '../api/subsystems';
+import { LDFeatureStore } from '../api/subsystems';
 import FileDataSource from '../data_sources/FileDataSource';
 
 /**
@@ -43,7 +43,7 @@ export default class FileDataSourceFactory {
   getFactory(): (
     ldClientContext: LDClientContext,
     featureStore: LDFeatureStore,
-  ) => LDStreamProcessor {
+  ) => subsystem.LDStreamProcessor {
     return (ldClientContext, featureStore) => this.create(ldClientContext, featureStore);
   }
 }

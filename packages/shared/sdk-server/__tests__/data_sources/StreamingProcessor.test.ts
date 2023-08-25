@@ -9,10 +9,10 @@ import {
   Requests,
   Response,
   SdkData,
+  subsystem,
 } from '@launchdarkly/js-sdk-common';
 
 import promisify from '../../src/async/promisify';
-import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
 import NullEventSource from '../../src/events/NullEventSource';
 import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
@@ -52,9 +52,9 @@ function createRequests(cb: (es: NullEventSource) => void): Requests {
 
 describe('given a stream processor with mock event source', () => {
   let es: NullEventSource;
-  let requests: Requests;
+  // let requests: Requests;
   let featureStore: InMemoryFeatureStore;
-  let streamProcessor: StreamingProcessor;
+  let streamProcessor: subsystem.LDStreamProcessor;
   let config: Configuration;
   let asyncStore: AsyncStoreFacade;
   let logger: TestLogger;
@@ -75,13 +75,13 @@ describe('given a stream processor with mock event source', () => {
       logger,
     });
     diagnosticsManager = new internal.DiagnosticsManager('sdk-key', mocks.basicPlatform, {});
-    streamProcessor = new StreamingProcessor(
+
+    streamProcessor = new internal.StreamingProcessor(
       sdkKey,
-      config,
-      requests,
-      info,
-      featureStore,
+      mocks.clientContext,
+      new Map(),
       diagnosticsManager,
+      () => '', // errorHandler
     );
   });
 

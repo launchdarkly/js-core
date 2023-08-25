@@ -1,4 +1,5 @@
-import { LDStreamProcessor } from '../../api';
+import { subsystem } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../../api/interfaces';
 import { LDKeyedFeatureStoreItem } from '../../api/subsystems';
 import { Flag } from '../../evaluation/data/Flag';
@@ -9,7 +10,7 @@ import VersionedDataKinds from '../../store/VersionedDataKinds';
 /**
  * @internal
  */
-export default class TestDataSource implements LDStreamProcessor {
+export default class TestDataSource implements subsystem.LDStreamProcessor {
   constructor(
     private readonly featureStore: AsyncStoreFacade,
     private readonly flags: Record<string, Flag>,
