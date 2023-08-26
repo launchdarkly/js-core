@@ -40,15 +40,12 @@ export default class EventSender implements subsystem.LDEventSender {
       ...defaultHeaders(sdkKey, config, info),
     };
 
-    this.eventsUri = `${events}/bulk`;
+    const isClientSideID = !sdkKey.startsWith('sdk-');
+    this.eventsUri = isClientSideID ? `${events}/events/bulk/${sdkKey}` : `${events}/bulk`;
+    this.diagnosticEventsUri = isClientSideID
+      ? `${events}/events/diagnostic/${sdkKey}`
+      : `${events}/diagnostic`;
 
-    // edge sdks use clientSideID so we use the environment endpoint
-    const useEnvironmentEndpoint = !sdkKey.startsWith('sdk-');
-    if (useEnvironmentEndpoint) {
-      this.eventsUri = `${this.eventsUri}/${sdkKey}`;
-    }
-
-    this.diagnosticEventsUri = `${events}/diagnostic`;
     this.requests = requests;
     this.crypto = crypto;
   }
