@@ -28,21 +28,29 @@ export default class EventSender implements subsystem.LDEventSender {
   private crypto: Crypto;
 
   constructor(config: EventSenderOptions, clientContext: ClientContext) {
+    const {
+      basicConfiguration: {
+        sdkKey,
+        serviceEndpoints: { events },
+      },
+      platform: { info, requests, crypto },
+    } = clientContext;
+
     this.defaultHeaders = {
-      ...defaultHeaders(
-        clientContext.basicConfiguration.sdkKey,
-        config,
-        clientContext.platform.info,
-      ),
+      ...defaultHeaders(sdkKey, config, info),
     };
 
-    this.eventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/bulk`;
+    this.eventsUri = `${events}/bulk`;
 
-    this.diagnosticEventsUri = `${clientContext.basicConfiguration.serviceEndpoints.events}/diagnostic`;
+    // edge sdks use clientSideID so we use the environment endpoint
+    const useEnvironmentEndpoint = !sdkKey.startsWith('sdk-');
+    if (useEnvironmentEndpoint) {
+      this.eventsUri = `${this.eventsUri}/${sdkKey}`;
+    }
 
-    this.requests = clientContext.platform.requests;
-
-    this.crypto = clientContext.platform.crypto;
+    this.diagnosticEventsUri = `${events}/diagnostic`;
+    this.requests = requests;
+    this.crypto = crypto;
   }
 
   private async tryPostingEvents(

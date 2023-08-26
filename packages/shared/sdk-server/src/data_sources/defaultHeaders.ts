@@ -11,11 +11,15 @@ export default function defaultHeaders(
 ): { [key: string]: string } {
   const sdkData = info.sdkData();
   const headers: { [key: string]: string } = {
-    authorization: sdkKey,
     'user-agent': `${sdkData.userAgentBase ? sdkData.userAgentBase : 'NodeJSClient'}/${
       sdkData.version
     }`,
   };
+
+  // edge sdks use clientSideID and don't need the authorization header
+  if (sdkKey.startsWith('sdk-')) {
+    headers.authorization = sdkKey;
+  }
 
   if (sdkData.wrapperName) {
     headers['x-launchdarkly-wrapper'] = sdkData.wrapperVersion
