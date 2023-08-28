@@ -29,7 +29,9 @@ function isErrorMeasurement(value: LDMigrationMeasurement): value is LDMigration
   return (value as any).kind === undefined && value.key === 'error';
 }
 
-function isInvokedMeasurement(value: LDMigrationMeasurement): value is LDMigrationInvokedMeasurement {
+function isInvokedMeasurement(
+  value: LDMigrationMeasurement,
+): value is LDMigrationInvokedMeasurement {
   return (value as any).kind === undefined && value.key === 'invoked';
 }
 
@@ -119,7 +121,7 @@ function validateMeasurement(
     };
   }
 
-  if(isInvokedMeasurement(measurement)) {
+  if (isInvokedMeasurement(measurement)) {
     if (!TypeValidators.Object.is(measurement.values)) {
       return undefined;
     }

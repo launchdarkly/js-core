@@ -1,6 +1,6 @@
 import { LDConsistencyCheck, LDMigrationStage } from '../src';
-import MigrationOpTracker from '../src/MigrationOpTracker';
 import { LDMigrationOrigin } from '../src/api/LDMigration';
+import MigrationOpTracker from '../src/MigrationOpTracker';
 
 it('does not generate an event if an op is not set', () => {
   const tracker = new MigrationOpTracker(
@@ -45,12 +45,14 @@ it('generates an event if the minimal requirements are met.', () => {
     contextKeys: { user: 'bob' },
     evaluation: { default: 'off', key: 'flag', reason: { kind: 'FALLTHROUGH' }, value: 'off' },
     kind: 'migration_op',
-    measurements: [{
-      key: 'invoked',
-      values: {
-        old: true,
-      }
-    }],
+    measurements: [
+      {
+        key: 'invoked',
+        values: {
+          old: true,
+        },
+      },
+    ],
     operation: 'write',
   });
 });

@@ -191,6 +191,44 @@ describe('given an LDClient with test data', () => {
         });
       });
 
+      it.each([
+        [LDMigrationStage.Off, { old: true }],
+        [LDMigrationStage.DualWrite, { old: true }],
+        [LDMigrationStage.Shadow, { old: true, new: true }],
+        [LDMigrationStage.RampDown, { new: true }],
+        [LDMigrationStage.Complete, { new: true }],
+      ])('tracks the invoked methods for reads', async (stage, values) => {
+        const flagKey = 'migration';
+        td.update(td.flag(flagKey).valueForAll(stage));
+
+        await migration.read(flagKey, { key: 'test' }, stage);
+        // Feature event.
+        await events.take();
+        // Migration event.
+        const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
+        expect(migrationEvent.measurements[0].key).toEqual('invoked');
+        expect(migrationEvent.measurements[0].values).toEqual(values);
+      });
+
+      it.each([
+        [LDMigrationStage.Off, { old: true }],
+        [LDMigrationStage.DualWrite, { old: true, new: true }],
+        [LDMigrationStage.Shadow, { old: true, new: true }],
+        [LDMigrationStage.RampDown, { old: true, new: true }],
+        [LDMigrationStage.Complete, { new: true }],
+      ])('tracks the invoked methods for writes', async (stage, values) => {
+        const flagKey = 'migration';
+        td.update(td.flag(flagKey).valueForAll(stage));
+
+        await migration.write(flagKey, { key: 'test' }, stage);
+        // Feature event.
+        await events.take();
+        // Migration event.
+        const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
+        expect(migrationEvent.measurements[0].key).toEqual('invoked');
+        expect(migrationEvent.measurements[0].values).toEqual(values);
+      });
+
       it.each([LDMigrationStage.Shadow, LDMigrationStage.Live])(
         'can report read latency for new and old',
         async (stage) => {
@@ -338,14 +376,13 @@ describe('given an LDClient with test data', () => {
           // Migration event.
           const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
-          expect(migrationEvent.measurements).toContainEqual(
-            {
-              key: 'error',
-              values: {
-                old: true,
-              },
-            });
-        }
+          expect(migrationEvent.measurements).toContainEqual({
+            key: 'error',
+            values: {
+              old: true,
+            },
+          });
+        },
       );
 
       it.each([LDMigrationStage.RampDown, LDMigrationStage.Complete])(
@@ -359,13 +396,12 @@ describe('given an LDClient with test data', () => {
           await events.take();
           // Migration event.
           const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
-          expect(migrationEvent.measurements).toContainEqual(
-            {
-              key: 'error',
-              values: {
-                new: true,
-              },
-            });
+          expect(migrationEvent.measurements).toContainEqual({
+            key: 'error',
+            values: {
+              new: true,
+            },
+          });
         },
       );
 
@@ -381,14 +417,13 @@ describe('given an LDClient with test data', () => {
           // Migration event.
           const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
-          expect(migrationEvent.measurements).toContainEqual(
-            {
-              key: 'error',
-              values: {
-                old: true,
-                new: true,
-              },
-            });
+          expect(migrationEvent.measurements).toContainEqual({
+            key: 'error',
+            values: {
+              old: true,
+              new: true,
+            },
+          });
         },
       );
 
@@ -403,13 +438,44 @@ describe('given an LDClient with test data', () => {
           await events.take();
           // Migration event.
           const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
-          expect(migrationEvent.measurements).toContainEqual(
-            {
-              key: 'error',
-              values: {
-                old: true,
-              },
-            });
+          expect(migrationEvent.measurements).toContainEqual({
+            key: 'error',
+            values: {
+              old: true,
+            },
+          });
+        },
+      );
+
+      it.each([LDMigrationStage.Off, LDMigrationStage.DualWrite, LDMigrationStage.Shadow])(
+        'it does not invoke non-authoritative write after an error with authoritative old',
+        async (stage) => {
+          const flagKey = 'migration';
+          td.update(td.flag(flagKey).valueForAll(stage));
+
+          await migration.write(flagKey, { key: 'test' }, stage);
+          // Feature event.
+          await events.take();
+          // Migration event.
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
+          expect(migrationEvent.measurements[0].key).toEqual('invoked');
+          expect(migrationEvent.measurements[0].values).toEqual({ old: true });
+        },
+      );
+
+      it.each([LDMigrationStage.Live, LDMigrationStage.RampDown, LDMigrationStage.Complete])(
+        'it does not invoke non-authoritative write after an error with authoritative new',
+        async (stage) => {
+          const flagKey = 'migration';
+          td.update(td.flag(flagKey).valueForAll(stage));
+
+          await migration.write(flagKey, { key: 'test' }, stage);
+          // Feature event.
+          await events.take();
+          // Migration event.
+          const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
+          expect(migrationEvent.measurements[0].key).toEqual('invoked');
+          expect(migrationEvent.measurements[0].values).toEqual({ new: true });
         },
       );
 
@@ -425,13 +491,12 @@ describe('given an LDClient with test data', () => {
           // Migration event.
           const migrationEvent = (await events.take()) as internal.InputMigrationEvent;
           // Only check the measurements component of the event.
-          expect(migrationEvent.measurements).toContainEqual(
-            {
-              key: 'error',
-              values: {
-                new: true,
-              },
-            });
+          expect(migrationEvent.measurements).toContainEqual({
+            key: 'error',
+            values: {
+              new: true,
+            },
+          });
         },
       );
     });

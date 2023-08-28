@@ -43,7 +43,7 @@ export interface LDMigrationInvokedMeasurement {
   values: {
     old?: boolean;
     new?: boolean;
-  }
+  };
 }
 
 /**
