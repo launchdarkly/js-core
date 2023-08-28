@@ -2,6 +2,14 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.2.1...js-server-sdk-common-v1.2.2) (2023-08-28)
+
+
+### Bug Fixes
+
+* Client cannot become un-initialized. ([#251](https://github.com/launchdarkly/js-core/issues/251)) ([e2e8971](https://github.com/launchdarkly/js-core/commit/e2e8971fc1945a1121649ca84b752eb5d819aedd))
+* Dispatch change events after ready event. ([#252](https://github.com/launchdarkly/js-core/issues/252)) ([2e2a865](https://github.com/launchdarkly/js-core/commit/2e2a8653671b7e7c814446ccb7ba696e301e81bb))
+
 ## [1.2.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.2.0...js-server-sdk-common-v1.2.1) (2023-08-24)
 
 
