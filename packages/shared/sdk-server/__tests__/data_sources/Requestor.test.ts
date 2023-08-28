@@ -80,12 +80,7 @@ describe('given a requestor', () => {
       },
     };
 
-    requestor = new Requestor(
-      'sdk-my-sdk-Key',
-      new Configuration({}),
-      basicPlatform.info,
-      requests,
-    );
+    requestor = new Requestor('sdkKey', new Configuration({}), basicPlatform.info, requests);
   });
 
   it('gets data', (done) => {
@@ -96,7 +91,7 @@ describe('given a requestor', () => {
 
       expect(requestsMade.length).toBe(1);
       expect(requestsMade[0].url).toBe('https://sdk.launchdarkly.com/sdk/latest-all');
-      expect(requestsMade[0].options.headers?.authorization).toBe('sdk-my-sdk-Key');
+      expect(requestsMade[0].options.headers?.authorization).toBe('sdkKey');
 
       done();
     });
