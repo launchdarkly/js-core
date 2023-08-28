@@ -1,7 +1,6 @@
 import { EventEmitter } from 'node:events';
 
-import { internal } from '@launchdarkly/js-sdk-common';
-import { Info, LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
+import { Info, internal, LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
 
 import EdgePlatform from '../platform';
 import createCallbacks from './createCallbacks';
