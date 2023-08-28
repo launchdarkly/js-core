@@ -75,7 +75,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
 
     if (Object.keys(this.contextKeys).length === 0) {
       this.logger?.error(
-        'The migration was not done against a valid context and cannot' + 'generate an event.',
+        'The migration was not done against a valid context and cannot generate an event.',
       );
       return undefined;
     }
