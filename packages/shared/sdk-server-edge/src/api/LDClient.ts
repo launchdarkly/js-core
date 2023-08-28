@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 
-import { Info, LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
+import { Info, internal, LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
 
 import EdgePlatform from '../platform';
 import createCallbacks from './createCallbacks';
@@ -16,7 +16,12 @@ export class LDClient extends LDClientImpl {
   constructor(clientSideID: string, platformInfo: Info, options: LDOptions) {
     const em = new EventEmitter();
     const platform = new EdgePlatform(platformInfo);
-    super(clientSideID, platform, createOptions(options), createCallbacks(em));
+    const internalOptions: internal.LDInternalOptions = {
+      analyticsEventPath: `/events/bulk/${clientSideID}`,
+      diagnosticEventPath: `/events/diagnostic/${clientSideID}`,
+      includeAuthorizationHeader: false,
+    };
+    super(clientSideID, platform, createOptions(options), createCallbacks(em), internalOptions);
     this.emitter = em;
   }
 }

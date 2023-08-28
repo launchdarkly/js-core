@@ -1,5 +1,6 @@
 import {
   ApplicationTags,
+  internal,
   LDClientContext,
   LDLogger,
   NumberWithMinimum,
@@ -209,7 +210,7 @@ export default class Configuration {
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 
-  constructor(options: LDOptions = {}) {
+  constructor(options: LDOptions = {}, internalOptions: internal.LDInternalOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
     // eslint-disable-next-line no-param-reassign
@@ -228,6 +229,8 @@ export default class Configuration {
       validatedOptions.streamUri,
       validatedOptions.baseUri,
       validatedOptions.eventsUri,
+      internalOptions.analyticsEventPath,
+      internalOptions.diagnosticEventPath,
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;
