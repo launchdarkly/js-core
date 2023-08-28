@@ -4,6 +4,7 @@ import {
   LDMigrationConsistencyMeasurement,
   LDMigrationErrorMeasurement,
   LDMigrationEvaluation,
+  LDMigrationInvokedMeasurement,
   LDMigrationLatencyMeasurement,
   LDMigrationMeasurement,
   LDMigrationOp,
@@ -26,6 +27,10 @@ function isLatencyMeasurement(
 
 function isErrorMeasurement(value: LDMigrationMeasurement): value is LDMigrationErrorMeasurement {
   return (value as any).kind === undefined && value.key === 'error';
+}
+
+function isInvokedMeasurement(value: LDMigrationMeasurement): value is LDMigrationInvokedMeasurement {
+  return (value as any).kind === undefined && value.key === 'invoked';
 }
 
 function isConsistencyMeasurement(
@@ -111,6 +116,22 @@ function validateMeasurement(
       key: measurement.key,
       value: measurement.value,
       samplingRatio: measurement.samplingRatio,
+    };
+  }
+
+  if(isInvokedMeasurement(measurement)) {
+    if (!TypeValidators.Object.is(measurement.values)) {
+      return undefined;
+    }
+    if (!areValidBooleans(measurement.values)) {
+      return undefined;
+    }
+    return {
+      key: measurement.key,
+      values: {
+        old: measurement.values.old,
+        new: measurement.values.new,
+      },
     };
   }
 

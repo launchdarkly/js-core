@@ -29,6 +29,7 @@ app.get('/', (req, res) => {
       'big-segments',
       'user-type',
       'migrations',
+      'event-sampling'
     ],
   });
 });
