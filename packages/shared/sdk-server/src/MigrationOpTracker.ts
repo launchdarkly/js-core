@@ -45,7 +45,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     private readonly variation?: number,
     private readonly samplingRatio?: number,
     private readonly logger?: LDLogger,
-  ) {}
+  ) { }
 
   op(op: LDMigrationOp) {
     this.operation = op;
@@ -68,32 +68,46 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   }
 
   createEvent(): LDMigrationOpEvent | undefined {
-    if (this.operation && Object.keys(this.contextKeys).length) {
-      const measurements: LDMigrationMeasurement[] = [];
-
-      this.populateInvoked(measurements);
-      this.populateConsistency(measurements);
-      this.populateLatency(measurements);
-      this.populateErrors(measurements);
-      this.measurementConsistencyCheck();
-
-      return {
-        kind: 'migration_op',
-        operation: this.operation,
-        creationDate: Date.now(),
-        contextKeys: this.contextKeys,
-        evaluation: {
-          key: this.flagKey,
-          value: this.stage,
-          default: this.defaultStage,
-          reason: this.reason,
-          variation: this.variation,
-        },
-        measurements,
-        samplingRatio: this.samplingRatio ?? 1,
-      };
+    if (!this.operation) {
+      this.logger?.error('The operation must be set using "op" before an event can be created.');
+      return undefined;
     }
-    return undefined;
+
+    if (Object.keys(this.contextKeys).length === 0) {
+      this.logger?.error('The migration was not done against a valid context and cannot' +
+        'generate an event.');
+      return undefined;
+    }
+
+    if (!this.wasInvoked.old && !this.wasInvoked.new) {
+      this.logger?.error('The migration invoked neither the "old" or "new" implementation and' + 
+      'an event cannot be generated');
+      return undefined;
+    }
+
+    const measurements: LDMigrationMeasurement[] = [];
+
+    this.populateInvoked(measurements);
+    this.populateConsistency(measurements);
+    this.populateLatency(measurements);
+    this.populateErrors(measurements);
+    this.measurementConsistencyCheck();
+
+    return {
+      kind: 'migration_op',
+      operation: this.operation,
+      creationDate: Date.now(),
+      contextKeys: this.contextKeys,
+      evaluation: {
+        key: this.flagKey,
+        value: this.stage,
+        default: this.defaultStage,
+        reason: this.reason,
+        variation: this.variation,
+      },
+      measurements,
+      samplingRatio: this.samplingRatio ?? 1,
+    };
   }
 
   private logTag(): string {
