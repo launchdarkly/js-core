@@ -1,5 +1,6 @@
 import { LDConsistencyCheck, LDMigrationStage } from '../src';
 import MigrationOpTracker from '../src/MigrationOpTracker';
+import { LDMigrationOrigin } from '../src/api/LDMigration';
 
 it('does not generate an event if an op is not set', () => {
   const tracker = new MigrationOpTracker(
@@ -38,12 +39,18 @@ it('generates an event if the minimal requirements are met.', () => {
   );
 
   tracker.op('write');
+  tracker.invoked('old');
 
   expect(tracker.createEvent()).toMatchObject({
     contextKeys: { user: 'bob' },
     evaluation: { default: 'off', key: 'flag', reason: { kind: 'FALLTHROUGH' }, value: 'off' },
     kind: 'migration_op',
-    measurements: [],
+    measurements: [{
+      key: 'invoked',
+      values: {
+        old: true,
+      }
+    }],
     operation: 'write',
   });
 });
@@ -171,5 +178,46 @@ it('includes if the result was inconsistent', () => {
     key: 'consistent',
     value: false,
     samplingRatio: 1,
+  });
+});
+
+it.each(['old', 'new'])('includes which single origins were invoked', (origin) => {
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+  );
+  tracker.op('read');
+  tracker.invoked(origin as LDMigrationOrigin);
+
+  const event = tracker.createEvent();
+  expect(event?.measurements).toContainEqual({
+    key: 'invoked',
+    values: { [origin]: true },
+  });
+});
+
+it('includes when both origins were invoked', () => {
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+  );
+  tracker.op('read');
+  tracker.invoked('old');
+  tracker.invoked('new');
+
+  const event = tracker.createEvent();
+  expect(event?.measurements).toContainEqual({
+    key: 'invoked',
+    values: { old: true, new: true },
   });
 });
