@@ -12,7 +12,7 @@ import createOptions from './createOptions';
 export class LDClient extends LDClientImpl {
   emitter: EventEmitter;
 
-  // clientSideID is only used to query featureStore, not to initialize with LD servers
+  // clientSideID is only used to query the edge key-value store and send analytics, not to initialize with LD servers
   constructor(clientSideID: string, platformInfo: Info, options: LDOptions) {
     const em = new EventEmitter();
     const platform = new EdgePlatform(platformInfo);
