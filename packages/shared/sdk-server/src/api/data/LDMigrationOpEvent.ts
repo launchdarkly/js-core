@@ -38,13 +38,22 @@ export interface LDMigrationErrorMeasurement {
   };
 }
 
+export interface LDMigrationInvokedMeasurement {
+  key: 'invoked';
+  values: {
+    old?: boolean;
+    new?: boolean;
+  }
+}
+
 /**
  * Types of measurements supported by an LDMigrationOpEvent.
  */
 export type LDMigrationMeasurement =
   | LDMigrationLatencyMeasurement
   | LDMigrationErrorMeasurement
-  | LDMigrationConsistencyMeasurement;
+  | LDMigrationConsistencyMeasurement
+  | LDMigrationInvokedMeasurement;
 
 /**
  * Event used to track information about a migration operation.
