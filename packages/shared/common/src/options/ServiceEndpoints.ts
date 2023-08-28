@@ -26,17 +26,22 @@ export default class ServiceEndpoints {
    */
   public readonly diagnosticEventPath: string;
 
+  // if true the sdk key will be included as authorization header
+  public readonly includeAuthorizationHeader: boolean;
+
   public constructor(
     streaming: string,
     polling: string,
     events: string,
     analyticsEventPath: string = '/bulk',
     diagnosticEventPath: string = '/diagnostic',
+    includeAuthorizationHeader: boolean = true,
   ) {
     this.streaming = canonicalizeUri(streaming);
     this.polling = canonicalizeUri(polling);
     this.events = canonicalizeUri(events);
     this.analyticsEventPath = analyticsEventPath;
     this.diagnosticEventPath = diagnosticEventPath;
+    this.includeAuthorizationHeader = includeAuthorizationHeader;
   }
 }

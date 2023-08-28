@@ -31,13 +31,18 @@ export default class EventSender implements subsystem.LDEventSender {
     const {
       basicConfiguration: {
         sdkKey,
-        serviceEndpoints: { events, analyticsEventPath, diagnosticEventPath },
+        serviceEndpoints: {
+          events,
+          analyticsEventPath,
+          diagnosticEventPath,
+          includeAuthorizationHeader,
+        },
       },
       platform: { info, requests, crypto },
     } = clientContext;
 
     this.defaultHeaders = {
-      ...defaultHeaders(sdkKey, config, info),
+      ...defaultHeaders(sdkKey, config, info, includeAuthorizationHeader),
     };
 
     this.eventsUri = `${events}${analyticsEventPath}`;

@@ -8,6 +8,7 @@ export default function defaultHeaders(
   sdkKey: string,
   config: DefaultHeaderOptions,
   info: Info,
+  includeAuthorizationHeader: boolean = true,
 ): { [key: string]: string } {
   const sdkData = info.sdkData();
   const headers: { [key: string]: string } = {
@@ -16,8 +17,9 @@ export default function defaultHeaders(
     }`,
   };
 
-  // edge sdks use clientSideID and don't need the authorization header
-  if (sdkKey.startsWith('sdk-')) {
+  // edge sdks sets this to false because they use the clientSideID
+  // and they don't need the authorization header
+  if (includeAuthorizationHeader) {
     headers.authorization = sdkKey;
   }
 

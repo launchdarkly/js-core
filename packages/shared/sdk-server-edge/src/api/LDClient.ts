@@ -20,6 +20,7 @@ export class LDClient extends LDClientImpl {
     const internalOptions: internal.LDInternalOptions = {
       analyticsEventPath: `/events/bulk/${clientSideID}`,
       diagnosticEventPath: `/events/diagnostic/${clientSideID}`,
+      includeAuthorizationHeader: false,
     };
     super(clientSideID, platform, createOptions(options), createCallbacks(em), internalOptions);
     this.emitter = em;
