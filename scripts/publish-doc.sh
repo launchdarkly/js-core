@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Run this script like:
 # ./scripts/publish-doc.sh packages/sdk/node
 
@@ -55,10 +57,10 @@ set +e
 
 while true
 do
-    
+
     git pull origin gh-pages --no-edit # should accept the default message
     after_pull_sha=$(git rev-parse HEAD)
-    
+
     # The first time this runs the head_sha will be empty and they will not match.
     # If the push fails, then we pull again, and if the SHA does not change, then
     # the push will not succeed.
@@ -66,13 +68,13 @@ do
         echo "Failed to get changes. Could not publish docs."
         exit 1
     fi
-    
+
     head_sha=$after_pull_sha
-    
+
     if git push; then
         break
     fi
-    
+
     echo "Push failed, trying again."
 done
 

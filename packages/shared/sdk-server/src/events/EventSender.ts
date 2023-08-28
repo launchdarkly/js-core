@@ -2,6 +2,7 @@ import {
   ApplicationTags,
   ClientContext,
   Crypto,
+  LDLogger,
   Requests,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -27,11 +28,14 @@ export default class EventSender implements subsystem.LDEventSender {
 
   private crypto: Crypto;
 
+  private logger?: LDLogger;
+
   constructor(config: EventSenderOptions, clientContext: ClientContext) {
     const {
       basicConfiguration: {
         sdkKey,
         serviceEndpoints: { events },
+        logger,
       },
       platform: { info, requests, crypto },
     } = clientContext;
@@ -48,6 +52,7 @@ export default class EventSender implements subsystem.LDEventSender {
 
     this.requests = requests;
     this.crypto = crypto;
+    this.logger = logger;
   }
 
   private async tryPostingEvents(
@@ -71,6 +76,9 @@ export default class EventSender implements subsystem.LDEventSender {
     }
     let error;
     try {
+      this.logger?.error(`===== uri: ${uri}`);
+      this.logger?.error(`===== headers: ${JSON.stringify(headers)}`);
+      this.logger?.error(`===== events: ${JSON.stringify(events)}`);
       const res = await this.requests.fetch(uri, {
         headers,
         body: JSON.stringify(events),
