@@ -3,10 +3,7 @@
 
 set -e
 
-# Get the script location so we can run adjacent scripts.
-script_path=$(readlink -f "$0")
-base_name=$(dirname $script_path)
 
-# Determine the name to use for the doc. The name and version from package.json.
-doc_name=$($base_name/doc-name.sh $1)
-npx typedoc --name "$doc_name" --readme none --out ./$1/docs --entryPointStrategy packages $1;
+script_path=$(readlink -f "$0")
+cd "$script_path"/..
+npx typedoc --options "$1/typedoc.json"

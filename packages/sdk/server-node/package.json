@@ -36,7 +36,6 @@
     "client"
   ],
   "scripts": {
-    "doc": "../../../scripts/build-doc.sh .",
     "clean": "npx tsc --build --clean",
     "//": "We run the tests in-band because the FS tests work best sequential.",
     "test": "npx jest --ci --runInBand",
@@ -65,7 +64,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "ts-jest": "^29.0.5",
-    "typedoc": "0.24.8",
+    "typedoc": "0.25.0",
     "typescript": "5.1.6"
   }
 }
