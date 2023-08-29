@@ -4,11 +4,17 @@ import { isHttpRecoverable, LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
 import { defaultHeaders, httpErrorMessage } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
+import { StreamingErrorHandler } from './types';
 
 const STREAM_READ_TIMEOUT_MS = 5 * 60 * 1000;
 const RETRY_RESET_INTERVAL_MS = 60 * 1000;
 
-const reportJsonError = (type: string, data: string, logger?: LDLogger, errorHandler?: any) => {
+const reportJsonError = (
+  type: string,
+  data: string,
+  logger?: LDLogger,
+  errorHandler?: StreamingErrorHandler,
+) => {
   logger?.error(`Stream received invalid data in "${type}" message`);
   logger?.debug(`Invalid JSON follows: ${data}`);
   errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
@@ -29,7 +35,7 @@ class StreamingProcessor implements LDStreamProcessor {
     clientContext: ClientContext,
     private readonly listeners: Map<EventName, ProcessStreamResponse>,
     private readonly diagnosticsManager?: DiagnosticsManager,
-    private readonly errorHandler?: (err?: any) => void,
+    private readonly errorHandler?: StreamingErrorHandler,
   ) {
     const { basicConfiguration, platform } = clientContext;
     const { logger, tags, streamInitialReconnectDelay } = basicConfiguration;
@@ -102,21 +108,20 @@ class StreamingProcessor implements LDStreamProcessor {
       this.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
     };
 
-    this.listeners.forEach(({ deserialize, process }, eventName) => {
+    this.listeners.forEach(({ deserializeData, processJson }, eventName) => {
       eventSource.addEventListener(eventName, (event) => {
         this.logger?.debug(`Received ${eventName} event`);
 
         if (event?.data) {
           this.logConnectionResult(true);
           const { data } = event;
-          const parsed = deserialize(data);
+          const parsed = deserializeData(data);
 
           if (!parsed) {
             reportJsonError(eventName, data, this.logger, this.errorHandler);
             return;
           }
-
-          process(parsed);
+          processJson(parsed);
         } else {
           this.errorHandler?.(new LDStreamingError('Unexpected payload from event stream'));
         }

@@ -140,6 +140,16 @@ export default class LDClientImpl implements LDClient {
             clientContext,
             this.featureStore,
             this.diagnosticsManager,
+            (err) => {
+              const error =
+                err.code === 401
+                  ? new Error('Authentication failed. Double check your SDK key.')
+                  : err;
+              this.onError(error);
+              this.onFailed(error);
+              this.initReject?.(error);
+              this.initState = InitState.Failed;
+            },
           )
         : new PollingProcessor(
             config,
@@ -193,25 +203,7 @@ export default class LDClientImpl implements LDClient {
     };
     this.evaluator = new Evaluator(this.platform, queries);
 
-    this.updateProcessor.start((err) => {
-      if (err) {
-        let error;
-        if ((err.status && err.status === 401) || (err.code && err.code === 401)) {
-          error = new Error('Authentication failed. Double check your SDK key.');
-        } else {
-          error = err;
-        }
-
-        this.onError(error);
-        this.onFailed(error);
-        this.initReject?.(error);
-        this.initState = InitState.Failed;
-      } else if (!this.initialized()) {
-        this.initState = InitState.Initialized;
-        this.initResolve?.(this);
-        this.onReady();
-      }
-    });
+    this.updateProcessor.start();
   }
 
   initialized(): boolean {

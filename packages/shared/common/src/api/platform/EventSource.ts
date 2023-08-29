@@ -1,8 +1,8 @@
 export type EventName = 'delete' | 'patch' | 'ping' | 'put';
 export type EventListener = (event?: { data?: any }) => void;
 export type ProcessStreamResponse = {
-  deserialize: (response: string) => any;
-  process: (json: any) => void;
+  deserializeData: (data: string) => any;
+  processJson: (json: any) => void;
 };
 
 export interface EventSource {

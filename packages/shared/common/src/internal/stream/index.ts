@@ -1,4 +1,5 @@
 import StreamingProcessor from './StreamingProcessor';
+import { type StreamingErrorHandler } from './types';
 
 // eslint-disable-next-line
-export { StreamingProcessor };
+export { StreamingProcessor, type StreamingErrorHandler };

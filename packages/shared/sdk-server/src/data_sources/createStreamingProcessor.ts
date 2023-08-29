@@ -14,25 +14,36 @@ const createStreamingProcessor = (
   clientContext: ClientContext,
   featureStore: LDDataSourceUpdates,
   diagnosticsManager?: internal.DiagnosticsManager,
+  errorHandler?: internal.StreamingErrorHandler,
 ) => {
   const listeners = new Map<EventName, ProcessStreamResponse>();
 
-  // TODO: simplify the way we add listeners to StreamingProcessor
   listeners.set('put', {
-    deserialize: deserializeAll,
-    process: (json: AllData) => {
+    deserializeData: deserializeAll,
+    processJson: (json: AllData) => {
       const initData = {
         [VersionedDataKinds.Features.namespace]: json.data.flags,
         [VersionedDataKinds.Segments.namespace]: json.data.segments,
       };
 
-      // TODO: fix errorHandler function
-      // featureStore.init(initData, () => fn?.());
-      featureStore.init(initData, () => '');
+      featureStore.init(initData, () => {
+        // TODO:
+        // if (!this.initialized()) {
+        //   this.initState = InitState.Initialized;
+        //   this.initResolve?.(this);
+        //   this.onReady();
+        // }
+      });
     },
   });
 
-  return new internal.StreamingProcessor(sdkKey, clientContext, listeners, diagnosticsManager);
+  return new internal.StreamingProcessor(
+    sdkKey,
+    clientContext,
+    listeners,
+    diagnosticsManager,
+    errorHandler,
+  );
 };
 
 export default createStreamingProcessor;
