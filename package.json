@@ -20,7 +20,7 @@
     "clean": "yarn workspaces foreach -pt run clean",
     "build": "yarn workspaces foreach -p --topological-dev run build",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/common' for example.",
-    "build:doc": "./scripts/build-doc.sh $1",
+    "build:doc": "npx typedoc --options $1/typedoc.json",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
     "test": "echo Please run tests for individual packages.",
@@ -43,7 +43,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
-    "typedoc": "0.24.8",
+    "typedoc": "0.25.0",
     "typescript": "5.1.6"
   },
   "packageManager": "yarn@3.4.1"
