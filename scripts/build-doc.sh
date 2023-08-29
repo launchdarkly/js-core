@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Run this script like:
 # ./scripts/build-doc.sh packages/sdk/node
 

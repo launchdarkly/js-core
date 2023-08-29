@@ -1,5 +1,5 @@
 import { EventName, EventSource, LDLogger, ProcessStreamResponse, Requests } from '../../api';
-import { LDStreamProcessor } from '../../api/subsystem/LDStreamProcessor';
+import { LDStreamProcessor } from '../../api/subsystem';
 import { isHttpRecoverable, LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
 import { defaultHeaders, httpErrorMessage } from '../../utils';

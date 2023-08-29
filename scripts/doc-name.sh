@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Given a path get the name for the documentation.
 # ./scripts/doc-name.sh packages/sdk/server-node
 # Produces something like:
