@@ -4,6 +4,7 @@
 import {
   ClientContext,
   Context,
+  EventName,
   internal,
   LDClientError,
   LDContext,
@@ -11,6 +12,7 @@ import {
   LDLogger,
   LDStreamingError,
   Platform,
+  ProcessStreamResponse,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -19,7 +21,6 @@ import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import ClientMessages from './ClientMessages';
-import createStreamingProcessor from './data_sources/createStreamingProcessor';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import PollingProcessor from './data_sources/PollingProcessor';
@@ -38,6 +39,14 @@ import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
+import {
+  AllData,
+  DeleteData,
+  deserializeAll,
+  deserializeDelete,
+  deserializePatch,
+  PatchData,
+} from './store/serialization';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 enum InitState {
@@ -137,10 +146,10 @@ export default class LDClientImpl implements LDClient {
 
     const makeDefaultProcessor = () =>
       config.stream
-        ? createStreamingProcessor(
+        ? new internal.StreamingProcessor(
             sdkKey,
             clientContext,
-            this.featureStore,
+            this.createStreamListeners(),
             this.diagnosticsManager,
             this.streamErrorHandler,
           )
@@ -446,5 +455,66 @@ export default class LDClientImpl implements LDClient {
     this.onFailed(error);
     this.initReject?.(error);
     this.initState = InitState.Failed;
+  }
+
+  private createStreamListeners() {
+    const listeners = new Map<EventName, ProcessStreamResponse>();
+    listeners.set('put', this.createPutListener());
+    listeners.set('patch', this.createPatchListener());
+    listeners.set('delete', this.createDeleteListener());
+    return listeners;
+  }
+
+  private createPutListener() {
+    return {
+      deserializeData: deserializeAll,
+      processJson: async ({ data: { flags, segments } }: AllData) => {
+        const initData = {
+          [VersionedDataKinds.Features.namespace]: flags,
+          [VersionedDataKinds.Segments.namespace]: segments,
+        };
+
+        await this.featureStore.init(initData);
+
+        if (!this.initialized()) {
+          this.initState = InitState.Initialized;
+          this.initResolve?.(this);
+          this.onReady();
+        }
+      },
+    };
+  }
+  private createPatchListener() {
+    return {
+      deserializeData: deserializePatch,
+      processJson: async ({ data, kind, path }: PatchData) => {
+        if (kind) {
+          const key = VersionedDataKinds.getKeyFromPath(kind, path);
+          if (key) {
+            this.logger?.debug(`Updating ${key} in ${kind.namespace}`);
+            await this.featureStore.upsert(kind, data);
+          }
+        }
+      },
+    };
+  }
+
+  private createDeleteListener() {
+    return {
+      deserializeData: deserializeDelete,
+      processJson: async ({ kind, path, version }: DeleteData) => {
+        if (kind) {
+          const key = VersionedDataKinds.getKeyFromPath(kind, path);
+          if (key) {
+            this.logger?.debug(`Deleting ${key} in ${kind.namespace}`);
+            await this.featureStore.upsert(kind, {
+              key,
+              version,
+              deleted: true,
+            });
+          }
+        }
+      },
+    };
   }
 }
