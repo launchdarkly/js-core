@@ -9,6 +9,7 @@ import {
   LDContext,
   LDEvaluationDetail,
   LDLogger,
+  LDStreamingError,
   Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -115,6 +116,7 @@ export default class LDClientImpl implements LDClient {
 
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options);
+
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
     }
@@ -140,16 +142,7 @@ export default class LDClientImpl implements LDClient {
             clientContext,
             this.featureStore,
             this.diagnosticsManager,
-            (err) => {
-              const error =
-                err.code === 401
-                  ? new Error('Authentication failed. Double check your SDK key.')
-                  : err;
-              this.onError(error);
-              this.onFailed(error);
-              this.initReject?.(error);
-              this.initState = InitState.Failed;
-            },
+            this.streamErrorHandler,
           )
         : new PollingProcessor(
             config,
@@ -442,5 +435,16 @@ export default class LDClientImpl implements LDClient {
       return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
     }
     return this.variationInternal(flagKey, context, defaultValue, eventFactory);
+  }
+
+  private streamErrorHandler(streamError: LDStreamingError) {
+    const error =
+      streamError.code === 401
+        ? new Error('Authentication failed. Double check your SDK key.')
+        : streamError;
+    this.onError(error);
+    this.onFailed(error);
+    this.initReject?.(error);
+    this.initState = InitState.Failed;
   }
 }
