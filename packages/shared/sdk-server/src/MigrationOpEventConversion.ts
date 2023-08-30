@@ -22,23 +22,23 @@ function isOperation(value: LDMigrationOp) {
 function isLatencyMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationLatencyMeasurement {
-  return (value as any).kind === undefined && value.key === 'latency_ms';
+  return value.key === 'latency_ms';
 }
 
 function isErrorMeasurement(value: LDMigrationMeasurement): value is LDMigrationErrorMeasurement {
-  return (value as any).kind === undefined && value.key === 'error';
+  return value.key === 'error';
 }
 
 function isInvokedMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationInvokedMeasurement {
-  return (value as any).kind === undefined && value.key === 'invoked';
+  return value.key === 'invoked';
 }
 
 function isConsistencyMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationConsistencyMeasurement {
-  return (value as any).kind === undefined && value.key === 'consistent';
+  return value.key === 'consistent';
 }
 
 function areValidNumbers(values: { old?: number; new?: number }) {
