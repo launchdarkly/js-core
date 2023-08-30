@@ -1,8 +1,14 @@
 /* eslint-disable no-console */
 import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
-export default {
-  async fetch(request: Request, env: Bindings): Promise<Response> {
+// handler types ripped from the cloudflare docs:
+// https://developers.cloudflare.com/workers/examples/accessing-the-cloudflare-object/
+const handler: ExportedHandler<Bindings> = {
+  async fetch(
+    request: Request,
+    env: Bindings,
+    executionContext: ExecutionContext,
+  ): Promise<Response> {
     const clientSideID = 'client-side-id';
     const flagKey = 'testFlag1';
     const context = { kind: 'org', key: 'org-key-cf', email: 'testcforg@gmail.com' };
@@ -14,18 +20,24 @@ export default {
     const flagDetail = await client.variationDetail(flagKey, context, false);
     const allFlags = await client.allFlagsState(context);
 
-    // Gotcha: you must call flush otherwise events will not be sent to LD servers
-    // due to the ephemeral nature of edge workers.
-    await client.flush((err, res) => {
-      console.log(`flushed events result: ${res}, error: ${err}`);
-    });
-
     const resp = `
     ${flagKey}: ${flagValue}
     detail: ${JSON.stringify(flagDetail)}
     allFlags: ${JSON.stringify(allFlags)}`;
 
     console.log(`------------- ${resp}`);
+
+    // Gotcha: you must call flush otherwise events will not be sent to LD servers
+    // due to the ephemeral nature of edge workers.
+    // https://developers.cloudflare.com/workers/runtime-apis/fetch-event/#waituntil
+    executionContext.waitUntil(
+      client.flush((err, res) => {
+        console.log(`flushed events result: ${res}, error: ${err}`);
+      }),
+    );
+
     return new Response(`${resp}`);
   },
 };
+
+export default handler;
