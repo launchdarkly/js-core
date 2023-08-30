@@ -1,4 +1,5 @@
 import { LDConsistencyCheck, LDMigrationStage } from '../src';
+import { LDMigrationOrigin } from '../src/api/LDMigration';
 import MigrationOpTracker from '../src/MigrationOpTracker';
 
 it('does not generate an event if an op is not set', () => {
@@ -38,12 +39,20 @@ it('generates an event if the minimal requirements are met.', () => {
   );
 
   tracker.op('write');
+  tracker.invoked('old');
 
   expect(tracker.createEvent()).toMatchObject({
     contextKeys: { user: 'bob' },
     evaluation: { default: 'off', key: 'flag', reason: { kind: 'FALLTHROUGH' }, value: 'off' },
     kind: 'migration_op',
-    measurements: [],
+    measurements: [
+      {
+        key: 'invoked',
+        values: {
+          old: true,
+        },
+      },
+    ],
     operation: 'write',
   });
 });
@@ -60,6 +69,8 @@ it('includes errors if at least one is set', () => {
   );
   tracker.op('read');
   tracker.error('old');
+  tracker.invoked('old');
+  tracker.invoked('new');
 
   const event = tracker.createEvent();
   expect(event?.measurements).toContainEqual({
@@ -80,6 +91,8 @@ it('includes errors if at least one is set', () => {
   );
   trackerB.op('read');
   trackerB.error('new');
+  trackerB.invoked('old');
+  trackerB.invoked('new');
 
   const eventB = trackerB.createEvent();
   expect(eventB?.measurements).toContainEqual({
@@ -102,6 +115,8 @@ it('includes latency if at least one measurement exists', () => {
   );
   tracker.op('read');
   tracker.latency('old', 100);
+  tracker.invoked('old');
+  tracker.invoked('new');
 
   const event = tracker.createEvent();
   expect(event?.measurements).toContainEqual({
@@ -122,6 +137,8 @@ it('includes latency if at least one measurement exists', () => {
   );
   trackerB.op('read');
   trackerB.latency('new', 150);
+  trackerB.invoked('old');
+  trackerB.invoked('new');
 
   const eventB = trackerB.createEvent();
   expect(eventB?.measurements).toContainEqual({
@@ -144,6 +161,8 @@ it('includes if the result was consistent', () => {
   );
   tracker.op('read');
   tracker.consistency(LDConsistencyCheck.Consistent);
+  tracker.invoked('old');
+  tracker.invoked('new');
 
   const event = tracker.createEvent();
   expect(event?.measurements).toContainEqual({
@@ -164,6 +183,8 @@ it('includes if the result was inconsistent', () => {
     },
   );
   tracker.op('read');
+  tracker.invoked('old');
+  tracker.invoked('new');
   tracker.consistency(LDConsistencyCheck.Inconsistent);
 
   const event = tracker.createEvent();
@@ -171,5 +192,46 @@ it('includes if the result was inconsistent', () => {
     key: 'consistent',
     value: false,
     samplingRatio: 1,
+  });
+});
+
+it.each(['old', 'new'])('includes which single origins were invoked', (origin) => {
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+  );
+  tracker.op('read');
+  tracker.invoked(origin as LDMigrationOrigin);
+
+  const event = tracker.createEvent();
+  expect(event?.measurements).toContainEqual({
+    key: 'invoked',
+    values: { [origin]: true },
+  });
+});
+
+it('includes when both origins were invoked', () => {
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+  );
+  tracker.op('read');
+  tracker.invoked('old');
+  tracker.invoked('new');
+
+  const event = tracker.createEvent();
+  expect(event?.measurements).toContainEqual({
+    key: 'invoked',
+    values: { old: true, new: true },
   });
 });

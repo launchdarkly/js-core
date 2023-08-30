@@ -64,7 +64,7 @@ export function makeSdkConfig(options, tag) {
 }
 
 function getExecution(order) {
-  switch(order) {
+  switch (order) {
     case 'serial': {
       return new LDSerialExecution(LDExecutionOrdering.Fixed);
     }
@@ -164,7 +164,7 @@ export async function newSdkClientEntity(options) {
       case 'migrationOperation':
         const migrationOperation = params.migrationOperation;
         const readExecutionOrder = migrationOperation.readExecutionOrder;
-        
+
         const migration = new Migration(client, {
           execution: getExecution(readExecutionOrder),
           latencyTracking: migrationOperation.trackLatency,

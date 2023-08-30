@@ -4,6 +4,7 @@ import {
   LDMigrationConsistencyMeasurement,
   LDMigrationErrorMeasurement,
   LDMigrationEvaluation,
+  LDMigrationInvokedMeasurement,
   LDMigrationLatencyMeasurement,
   LDMigrationMeasurement,
   LDMigrationOp,
@@ -21,17 +22,23 @@ function isOperation(value: LDMigrationOp) {
 function isLatencyMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationLatencyMeasurement {
-  return (value as any).kind === undefined && value.key === 'latency_ms';
+  return value.key === 'latency_ms';
 }
 
 function isErrorMeasurement(value: LDMigrationMeasurement): value is LDMigrationErrorMeasurement {
-  return (value as any).kind === undefined && value.key === 'error';
+  return value.key === 'error';
+}
+
+function isInvokedMeasurement(
+  value: LDMigrationMeasurement,
+): value is LDMigrationInvokedMeasurement {
+  return value.key === 'invoked';
 }
 
 function isConsistencyMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationConsistencyMeasurement {
-  return (value as any).kind === undefined && value.key === 'consistent';
+  return value.key === 'consistent';
 }
 
 function areValidNumbers(values: { old?: number; new?: number }) {
@@ -111,6 +118,22 @@ function validateMeasurement(
       key: measurement.key,
       value: measurement.value,
       samplingRatio: measurement.samplingRatio,
+    };
+  }
+
+  if (isInvokedMeasurement(measurement)) {
+    if (!TypeValidators.Object.is(measurement.values)) {
+      return undefined;
+    }
+    if (!areValidBooleans(measurement.values)) {
+      return undefined;
+    }
+    return {
+      key: measurement.key,
+      values: {
+        old: measurement.values.old,
+        new: measurement.values.new,
+      },
     };
   }
 

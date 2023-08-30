@@ -302,6 +302,7 @@ export default class Migration<
     origin: LDMigrationOrigin,
     method: (payload?: TInput) => Promise<LDMethodResult<TOutput>>,
   ): Promise<LDMigrationResult<TOutput>> {
+    context.tracker.invoked(origin);
     const res = await this.trackLatency(context.tracker, origin, () =>
       safeCall(() => method(context.payload)),
     );
