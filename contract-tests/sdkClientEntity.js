@@ -80,6 +80,13 @@ function getExecution(order) {
   }
 }
 
+function makeMigrationPostOptions(payload) {
+  if (payload) {
+    return { body: payload };
+  }
+  return {};
+}
+
 export async function newSdkClientEntity(options) {
   const c = {};
   const log = Log(options.tag);
@@ -170,49 +177,45 @@ export async function newSdkClientEntity(options) {
           latencyTracking: migrationOperation.trackLatency,
           errorTracking: migrationOperation.trackErrors,
           check: migrationOperation.trackConsistency ? (a, b) => a === b : undefined,
-          readNew: async () => {
+          readNew: async (payload) => {
             try {
-              const options = {};
-              if (migrationOperation.payload) {
-                options.body = migrationOperation.payload;
-              }
-              const res = await got.post(migrationOperation.newEndpoint, options);
+              const res = await got.post(
+                migrationOperation.newEndpoint,
+                makeMigrationPostOptions(payload),
+              );
               return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
             }
           },
-          writeNew: async () => {
+          writeNew: async (payload) => {
             try {
-              const options = {};
-              if (migrationOperation.payload) {
-                options.body = migrationOperation.payload;
-              }
-              const res = await got.post(migrationOperation.newEndpoint, options);
+              const res = await got.post(
+                migrationOperation.newEndpoint,
+                makeMigrationPostOptions(payload),
+              );
               return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
             }
           },
-          readOld: async () => {
+          readOld: async (payload) => {
             try {
-              const options = {};
-              if (migrationOperation.payload) {
-                options.body = migrationOperation.payload;
-              }
-              const res = await got.post(migrationOperation.oldEndpoint, options);
+              const res = await got.post(
+                migrationOperation.oldEndpoint,
+                makeMigrationPostOptions(payload),
+              );
               return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
             }
           },
-          writeOld: async () => {
+          writeOld: async (payload) => {
             try {
-              const options = {};
-              if (migrationOperation.payload) {
-                options.body = migrationOperation.payload;
-              }
-              const res = await got.post(migrationOperation.oldEndpoint, options);
+              const res = await got.post(
+                migrationOperation.oldEndpoint,
+                makeMigrationPostOptions(payload),
+              );
               return LDMigrationSuccess(res.body);
             } catch (err) {
               return LDMigrationError(err.message);
