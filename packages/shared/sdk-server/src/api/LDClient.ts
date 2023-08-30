@@ -123,7 +123,8 @@ export interface LDClient {
   ): Promise<LDEvaluationDetail>;
 
   /**
-   * TKTK: Should use a common description.
+   * MigrationVariation returns the migration stage of the migration feature flag for the given
+   * evaluation context.
    *
    * If the evaluated value of the flag cannot be converted to an LDMigrationStage, then an error
    * event will be raised.

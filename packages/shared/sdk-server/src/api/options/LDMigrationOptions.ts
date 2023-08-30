@@ -90,27 +90,57 @@ export interface LDMigrationOptions<
   errorTracking?: boolean;
 
   /**
-   * TKTK
+   * Implementation which provides a read from the "new" source.
+   *
+   * Users are required to provide two different read methods -- one to read from the old migration source, and one to
+   * read from the new source. Additionally, customers can opt-in to consistency tracking by providing a comparison
+   * function.
+   *
+   * Depending on the migration stage, one or both of these read methods may be called.
+   *
+   * @param payload An optional payload. The payload is provided when calling the  `read` method on the migration.
+   * @returns The result of the operation. Use {@link LDMigrationSuccess} or {@link LDMigrationFailure} to create a suitable return value.
    */
   readNew: (payload?: TMigrationReadInput) => Promise<LDMethodResult<TMigrationRead>>;
 
   /**
-   * TKTK
+   * Implementation which provides a write to the "new" source.
+   *
+   * Users are required to provide two different write methods -- one to write to the old migration source, and one to
+   * write to the new source. Not every stage requires
+   *
+   * Depending on the migration stage, one or both of these write methods may be called.
+   * @param payload An optional payload. The payload is provided when calling the  `read` method on the migration.
+   * @returns The result of the operation. Use {@link LDMigrationSuccess} or {@link LDMigrationFailure} to create a suitable return value.
    */
   writeNew: (payload?: TMigrationWriteInput) => Promise<LDMethodResult<TMigrationWrite>>;
 
   /**
-   * TKTK
+   * Implementation which provides a read from the "old" source.
+   *
+   * Users are required to provide two different read methods -- one to read from the old migration source, and one to
+   * read from the new source. Additionally, customers can opt-in to consistency tracking by providing a comparison
+   * function.
+   *
+   * Depending on the migration stage, one or both of these read methods may be called.
    */
   readOld: (payload?: TMigrationReadInput) => Promise<LDMethodResult<TMigrationRead>>;
 
   /**
-   * TKTK
+   * Implementation which provides a write to the "old" source.
+   *
+   * Users are required to provide two different write methods -- one to write to the old migration source, and one to
+   * write to the new source. Not every stage requires
+   *
+   * Depending on the migration stage, one or both of these write methods may be called.
+   * @param payload An optional payload. The payload is provided when calling the  `read` method on the migration.
+   * @returns The result of the operation. Use {@link LDMigrationSuccess} or {@link LDMigrationFailure} to create a suitable return value.
    */
   writeOld: (payload?: TMigrationWriteInput) => Promise<LDMethodResult<TMigrationWrite>>;
 
   /**
-   * TKTK
+   * Method used to do consistency checks for read operations. After a read operation, during which both data sources
+   * are read from, a check of read consistency may be done using this method.
    */
   check?: (a: TMigrationRead, b: TMigrationRead) => boolean;
 }
