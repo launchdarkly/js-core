@@ -113,19 +113,19 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     };
   }
 
-  private logTag(): string {
+  private logTag() {
     return `For migration ${this.operation}-${this.flagKey}:`;
   }
 
-  private latencyConsistencyMessage(origin: LDMigrationOrigin): string {
+  private latencyConsistencyMessage(origin: LDMigrationOrigin) {
     return `Latency measurement for "${origin}", but "new" was not invoked.`;
   }
 
-  private errorConsistencyMessage(origin: LDMigrationOrigin): string {
+  private errorConsistencyMessage(origin: LDMigrationOrigin) {
     return `Error occurred for "${origin}", but "new" was not invoked.`;
   }
 
-  private consistencyCheckConsistencyMessage(origin: LDMigrationOrigin): string {
+  private consistencyCheckConsistencyMessage(origin: LDMigrationOrigin) {
     return (
       `Consistency check was done, but "${origin}" was not invoked.` +
       'Both "old" and "new" must be invoked to do a consistency check.'
