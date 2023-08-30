@@ -35,12 +35,6 @@ function isInvokedMeasurement(
   return value.key === 'invoked';
 }
 
-function isInvokedMeasurement(
-  value: LDMigrationMeasurement,
-): value is LDMigrationInvokedMeasurement {
-  return (value as any).kind === undefined && value.key === 'invoked';
-}
-
 function isConsistencyMeasurement(
   value: LDMigrationMeasurement,
 ): value is LDMigrationConsistencyMeasurement {
