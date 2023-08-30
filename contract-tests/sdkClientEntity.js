@@ -87,7 +87,7 @@ export async function newSdkClientEntity(options) {
   log.info('Creating client with configuration: ' + JSON.stringify(options.configuration));
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
-      options.configuration.startWaitTimeMs !== undefined
+    options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
   const client = ld.init(
@@ -226,7 +226,7 @@ export async function newSdkClientEntity(options) {
               migrationOperation.key,
               migrationOperation.context,
               migrationOperation.defaultStage,
-              migrationOperation.payload
+              migrationOperation.payload,
             );
             if (res.success) {
               return { result: res.result };
@@ -239,7 +239,7 @@ export async function newSdkClientEntity(options) {
               migrationOperation.key,
               migrationOperation.context,
               migrationOperation.defaultStage,
-              migrationOperation.payload
+              migrationOperation.payload,
             );
 
             if (res.authoritative.success) {
