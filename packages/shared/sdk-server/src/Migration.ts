@@ -39,6 +39,22 @@ async function safeCall<TResult>(
   }
 }
 
+/**
+ * Report a successful migration operation from `readNew`, `readOld`, `writeNew` or `writeOld`.
+ *
+ * ```
+ * readNew: async () => {
+ *   const myResult = doMyOldRead();
+ *   if(myResult.wasGood) {
+ *     return LDMigrationSuccess(myResult);
+ *   }
+ *   return LDMigrationError(myResult.error)
+ * }
+ * ```
+ *
+ * @param result The result of the operation.
+ * @returns An {@link LDMethodResult}
+ */
 export function LDMigrationSuccess<TResult>(result: TResult): LDMethodResult<TResult> {
   return {
     success: true,
@@ -46,6 +62,22 @@ export function LDMigrationSuccess<TResult>(result: TResult): LDMethodResult<TRe
   };
 }
 
+/**
+ * Report a failed migration operation from `readNew`, `readOld`, `writeNew` or `writeOld`.
+ *
+ * ```
+ * readNew: async () => {
+ *   const myResult = doMyOldRead();
+ *   if(myResult.wasGood) {
+ *     return LDMigrationSuccess(myResult);
+ *   }
+ *   return LDMigrationError(myResult.error)
+ * }
+ * ```
+ *
+ * @param result The result of the operations.
+ * @returns An {@link LDMethodResult}
+ */
 export function LDMigrationError(error: Error): { success: false; error: Error } {
   return {
     success: false,
@@ -59,6 +91,9 @@ interface MigrationContext<TPayload> {
   checkRatio?: number;
 }
 
+/**
+ * Class which allows performing technology migrations.
+ */
 export default class Migration<
   TMigrationRead,
   TMigrationWrite,
