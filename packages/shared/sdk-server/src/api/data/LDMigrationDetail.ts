@@ -15,8 +15,6 @@ export enum LDConsistencyCheck {
 
 /**
  * Used to track information related to a migration operation.
- *
- * TKTK
  */
 export interface LDMigrationTracker {
   /**

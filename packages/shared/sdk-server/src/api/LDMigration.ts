@@ -51,9 +51,7 @@ export type LDMigrationWriteResult<TResult> = {
 };
 
 /**
- * Interface for a migration.
- *
- * TKTK
+ * Interface representing a migration.
  */
 export interface LDMigration<
   TMigrationRead,
@@ -62,7 +60,7 @@ export interface LDMigration<
   TMigrationWriteInput,
 > {
   /**
-   * TKTK
+   * Perform a read using the migration.
    *
    * @param key The key of the flag controlling the migration.
    * @param context The context requesting the flag. The client will generate an analytics event to
@@ -78,7 +76,7 @@ export interface LDMigration<
   ): Promise<LDMigrationReadResult<TMigrationRead>>;
 
   /**
-   * TKTK
+   * Perform a write using the migration.
    *
    * @param key The key of the flag controlling the migration.
    * @param context The context requesting the flag. The client will generate an analytics event to
