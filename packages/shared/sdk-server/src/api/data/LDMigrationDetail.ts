@@ -39,6 +39,16 @@ export interface LDMigrationTracker {
   consistency(result: LDConsistencyCheck): void;
 
   /**
+   * Call this to report that an origin was invoked (executed). There are some situations where the
+   * expectation is that both the old and new implementation will be used, but with writes
+   * it is possible that the non-authoritative will not execute. Reporting the execution allows
+   * for more accurate analytics.
+   *
+   * @param origin The origin that was invoked.
+   */
+  invoked(origin: LDMigrationOrigin): void;
+
+  /**
    * Report the latency of an operation.
    *
    * @param origin The origin the latency is being reported for.
