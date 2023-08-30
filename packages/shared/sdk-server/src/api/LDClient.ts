@@ -123,11 +123,11 @@ export interface LDClient {
   ): Promise<LDEvaluationDetail>;
 
   /**
-   * MigrationVariation returns the migration stage of the migration feature flag for the given
+   * Returns the migration stage of the migration feature flag for the given
    * evaluation context.
    *
-   * If the evaluated value of the flag cannot be converted to an LDMigrationStage, then an error
-   * event will be raised.
+   * If the evaluated value of the flag cannot be converted to an LDMigrationStage, then the default
+   * value will be returned and error will be logged.
    *
    * @param key The unique key of the feature flag.
    * @param context The context requesting the flag. The client will generate an analytics event to
