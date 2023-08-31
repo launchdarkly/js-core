@@ -17,9 +17,9 @@ import {
   LDClient,
   LDFlagsState,
   LDFlagsStateOptions,
-  LDMigrationDetail,
   LDMigrationOpEvent,
   LDMigrationStage,
+  LDMigrationVariation,
   LDOptions,
   LDStreamProcessor,
 } from './api';
@@ -307,7 +307,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-  ): Promise<LDMigrationDetail> {
+  ): Promise<LDMigrationVariation> {
     const convertedContext = Context.fromLDContext(context);
     const [{ detail }, flag] = await this.evaluateIfPossible(
       key,
@@ -328,8 +328,6 @@ export default class LDClientImpl implements LDClient {
       };
       return {
         value: defaultValue,
-        reason,
-        checkRatio,
         tracker: new MigrationOpTracker(
           key,
           contextKeys,
@@ -343,9 +341,7 @@ export default class LDClientImpl implements LDClient {
       };
     }
     return {
-      ...detail,
       value: detail.value as LDMigrationStage,
-      checkRatio,
       tracker: new MigrationOpTracker(
         key,
         contextKeys,

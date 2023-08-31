@@ -1,4 +1,5 @@
 import { LDEvaluationReason, LDLogger } from '@launchdarkly/js-sdk-common';
+import { shouldSample } from '@launchdarkly/js-sdk-common/dist/internal';
 
 import { LDMigrationStage, LDMigrationTracker } from './api';
 import {
@@ -55,8 +56,11 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     this.errors[origin] = true;
   }
 
-  consistency(result: LDConsistencyCheck) {
-    this.consistencyCheck = result;
+  consistency(check: () => boolean) {
+    if (shouldSample(this.checkRatio ?? 1)) {
+      const res = check();
+      this.consistencyCheck = res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent;
+    }
   }
 
   latency(origin: LDMigrationOrigin, value: number) {

@@ -88,7 +88,6 @@ export function LDMigrationError(error: Error): { success: false; error: Error }
 interface MigrationContext<TPayload> {
   payload?: TPayload;
   tracker: LDMigrationTracker;
-  checkRatio?: number;
 }
 
 /**
@@ -239,7 +238,6 @@ export default class Migration<
     const res = await this.readTable[stage.value]({
       payload,
       tracker: stage.tracker,
-      checkRatio: stage.checkRatio,
     });
     stage.tracker.op('read');
     this.sendEvent(stage.tracker);
@@ -274,13 +272,13 @@ export default class Migration<
     oldValue: LDMethodResult<TMigrationRead>,
     newValue: LDMethodResult<TMigrationRead>,
   ) {
-    if (this.config.check && shouldSample(context.checkRatio ?? 1)) {
-      if (oldValue.success && newValue.success) {
-        const res = this.config.check(oldValue.result, newValue.result);
-        context.tracker.consistency(
-          res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent,
-        );
-      }
+    if(!this.config.check) {
+      return;
+    }
+
+    if (oldValue.success && newValue.success) {
+      // Check is validated before this point, so it is force unwrapped.
+      context.tracker.consistency(() => this.config.check!(oldValue.result, newValue.result));
     }
   }
 

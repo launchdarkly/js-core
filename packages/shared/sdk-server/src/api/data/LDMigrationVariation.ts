@@ -32,11 +32,21 @@ export interface LDMigrationTracker {
   error(origin: LDMigrationOrigin): void;
 
   /**
-   * Report the result of a consistency check.
+   * Check the consistency of a read result. This method should be invoked if the `check` function
+   * is defined for the migration and both reads ("new"/"old") were done.
    *
-   * @param result The result of the check.
+   * The function will use the checkRatio to determine if the check should be executed, and it
+   * will record the result.
+   *
+   * Example calling the check function from the migration config.
+   * ```
+   * context.tracker.consistency(() => config.check!(oldValue.result, newValue.result));
+   * ```
+   *
+   * @param check The function which executes the check. This is not the `check` function from the
+   * migration options, but instead should be a parameter-less function that calls that function.
    */
-  consistency(result: LDConsistencyCheck): void;
+  consistency(check: () => boolean): void;
 
   /**
    * Call this to report that an origin was invoked (executed). There are some situations where the
@@ -64,9 +74,9 @@ export interface LDMigrationTracker {
 }
 
 /**
- * Detailed information about a migration variation.
+ * Migration value and tracker.
  */
-export interface LDMigrationDetail {
+export interface LDMigrationVariation {
   /**
    * The result of the flag evaluation. This will be either one of the flag's variations or
    * the default value that was passed to `LDClient.variationDetail`.
@@ -74,30 +84,7 @@ export interface LDMigrationDetail {
   value: LDMigrationStage;
 
   /**
-   * The index of the returned value within the flag's list of variations, e.g. 0 for the
-   * first variation-- or `null` if the default value was returned.
-   */
-  variationIndex?: number | null;
-
-  /**
-   * An object describing the main factor that influenced the flag evaluation value.
-   */
-  reason: LDEvaluationReason;
-
-  /**
    * A tracker which which can be used to generate analytics for the migration.
    */
   tracker: LDMigrationTracker;
-
-  /**
-   * When present represents a 1 in X ratio indicating the probability that a given operation
-   * should have its consistency checked. A 1 indicates that it should always be sampled and
-   * 0 indicates that it never should be sampled.
-   */
-  checkRatio?: number;
-
-  /**
-   * Sampling ratio for the migration event. Defaults to 1 if not specified.
-   */
-  samplingRatio?: number;
 }
