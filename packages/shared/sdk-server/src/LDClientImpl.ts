@@ -143,26 +143,6 @@ export default class LDClientImpl implements LDClient {
       );
     }
 
-    const makeDefaultProcessor = () =>
-      config.stream
-        ? new internal.StreamingProcessor(
-            sdkKey,
-            clientContext,
-            this.createStreamListeners(),
-            this.diagnosticsManager,
-            this.streamErrorHandler,
-          )
-        : new PollingProcessor(
-            config,
-            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
-            dataSourceUpdates,
-          );
-
-    if (!(config.offline || config.useLdd)) {
-      this.updateProcessor =
-        config.updateProcessorFactory?.(clientContext, dataSourceUpdates) ?? makeDefaultProcessor();
-    }
-
     if (!config.sendEvents || config.offline) {
       this.eventProcessor = new internal.NullEventProcessor();
     } else {
@@ -201,10 +181,30 @@ export default class LDClientImpl implements LDClient {
     };
     this.evaluator = new Evaluator(this.platform, queries);
 
-    if (!this.updateProcessor) {
-      this.onReady();
-    } else {
+    const makeDefaultProcessor = () =>
+      config.stream
+        ? new internal.StreamingProcessor(
+            sdkKey,
+            clientContext,
+            this.createStreamListeners(),
+            this.diagnosticsManager,
+            (streamError) => this.streamErrorHandler.call(this, streamError),
+          )
+        : new PollingProcessor(
+            config,
+            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+            dataSourceUpdates,
+          );
+
+    if (!(config.offline || config.useLdd)) {
+      this.updateProcessor =
+        config.updateProcessorFactory?.(clientContext, dataSourceUpdates) ?? makeDefaultProcessor();
+    }
+
+    if (this.updateProcessor) {
       this.updateProcessor.start();
+    } else {
+      this.initSuccessful();
     }
   }
 
@@ -460,6 +460,14 @@ export default class LDClientImpl implements LDClient {
     }
   }
 
+  private initSuccessful() {
+    if (!this.initialized()) {
+      this.initState = InitState.Initialized;
+      this.initResolve?.(this);
+      this.onReady();
+    }
+  }
+
   private createStreamListeners() {
     const listeners = new Map<EventName, ProcessStreamResponse>();
     listeners.set('put', this.createPutListener());
@@ -476,17 +484,12 @@ export default class LDClientImpl implements LDClient {
           [VersionedDataKinds.Features.namespace]: flags,
           [VersionedDataKinds.Segments.namespace]: segments,
         };
-
         await this.featureStore.init(initData);
-
-        if (!this.initialized()) {
-          this.initState = InitState.Initialized;
-          this.initResolve?.(this);
-          this.onReady();
-        }
+        this.initSuccessful();
       },
     };
   }
+
   private createPatchListener() {
     return {
       deserializeData: deserializePatch,

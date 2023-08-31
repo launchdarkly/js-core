@@ -24,9 +24,9 @@ class StreamingProcessor implements LDStreamProcessor {
   private readonly headers: { [key: string]: string | string[] };
   private readonly streamInitialReconnectDelay: number;
   private readonly streamUri: string;
+  private readonly logger?: LDLogger;
 
   private eventSource?: EventSource;
-  private logger?: LDLogger;
   private requests: Requests;
   private connectionAttemptStartTime?: number;
 
@@ -115,13 +115,13 @@ class StreamingProcessor implements LDStreamProcessor {
         if (event?.data) {
           this.logConnectionResult(true);
           const { data } = event;
-          const parsed = deserializeData(data);
+          const dataJson = deserializeData(data);
 
-          if (!parsed) {
+          if (!dataJson) {
             reportJsonError(eventName, data, this.logger, this.errorHandler);
             return;
           }
-          processJson(parsed);
+          processJson(dataJson);
         } else {
           this.errorHandler?.(new LDStreamingError('Unexpected payload from event stream'));
         }

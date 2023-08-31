@@ -1,137 +1,97 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { internal } from '@launchdarkly/js-sdk-common';
 
-import { LDClientImpl } from '../src';
-import TestLogger from './Logger';
-import makeCallbacks from './makeCallbacks';
+import { LDClientImpl, LDOptions } from '../src';
+import { setupMockStreamingProcessor } from './mockStreamingProcessor';
+
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  const { mockStreamingProcessor } = jest.requireActual('./mockStreamingProcessor');
+  return {
+    ...actual,
+    ...{ internal: { ...actual.internal, StreamingProcessor: mockStreamingProcessor } },
+  };
+});
 
 const { mocks } = internal;
 
-it.only('fires ready event in offline mode', (done) => {
-  const client = new LDClientImpl(
-    'sdk-key',
-    mocks.basicPlatform,
-    { offline: true },
-    { ...makeCallbacks(false), onReady: () => done() },
-  );
-  client.close();
-});
-
-it.only('fires the failed event if initialization fails', (done) => {
-  const client = new LDClientImpl(
-    'sdk-key',
-    mocks.basicPlatform,
-    {
-      updateProcessor: {
-        start: (fn: (err: any) => void) => {
-          setTimeout(() => {
-            fn(new Error('BAD THINGS'));
-          }, 0);
-        },
-        stop: () => {},
-        close: () => {},
-      },
-    },
-    { ...makeCallbacks(false), onFailed: () => done() },
-  );
-
-  client.close();
-});
-
-it('isOffline returns true in offline mode', (done) => {
-  const client = new LDClientImpl(
-    'sdk-key',
-    mocks.basicPlatform,
-    { offline: true },
-    {
-      ...makeCallbacks(false),
-      onReady: () => {
-        expect(client.isOffline()).toEqual(true);
-        done();
-      },
-    },
-  );
-
-  client.close();
-});
-
-describe('when waiting for initialization', () => {
+describe('LDClientImpl', () => {
   let client: LDClientImpl;
-  let resolve: Function;
+  const callbacks = {
+    onFailed: jest.fn().mockName('onFailed'),
+    onError: jest.fn().mockName('onError'),
+    onReady: jest.fn().mockName('onReady'),
+    onUpdate: jest.fn().mockName('onUpdate'),
+    hasEventListeners: jest.fn().mockName('hasEventListeners'),
+  };
+  const createClient = (options: LDOptions = {}) =>
+    new LDClientImpl('sdk-key', mocks.basicPlatform, options, callbacks);
 
   beforeEach(() => {
-    client = new LDClientImpl(
-      'sdk-key',
-      mocks.basicPlatform,
-      {
-        updateProcessor: {
-          start: (fn: (err?: any) => void) => {
-            resolve = fn;
-          },
-          stop: () => {},
-          close: () => {},
-        },
-        sendEvents: false,
-        logger: new TestLogger(),
-      },
-      makeCallbacks(false),
-    );
+    setupMockStreamingProcessor();
   });
 
   afterEach(() => {
     client.close();
+    jest.resetAllMocks();
+    jest.useRealTimers();
   });
 
-  it('resolves when ready', async () => {
-    resolve();
-    await client.waitForInitialization();
+  it('fires ready event in online mode', async () => {
+    client = createClient();
+    const initializedClient = await client.waitForInitialization();
+
+    expect(initializedClient).toEqual(client);
+    expect(client.initialized()).toBeTruthy();
+    expect(callbacks.onReady).toBeCalled();
+    expect(callbacks.onFailed).not.toBeCalled();
+    expect(callbacks.onError).not.toBeCalled();
+  });
+
+  it('fires ready event in offline mode', async () => {
+    client = createClient({ offline: true });
+    const initializedClient = await client.waitForInitialization();
+
+    expect(initializedClient).toEqual(client);
+    expect(client.initialized()).toBeTruthy();
+    expect(callbacks.onReady).toBeCalled();
+    expect(callbacks.onFailed).not.toBeCalled();
+    expect(callbacks.onError).not.toBeCalled();
+  });
+
+  it('initialization fails: failed event fires and initialization promise rejects', async () => {
+    setupMockStreamingProcessor(true);
+    client = createClient();
+
+    await expect(client.waitForInitialization()).rejects.toThrow('failed');
+
+    expect(client.initialized()).toBeFalsy();
+    expect(callbacks.onReady).not.toBeCalled();
+    expect(callbacks.onFailed).toBeCalled();
+    expect(callbacks.onError).toBeCalled();
+  });
+
+  it('isOffline returns true in offline mode', () => {
+    client = createClient({ offline: true });
+    expect(client.isOffline()).toEqual(true);
+  });
+
+  it('does not crash when closing an offline client', () => {
+    client = createClient({ offline: true });
+    expect(() => client.close()).not.toThrow();
   });
 
   it('resolves immediately if the client is already ready', async () => {
-    resolve();
+    client = createClient();
     await client.waitForInitialization();
     await client.waitForInitialization();
   });
 
   it('creates only one Promise', async () => {
+    client = createClient();
     const p1 = client.waitForInitialization();
     const p2 = client.waitForInitialization();
-    resolve();
+
     expect(p2).toBe(p1);
   });
-});
-
-it('does not crash when closing an offline client', () => {
-  const client = new LDClientImpl(
-    'sdk-key',
-    mocks.basicPlatform,
-    { offline: true },
-    makeCallbacks(false),
-  );
-
-  expect(() => client.close()).not.toThrow();
-  client.close();
-});
-
-it('the wait for initialization promise is rejected if initialization fails', (done) => {
-  const client = new LDClientImpl(
-    'sdk-key',
-    mocks.basicPlatform,
-    {
-      updateProcessor: {
-        start: (fn: (err: any) => void) => {
-          setTimeout(() => {
-            fn(new Error('BAD THINGS'));
-          }, 0);
-        },
-        stop: () => {},
-        close: () => {},
-      },
-      sendEvents: false,
-    },
-    makeCallbacks(false),
-  );
-
-  client.waitForInitialization().catch(() => done());
-  client.close();
 });
