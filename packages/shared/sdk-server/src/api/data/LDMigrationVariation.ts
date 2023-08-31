@@ -77,12 +77,12 @@ export interface LDMigrationTracker {
 export interface LDMigrationVariation {
   /**
    * The result of the flag evaluation. This will be either one of the flag's variations or
-   * the default value that was passed to `LDClient.variationDetail`.
+   * the default value that was passed to `LDClient.variationMigration`.
    */
   value: LDMigrationStage;
 
   /**
-   * A tracker which which can be used to generate analytics for the migration.
+   * A tracker which can be used to generate analytics for the migration.
    */
   tracker: LDMigrationTracker;
 }
