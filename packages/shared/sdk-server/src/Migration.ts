@@ -272,7 +272,7 @@ export default class Migration<
     oldValue: LDMethodResult<TMigrationRead>,
     newValue: LDMethodResult<TMigrationRead>,
   ) {
-    if(!this.config.check) {
+    if (!this.config.check) {
       return;
     }
 

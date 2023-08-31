@@ -1,4 +1,4 @@
-import { LDEvaluationReason, LDLogger, internal } from '@launchdarkly/js-sdk-common';
+import { internal, LDEvaluationReason, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationStage, LDMigrationTracker } from './api';
 import {
