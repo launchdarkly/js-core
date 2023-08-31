@@ -22,7 +22,6 @@ import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import ClientMessages from './ClientMessages';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
-import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
@@ -74,7 +73,7 @@ export default class LDClientImpl implements LDClient {
 
   private featureStore: AsyncStoreFacade;
 
-  private updateProcessor: subsystem.LDStreamProcessor;
+  private updateProcessor?: subsystem.LDStreamProcessor;
 
   private eventFactoryDefault = new EventFactory(false);
 
@@ -159,9 +158,7 @@ export default class LDClientImpl implements LDClient {
             dataSourceUpdates,
           );
 
-    if (config.offline || config.useLdd) {
-      this.updateProcessor = new NullUpdateProcessor();
-    } else {
+    if (!(config.offline || config.useLdd)) {
       this.updateProcessor =
         config.updateProcessorFactory?.(clientContext, dataSourceUpdates) ?? makeDefaultProcessor();
     }
@@ -178,7 +175,6 @@ export default class LDClientImpl implements LDClient {
     }
 
     const asyncFacade = new AsyncStoreFacade(featureStore);
-
     this.featureStore = asyncFacade;
 
     const manager = new BigSegmentsManager(
@@ -205,7 +201,11 @@ export default class LDClientImpl implements LDClient {
     };
     this.evaluator = new Evaluator(this.platform, queries);
 
-    this.updateProcessor.start();
+    if (!this.updateProcessor) {
+      this.onReady();
+    } else {
+      this.updateProcessor.start();
+    }
   }
 
   initialized(): boolean {
@@ -340,7 +340,7 @@ export default class LDClientImpl implements LDClient {
 
   close(): void {
     this.eventProcessor.close();
-    this.updateProcessor.close();
+    this.updateProcessor?.close();
     this.featureStore.close();
     this.bigSegmentsManager.close();
   }
@@ -453,8 +453,11 @@ export default class LDClientImpl implements LDClient {
         : streamError;
     this.onError(error);
     this.onFailed(error);
-    this.initReject?.(error);
-    this.initState = InitState.Failed;
+
+    if (!this.initialized()) {
+      this.initState = InitState.Failed;
+      this.initReject?.(error);
+    }
   }
 
   private createStreamListeners() {

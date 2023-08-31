@@ -2,7 +2,6 @@ import { internal, subsystem } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl } from '../src';
 import { LDFeatureStore } from '../src/api/subsystems';
-import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
@@ -268,7 +267,6 @@ describe('given a client that is un-initialized and store that is initialized', 
       'sdk-key',
       mocks.basicPlatform,
       {
-        updateProcessor: new NullUpdateProcessor(),
         sendEvents: false,
         featureStore: store,
       },
