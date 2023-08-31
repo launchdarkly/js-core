@@ -2,7 +2,7 @@
   "compilerOptions": {
     "incremental": true,
     "strict": true,
-    "module": "NodeNext",
+    "module": "nodenext",
     "outDir": "dist/ew",
     "target": "ESNext",
     "lib": ["es2023", "DOM"],

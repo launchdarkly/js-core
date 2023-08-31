@@ -12,6 +12,9 @@ import { Metric } from './Metric';
 import { Override } from './Override';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 
+// The max size where we use an array instead of a set.
+const TARGET_LIST_ARRAY_CUTOFF = 100;
+
 /**
  * @internal
  */
@@ -54,6 +57,30 @@ export function replacer(this: any, key: string, value: any): any {
     if (value[0] && value[0] instanceof AttributeReference) {
       return undefined;
     }
+  }
+  if (value.generated_includedSet) {
+    value.included = [...value.generated_includedSet];
+    delete value.generated_includedSet;
+  }
+  if (value.generated_excludedSet) {
+    value.excluded = [...value.generated_excludedSet];
+    delete value.generated_excludedSet;
+  }
+  if (value.includedContexts) {
+    value.includedContexts.forEach((target: any) => {
+      if (target.generated_valuesSet) {
+        target.values = [...target.generated_valuesSet];
+      }
+      delete target.generated_valuesSet;
+    });
+  }
+  if (value.excludedContexts) {
+    value.excludedContexts.forEach((target: any) => {
+      if (target.generated_valuesSet) {
+        target.values = [...target.generated_valuesSet];
+      }
+      delete target.generated_valuesSet;
+    });
   }
   return value;
 }
@@ -110,6 +137,35 @@ export function processFlag(flag: Flag) {
  * @internal
  */
 export function processSegment(segment: Segment) {
+  if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
+    segment.generated_includedSet = new Set(segment.included);
+    delete segment.included;
+  }
+  if (segment?.excluded?.length && segment.excluded.length > TARGET_LIST_ARRAY_CUTOFF) {
+    segment.generated_excludedSet = new Set(segment.excluded);
+    delete segment.excluded;
+  }
+
+  if (segment?.includedContexts?.length) {
+    segment.includedContexts.forEach((target) => {
+      if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
+        target.generated_valuesSet = new Set(target.values);
+        // Currently typing is non-optional, so we don't delete it.
+        target.values = [];
+      }
+    });
+  }
+
+  if (segment?.excludedContexts?.length) {
+    segment.excludedContexts.forEach((target) => {
+      if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
+        target.generated_valuesSet = new Set(target.values);
+        // Currently typing is non-optional, so we don't delete it.
+        target.values = [];
+      }
+    });
+  }
+
   segment?.rules?.forEach((rule) => {
     if (rule.bucketBy) {
       // Rules before U2C would have had literals for attributes.

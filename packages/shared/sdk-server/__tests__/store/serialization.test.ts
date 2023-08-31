@@ -6,6 +6,7 @@ import {
   deserializePatch,
   replacer,
   reviver,
+  serializeSegment,
 } from '../../src/store/serialization';
 
 const flagWithAttributeNameInClause = {
@@ -414,4 +415,110 @@ it('given bad json', () => {
   expect(deserializeAll(data)).toBeUndefined();
   expect(deserializePatch(data)).toBeUndefined();
   expect(deserializeDelete(data)).toBeUndefined();
+});
+
+it('deserialization creates a set for a large number of includes/excludes', () => {
+  const included = [...Array(500).keys()].map((i) => (i + 1).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 10).toString());
+
+  const jsonString = makeSerializedPatchData(undefined, {
+    key: 'test-segment-1',
+    included,
+    excluded,
+    includedContexts: [],
+    excludedContexts: [],
+    salt: 'saltyA',
+    rules: [],
+    version: 0,
+    deleted: false,
+  });
+
+  const res = deserializePatch(jsonString);
+  const segment = res?.data as Segment;
+  expect(segment.included).toBeUndefined();
+  expect(segment.excluded).toBeUndefined();
+
+  expect([...segment.generated_includedSet!]).toEqual(included);
+  expect([...segment.generated_excludedSet!]).toEqual(excluded);
+});
+
+it('deserialization creates a set for a large number of included/excluded context values', () => {
+  const included = [...Array(500).keys()].map((i) => (i + 10).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 1).toString());
+
+  const jsonString = makeSerializedPatchData(undefined, {
+    key: 'test-segment-1',
+    included: [],
+    excluded: [],
+    includedContexts: [{ contextKind: 'org', values: included }],
+    excludedContexts: [{ contextKind: 'user', values: excluded }],
+    salt: 'saltyA',
+    rules: [],
+    version: 0,
+    deleted: false,
+  });
+
+  const res = deserializePatch(jsonString);
+  const segment = res?.data as Segment;
+
+  expect([...segment.includedContexts![0].generated_valuesSet!]).toEqual(included);
+  expect([...segment.excludedContexts![0].generated_valuesSet!]).toEqual(excluded);
+});
+
+it('serialization converts sets back to arrays for included/excluded', () => {
+  const included = [...Array(500).keys()].map((i) => (i + 1).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 10).toString());
+
+  const jsonString = makeSerializedPatchData(undefined, {
+    key: 'test-segment-1',
+    included,
+    excluded,
+    includedContexts: [],
+    excludedContexts: [],
+    salt: 'saltyA',
+    rules: [],
+    version: 0,
+    deleted: false,
+  });
+
+  const res = deserializePatch(jsonString);
+  const segment = res?.data as Segment;
+
+  const serializedSegment = serializeSegment(segment);
+  // Just json parse. We don't want it to automatically re-populate the sets.
+  const jsonDeserialized = JSON.parse(serializedSegment);
+
+  expect(jsonDeserialized.included).toEqual(included);
+  expect(jsonDeserialized.excluded).toEqual(excluded);
+  expect(jsonDeserialized.generated_includedSet).toBeUndefined();
+  expect(jsonDeserialized.generated_excludedSet).toBeUndefined();
+});
+
+it('serialization converts sets back to arrays for includedContexts/excludedContexts', () => {
+  const included = [...Array(500).keys()].map((i) => (i + 1).toString());
+  const excluded = [...Array(500).keys()].map((i) => (i + 10).toString());
+
+  const jsonString = makeSerializedPatchData(undefined, {
+    key: 'test-segment-1',
+    included: [],
+    excluded: [],
+    includedContexts: [{ contextKind: 'org', values: included }],
+    excludedContexts: [{ contextKind: 'user', values: excluded }],
+    salt: 'saltyA',
+    rules: [],
+    version: 0,
+    deleted: false,
+  });
+
+  const res = deserializePatch(jsonString);
+  const segment = res?.data as Segment;
+
+  const serializedSegment = serializeSegment(segment);
+  // Just json parse. We don't want it to automatically re-populate the sets.
+  const jsonDeserialized = JSON.parse(serializedSegment);
+
+  expect(jsonDeserialized.includedContexts[0].values).toEqual(included);
+  expect(jsonDeserialized.excludedContexts[0].values).toEqual(excluded);
+  expect(jsonDeserialized.includedContexts[0].generated_valuesSet).toBeUndefined();
+  expect(jsonDeserialized.excludedContexts[0].generated_valuesSet).toBeUndefined();
 });

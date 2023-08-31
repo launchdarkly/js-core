@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk",
-  "version": "8.2.0",
+  "version": "8.2.3",
   "description": "LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-node",
   "repository": {
@@ -46,9 +46,9 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "1.1.0",
+    "@launchdarkly/js-server-sdk-common": "1.2.2",
     "https-proxy-agent": "^5.0.1",
-    "launchdarkly-eventsource": "2.0.0"
+    "launchdarkly-eventsource": "2.0.1"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
@@ -65,7 +65,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "ts-jest": "^29.0.5",
-    "typedoc": "0.23.26",
+    "typedoc": "0.24.8",
     "typescript": "5.1.6"
   }
 }

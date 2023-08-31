@@ -18,59 +18,102 @@ export function firstResult<T, U>(
   return res;
 }
 
-async function seriesAsync<T>(
+const ITERATION_RECURSION_LIMIT = 50;
+
+function seriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>,
+  check: (val: T, index: number, cb: (res: boolean) => void) => void,
   all: boolean,
-) {
+  index: number,
+  cb: (res: boolean) => void,
+): void {
   if (!collection) {
-    return false;
+    cb(false);
+    return;
   }
-  for (let index = 0; index < collection.length; index += 1) {
-    // This warning is to encourage starting many operations at once.
-    // In this case we only want to evaluate until we encounter something that
-    // doesn't match. Versus starting all the evaluations and then letting them
-    // all resolve.
-    // eslint-disable-next-line no-await-in-loop
-    const res = await check(collection[index], index);
-    // If we want all checks to pass, then we return on any failed check.
-    // If we want only a single result to pass, then we return on a true result.
-    if (all) {
-      if (!res) {
-        return false;
+  if (index < collection?.length) {
+    check(collection[index], index, (res) => {
+      if (all) {
+        if (!res) {
+          cb(false);
+          return;
+        }
+      } else if (res) {
+        cb(true);
+        return;
       }
-    } else if (res) {
-      return true;
-    }
+      if (collection.length > ITERATION_RECURSION_LIMIT) {
+        // When we hit the recursion limit we defer execution
+        // by using a resolved promise. This is similar to using setImmediate
+        // but more portable.
+        Promise.resolve().then(() => {
+          seriesAsync(collection, check, all, index + 1, cb);
+        });
+      } else {
+        seriesAsync(collection, check, all, index + 1, cb);
+      }
+    });
+  } else {
+    cb(all);
   }
-  // In the case of 'all', getting here means all checks passed.
-  // In the case of 'first', this means no checks passed.
-  return all;
 }
 
 /**
  * Iterate a collection in series awaiting each check operation.
  * @param collection The collection to iterate.
  * @param check The check to perform for each item in the container.
- * @returns True if all items pass the check.
+ * @param cb Called with true if all items pass the check.
  */
-export async function allSeriesAsync<T>(
+export function allSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>,
-): Promise<boolean> {
-  return seriesAsync(collection, check, true);
+  check: (val: T, index: number, cb: (res: boolean) => void) => void,
+  cb: (res: boolean) => void,
+): void {
+  seriesAsync(collection, check, true, 0, cb);
 }
 
 /**
  * Iterate a collection in series awaiting each check operation.
  * @param collection The collection to iterate.
  * @param check The check to perform for each item in the container.
- * @returns True on the first item that passes the check. False if no items
- * pass.
+ * @param cb called with true on the first item that passes the check. False
+ * means no items passed the check.
  */
-export async function firstSeriesAsync<T>(
+export function firstSeriesAsync<T>(
   collection: T[] | undefined,
-  check: (val: T, index: number) => Promise<boolean>,
-): Promise<boolean> {
-  return seriesAsync(collection, check, false);
+  check: (val: T, index: number, cb: (res: boolean) => void) => void,
+  cb: (res: boolean) => void,
+): void {
+  seriesAsync(collection, check, false, 0, cb);
+}
+
+/**
+ * Iterate a collection and execute the the given check operation
+ * for all items concurrently.
+ * @param collection The collection to iterate.
+ * @param check The check to run for each item.
+ * @param cb Callback executed when all items have been checked. The callback
+ * will be called with true if each item resulted in true, otherwise it will
+ * be called with false.
+ */
+export function allAsync<T>(
+  collection: T[] | undefined,
+  check: (val: T, cb: (res: boolean) => void) => void,
+  cb: (res: boolean | null | undefined) => void,
+): void {
+  if (!collection) {
+    cb(false);
+    return;
+  }
+
+  Promise.all(
+    collection?.map(
+      (item) =>
+        new Promise((resolve) => {
+          check(item, resolve);
+        }),
+    ),
+  ).then((results) => {
+    cb(results.every((success) => success));
+  });
 }
