@@ -1,4 +1,4 @@
-import { internal, LDContext } from '@launchdarkly/js-sdk-common';
+import { LDContext } from '@launchdarkly/js-sdk-common';
 
 import { LDClient, LDMigrationStage, LDMigrationTracker } from './api';
 import {
