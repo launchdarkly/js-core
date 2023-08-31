@@ -35,7 +35,6 @@
     "dist"
   ],
   "scripts": {
-    "doc": "npx typedoc --name \"$(../../../scripts/doc-name.sh .)\" --readme none --entryPointStrategy resolve src/index.ts",
     "build": "rollup -c rollup.config.js && ../../../scripts/replace-version.sh .",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
@@ -69,7 +68,7 @@
     "rollup": "^3.23.0",
     "rollup-plugin-generate-package-json": "^3.2.0",
     "ts-jest": "^29.1.0",
-    "typedoc": "0.24.8",
+    "typedoc": "0.25.0",
     "typescript": "5.1.6"
   },
   "dependencies": {

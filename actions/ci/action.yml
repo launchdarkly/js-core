@@ -40,4 +40,4 @@ runs:
 
     - name: Build Docs
       shell: bash
-      run: yarn workspace ${{ inputs.workspace_name }} doc
+      run: yarn build:doc -- ${{ inputs.workspace_path }}
