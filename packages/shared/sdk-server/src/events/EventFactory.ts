@@ -37,8 +37,23 @@ export default class EventFactory {
     );
   }
 
-  unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
-    return new internal.InputEvalEvent(this.withReasons, context, key, detail.value, detail);
+  unknownFlagEvent(
+    key: string,
+    context: Context,
+    detail: LDEvaluationDetail,
+    indexEventSamplingRatio?: number,
+  ) {
+    return new internal.InputEvalEvent(
+      this.withReasons,
+      context,
+      key,
+      detail.value,
+      detail,
+      undefined,
+      undefined,
+      undefined,
+      indexEventSamplingRatio,
+    );
   }
 
   /* eslint-disable-next-line class-methods-use-this */

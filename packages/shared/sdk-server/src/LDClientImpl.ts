@@ -550,6 +550,17 @@ export default class LDClientImpl implements LDClient {
         );
         this.onError(error);
         const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
+        (async () => {
+          const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
+          this.eventProcessor.sendEvent(
+            this.eventFactoryDefault.unknownFlagEvent(
+              flagKey,
+              evalContext,
+              result.detail,
+              indexSamplingRatio,
+            ),
+          );
+        })();
         this.eventProcessor.sendEvent(
           this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
         );
@@ -567,12 +578,25 @@ export default class LDClientImpl implements LDClient {
             this.logger?.debug('Result value is null in variation');
             evalRes.setDefault(defaultValue);
           }
-          evalRes.events?.forEach((event) => {
-            this.eventProcessor.sendEvent(event);
-          });
-          this.eventProcessor.sendEvent(
-            eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue),
-          );
+
+          // Immediately invoked function expression to get the event out of the callback
+          // path and allow access to async methods.
+          (async () => {
+            const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
+            evalRes.events?.forEach((event) => {
+              this.eventProcessor.sendEvent({ ...event, indexSamplingRatio });
+            });
+            this.eventProcessor.sendEvent(
+              eventFactory.evalEvent(
+                flag,
+                evalContext,
+                evalRes.detail,
+                defaultValue,
+                undefined,
+                indexSamplingRatio,
+              ),
+            );
+          })();
           cb(evalRes, flag);
         },
         eventFactory,
