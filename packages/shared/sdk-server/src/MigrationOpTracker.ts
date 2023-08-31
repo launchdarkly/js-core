@@ -1,5 +1,4 @@
-import { LDEvaluationReason, LDLogger } from '@launchdarkly/js-sdk-common';
-import { shouldSample } from '@launchdarkly/js-sdk-common/dist/internal';
+import { LDEvaluationReason, LDLogger, internal } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationStage, LDMigrationTracker } from './api';
 import {
@@ -57,7 +56,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   }
 
   consistency(check: () => boolean) {
-    if (shouldSample(this.checkRatio ?? 1)) {
+    if (internal.shouldSample(this.checkRatio ?? 1)) {
       const res = check();
       this.consistencyCheck = res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent;
     }
