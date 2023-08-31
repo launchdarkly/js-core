@@ -49,9 +49,16 @@ export default class EventFactory {
       key,
       detail.value,
       detail,
-      undefined,
-      undefined,
-      undefined,
+      // This isn't ideal, but the purpose of the factory is to at least
+      // handle this situation.
+      undefined, // version
+      undefined, // variation index
+      undefined, // track events
+      undefined, // prereqOf
+      undefined, // reason
+      undefined, // debugEventsUntilDate
+      undefined, // exclude from summaries
+      undefined, // sampling ratio
       indexEventSamplingRatio,
     );
   }

@@ -561,9 +561,6 @@ export default class LDClientImpl implements LDClient {
             ),
           );
         })();
-        this.eventProcessor.sendEvent(
-          this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
-        );
         cb(result);
         return;
       }
