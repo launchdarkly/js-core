@@ -313,7 +313,7 @@ export default class LDClientImpl implements LDClient {
       key,
       context,
       defaultValue,
-      this.eventFactoryWithReasons,
+      this.eventFactoryDefault,
     );
 
     const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
