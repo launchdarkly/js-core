@@ -18,9 +18,9 @@ import {
   LDFeatureStore,
   LDFlagsState,
   LDFlagsStateOptions,
-  LDMigrationDetail,
   LDMigrationOpEvent,
   LDMigrationStage,
+  LDMigrationVariation,
   LDOptions,
   LDStreamProcessor,
 } from './api';
@@ -305,7 +305,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-  ): Promise<LDMigrationDetail> {
+  ): Promise<LDMigrationVariation> {
     const convertedContext = Context.fromLDContext(context);
     return new Promise((resolve) => {
       this.evaluateIfPossible(
@@ -328,8 +328,6 @@ export default class LDClientImpl implements LDClient {
             };
             resolve({
               value: defaultValue,
-              reason,
-              checkRatio,
               tracker: new MigrationOpTracker(
                 key,
                 contextKeys,
@@ -344,9 +342,7 @@ export default class LDClientImpl implements LDClient {
             return;
           }
           resolve({
-            ...detail,
             value: detail.value as LDMigrationStage,
-            checkRatio,
             tracker: new MigrationOpTracker(
               key,
               contextKeys,
