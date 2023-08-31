@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
-    "build": "/bin/sh ../../../scripts/build-package.sh",
+    "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
     "clean": "rimraf dist",
     "start": "rimraf dist && yarn tsw",

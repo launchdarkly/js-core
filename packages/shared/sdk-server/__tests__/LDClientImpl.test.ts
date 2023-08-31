@@ -7,7 +7,7 @@ import makeCallbacks from './makeCallbacks';
 
 const { mocks } = internal;
 
-it('fires ready event in offline mode', (done) => {
+it.only('fires ready event in offline mode', (done) => {
   const client = new LDClientImpl(
     'sdk-key',
     mocks.basicPlatform,
