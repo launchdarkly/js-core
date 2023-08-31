@@ -1,4 +1,4 @@
-import { LDConsistencyCheck, LDMigrationStage } from '../src';
+import { LDMigrationStage } from '../src';
 import { LDMigrationOrigin } from '../src/api/LDMigration';
 import MigrationOpTracker from '../src/MigrationOpTracker';
 
