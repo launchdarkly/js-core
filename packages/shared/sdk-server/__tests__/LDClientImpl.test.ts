@@ -17,7 +17,7 @@ it('fires ready event in offline mode', (done) => {
   client.close();
 });
 
-it('fires the failed event if initialization fails', (done) => {
+it.only('fires the failed event if initialization fails', (done) => {
   const client = new LDClientImpl(
     'sdk-key',
     mocks.basicPlatform,

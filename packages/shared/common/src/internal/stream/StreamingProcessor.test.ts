@@ -11,14 +11,14 @@ import {
   SdkData,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
+import promisify from '@launchdarkly/js-server-sdk-common/dist/async/promisify';
+import NullEventSource from '@launchdarkly/js-server-sdk-common/dist/events/NullEventSource';
+import Configuration from '@launchdarkly/js-server-sdk-common/dist/options/Configuration';
+import AsyncStoreFacade from '@launchdarkly/js-server-sdk-common/dist/store/AsyncStoreFacade';
+import InMemoryFeatureStore from '@launchdarkly/js-server-sdk-common/dist/store/InMemoryFeatureStore';
+import VersionedDataKinds from '@launchdarkly/js-server-sdk-common/dist/store/VersionedDataKinds';
 
-import promisify from '../../src/async/promisify';
-import NullEventSource from '../../src/events/NullEventSource';
-import Configuration from '../../src/options/Configuration';
-import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
-import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import TestLogger, { LogLevel } from '../Logger';
+import TestLogger, { LogLevel } from '../../../../sdk-server/__tests__/Logger';
 
 const { mocks } = internal;
 
