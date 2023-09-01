@@ -182,14 +182,15 @@ export default class LDClientImpl implements LDClient {
     };
     this.evaluator = new Evaluator(this.platform, queries);
 
+    const listeners = createStreamListeners(this.featureStore, this.logger, {
+      put: () => this.initSuccessful(),
+    });
     const makeDefaultProcessor = () =>
       config.stream
         ? new internal.StreamingProcessor(
             sdkKey,
             clientContext,
-            createStreamListeners(this.featureStore, this.logger, {
-              put: () => this.initSuccessful(),
-            }),
+            listeners,
             this.diagnosticsManager,
             (streamError) => this.streamErrorHandler(streamError),
           )
@@ -201,13 +202,8 @@ export default class LDClientImpl implements LDClient {
 
     if (!(config.offline || config.useLdd)) {
       this.updateProcessor =
-        config.updateProcessorFactory?.(
-          clientContext,
-          dataSourceUpdates,
-          createStreamListeners(this.featureStore, this.logger, {
-            put: () => this.initSuccessful(),
-          }),
-        ) ?? makeDefaultProcessor();
+        config.updateProcessorFactory?.(clientContext, dataSourceUpdates, listeners) ??
+        makeDefaultProcessor();
     }
 
     if (this.updateProcessor) {
