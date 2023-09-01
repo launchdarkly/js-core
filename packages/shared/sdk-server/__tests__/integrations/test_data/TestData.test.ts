@@ -1,4 +1,9 @@
-import { ClientContext, internal } from '@launchdarkly/js-sdk-common';
+import {
+  ClientContext,
+  EventName,
+  internal,
+  ProcessStreamResponse,
+} from '@launchdarkly/js-sdk-common';
 
 import { AttributeReference } from '../../../src';
 import { Flag } from '../../../src/evaluation/data/Flag';
@@ -22,134 +27,157 @@ const basicBooleanFlag: Flag = {
   version: 1,
 };
 
-it('initializes the data store with flags configured the data store is created', async () => {
-  const td = new TestData();
-  td.update(td.flag('new-flag').variationForAll(true));
+const createStreamListeners = () => {
+  const listeners = new Map<EventName, ProcessStreamResponse>();
+  listeners.set('put', { deserializeData: jest.fn(), processJson: jest.fn() });
+  listeners.set('patch', { deserializeData: jest.fn(), processJson: jest.fn() });
+  listeners.set('delete', { deserializeData: jest.fn(), processJson: jest.fn() });
+  return listeners;
+};
 
-  const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), mocks.basicPlatform),
-    store,
-  );
+describe('TestData', () => {
+  let listeners: Map<EventName, ProcessStreamResponse>;
 
-  processor.start();
-  const facade = new AsyncStoreFacade(store);
-
-  const res = await facade.get(VersionedDataKinds.Features, 'new-flag');
-
-  expect(res).toEqual(basicBooleanFlag);
-});
-
-it('updates the data store when update is called', async () => {
-  const td = new TestData();
-  const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), mocks.basicPlatform),
-    store,
-  );
-
-  processor.start();
-  const facade = new AsyncStoreFacade(store);
-
-  // In this test the update is after initialization.
-  await td.update(td.flag('new-flag').variationForAll(true));
-  const res = await facade.get(VersionedDataKinds.Features, 'new-flag');
-  expect(res).toEqual(basicBooleanFlag);
-});
-
-it('can include pre-configured items', async () => {
-  const td = new TestData();
-  td.usePreconfiguredFlag({ key: 'my-flag', version: 1000, on: true });
-  td.usePreconfiguredSegment({ key: 'my-segment', version: 2000 });
-
-  const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), mocks.basicPlatform),
-    store,
-  );
-
-  processor.start();
-
-  td.usePreconfiguredFlag({ key: 'my-flag', on: false });
-  td.usePreconfiguredFlag({ key: 'my-flag-2', version: 1000, on: true });
-  td.usePreconfiguredSegment({ key: 'my-segment', included: ['x'] });
-  td.usePreconfiguredSegment({ key: 'my-segment-2', version: 2000 });
-
-  const facade = new AsyncStoreFacade(store);
-  const allFlags = await facade.all(VersionedDataKinds.Features);
-  const allSegments = await facade.all(VersionedDataKinds.Segments);
-
-  expect(allFlags).toEqual({
-    'my-flag': {
-      key: 'my-flag',
-      on: false,
-      version: 1001,
-    },
-    'my-flag-2': {
-      key: 'my-flag-2',
-      on: true,
-      version: 1000,
-    },
+  beforeEach(() => {
+    listeners = createStreamListeners();
   });
 
-  expect(allSegments).toEqual({
-    'my-segment': {
-      included: ['x'],
-      key: 'my-segment',
-      version: 2001,
-    },
-    'my-segment-2': {
-      key: 'my-segment-2',
-      version: 2000,
-    },
+  afterEach(() => {
+    jest.resetAllMocks();
   });
-});
 
-it.each([true, false])('does not update the store after stop/close is called', async (stop) => {
-  const td = new TestData();
+  it('initializes the data store with flags configured the data store is created', async () => {
+    const td = new TestData();
+    td.update(td.flag('new-flag').variationForAll(true));
 
-  const store = new InMemoryFeatureStore();
-  const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), mocks.basicPlatform),
-    store,
-  );
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      store,
+      listeners,
+    );
+    processor.start();
+    const facade = new AsyncStoreFacade(store);
+    const res = await facade.get(VersionedDataKinds.Features, 'new-flag');
 
-  processor.start();
-  td.update(td.flag('new-flag').variationForAll(true));
-  if (stop) {
-    processor.stop();
-  } else {
-    processor.close();
-  }
-  td.update(td.flag('new-flag-2').variationForAll(true));
+    expect(res).toEqual(basicBooleanFlag);
+  });
 
-  const facade = new AsyncStoreFacade(store);
+  it('updates the data store when update is called', async () => {
+    const td = new TestData();
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      store,
+      listeners,
+    );
 
-  const flag1 = await facade.get(VersionedDataKinds.Features, 'new-flag');
-  const flag2 = await facade.get(VersionedDataKinds.Features, 'new-flag-2');
+    processor.start();
+    const facade = new AsyncStoreFacade(store);
 
-  expect(flag1).toBeDefined();
-  expect(flag2).toBeNull();
-});
+    // In this test the update is after initialization.
+    await td.update(td.flag('new-flag').variationForAll(true));
+    const res = await facade.get(VersionedDataKinds.Features, 'new-flag');
+    expect(res).toEqual(basicBooleanFlag);
+  });
 
-it('can update a flag that already exists in the store', async () => {
-  const td = new TestData();
+  it('can include pre-configured items', async () => {
+    const td = new TestData();
+    td.usePreconfiguredFlag({ key: 'my-flag', version: 1000, on: true });
+    td.usePreconfiguredSegment({ key: 'my-segment', version: 2000 });
 
-  const store = new InMemoryFeatureStore();
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      store,
+      listeners,
+    );
 
-  const processor = td.getFactory()(
-    new ClientContext('', new Configuration({}), mocks.basicPlatform),
-    store,
-  );
+    processor.start();
 
-  processor.start();
-  td.update(td.flag('new-flag').variationForAll(true));
-  td.update(td.flag('new-flag').variationForAll(false));
+    td.usePreconfiguredFlag({ key: 'my-flag', on: false });
+    td.usePreconfiguredFlag({ key: 'my-flag-2', version: 1000, on: true });
+    td.usePreconfiguredSegment({ key: 'my-segment', included: ['x'] });
+    td.usePreconfiguredSegment({ key: 'my-segment-2', version: 2000 });
 
-  const facade = new AsyncStoreFacade(store);
-  const res = (await facade.get(VersionedDataKinds.Features, 'new-flag')) as Flag;
-  expect(res.version).toEqual(2);
-  expect(res.fallthrough.variation).toEqual(1);
+    const facade = new AsyncStoreFacade(store);
+    const allFlags = await facade.all(VersionedDataKinds.Features);
+    const allSegments = await facade.all(VersionedDataKinds.Segments);
+
+    expect(allFlags).toEqual({
+      'my-flag': {
+        key: 'my-flag',
+        on: false,
+        version: 1001,
+      },
+      'my-flag-2': {
+        key: 'my-flag-2',
+        on: true,
+        version: 1000,
+      },
+    });
+
+    expect(allSegments).toEqual({
+      'my-segment': {
+        included: ['x'],
+        key: 'my-segment',
+        version: 2001,
+      },
+      'my-segment-2': {
+        key: 'my-segment-2',
+        version: 2000,
+      },
+    });
+  });
+
+  it.each([true, false])('does not update the store after stop/close is called', async (stop) => {
+    const td = new TestData();
+
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      store,
+      listeners,
+    );
+
+    processor.start();
+    td.update(td.flag('new-flag').variationForAll(true));
+    if (stop) {
+      processor.stop();
+    } else {
+      processor.close();
+    }
+    td.update(td.flag('new-flag-2').variationForAll(true));
+
+    const facade = new AsyncStoreFacade(store);
+
+    const flag1 = await facade.get(VersionedDataKinds.Features, 'new-flag');
+    const flag2 = await facade.get(VersionedDataKinds.Features, 'new-flag-2');
+
+    expect(flag1).toBeDefined();
+    expect(flag2).toBeNull();
+  });
+
+  it('can update a flag that already exists in the store', async () => {
+    const td = new TestData();
+
+    const store = new InMemoryFeatureStore();
+
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      store,
+      listeners,
+    );
+
+    processor.start();
+    td.update(td.flag('new-flag').variationForAll(true));
+    td.update(td.flag('new-flag').variationForAll(false));
+
+    const facade = new AsyncStoreFacade(store);
+    const res = (await facade.get(VersionedDataKinds.Features, 'new-flag')) as Flag;
+    expect(res.version).toEqual(2);
+    expect(res.fallthrough.variation).toEqual(1);
+  });
 });
 
 describe('given a TestData instance', () => {
