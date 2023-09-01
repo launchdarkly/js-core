@@ -21,6 +21,7 @@ import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import ClientMessages from './ClientMessages';
+import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
@@ -186,9 +187,11 @@ export default class LDClientImpl implements LDClient {
         ? new internal.StreamingProcessor(
             sdkKey,
             clientContext,
-            this.createStreamListeners(),
+            createStreamListeners(this.featureStore, this.logger, {
+              put: () => this.initSuccessful(),
+            }),
             this.diagnosticsManager,
-            (streamError) => this.streamErrorHandler.call(this, streamError),
+            (streamError) => this.streamErrorHandler(streamError),
           )
         : new PollingProcessor(
             config,
@@ -201,7 +204,9 @@ export default class LDClientImpl implements LDClient {
         config.updateProcessorFactory?.(
           clientContext,
           dataSourceUpdates,
-          this.createStreamListeners(),
+          createStreamListeners(this.featureStore, this.logger, {
+            put: () => this.initSuccessful(),
+          }),
         ) ?? makeDefaultProcessor();
     }
 
@@ -470,61 +475,5 @@ export default class LDClientImpl implements LDClient {
       this.initResolve?.(this);
       this.onReady();
     }
-  }
-
-  private createStreamListeners() {
-    const listeners = new Map<EventName, ProcessStreamResponse>();
-    listeners.set('put', this.createPutListener());
-    listeners.set('patch', this.createPatchListener());
-    listeners.set('delete', this.createDeleteListener());
-    return listeners;
-  }
-
-  private createPutListener() {
-    return {
-      deserializeData: deserializeAll,
-      processJson: async ({ data: { flags, segments } }: AllData) => {
-        const initData = {
-          [VersionedDataKinds.Features.namespace]: flags,
-          [VersionedDataKinds.Segments.namespace]: segments,
-        };
-        await this.featureStore.init(initData);
-        this.initSuccessful();
-      },
-    };
-  }
-
-  private createPatchListener() {
-    return {
-      deserializeData: deserializePatch,
-      processJson: async ({ data, kind, path }: PatchData) => {
-        if (kind) {
-          const key = VersionedDataKinds.getKeyFromPath(kind, path);
-          if (key) {
-            this.logger?.debug(`Updating ${key} in ${kind.namespace}`);
-            await this.featureStore.upsert(kind, data);
-          }
-        }
-      },
-    };
-  }
-
-  private createDeleteListener() {
-    return {
-      deserializeData: deserializeDelete,
-      processJson: async ({ kind, path, version }: DeleteData) => {
-        if (kind) {
-          const key = VersionedDataKinds.getKeyFromPath(kind, path);
-          if (key) {
-            this.logger?.debug(`Deleting ${key} in ${kind.namespace}`);
-            await this.featureStore.upsert(kind, {
-              key,
-              version,
-              deleted: true,
-            });
-          }
-        }
-      },
-    };
   }
 }
