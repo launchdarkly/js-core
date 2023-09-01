@@ -1,11 +1,9 @@
-import { subsystem } from '@launchdarkly/js-sdk-common';
+import { EventName, ProcessStreamResponse, subsystem } from '@launchdarkly/js-sdk-common';
 
-import { DataKind } from '../../api/interfaces';
-import { LDKeyedFeatureStoreItem } from '../../api/subsystems';
+import { DataKind, LDKeyedFeatureStoreItem } from '../../api';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
 import AsyncStoreFacade from '../../store/AsyncStoreFacade';
-import VersionedDataKinds from '../../store/VersionedDataKinds';
 
 /**
  * @internal
@@ -16,14 +14,14 @@ export default class TestDataSource implements subsystem.LDStreamProcessor {
     private readonly flags: Record<string, Flag>,
     private readonly segments: Record<string, Segment>,
     private readonly onStop: (tfs: TestDataSource) => void,
+    private readonly listeners: Map<EventName, ProcessStreamResponse>,
   ) {}
 
-  async start(fn?: ((err?: any) => void) | undefined) {
-    await this.featureStore.init({
-      [VersionedDataKinds.Features.namespace]: { ...this.flags },
-      [VersionedDataKinds.Segments.namespace]: { ...this.segments },
+  async start() {
+    this.listeners.forEach(({ processJson }) => {
+      const dataJson = { data: { flags: this.flags, segments: this.segments } };
+      processJson(dataJson);
     });
-    fn?.();
   }
 
   stop() {

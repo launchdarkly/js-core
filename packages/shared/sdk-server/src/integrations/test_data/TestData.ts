@@ -1,6 +1,11 @@
-import { LDClientContext, subsystem } from '@launchdarkly/js-sdk-common';
+import {
+  EventName,
+  LDClientContext,
+  ProcessStreamResponse,
+  subsystem,
+} from '@launchdarkly/js-sdk-common';
 
-import { LDFeatureStore } from '../../api/subsystems';
+import { LDFeatureStore } from '../../api';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
 import AsyncStoreFacade from '../../store/AsyncStoreFacade';
@@ -57,6 +62,7 @@ export default class TestData {
   getFactory(): (
     clientContext: LDClientContext,
     featureStore: LDFeatureStore,
+    listeners: Map<EventName, ProcessStreamResponse>,
   ) => subsystem.LDStreamProcessor {
     // Provides an arrow function to prevent needed to bind the method to
     // maintain `this`.
@@ -64,15 +70,16 @@ export default class TestData {
       /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       clientContext: LDClientContext,
       featureStore: LDFeatureStore,
+      listeners: Map<EventName, ProcessStreamResponse>,
     ) => {
       const newSource = new TestDataSource(
         new AsyncStoreFacade(featureStore),
         this.currentFlags,
-
         this.currentSegments,
         (tds) => {
           this.dataSources.splice(this.dataSources.indexOf(tds));
         },
+        listeners,
       );
 
       this.dataSources.push(newSource);

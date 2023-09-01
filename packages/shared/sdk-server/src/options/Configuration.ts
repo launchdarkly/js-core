@@ -1,9 +1,11 @@
 import {
   ApplicationTags,
+  EventName,
   LDClientContext,
   LDLogger,
   NumberWithMinimum,
   OptionMessages,
+  ProcessStreamResponse,
   ServiceEndpoints,
   subsystem,
   TypeValidator,
@@ -200,6 +202,7 @@ export default class Configuration {
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
     dataSourceUpdates: LDDataSourceUpdates,
+    listeners: Map<EventName, ProcessStreamResponse>,
   ) => subsystem.LDStreamProcessor;
 
   public readonly bigSegments?: LDBigSegmentsOptions;

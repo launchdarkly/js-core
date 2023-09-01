@@ -8,7 +8,16 @@ import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
+import { setupMockStreamingProcessor } from './mockStreamingProcessor';
 
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  const { mockStreamingProcessor } = jest.requireActual('./mockStreamingProcessor');
+  return {
+    ...actual,
+    ...{ internal: { ...actual.internal, StreamingProcessor: mockStreamingProcessor } },
+  };
+});
 const { mocks } = internal;
 
 const defaultUser = { key: 'user' };
@@ -262,6 +271,7 @@ describe('given a client that is un-initialized and store that is initialized', 
       },
       segments: {},
     });
+    setupMockStreamingProcessor(true);
 
     client = new LDClientImpl(
       'sdk-key',
