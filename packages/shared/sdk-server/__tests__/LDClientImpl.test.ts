@@ -34,7 +34,6 @@ describe('LDClientImpl', () => {
   afterEach(() => {
     client.close();
     jest.resetAllMocks();
-    jest.useRealTimers();
   });
 
   it('fires ready event in online mode', async () => {
