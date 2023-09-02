@@ -9,13 +9,20 @@ import AsyncStoreFacade from '../../store/AsyncStoreFacade';
  * @internal
  */
 export default class TestDataSource implements subsystem.LDStreamProcessor {
+  private readonly flags: Record<string, Flag>;
+  private readonly segments: Record<string, Segment>;
   constructor(
     private readonly featureStore: AsyncStoreFacade,
-    private readonly flags: Record<string, Flag>,
-    private readonly segments: Record<string, Segment>,
+    initialFlags: Record<string, Flag>,
+    initialSegments: Record<string, Segment>,
     private readonly onStop: (tfs: TestDataSource) => void,
     private readonly listeners: Map<EventName, ProcessStreamResponse>,
-  ) {}
+  ) {
+    // make copies of these objects to decouple them from the originals
+    // so updates made to the originals don't affect these internal data.
+    this.flags = { ...initialFlags };
+    this.segments = { ...initialSegments };
+  }
 
   async start() {
     this.listeners.forEach(({ processJson }) => {

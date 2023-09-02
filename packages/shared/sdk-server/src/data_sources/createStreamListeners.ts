@@ -5,7 +5,7 @@ import {
   VoidFunction,
 } from '@launchdarkly/js-sdk-common';
 
-import { AsyncStoreFacade } from '../store';
+import { LDDataSourceUpdates } from '../api/subsystems';
 import {
   AllData,
   DeleteData,
@@ -17,9 +17,9 @@ import {
 import VersionedDataKinds from '../store/VersionedDataKinds';
 
 export const createPutListener = (
-  featureStore: AsyncStoreFacade,
+  dataSourceUpdates: LDDataSourceUpdates,
   logger?: LDLogger,
-  onPutCompleteHandler?: VoidFunction,
+  onPutCompleteHandler: VoidFunction = () => {},
 ) => ({
   deserializeData: deserializeAll,
   processJson: async ({ data: { flags, segments } }: AllData) => {
@@ -29,15 +29,14 @@ export const createPutListener = (
     };
 
     logger?.debug('Initializing all data');
-    await featureStore.init(initData);
-    onPutCompleteHandler?.();
+    dataSourceUpdates.init(initData, onPutCompleteHandler);
   },
 });
 
 export const createPatchListener = (
-  featureStore: AsyncStoreFacade,
+  dataSourceUpdates: LDDataSourceUpdates,
   logger?: LDLogger,
-  onPatchCompleteHandler?: VoidFunction,
+  onPatchCompleteHandler: VoidFunction = () => {},
 ) => ({
   deserializeData: deserializePatch,
   processJson: async ({ data, kind, path }: PatchData) => {
@@ -45,18 +44,16 @@ export const createPatchListener = (
       const key = VersionedDataKinds.getKeyFromPath(kind, path);
       if (key) {
         logger?.debug(`Updating ${key} in ${kind.namespace}`);
-        await featureStore.upsert(kind, data);
+        dataSourceUpdates.upsert(kind, data, onPatchCompleteHandler);
       }
     }
-
-    onPatchCompleteHandler?.();
   },
 });
 
 export const createDeleteListener = (
-  featureStore: AsyncStoreFacade,
+  dataSourceUpdates: LDDataSourceUpdates,
   logger?: LDLogger,
-  onDeleteCompleteHandler?: VoidFunction,
+  onDeleteCompleteHandler: VoidFunction = () => {},
 ) => ({
   deserializeData: deserializeDelete,
   processJson: async ({ kind, path, version }: DeleteData) => {
@@ -64,20 +61,22 @@ export const createDeleteListener = (
       const key = VersionedDataKinds.getKeyFromPath(kind, path);
       if (key) {
         logger?.debug(`Deleting ${key} in ${kind.namespace}`);
-        await featureStore.upsert(kind, {
-          key,
-          version,
-          deleted: true,
-        });
+        dataSourceUpdates.upsert(
+          kind,
+          {
+            key,
+            version,
+            deleted: true,
+          },
+          onDeleteCompleteHandler,
+        );
       }
     }
-
-    onDeleteCompleteHandler?.();
   },
 });
 
 export const createStreamListeners = (
-  featureStore: AsyncStoreFacade,
+  dataSourceUpdates: LDDataSourceUpdates,
   logger?: LDLogger,
   onCompleteHandlers?: {
     put?: VoidFunction;
@@ -86,8 +85,11 @@ export const createStreamListeners = (
   },
 ) => {
   const listeners = new Map<EventName, ProcessStreamResponse>();
-  listeners.set('put', createPutListener(featureStore, logger, onCompleteHandlers?.put));
-  listeners.set('patch', createPatchListener(featureStore, logger, onCompleteHandlers?.patch));
-  listeners.set('delete', createDeleteListener(featureStore, logger, onCompleteHandlers?.delete));
+  listeners.set('put', createPutListener(dataSourceUpdates, logger, onCompleteHandlers?.put));
+  listeners.set('patch', createPatchListener(dataSourceUpdates, logger, onCompleteHandlers?.patch));
+  listeners.set(
+    'delete',
+    createDeleteListener(dataSourceUpdates, logger, onCompleteHandlers?.delete),
+  );
   return listeners;
 };

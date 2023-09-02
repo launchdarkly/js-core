@@ -182,7 +182,7 @@ export default class LDClientImpl implements LDClient {
     };
     this.evaluator = new Evaluator(this.platform, queries);
 
-    const listeners = createStreamListeners(this.featureStore, this.logger, {
+    const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
       put: () => this.initSuccessful(),
     });
     const makeDefaultProcessor = () =>
