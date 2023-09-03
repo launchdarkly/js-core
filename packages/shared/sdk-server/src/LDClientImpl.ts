@@ -6,15 +6,14 @@ import * as process from 'process';
 import {
   ClientContext,
   Context,
-  EventName,
   internal,
   LDClientError,
   LDContext,
   LDEvaluationDetail,
   LDLogger,
+  LDPollingError,
   LDStreamingError,
   Platform,
-  ProcessStreamResponse,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -41,14 +40,6 @@ import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
-import {
-  AllData,
-  DeleteData,
-  deserializeAll,
-  deserializeDelete,
-  deserializePatch,
-  PatchData,
-} from './store/serialization';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 enum InitState {
@@ -185,7 +176,7 @@ export default class LDClientImpl implements LDClient {
     this.evaluator = new Evaluator(this.platform, queries);
 
     const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
-      put: () => this.initSuccessful(),
+      put: () => this.initSuccess(),
     });
     const makeDefaultProcessor = () =>
       config.stream
@@ -194,12 +185,14 @@ export default class LDClientImpl implements LDClient {
             clientContext,
             listeners,
             this.diagnosticsManager,
-            (streamError) => this.streamErrorHandler(streamError),
+            (e) => this.dataSourceErrorHandler(e),
           )
         : new PollingProcessor(
             config,
             new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
             dataSourceUpdates,
+            () => this.initSuccess(),
+            (e) => this.dataSourceErrorHandler(e),
           );
 
     if (!(config.offline || config.useLdd)) {
@@ -211,7 +204,7 @@ export default class LDClientImpl implements LDClient {
     if (this.updateProcessor) {
       this.updateProcessor.start();
     } else {
-      process.nextTick(() => this.initSuccessful());
+      process.nextTick(() => this.initSuccess());
     }
   }
 
@@ -453,11 +446,12 @@ export default class LDClientImpl implements LDClient {
     return this.variationInternal(flagKey, context, defaultValue, eventFactory);
   }
 
-  private streamErrorHandler(streamError: LDStreamingError) {
+  private dataSourceErrorHandler(e: LDStreamingError | LDPollingError) {
     const error =
-      streamError.code === 401
+      e instanceof LDStreamingError && e.code === 401
         ? new Error('Authentication failed. Double check your SDK key.')
-        : streamError;
+        : e;
+
     this.onError(error);
     this.onFailed(error);
 
@@ -467,7 +461,7 @@ export default class LDClientImpl implements LDClient {
     }
   }
 
-  private initSuccessful() {
+  private initSuccess() {
     if (!this.initialized()) {
       this.initState = InitState.Initialized;
       this.initResolve?.(this);
