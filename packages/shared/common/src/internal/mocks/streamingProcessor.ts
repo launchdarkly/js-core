@@ -1,30 +1,19 @@
-import {
-  ClientContext,
-  EventName,
-  internal,
-  LDStreamingError,
-  ProcessStreamResponse,
-} from '@launchdarkly/js-sdk-common';
+import { EventName, ProcessStreamResponse } from '../../api';
+import { LDStreamingError } from '../../errors';
+import { ClientContext } from '../../options';
+import { DiagnosticsManager } from '../diagnostics';
+import { type StreamingErrorHandler } from '../stream';
 
-jest.mock('@launchdarkly/js-sdk-common', () => {
-  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-
-  return {
-    ...actual,
-    ...{ internal: { ...actual.internal, StreamingProcessor: jest.fn() } },
-  };
-});
-
-export const mockStreamingProcessor = internal.StreamingProcessor as jest.Mock;
+export const MockStreamingProcessor = jest.fn();
 
 export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
-  mockStreamingProcessor.mockImplementation(
+  MockStreamingProcessor.mockImplementation(
     (
       sdkKey: string,
       clientContext: ClientContext,
       listeners: Map<EventName, ProcessStreamResponse>,
-      diagnosticsManager: internal.DiagnosticsManager,
-      errorHandler: internal.StreamingErrorHandler,
+      diagnosticsManager: DiagnosticsManager,
+      errorHandler: StreamingErrorHandler,
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {

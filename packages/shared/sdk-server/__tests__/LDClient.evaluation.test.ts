@@ -1,24 +1,28 @@
 import { internal, subsystem } from '@launchdarkly/js-sdk-common';
 
-import { LDClientImpl } from '../src';
-import { LDFeatureStore } from '../src/api/subsystems';
+import { LDClientImpl, LDFeatureStore } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
-import { setupMockStreamingProcessor } from './mockStreamingProcessor';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const { mockStreamingProcessor } = jest.requireActual('./mockStreamingProcessor');
   return {
     ...actual,
-    ...{ internal: { ...actual.internal, StreamingProcessor: mockStreamingProcessor } },
+    ...{
+      internal: {
+        ...actual.internal,
+        StreamingProcessor: actual.internal.mocks.MockStreamingProcessor,
+      },
+    },
   };
 });
-const { mocks } = internal;
+const {
+  mocks: { basicPlatform, setupMockStreamingProcessor },
+} = internal;
 
 const defaultUser = { key: 'user' };
 
@@ -30,7 +34,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      mocks.basicPlatform,
+      basicPlatform,
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -160,7 +164,7 @@ describe('given an offline client', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      mocks.basicPlatform,
+      basicPlatform,
       {
         offline: true,
         updateProcessor: td.getFactory(),
@@ -225,7 +229,7 @@ describe('given a client and store that are uninitialized', () => {
 
     client = new LDClientImpl(
       'sdk-key',
-      mocks.basicPlatform,
+      basicPlatform,
       {
         updateProcessor: new InertUpdateProcessor(),
         sendEvents: false,
@@ -275,7 +279,7 @@ describe('given a client that is un-initialized and store that is initialized', 
 
     client = new LDClientImpl(
       'sdk-key',
-      mocks.basicPlatform,
+      basicPlatform,
       {
         sendEvents: false,
         featureStore: store,

@@ -2,18 +2,22 @@
 import { internal } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl, LDOptions } from '../src';
-import { setupMockStreamingProcessor } from './mockStreamingProcessor';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const { mockStreamingProcessor } = jest.requireActual('./mockStreamingProcessor');
   return {
     ...actual,
-    ...{ internal: { ...actual.internal, StreamingProcessor: mockStreamingProcessor } },
+    ...{
+      internal: {
+        ...actual.internal,
+        StreamingProcessor: actual.internal.mocks.MockStreamingProcessor,
+      },
+    },
   };
 });
-
-const { mocks } = internal;
+const {
+  mocks: { basicPlatform, setupMockStreamingProcessor },
+} = internal;
 
 describe('LDClientImpl', () => {
   let client: LDClientImpl;
@@ -25,7 +29,7 @@ describe('LDClientImpl', () => {
     hasEventListeners: jest.fn().mockName('hasEventListeners'),
   };
   const createClient = (options: LDOptions = {}) =>
-    new LDClientImpl('sdk-key', mocks.basicPlatform, options, callbacks);
+    new LDClientImpl('sdk-key', basicPlatform, options, callbacks);
 
   beforeEach(() => {
     setupMockStreamingProcessor();
