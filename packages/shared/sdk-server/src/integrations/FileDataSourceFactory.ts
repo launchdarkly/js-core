@@ -1,8 +1,8 @@
-import { LDClientContext, LDLogger, subsystem } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, LDLogger, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
 import { FileDataSourceOptions } from '../api/integrations';
 import { LDFeatureStore } from '../api/subsystems';
-import FileDataSource from '../data_sources/FileDataSource';
+import FileDataSource, { FileDataSourceErrorHandler } from '../data_sources/FileDataSource';
 
 /**
  * Components of the SDK runtime configuration which are required
@@ -30,20 +30,34 @@ export default class FileDataSourceFactory {
    *
    * @internal
    */
-  create(ldClientContext: LDClientContext, featureStore: LDFeatureStore) {
+  create(
+    ldClientContext: LDClientContext,
+    featureStore: LDFeatureStore,
+    initSuccessHandler?: VoidFunction,
+    errorHandler?: FileDataSourceErrorHandler,
+  ) {
     const updatedOptions: FileDataSourceOptions = {
       paths: this.options.paths,
       autoUpdate: this.options.autoUpdate,
       logger: this.options.logger || ldClientContext.basicConfiguration.logger,
       yamlParser: this.options.yamlParser,
     };
-    return new FileDataSource(updatedOptions, ldClientContext.platform.fileSystem!, featureStore);
+    return new FileDataSource(
+      updatedOptions,
+      ldClientContext.platform.fileSystem!,
+      featureStore,
+      initSuccessHandler,
+      errorHandler,
+    );
   }
 
   getFactory(): (
     ldClientContext: LDClientContext,
     featureStore: LDFeatureStore,
+    initSuccessHandler?: VoidFunction,
+    errorHandler?: FileDataSourceErrorHandler,
   ) => subsystem.LDStreamProcessor {
-    return (ldClientContext, featureStore) => this.create(ldClientContext, featureStore);
+    return (ldClientContext, featureStore, initSuccessHandler, errorHandlerr) =>
+      this.create(ldClientContext, featureStore, initSuccessHandler, errorHandlerr);
   }
 }
