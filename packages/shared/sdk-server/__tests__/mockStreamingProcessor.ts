@@ -31,7 +31,9 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
           process.nextTick(() => errorHandler(new LDStreamingError('test-error', 401)));
         } else {
           // execute put which will resolve the init promise
-          listeners.get('put')?.processJson({ data: { flags: {}, segments: {} } });
+          process.nextTick(
+            () => listeners.get('put')?.processJson({ data: { flags: {}, segments: {} } }),
+          );
         }
       }),
       close: jest.fn(),

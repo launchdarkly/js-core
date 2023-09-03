@@ -86,7 +86,7 @@ describe('LDClientImpl', () => {
     await client.waitForInitialization();
   });
 
-  it('creates only one Promise', async () => {
+  it('creates only one Promise when waiting for initialization', async () => {
     client = createClient();
     const p1 = client.waitForInitialization();
     const p2 = client.waitForInitialization();
