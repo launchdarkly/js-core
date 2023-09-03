@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 /* eslint-disable class-methods-use-this */
+import * as process from 'process';
+
 import {
   ClientContext,
   Context,
@@ -209,7 +211,7 @@ export default class LDClientImpl implements LDClient {
     if (this.updateProcessor) {
       this.updateProcessor.start();
     } else {
-      this.initSuccessful();
+      process.nextTick(() => this.initSuccessful());
     }
   }
 

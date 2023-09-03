@@ -1,7 +1,22 @@
-import { LDContext } from '@launchdarkly/js-server-sdk-common';
+import { internal, LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { init } from '../src';
 
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  return {
+    ...actual,
+    ...{
+      internal: {
+        ...actual.internal,
+        StreamingProcessor: actual.internal.mocks.MockStreamingProcessor,
+      },
+    },
+  };
+});
+const {
+  mocks: { setupMockStreamingProcessor },
+} = internal;
 it('fires ready event in offline mode', (done) => {
   const client = init('sdk_key', { offline: true });
   client.on('ready', () => {
@@ -11,18 +26,8 @@ it('fires ready event in offline mode', (done) => {
 });
 
 it('fires the failed event if initialization fails', (done) => {
-  const client = init('sdk_key', {
-    updateProcessor: {
-      start: (fn: (err: any) => void) => {
-        setTimeout(() => {
-          fn(new Error('BAD THINGS'));
-        }, 0);
-      },
-      stop: () => {},
-      close: () => {},
-      sendEvents: false,
-    },
-  });
+  setupMockStreamingProcessor(true);
+  const client = init('sdk_key');
   client.on('failed', () => {
     client.close();
     done();
