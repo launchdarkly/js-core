@@ -168,9 +168,7 @@ describe('given a mock filesystem and memory feature store', () => {
       files: { path: string; data: string }[] = defaultTestFilePathData,
       simulateMissingFile: boolean = false,
       autoUpdate: boolean = false,
-      yamlParser: (data: string) => any = mockYamlParser,
-      initSuccessHandler: VoidFunction = mockInitSuccessHandler,
-      errorHandler: FileDataSourceErrorHandler = mockErrorHandler,
+      yamlParser?: (data: string) => any,
     ) => {
       const filePaths = setupFileSystem(files);
       if (simulateMissingFile) {
@@ -195,8 +193,8 @@ describe('given a mock filesystem and memory feature store', () => {
           },
         ),
         featureStore,
-        initSuccessHandler,
-        errorHandler,
+        mockInitSuccessHandler,
+        mockErrorHandler,
       );
 
       if (start) {
@@ -467,42 +465,21 @@ describe('given a mock filesystem and memory feature store', () => {
   //     }, 100);
   //   });
   // });
-  //
-  // it.each([['yml'], ['yaml']])(
-  //   'does not initialize when a yaml file is specified, but no parser is provided %s',
-  //   async (ext) => {
-  //     jest.spyOn(filesystem, 'readFile');
-  //     const fileName = `yamlfile.${ext}`;
-  //     filesystem.fileData[fileName] = { timestamp: 0, data: '' };
-  //     const factory = new FileDataSourceFactory({
-  //       paths: [fileName],
-  //     });
-  //
-  //     const fds = factory.create(
-  //       new ClientContext(
-  //         '',
-  //         new Configuration({
-  //           featureStore,
-  //           logger,
-  //         }),
-  //         { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-  //       ),
-  //       featureStore,
-  //     );
-  //
-  //     const err = await promisify((cb) => {
-  //       fds.start(cb);
-  //     });
-  //
-  //     expect((err as any).message).toEqual(
-  //       `Attempted to parse yaml file (yamlfile.${ext}) without parser.`,
-  //     );
-  //     expect(await asyncFeatureStore.initialized()).toBeFalsy();
-  //
-  //     expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
-  //     expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
-  //   },
-  // );
+
+  it.each([['yml'], ['yaml']])(
+    'does not initialize when a yaml file is specified, but no parser is provided %s',
+    async (ext) => {
+      const fileName = `yamlfile.${ext}`;
+      await createFileDataSource(true, [{ path: fileName, data: '' }]);
+
+      expect(mockErrorHandler.mock.lastCall[0].message).toEqual(
+        `Attempted to parse yaml file (yamlfile.${ext}) without parser.`,
+      );
+      expect(await asyncFeatureStore.initialized()).toBeFalsy();
+      expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
+      expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
+    },
+  );
 
   it.each([['yml'], ['yaml']])('uses the yaml parser when specified %s', async (ext) => {
     const yamlParser = jest.fn(() => JSON.parse(allPropertiesJson));
