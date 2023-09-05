@@ -3,12 +3,9 @@ import {
   Context,
   Filesystem,
   internal,
-  LDFileDataSourceError,
   WatchHandle,
 } from '@launchdarkly/js-sdk-common';
 
-import promisify from '../../src/async/promisify';
-import { FileDataSourceErrorHandler } from '../../src/data_sources/FileDataSource';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import Evaluator from '../../src/evaluation/Evaluator';
@@ -131,20 +128,19 @@ describe('given a mock filesystem and memory feature store', () => {
   let createFileDataSource: any;
   let mockInitSuccessHandler: jest.Mock;
   let mockErrorHandler: jest.Mock;
-  let mockYamlParser: jest.Mock;
 
   beforeEach(() => {
     jest.useFakeTimers();
 
     mockInitSuccessHandler = jest.fn();
     mockErrorHandler = jest.fn();
-    mockYamlParser = jest.fn();
     filesystem = new MockFilesystem();
     logger = new TestLogger();
     featureStore = new InMemoryFeatureStore();
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
     jest.spyOn(filesystem, 'readFile');
     jest.spyOn(filesystem, 'watch');
+    jest.spyOn(featureStore, 'init');
 
     const defaultData = {
       flagValues: {
@@ -346,125 +342,75 @@ describe('given a mock filesystem and memory feature store', () => {
     expect(filesystem.watches['file2.json'].length).toEqual(0);
   });
 
-  // it('reloads modified files when auto update is enabled', async () => {
-  //   jest.spyOn(filesystem, 'watch');
-  //   await createFileDataSource(true, [{ path: 'file1.json', data: flagOnlyJson }], false, true);
-  //
-  //   expect(await asyncFeatureStore.initialized()).toBeTruthy();
-  //
-  //   const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-  //   expect(Object.keys(flags).length).toEqual(1);
-  //
-  //   const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-  //   expect(Object.keys(segments).length).toEqual(0);
-  //
-  //   // Need to update the timestamp, or it will think the file has not changed.
-  //   filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
-  //   filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-  //
-  //   setTimeout(async () => {
-  //     const flags2 = await asyncFeatureStore.all(VersionedDataKinds.Features);
-  //     expect(Object.keys(flags2).length).toEqual(0);
-  //
-  //     const segments2 = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-  //     expect(Object.keys(segments2).length).toEqual(1);
-  //   });
-  // });
+  it('reloads modified files when auto update is enabled', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: flagOnlyJson }], false, true);
 
-  // it('debounces the callback for file loading', async () => {
-  //   filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-  //
-  //   jest.spyOn(filesystem, 'watch');
-  //   jest.spyOn(featureStore, 'init');
-  //   const factory = new FileDataSourceFactory({
-  //     paths: ['file1.json'],
-  //     autoUpdate: true,
-  //   });
-  //
-  //   const fds = factory.create(
-  //     new ClientContext(
-  //       '',
-  //       new Configuration({
-  //         featureStore,
-  //         logger,
-  //       }),
-  //       { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-  //     ),
-  //     featureStore,
-  //   );
-  //
-  //   fds.start(async () => {
-  //     expect(await asyncFeatureStore.initialized()).toBeTruthy();
-  //
-  //     const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-  //     expect(Object.keys(flags).length).toEqual(1);
-  //
-  //     const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-  //     expect(Object.keys(segments).length).toEqual(0);
-  //
-  //     // Trigger several change callbacks.
-  //     filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
-  //     filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-  //     filesystem.fileData['file1.json'] = { timestamp: 101, data: segmentOnlyJson };
-  //     filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-  //     filesystem.fileData['file1.json'] = { timestamp: 102, data: segmentOnlyJson };
-  //     filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-  //     filesystem.fileData['file1.json'] = { timestamp: 103, data: segmentOnlyJson };
-  //     filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-  //
-  //     // The handling of the file loading is async, and additionally we debounce
-  //     // the callback. So we have to wait a bit to account for the awaits and the debounce.
-  //     setTimeout(async () => {
-  //       // Once for the start, and then again for the coalesced update.
-  //       expect(featureStore.init).toHaveBeenCalledTimes(2);
-  //       done();
-  //     }, 100);
-  //   });
-  // });
-  //
-  // it('does not callback if the timestamp has not changed', async () => {
-  //   filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-  //
-  //   jest.spyOn(filesystem, 'watch');
-  //   jest.spyOn(featureStore, 'init');
-  //   const factory = new FileDataSourceFactory({
-  //     paths: ['file1.json'],
-  //     autoUpdate: true,
-  //   });
-  //
-  //   const fds = factory.create(
-  //     new ClientContext(
-  //       '',
-  //       new Configuration({
-  //         featureStore,
-  //         logger,
-  //       }),
-  //       { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-  //     ),
-  //     featureStore,
-  //   );
-  //
-  //   fds.start(async () => {
-  //     expect(await asyncFeatureStore.initialized()).toBeTruthy();
-  //
-  //     const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-  //     expect(Object.keys(flags).length).toEqual(1);
-  //
-  //     const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-  //     expect(Object.keys(segments).length).toEqual(0);
-  //
-  //     filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-  //     filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-  //
-  //     // The handling of the file loading is async, and additionally we debounce
-  //     // the callback. So we have to wait a bit to account for the awaits and the debounce.
-  //     setTimeout(async () => {
-  //       // Once for the start.
-  //       expect(featureStore.init).toHaveBeenCalledTimes(1);
-  //       done();
-  //     }, 100);
-  //   });
-  // });
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    // Need to update the timestamp, or it will think the file has not changed.
+    filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    await jest.runAllTimersAsync();
+    const flags2 = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags2).length).toEqual(0);
+
+    const segments2 = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments2).length).toEqual(1);
+  });
+
+  it('debounces the callback for file loading', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: flagOnlyJson }], false, true);
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    // Trigger several change callbacks.
+    filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.fileData['file1.json'] = { timestamp: 101, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.fileData['file1.json'] = { timestamp: 102, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.fileData['file1.json'] = { timestamp: 103, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    // The handling of the file loading is async, and additionally we debounce
+    // the callback. So we have to wait a bit to account for the awaits and the debounce.
+    // Once for the start, and then again for the coalesced update.
+    await jest.runAllTimersAsync();
+    expect(featureStore.init).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not callback if the timestamp has not changed', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: flagOnlyJson }], false, true);
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    await jest.runAllTimersAsync();
+    // Once for the start.
+    expect(featureStore.init).toHaveBeenCalledTimes(1);
+  });
 
   it.each([['yml'], ['yaml']])(
     'does not initialize when a yaml file is specified, but no parser is provided %s',
