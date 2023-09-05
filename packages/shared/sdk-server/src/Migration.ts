@@ -359,10 +359,11 @@ export default class Migration<
       start = performance.now();
       result = await method();
       end = performance.now();
+    } else {
+      start = Date.now();
+      result = await method();
+      end = Date.now();
     }
-    start = Date.now();
-    result = await method();
-    end = Date.now();
 
     // Performance timer is in ms, but may have a microsecond resolution
     // fractional component.
