@@ -2,6 +2,12 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.2 to 1.2.3
+
 ## [8.2.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.2...node-server-sdk-v8.2.3) (2023-08-28)
 
 ## Fixes:
