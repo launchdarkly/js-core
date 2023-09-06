@@ -301,7 +301,7 @@ export default class LDClientImpl implements LDClient {
             Object.values(allFlags),
             (storeItem, iterCb) => {
               const flag = storeItem as Flag;
-              if (clientOnly && !flag.clientSide) {
+              if (clientOnly && !flag.clientSideAvailability?.usingEnvironmentId) {
                 iterCb(true);
                 return;
               }
