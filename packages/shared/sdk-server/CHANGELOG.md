@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.2.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.2.2...js-server-sdk-common-v1.2.3) (2023-09-06)
+
+
+### Bug Fixes
+
+* Use clientSideAvailability instead of clientSide for filtering client side flags. ([#270](https://github.com/launchdarkly/js-core/issues/270)) ([2702342](https://github.com/launchdarkly/js-core/commit/27023429d36986466cda46aa4d95eb01c10cd455))
+
 ## [1.2.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.2.1...js-server-sdk-common-v1.2.2) (2023-08-28)
 
 
