@@ -1,5 +1,6 @@
-import { LDClientContext, LDLogger, subsystem } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, LDLogger, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
+import { PollingErrorHandler } from '../../data_sources/PollingProcessor';
 import { LDDataSourceUpdates } from '../subsystems';
 import { LDFeatureStore } from '../subsystems/LDFeatureStore';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
@@ -93,6 +94,8 @@ export interface LDOptions {
     | ((
         clientContext: LDClientContext,
         dataSourceUpdates: LDDataSourceUpdates,
+        initSuccessHandler: VoidFunction,
+        errorHandler?: (e: Error) => void,
       ) => subsystem.LDStreamProcessor);
 
   /**

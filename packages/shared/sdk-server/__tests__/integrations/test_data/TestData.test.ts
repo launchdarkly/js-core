@@ -1,12 +1,5 @@
-import {
-  AttributeReference,
-  ClientContext,
-  EventName,
-  internal,
-  ProcessStreamResponse,
-} from '@launchdarkly/js-sdk-common';
+import { AttributeReference, ClientContext, internal } from '@launchdarkly/js-sdk-common';
 
-import { createStreamListeners } from '../../../src/data_sources/createStreamListeners';
 import { Flag } from '../../../src/evaluation/data/Flag';
 import { FlagRule } from '../../../src/evaluation/data/FlagRule';
 import TestData from '../../../src/integrations/test_data/TestData';
@@ -29,10 +22,10 @@ const basicBooleanFlag: Flag = {
 };
 
 describe('TestData', () => {
-  let listeners: Map<EventName, ProcessStreamResponse>;
+  let initSuccessHandler: jest.Mock;
 
   beforeEach(() => {
-    // listeners = createStreamListeners();
+    initSuccessHandler = jest.fn();
   });
 
   afterEach(() => {
@@ -45,15 +38,16 @@ describe('TestData', () => {
 
     const store = new InMemoryFeatureStore();
     const facade = new AsyncStoreFacade(store);
-    listeners = createStreamListeners(facade);
+
     const processor = td.getFactory()(
       new ClientContext('', new Configuration({}), mocks.basicPlatform),
       store,
-      listeners,
+      initSuccessHandler,
     );
     processor.start();
     const res = await facade.get(VersionedDataKinds.Features, 'new-flag');
 
+    expect(initSuccessHandler).toBeCalled();
     expect(res).toEqual(basicBooleanFlag);
   });
 
@@ -63,7 +57,7 @@ describe('TestData', () => {
     const processor = td.getFactory()(
       new ClientContext('', new Configuration({}), mocks.basicPlatform),
       store,
-      listeners,
+      initSuccessHandler,
     );
 
     processor.start();
@@ -84,7 +78,7 @@ describe('TestData', () => {
     const processor = td.getFactory()(
       new ClientContext('', new Configuration({}), mocks.basicPlatform),
       store,
-      listeners,
+      initSuccessHandler,
     );
 
     processor.start();
@@ -131,7 +125,7 @@ describe('TestData', () => {
     const processor = td.getFactory()(
       new ClientContext('', new Configuration({}), mocks.basicPlatform),
       store,
-      listeners,
+      initSuccessHandler,
     );
 
     processor.start();
@@ -160,7 +154,7 @@ describe('TestData', () => {
     const processor = td.getFactory()(
       new ClientContext('', new Configuration({}), mocks.basicPlatform),
       store,
-      listeners,
+      initSuccessHandler,
     );
 
     processor.start();

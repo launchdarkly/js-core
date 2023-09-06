@@ -10,6 +10,7 @@ import {
   subsystem,
   TypeValidator,
   TypeValidators,
+  VoidFunction,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
@@ -202,7 +203,8 @@ export default class Configuration {
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
     dataSourceUpdates: LDDataSourceUpdates,
-    listeners: Map<EventName, ProcessStreamResponse>,
+    initSuccessHandler: VoidFunction,
+    errorHandler?: (e: Error) => void,
   ) => subsystem.LDStreamProcessor;
 
   public readonly bigSegments?: LDBigSegmentsOptions;

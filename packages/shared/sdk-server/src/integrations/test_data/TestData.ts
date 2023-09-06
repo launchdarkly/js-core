@@ -3,9 +3,11 @@ import {
   LDClientContext,
   ProcessStreamResponse,
   subsystem,
+  VoidFunction,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureStore } from '../../api';
+import { createStreamListeners } from '../../data_sources/createStreamListeners';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
 import AsyncStoreFacade from '../../store/AsyncStoreFacade';
@@ -62,7 +64,8 @@ export default class TestData {
   getFactory(): (
     clientContext: LDClientContext,
     featureStore: LDFeatureStore,
-    listeners: Map<EventName, ProcessStreamResponse>,
+    initSuccessHandler: VoidFunction,
+    errorHandler?: (e: Error) => void,
   ) => subsystem.LDStreamProcessor {
     // Provides an arrow function to prevent needed to bind the method to
     // maintain `this`.
@@ -70,8 +73,17 @@ export default class TestData {
       /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       clientContext: LDClientContext,
       featureStore: LDFeatureStore,
-      listeners: Map<EventName, ProcessStreamResponse>,
+      initSuccessHandler: VoidFunction,
+      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+      errorHandler?: (e: Error) => void,
     ) => {
+      const listeners = createStreamListeners(
+        featureStore,
+        clientContext.basicConfiguration.logger,
+        {
+          put: initSuccessHandler,
+        },
+      );
       const newSource = new TestDataSource(
         new AsyncStoreFacade(featureStore),
         this.currentFlags,

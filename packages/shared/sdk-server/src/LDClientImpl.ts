@@ -197,8 +197,12 @@ export default class LDClientImpl implements LDClient {
 
     if (!(config.offline || config.useLdd)) {
       this.updateProcessor =
-        config.updateProcessorFactory?.(clientContext, dataSourceUpdates, listeners) ??
-        makeDefaultProcessor();
+        config.updateProcessorFactory?.(
+          clientContext,
+          dataSourceUpdates,
+          () => this.initSuccess(),
+          (e) => this.dataSourceErrorHandler(e),
+        ) ?? makeDefaultProcessor();
     }
 
     if (this.updateProcessor) {
