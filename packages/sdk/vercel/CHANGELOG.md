@@ -2,11 +2,17 @@
 
 All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.1.4](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.1.3...vercel-server-sdk-v1.1.4) (2023-09-06)
+
+### Bug Fixes
+
+* Use clientSideAvailability instead of clientSide for filtering client side flags. ([#270](https://github.com/launchdarkly/js-core/issues/270)) ([2702342](https://github.com/launchdarkly/js-core/commit/27023429d36986466cda46aa4d95eb01c10cd455))
+
 ### Dependencies
 
 * The following workspace dependencies were updated
   * dependencies
-    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.10 to 1.0.11
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.12 to 1.0.13
 
 ### Dependencies
 
@@ -18,7 +24,7 @@ All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be docum
 
 * The following workspace dependencies were updated
   * dependencies
-    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.12 to 1.0.13
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.10 to 1.0.11
 
 ## [1.1.1](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.1.1...vercel-server-sdk-v1.1.1) (2023-08-14)
 
