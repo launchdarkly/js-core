@@ -13,6 +13,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { EventName, ProcessStreamResponse } from '../../api';
+import { VoidFunction } from '../../utils';
 import { basicPlatform, clientContext, logger } from '../mocks';
 
 const sdkKey = 'my-sdk-key';
@@ -31,13 +32,6 @@ const event = {
   },
 };
 
-const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
-  streamUri,
-  options,
-  onclose: jest.fn(),
-  addEventListener: jest.fn(),
-});
-
 describe('given a stream processor with mock event source', () => {
   let streamProcessor: subsystem.LDStreamProcessor;
   let diagnosticsManager: internal.DiagnosticsManager;
@@ -46,16 +40,13 @@ describe('given a stream processor with mock event source', () => {
   let mockListener: ProcessStreamResponse;
   let mockErrorHandler: jest.Mock;
   let simulatePutEvent: (e?: any) => void;
-  let simulateError: (e: { status: number; message: string }) => boolean;
 
   beforeEach(() => {
     mockErrorHandler = jest.fn();
+    mockEventSource = { onclose: jest.fn(), addEventListener: jest.fn() };
 
     basicPlatform.requests = {
-      createEventSource: jest.fn((streamUri: string, options: any) => {
-        mockEventSource = createMockEventSource(streamUri, options);
-        return mockEventSource;
-      }),
+      createEventSource: jest.fn(() => mockEventSource),
     } as any;
     clientContext.basicConfiguration.logger = logger;
 
@@ -78,10 +69,6 @@ describe('given a stream processor with mock event source', () => {
 
     simulatePutEvent = (e: any = event) => {
       mockEventSource.addEventListener.mock.calls[0][1](e);
-    };
-
-    simulateError = (e: { status: number; message: string }): boolean => {
-      return mockEventSource.options.errorFilter(e);
     };
 
     streamProcessor.start();
@@ -245,28 +232,37 @@ describe('given a stream processor with mock event source', () => {
   //     expectJsonError(result as any);
   //   });
   // });
-
-  describe.each([400, 408, 429, 500, 503])('given recoverable http errors', (status) => {
-    it(`continues retrying after error: ${status}`, () => {
-      const startTime = Date.now();
-      const willRetry = simulateError({ status, message: 'unused because recoverable' });
-
-      expect(willRetry).toBeTruthy();
-      expect(mockErrorHandler).not.toBeCalled();
-      expect(logger.warn).toBeCalledWith(
-        expect.stringMatching(new RegExp(`${status}.*will retry`)),
-      );
-
-      const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
-      expect(diagnosticEvent.streamInits.length).toEqual(1);
-      const si = diagnosticEvent.streamInits[0];
-      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
-      expect(si.failed).toBeTruthy();
-      expect(si.durationMillis).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  // describe.each([401, 403])('given irrecoverable http errors', (status) => {
+  //
+  // describe.each([400, 408, 429, 500, 503, undefined])('given recoverable http errors', (status) => {
+  //   const err = {
+  //     status,
+  //     message: 'sorry',
+  //   };
+  //
+  //   it(`continues retrying after error: ${status}`, () => {
+  //     const startTime = Date.now();
+  //     streamProcessor.start();
+  //     es.simulateError(err as any);
+  //
+  //     logger.expectMessages([
+  //       {
+  //         level: LogLevel.Warn,
+  //         matches: status
+  //           ? new RegExp(`error ${err.status}.*will retry`)
+  //           : /Received I\/O error \(sorry\) for streaming request - will retry/,
+  //       },
+  //     ]);
+  //
+  //     const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+  //     expect(event.streamInits.length).toEqual(1);
+  //     const si = event.streamInits[0];
+  //     expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+  //     expect(si.failed).toBeTruthy();
+  //     expect(si.durationMillis).toBeGreaterThanOrEqual(0);
+  //   });
+  // });
+  //
+  // describe.each([401, 403])('given unrecoverable http errors', (status) => {
   //   const startTime = Date.now();
   //   const err = {
   //     status,

@@ -65,3 +65,7 @@ describe('defaultHeaders', () => {
     });
   });
 });
+
+describe('httpErrorMessage', () => {
+  // TODO:
+});
