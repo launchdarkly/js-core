@@ -45,7 +45,7 @@ class StreamingProcessor implements LDStreamProcessor {
     this.logger = logger;
     this.streamInitialReconnectDelay = streamInitialReconnectDelay ?? 1;
     this.requests = requests;
-    this.streamUri = basicConfiguration.serviceEndpoints.streaming;
+    this.streamUri = `${basicConfiguration.serviceEndpoints.streaming}/all`;
   }
 
   private logConnectionStarted() {
