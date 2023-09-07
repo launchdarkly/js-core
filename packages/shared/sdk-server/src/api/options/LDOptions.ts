@@ -1,7 +1,6 @@
 import { LDClientContext, LDLogger, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
-import { LDDataSourceUpdates } from '../subsystems';
-import { LDFeatureStore } from '../subsystems/LDFeatureStore';
+import { LDDataSourceUpdates, LDFeatureStore } from '../subsystems';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
