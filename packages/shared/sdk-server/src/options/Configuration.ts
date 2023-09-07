@@ -1,11 +1,9 @@
 import {
   ApplicationTags,
-  EventName,
   LDClientContext,
   LDLogger,
   NumberWithMinimum,
   OptionMessages,
-  ProcessStreamResponse,
   ServiceEndpoints,
   subsystem,
   TypeValidator,

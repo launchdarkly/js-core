@@ -1,10 +1,4 @@
-import {
-  EventName,
-  LDClientContext,
-  ProcessStreamResponse,
-  subsystem,
-  VoidFunction,
-} from '@launchdarkly/js-sdk-common';
+import { LDClientContext, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureStore } from '../../api';
 import { createStreamListeners } from '../../data_sources/createStreamListeners';
