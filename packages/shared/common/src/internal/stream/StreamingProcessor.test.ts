@@ -40,7 +40,6 @@ describe('given a stream processor with mock event source', () => {
   let mockErrorHandler: jest.Mock;
   let simulatePutEvent: (e?: any) => void;
   let simulateError: (e: { status: number; message: string }) => boolean;
-  let stopSpy: jest.SpyInstance;
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -64,9 +63,8 @@ describe('given a stream processor with mock event source', () => {
     simulatePutEvent = (e: any = event) => {
       mockEventSource.addEventListener.mock.calls[0][1](e);
     };
-    simulateError = (e: { status: number; message: string }): boolean => {
-      return mockEventSource.options.errorFilter(e);
-    };
+    simulateError = (e: { status: number; message: string }): boolean =>
+      mockEventSource.options.errorFilter(e);
 
     listeners = new Map();
     mockListener = {
@@ -85,7 +83,7 @@ describe('given a stream processor with mock event source', () => {
       mockErrorHandler,
     );
 
-    stopSpy = jest.spyOn(streamingProcessor, 'stop');
+    jest.spyOn(streamingProcessor, 'stop');
     streamingProcessor.start();
   });
 
