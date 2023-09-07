@@ -1,20 +1,12 @@
-import {
-  defaultHeaders,
-  EventSource,
-  EventSourceInitDict,
-  Info,
-  internal,
-  Options,
-  PlatformData,
-  Requests,
-  Response,
-  SdkData,
-  subsystem,
-} from '@launchdarkly/js-sdk-common';
-
 import { EventName, ProcessStreamResponse } from '../../api';
+import { LDStreamProcessor } from '../../api/subsystem';
+import { LDStreamingError } from '../../errors';
+import { defaultHeaders } from '../../utils';
+import { DiagnosticsManager } from '../diagnostics';
 import { basicPlatform, clientContext, logger } from '../mocks';
+import StreamingProcessor from './StreamingProcessor';
 
+const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
 const {
   basicConfiguration: { serviceEndpoints, tags },
@@ -36,20 +28,32 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
   options,
   onclose: jest.fn(),
   addEventListener: jest.fn(),
+  close: jest.fn(),
 });
 
 describe('given a stream processor with mock event source', () => {
-  let streamProcessor: subsystem.LDStreamProcessor;
-  let diagnosticsManager: internal.DiagnosticsManager;
+  let streamingProcessor: LDStreamProcessor;
+  let diagnosticsManager: DiagnosticsManager;
   let listeners: Map<EventName, ProcessStreamResponse>;
   let mockEventSource: any;
   let mockListener: ProcessStreamResponse;
   let mockErrorHandler: jest.Mock;
   let simulatePutEvent: (e?: any) => void;
   let simulateError: (e: { status: number; message: string }) => boolean;
+  let stopSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(dateNowString));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
 
   beforeEach(() => {
     mockErrorHandler = jest.fn();
+    clientContext.basicConfiguration.logger = logger;
 
     basicPlatform.requests = {
       createEventSource: jest.fn((streamUri: string, options: any) => {
@@ -57,7 +61,12 @@ describe('given a stream processor with mock event source', () => {
         return mockEventSource;
       }),
     } as any;
-    clientContext.basicConfiguration.logger = logger;
+    simulatePutEvent = (e: any = event) => {
+      mockEventSource.addEventListener.mock.calls[0][1](e);
+    };
+    simulateError = (e: { status: number; message: string }): boolean => {
+      return mockEventSource.options.errorFilter(e);
+    };
 
     listeners = new Map();
     mockListener = {
@@ -67,8 +76,8 @@ describe('given a stream processor with mock event source', () => {
     listeners.set('put', mockListener);
     listeners.set('patch', mockListener);
 
-    diagnosticsManager = new internal.DiagnosticsManager(sdkKey, basicPlatform, {});
-    streamProcessor = new internal.StreamingProcessor(
+    diagnosticsManager = new DiagnosticsManager(sdkKey, basicPlatform, {});
+    streamingProcessor = new StreamingProcessor(
       sdkKey,
       clientContext,
       listeners,
@@ -76,15 +85,13 @@ describe('given a stream processor with mock event source', () => {
       mockErrorHandler,
     );
 
-    simulatePutEvent = (e: any = event) => {
-      mockEventSource.addEventListener.mock.calls[0][1](e);
-    };
+    stopSpy = jest.spyOn(streamingProcessor, 'stop');
+    streamingProcessor.start();
+  });
 
-    simulateError = (e: { status: number; message: string }): boolean => {
-      return mockEventSource.options.errorFilter(e);
-    };
-
-    streamProcessor.start();
+  afterEach(() => {
+    streamingProcessor.close();
+    jest.resetAllMocks();
   });
 
   it('uses expected uri', () => {
@@ -122,23 +129,6 @@ describe('given a stream processor with mock event source', () => {
     expect(mockListener.processJson).toBeCalledTimes(2);
   });
 
-  // it('causes flags and segments to be stored', async () => {
-  //   streamProcessor.start();
-  //   es.handlers.put({ data: JSON.stringify(event) });
-  //
-  //   const initialized = await asyncStore.initialized();
-  //   expect(initialized).toBeTruthy();
-  //   const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-  //   expect(f?.version).toEqual(1);
-  //   const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-  //   expect(s?.version).toEqual(2);
-  // });
-  // it('calls initialization callback', async () => {
-  //   const promise = promiseStart();
-  //   es.handlers.put({ data: JSON.stringify(event) });
-  //   expect(await promise).toBeUndefined();
-  // });
-
   it('passes error to callback if json data is malformed', async () => {
     (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
     simulatePutEvent();
@@ -156,6 +146,15 @@ describe('given a stream processor with mock event source', () => {
     expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/unexpected payload/i);
   });
 
+  it.only('closes and stops', async () => {
+    streamingProcessor.close();
+
+    expect(streamingProcessor.stop).toBeCalled();
+    expect(mockEventSource.close).toBeCalled();
+    // @ts-ignore
+    expect(streamingProcessor.eventSource).toBeUndefined();
+  });
+
   it('creates a stream init event', async () => {
     const startTime = Date.now();
     simulatePutEvent();
@@ -163,93 +162,16 @@ describe('given a stream processor with mock event source', () => {
     const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
     expect(diagnosticEvent.streamInits.length).toEqual(1);
     const si = diagnosticEvent.streamInits[0];
-    expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+    expect(si.timestamp).toEqual(startTime);
     expect(si.failed).toBeFalsy();
     expect(si.durationMillis).toBeGreaterThanOrEqual(0);
   });
 
-  // describe('when patching a message', () => {
-  //   it('updates a patched flag', async () => {
-  //     streamProcessor.start();
-  //     const patchData = {
-  //       path: '/flags/flagkey',
-  //       data: { key: 'flagkey', version: 1 },
-  //     };
-  //
-  //     es.handlers.patch({ data: JSON.stringify(patchData) });
-  //
-  //     const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-  //     expect(f!.version).toEqual(1);
-  //   });
-  //
-  //   it('updates a patched segment', async () => {
-  //     streamProcessor.start();
-  //     const patchData = {
-  //       path: '/segments/segkey',
-  //       data: { key: 'segkey', version: 1 },
-  //     };
-  //
-  //     es.handlers.patch({ data: JSON.stringify(patchData) });
-  //
-  //     const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-  //     expect(s!.version).toEqual(1);
-  //   });
-  //
-  //   it('passes error to callback if data is invalid', async () => {
-  //     streamProcessor.start();
-  //
-  //     const promise = promiseStart();
-  //     es.handlers.patch({ data: '{not-good' });
-  //     const result = await promise;
-  //     expectJsonError(result as any);
-  //   });
-  // });
-  //
-  // describe('when deleting a message', () => {
-  //   it('deletes a flag', async () => {
-  //     streamProcessor.start();
-  //     const flag = { key: 'flagkey', version: 1 };
-  //     await asyncStore.upsert(VersionedDataKinds.Features, flag);
-  //     const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-  //     expect(f!.version).toEqual(1);
-  //
-  //     const deleteData = { path: `/flags/${flag.key}`, version: 2 };
-  //
-  //     es.handlers.delete({ data: JSON.stringify(deleteData) });
-  //
-  //     const f2 = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-  //     expect(f2).toBe(null);
-  //   });
-  //
-  //   it('deletes a segment', async () => {
-  //     streamProcessor.start();
-  //     const segment = { key: 'segkey', version: 1 };
-  //     await asyncStore.upsert(VersionedDataKinds.Segments, segment);
-  //     const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-  //     expect(s!.version).toEqual(1);
-  //
-  //     const deleteData = { path: `/segments/${segment.key}`, version: 2 };
-  //
-  //     es.handlers.delete({ data: JSON.stringify(deleteData) });
-  //
-  //     const s2 = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-  //     expect(s2).toBe(null);
-  //   });
-  //
-  //   it('passes error to callback if data is invalid', async () => {
-  //     streamProcessor.start();
-  //
-  //     const promise = promiseStart();
-  //     es.handlers.delete({ data: '{not-good' });
-  //     const result = await promise;
-  //     expectJsonError(result as any);
-  //   });
-  // });
-
   describe.each([400, 408, 429, 500, 503])('given recoverable http errors', (status) => {
     it(`continues retrying after error: ${status}`, () => {
       const startTime = Date.now();
-      const willRetry = simulateError({ status, message: 'unused because recoverable' });
+      const testError = { status, message: 'retry. recoverable.' };
+      const willRetry = simulateError(testError);
 
       expect(willRetry).toBeTruthy();
       expect(mockErrorHandler).not.toBeCalled();
@@ -260,36 +182,32 @@ describe('given a stream processor with mock event source', () => {
       const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
       expect(diagnosticEvent.streamInits.length).toEqual(1);
       const si = diagnosticEvent.streamInits[0];
-      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+      expect(si.timestamp).toEqual(startTime);
       expect(si.failed).toBeTruthy();
       expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });
   });
 
-  // describe.each([401, 403])('given irrecoverable http errors', (status) => {
-  //   const startTime = Date.now();
-  //   const err = {
-  //     status,
-  //     message: 'sorry',
-  //   };
-  //
-  //   it(`stops retrying after error: ${status}`, () => {
-  //     streamProcessor.start();
-  //     es.simulateError(err as any);
-  //
-  //     logger.expectMessages([
-  //       {
-  //         level: LogLevel.Error,
-  //         matches: /Received error.*giving up permanently/,
-  //       },
-  //     ]);
-  //
-  //     const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
-  //     expect(event.streamInits.length).toEqual(1);
-  //     const si = event.streamInits[0];
-  //     expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
-  //     expect(si.failed).toBeTruthy();
-  //     expect(si.durationMillis).toBeGreaterThanOrEqual(0);
-  //   });
-  // });
+  describe.each([401, 403])('given irrecoverable http errors', (status) => {
+    it(`stops retrying after error: ${status}`, () => {
+      const startTime = Date.now();
+      const testError = { status, message: 'stopping. irrecoverable.' };
+      const willRetry = simulateError(testError);
+
+      expect(willRetry).toBeFalsy();
+      expect(mockErrorHandler).toBeCalledWith(
+        new LDStreamingError(testError.message, testError.status),
+      );
+      expect(logger.error).toBeCalledWith(
+        expect.stringMatching(new RegExp(`${status}.*permanently`)),
+      );
+
+      const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+      expect(diagnosticEvent.streamInits.length).toEqual(1);
+      const si = diagnosticEvent.streamInits[0];
+      expect(si.timestamp).toEqual(startTime);
+      expect(si.failed).toBeTruthy();
+      expect(si.durationMillis).toBeGreaterThanOrEqual(0);
+    });
+  });
 });
