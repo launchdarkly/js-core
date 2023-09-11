@@ -11,6 +11,11 @@ import { BigSegmentStoreStatusProvider } from './interfaces';
  * and continue to use it throughout the lifetime of the application, rather than creating instances
  * on the fly.
  *
+ * Note that `LDClient` inherits from `EventEmitter`, so you can use the standard `on()`, `once()`, and
+ * `off()` methods to receive events. The standard `EventEmitter` methods are not documented here; see the
+ * {@link https://nodejs.org/api/events.html#events_class_eventemitter|Node API documentation}. For a
+ * description of events you can listen for, see {@link on}.
+ *
  */
 export interface LDClient extends LDClientCommon, EventEmitter {
   /**
@@ -23,6 +28,7 @@ export interface LDClient extends LDClientCommon, EventEmitter {
   readonly bigSegmentStoreStatusProvider: BigSegmentStoreStatusProvider;
 
   /**
+   *
    * Registers an event listener that will be called when the client triggers some type of event.
    *
    * This is the standard `on` method inherited from Node's `EventEmitter`; see the
