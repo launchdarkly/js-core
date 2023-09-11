@@ -121,11 +121,11 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   }
 
   private latencyConsistencyMessage(origin: LDMigrationOrigin) {
-    return `Latency measurement for "${origin}", but "new" was not invoked.`;
+    return `Latency measurement for "${origin}", but "${origin}" was not invoked.`;
   }
 
   private errorConsistencyMessage(origin: LDMigrationOrigin) {
-    return `Error occurred for "${origin}", but "new" was not invoked.`;
+    return `Error occurred for "${origin}", but "${origin}" was not invoked.`;
   }
 
   private consistencyCheckConsistencyMessage(origin: LDMigrationOrigin) {
