@@ -36,7 +36,7 @@ describe('createDiagnosticsInitConfig', () => {
         eventsUri: 'https://events.ld.com',
         capacity: 1,
         flushInterval: 2,
-        streamReconnectDelay: 3,
+        streamInitialReconnectDelay: 3,
         diagnosticRecordingInterval: 4,
         stream: true,
         allAttributesPrivate: true,

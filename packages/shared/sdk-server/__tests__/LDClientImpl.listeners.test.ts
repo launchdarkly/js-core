@@ -9,7 +9,9 @@ import { makeFlagWithSegmentMatch } from './evaluation/flags';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';
 
-const { mocks } = internal;
+const {
+  mocks: { basicPlatform },
+} = internal;
 
 describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
@@ -21,7 +23,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      mocks.basicPlatform,
+      basicPlatform,
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
