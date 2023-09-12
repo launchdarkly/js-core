@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Run this script like:
 # ./scripts/publish-doc.sh packages/sdk/node
 

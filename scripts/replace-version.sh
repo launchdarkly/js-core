@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Run this script like:
 # ./scripts/replace-version.sh packages/sdk/node
 
