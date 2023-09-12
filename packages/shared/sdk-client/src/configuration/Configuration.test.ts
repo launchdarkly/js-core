@@ -28,7 +28,7 @@ describe('Configuration', () => {
       privateAttributes: [],
       sendEvents: true,
       sendLDHeaders: true,
-      streamInitialReconnectDelay: 1,
+      streamReconnectDelay: 1,
       streamUri: 'https://clientstream.launchdarkly.com',
       useReport: false,
     });
