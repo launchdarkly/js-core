@@ -208,6 +208,8 @@ export default class LDClientImpl implements LDClient {
     if (this.updateProcessor) {
       this.updateProcessor.start();
     } else {
+      // Deferring the start callback should allow client construction to complete before we start
+      // emitting events. Allowing the client an opportunity to register events.
       process.nextTick(() => this.initSuccess());
     }
   }
