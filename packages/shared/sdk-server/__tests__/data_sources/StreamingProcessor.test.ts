@@ -3,10 +3,10 @@
 import { EventName, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
+import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
 import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import { basicPlatform, clientContext, logger } from '../mocks';
-import StreamingProcessor from './StreamingProcessor';
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
