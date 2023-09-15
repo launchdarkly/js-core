@@ -41,6 +41,9 @@ export interface LDMigrationTracker {
    * context.tracker.consistency(() => config.check!(oldValue.result, newValue.result));
    * ```
    *
+   * If the consistency check function throws an exception, then the consistency check result
+   * will not be included in the generated event.
+   *
    * @param check The function which executes the check. This is not the `check` function from the
    * migration options, but instead should be a parameter-less function that calls that function.
    */

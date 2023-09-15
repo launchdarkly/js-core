@@ -57,8 +57,18 @@ export default class MigrationOpTracker implements LDMigrationTracker {
 
   consistency(check: () => boolean) {
     if (internal.shouldSample(this.checkRatio ?? 1)) {
-      const res = check();
-      this.consistencyCheck = res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent;
+      try {
+        const res = check();
+        this.consistencyCheck = res
+          ? LDConsistencyCheck.Consistent
+          : LDConsistencyCheck.Inconsistent;
+      } catch (exception) {
+        this.logger?.error(
+          'Exception when executing consistency check function for migration' +
+            ` '${this.flagKey}' the consistency check will not be included in the generated migration` +
+            ` op event. Exception: ${exception}`,
+        );
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 import { LDMigrationStage } from '../src';
 import { LDMigrationOrigin } from '../src/api/LDMigration';
 import MigrationOpTracker from '../src/MigrationOpTracker';
+import TestLogger, { LogLevel } from './Logger';
 
 it('does not generate an event if an op is not set', () => {
   const tracker = new MigrationOpTracker(
@@ -234,4 +235,33 @@ it('includes when both origins were invoked', () => {
     key: 'invoked',
     values: { old: true, new: true },
   });
+});
+
+it('can handle exceptions thrown in the consistency check method', () => {
+  const logger = new TestLogger();
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+    undefined,
+    undefined,
+    undefined,
+    logger,
+  );
+  tracker.op('read');
+  tracker.invoked('old');
+  tracker.invoked('new');
+  tracker.consistency(() => {
+    throw new Error('I HAVE FAILED');
+  });
+  logger.expectMessages([
+    {
+      level: LogLevel.Error,
+      matches: /.*migration 'flag'.*Error: I HAVE FAILED/,
+    },
+  ]);
 });
