@@ -92,13 +92,36 @@ describe('given a stream processor with mock event source', () => {
     jest.resetAllMocks();
   });
 
-  it('uses expected uri', () => {
+  it('uses expected uri and eventSource init args', () => {
     expect(basicPlatform.requests.createEventSource).toBeCalledWith(
       `${serviceEndpoints.streaming}/all`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, tags),
         initialRetryDelayMillis: 1000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
+    );
+  });
+
+  it('sets streamInitialReconnectDelay correctly', () => {
+    streamingProcessor = new StreamingProcessor(
+      sdkKey,
+      clientContext,
+      listeners,
+      diagnosticsManager,
+      mockErrorHandler,
+      22,
+    );
+    streamingProcessor.start();
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/all`,
+      {
+        errorFilter: expect.any(Function),
+        headers: defaultHeaders(sdkKey, info, tags),
+        initialRetryDelayMillis: 22000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
       },
@@ -144,7 +167,7 @@ describe('given a stream processor with mock event source', () => {
     expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/unexpected payload/i);
   });
 
-  it.only('closes and stops', async () => {
+  it('closes and stops', async () => {
     streamingProcessor.close();
 
     expect(streamingProcessor.stop).toBeCalled();
