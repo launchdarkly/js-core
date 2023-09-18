@@ -23,11 +23,6 @@ export interface LDBasicConfiguration {
   serviceEndpoints: LDServiceEndpoints;
 
   /**
-   * Sets the initial reconnect delay for the streaming connection, in seconds.
-   */
-  streamInitialReconnectDelay?: number;
-
-  /**
    * True if the SDK was configured to be completely offline.
    */
   offline?: boolean;

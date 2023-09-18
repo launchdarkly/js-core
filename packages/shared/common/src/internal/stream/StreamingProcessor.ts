@@ -22,7 +22,6 @@ const reportJsonError = (
 
 class StreamingProcessor implements LDStreamProcessor {
   private readonly headers: { [key: string]: string | string[] };
-  private readonly streamInitialReconnectDelay: number;
   private readonly streamUri: string;
   private readonly logger?: LDLogger;
 
@@ -36,14 +35,14 @@ class StreamingProcessor implements LDStreamProcessor {
     private readonly listeners: Map<EventName, ProcessStreamResponse>,
     private readonly diagnosticsManager?: DiagnosticsManager,
     private readonly errorHandler?: StreamingErrorHandler,
+    private readonly streamInitialReconnectDelay = 1,
   ) {
     const { basicConfiguration, platform } = clientContext;
-    const { logger, tags, streamInitialReconnectDelay } = basicConfiguration;
+    const { logger, tags } = basicConfiguration;
     const { info, requests } = platform;
 
     this.headers = defaultHeaders(sdkKey, info, tags);
     this.logger = logger;
-    this.streamInitialReconnectDelay = streamInitialReconnectDelay ?? 1;
     this.requests = requests;
     this.streamUri = `${basicConfiguration.serviceEndpoints.streaming}/all`;
   }

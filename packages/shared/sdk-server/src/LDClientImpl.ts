@@ -186,6 +186,7 @@ export default class LDClientImpl implements LDClient {
             listeners,
             this.diagnosticsManager,
             (e) => this.dataSourceErrorHandler(e),
+            this.config.streamInitialReconnectDelay,
           )
         : new PollingProcessor(
             config,
