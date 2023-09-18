@@ -8,6 +8,7 @@ export class LDFileDataSourceError extends Error {
     this.name = 'LaunchDarklyFileDataSourceError';
   }
 }
+
 export class LDPollingError extends Error {
   constructor(message: string) {
     super(message);
