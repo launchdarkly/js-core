@@ -2,21 +2,8 @@ import { internal, LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { init } from '../src';
 
-jest.mock('@launchdarkly/js-sdk-common', () => {
-  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  return {
-    ...actual,
-    ...{
-      internal: {
-        ...actual.internal,
-        StreamingProcessor: actual.internal.mocks.MockStreamingProcessor,
-      },
-    },
-  };
-});
-const {
-  mocks: { setupMockStreamingProcessor },
-} = internal;
+const { mocks } = internal;
+
 it('fires ready event in offline mode', (done) => {
   const client = init('sdk_key', { offline: true });
   client.on('ready', () => {
@@ -25,13 +12,24 @@ it('fires ready event in offline mode', (done) => {
   });
 });
 
-it('fires the failed event if initialization fails', (done) => {
-  setupMockStreamingProcessor(true);
-  const client = init('sdk_key');
-  client.on('failed', () => {
-    client.close();
-    done();
+it('fires the failed event if initialization fails', async () => {
+  jest.useFakeTimers();
+
+  const failedHandler = jest.fn().mockName('failedHandler');
+  const client = init('sdk_key', {
+    sendEvents: false,
+    logger: mocks.logger,
+    updateProcessor: (clientContext, dataSourceUpdates, initSuccessHandler, errorHandler) => ({
+      start: () => {
+        setTimeout(() => errorHandler?.(new Error('Something unexpected happened')), 0);
+      },
+      close: jest.fn(),
+    }),
   });
+  client.on('failed', failedHandler);
+  jest.runAllTimers();
+
+  expect(failedHandler).toBeCalledWith(new Error('Something unexpected happened'));
 });
 
 // These tests are done in the node implementation because common doesn't have a crypto
