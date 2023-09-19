@@ -1,12 +1,10 @@
-// FOR REVIEW ONLY: this has been moved to shared/common and is only here for PR
-// review. Delete when review is finished.
 import { EventName, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
-import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
 import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import { basicPlatform, clientContext, logger } from '../mocks';
+import StreamingProcessor from './StreamingProcessor';
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
@@ -94,13 +92,36 @@ describe('given a stream processor with mock event source', () => {
     jest.resetAllMocks();
   });
 
-  it('uses expected uri', () => {
+  it('uses expected uri and eventSource init args', () => {
     expect(basicPlatform.requests.createEventSource).toBeCalledWith(
       `${serviceEndpoints.streaming}/all`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, tags),
         initialRetryDelayMillis: 1000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
+    );
+  });
+
+  it('sets streamInitialReconnectDelay correctly', () => {
+    streamingProcessor = new StreamingProcessor(
+      sdkKey,
+      clientContext,
+      listeners,
+      diagnosticsManager,
+      mockErrorHandler,
+      22,
+    );
+    streamingProcessor.start();
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/all`,
+      {
+        errorFilter: expect.any(Function),
+        headers: defaultHeaders(sdkKey, info, tags),
+        initialRetryDelayMillis: 22000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
       },
@@ -146,7 +167,7 @@ describe('given a stream processor with mock event source', () => {
     expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/unexpected payload/i);
   });
 
-  it.only('closes and stops', async () => {
+  it('closes and stops', async () => {
     streamingProcessor.close();
 
     expect(streamingProcessor.stop).toBeCalled();
