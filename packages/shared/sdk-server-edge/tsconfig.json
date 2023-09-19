@@ -2,9 +2,9 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "dist",
-    "target": "ES2017",
+    "target": "es2017",
     "lib": ["es6", "webworker"],
-    "module": "ES6",
+    "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
     "allowSyntheticDefaultImports": true,
