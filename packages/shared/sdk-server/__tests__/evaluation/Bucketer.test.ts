@@ -2,10 +2,11 @@
 // We cannot fully validate bucketing in the common tests. Platform implementations
 // should contain a consistency test.
 // Testing here can only validate we are providing correct inputs to the hashing algorithm.
-import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, Context, internal, LDContext } from '@launchdarkly/js-sdk-common';
 
 import Bucketer from '../../src/evaluation/Bucketer';
-import { crypto, hasher } from './mocks/hasher';
+
+const { mocks } = internal;
 
 describe.each<
   [
@@ -65,7 +66,7 @@ describe.each<
     const validatedContext = Context.fromLDContext(context);
     const attrRef = new AttributeReference(attr);
 
-    const bucketer = new Bucketer(crypto);
+    const bucketer = new Bucketer(mocks.crypto);
     const [bucket, hadContext] = bucketer.bucket(
       validatedContext!,
       key,
@@ -75,12 +76,12 @@ describe.each<
       seed,
     );
 
-    // The hasher always returns the same value. This just checks that it converts it to a number
+    // The mocks.hasher always returns the same value. This just checks that it converts it to a number
     // in the expected way.
     expect(bucket).toBeCloseTo(0.07111111110140983, 5);
     expect(hadContext).toBeTruthy();
-    expect(hasher.update).toHaveBeenCalledWith(expected);
-    expect(hasher.digest).toHaveBeenCalledWith('hex');
+    expect(mocks.hasher.update).toHaveBeenCalledWith(expected);
+    expect(mocks.hasher.digest).toHaveBeenCalledWith('hex');
   });
 
   afterEach(() => {
@@ -104,7 +105,7 @@ describe.each([
     });
     const attrRef = new AttributeReference(attr);
 
-    const bucketer = new Bucketer(crypto);
+    const bucketer = new Bucketer(mocks.crypto);
     const [bucket, hadContext] = bucketer.bucket(
       validatedContext!,
       'key',
@@ -115,8 +116,8 @@ describe.each([
     );
     expect(bucket).toEqual(0);
     expect(hadContext).toEqual(kind === 'org');
-    expect(hasher.update).toBeCalledTimes(0);
-    expect(hasher.digest).toBeCalledTimes(0);
+    expect(mocks.hasher.update).toBeCalledTimes(0);
+    expect(mocks.hasher.digest).toBeCalledTimes(0);
   });
 
   afterEach(() => {

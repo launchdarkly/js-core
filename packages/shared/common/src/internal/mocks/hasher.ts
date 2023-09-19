@@ -1,5 +1,4 @@
-// Mock hashing implementation.
-import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
+import { Crypto, Hasher, Hmac } from '../../api';
 
 export const hasher: Hasher = {
   update: jest.fn(),

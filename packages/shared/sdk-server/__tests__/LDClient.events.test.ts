@@ -2,8 +2,9 @@ import { Context, internal } from '@launchdarkly/js-sdk-common';
 
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
+
+const { mocks } = internal;
 
 const defaultUser = { key: 'user' };
 const anonymousUser = { key: 'anon-user', anonymous: true };
@@ -25,7 +26,7 @@ describe('given a client with mock event processor', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: td.getFactory(),
       },

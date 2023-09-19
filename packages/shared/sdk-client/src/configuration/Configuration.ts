@@ -3,6 +3,7 @@ import {
   LDFlagSet,
   NumberWithMinimum,
   OptionMessages,
+  ServiceEndpoints,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
@@ -11,22 +12,24 @@ import type LDOptions from '../api/LDOptions';
 import validators from './validators';
 
 export default class Configuration {
+  public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
+  public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
+
   public readonly logger = createSafeLogger();
 
-  public readonly baseUri = 'https://sdk.launchdarkly.com';
-  public readonly eventsUri = 'https://events.launchdarkly.com';
-  public readonly streamUri = 'https://clientstream.launchdarkly.com';
+  public readonly baseUri = Configuration.DEFAULT_POLLING;
+  public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
+  public readonly streamUri = Configuration.DEFAULT_STREAM;
 
   public readonly capacity = 100;
-  public readonly diagnosticRecordingInterval = 900000;
-  public readonly flushInterval = 2000;
-  public readonly streamReconnectDelay = 1000;
+  public readonly diagnosticRecordingInterval = 900;
+  public readonly flushInterval = 2;
+  public readonly streamInitialReconnectDelay = 1;
 
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
   public readonly evaluationReasons = false;
   public readonly sendEvents = true;
-  public readonly sendEventsOnlyForVariation = false;
   public readonly sendLDHeaders = true;
   public readonly useReport = false;
 
@@ -37,8 +40,11 @@ export default class Configuration {
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
   public readonly stream?: boolean;
+  public readonly hash?: string;
   public readonly wrapperName?: string;
   public readonly wrapperVersion?: string;
+
+  public readonly serviceEndpoints: ServiceEndpoints;
 
   // Allow indexing Configuration by a string
   [index: string]: any;
@@ -46,6 +52,8 @@ export default class Configuration {
   constructor(pristineOptions: LDOptions = {}) {
     const errors = this.validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
+
+    this.serviceEndpoints = new ServiceEndpoints(this.streamUri, this.baseUri, this.eventsUri);
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {

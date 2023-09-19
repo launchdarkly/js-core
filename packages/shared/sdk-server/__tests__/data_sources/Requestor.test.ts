@@ -3,6 +3,7 @@ import {
   EventSource,
   EventSourceInitDict,
   Headers,
+  internal,
   Options,
   Requests,
   Response,
@@ -11,7 +12,8 @@ import {
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
-import basicPlatform from '../evaluation/mocks/platform';
+
+const { mocks } = internal;
 
 describe('given a requestor', () => {
   let requestor: Requestor;
@@ -80,7 +82,7 @@ describe('given a requestor', () => {
       },
     };
 
-    requestor = new Requestor('sdkKey', new Configuration({}), basicPlatform.info, requests);
+    requestor = new Requestor('sdkKey', new Configuration({}), mocks.basicPlatform.info, requests);
   });
 
   it('gets data', (done) => {

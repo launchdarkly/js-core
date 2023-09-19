@@ -21,15 +21,14 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   eventsUri: TypeValidators.String,
 
   capacity: TypeValidators.numberWithMin(1),
-  diagnosticRecordingInterval: TypeValidators.numberWithMin(2000),
-  flushInterval: TypeValidators.numberWithMin(2000),
-  streamReconnectDelay: TypeValidators.numberWithMin(0),
+  diagnosticRecordingInterval: TypeValidators.numberWithMin(2),
+  flushInterval: TypeValidators.numberWithMin(2),
+  streamInitialReconnectDelay: TypeValidators.numberWithMin(0),
 
   allAttributesPrivate: TypeValidators.Boolean,
   diagnosticOptOut: TypeValidators.Boolean,
   evaluationReasons: TypeValidators.Boolean,
   sendEvents: TypeValidators.Boolean,
-  sendEventsOnlyForVariation: TypeValidators.Boolean,
   sendLDHeaders: TypeValidators.Boolean,
   useReport: TypeValidators.Boolean,
 
@@ -46,6 +45,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   stream: TypeValidators.NullableBoolean,
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
+  hash: TypeValidators.String,
 };
 
 export default validators;

@@ -1,11 +1,12 @@
-import { LDEvaluationReason } from '../../api/data/LDEvaluationReason';
-import { LDLogger } from '../../api/logging/LDLogger';
+import { LDEvaluationReason, LDLogger } from '../../api';
+import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
 import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
 import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
-import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
-import ClientContext from '../../options/ClientContext';
+import { ClientContext } from '../../options';
+import { DiagnosticsManager } from '../diagnostics';
+import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
 import InputEvent from './InputEvent';
@@ -66,72 +67,53 @@ export interface EventProcessorOptions {
   diagnosticRecordingInterval: number;
 }
 
-interface LDDiagnosticsManager {
-  createInitEvent(): DiagnosticEvent;
-  createStatsEventAndReset(
-    droppedEvents: number,
-    deduplicatedUsers: number,
-    eventsInLastBatch: number,
-  ): DiagnosticEvent;
-}
-
 export default class EventProcessor implements LDEventProcessor {
+  private eventSender: EventSender;
   private summarizer = new EventSummarizer();
-
   private queue: OutputEvent[] = [];
-
   private lastKnownPastTime = 0;
-
   private droppedEvents = 0;
-
   private deduplicatedUsers = 0;
-
   private exceededCapacity = false;
-
   private eventsInLastBatch = 0;
-
   private shutdown = false;
-
   private capacity: number;
-
   private logger?: LDLogger;
-
   private contextFilter: ContextFilter;
 
   // Using any here, because setInterval handles are not the same
   // between node and web.
   private diagnosticsTimer: any;
-
   private flushTimer: any;
-
   private flushUsersTimer: any = null;
 
   constructor(
     config: EventProcessorOptions,
     clientContext: ClientContext,
-    private readonly eventSender: LDEventSender,
-    private readonly contextDeduplicator: LDContextDeduplicator,
-    private readonly diagnosticsManager?: LDDiagnosticsManager,
+    private readonly contextDeduplicator?: LDContextDeduplicator,
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
+    this.eventSender = new EventSender(clientContext);
 
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
-    if (this.contextDeduplicator.flushInterval !== undefined) {
+    if (this.contextDeduplicator?.flushInterval !== undefined) {
       this.flushUsersTimer = setInterval(() => {
-        this.contextDeduplicator.flush();
+        this.contextDeduplicator?.flush();
       }, this.contextDeduplicator.flushInterval * 1000);
     }
 
     this.flushTimer = setInterval(async () => {
       try {
         await this.flush();
-      } catch {
-        // Eat the errors.
+      } catch (e) {
+        // Log errors and swallow them
+        this.logger?.debug(`Flush failed: ${e}`);
       }
     }, config.flushInterval * 1000);
 
@@ -203,7 +185,7 @@ export default class EventProcessor implements LDEventProcessor {
     const addDebugEvent = this.shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
-    const shouldNotDeduplicate = this.contextDeduplicator.processContext(inputEvent.context);
+    const shouldNotDeduplicate = this.contextDeduplicator?.processContext(inputEvent.context);
 
     // If there is no cache, then it will never be in the cache.
     if (!shouldNotDeduplicate) {

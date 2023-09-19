@@ -7,6 +7,7 @@ import {
   Crypto,
   Hasher,
   Hmac,
+  internal,
   LDContext,
 } from '@launchdarkly/js-sdk-common';
 
@@ -20,7 +21,8 @@ import {
   makeClauseThatMatchesUser,
   makeFlagWithSegmentMatch,
 } from './flags';
-import basicPlatform from './mocks/platform';
+
+const { mocks } = internal;
 
 const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };
@@ -60,7 +62,10 @@ describe('when evaluating user equivalent contexts for segments', () => {
         included: [basicUser.key],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
@@ -75,7 +80,10 @@ describe('when evaluating user equivalent contexts for segments', () => {
         excluded: [basicUser.key],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
@@ -90,7 +98,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
         excluded: [basicUser.key],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [] }));
+      const evaluator = new Evaluator(mocks.basicPlatform, new TestQueries({ segments: [] }));
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
@@ -103,7 +111,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       included: ['foo'],
       version: 1,
     };
-    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const evaluator = new Evaluator(mocks.basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const user = { key: 'bar' };
     const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
@@ -119,7 +127,10 @@ describe('when evaluating user equivalent contexts for segments', () => {
         excluded: [basicUser.key],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
@@ -140,7 +151,10 @@ describe('when evaluating user equivalent contexts for segments', () => {
         ],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
@@ -162,7 +176,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       ],
       version: 1,
     };
-    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const evaluator = new Evaluator(mocks.basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(basicUser));
     expect(res.detail.reason).toEqual({ kind: 'ERROR', errorKind: 'MALFORMED_FLAG' });
@@ -183,7 +197,10 @@ describe('when evaluating user equivalent contexts for segments', () => {
         ],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
@@ -215,7 +232,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       ],
       version: 1,
     };
-    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const evaluator = new Evaluator(mocks.basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
     expect(res.detail.value).toBe(true);
@@ -233,7 +250,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       ],
       version: 1,
     };
-    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const evaluator = new Evaluator(mocks.basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
     expect(res.detail.value).toBe(false);
@@ -265,7 +282,7 @@ describe('when evaluating user equivalent contexts for segments', () => {
       },
     };
 
-    const bucketingPlatform = { ...basicPlatform, crypto };
+    const bucketingPlatform = { ...mocks.basicPlatform, crypto };
     const context = Context.fromLDContext({ contextKind: 'user', key: 'userkey' });
 
     const segment1: Segment = {
@@ -322,7 +339,10 @@ describe('Evaluator - segment match for non-user contexts', () => {
         includedContexts: [{ contextKind: 'org', values: [singleKind.key] }],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(true);
@@ -354,7 +374,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       version: 1,
     };
     const evaluator = new Evaluator(
-      basicPlatform,
+      mocks.basicPlatform,
       new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
@@ -381,7 +401,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       ],
       version: 1,
     };
-    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const evaluator = new Evaluator(mocks.basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(singleKind));
     expect(res.detail.reason).toEqual({ kind: 'ERROR', errorKind: 'MALFORMED_FLAG' });
@@ -419,7 +439,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       version: 1,
     };
     const evaluator = new Evaluator(
-      basicPlatform,
+      mocks.basicPlatform,
       new TestQueries({ segments: [segment1, segment2] }),
     );
     const flag = makeFlagWithSegmentMatch(segment2);
@@ -435,7 +455,10 @@ describe('Evaluator - segment match for non-user contexts', () => {
         includedContexts: [{ contextKind: 'org', values: ['otherKey'] }],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
@@ -450,7 +473,10 @@ describe('Evaluator - segment match for non-user contexts', () => {
         excludedContexts: [{ contextKind: 'org', values: [singleKind.key] }],
         version: 1,
       };
-      const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+      const evaluator = new Evaluator(
+        mocks.basicPlatform,
+        new TestQueries({ segments: [segment] }),
+      );
       const flag = makeFlagWithSegmentMatch(segment);
       const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
       expect(res.detail.value).toBe(false);
@@ -463,7 +489,7 @@ describe('Evaluator - segment match for non-user contexts', () => {
       includedContexts: [{ contextKind: 'notOrg', values: [singleKind.key] }],
       version: 1,
     };
-    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const evaluator = new Evaluator(mocks.basicPlatform, new TestQueries({ segments: [segment] }));
     const flag = makeFlagWithSegmentMatch(segment);
     const res = await evaluator.evaluate(flag, Context.fromLDContext(context));
     expect(res.detail.value).toBe(false);

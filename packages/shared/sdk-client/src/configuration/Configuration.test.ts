@@ -12,13 +12,13 @@ describe('Configuration', () => {
 
     expect(config).toMatchObject({
       allAttributesPrivate: false,
-      baseUri: 'https://sdk.launchdarkly.com',
+      baseUri: 'https://clientsdk.launchdarkly.com',
       capacity: 100,
       diagnosticOptOut: false,
-      diagnosticRecordingInterval: 900000,
+      diagnosticRecordingInterval: 900,
       evaluationReasons: false,
       eventsUri: 'https://events.launchdarkly.com',
-      flushInterval: 2000,
+      flushInterval: 2,
       inspectors: [],
       logger: {
         destination: console.error,
@@ -27,9 +27,8 @@ describe('Configuration', () => {
       },
       privateAttributes: [],
       sendEvents: true,
-      sendEventsOnlyForVariation: false,
       sendLDHeaders: true,
-      streamReconnectDelay: 1000,
+      streamInitialReconnectDelay: 1,
       streamUri: 'https://clientstream.launchdarkly.com',
       useReport: false,
     });
@@ -72,12 +71,10 @@ describe('Configuration', () => {
   test('enforce minimum', () => {
     const config = new Configuration({ flushInterval: 1 });
 
-    expect(config.flushInterval).toEqual(2000);
+    expect(config.flushInterval).toEqual(2);
     expect(console.error).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining(
-        '"flushInterval" had invalid value of 1, using minimum of 2000 instead',
-      ),
+      expect.stringContaining('"flushInterval" had invalid value of 1, using minimum of 2 instead'),
     );
   });
 

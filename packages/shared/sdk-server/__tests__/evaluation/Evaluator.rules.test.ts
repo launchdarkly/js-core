@@ -1,6 +1,6 @@
 // Tests of flag evaluation at the rule level. Clause-level behavior is covered
 // in detail in Evaluator.clause.tests and (TODO: File for segments).
-import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, Context, internal, LDContext } from '@launchdarkly/js-sdk-common';
 
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
@@ -12,13 +12,14 @@ import {
   makeFlagWithRules,
 } from './flags';
 import noQueries from './mocks/noQueries';
-import basicPlatform from './mocks/platform';
+
+const { mocks } = internal;
 
 const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };
 const basicMultiKindUser: LDContext = { kind: 'multi', user: { key: 'userkey' } };
 
-const evaluator = new Evaluator(basicPlatform, noQueries);
+const evaluator = new Evaluator(mocks.basicPlatform, noQueries);
 
 describe('when evaluating user equivalent contexts', () => {
   const matchClause = makeClauseThatMatchesUser(basicUser);

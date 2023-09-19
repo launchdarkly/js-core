@@ -1,8 +1,11 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
+
+const { mocks } = internal;
 
 const defaultUser = { key: 'user' };
 
@@ -16,7 +19,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -282,7 +285,7 @@ describe('given an offline client', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         offline: true,
         updateProcessor: td.getFactory(),

@@ -1,15 +1,15 @@
-import { ClientContext } from '@launchdarkly/js-sdk-common';
+import { ClientContext, internal } from '@launchdarkly/js-sdk-common';
 
-import { LDFeatureStore } from '../../src/api/subsystems';
-import promisify from '../../src/async/promisify';
+import { LDFeatureStore } from '../../src';
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import basicPlatform from '../evaluation/mocks/platform';
 import TestLogger, { LogLevel } from '../Logger';
+
+const { mocks } = internal;
 
 describe('given an event processor', () => {
   const requestor = {
@@ -23,6 +23,7 @@ describe('given an event processor', () => {
   let storeFacade: AsyncStoreFacade;
   let config: Configuration;
   let processor: PollingProcessor;
+  let initSuccessHandler: jest.Mock;
 
   beforeEach(() => {
     store = new InMemoryFeatureStore();
@@ -32,10 +33,13 @@ describe('given an event processor', () => {
       pollInterval: longInterval,
       logger: new TestLogger(),
     });
+    initSuccessHandler = jest.fn();
+
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, mocks.basicPlatform)),
+      initSuccessHandler,
     );
   });
 
@@ -49,25 +53,25 @@ describe('given an event processor', () => {
   });
 
   it('polls immediately on start', () => {
-    processor.start(() => {});
+    processor.start();
 
     expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
   });
 
-  it('calls callback on success', (done) => {
+  it('calls callback on success', () => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
-
-    processor.start(() => done());
+    processor.start();
+    expect(initSuccessHandler).toBeCalled();
   });
 
   it('initializes the feature store', async () => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
 
-    await promisify((cb) => processor.start(cb));
-
+    processor.start();
     const flags = await storeFacade.all(VersionedDataKinds.Features);
-    expect(flags).toEqual(allData.flags);
     const segments = await storeFacade.all(VersionedDataKinds.Segments);
+
+    expect(flags).toEqual(allData.flags);
     expect(segments).toEqual(allData.segments);
   });
 });
@@ -83,6 +87,8 @@ describe('given a polling processor with a short poll duration', () => {
   let store: LDFeatureStore;
   let config: Configuration;
   let processor: PollingProcessor;
+  let initSuccessHandler: jest.Mock;
+  let errorHandler: jest.Mock;
 
   beforeEach(() => {
     store = new InMemoryFeatureStore();
@@ -91,24 +97,29 @@ describe('given a polling processor with a short poll duration', () => {
       pollInterval: shortInterval,
       logger: new TestLogger(),
     });
+    initSuccessHandler = jest.fn();
+    errorHandler = jest.fn();
+
     // Configuration will not let us set this as low as needed for the test.
     Object.defineProperty(config, 'pollInterval', { value: 0.1 });
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, mocks.basicPlatform)),
+      initSuccessHandler,
+      errorHandler,
     );
   });
 
   afterEach(() => {
     processor.stop();
-    jest.restoreAllMocks();
+    jest.resetAllMocks();
   });
 
   it('polls repeatedly', (done) => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
 
-    processor.start(() => {});
+    processor.start();
     setTimeout(() => {
       expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(4);
       done();
@@ -126,10 +137,11 @@ describe('given a polling processor with a short poll duration', () => {
           undefined,
         ),
       );
-      processor.start((e) => {
-        expect(e).toBeUndefined();
-      });
 
+      processor.start();
+
+      expect(initSuccessHandler).not.toBeCalled();
+      expect(errorHandler).not.toBeCalled();
       setTimeout(() => {
         expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
         const testLogger = config.logger as TestLogger;
@@ -142,9 +154,11 @@ describe('given a polling processor with a short poll duration', () => {
 
   it('continues polling after receiving invalid JSON', (done) => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, '{sad'));
-    processor.start((e) => {
-      expect(e).toBeDefined();
-    });
+
+    processor.start();
+
+    expect(initSuccessHandler).not.toBeCalled();
+    expect(errorHandler.mock.lastCall[0].message).toMatch(/malformed json/i);
 
     setTimeout(() => {
       expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -165,9 +179,9 @@ describe('given a polling processor with a short poll duration', () => {
           undefined,
         ),
       );
-      processor.start((e) => {
-        expect(e).toBeDefined();
-      });
+      processor.start();
+      expect(initSuccessHandler).not.toBeCalled();
+      expect(errorHandler.mock.lastCall[0].message).toMatch(new RegExp(`${status}.*permanently`));
 
       setTimeout(() => {
         expect(requestor.requestAllData.mock.calls.length).toBe(1);

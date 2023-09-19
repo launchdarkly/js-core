@@ -1,12 +1,13 @@
-import { Context } from '@launchdarkly/js-sdk-common';
+import { Context, internal } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Rollout } from '../../src/evaluation/data/Rollout';
 import Evaluator from '../../src/evaluation/Evaluator';
 import noQueries from './mocks/noQueries';
-import basicPlatform from './mocks/platform';
 
-const evaluator = new Evaluator(basicPlatform, noQueries);
+const { mocks } = internal;
+
+const evaluator = new Evaluator(mocks.basicPlatform, noQueries);
 
 describe('given a flag with a rollout', () => {
   const seed = 61;

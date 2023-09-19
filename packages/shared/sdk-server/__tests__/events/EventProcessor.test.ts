@@ -17,11 +17,10 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
-import DiagnosticsManager from '../../src/events/DiagnosticsManager';
-import EventSender from '../../src/events/EventSender';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-import basicPlatform from '../evaluation/mocks/platform';
+
+const { mocks } = internal;
 
 const SDK_KEY = 'sdk-key';
 
@@ -172,21 +171,22 @@ describe('given an event processor with diagnostics manager', () => {
     // we need to make an object and replace the value.
     const testConfig = { ...config, diagnosticRecordingInterval: 0.1 };
 
-    const diagnosticsManager = new DiagnosticsManager(
+    const diagnosticsManager = new internal.DiagnosticsManager(
       'sdk-key',
-      testConfig,
       {
-        ...basicPlatform,
+        ...mocks.basicPlatform,
         // Replace info and requests.
         info,
         requests,
         crypto,
       },
-      store,
+      {
+        config1: 'test',
+      },
     );
 
     const clientContext = new ClientContext(SDK_KEY, testConfig, {
-      ...basicPlatform,
+      ...mocks.basicPlatform,
       info,
       requests,
     });
@@ -194,7 +194,6 @@ describe('given an event processor with diagnostics manager', () => {
     eventProcessor = new internal.EventProcessor(
       testConfig,
       clientContext,
-      new EventSender(config, clientContext),
       new ContextDeduplicator(config),
       diagnosticsManager,
     );
@@ -209,25 +208,7 @@ describe('given an event processor with diagnostics manager', () => {
     expect(requestState.requestsMade.length).toEqual(1);
     expect(JSON.parse(requestState.requestsMade[0].options.body!)).toEqual({
       configuration: {
-        allAttributesPrivate: false,
-        connectTimeoutMillis: 5000,
-        contextKeysCapacity: 1000,
-        contextKeysFlushIntervalMillis: 300000,
-        customBaseURI: false,
-        customEventsURI: false,
-        customStreamURI: false,
-        dataStoreType: 'memory',
-        diagnosticRecordingIntervalMillis: 100,
-        eventsCapacity: 3,
-        eventsFlushIntervalMillis: 5000,
-        offline: false,
-        pollingIntervalMillis: 30000,
-        reconnectTimeMillis: 1000,
-        socketTimeoutMillis: 5000,
-        streamingDisabled: false,
-        usingProxy: false,
-        usingProxyAuthenticator: false,
-        usingRelayDaemon: false,
+        config1: 'test',
       },
       creationDate: 1000,
       id: {

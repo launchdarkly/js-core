@@ -1,13 +1,19 @@
-import { Filesystem, LDLogger } from '@launchdarkly/js-sdk-common';
+import {
+  Filesystem,
+  LDFileDataSourceError,
+  LDLogger,
+  subsystem,
+  VoidFunction,
+} from '@launchdarkly/js-sdk-common';
 
-import { LDStreamProcessor } from '../api';
+import { DataKind, LDFeatureStore, LDFeatureStoreDataStorage } from '../api';
 import { FileDataSourceOptions } from '../api/integrations';
-import { DataKind } from '../api/interfaces';
-import { LDFeatureStore, LDFeatureStoreDataStorage } from '../api/subsystems';
 import { Flag } from '../evaluation/data/Flag';
 import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import FileLoader from './FileLoader';
+
+export type FileDataSourceErrorHandler = (err: LDFileDataSourceError) => void;
 
 function makeFlagWithValue(key: string, value: any): Flag {
   return {
@@ -19,7 +25,7 @@ function makeFlagWithValue(key: string, value: any): Flag {
   };
 }
 
-export default class FileDataSource implements LDStreamProcessor {
+export default class FileDataSource implements subsystem.LDStreamProcessor {
   private logger?: LDLogger;
 
   private yamlParser?: (data: string) => any;
@@ -27,8 +33,6 @@ export default class FileDataSource implements LDStreamProcessor {
   private fileLoader: FileLoader;
 
   private allData: LDFeatureStoreDataStorage = {};
-
-  private initCallback?: (err?: any) => void;
 
   /**
    * This is internal because we want instances to only be created with the
@@ -39,6 +43,8 @@ export default class FileDataSource implements LDStreamProcessor {
     options: FileDataSourceOptions,
     filesystem: Filesystem,
     private readonly featureStore: LDFeatureStore,
+    private initSuccessHandler: VoidFunction = () => {},
+    private readonly errorHandler?: FileDataSourceErrorHandler,
   ) {
     this.fileLoader = new FileLoader(
       filesystem,
@@ -51,7 +57,7 @@ export default class FileDataSource implements LDStreamProcessor {
           this.processFileData(results);
         } catch (err) {
           // If this was during start, then the initCallback will be present.
-          this.initCallback?.(err);
+          this.errorHandler?.(err as LDFileDataSourceError);
           this.logger?.error(`Error processing files: ${err}`);
         }
       },
@@ -61,8 +67,7 @@ export default class FileDataSource implements LDStreamProcessor {
     this.yamlParser = options.yamlParser;
   }
 
-  start(fn?: ((err?: any) => void) | undefined): void {
-    this.initCallback = fn;
+  start(): void {
     // Use an immediately invoked function expression to allow handling of the
     // async loading without making start async itself.
     (async () => {
@@ -71,7 +76,7 @@ export default class FileDataSource implements LDStreamProcessor {
       } catch (err) {
         // There was an issue loading/watching the files.
         // Report back to the caller.
-        fn?.(err);
+        this.errorHandler?.(err as LDFileDataSourceError);
       }
     })();
   }
@@ -118,8 +123,8 @@ export default class FileDataSource implements LDStreamProcessor {
     this.featureStore.init(this.allData, () => {
       // Call the init callback if present.
       // Then clear the callback so we cannot call it again.
-      this.initCallback?.();
-      this.initCallback = undefined;
+      this.initSuccessHandler();
+      this.initSuccessHandler = () => {};
     });
   }
 
