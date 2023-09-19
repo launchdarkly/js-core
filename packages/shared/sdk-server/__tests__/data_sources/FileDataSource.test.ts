@@ -6,7 +6,6 @@ import {
   WatchHandle,
 } from '@launchdarkly/js-sdk-common';
 
-import promisify from '../../src/async/promisify';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import Evaluator from '../../src/evaluation/Evaluator';
@@ -125,545 +124,103 @@ describe('given a mock filesystem and memory feature store', () => {
   let filesystem: MockFilesystem;
   let logger: TestLogger;
   let featureStore: InMemoryFeatureStore;
-
   let asyncFeatureStore: AsyncStoreFacade;
+  let createFileDataSource: any;
+  let mockInitSuccessHandler: jest.Mock;
+  let mockErrorHandler: jest.Mock;
 
   beforeEach(() => {
+    jest.useFakeTimers();
+
+    mockInitSuccessHandler = jest.fn();
+    mockErrorHandler = jest.fn();
     filesystem = new MockFilesystem();
     logger = new TestLogger();
     featureStore = new InMemoryFeatureStore();
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
-
-  it('does not load flags prior to start', async () => {
-    filesystem.fileData['testfile.json'] = { timestamp: 0, data: '{"flagValues":{"key":"value"}}' };
     jest.spyOn(filesystem, 'readFile');
-
-    const factory = new FileDataSourceFactory({
-      paths: ['testfile.json'],
-    });
-
-    factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-    expect(await asyncFeatureStore.initialized()).toBeFalsy();
-
-    expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
-    expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
-    // There was no file access.
-    expect(filesystem.readFile).toHaveBeenCalledTimes(0);
-  });
-
-  it('loads all properties', (done) => {
-    filesystem.fileData['testfile.json'] = { timestamp: 0, data: allPropertiesJson };
-    jest.spyOn(filesystem, 'readFile');
-
-    const factory = new FileDataSourceFactory({
-      paths: ['testfile.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      expect(await asyncFeatureStore.initialized()).toBeTruthy();
-
-      const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-      expect(sorted(Object.keys(flags))).toEqual([flag1Key, flag2Key]);
-
-      const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-      expect(segments).toEqual({ seg1: segment1 });
-      expect(filesystem.readFile).toHaveBeenCalledTimes(1);
-      done();
-    });
-  });
-
-  it('does not load if a file it not found', (done) => {
-    const factory = new FileDataSourceFactory({
-      paths: ['missing-file.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async (err) => {
-      expect(err).toBeDefined();
-      expect(await asyncFeatureStore.initialized()).toBeFalsy();
-
-      expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
-      expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
-      done();
-    });
-  });
-
-  it('does not load if a file was malformed', (done) => {
-    filesystem.fileData['malformed_file.json'] = { timestamp: 0, data: '{sorry' };
-    jest.spyOn(filesystem, 'readFile');
-    const factory = new FileDataSourceFactory({
-      paths: ['malformed_file.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async (err) => {
-      expect(err).toBeDefined();
-      expect(await asyncFeatureStore.initialized()).toBeFalsy();
-
-      expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
-      expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
-      expect(filesystem.readFile).toHaveBeenCalledWith('malformed_file.json');
-      done();
-    });
-  });
-
-  it('can load multiple files', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-    filesystem.fileData['file2.json'] = { timestamp: 0, data: segmentOnlyJson };
-
-    jest.spyOn(filesystem, 'readFile');
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json', 'file2.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      expect(await asyncFeatureStore.initialized()).toBeTruthy();
-
-      const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-      expect(sorted(Object.keys(flags))).toEqual([flag1Key]);
-
-      const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-      expect(segments).toEqual({ seg1: segment1 });
-      expect(filesystem.readFile).toHaveBeenCalledTimes(2);
-      done();
-    });
-  });
-
-  it('does not allow duplicate keys', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-    filesystem.fileData['file2.json'] = { timestamp: 0, data: flagOnlyJson };
-
-    jest.spyOn(filesystem, 'readFile');
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json', 'file2.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async (err) => {
-      expect(err).toBeDefined();
-      expect(await asyncFeatureStore.initialized()).toBeFalsy();
-      expect(filesystem.readFile).toHaveBeenCalledTimes(2);
-      done();
-    });
-  });
-
-  it('does not create watchers if auto-update if off', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-    filesystem.fileData['file2.json'] = { timestamp: 0, data: segmentOnlyJson };
-
-    jest.spyOn(filesystem, 'watch');
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json', 'file2.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      expect(await asyncFeatureStore.initialized()).toBeTruthy();
-      expect(filesystem.watch).toHaveBeenCalledTimes(0);
-      done();
-    });
-  });
-
-  it('can evaluate simple loaded flags', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: allPropertiesJson };
-
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      const evaluator = new Evaluator(mocks.basicPlatform, {
-        getFlag: async (key) =>
-          ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
-        getSegment: async (key) =>
-          ((await asyncFeatureStore.get(VersionedDataKinds.Segments, key)) as Segment) ?? undefined,
-        getBigSegmentsMembership: () => Promise.resolve(undefined),
-      });
-
-      const flag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag2Key);
-      const res = await evaluator.evaluate(
-        flag as Flag,
-        Context.fromLDContext({ key: 'userkey' })!,
-      );
-      expect(res.detail.value).toEqual(flag2Value);
-      done();
-    });
-  });
-
-  it('can evaluate full loaded flags', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: allPropertiesJson };
-
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json'],
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      const evaluator = new Evaluator(mocks.basicPlatform, {
-        getFlag: async (key) =>
-          ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
-        getSegment: async (key) =>
-          ((await asyncFeatureStore.get(VersionedDataKinds.Segments, key)) as Segment) ?? undefined,
-        getBigSegmentsMembership: () => Promise.resolve(undefined),
-      });
-
-      const flag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag1Key);
-      const res = await evaluator.evaluate(
-        flag as Flag,
-        Context.fromLDContext({ key: 'userkey' })!,
-      );
-      expect(res.detail.value).toEqual('on');
-      done();
-    });
-  });
-
-  it('register watchers when auto update is enabled and unregisters them when it is closed', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-    filesystem.fileData['file2.json'] = { timestamp: 0, data: segmentOnlyJson };
-
-    jest.spyOn(filesystem, 'watch');
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json', 'file2.json'],
-      autoUpdate: true,
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      expect(await asyncFeatureStore.initialized()).toBeTruthy();
-      expect(filesystem.watch).toHaveBeenCalledTimes(2);
-      expect(filesystem.watches['file1.json'].length).toEqual(1);
-      expect(filesystem.watches['file2.json'].length).toEqual(1);
-      fds.close();
-
-      expect(filesystem.watches['file1.json'].length).toEqual(0);
-      expect(filesystem.watches['file2.json'].length).toEqual(0);
-      done();
-    });
-  });
-
-  it('reloads modified files when auto update is enabled', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-
-    jest.spyOn(filesystem, 'watch');
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json'],
-      autoUpdate: true,
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      expect(await asyncFeatureStore.initialized()).toBeTruthy();
-
-      const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-      expect(Object.keys(flags).length).toEqual(1);
-
-      const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-      expect(Object.keys(segments).length).toEqual(0);
-
-      // Need to update the timestamp, or it will think the file has not changed.
-      filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
-      filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-
-      // The handling of the file loading is async, and additionally we debounce
-      // the callback. So we have to wait a bit to account for the awaits and the debounce.
-      setTimeout(async () => {
-        const flags2 = await asyncFeatureStore.all(VersionedDataKinds.Features);
-        expect(Object.keys(flags2).length).toEqual(0);
-
-        const segments2 = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-        expect(Object.keys(segments2).length).toEqual(1);
-        done();
-      }, 100);
-    });
-  });
-
-  it('debounces the callback for file loading', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-
     jest.spyOn(filesystem, 'watch');
     jest.spyOn(featureStore, 'init');
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json'],
-      autoUpdate: true,
-    });
 
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
+    const defaultData = {
+      flagValues: {
+        key: 'value',
+      },
+    };
+    const defaultDataString = JSON.stringify(defaultData);
+    const defaultTestFilePath = 'testFile.json';
+    const defaultTestFilePathData = [{ path: defaultTestFilePath, data: defaultDataString }];
 
-    fds.start(async () => {
-      expect(await asyncFeatureStore.initialized()).toBeTruthy();
+    // setup a filesystem of paths pointing to data
+    // returns an array of paths
+    const setupFileSystem = (testFiles: { path: string; data: string }[]) =>
+      testFiles.map(({ path, data }) => {
+        filesystem.fileData[path] = { timestamp: 0, data };
+        return path;
+      });
 
-      const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-      expect(Object.keys(flags).length).toEqual(1);
-
-      const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-      expect(Object.keys(segments).length).toEqual(0);
-
-      // Trigger several change callbacks.
-      filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
-      filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-      filesystem.fileData['file1.json'] = { timestamp: 101, data: segmentOnlyJson };
-      filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-      filesystem.fileData['file1.json'] = { timestamp: 102, data: segmentOnlyJson };
-      filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-      filesystem.fileData['file1.json'] = { timestamp: 103, data: segmentOnlyJson };
-      filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-
-      // The handling of the file loading is async, and additionally we debounce
-      // the callback. So we have to wait a bit to account for the awaits and the debounce.
-      setTimeout(async () => {
-        // Once for the start, and then again for the coalesced update.
-        expect(featureStore.init).toHaveBeenCalledTimes(2);
-        done();
-      }, 100);
-    });
-  });
-
-  it('does not callback if the timestamp has not changed', (done) => {
-    filesystem.fileData['file1.json'] = { timestamp: 0, data: flagOnlyJson };
-
-    jest.spyOn(filesystem, 'watch');
-    jest.spyOn(featureStore, 'init');
-    const factory = new FileDataSourceFactory({
-      paths: ['file1.json'],
-      autoUpdate: true,
-    });
-
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
-
-    fds.start(async () => {
-      expect(await asyncFeatureStore.initialized()).toBeTruthy();
-
-      const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
-      expect(Object.keys(flags).length).toEqual(1);
-
-      const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
-      expect(Object.keys(segments).length).toEqual(0);
-
-      filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-      filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-
-      // The handling of the file loading is async, and additionally we debounce
-      // the callback. So we have to wait a bit to account for the awaits and the debounce.
-      setTimeout(async () => {
-        // Once for the start.
-        expect(featureStore.init).toHaveBeenCalledTimes(1);
-        done();
-      }, 100);
-    });
-  });
-
-  it.each([['yml'], ['yaml']])(
-    'does not initialize when a yaml file is specified, but no parser is provided %s',
-    async (ext) => {
-      jest.spyOn(filesystem, 'readFile');
-      const fileName = `yamlfile.${ext}`;
-      filesystem.fileData[fileName] = { timestamp: 0, data: '' };
+    createFileDataSource = async (
+      start: boolean = true,
+      files: { path: string; data: string }[] = defaultTestFilePathData,
+      simulateMissingFile: boolean = false,
+      autoUpdate: boolean = false,
+      yamlParser?: (data: string) => any,
+    ) => {
+      const filePaths = setupFileSystem(files);
+      if (simulateMissingFile) {
+        filePaths.push('missing-file.json');
+      }
       const factory = new FileDataSourceFactory({
-        paths: [fileName],
+        paths: filePaths,
+        autoUpdate,
+        yamlParser,
       });
 
-      const fds = factory.create(
+      const fileDataSource = factory.create(
         new ClientContext(
           '',
           new Configuration({
             featureStore,
             logger,
           }),
-          { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
+          {
+            ...mocks.basicPlatform,
+            fileSystem: filesystem as unknown as Filesystem,
+          },
         ),
         featureStore,
+        mockInitSuccessHandler,
+        mockErrorHandler,
       );
 
-      const err = await promisify((cb) => {
-        fds.start(cb);
-      });
+      if (start) {
+        fileDataSource.start();
+      }
 
-      expect((err as any).message).toEqual(
-        `Attempted to parse yaml file (yamlfile.${ext}) without parser.`,
-      );
-      expect(await asyncFeatureStore.initialized()).toBeFalsy();
+      await jest.runAllTimersAsync();
+      return fileDataSource;
+    };
+  });
 
-      expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
-      expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
-    },
-  );
+  afterEach(() => {
+    jest.resetAllMocks();
+    jest.useRealTimers();
+  });
 
-  it.each([['yml'], ['yaml']])('uses the yaml parser when specified %s', async (ext) => {
-    const parser = jest.fn(() => JSON.parse(allPropertiesJson));
+  it('does not load flags prior to start', async () => {
+    await createFileDataSource(false);
 
-    jest.spyOn(filesystem, 'readFile');
-    const fileName = `yamlfile.${ext}`;
-    filesystem.fileData[fileName] = { timestamp: 0, data: 'the data' };
-    const factory = new FileDataSourceFactory({
-      paths: [fileName],
-      yamlParser: parser,
-    });
+    expect(await asyncFeatureStore.initialized()).toBeFalsy();
+    expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
+    expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
+    // There was no file access.
+    expect(filesystem.readFile).not.toHaveBeenCalled();
+  });
 
-    const fds = factory.create(
-      new ClientContext(
-        '',
-        new Configuration({
-          featureStore,
-          logger,
-        }),
-        { ...mocks.basicPlatform, fileSystem: filesystem as unknown as Filesystem },
-      ),
-      featureStore,
-    );
+  it('loads all properties', async () => {
+    await createFileDataSource(true, [{ path: 'allProperties.json', data: allPropertiesJson }]);
 
-    const err = await promisify((cb) => {
-      fds.start(cb);
-    });
-
-    expect(err).toBeUndefined();
+    expect(mockInitSuccessHandler).toBeCalled();
     expect(await asyncFeatureStore.initialized()).toBeTruthy();
 
     const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
@@ -672,6 +229,224 @@ describe('given a mock filesystem and memory feature store', () => {
     const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
     expect(segments).toEqual({ seg1: segment1 });
     expect(filesystem.readFile).toHaveBeenCalledTimes(1);
-    expect(parser).toHaveBeenCalledWith('the data');
+  });
+
+  it('does not load if a file it not found', async () => {
+    await createFileDataSource(true, undefined, true);
+
+    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/not found/i);
+    expect(filesystem.readFile).toHaveBeenCalledWith('missing-file.json');
+    expect(await asyncFeatureStore.initialized()).toBeFalsy();
+    expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
+    expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
+  });
+
+  it('does not load if a file was malformed', async () => {
+    await createFileDataSource(true, [{ path: 'allProperties.json', data: '{malformed' }]);
+
+    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/expected.*json at position/i);
+    expect(await asyncFeatureStore.initialized()).toBeFalsy();
+    expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
+    expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
+  });
+
+  it('can load multiple files', async () => {
+    await createFileDataSource(true, [
+      { path: 'file1.json', data: flagOnlyJson },
+      { path: 'file2.json', data: segmentOnlyJson },
+    ]);
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(sorted(Object.keys(flags))).toEqual([flag1Key]);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(segments).toEqual({ seg1: segment1 });
+
+    expect(filesystem.readFile).toHaveBeenCalledTimes(2);
+    expect(filesystem.readFile).toHaveBeenNthCalledWith(1, 'file1.json');
+    expect(filesystem.readFile).toHaveBeenNthCalledWith(2, 'file2.json');
+  });
+
+  it('does not allow duplicate keys', async () => {
+    await createFileDataSource(true, [
+      { path: 'file1.json', data: flagOnlyJson },
+      { path: 'file2.json', data: flagOnlyJson },
+    ]);
+
+    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/duplicate.*flag1/);
+    expect(await asyncFeatureStore.initialized()).toBeFalsy();
+    expect(filesystem.readFile).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not create watchers if auto-update if off', async () => {
+    await createFileDataSource(true, [
+      { path: 'file1.json', data: flagOnlyJson },
+      { path: 'file2.json', data: segmentOnlyJson },
+    ]);
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+    expect(filesystem.watch).not.toBeCalled();
+  });
+
+  it('can evaluate simple loaded flags', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: allPropertiesJson }]);
+
+    const evaluator = new Evaluator(mocks.basicPlatform, {
+      getFlag: async (key) =>
+        ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
+      getSegment: async (key) =>
+        ((await asyncFeatureStore.get(VersionedDataKinds.Segments, key)) as Segment) ?? undefined,
+      getBigSegmentsMembership: () => Promise.resolve(undefined),
+    });
+    const flag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag2Key);
+    const res = await evaluator.evaluate(flag as Flag, Context.fromLDContext({ key: 'userkey' })!);
+
+    expect(res.detail.value).toEqual(flag2Value);
+  });
+
+  it('can evaluate full loaded flags', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: allPropertiesJson }]);
+    const evaluator = new Evaluator(mocks.basicPlatform, {
+      getFlag: async (key) =>
+        ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
+      getSegment: async (key) =>
+        ((await asyncFeatureStore.get(VersionedDataKinds.Segments, key)) as Segment) ?? undefined,
+      getBigSegmentsMembership: () => Promise.resolve(undefined),
+    });
+    const flag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag1Key);
+    const res = await evaluator.evaluate(flag as Flag, Context.fromLDContext({ key: 'userkey' })!);
+
+    expect(res.detail.value).toEqual('on');
+  });
+
+  it('register watchers when auto update is enabled and unregisters them when it is closed', async () => {
+    const fds = await createFileDataSource(
+      true,
+      [
+        { path: 'file1.json', data: flagOnlyJson },
+        { path: 'file2.json', data: segmentOnlyJson },
+      ],
+      false,
+      true,
+    );
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+    expect(filesystem.watch).toHaveBeenCalledTimes(2);
+    expect(filesystem.watches['file1.json'].length).toEqual(1);
+    expect(filesystem.watches['file2.json'].length).toEqual(1);
+    fds.close();
+
+    expect(filesystem.watches['file1.json'].length).toEqual(0);
+    expect(filesystem.watches['file2.json'].length).toEqual(0);
+  });
+
+  it('reloads modified files when auto update is enabled', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: flagOnlyJson }], false, true);
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    // Need to update the timestamp, or it will think the file has not changed.
+    filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    await jest.runAllTimersAsync();
+    const flags2 = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags2).length).toEqual(0);
+
+    const segments2 = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments2).length).toEqual(1);
+  });
+
+  it('debounces the callback for file loading', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: flagOnlyJson }], false, true);
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    // Trigger several change callbacks.
+    filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.fileData['file1.json'] = { timestamp: 101, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.fileData['file1.json'] = { timestamp: 102, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.fileData['file1.json'] = { timestamp: 103, data: segmentOnlyJson };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    // The handling of the file loading is async, and additionally we debounce
+    // the callback. So we have to wait a bit to account for the awaits and the debounce.
+    // Once for the start, and then again for the coalesced update.
+    await jest.runAllTimersAsync();
+    expect(featureStore.init).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not callback if the timestamp has not changed', async () => {
+    await createFileDataSource(true, [{ path: 'file1.json', data: flagOnlyJson }], false, true);
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    await jest.runAllTimersAsync();
+    // Once for the start.
+    expect(featureStore.init).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([['yml'], ['yaml']])(
+    'does not initialize when a yaml file is specified, but no parser is provided %s',
+    async (ext) => {
+      const fileName = `yamlfile.${ext}`;
+      await createFileDataSource(true, [{ path: fileName, data: '' }]);
+
+      expect(mockErrorHandler.mock.lastCall[0].message).toEqual(
+        `Attempted to parse yaml file (yamlfile.${ext}) without parser.`,
+      );
+      expect(await asyncFeatureStore.initialized()).toBeFalsy();
+      expect(await asyncFeatureStore.all(VersionedDataKinds.Features)).toEqual({});
+      expect(await asyncFeatureStore.all(VersionedDataKinds.Segments)).toEqual({});
+    },
+  );
+
+  it.each([['yml'], ['yaml']])('uses the yaml parser when specified %s', async (ext) => {
+    const yamlParser = jest.fn(() => JSON.parse(allPropertiesJson));
+    const fileName = `yamlfile.${ext}`;
+    await createFileDataSource(
+      true,
+      [{ path: fileName, data: 'the data' }],
+      undefined,
+      undefined,
+      yamlParser,
+    );
+
+    expect(mockErrorHandler).not.toBeCalled();
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(sorted(Object.keys(flags))).toEqual([flag1Key, flag2Key]);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(segments).toEqual({ seg1: segment1 });
+    expect(filesystem.readFile).toHaveBeenCalledTimes(1);
+    expect(yamlParser).toHaveBeenCalledWith('the data');
   });
 });

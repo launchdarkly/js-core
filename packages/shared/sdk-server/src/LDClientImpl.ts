@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 /* eslint-disable class-methods-use-this */
+import * as process from 'process';
+
 import {
   ClientContext,
   Context,
@@ -9,20 +11,21 @@ import {
   LDContext,
   LDEvaluationDetail,
   LDLogger,
+  LDPollingError,
+  LDStreamingError,
   Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, LDFlagsState, LDFlagsStateOptions, LDOptions, LDStreamProcessor } from './api';
+import { LDClient, LDFlagsState, LDFlagsStateOptions, LDOptions } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import ClientMessages from './ClientMessages';
+import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
-import NullUpdateProcessor from './data_sources/NullUpdateProcessor';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
-import StreamingProcessor from './data_sources/StreamingProcessor';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allSeriesAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
@@ -64,7 +67,7 @@ export default class LDClientImpl implements LDClient {
 
   private featureStore: AsyncStoreFacade;
 
-  private updateProcessor: LDStreamProcessor;
+  private updateProcessor?: subsystem.LDStreamProcessor;
 
   private eventFactoryDefault = new EventFactory(false);
 
@@ -115,6 +118,7 @@ export default class LDClientImpl implements LDClient {
 
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options);
+
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
     }
@@ -133,29 +137,6 @@ export default class LDClientImpl implements LDClient {
       );
     }
 
-    const makeDefaultProcessor = () =>
-      config.stream
-        ? new StreamingProcessor(
-            sdkKey,
-            config,
-            this.platform.requests,
-            this.platform.info,
-            dataSourceUpdates,
-            this.diagnosticsManager,
-          )
-        : new PollingProcessor(
-            config,
-            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
-            dataSourceUpdates,
-          );
-
-    if (config.offline || config.useLdd) {
-      this.updateProcessor = new NullUpdateProcessor();
-    } else {
-      this.updateProcessor =
-        config.updateProcessorFactory?.(clientContext, dataSourceUpdates) ?? makeDefaultProcessor();
-    }
-
     if (!config.sendEvents || config.offline) {
       this.eventProcessor = new internal.NullEventProcessor();
     } else {
@@ -168,7 +149,6 @@ export default class LDClientImpl implements LDClient {
     }
 
     const asyncFacade = new AsyncStoreFacade(featureStore);
-
     this.featureStore = asyncFacade;
 
     const manager = new BigSegmentsManager(
@@ -195,25 +175,44 @@ export default class LDClientImpl implements LDClient {
     };
     this.evaluator = new Evaluator(this.platform, queries);
 
-    this.updateProcessor.start((err) => {
-      if (err) {
-        let error;
-        if ((err.status && err.status === 401) || (err.code && err.code === 401)) {
-          error = new Error('Authentication failed. Double check your SDK key.');
-        } else {
-          error = err;
-        }
-
-        this.onError(error);
-        this.onFailed(error);
-        this.initReject?.(error);
-        this.initState = InitState.Failed;
-      } else if (!this.initialized()) {
-        this.initState = InitState.Initialized;
-        this.initResolve?.(this);
-        this.onReady();
-      }
+    const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
+      put: () => this.initSuccess(),
     });
+    const makeDefaultProcessor = () =>
+      config.stream
+        ? new internal.StreamingProcessor(
+            sdkKey,
+            clientContext,
+            listeners,
+            this.diagnosticsManager,
+            (e) => this.dataSourceErrorHandler(e),
+            this.config.streamInitialReconnectDelay,
+          )
+        : new PollingProcessor(
+            config,
+            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+            dataSourceUpdates,
+            () => this.initSuccess(),
+            (e) => this.dataSourceErrorHandler(e),
+          );
+
+    if (!(config.offline || config.useLdd)) {
+      this.updateProcessor =
+        config.updateProcessorFactory?.(
+          clientContext,
+          dataSourceUpdates,
+          () => this.initSuccess(),
+          (e) => this.dataSourceErrorHandler(e),
+        ) ?? makeDefaultProcessor();
+    }
+
+    if (this.updateProcessor) {
+      this.updateProcessor.start();
+    } else {
+      // Deferring the start callback should allow client construction to complete before we start
+      // emitting events. Allowing the client an opportunity to register events.
+      setTimeout(() => this.initSuccess(), 0);
+    }
   }
 
   initialized(): boolean {
@@ -348,7 +347,7 @@ export default class LDClientImpl implements LDClient {
 
   close(): void {
     this.eventProcessor.close();
-    this.updateProcessor.close();
+    this.updateProcessor?.close();
     this.featureStore.close();
     this.bigSegmentsManager.close();
   }
@@ -452,5 +451,28 @@ export default class LDClientImpl implements LDClient {
       return EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue);
     }
     return this.variationInternal(flagKey, context, defaultValue, eventFactory);
+  }
+
+  private dataSourceErrorHandler(e: LDStreamingError | LDPollingError) {
+    const error =
+      e instanceof LDStreamingError && e.code === 401
+        ? new Error('Authentication failed. Double check your SDK key.')
+        : e;
+
+    this.onError(error);
+    this.onFailed(error);
+
+    if (!this.initialized()) {
+      this.initState = InitState.Failed;
+      this.initReject?.(error);
+    }
+  }
+
+  private initSuccess() {
+    if (!this.initialized()) {
+      this.initState = InitState.Initialized;
+      this.initResolve?.(this);
+      this.onReady();
+    }
   }
 }

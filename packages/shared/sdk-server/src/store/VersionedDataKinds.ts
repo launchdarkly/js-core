@@ -19,4 +19,10 @@ export default class VersionedDataKinds {
     streamApiPath: '/segments/',
     requestPath: '/sdk/latest-segments/',
   };
+
+  static getKeyFromPath(kind: VersionedDataKind, path: string): string | undefined {
+    return path.startsWith(kind.streamApiPath)
+      ? path.substring(kind.streamApiPath.length)
+      : undefined;
+  }
 }

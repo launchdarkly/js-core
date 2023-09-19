@@ -12,13 +12,6 @@ export interface LDServiceEndpoints {
  * The most basic properties of the SDK client that are available to all SDK component factories.
  */
 export interface LDBasicConfiguration {
-  logger?: LDLogger;
-
-  /**
-   * True if the SDK was configured to be completely offline.
-   */
-  offline?: boolean;
-
   /**
    * The configured SDK key.
    */
@@ -28,6 +21,15 @@ export interface LDBasicConfiguration {
    * Defines the base service URIs used by SDK components.
    */
   serviceEndpoints: LDServiceEndpoints;
+
+  /**
+   * True if the SDK was configured to be completely offline.
+   */
+  offline?: boolean;
+
+  logger?: LDLogger;
+
+  tags?: { value?: string };
 }
 
 /**

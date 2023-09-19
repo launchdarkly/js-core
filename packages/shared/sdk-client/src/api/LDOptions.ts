@@ -154,13 +154,15 @@ export default interface LDOptions {
   flushInterval?: number;
 
   /**
-   * How long (in seconds) to wait after a failure of the stream connection before trying to
-   * reconnect.
+   * Sets the initial reconnect delay for the streaming connection, in seconds.
    *
-   * This only applies if streaming has been enabled by setting {@link streaming} to true or
-   * subscribing to `"change"` events. The default is 1s.
+   * The streaming service uses a backoff algorithm (with jitter) every time the connection needs
+   * to be reestablished. The delay for the first reconnection will start near this value, and then
+   * increase exponentially for any subsequent connection failures.
+   *
+   * The default value is 1.
    */
-  streamReconnectDelay?: number;
+  streamInitialReconnectDelay?: number;
 
   /**
    * Set to true to opt out of sending diagnostics data.

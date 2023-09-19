@@ -24,7 +24,7 @@ export default class Configuration {
   public readonly capacity = 100;
   public readonly diagnosticRecordingInterval = 900;
   public readonly flushInterval = 2;
-  public readonly streamReconnectDelay = 1;
+  public readonly streamInitialReconnectDelay = 1;
 
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;

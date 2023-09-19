@@ -23,12 +23,12 @@ export function reviver(this: any, key: string, value: any): any {
   return value;
 }
 
-interface FlagsAndSegments {
+export interface FlagsAndSegments {
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
 }
 
-interface AllData {
+export interface AllData {
   data: FlagsAndSegments;
 }
 
@@ -54,7 +54,7 @@ export function replacer(this: any, key: string, value: any): any {
   return value;
 }
 
-interface DeleteData extends Omit<VersionedData, 'key'> {
+export interface DeleteData extends Omit<VersionedData, 'key'> {
   path: string;
   kind?: VersionedDataKind;
 }
@@ -62,7 +62,7 @@ interface DeleteData extends Omit<VersionedData, 'key'> {
 type VersionedFlag = VersionedData & Flag;
 type VersionedSegment = VersionedData & Segment;
 
-interface PatchData {
+export interface PatchData {
   path: string;
   data: VersionedFlag | VersionedSegment;
   kind?: VersionedDataKind;
