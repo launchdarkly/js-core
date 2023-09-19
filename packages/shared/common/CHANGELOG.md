@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [1.1.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v1.0.3...js-sdk-common-v1.1.0) (2023-08-14)
+
+
+### Features
+
+* Allow specifying the user agent per-sdk implementation. ([#226](https://github.com/launchdarkly/js-core/issues/226)) ([e57716f](https://github.com/launchdarkly/js-core/commit/e57716f3f6f0ba8568e32b0937903ca46e5470ad))
+
 ## [1.0.3](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v1.0.2...js-sdk-common-v1.0.3) (2023-08-10)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common-edge",
-  "version": "1.0.8",
+  "version": "1.0.13",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server-edge",
   "repository": {
     "type": "git",
@@ -25,7 +25,6 @@
     "dist"
   ],
   "scripts": {
-    "doc": "../../../scripts/build-doc.sh .",
     "build": "../../../scripts/build-package.sh",
     "tsw": "yarn tsc --watch",
     "clean": "rimraf dist",
@@ -37,7 +36,7 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "1.0.8",
+    "@launchdarkly/js-server-sdk-common": "1.2.3",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
@@ -59,7 +58,7 @@
     "prettier": "^3.0.0",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.1.0",
-    "typedoc": "0.23.26",
-    "typescript": "^5.1.6"
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
   }
 }

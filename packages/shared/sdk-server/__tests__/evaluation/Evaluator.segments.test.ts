@@ -36,12 +36,14 @@ class TestQueries implements Queries {
     },
   ) {}
 
-  async getFlag(key: string): Promise<Flag | undefined> {
-    return this.data.flags?.find((flag) => flag.key === key);
+  getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
+    const res = this.data.flags?.find((flag) => flag.key === key);
+    cb(res);
   }
 
-  async getSegment(key: string): Promise<Segment | undefined> {
-    return this.data.segments?.find((segment) => segment.key === key);
+  getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
+    const res = this.data.segments?.find((segment) => segment.key === key);
+    cb(res);
   }
 
   getBigSegmentsMembership(
@@ -116,6 +118,20 @@ describe('when evaluating user equivalent contexts for segments', () => {
     const user = { key: 'bar' };
     const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
     expect(res.detail.value).toBe(false);
+  });
+
+  it('can negate a segment match op', async () => {
+    const segment = {
+      key: 'test',
+      included: ['foo'],
+      version: 1,
+    };
+    const evaluator = new Evaluator(basicPlatform, new TestQueries({ segments: [segment] }));
+    const flag = makeFlagWithSegmentMatch(segment);
+    flag.rules[0].clauses![0].negate = true;
+    const user = { key: 'bar' };
+    const res = await evaluator.evaluate(flag, Context.fromLDContext(user));
+    expect(res.detail.value).toBe(true);
   });
 
   it.each([basicUser, basicSingleKindUser, basicMultiKindUser])(

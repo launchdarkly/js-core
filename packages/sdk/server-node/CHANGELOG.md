@@ -2,6 +2,68 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [8.2.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.3...node-server-sdk-v8.2.4) (2023-09-06)
+
+### Bug Fixes
+
+* Use clientSideAvailability instead of clientSide for filtering client side flags. ([#270](https://github.com/launchdarkly/js-core/issues/270)) ([2702342](https://github.com/launchdarkly/js-core/commit/27023429d36986466cda46aa4d95eb01c10cd455))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.2 to 1.2.3
+
+## [8.2.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.2...node-server-sdk-v8.2.3) (2023-08-28)
+
+## Fixes:
+* Upgraded to `launchdarkly-eventsource` version `2.0.1`. This includes a fix for the buffer pre-allocation algorithm and handling partial messages.
+* Ensure that flag `update` events are dispatched after the SDK `ready` event.
+* Fix an issue that could cause the SDK log warnings about usage before initialization after an error handling a flag update.
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.1 to 1.2.2
+
+## [8.2.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.1...node-server-sdk-v8.2.2) (2023-08-24)
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.0 to 1.2.1
+
+## [8.2.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.0...node-server-sdk-v8.2.1) (2023-08-14)
+
+Updated common dependency includes performance improvements.
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.1.0 to 1.2.0
+
+## [8.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.1.2...node-server-sdk-v8.2.0) (2023-08-14)
+
+
+### Features
+
+* Allow specifying the user agent per-sdk implementation. ([#226](https://github.com/launchdarkly/js-core/issues/226)) ([e57716f](https://github.com/launchdarkly/js-core/commit/e57716f3f6f0ba8568e32b0937903ca46e5470ad))
+
+### Bug Fixes
+
+* Allow for negation of segment match clauses. ([#237](https://github.com/launchdarkly/js-core/issues/237)) ([d8e469a](https://github.com/launchdarkly/js-core/commit/d8e469a5e58b90c791fbbee80f7c0fc447c4e42f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.8 to 1.1.0
+
 ## [8.1.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.1.1...node-server-sdk-v8.1.2) (2023-08-10)
 
 

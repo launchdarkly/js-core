@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk-redis",
-  "version": "3.0.6",
+  "version": "3.0.11",
   "description": "Redis-backed feature store for the LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/store/node-server-sdk-redis",
   "repository": {
@@ -24,8 +24,7 @@
     "test": "npx jest --ci --runInBand",
     "build": "npx tsc",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint --fix",
-    "doc": "../../../scripts/build-doc.sh ."
+    "lint:fix": "yarn run lint --fix"
   },
   "dependencies": {
     "ioredis": "^5.3.2"
@@ -34,7 +33,7 @@
     "@launchdarkly/node-server-sdk": "8.x"
   },
   "devDependencies": {
-    "@launchdarkly/node-server-sdk": "8.1.2",
+    "@launchdarkly/node-server-sdk": "8.2.4",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.1.0",
@@ -49,7 +48,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "ts-jest": "^29.0.5",
-    "typedoc": "0.23.26",
-    "typescript": "^5.1.6"
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
   }
 }

@@ -41,13 +41,13 @@ npm install ioredis --save
 3. Import the package:
 
 ```typescript
-import { RedisFeatureStoreFactory } = from '@launchdarkly/node-server-sdk-redis';
+import { RedisFeatureStore } = from '@launchdarkly/node-server-sdk-redis';
 ```
 
 4. When configuring your SDK client, add the Redis feature store:
 
 ```typescript
-const storeFactory = RedisFeatureStoreFactory();
+const storeFactory = RedisFeatureStore();
 const config = { featureStore: storeFactory };
 const client = LaunchDarkly.init('YOUR SDK KEY', config);
 ```
