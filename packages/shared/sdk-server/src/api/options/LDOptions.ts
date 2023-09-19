@@ -1,7 +1,6 @@
-import { LDClientContext, LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, LDLogger, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
-import { LDDataSourceUpdates, LDStreamProcessor } from '../subsystems';
-import { LDFeatureStore } from '../subsystems/LDFeatureStore';
+import { LDDataSourceUpdates, LDFeatureStore } from '../subsystems';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
@@ -93,7 +92,9 @@ export interface LDOptions {
     | ((
         clientContext: LDClientContext,
         dataSourceUpdates: LDDataSourceUpdates,
-      ) => LDStreamProcessor);
+        initSuccessHandler: VoidFunction,
+        errorHandler?: (e: Error) => void,
+      ) => subsystem.LDStreamProcessor);
 
   /**
    * The interval in between flushes of the analytics events queue, in seconds.

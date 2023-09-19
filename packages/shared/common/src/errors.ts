@@ -2,6 +2,13 @@
 // more complex, then they could be independent files.
 /* eslint-disable max-classes-per-file */
 
+export class LDFileDataSourceError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LaunchDarklyFileDataSourceError';
+  }
+}
+
 export class LDPollingError extends Error {
   constructor(message: string) {
     super(message);

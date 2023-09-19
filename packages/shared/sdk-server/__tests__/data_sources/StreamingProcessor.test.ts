@@ -1,302 +1,211 @@
-import {
-  defaultHeaders,
-  EventSource,
-  EventSourceInitDict,
-  Info,
-  mocks,
-  Options,
-  PlatformData,
-  Requests,
-  Response,
-  SdkData,
-} from '@launchdarkly/js-sdk-common';
-
-import promisify from '../../src/async/promisify';
+// FOR REVIEW ONLY: this has been moved to shared/common and is only here for PR
+// review. Delete when review is finished.
+import { EventName, ProcessStreamResponse } from '../../api';
+import { LDStreamProcessor } from '../../api/subsystem';
+import { LDStreamingError } from '../../errors';
 import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
-import DiagnosticsManager from '../../src/events/DiagnosticsManager';
-import NullEventSource from '../../src/events/NullEventSource';
-import Configuration from '../../src/options/Configuration';
-import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
-import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import TestLogger, { LogLevel } from '../Logger';
+import { defaultHeaders } from '../../utils';
+import { DiagnosticsManager } from '../diagnostics';
+import { basicPlatform, clientContext, logger } from '../mocks';
 
+const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
-
-const info: Info = {
-  platformData(): PlatformData {
-    return {};
-  },
-  sdkData(): SdkData {
-    const sdkData: SdkData = {
-      version: '2.2.2',
-    };
-    return sdkData;
+const {
+  basicConfiguration: { serviceEndpoints, tags },
+  platform: { info },
+} = clientContext;
+const event = {
+  data: {
+    flags: {
+      flagkey: { key: 'flagkey', version: 1 },
+    },
+    segments: {
+      segkey: { key: 'segkey', version: 2 },
+    },
   },
 };
 
-function createRequests(cb: (es: NullEventSource) => void): Requests {
-  return {
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    fetch(url: string, options?: Options | undefined): Promise<Response> {
-      throw new Error('Function not implemented.');
-    },
-    createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-      const es = new NullEventSource(url, eventSourceInitDict);
-      cb(es);
-      return es;
-    },
-  };
-}
+const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
+  streamUri,
+  options,
+  onclose: jest.fn(),
+  addEventListener: jest.fn(),
+  close: jest.fn(),
+});
 
 describe('given a stream processor with mock event source', () => {
-  let es: NullEventSource;
-  let requests: Requests;
-  let featureStore: InMemoryFeatureStore;
-  let streamProcessor: StreamingProcessor;
-  let config: Configuration;
-  let asyncStore: AsyncStoreFacade;
-  let logger: TestLogger;
+  let streamingProcessor: LDStreamProcessor;
   let diagnosticsManager: DiagnosticsManager;
+  let listeners: Map<EventName, ProcessStreamResponse>;
+  let mockEventSource: any;
+  let mockListener: ProcessStreamResponse;
+  let mockErrorHandler: jest.Mock;
+  let simulatePutEvent: (e?: any) => void;
+  let simulateError: (e: { status: number; message: string }) => boolean;
+
+  beforeAll(() => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(dateNowString));
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
 
   beforeEach(() => {
-    requests = createRequests((nes) => {
-      es = nes;
-    });
-    featureStore = new InMemoryFeatureStore();
-    asyncStore = new AsyncStoreFacade(featureStore);
-    logger = new TestLogger();
-    config = new Configuration({
-      streamUri: 'http://test',
-      baseUri: 'http://base.test',
-      eventsUri: 'http://events.test',
-      featureStore,
-      logger,
-    });
-    diagnosticsManager = new DiagnosticsManager(
-      'sdk-key',
-      config,
-      mocks.basicPlatform,
-      featureStore,
-    );
-    streamProcessor = new StreamingProcessor(
+    mockErrorHandler = jest.fn();
+    clientContext.basicConfiguration.logger = logger;
+
+    basicPlatform.requests = {
+      createEventSource: jest.fn((streamUri: string, options: any) => {
+        mockEventSource = createMockEventSource(streamUri, options);
+        return mockEventSource;
+      }),
+    } as any;
+    simulatePutEvent = (e: any = event) => {
+      mockEventSource.addEventListener.mock.calls[0][1](e);
+    };
+    simulateError = (e: { status: number; message: string }): boolean =>
+      mockEventSource.options.errorFilter(e);
+
+    listeners = new Map();
+    mockListener = {
+      deserializeData: jest.fn((data) => data),
+      processJson: jest.fn(),
+    };
+    listeners.set('put', mockListener);
+    listeners.set('patch', mockListener);
+
+    diagnosticsManager = new DiagnosticsManager(sdkKey, basicPlatform, {});
+    streamingProcessor = new StreamingProcessor(
       sdkKey,
-      config,
-      requests,
-      info,
-      featureStore,
+      clientContext,
+      listeners,
       diagnosticsManager,
+      mockErrorHandler,
+    );
+
+    jest.spyOn(streamingProcessor, 'stop');
+    streamingProcessor.start();
+  });
+
+  afterEach(() => {
+    streamingProcessor.close();
+    jest.resetAllMocks();
+  });
+
+  it('uses expected uri', () => {
+    expect(basicPlatform.requests.createEventSource).toBeCalledWith(
+      `${serviceEndpoints.streaming}/all`,
+      {
+        errorFilter: expect.any(Function),
+        headers: defaultHeaders(sdkKey, info, tags),
+        initialRetryDelayMillis: 1000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
     );
   });
 
-  async function promiseStart() {
-    return promisify((cb) => streamProcessor.start(cb));
-  }
-
-  function expectJsonError(err: { message?: string }) {
-    expect(err).toBeDefined();
-    expect(err.message).toEqual('Malformed JSON data in event stream');
-    logger.expectMessages([
-      {
-        level: LogLevel.Error,
-        matches: /Stream received invalid data in/,
-      },
-    ]);
-  }
-
-  it('uses expected URL', () => {
-    streamProcessor.start();
-    expect(es.url).toEqual(`${config.serviceEndpoints.streaming}/all`);
+  it('adds listeners', () => {
+    expect(mockEventSource.addEventListener).toHaveBeenNthCalledWith(
+      1,
+      'put',
+      expect.any(Function),
+    );
+    expect(mockEventSource.addEventListener).toHaveBeenNthCalledWith(
+      2,
+      'patch',
+      expect.any(Function),
+    );
   });
 
-  it('sets expected headers', () => {
-    streamProcessor.start();
-    expect(es.options.headers).toMatchObject(defaultHeaders(sdkKey, info, config.tags));
+  it('executes listeners', () => {
+    simulatePutEvent();
+    const patchHandler = mockEventSource.addEventListener.mock.calls[1][1];
+    patchHandler(event);
+
+    expect(mockListener.deserializeData).toBeCalledTimes(2);
+    expect(mockListener.processJson).toBeCalledTimes(2);
   });
 
-  describe('when putting a message', () => {
-    const putData = {
-      data: {
-        flags: {
-          flagkey: { key: 'flagkey', version: 1 },
-        },
-        segments: {
-          segkey: { key: 'segkey', version: 2 },
-        },
-      },
-    };
+  it('passes error to callback if json data is malformed', async () => {
+    (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
+    simulatePutEvent();
 
-    it('causes flags and segments to be stored', async () => {
-      streamProcessor.start();
-      es.handlers.put({ data: JSON.stringify(putData) });
-      const initialized = await asyncStore.initialized();
-      expect(initialized).toBeTruthy();
-
-      const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-      expect(f?.version).toEqual(1);
-      const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-      expect(s?.version).toEqual(2);
-    });
-
-    it('calls initialization callback', async () => {
-      const promise = promiseStart();
-      es.handlers.put({ data: JSON.stringify(putData) });
-      expect(await promise).toBeUndefined();
-    });
-
-    it('passes error to callback if data is invalid', async () => {
-      streamProcessor.start();
-
-      const promise = promiseStart();
-      es.handlers.put({ data: '{not-good' });
-      const result = await promise;
-      expectJsonError(result as any);
-    });
-
-    it('creates a stream init event', async () => {
-      const startTime = Date.now();
-      streamProcessor.start();
-      es.handlers.put({ data: JSON.stringify(putData) });
-      await asyncStore.initialized();
-
-      const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
-      expect(event.streamInits.length).toEqual(1);
-      const si = event.streamInits[0];
-      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
-      expect(si.failed).toBeFalsy();
-      expect(si.durationMillis).toBeGreaterThanOrEqual(0);
-    });
+    expect(logger.error).toBeCalledWith(expect.stringMatching(/invalid data in "put"/));
+    expect(logger.debug).toBeCalledWith(expect.stringMatching(/invalid json/i));
+    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/malformed json/i);
   });
 
-  describe('when patching a message', () => {
-    it('updates a patched flag', async () => {
-      streamProcessor.start();
-      const patchData = {
-        path: '/flags/flagkey',
-        data: { key: 'flagkey', version: 1 },
-      };
+  it('calls error handler if event.data prop is missing', async () => {
+    simulatePutEvent({ flags: {} });
 
-      es.handlers.patch({ data: JSON.stringify(patchData) });
-
-      const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-      expect(f!.version).toEqual(1);
-    });
-
-    it('updates a patched segment', async () => {
-      streamProcessor.start();
-      const patchData = {
-        path: '/segments/segkey',
-        data: { key: 'segkey', version: 1 },
-      };
-
-      es.handlers.patch({ data: JSON.stringify(patchData) });
-
-      const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-      expect(s!.version).toEqual(1);
-    });
-
-    it('passes error to callback if data is invalid', async () => {
-      streamProcessor.start();
-
-      const promise = promiseStart();
-      es.handlers.patch({ data: '{not-good' });
-      const result = await promise;
-      expectJsonError(result as any);
-    });
+    expect(mockListener.deserializeData).not.toBeCalled();
+    expect(mockListener.processJson).not.toBeCalled();
+    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/unexpected payload/i);
   });
 
-  describe('when deleting a message', () => {
-    it('deletes a flag', async () => {
-      streamProcessor.start();
-      const flag = { key: 'flagkey', version: 1 };
-      await asyncStore.upsert(VersionedDataKinds.Features, flag);
-      const f = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-      expect(f!.version).toEqual(1);
+  it.only('closes and stops', async () => {
+    streamingProcessor.close();
 
-      const deleteData = { path: `/flags/${flag.key}`, version: 2 };
-
-      es.handlers.delete({ data: JSON.stringify(deleteData) });
-
-      const f2 = await asyncStore.get(VersionedDataKinds.Features, 'flagkey');
-      expect(f2).toBe(null);
-    });
-
-    it('deletes a segment', async () => {
-      streamProcessor.start();
-      const segment = { key: 'segkey', version: 1 };
-      await asyncStore.upsert(VersionedDataKinds.Segments, segment);
-      const s = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-      expect(s!.version).toEqual(1);
-
-      const deleteData = { path: `/segments/${segment.key}`, version: 2 };
-
-      es.handlers.delete({ data: JSON.stringify(deleteData) });
-
-      const s2 = await asyncStore.get(VersionedDataKinds.Segments, 'segkey');
-      expect(s2).toBe(null);
-    });
-
-    it('passes error to callback if data is invalid', async () => {
-      streamProcessor.start();
-
-      const promise = promiseStart();
-      es.handlers.delete({ data: '{not-good' });
-      const result = await promise;
-      expectJsonError(result as any);
-    });
+    expect(streamingProcessor.stop).toBeCalled();
+    expect(mockEventSource.close).toBeCalled();
+    // @ts-ignore
+    expect(streamingProcessor.eventSource).toBeUndefined();
   });
 
-  describe.each([400, 408, 429, 500, 503, undefined])('given recoverable http errors', (status) => {
-    const err = {
-      status,
-      message: 'sorry',
-    };
+  it('creates a stream init event', async () => {
+    const startTime = Date.now();
+    simulatePutEvent();
 
+    const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+    expect(diagnosticEvent.streamInits.length).toEqual(1);
+    const si = diagnosticEvent.streamInits[0];
+    expect(si.timestamp).toEqual(startTime);
+    expect(si.failed).toBeFalsy();
+    expect(si.durationMillis).toBeGreaterThanOrEqual(0);
+  });
+
+  describe.each([400, 408, 429, 500, 503])('given recoverable http errors', (status) => {
     it(`continues retrying after error: ${status}`, () => {
       const startTime = Date.now();
-      streamProcessor.start();
-      es.simulateError(err as any);
+      const testError = { status, message: 'retry. recoverable.' };
+      const willRetry = simulateError(testError);
 
-      logger.expectMessages([
-        {
-          level: LogLevel.Warn,
-          matches: status
-            ? new RegExp(`error ${err.status}.*will retry`)
-            : /Received I\/O error \(sorry\) for streaming request - will retry/,
-        },
-      ]);
+      expect(willRetry).toBeTruthy();
+      expect(mockErrorHandler).not.toBeCalled();
+      expect(logger.warn).toBeCalledWith(
+        expect.stringMatching(new RegExp(`${status}.*will retry`)),
+      );
 
-      const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
-      expect(event.streamInits.length).toEqual(1);
-      const si = event.streamInits[0];
-      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+      const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+      expect(diagnosticEvent.streamInits.length).toEqual(1);
+      const si = diagnosticEvent.streamInits[0];
+      expect(si.timestamp).toEqual(startTime);
       expect(si.failed).toBeTruthy();
       expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });
   });
 
-  describe.each([401, 403])('given unrecoverable http errors', (status) => {
-    const startTime = Date.now();
-    const err = {
-      status,
-      message: 'sorry',
-    };
-
+  describe.each([401, 403])('given irrecoverable http errors', (status) => {
     it(`stops retrying after error: ${status}`, () => {
-      streamProcessor.start();
-      es.simulateError(err as any);
+      const startTime = Date.now();
+      const testError = { status, message: 'stopping. irrecoverable.' };
+      const willRetry = simulateError(testError);
 
-      logger.expectMessages([
-        {
-          level: LogLevel.Error,
-          matches: /Received error.*giving up permanently/,
-        },
-      ]);
+      expect(willRetry).toBeFalsy();
+      expect(mockErrorHandler).toBeCalledWith(
+        new LDStreamingError(testError.message, testError.status),
+      );
+      expect(logger.error).toBeCalledWith(
+        expect.stringMatching(new RegExp(`${status}.*permanently`)),
+      );
 
-      const event = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
-      expect(event.streamInits.length).toEqual(1);
-      const si = event.streamInits[0];
-      expect(si.timestamp).toBeGreaterThanOrEqual(startTime);
+      const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
+      expect(diagnosticEvent.streamInits.length).toEqual(1);
+      const si = diagnosticEvent.streamInits[0];
+      expect(si.timestamp).toEqual(startTime);
       expect(si.failed).toBeTruthy();
       expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });

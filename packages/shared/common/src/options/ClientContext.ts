@@ -25,6 +25,11 @@ interface BasicConfiguration {
    * Defines the base service URIs used by SDK components.
    */
   serviceEndpoints: ServiceEndpoints;
+
+  /**
+   * Sets the initial reconnect delay for the streaming connection, in seconds.
+   */
+  streamInitialReconnectDelay?: number;
 }
 
 /**

@@ -4,7 +4,10 @@ import basicPlatform from './platform';
 
 const clientContext = new ClientContext(
   'testSdkKey',
-  { serviceEndpoints: { streaming: '', polling: '', events: '' }, logger: createSafeLogger() },
+  {
+    serviceEndpoints: { streaming: 'https://mockstream.ld.com', polling: '', events: '' },
+    logger: createSafeLogger(),
+  },
   basicPlatform,
 );
 

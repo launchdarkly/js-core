@@ -5,6 +5,7 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
+import { DiagnosticsManager } from '../diagnostics';
 import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify } from './guards';
@@ -66,15 +67,6 @@ export interface EventProcessorOptions {
   diagnosticRecordingInterval: number;
 }
 
-interface LDDiagnosticsManager {
-  createInitEvent(): DiagnosticEvent;
-  createStatsEventAndReset(
-    droppedEvents: number,
-    deduplicatedUsers: number,
-    eventsInLastBatch: number,
-  ): DiagnosticEvent;
-}
-
 export default class EventProcessor implements LDEventProcessor {
   private eventSender: EventSender;
   private summarizer = new EventSummarizer();
@@ -99,7 +91,7 @@ export default class EventProcessor implements LDEventProcessor {
     config: EventProcessorOptions,
     clientContext: ClientContext,
     private readonly contextDeduplicator?: LDContextDeduplicator,
-    private readonly diagnosticsManager?: LDDiagnosticsManager,
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;

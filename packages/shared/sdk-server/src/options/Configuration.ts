@@ -5,17 +5,13 @@ import {
   NumberWithMinimum,
   OptionMessages,
   ServiceEndpoints,
+  subsystem,
   TypeValidator,
   TypeValidators,
+  VoidFunction,
 } from '@launchdarkly/js-sdk-common';
 
-import {
-  LDBigSegmentsOptions,
-  LDOptions,
-  LDProxyOptions,
-  LDStreamProcessor,
-  LDTLSOptions,
-} from '../api';
+import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
@@ -65,7 +61,7 @@ const validations: Record<string, TypeValidator> = {
 export const defaultValues: ValidatedOptions = {
   baseUri: 'https://sdk.launchdarkly.com',
   streamUri: 'https://stream.launchdarkly.com',
-  eventsUri: 'https://events.launchdarkly.com',
+  eventsUri: ServiceEndpoints.DEFAULT_EVENTS,
   stream: true,
   streamInitialReconnectDelay: 1,
   sendEvents: true,
@@ -205,7 +201,9 @@ export default class Configuration {
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
     dataSourceUpdates: LDDataSourceUpdates,
-  ) => LDStreamProcessor;
+    initSuccessHandler: VoidFunction,
+    errorHandler?: (e: Error) => void,
+  ) => subsystem.LDStreamProcessor;
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 

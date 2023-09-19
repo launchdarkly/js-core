@@ -1,6 +1,6 @@
 import { Info, PlatformData, SdkData } from '../api';
 import { ApplicationTags } from '../options';
-import { defaultHeaders } from './http';
+import { defaultHeaders, httpErrorMessage } from './http';
 
 describe('defaultHeaders', () => {
   const makeInfo = (
@@ -63,5 +63,57 @@ describe('defaultHeaders', () => {
     expect(h).toMatchObject({
       'x-launchdarkly-tags': 'application-id/test-application application-version/test-version',
     });
+  });
+});
+
+describe('httpErrorMessage', () => {
+  test('I/O error', () => {
+    const error = { status: undefined, message: 'no status' };
+    const context = 'fake error context message';
+    const retryMessage = undefined;
+
+    // @ts-ignore
+    const result = httpErrorMessage(error, context, retryMessage);
+
+    expect(result).toBe(
+      'Received I/O error (no status) for fake error context message - giving up permanently',
+    );
+  });
+
+  test('invalid sdk key', () => {
+    const error = { status: 401, message: 'denied' };
+    const context = 'fake error context message';
+    const retryMessage = undefined;
+
+    // @ts-ignore
+    const result = httpErrorMessage(error, context, retryMessage);
+
+    expect(result).toBe(
+      'Received error 401 (invalid SDK key) for fake error context message - giving up permanently',
+    );
+  });
+
+  test('non-401 errors', () => {
+    const error = { status: 500, message: 'server error' };
+    const context = 'fake error context message';
+    const retryMessage = undefined;
+
+    // @ts-ignore
+    const result = httpErrorMessage(error, context, retryMessage);
+
+    expect(result).toBe(
+      'Received error 500 for fake error context message - giving up permanently',
+    );
+  });
+
+  test('with retry message', () => {
+    const error = { status: 500, message: 'denied' };
+    const context = 'fake error context message';
+    const retryMessage = 'will retry';
+
+    // @ts-ignore
+    const result = httpErrorMessage(error, context, retryMessage);
+
+    expect(result).toBe('Received error 500 for fake error context message - will retry');
   });
 });

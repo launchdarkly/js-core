@@ -16,12 +16,15 @@ export function defaultHeaders(sdkKey: string, info: Info, tags?: ApplicationTag
     'user-agent': `${userAgentBase ?? 'NodeJSClient'}/${version}`,
   };
 
-  let wrapper = wrapperName;
-  if (wrapperName && wrapperVersion) {
-    wrapper = `${wrapperName}/${wrapperVersion}`;
+  if (wrapperName) {
+    headers['x-launchdarkly-wrapper'] = wrapperVersion
+      ? `${wrapperName}/${wrapperVersion}`
+      : wrapperName;
   }
-  headers['x-launchdarkly-wrapper'] = wrapper;
-  headers['x-launchdarkly-tags'] = tags?.value;
+
+  if (tags?.value) {
+    headers['x-launchdarkly-tags'] = tags.value;
+  }
 
   return headers;
 }

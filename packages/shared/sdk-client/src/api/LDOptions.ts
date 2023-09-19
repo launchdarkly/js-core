@@ -133,14 +133,6 @@ export default interface LDOptions {
   privateAttributes?: Array<string>;
 
   /**
-   * Whether analytics events should be sent only when you call variation (true), or also when you
-   * call allFlags (false).
-   *
-   * By default, this is false (events will be sent in both cases).
-   */
-  sendEventsOnlyForVariation?: boolean;
-
-  /**
    * The capacity of the analytics events queue.
    *
    * The client buffers up to this many events in memory before flushing. If the capacity is exceeded
@@ -155,20 +147,22 @@ export default interface LDOptions {
   capacity?: number;
 
   /**
-   * The interval in between flushes of the analytics events queue, in milliseconds.
+   * The interval in between flushes of the analytics events queue, in seconds.
    *
-   * The default value is 2000ms.
+   * The default value is 2s.
    */
   flushInterval?: number;
 
   /**
-   * How long (in milliseconds) to wait after a failure of the stream connection before trying to
-   * reconnect.
+   * Sets the initial reconnect delay for the streaming connection, in seconds.
    *
-   * This only applies if streaming has been enabled by setting {@link streaming} to true or
-   * subscribing to `"change"` events. The default is 1000ms.
+   * The streaming service uses a backoff algorithm (with jitter) every time the connection needs
+   * to be reestablished. The delay for the first reconnection will start near this value, and then
+   * increase exponentially for any subsequent connection failures.
+   *
+   * The default value is 1.
    */
-  streamReconnectDelay?: number;
+  streamInitialReconnectDelay?: number;
 
   /**
    * Set to true to opt out of sending diagnostics data.
@@ -182,9 +176,9 @@ export default interface LDOptions {
   diagnosticOptOut?: boolean;
 
   /**
-   * The interval at which periodic diagnostic data is sent, in milliseconds.
+   * The interval at which periodic diagnostic data is sent, in seconds.
    *
-   * The default is 900000 (every 15 minutes) and the minimum value is 6000. See {@link diagnosticOptOut}
+   * The default is 900 (every 15 minutes) and the minimum value is 6. See {@link diagnosticOptOut}
    * for more information on the diagnostics data being sent.
    */
   diagnosticRecordingInterval?: number;
@@ -233,4 +227,12 @@ export default interface LDOptions {
    * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
    */
   inspectors?: LDInspection[];
+
+  /**
+   * The signed context key for Secure Mode.
+   *
+   * For more information, see the JavaScript SDK Reference Guide on
+   * [Secure mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
+   */
+  hash?: string;
 }

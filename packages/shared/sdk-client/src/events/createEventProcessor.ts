@@ -7,11 +7,14 @@ const createEventProcessor = (
   clientSideID: string,
   config: Configuration,
   platform: PlatformDom,
+  diagnosticsManager?: internal.DiagnosticsManager,
 ): subsystem.LDEventProcessor =>
   config.sendEvents
     ? new internal.EventProcessor(
         { ...config, eventsCapacity: config.capacity },
         new ClientContext(clientSideID, config, platform),
+        undefined,
+        diagnosticsManager,
       )
     : new internal.NullEventProcessor();
 
