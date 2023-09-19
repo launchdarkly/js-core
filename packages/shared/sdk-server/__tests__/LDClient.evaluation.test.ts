@@ -152,6 +152,29 @@ describe('given an LDClient with test data', () => {
       reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
     });
   });
+
+  it('evaluates and updates user targets from test data', async () => {
+    // This is a specific test case for a customer issue.
+    // It tests the combination of evaluation and test data functionality.
+    const userUuid = '1234';
+    const userContextObject = {
+      kind: 'user',
+      key: userUuid,
+    };
+
+    await td.update(
+      td.flag('my-feature-flag-1').variationForUser(userUuid, false).fallthroughVariation(false),
+    );
+    const valueA = await client.variation('my-feature-flag-1', userContextObject, 'default');
+    expect(valueA).toEqual(false);
+
+    await td.update(
+      td.flag('my-feature-flag-1').variationForUser(userUuid, true).fallthroughVariation(false),
+    );
+
+    const valueB = await client.variation('my-feature-flag-1', userContextObject, 'default');
+    expect(valueB).toEqual(true);
+  });
 });
 
 describe('given an offline client', () => {
