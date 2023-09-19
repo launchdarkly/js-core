@@ -15,7 +15,7 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, LDFlagsState, LDFlagsStateOptions, LDOptions } from './api';
+import { LDClient, LDFeatureStore, LDFlagsState, LDFlagsStateOptions, LDOptions } from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -40,6 +40,7 @@ import Configuration from './options/Configuration';
 import { AsyncStoreFacade } from './store';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
+const { NullEventProcessor } = internal;
 enum InitState {
   Initializing,
   Initialized,

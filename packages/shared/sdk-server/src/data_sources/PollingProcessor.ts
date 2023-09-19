@@ -57,10 +57,11 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
 
       this.logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
       if (err) {
-        if (err.status && !isHttpRecoverable(err.status)) {
+        const { status } = err;
+        if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
           this.logger?.error(message);
-          this.errorHandler?.(new LDPollingError(message));
+          this.errorHandler?.(new LDPollingError(message, status));
           // It is not recoverable, return and do not trigger another
           // poll.
           return;
