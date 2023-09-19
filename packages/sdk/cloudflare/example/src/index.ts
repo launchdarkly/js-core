@@ -4,7 +4,7 @@ export default {
   async fetch(request: Request, env: Bindings): Promise<Response> {
     const sdkKey = 'test-sdk-key';
     const flagKey = 'testFlag1';
-    const context = { kind: 'user', key: 'test-user-key-1', email: 'test@gmail.com' };
+    const context = { kind: 'user', key: 'test-user-key-1', email: 'test@gmaixl.com' };
 
     // start using ld
     const client = initLD(sdkKey, env.LD_KV);

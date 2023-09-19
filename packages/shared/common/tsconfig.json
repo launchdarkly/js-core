@@ -2,9 +2,9 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "target": "es2017",
+    "target": "ES2017",
     "lib": ["es6"],
-    "module": "commonjs",
+    "module": "NodeNext",
     "strict": true,
     "noImplicitOverride": true,
     // Needed for CommonJS modules: markdown-it, fs-extra
