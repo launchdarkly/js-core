@@ -3,8 +3,9 @@ import { LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
 import { DiagnosticsManager } from '../diagnostics';
 import { type StreamingErrorHandler } from '../stream';
+import j from './getJest';
 
-export const MockStreamingProcessor = jest.fn();
+export const MockStreamingProcessor = j.fn();
 
 export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
   MockStreamingProcessor.mockImplementation(
@@ -15,7 +16,7 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
       diagnosticsManager: DiagnosticsManager,
       errorHandler: StreamingErrorHandler,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      streamInitialReconnectDelay,
+      streamInitialReconnectDelay: number,
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {

@@ -1,8 +1,10 @@
+import j from './getJest';
+
 const logger = {
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
-  debug: jest.fn(),
+  error: j.fn(),
+  warn: j.fn(),
+  info: j.fn(),
+  debug: j.fn(),
 };
 
 export default logger;
