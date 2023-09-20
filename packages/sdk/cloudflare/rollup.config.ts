@@ -3,16 +3,25 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
-import copy from 'rollup-plugin-copy';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
 import filesize from 'rollup-plugin-filesize';
+import generatePackageJson from 'rollup-plugin-generate-package-json';
 
-const copyToDist = copy({
-  targets: [{ src: 'package.json', dest: ['dist/cjs', 'dist/esm'] }],
-  verbose: true,
-});
-const plugins = [resolve(), commonjs(), esbuild(), json(), terser(), filesize(), copyToDist];
+type PackageType = 'commonjs' | 'module';
+const basePlugins = [resolve(), commonjs(), esbuild(), json(), terser(), filesize()];
+const generatePlugins = (type: PackageType) =>
+  basePlugins.concat([
+    generatePackageJson({
+      baseContents: ({ name, version }: any) => ({
+        name,
+        version,
+        type,
+      }),
+      outputFolder: type === 'commonjs' ? 'dist/cjs' : 'dist/esm',
+    }),
+  ]);
+
 const external = [/node_modules/, (id: string) => !id.includes('js-core')];
 
 export default [
@@ -25,7 +34,7 @@ export default [
         sourcemap: true,
       },
     ],
-    plugins,
+    plugins: generatePlugins('commonjs'),
     external,
   },
   {
@@ -37,7 +46,7 @@ export default [
         sourcemap: true,
       },
     ],
-    plugins,
+    plugins: generatePlugins('module'),
     external,
   },
   {

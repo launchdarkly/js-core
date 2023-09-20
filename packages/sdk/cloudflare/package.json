@@ -17,8 +17,9 @@
   ],
   "type": "module",
   "exports": {
-    "require": "./dist/cjs/src/index.js",
-    "import": "./dist/esm/src/index.js"
+    "types": "./dist/index.d.ts",
+    "import": "./dist/esm/src/index.js",
+    "require": "./dist/cjs/src/index.js"
   },
   "main": "./dist/cjs/src/index.js",
   "types": "./dist/index.d.ts",
@@ -51,6 +52,7 @@
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/crypto-js": "^4.1.1",
     "@types/jest": "^29.5.0",
+    "@types/rollup-plugin-generate-package-json": "^3.2.3",
     "@typescript-eslint/eslint-plugin": "^6.1.0",
     "@typescript-eslint/parser": "^6.1.0",
     "eslint": "^8.45.0",
@@ -65,10 +67,10 @@
     "prettier": "^3.0.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.29.2",
-    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-dts": "^6.0.2",
     "rollup-plugin-esbuild": "^5.0.0",
     "rollup-plugin-filesize": "^10.0.0",
+    "rollup-plugin-generate-package-json": "^3.2.0",
     "ts-jest": "^29.1.0",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
