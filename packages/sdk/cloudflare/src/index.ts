@@ -10,7 +10,6 @@
  */
 import type { KVNamespace } from '@cloudflare/workers-types';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   BasicLogger,
   EdgeFeatureStore,
@@ -21,7 +20,6 @@ import {
 
 import createPlatformInfo from './createPlatformInfo';
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 export * from '@launchdarkly/js-server-sdk-common-edge';
 
 export type { LDClient };
