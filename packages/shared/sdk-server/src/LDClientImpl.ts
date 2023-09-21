@@ -336,6 +336,7 @@ export default class LDClientImpl implements LDClient {
                 reason,
                 checkRatio,
                 undefined,
+                undefined,
                 samplingRatio,
               ),
             });
@@ -352,6 +353,7 @@ export default class LDClientImpl implements LDClient {
               checkRatio,
               // Can be null for compatibility reasons.
               detail.variationIndex === null ? undefined : detail.variationIndex,
+              flag?.version,
               samplingRatio,
             ),
           });
