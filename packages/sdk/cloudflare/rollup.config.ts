@@ -3,25 +3,49 @@ import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
+import { loadJsonFileSync } from 'load-json-file';
+import { OutputOptions } from 'rollup';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
 import filesize from 'rollup-plugin-filesize';
-import generatePackageJson from 'rollup-plugin-generate-package-json';
+import { writeJsonFileSync } from 'write-json-file';
 
-type PackageType = 'commonjs' | 'module';
-const basePlugins = [resolve(), commonjs(), esbuild(), json(), terser(), filesize()];
-const generatePlugins = (type: PackageType) =>
-  basePlugins.concat([
-    generatePackageJson({
-      baseContents: ({ name, version }: any) => ({
+const cjsIndex = 'dist/cjs/src/index.js';
+const cjsPackageJson = 'dist/cjs/package.json';
+const esmIndex = 'dist/esm/src/index.js';
+const esmPackageJson = 'dist/esm/package.json';
+
+function injectPackageJson() {
+  return {
+    name: 'inject-package-json',
+    generateBundle({ format }: OutputOptions) {
+      const { name, version } = loadJsonFileSync('package.json') as any;
+      const minimalPackageJson = {
         name,
         version,
-        type,
-      }),
-      outputFolder: type === 'commonjs' ? 'dist/cjs' : 'dist/esm',
-    }),
-  ]);
+        type: format === 'cjs' ? 'commonjs' : 'module',
+      };
 
+      const packageJsonPath = format === 'cjs' ? cjsPackageJson : esmPackageJson;
+      writeJsonFileSync(packageJsonPath, minimalPackageJson, {
+        indent: 2,
+      });
+    },
+  };
+}
+
+const plugins = [
+  resolve(),
+  commonjs(),
+  esbuild(),
+  json(),
+  terser(),
+  filesize(),
+  injectPackageJson(),
+];
+
+// the second array item is a function to include all js-core packages in the bundle so they
+// are not imported or required as separate npm packages
 const external = [/node_modules/, (id: string) => !id.includes('js-core')];
 
 export default [
@@ -29,24 +53,24 @@ export default [
     input: 'src/index.ts',
     output: [
       {
-        file: 'dist/cjs/src/index.js',
+        file: cjsIndex,
         format: 'cjs',
         sourcemap: true,
       },
     ],
-    plugins: generatePlugins('commonjs'),
+    plugins,
     external,
   },
   {
     input: 'src/index.ts',
     output: [
       {
-        file: 'dist/esm/src/index.js',
+        file: esmIndex,
         format: 'esm',
         sourcemap: true,
       },
     ],
-    plugins: generatePlugins('module'),
+    plugins,
     external,
   },
   {
