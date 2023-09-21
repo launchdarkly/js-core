@@ -16,7 +16,7 @@ module.exports = {
     'import/no-extraneous-dependencies': [
       'error',
       {
-        devDependencies: ['**/jest*.ts', '**/*.test.ts'],
+        devDependencies: ['**/jest*.ts', '**/*.test.ts', '**/rollup.config.ts'],
       },
     ],
   },

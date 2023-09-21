@@ -4,7 +4,11 @@ export default {
   async fetch(request: Request, env: Bindings): Promise<Response> {
     const sdkKey = 'test-sdk-key';
     const flagKey = 'testFlag1';
-    const context = { kind: 'user', key: 'test-user-key-1', email: 'test@gmail.com' };
+    const { searchParams } = new URL(request.url);
+
+    // falsemail will return false, other emails return true
+    const email = searchParams.get('email') ?? 'test@anymail.com';
+    const context = { kind: 'user', key: 'test-user-key-1', email };
 
     // start using ld
     const client = initLD(sdkKey, env.LD_KV);

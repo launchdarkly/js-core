@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 if $LD_RELEASE_IS_DRYRUN ; then
   # Dry run just pack the workspace.
   echo "Doing a dry run of publishing."

@@ -51,7 +51,7 @@ describe('init', () => {
     });
 
     test('rule match', async () => {
-      const contextWithEmail = { ...context, email: 'test@gmail.com' };
+      const contextWithEmail = { ...context, email: 'test@falsemail.com' };
       const value = await ldClient.variation(flagKey1, contextWithEmail, false);
       const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
 
