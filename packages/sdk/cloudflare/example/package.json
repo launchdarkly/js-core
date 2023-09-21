@@ -20,10 +20,9 @@
     "wrangler": "2.20.1"
   },
   "scripts": {
-    "build": "yarn link-dev && node build.js",
+    "build": "node build.js",
     "start": "wrangler dev",
     "deploy": "wrangler publish",
-    "test": "yarn build && jest",
-    "link-dev": "./link-dev.sh"
+    "test": "yarn build && jest"
   }
 }
