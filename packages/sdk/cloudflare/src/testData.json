@@ -14,7 +14,7 @@
               "contextKind": "user",
               "attribute": "/email",
               "op": "contains",
-              "values": ["gmail"],
+              "values": ["falsemail"],
               "negate": false
             }
           ],

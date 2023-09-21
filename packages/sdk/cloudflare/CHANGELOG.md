@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [2.2.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.1.4...cloudflare-server-sdk-v2.2.0) (2023-09-21)
+
+
+### Features
+
+* rollup cloudflare sdk ([#279](https://github.com/launchdarkly/js-core/issues/279)) ([7af4f6e](https://github.com/launchdarkly/js-core/commit/7af4f6e2d029b87396087d96904cdfa7d39a8cb3))
+
 ## [2.1.4](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.1.3...cloudflare-server-sdk-v2.1.4) (2023-09-06)
 
 ### Bug Fixes

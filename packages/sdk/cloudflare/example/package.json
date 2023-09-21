@@ -5,7 +5,7 @@
   "module": "./dist/index.mjs",
   "packageManager": "yarn@3.4.1",
   "dependencies": {
-    "@launchdarkly/cloudflare-server-sdk": "^2.0.2"
+    "@launchdarkly/cloudflare-server-sdk": "^2.1.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
@@ -23,6 +23,6 @@
     "build": "node build.js",
     "start": "wrangler dev",
     "deploy": "wrangler publish",
-    "test": "yarn build && node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js"
+    "test": "yarn build && jest"
   }
 }
