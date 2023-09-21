@@ -15,8 +15,7 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
       listeners: Map<EventName, ProcessStreamResponse>,
       diagnosticsManager: DiagnosticsManager,
       errorHandler: StreamingErrorHandler,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      streamInitialReconnectDelay: number,
+      __streamInitialReconnectDelay: number,
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {

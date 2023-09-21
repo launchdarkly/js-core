@@ -11,6 +11,10 @@ module.exports = {
   ignorePatterns: ['**/dist/**', '**/vercel/examples/**'],
   rules: {
     '@typescript-eslint/lines-between-class-members': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      { argsIgnorePattern: '^__', varsIgnorePattern: '^__' },
+    ],
     'prettier/prettier': ['error'],
     'class-methods-use-this': 'off',
     'import/no-extraneous-dependencies': [
