@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 # Run this script like:
 # ./scripts/build-package.sh
 

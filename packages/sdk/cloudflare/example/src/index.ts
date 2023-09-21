@@ -11,7 +11,11 @@ const handler: ExportedHandler<Bindings> = {
   ): Promise<Response> {
     const clientSideID = 'client-side-id';
     const flagKey = 'testFlag1';
-    const context = { kind: 'org', key: 'org-key-cf', email: 'testcforg@gmail.com' };
+    const { searchParams } = new URL(request.url);
+
+    // falsemail will return false, other emails return true
+    const email = searchParams.get('email') ?? 'test@anymail.com';
+    const context = { kind: 'user', key: 'test-user-key-1', email };
 
     // start using ld
     const client = initLD(clientSideID, env.LD_KV, { sendEvents: true });

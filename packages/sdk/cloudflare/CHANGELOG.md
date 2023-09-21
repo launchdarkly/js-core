@@ -2,6 +2,25 @@
 
 All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [2.2.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.1.4...cloudflare-server-sdk-v2.2.0) (2023-09-21)
+
+
+### Features
+
+* rollup cloudflare sdk ([#279](https://github.com/launchdarkly/js-core/issues/279)) ([7af4f6e](https://github.com/launchdarkly/js-core/commit/7af4f6e2d029b87396087d96904cdfa7d39a8cb3))
+
+## [2.1.4](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.1.3...cloudflare-server-sdk-v2.1.4) (2023-09-06)
+
+### Bug Fixes
+
+* Use clientSideAvailability instead of clientSide for filtering client side flags. ([#270](https://github.com/launchdarkly/js-core/issues/270)) ([2702342](https://github.com/launchdarkly/js-core/commit/27023429d36986466cda46aa4d95eb01c10cd455))
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.12 to 1.0.13
+
 ### Dependencies
 
 * The following workspace dependencies were updated
@@ -13,6 +32,7 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
 * The following workspace dependencies were updated
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.11 to 1.0.12
+
 
 ## [2.1.1](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.1.0...cloudflare-server-sdk-v2.1.1) (2023-08-14)
 

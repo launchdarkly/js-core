@@ -2,6 +2,19 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [8.2.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.3...node-server-sdk-v8.2.4) (2023-09-06)
+
+### Bug Fixes
+
+* Use clientSideAvailability instead of clientSide for filtering client side flags. ([#270](https://github.com/launchdarkly/js-core/issues/270)) ([2702342](https://github.com/launchdarkly/js-core/commit/27023429d36986466cda46aa4d95eb01c10cd455))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.2 to 1.2.3
+
 ## [8.2.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.2...node-server-sdk-v8.2.3) (2023-08-28)
 
 ## Fixes:
