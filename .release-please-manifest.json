@@ -2,7 +2,7 @@
   "packages/shared/common": "1.1.0",
   "packages/shared/sdk-server": "1.2.3",
   "packages/sdk/server-node": "8.2.4",
-  "packages/sdk/cloudflare": "2.1.4",
+  "packages/sdk/cloudflare": "2.2.0",
   "packages/shared/sdk-server-edge": "1.0.13",
   "packages/sdk/vercel": "1.1.4",
   "packages/sdk/akamai-base": "1.0.7",
