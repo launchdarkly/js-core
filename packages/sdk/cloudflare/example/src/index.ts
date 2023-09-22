@@ -1,15 +1,9 @@
 /* eslint-disable no-console */
 import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
-// handler types ripped from the cloudflare docs:
-// https://developers.cloudflare.com/workers/examples/accessing-the-cloudflare-object/
-const handler: ExportedHandler<Bindings> = {
-  async fetch(
-    request: Request,
-    env: Bindings,
-    executionContext: ExecutionContext,
-  ): Promise<Response> {
-    const clientSideID = 'client-side-id';
+export default {
+  async fetch(request: Request, env: Bindings, ctx?: ExecutionContext): Promise<Response> {
+    const sdkKey = 'test-sdk-key';
     const flagKey = 'testFlag1';
     const { searchParams } = new URL(request.url);
 
@@ -18,7 +12,7 @@ const handler: ExportedHandler<Bindings> = {
     const context = { kind: 'user', key: 'test-user-key-1', email };
 
     // start using ld
-    const client = initLD(clientSideID, env.LD_KV, { sendEvents: true });
+    const client = initLD(sdkKey, env.LD_KV, { sendEvents: true });
     await client.waitForInitialization();
     const flagValue = await client.variation(flagKey, context, false);
     const flagDetail = await client.variationDetail(flagKey, context, false);
@@ -34,14 +28,13 @@ const handler: ExportedHandler<Bindings> = {
     // Gotcha: you must call flush otherwise events will not be sent to LD servers
     // due to the ephemeral nature of edge workers.
     // https://developers.cloudflare.com/workers/runtime-apis/fetch-event/#waituntil
-    executionContext.waitUntil(
+    ctx?.waitUntil(
+      // @ts-ignore
       client.flush((err, res) => {
         console.log(`flushed events result: ${res}, error: ${err}`);
+        client.close();
       }),
     );
-
     return new Response(`${resp}`);
   },
 };
-
-export default handler;
