@@ -2,7 +2,7 @@
 import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
 export default {
-  async fetch(request: Request, env: Bindings, ctx?: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Bindings, ctx: ExecutionContext): Promise<Response> {
     const sdkKey = 'test-sdk-key';
     const flagKey = 'testFlag1';
     const { searchParams } = new URL(request.url);
@@ -28,8 +28,8 @@ export default {
     // Gotcha: you must call flush otherwise events will not be sent to LD servers
     // due to the ephemeral nature of edge workers.
     // https://developers.cloudflare.com/workers/runtime-apis/fetch-event/#waituntil
-    ctx?.waitUntil(
-      client.flush((err: Error, res: boolean) => {
+    ctx.waitUntil(
+      client.flush((err: Error | null, res: boolean) => {
         console.log(`flushed events result: ${res}, error: ${err}`);
         client.close();
       }),
