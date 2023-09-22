@@ -43,6 +43,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     private readonly reason: LDEvaluationReason,
     private readonly checkRatio?: number,
     private readonly variation?: number,
+    private readonly version?: number,
     private readonly samplingRatio?: number,
     private readonly logger?: LDLogger,
   ) {}
@@ -123,6 +124,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
         default: this.defaultStage,
         reason: this.reason,
         variation: this.variation,
+        version: this.version,
       },
       measurements,
       samplingRatio: this.samplingRatio ?? 1,
