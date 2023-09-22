@@ -29,12 +29,12 @@ export default {
     // due to the ephemeral nature of edge workers.
     // https://developers.cloudflare.com/workers/runtime-apis/fetch-event/#waituntil
     ctx?.waitUntil(
-      // @ts-ignore
-      client.flush((err, res) => {
+      client.flush((err: Error, res: boolean) => {
         console.log(`flushed events result: ${res}, error: ${err}`);
         client.close();
       }),
     );
+
     return new Response(`${resp}`);
   },
 };
