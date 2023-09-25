@@ -91,7 +91,7 @@ interface MigrationContext<TPayload> {
 /**
  * Class which allows performing technology migrations.
  */
-export default class Migration<
+class Migration<
   TMigrationRead,
   TMigrationWrite,
   TMigrationReadInput = any,
@@ -371,4 +371,21 @@ export default class Migration<
     tracker.latency(origin, latency);
     return result;
   }
+}
+
+export function createMigration<
+  TMigrationRead,
+  TMigrationWrite,
+  TMigrationReadInput = any,
+  TMigrationWriteInput = any,
+>(
+  client: LDClient,
+  config: LDMigrationOptions<
+    TMigrationRead,
+    TMigrationWrite,
+    TMigrationReadInput,
+    TMigrationWriteInput
+  >,
+): LDMigration<TMigrationRead, TMigrationWrite, TMigrationReadInput, TMigrationWriteInput> {
+  return new Migration(client, config);
 }

@@ -56,8 +56,8 @@ export type LDMigrationWriteResult<TResult> = {
 export interface LDMigration<
   TMigrationRead,
   TMigrationWrite,
-  TMigrationReadInput,
-  TMigrationWriteInput,
+  TMigrationReadInput = any,
+  TMigrationWriteInput = any,
 > {
   /**
    * Perform a read using the migration.
