@@ -1,12 +1,8 @@
-import { internal } from '@launchdarkly/js-sdk-common';
+import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDOptions } from '../api';
 import Configuration from '../options/Configuration';
 import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
-
-const {
-  mocks: { basicPlatform },
-} = internal;
 
 const mockFeatureStore = {
   getDescription: jest.fn(() => 'Mock Feature Store'),

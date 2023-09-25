@@ -1,7 +1,6 @@
-import { LDContextDeduplicator } from '../../api/subsystem';
-import { Context } from '../../index';
+import type { Context, subsystem } from 'shared-common-types';
 
-export default class ContextDeduplicator implements LDContextDeduplicator {
+export default class ContextDeduplicator implements subsystem.LDContextDeduplicator {
   flushInterval?: number | undefined = 0.1;
 
   seen: string[] = [];

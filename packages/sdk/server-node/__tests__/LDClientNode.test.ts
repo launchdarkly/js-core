@@ -1,8 +1,7 @@
-import { internal, LDContext } from '@launchdarkly/js-server-sdk-common';
+import { LDContext } from '@launchdarkly/js-server-sdk-common';
+import { logger } from '@launchdarkly/private-js-mocks';
 
 import { init } from '../src';
-
-const { mocks } = internal;
 
 it('fires ready event in offline mode', (done) => {
   const client = init('sdk_key', { offline: true });
@@ -18,7 +17,7 @@ it('fires the failed event if initialization fails', async () => {
   const failedHandler = jest.fn().mockName('failedHandler');
   const client = init('sdk_key', {
     sendEvents: false,
-    logger: mocks.logger,
+    logger,
     updateProcessor: (clientContext, dataSourceUpdates, initSuccessHandler, errorHandler) => ({
       start: () => {
         setTimeout(() => errorHandler?.(new Error('Something unexpected happened')), 0);

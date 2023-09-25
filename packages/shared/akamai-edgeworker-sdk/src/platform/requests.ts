@@ -34,8 +34,7 @@ class NoopResponse implements Response {
 }
 
 export default class EdgeRequests implements Requests {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  fetch(url: string, options: Options = {}): Promise<Response> {
+  fetch(url: string, _options: Options = {}): Promise<Response> {
     return Promise.resolve(new NoopResponse());
   }
 

@@ -1,10 +1,5 @@
-import {
-  ClientContext,
-  Context,
-  Filesystem,
-  internal,
-  WatchHandle,
-} from '@launchdarkly/js-sdk-common';
+import { ClientContext, Context, Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
@@ -16,7 +11,6 @@ import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import TestLogger from '../Logger';
 
-const { mocks } = internal;
 const flag1Key = 'flag1';
 const flag2Key = 'flag2';
 const flag2Value = 'value2';

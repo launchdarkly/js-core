@@ -1,4 +1,4 @@
-import { internal } from '@launchdarkly/js-sdk-common';
+import { logger } from '@launchdarkly/private-js-mocks';
 
 import { LDDataSourceUpdates } from '../api/subsystems';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
@@ -6,10 +6,6 @@ import VersionedDataKinds from '../store/VersionedDataKinds';
 import { createStreamListeners } from './createStreamListeners';
 
 jest.mock('../store/serialization');
-
-const {
-  mocks: { logger },
-} = internal;
 
 const allData = {
   data: {

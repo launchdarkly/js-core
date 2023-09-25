@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 /* eslint-disable class-methods-use-this */
 import {
   ClientContext,
@@ -25,7 +23,7 @@ import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
-import { allAsync, allSeriesAsync } from './evaluation/collection';
+import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
 import ErrorKinds from './evaluation/ErrorKinds';

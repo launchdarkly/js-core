@@ -1,15 +1,13 @@
 /* eslint-disable class-methods-use-this */
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   AttributeReference,
   Context,
   Crypto,
   Hasher,
   Hmac,
-  internal,
   LDContext,
 } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
@@ -21,8 +19,6 @@ import {
   makeClauseThatMatchesUser,
   makeFlagWithSegmentMatch,
 } from './flags';
-
-const { mocks } = internal;
 
 const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };
@@ -47,7 +43,7 @@ class TestQueries implements Queries {
   }
 
   getBigSegmentsMembership(
-    userKey: string,
+    _userKey: string,
   ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
     throw new Error('Method not implemented.');
   }

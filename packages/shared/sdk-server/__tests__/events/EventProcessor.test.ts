@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ClientContext,
   Context,
@@ -15,12 +14,11 @@ import {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-
-const { mocks } = internal;
 
 const SDK_KEY = 'sdk-key';
 
@@ -67,9 +65,8 @@ function makePlatform(requestState: RequestState) {
     });
 
   const requests: Requests = {
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     fetch(url: string, options?: Options): Promise<Response> {
-      return new Promise<Response>((a, r) => {
+      return new Promise<Response>((a) => {
         const headers: Headers = {
           get(name: string): string | null {
             return requestState.testHeaders[name] || null;
@@ -83,7 +80,7 @@ function makePlatform(requestState: RequestState) {
           entries(): Iterable<[string, string]> {
             throw new Error('Function not implemented.');
           },
-          has(name: string): boolean {
+          has(_name: string): boolean {
             throw new Error('Function not implemented.');
           },
         };
@@ -105,8 +102,7 @@ function makePlatform(requestState: RequestState) {
       });
     },
 
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+    createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
       throw new Error('Function not implemented.');
     },
   };

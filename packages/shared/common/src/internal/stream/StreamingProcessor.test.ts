@@ -1,9 +1,10 @@
+import { basicPlatform, clientContext, logger } from '@launchdarkly/private-js-mocks';
+
 import { EventName, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
 import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
-import { basicPlatform, clientContext, logger } from '../mocks';
 import StreamingProcessor from './StreamingProcessor';
 
 const dateNowString = '2023-08-10';

@@ -1,11 +1,12 @@
-import { EventName, ProcessStreamResponse } from '../../api';
-import { LDStreamingError } from '../../errors';
-import { ClientContext } from '../../options';
-import { DiagnosticsManager } from '../diagnostics';
-import { type StreamingErrorHandler } from '../stream';
-import j from './getJest';
+import type {
+  ClientContext,
+  EventName,
+  internal,
+  LDStreamingError,
+  ProcessStreamResponse,
+} from 'shared-common-types';
 
-export const MockStreamingProcessor = j.fn();
+export const MockStreamingProcessor = jest.fn();
 
 export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
   MockStreamingProcessor.mockImplementation(
@@ -13,13 +14,19 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
       sdkKey: string,
       clientContext: ClientContext,
       listeners: Map<EventName, ProcessStreamResponse>,
-      diagnosticsManager: DiagnosticsManager,
-      errorHandler: StreamingErrorHandler,
+      diagnosticsManager: internal.DiagnosticsManager,
+      errorHandler: internal.StreamingErrorHandler,
       __streamInitialReconnectDelay: number,
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
-          process.nextTick(() => errorHandler(new LDStreamingError('test-error', 401)));
+          process.nextTick(() =>
+            errorHandler({
+              code: 401,
+              name: 'LaunchDarklyStreamingError',
+              message: 'test-error',
+            } as LDStreamingError),
+          );
         } else {
           // execute put which will resolve the init promise
           process.nextTick(

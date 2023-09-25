@@ -175,7 +175,6 @@ export default class Evaluator {
   private evaluateInternal(
     flag: Flag,
     context: Context,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     visitedFlags: string[],
     cb: (res: EvalResult) => void,
@@ -601,9 +600,7 @@ export default class Evaluator {
   segmentMatchContext(
     segment: Segment,
     context: Context,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     segmentsVisited: string[],
     cb: (res: MatchOrError) => void,
   ): void {

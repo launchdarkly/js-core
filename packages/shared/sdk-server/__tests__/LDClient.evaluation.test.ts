@@ -1,4 +1,9 @@
-import { internal, subsystem } from '@launchdarkly/js-sdk-common';
+import { subsystem } from '@launchdarkly/js-sdk-common';
+import {
+  basicPlatform,
+  MockStreamingProcessor,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl, LDFeatureStore } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
@@ -15,14 +20,11 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
     ...{
       internal: {
         ...actual.internal,
-        StreamingProcessor: actual.internal.mocks.MockStreamingProcessor,
+        StreamingProcessor: MockStreamingProcessor,
       },
     },
   };
 });
-const {
-  mocks: { basicPlatform, setupMockStreamingProcessor },
-} = internal;
 
 const defaultUser = { key: 'user' };
 
@@ -224,8 +226,7 @@ describe('given an offline client', () => {
 });
 
 class InertUpdateProcessor implements subsystem.LDStreamProcessor {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  start(fn?: ((err?: any) => void) | undefined) {
+  start(_fn?: ((err?: any) => void) | undefined) {
     // Never initialize.
   }
 

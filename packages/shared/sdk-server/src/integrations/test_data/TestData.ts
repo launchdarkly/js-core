@@ -64,12 +64,10 @@ export default class TestData {
     // Provides an arrow function to prevent needed to bind the method to
     // maintain `this`.
     return (
-      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       clientContext: LDClientContext,
       featureStore: LDFeatureStore,
       initSuccessHandler: VoidFunction,
-      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-      errorHandler?: (e: Error) => void,
+      _errorHandler?: (e: Error) => void,
     ) => {
       const listeners = createStreamListeners(
         featureStore,

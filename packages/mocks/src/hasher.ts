@@ -1,9 +1,8 @@
-import { Crypto, Hasher, Hmac } from '../../api';
-import j from './getJest';
+import type { Crypto, Hasher, Hmac } from 'shared-common-types';
 
 export const hasher: Hasher = {
-  update: j.fn(),
-  digest: j.fn(() => '1234567890123456'),
+  update: jest.fn(),
+  digest: jest.fn(() => '1234567890123456'),
 };
 
 let counter = 0;

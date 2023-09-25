@@ -1,4 +1,4 @@
-import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
+import type { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
 
 import {
   BigSegmentStore,
