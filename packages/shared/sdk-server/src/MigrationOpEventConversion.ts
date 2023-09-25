@@ -196,6 +196,10 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
     validated.variation = evaluation.variation;
   }
 
+  if (evaluation.version !== undefined && TypeValidators.Number.is(evaluation.version)) {
+    validated.version = evaluation.version;
+  }
+
   return validated;
 }
 

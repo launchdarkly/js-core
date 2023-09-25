@@ -58,6 +58,83 @@ it('generates an event if the minimal requirements are met.', () => {
   });
 });
 
+it('can include the variation in the event', () => {
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+    undefined,
+    1,
+  );
+
+  tracker.op('write');
+  tracker.invoked('old');
+
+  expect(tracker.createEvent()).toMatchObject({
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      default: 'off',
+      key: 'flag',
+      reason: { kind: 'FALLTHROUGH' },
+      value: 'off',
+      variation: 1,
+    },
+    kind: 'migration_op',
+    measurements: [
+      {
+        key: 'invoked',
+        values: {
+          old: true,
+        },
+      },
+    ],
+    operation: 'write',
+  });
+});
+
+it('can include the version in the event', () => {
+  const tracker = new MigrationOpTracker(
+    'flag',
+    { user: 'bob' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+    undefined,
+    undefined,
+    2,
+  );
+
+  tracker.op('write');
+  tracker.invoked('old');
+
+  expect(tracker.createEvent()).toMatchObject({
+    contextKeys: { user: 'bob' },
+    evaluation: {
+      default: 'off',
+      key: 'flag',
+      reason: { kind: 'FALLTHROUGH' },
+      value: 'off',
+      version: 2,
+    },
+    kind: 'migration_op',
+    measurements: [
+      {
+        key: 'invoked',
+        values: {
+          old: true,
+        },
+      },
+    ],
+    operation: 'write',
+  });
+});
+
 it('includes errors if at least one is set', () => {
   const tracker = new MigrationOpTracker(
     'flag',
@@ -250,6 +327,7 @@ it('can handle exceptions thrown in the consistency check method', () => {
     undefined,
     undefined,
     undefined,
+    undefined,
     logger,
   );
   tracker.op('read');
@@ -265,3 +343,108 @@ it('can handle exceptions thrown in the consistency check method', () => {
     },
   ]);
 });
+
+it.each([
+  [false, true, true, false],
+  [true, false, false, true],
+  [false, true, true, true],
+  [true, false, true, true],
+])(
+  'does not generate an event if latency measurement without correct invoked measurement' +
+    ' invoke old: %p invoke new: %p measure old: %p measure new: %p',
+  (invoke_old, invoke_new, measure_old, measure_new) => {
+    const tracker = new MigrationOpTracker(
+      'flag',
+      { user: 'bob' },
+      LDMigrationStage.Off,
+      LDMigrationStage.Off,
+      {
+        kind: 'FALLTHROUGH',
+      },
+    );
+
+    tracker.op('write');
+    if (invoke_old) {
+      tracker.invoked('old');
+    }
+    if (invoke_new) {
+      tracker.invoked('new');
+    }
+    if (measure_old) {
+      tracker.latency('old', 100);
+    }
+    if (measure_new) {
+      tracker.latency('new', 100);
+    }
+
+    expect(tracker.createEvent()).toBeUndefined();
+  },
+);
+
+it.each([
+  [false, true, true, false],
+  [true, false, false, true],
+  [false, true, true, true],
+  [true, false, true, true],
+])(
+  'does not generate an event error measurement without correct invoked measurement' +
+    ' invoke old: %p invoke new: %p measure old: %p measure new: %p',
+  (invoke_old, invoke_new, measure_old, measure_new) => {
+    const tracker = new MigrationOpTracker(
+      'flag',
+      { user: 'bob' },
+      LDMigrationStage.Off,
+      LDMigrationStage.Off,
+      {
+        kind: 'FALLTHROUGH',
+      },
+    );
+
+    tracker.op('write');
+    if (invoke_old) {
+      tracker.invoked('old');
+    }
+    if (invoke_new) {
+      tracker.invoked('new');
+    }
+    if (measure_old) {
+      tracker.error('old');
+    }
+    if (measure_new) {
+      tracker.error('new');
+    }
+
+    expect(tracker.createEvent()).toBeUndefined();
+  },
+);
+
+it.each([
+  [true, false, true],
+  [false, true, true],
+  [true, false, false],
+  [false, true, false],
+])(
+  'does not generate an event if there is a consistency measurement but both origins were not invoked' +
+    ' invoke old: %p invoke new: %p consistent: %p',
+  (invoke_old, invoke_new, consistent) => {
+    const tracker = new MigrationOpTracker(
+      'flag',
+      { user: 'bob' },
+      LDMigrationStage.Off,
+      LDMigrationStage.Off,
+      {
+        kind: 'FALLTHROUGH',
+      },
+    );
+
+    tracker.op('write');
+    if (invoke_old) {
+      tracker.invoked('old');
+    }
+    if (invoke_new) {
+      tracker.invoked('new');
+    }
+    tracker.consistency(() => consistent);
+    expect(tracker.createEvent()).toBeUndefined();
+  },
+);

@@ -13,6 +13,7 @@ export interface LDMigrationEvaluation {
   value: LDMigrationStage;
   default: LDMigrationStage;
   variation?: number;
+  version?: number;
   reason: LDEvaluationReason;
 }
 
