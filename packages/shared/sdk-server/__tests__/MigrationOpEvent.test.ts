@@ -10,13 +10,13 @@ import {
   LDMigrationStage,
   LDSerialExecution,
 } from '../src';
+import { LDMigration } from '../src/api/LDMigration';
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import { createMigration, LDMigrationError, LDMigrationSuccess } from '../src/Migration';
 import MigrationOpEventConversion from '../src/MigrationOpEventConversion';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
-import { LDMigration } from '../src/api/LDMigration';
 
 jest.mock('@launchdarkly/js-sdk-common', () => ({
   __esModule: true,
