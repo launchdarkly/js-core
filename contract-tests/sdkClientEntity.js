@@ -1,12 +1,11 @@
 import got from 'got';
 import ld, {
   LDConcurrentExecution,
-  LDExecution,
   LDExecutionOrdering,
   LDMigrationError,
   LDMigrationSuccess,
   LDSerialExecution,
-  Migration,
+  createMigration,
 } from 'node-server-sdk';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
@@ -172,7 +171,7 @@ export async function newSdkClientEntity(options) {
         const migrationOperation = params.migrationOperation;
         const readExecutionOrder = migrationOperation.readExecutionOrder;
 
-        const migration = new Migration(client, {
+        const migration = createMigration(client, {
           execution: getExecution(readExecutionOrder),
           latencyTracking: migrationOperation.trackLatency,
           errorTracking: migrationOperation.trackErrors,

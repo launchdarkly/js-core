@@ -1,7 +1,6 @@
 import BigSegmentStoreStatusProviderImpl from './BigSegmentStatusProviderImpl';
 import LDClientImpl from './LDClientImpl';
-// TODO: Maybe we have a factory?
-import Migration, { LDMigrationError, LDMigrationSuccess } from './Migration';
+import { createMigration, LDMigrationError, LDMigrationSuccess } from './Migration';
 
 export * as integrations from './integrations';
 export * as platform from '@launchdarkly/js-sdk-common';
@@ -16,5 +15,5 @@ export {
   BigSegmentStoreStatusProviderImpl,
   LDMigrationError,
   LDMigrationSuccess,
-  Migration,
+  createMigration,
 };
