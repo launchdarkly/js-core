@@ -26,7 +26,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     new: false,
   };
 
-  private consistencyCheck?: LDConsistencyCheck;
+  private consistencyCheck: LDConsistencyCheck = LDConsistencyCheck.NotChecked;
 
   private latencyMeasurement = {
     old: NaN,
@@ -43,6 +43,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     private readonly reason: LDEvaluationReason,
     private readonly checkRatio?: number,
     private readonly variation?: number,
+    private readonly version?: number,
     private readonly samplingRatio?: number,
     private readonly logger?: LDLogger,
   ) {}
@@ -57,8 +58,18 @@ export default class MigrationOpTracker implements LDMigrationTracker {
 
   consistency(check: () => boolean) {
     if (internal.shouldSample(this.checkRatio ?? 1)) {
-      const res = check();
-      this.consistencyCheck = res ? LDConsistencyCheck.Consistent : LDConsistencyCheck.Inconsistent;
+      try {
+        const res = check();
+        this.consistencyCheck = res
+          ? LDConsistencyCheck.Consistent
+          : LDConsistencyCheck.Inconsistent;
+      } catch (exception) {
+        this.logger?.error(
+          'Exception when executing consistency check function for migration' +
+            ` '${this.flagKey}' the consistency check will not be included in the generated migration` +
+            ` op event. Exception: ${exception}`,
+        );
+      }
     }
   }
 
@@ -91,13 +102,16 @@ export default class MigrationOpTracker implements LDMigrationTracker {
       return undefined;
     }
 
+    if (!this.measurementConsistencyCheck()) {
+      return undefined;
+    }
+
     const measurements: LDMigrationMeasurement[] = [];
 
     this.populateInvoked(measurements);
     this.populateConsistency(measurements);
     this.populateLatency(measurements);
     this.populateErrors(measurements);
-    this.measurementConsistencyCheck();
 
     return {
       kind: 'migration_op',
@@ -110,6 +124,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
         default: this.defaultStage,
         reason: this.reason,
         variation: this.variation,
+        version: this.version,
       },
       measurements,
       samplingRatio: this.samplingRatio ?? 1,
@@ -121,11 +136,11 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   }
 
   private latencyConsistencyMessage(origin: LDMigrationOrigin) {
-    return `Latency measurement for "${origin}", but "new" was not invoked.`;
+    return `Latency measurement for "${origin}", but "${origin}" was not invoked.`;
   }
 
   private errorConsistencyMessage(origin: LDMigrationOrigin) {
-    return `Error occurred for "${origin}", but "new" was not invoked.`;
+    return `Error occurred for "${origin}", but "${origin}" was not invoked.`;
   }
 
   private consistencyCheckConsistencyMessage(origin: LDMigrationOrigin) {
@@ -135,32 +150,35 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     );
   }
 
-  private checkOriginEventConsistency(origin: LDMigrationOrigin) {
+  private checkOriginEventConsistency(origin: LDMigrationOrigin): boolean {
     if (this.wasInvoked[origin]) {
-      return;
+      return true;
     }
 
     // If the specific origin was not invoked, but it contains measurements, then
     // that is a problem. Check each measurement and log a message if it is present.
     if (!Number.isNaN(this.latencyMeasurement[origin])) {
       this.logger?.error(`${this.logTag()} ${this.latencyConsistencyMessage(origin)}`);
+      return false;
     }
 
     if (this.errors[origin]) {
       this.logger?.error(`${this.logTag()} ${this.errorConsistencyMessage(origin)}`);
+      return false;
     }
 
     if (this.consistencyCheck !== LDConsistencyCheck.NotChecked) {
       this.logger?.error(`${this.logTag()} ${this.consistencyCheckConsistencyMessage(origin)}`);
+      return false;
     }
+    return true;
   }
 
   /**
    * Check that the latency, error, consistency and invoked measurements are self-consistent.
    */
-  private measurementConsistencyCheck() {
-    this.checkOriginEventConsistency('old');
-    this.checkOriginEventConsistency('new');
+  private measurementConsistencyCheck(): boolean {
+    return this.checkOriginEventConsistency('old') && this.checkOriginEventConsistency('new');
   }
 
   private populateInvoked(measurements: LDMigrationMeasurement[]) {

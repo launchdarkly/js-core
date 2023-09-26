@@ -10,9 +10,10 @@ import {
   LDMigrationStage,
   LDSerialExecution,
 } from '../src';
+import { LDMigration } from '../src/api/LDMigration';
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
-import Migration, { LDMigrationError, LDMigrationSuccess } from '../src/Migration';
+import { createMigration, LDMigrationError, LDMigrationSuccess } from '../src/Migration';
 import MigrationOpEventConversion from '../src/MigrationOpEventConversion';
 import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
@@ -64,9 +65,9 @@ describe('given an LDClient with test data', () => {
     [new LDConcurrentExecution(), 'concurrent'],
   ])('given different execution methods: %p %p', (execution) => {
     describe('given a migration which checks consistency and produces consistent results', () => {
-      let migration: Migration<string, string>;
+      let migration: LDMigration<string, string>;
       beforeEach(() => {
-        migration = new Migration(client, {
+        migration = createMigration(client, {
           execution,
           latencyTracking: false,
           errorTracking: false,
@@ -137,9 +138,9 @@ describe('given an LDClient with test data', () => {
     });
 
     describe('given a migration which checks consistency and produces inconsistent results', () => {
-      let migration: Migration<string, string>;
+      let migration: LDMigration<string, string>;
       beforeEach(() => {
-        migration = new Migration(client, {
+        migration = createMigration(client, {
           execution,
           latencyTracking: false,
           errorTracking: false,
@@ -171,7 +172,7 @@ describe('given an LDClient with test data', () => {
     });
 
     describe('given a migration which takes time to execute and tracks latency', () => {
-      let migration: Migration<string, string>;
+      let migration: LDMigration<string, string>;
 
       function timeoutPromise<TReturn>(val: TReturn): Promise<TReturn> {
         return new Promise((a) => {
@@ -180,7 +181,7 @@ describe('given an LDClient with test data', () => {
       }
 
       beforeEach(() => {
-        migration = new Migration(client, {
+        migration = createMigration(client, {
           execution,
           latencyTracking: true,
           errorTracking: false,
@@ -351,9 +352,9 @@ describe('given an LDClient with test data', () => {
     });
 
     describe('given a migration which produces errors for every step', () => {
-      let migration: Migration<string, boolean>;
+      let migration: LDMigration<string, boolean>;
       beforeEach(() => {
-        migration = new Migration<string, boolean>(client, {
+        migration = createMigration<string, boolean>(client, {
           execution,
           latencyTracking: false,
           errorTracking: true,
