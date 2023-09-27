@@ -54,7 +54,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "1.4.0-alpha.4",
+    "@launchdarkly/js-server-sdk-common": "1.4.0-alpha.5",
     "crypto-js": "^4.1.1"
   }
 }
