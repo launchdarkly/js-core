@@ -1,12 +1,10 @@
-# LaunchDarkly SDK JavaScript Common Code
+# LaunchDarkly SDK JavaScript Mocks
 
-[![NPM][common-npm-badge]][common-npm-link]
-[![Actions Status][shared-common-ci-badge]][shared-common-ci]
-[![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/shared/common/docs/)
+[![Actions Status][mocks-ci-badge]][mocks-ci]
 
-This project contains Typescript classes and interfaces that are applicable to client-side and server-side JavaScript SDKs.
+**Internal use only.**
 
-This library is a beta version and should not be considered ready for production use while this message is visible.
+This project contains JavaScript mocks that are consumed in unit tests in client-side and server-side JavaScript SDKs.
 
 ## Contributing
 
@@ -26,7 +24,5 @@ See [Contributing](../shared/CONTRIBUTING.md).
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
 
-[shared-common-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/common.yml/badge.svg
-[shared-common-ci]: https://github.com/launchdarkly/js-core/actions/workflows/common.yml
-[common-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/js-sdk-common.svg?style=flat-square
-[common-npm-link]: https://www.npmjs.com/package/@launchdarkly/js-sdk-common
+[mocks-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/mocks.yml/badge.svg
+[mocks-ci]: https://github.com/launchdarkly/js-core/actions/workflows/mocks.yml
