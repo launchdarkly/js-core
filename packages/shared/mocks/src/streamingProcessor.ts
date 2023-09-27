@@ -16,7 +16,7 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
       listeners: Map<EventName, ProcessStreamResponse>,
       diagnosticsManager: internal.DiagnosticsManager,
       errorHandler: internal.StreamingErrorHandler,
-      __streamInitialReconnectDelay: number,
+      _streamInitialReconnectDelay: number,
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
