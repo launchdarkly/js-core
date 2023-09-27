@@ -73,6 +73,6 @@
   },
   "dependencies": {
     "@launchdarkly/akamai-edgeworker-sdk-common": "^0.3.3",
-    "@launchdarkly/js-server-sdk-common": "^1.2.2"
+    "@launchdarkly/js-server-sdk-common": "1.4.0-alpha.4"
   }
 }

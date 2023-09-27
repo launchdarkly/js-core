@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common",
-  "version": "1.4.0-alpha.3",
+  "version": "1.4.0-alpha.4",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
