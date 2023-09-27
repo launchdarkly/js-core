@@ -678,21 +678,19 @@ export default class LDClientImpl implements LDClient {
           if (typeChecker) {
             const [matched, type] = typeChecker(evalRes.detail.value);
             if (!matched) {
-              // TODO: change the detail.
-              // TODO: Use the default.
               const errorRes = EvalResult.forError(
                 ErrorKinds.WrongType,
                 `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
                 defaultValue,
               );
-              // Method intentionally not awaited.
+              // Method intentionally not awaited, puts event processing outside hot path.
               this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
               cb(errorRes, flag);
               return;
             }
           }
 
-          // Method intentionally not awaited.
+          // Method intentionally not awaited, puts event processing outside hot path.
           this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
           cb(evalRes, flag);
         },
