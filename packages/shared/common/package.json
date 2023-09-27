@@ -42,7 +42,6 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "ts-jest": "^29.0.5",
-    "tsup": "^7.2.0",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   }
