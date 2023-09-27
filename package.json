@@ -2,6 +2,8 @@
   "name": "@launchdarkly/js-core",
   "workspaces": [
     "packages/shared/common",
+    "packages/shared/common-types",
+    "packages/shared/mocks",
     "packages/shared/sdk-client",
     "packages/shared/sdk-server",
     "packages/shared/sdk-server-edge",
@@ -15,8 +17,7 @@
     "packages/sdk/akamai-edgekv",
     "packages/sdk/akamai-edgekv/example",
     "packages/store/node-server-sdk-redis",
-    "packages/store/node-server-sdk-dynamodb",
-    "packages/mocks"
+    "packages/store/node-server-sdk-dynamodb"
   ],
   "private": true,
   "scripts": {

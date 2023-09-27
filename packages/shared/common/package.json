@@ -19,8 +19,9 @@
     "client"
   ],
   "scripts": {
-    "test": "npx jest --ci",
-    "build": "npx tsc",
+    "test": "yarn build && npx jest --ci",
+    "build": "npx tsc && yarn build-types",
+    "build-types": "tsup src/index.ts --dts-only --out-dir ../common-types",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix"
@@ -42,6 +43,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "ts-jest": "^29.0.5",
+    "tsup": "^7.2.0",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   }

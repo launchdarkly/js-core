@@ -1,4 +1,4 @@
-import type { Info, Platform, PlatformData, Requests, SdkData } from 'shared-common-types';
+import type { Info, Platform, PlatformData, Requests, SdkData } from 'ld-common';
 
 import { crypto } from './hasher';
 

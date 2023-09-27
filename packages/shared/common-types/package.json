@@ -1,0 +1,4 @@
+{
+  "name": "@types/ld-common",
+  "types": "./index.d.ts"
+}

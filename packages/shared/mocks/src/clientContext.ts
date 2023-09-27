@@ -1,4 +1,4 @@
-import type { ClientContext } from 'shared-common-types';
+import type { ClientContext } from 'ld-common';
 
 import platform from './platform';
 

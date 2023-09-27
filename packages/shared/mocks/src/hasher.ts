@@ -1,4 +1,4 @@
-import type { Crypto, Hasher, Hmac } from 'shared-common-types';
+import type { Crypto, Hasher, Hmac } from 'ld-common';
 
 export const hasher: Hasher = {
   update: jest.fn(),
