@@ -80,7 +80,7 @@ export interface LDMigrationTracker {
 export interface LDMigrationVariation {
   /**
    * The result of the flag evaluation. This will be either one of the flag's variations or
-   * the default value that was passed to `LDClient.variationMigration`.
+   * the default value that was passed to `LDClient.migrationVariation`.
    */
   value: LDMigrationStage;
 

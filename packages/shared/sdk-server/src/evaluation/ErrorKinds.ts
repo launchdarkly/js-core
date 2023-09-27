@@ -8,6 +8,7 @@ enum ErrorKinds {
   UserNotSpecified = 'USER_NOT_SPECIFIED',
   FlagNotFound = 'FLAG_NOT_FOUND',
   ClientNotReady = 'CLIENT_NOT_READY',
+  WrongType = 'WRONG_TYPE',
 }
 
 /**
