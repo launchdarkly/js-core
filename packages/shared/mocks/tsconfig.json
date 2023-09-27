@@ -12,7 +12,10 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true, // enables importers to jump to source
-    "stripInternal": true
+    "stripInternal": true,
+    "paths": {
+      "@common": ["../common"]
+    }
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"],
   "references": [

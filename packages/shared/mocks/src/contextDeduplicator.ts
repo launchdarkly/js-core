@@ -1,4 +1,4 @@
-import type { Context, subsystem } from '../../common';
+import type { Context, subsystem } from '@common';
 
 export default class ContextDeduplicator implements subsystem.LDContextDeduplicator {
   flushInterval?: number | undefined = 0.1;

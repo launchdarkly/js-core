@@ -1,4 +1,5 @@
-import type { ClientContext } from '../../common';
+import type { ClientContext } from '@common';
+
 import platform from './platform';
 
 const clientContext: ClientContext = {

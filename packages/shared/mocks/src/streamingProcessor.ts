@@ -4,7 +4,7 @@ import type {
   internal,
   LDStreamingError,
   ProcessStreamResponse,
-} from '../../common';
+} from '@common';
 
 export const MockStreamingProcessor = jest.fn();
 
