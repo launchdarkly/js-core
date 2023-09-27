@@ -102,8 +102,6 @@ describe('given an event processor', () => {
         status: LDDeliveryStatus.Succeeded,
       }),
     );
-    // TODO: fix this
-    // @ts-ignore
     contextDeduplicator = new ContextDeduplicator();
     eventProcessor = new EventProcessor(eventProcessorConfig, clientContext, contextDeduplicator);
   });
