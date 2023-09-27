@@ -140,8 +140,7 @@ export async function newSdkClientEntity(options) {
           switch(pe.valueType) {
             case "bool":
               return {value: await client.boolVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
-            case "int":
-              return {value: await client.numberVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            case "int": // Intentional fallthrough.
             case "double":
               return {value: await client.numberVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
             case "string":
