@@ -7,8 +7,6 @@ import {
   LDContext,
   LDEvaluationDetail,
   LDLogger,
-  LDPollingError,
-  LDStreamingError,
   Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -483,11 +481,9 @@ export default class LDClientImpl implements LDClient {
     this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
   }
 
-  private dataSourceErrorHandler(e: LDStreamingError | LDPollingError) {
+  private dataSourceErrorHandler(e: any) {
     const error =
-      e instanceof LDStreamingError && e.code === 401
-        ? new Error('Authentication failed. Double check your SDK key.')
-        : e;
+      e.code === 401 ? new Error('Authentication failed. Double check your SDK key.') : e;
 
     this.onError(error);
     this.onFailed(error);

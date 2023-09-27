@@ -62,11 +62,11 @@ describe('LDClientImpl', () => {
     expect(callbacks.onError).not.toBeCalled();
   });
 
-  // TODO: fix this
-  it.only('initialization fails: failed event fires and initialization promise rejects', async () => {
+  it('initialization fails: failed event fires and initialization promise rejects', async () => {
     setupMockStreamingProcessor(true);
     client = createClient();
-    // await expect(client.waitForInitialization()).rejects.toThrow('failed');
+
+    await expect(client.waitForInitialization()).rejects.toThrow('failed');
 
     expect(client.initialized()).toBeFalsy();
     expect(callbacks.onReady).not.toBeCalled();

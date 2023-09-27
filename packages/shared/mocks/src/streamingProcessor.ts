@@ -20,13 +20,14 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
-          process.nextTick(() =>
-            errorHandler({
+          process.nextTick(() => {
+            const unauthorized: LDStreamingError = {
               code: 401,
               name: 'LaunchDarklyStreamingError',
               message: 'test-error',
-            } as LDStreamingError),
-          );
+            };
+            errorHandler(unauthorized);
+          });
         } else {
           // execute put which will resolve the init promise
           process.nextTick(
