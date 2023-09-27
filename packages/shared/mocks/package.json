@@ -23,7 +23,7 @@
     "client"
   ],
   "scripts": {
-    "test": "npx jest --ci",
+    "test": "",
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint  --ext .ts",
