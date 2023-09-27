@@ -1,4 +1,9 @@
-import { internal, LDEvaluationReason, LDLogger } from '@launchdarkly/js-sdk-common';
+import {
+  internal,
+  LDEvaluationReason,
+  LDLogger,
+  TypeValidators,
+} from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationStage, LDMigrationTracker } from './api';
 import {
@@ -82,6 +87,11 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   }
 
   createEvent(): LDMigrationOpEvent | undefined {
+    if (!TypeValidators.String.is(this.flagKey) || this.flagKey === '') {
+      this.logger?.error('The flag key for a migration operation must be a non-empty string.');
+      return undefined;
+    }
+
     if (!this.operation) {
       this.logger?.error('The operation must be set using "op" before an event can be created.');
       return undefined;

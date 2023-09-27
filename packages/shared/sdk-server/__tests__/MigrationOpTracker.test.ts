@@ -14,6 +14,8 @@ it('does not generate an event if an op is not set', () => {
     },
   );
 
+  tracker.invoked('old');
+
   expect(tracker.createEvent()).toBeUndefined();
 });
 
@@ -22,8 +24,27 @@ it('does not generate an event with missing context keys', () => {
     kind: 'FALLTHROUGH',
   });
 
-  // Set the op otherwise that would prevent an event as well.
+  // Set the op otherwise/invoked that would prevent an event as well.
   tracker.op('write');
+  tracker.invoked('old');
+
+  expect(tracker.createEvent()).toBeUndefined();
+});
+
+it('does not generate an event with empty flag key', () => {
+  const tracker = new MigrationOpTracker(
+    '',
+    { key: 'user-key' },
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+  );
+
+  // Set the op/invoked otherwise that would prevent an event as well.
+  tracker.op('write');
+  tracker.invoked('old');
 
   expect(tracker.createEvent()).toBeUndefined();
 });

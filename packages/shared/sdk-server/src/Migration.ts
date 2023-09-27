@@ -232,7 +232,7 @@ class Migration<
     defaultStage: LDMigrationStage,
     payload?: TMigrationReadInput,
   ): Promise<LDMigrationReadResult<TMigrationRead>> {
-    const stage = await this.client.variationMigration(key, context, defaultStage);
+    const stage = await this.client.migrationVariation(key, context, defaultStage);
     const res = await this.readTable[stage.value]({
       payload,
       tracker: stage.tracker,
@@ -248,7 +248,7 @@ class Migration<
     defaultStage: LDMigrationStage,
     payload?: TMigrationWriteInput,
   ): Promise<LDMigrationWriteResult<TMigrationWrite>> {
-    const stage = await this.client.variationMigration(key, context, defaultStage);
+    const stage = await this.client.migrationVariation(key, context, defaultStage);
     const res = await this.writeTable[stage.value]({
       payload,
       tracker: stage.tracker,

@@ -31,7 +31,8 @@ app.get('/', (req, res) => {
       'migrations',
       'event-sampling',
       'config-override-kind',
-      'metric-kind'
+      'metric-kind',
+      'strongly-typed',
     ],
   });
 });
