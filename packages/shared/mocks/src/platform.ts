@@ -1,5 +1,4 @@
-import type { Info, Platform, PlatformData, Requests, SdkData } from 'ld-common';
-
+import type { Info, Platform, PlatformData, Requests, SdkData } from '../../common';
 import { crypto } from './hasher';
 
 const info: Info = {

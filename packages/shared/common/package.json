@@ -19,9 +19,8 @@
     "client"
   ],
   "scripts": {
-    "test": "yarn build && npx jest --ci",
-    "build": "npx tsc && yarn build-types",
-    "build-types": "tsup src/index.ts --dts-only --out-dir ../common-types",
+    "test": "npx jest --ci",
+    "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix"
