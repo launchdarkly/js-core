@@ -7,9 +7,11 @@ import {
   internal,
   LDContext,
   LDEvaluationDetail,
+  LDEvaluationDetailTyped,
   LDLogger,
   Platform,
   subsystem,
+  TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
 import {
@@ -301,7 +303,105 @@ export default class LDClientImpl implements LDClient {
     });
   }
 
-  async variationMigration(
+  private typedEval<TResult>(
+    key: string,
+    context: LDContext,
+    defaultValue: TResult,
+    eventFactory: EventFactory,
+    typeChecker: (value: unknown) => [boolean, string],
+  ): Promise<LDEvaluationDetail> {
+    return new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
+      this.evaluateIfPossible(
+        key,
+        context,
+        defaultValue,
+        eventFactory,
+        (res) => {
+          const typedRes: LDEvaluationDetailTyped<TResult> = {
+            value: res.detail.value as TResult,
+            reason: res.detail.reason,
+            variationIndex: res.detail.variationIndex,
+          };
+          resolve(typedRes);
+        },
+        typeChecker,
+      );
+    });
+  }
+
+  async boolVariation(key: string, context: LDContext, defaultValue: boolean): Promise<boolean> {
+    return (
+      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
+        TypeValidators.Boolean.is(value),
+        TypeValidators.Boolean.getType(),
+      ])
+    ).value;
+  }
+
+  async numberVariation(key: string, context: LDContext, defaultValue: number): Promise<number> {
+    return (
+      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
+        TypeValidators.Number.is(value),
+        TypeValidators.Number.getType(),
+      ])
+    ).value;
+  }
+
+  async stringVariation(key: string, context: LDContext, defaultValue: string): Promise<string> {
+    return (
+      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
+        TypeValidators.String.is(value),
+        TypeValidators.String.getType(),
+      ])
+    ).value;
+  }
+
+  jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown> {
+    return this.variation(key, context, defaultValue);
+  }
+
+  boolVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: boolean,
+  ): Promise<LDEvaluationDetailTyped<boolean>> {
+    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Boolean.is(value),
+      TypeValidators.Boolean.getType(),
+    ]);
+  }
+
+  numberVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: number,
+  ): Promise<LDEvaluationDetailTyped<number>> {
+    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]);
+  }
+
+  stringVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: string,
+  ): Promise<LDEvaluationDetailTyped<string>> {
+    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
+    ]);
+  }
+
+  jsonVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: unknown,
+  ): Promise<LDEvaluationDetailTyped<unknown>> {
+    return this.variationDetail(key, context, defaultValue);
+  }
+
+  async migrationVariation(
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
@@ -523,6 +623,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     eventFactory: EventFactory,
     cb: (res: EvalResult, flag?: Flag) => void,
+    typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (this.config.offline) {
       this.logger?.info('Variation called in offline mode. Returning default value.');
@@ -574,29 +675,53 @@ export default class LDClientImpl implements LDClient {
             evalRes.setDefault(defaultValue);
           }
 
-          // Immediately invoked function expression to get the event out of the callback
-          // path and allow access to async methods.
-          (async () => {
-            const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
-            evalRes.events?.forEach((event) => {
-              this.eventProcessor.sendEvent({ ...event, indexSamplingRatio });
-            });
-            this.eventProcessor.sendEvent(
-              eventFactory.evalEvent(
-                flag,
-                evalContext,
-                evalRes.detail,
+          if (typeChecker) {
+            const [matched, type] = typeChecker(evalRes.detail.value);
+            if (!matched) {
+              // TODO: change the detail.
+              // TODO: Use the default.
+              const errorRes = EvalResult.forError(
+                ErrorKinds.WrongType,
+                `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
                 defaultValue,
-                undefined,
-                indexSamplingRatio,
-              ),
-            );
-          })();
+              );
+              // Method intentionally not awaited.
+              this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
+              cb(errorRes, flag);
+              return;
+            }
+          }
+
+          // Method intentionally not awaited.
+          this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
           cb(evalRes, flag);
         },
         eventFactory,
       );
     });
+  }
+
+  private async sendEvalEvent(
+    evalRes: EvalResult,
+    eventFactory: EventFactory,
+    flag: Flag,
+    evalContext: Context,
+    defaultValue: any,
+  ) {
+    const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
+    evalRes.events?.forEach((event) => {
+      this.eventProcessor.sendEvent({ ...event, indexSamplingRatio });
+    });
+    this.eventProcessor.sendEvent(
+      eventFactory.evalEvent(
+        flag,
+        evalContext,
+        evalRes.detail,
+        defaultValue,
+        undefined,
+        indexSamplingRatio,
+      ),
+    );
   }
 
   private evaluateIfPossible(
@@ -605,6 +730,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     eventFactory: EventFactory,
     cb: (res: EvalResult, flag?: Flag) => void,
+    typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (!this.initialized()) {
       this.featureStore.initialized((storeInitialized) => {
@@ -613,7 +739,7 @@ export default class LDClientImpl implements LDClient {
             'Variation called before LaunchDarkly client initialization completed' +
               " (did you wait for the 'ready' event?) - using last known values from feature store",
           );
-          this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
+          this.variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
           return;
         }
         this.logger?.warn(
@@ -624,6 +750,6 @@ export default class LDClientImpl implements LDClient {
       });
       return;
     }
-    this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
+    this.variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
   }
 }

@@ -124,10 +124,32 @@ export async function newSdkClientEntity(options) {
       case 'evaluate': {
         const pe = params.evaluate;
         if (pe.detail) {
-          return await client.variationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+          switch(pe.valueType) {
+            case "bool":
+              return await client.boolVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+            case "int":
+              return await client.numberVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+            case "double":
+              return await client.numberVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+            case "string":
+              return await client.stringVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+            default:
+              return await client.variationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+          }
+
         } else {
-          const value = await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue);
-          return { value };
+          switch(pe.valueType) {
+            case "bool":
+              return {value: await client.boolVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            case "int":
+              return {value: await client.numberVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            case "double":
+              return {value: await client.numberVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            case "string":
+              return {value: await client.stringVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            default:
+              return {value: await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+          }
         }
       }
 
@@ -160,7 +182,7 @@ export async function newSdkClientEntity(options) {
 
       case 'migrationVariation':
         const migrationVariation = params.migrationVariation;
-        const res = await client.variationMigration(
+        const res = await client.migrationVariation(
           migrationVariation.key,
           migrationVariation.context,
           migrationVariation.defaultStage,

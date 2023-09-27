@@ -57,7 +57,7 @@ describe('given an LDClient with test data', () => {
       const defaultValue = Object.values(LDMigrationStage).find((item) => item !== value);
       // Verify the pre-condition that the default value is not the value under test.
       expect(defaultValue).not.toEqual(value);
-      const res = await client.variationMigration(
+      const res = await client.migrationVariation(
         flagKey,
         { key: 'test-key' },
         defaultValue as LDMigrationStage,
@@ -74,7 +74,7 @@ describe('given an LDClient with test data', () => {
     LDMigrationStage.RampDown,
     LDMigrationStage.Complete,
   ])('returns the default value if the flag does not exist: default = %p', async (stage) => {
-    const res = await client.variationMigration('no-flag', { key: 'test-key' }, stage);
+    const res = await client.migrationVariation('no-flag', { key: 'test-key' }, stage);
 
     expect(res.value).toEqual(stage);
   });
@@ -82,7 +82,7 @@ describe('given an LDClient with test data', () => {
   it('produces an error event for a migration flag with an incorrect value', async () => {
     const flagKey = 'bad-migration';
     td.update(td.flag(flagKey).valueForAll('potato'));
-    const res = await client.variationMigration(flagKey, { key: 'test-key' }, LDMigrationStage.Off);
+    const res = await client.migrationVariation(flagKey, { key: 'test-key' }, LDMigrationStage.Off);
     expect(res.value).toEqual(LDMigrationStage.Off);
     expect(errors.length).toEqual(1);
     expect(errors[0].message).toEqual(
