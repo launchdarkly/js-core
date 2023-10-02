@@ -59,12 +59,6 @@ export class EdgeFeatureStore implements LDFeatureStore {
         case 'segments':
           callback(item.segments[dataKey]);
           break;
-        case 'configurationOverrides':
-          callback(item.configurationOverrides?.[dataKey] ?? null);
-          break;
-        case 'metrics':
-          callback(item.metrics?.[dataKey] ?? null);
-          break;
         default:
           callback(null);
       }
@@ -95,12 +89,6 @@ export class EdgeFeatureStore implements LDFeatureStore {
           break;
         case 'segments':
           callback(item.segments);
-          break;
-        case 'configurationOverrides':
-          callback(item.configurationOverrides || {});
-          break;
-        case 'metrics':
-          callback(item.metrics || {});
           break;
         default:
           throw new Error(`Unsupported DataKind: ${namespace}`);

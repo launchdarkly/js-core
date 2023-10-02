@@ -6,17 +6,10 @@ import clearPrefix from './clearPrefix';
 
 const featuresKind = { namespace: 'features', deserialize: (data: string) => JSON.parse(data) };
 const segmentsKind = { namespace: 'segments', deserialize: (data: string) => JSON.parse(data) };
-const configurationOverridesKind = {
-  namespace: 'configurationOverrides',
-  deserialize: (data: string) => JSON.parse(data),
-};
-const metricsKind = { namespace: 'metrics', deserialize: (data: string) => JSON.parse(data) };
 
 const dataKind = {
   features: featuresKind,
   segments: segmentsKind,
-  configurationOverrides: configurationOverridesKind,
-  metrics: metricsKind,
 };
 
 function promisify<T>(method: (callback: (val: T) => void) => void): Promise<T> {
@@ -105,24 +98,14 @@ describe('given an empty store', () => {
     const segments = [
       { key: 'first', item: { version: 2, serializedItem: `{"version":2}`, deleted: false } },
     ];
-    const configurationOverrides = [
-      { key: 'first', item: { version: 1, serializedItem: `{"version":3}`, deleted: false } },
-    ];
-    const metrics = [
-      { key: 'first', item: { version: 1, serializedItem: `{"version":4}`, deleted: false } },
-    ];
 
     await facade.init([
       { key: dataKind.features, item: flags },
       { key: dataKind.segments, item: segments },
-      { key: dataKind.configurationOverrides, item: configurationOverrides },
-      { key: dataKind.metrics, item: metrics },
     ]);
 
     const items1 = await facade.getAll(dataKind.features);
     const items2 = await facade.getAll(dataKind.segments);
-    const overrides1 = await facade.getAll(dataKind.configurationOverrides);
-    const metrics1 = await facade.getAll(dataKind.metrics);
 
     // Reading from the store will not maintain the version.
     expect(items1).toEqual([
@@ -142,43 +125,20 @@ describe('given an empty store', () => {
       },
     ]);
 
-    expect(overrides1).toEqual([
-      {
-        key: 'first',
-        item: { version: 0, deleted: false, serializedItem: '{"version":3}' },
-      },
-    ]);
-    expect(metrics1).toEqual([
-      {
-        key: 'first',
-        item: { version: 0, deleted: false, serializedItem: '{"version":4}' },
-      },
-    ]);
-
     const newFlags = [
       { key: 'first', item: { version: 2, serializedItem: `{"version":2}`, deleted: false } },
     ];
     const newSegments = [
       { key: 'first', item: { version: 3, serializedItem: `{"version":3}`, deleted: false } },
     ];
-    const newOverrides = [
-      { key: 'first', item: { version: 2, serializedItem: `{"version":5}`, deleted: false } },
-    ];
-    const newMetrics = [
-      { key: 'first', item: { version: 3, serializedItem: `{"version":6}`, deleted: false } },
-    ];
 
     await facade.init([
       { key: dataKind.features, item: newFlags },
       { key: dataKind.segments, item: newSegments },
-      { key: dataKind.configurationOverrides, item: newOverrides },
-      { key: dataKind.metrics, item: newMetrics },
     ]);
 
     const items3 = await facade.getAll(dataKind.features);
     const items4 = await facade.getAll(dataKind.segments);
-    const overrides2 = await facade.getAll(dataKind.configurationOverrides);
-    const metrics2 = await facade.getAll(dataKind.metrics);
 
     expect(items3).toEqual([
       {
@@ -190,18 +150,6 @@ describe('given an empty store', () => {
       {
         key: 'first',
         item: { version: 0, deleted: false, serializedItem: '{"version":3}' },
-      },
-    ]);
-    expect(overrides2).toEqual([
-      {
-        key: 'first',
-        item: { version: 0, deleted: false, serializedItem: '{"version":5}' },
-      },
-    ]);
-    expect(metrics2).toEqual([
-      {
-        key: 'first',
-        item: { version: 0, deleted: false, serializedItem: '{"version":6}' },
       },
     ]);
   });

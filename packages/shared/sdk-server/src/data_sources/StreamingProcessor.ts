@@ -131,9 +131,6 @@ export default class StreamingProcessor implements LDStreamProcessor {
         const initData = {
           [VersionedDataKinds.Features.namespace]: parsed.data.flags,
           [VersionedDataKinds.Segments.namespace]: parsed.data.segments,
-          [VersionedDataKinds.ConfigurationOverrides.namespace]:
-            parsed.data.configurationOverrides || {},
-          [VersionedDataKinds.Metrics.namespace]: parsed.data.metrics || {},
         };
 
         this.featureStore.init(initData, () => fn?.());

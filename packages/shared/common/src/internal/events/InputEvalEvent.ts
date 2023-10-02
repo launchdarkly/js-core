@@ -38,7 +38,6 @@ export default class InputEvalEvent {
     debugEventsUntilDate?: number,
     excludeFromSummaries?: boolean,
     public readonly samplingRatio: number = 1,
-    public readonly indexSamplingRatio: number = 1,
   ) {
     this.creationDate = Date.now();
     this.default = defValue;

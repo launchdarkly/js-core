@@ -295,7 +295,6 @@ describe('given an event processor', () => {
       trackEvents: true,
       default: 'default',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
 
@@ -326,7 +325,6 @@ describe('given an event processor', () => {
       trackEvents: true,
       default: 'default',
       samplingRatio: 2,
-      indexSamplingRatio: 1, // Disable the index events.
       withReasons: true,
     });
 
@@ -360,7 +358,6 @@ describe('given an event processor', () => {
       trackEvents: true,
       default: 'default',
       samplingRatio: 2,
-      indexSamplingRatio: 1, // Disable the index events.
       withReasons: true,
     });
 
@@ -394,7 +391,6 @@ describe('given an event processor', () => {
       trackEvents: true,
       default: 'default',
       samplingRatio: 2,
-      indexSamplingRatio: 1, // Disable the index events.
       withReasons: true,
     });
 
@@ -422,7 +418,6 @@ describe('given an event processor', () => {
       trackEvents: true,
       default: 'default',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
 
@@ -455,7 +450,6 @@ describe('given an event processor', () => {
       debugEventsUntilDate: 2000,
       default: 'default',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
 
@@ -487,7 +481,6 @@ describe('given an event processor', () => {
       debugEventsUntilDate: 2000,
       default: 'default',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
 
@@ -526,7 +519,6 @@ describe('given an event processor', () => {
       debugEventsUntilDate: 1500,
       default: 'default',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
 
@@ -558,7 +550,6 @@ describe('given an event processor', () => {
       trackEvents: true,
       default: 'default',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
     eventProcessor.sendEvent({
@@ -572,7 +563,6 @@ describe('given an event processor', () => {
       trackEvents: true,
       default: 'potato',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
 
@@ -637,7 +627,6 @@ describe('given an event processor', () => {
       trackEvents: false,
       default: 'default',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
     eventProcessor.sendEvent({
@@ -651,7 +640,6 @@ describe('given an event processor', () => {
       trackEvents: false,
       default: 'potato',
       samplingRatio: 1,
-      indexSamplingRatio: 1,
       withReasons: true,
     });
 
@@ -709,7 +697,6 @@ describe('given an event processor', () => {
       key: 'eventkey',
       data: { thing: 'stuff' },
       samplingRatio: 1,
-      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -744,7 +731,6 @@ describe('given an event processor', () => {
       key: 'eventkey',
       data: { thing: 'stuff' },
       samplingRatio: 2,
-      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -770,7 +756,6 @@ describe('given an event processor', () => {
       key: 'eventkey',
       data: { thing: 'stuff' },
       samplingRatio: 2,
-      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -798,7 +783,6 @@ describe('given an event processor', () => {
       key: 'eventkey',
       data: { thing: 'stuff' },
       samplingRatio: 1,
-      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -832,7 +816,6 @@ describe('given an event processor', () => {
       data: { thing: 'stuff' },
       metricValue: 1.5,
       samplingRatio: 1,
-      indexSamplingRatio: 1,
     });
 
     await eventProcessor.flush();

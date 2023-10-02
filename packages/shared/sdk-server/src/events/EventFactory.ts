@@ -15,7 +15,6 @@ export default class EventFactory {
     detail: LDEvaluationDetail,
     defaultVal: any,
     prereqOfFlag?: Flag,
-    indexEventSamplingRatio?: number,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
     return new internal.InputEvalEvent(
@@ -33,7 +32,6 @@ export default class EventFactory {
       flag.debugEventsUntilDate,
       flag.excludeFromSummaries,
       flag.samplingRatio,
-      indexEventSamplingRatio ?? 1,
     );
   }
 
@@ -41,7 +39,6 @@ export default class EventFactory {
     key: string,
     context: Context,
     detail: LDEvaluationDetail,
-    indexEventSamplingRatio?: number,
   ) {
     return new internal.InputEvalEvent(
       this.withReasons,
@@ -59,7 +56,6 @@ export default class EventFactory {
       undefined, // debugEventsUntilDate
       undefined, // exclude from summaries
       undefined, // sampling ratio
-      indexEventSamplingRatio,
     );
   }
 
@@ -76,7 +72,6 @@ export default class EventFactory {
     data?: any,
     metricValue?: number,
     samplingRatio: number = 1,
-    indexSamplingRatio: number = 1,
   ) {
     return new internal.InputCustomEvent(
       context,
@@ -84,7 +79,6 @@ export default class EventFactory {
       data ?? undefined,
       metricValue ?? undefined,
       samplingRatio,
-      indexSamplingRatio,
     );
   }
 }

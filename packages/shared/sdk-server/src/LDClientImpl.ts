@@ -54,8 +54,6 @@ import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
-import { Metric } from './store/Metric';
-import { Override } from './store/Override';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 enum InitState {
@@ -114,8 +112,6 @@ export default class LDClientImpl implements LDClient {
   private onReady: () => void;
 
   private diagnosticsManager?: DiagnosticsManager;
-
-  private eventConfig: internal.LDEventOverrides;
 
   /**
    * Intended for use by platform specific client implementations.
@@ -236,26 +232,6 @@ export default class LDClientImpl implements LDClient {
         this.onReady();
       }
     });
-
-    this.eventConfig = {
-      samplingRatio: async (key: string) => {
-        const ratioItem = await this.asyncFeatureStore.get(VersionedDataKinds.Metrics, key);
-        if (ratioItem && !ratioItem.deleted) {
-          return (ratioItem as Metric).samplingRatio ?? 1;
-        }
-        return 1;
-      },
-      indexEventSamplingRatio: async () => {
-        const indexSampling = await this.asyncFeatureStore.get(
-          VersionedDataKinds.ConfigurationOverrides,
-          'indexSamplingRatio',
-        );
-        if (indexSampling && !indexSampling.deleted) {
-          return (indexSampling as Override).value ?? 1;
-        }
-        return 1;
-      },
-    };
   }
 
   initialized(): boolean {
@@ -574,20 +550,15 @@ export default class LDClientImpl implements LDClient {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
-    // Async immediately invoking function expression to get the flag from the store
-    // without requiring track to be async.
-    (async () => {
-      this.eventProcessor.sendEvent(
-        this.eventFactoryDefault.customEvent(
-          key,
-          checkedContext!,
-          data,
-          metricValue,
-          await this.eventConfig.samplingRatio(key),
-          await this.eventConfig.indexEventSamplingRatio(),
-        ),
-      );
-    })();
+
+    this.eventProcessor.sendEvent(
+      this.eventFactoryDefault.customEvent(
+        key,
+        checkedContext!,
+        data,
+        metricValue,
+      ),
+    );
   }
 
   trackMigration(event: LDMigrationOpEvent): void {
@@ -649,17 +620,13 @@ export default class LDClientImpl implements LDClient {
         );
         this.onError(error);
         const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
-        (async () => {
-          const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
           this.eventProcessor.sendEvent(
             this.eventFactoryDefault.unknownFlagEvent(
               flagKey,
               evalContext,
               result.detail,
-              indexSamplingRatio,
             ),
           );
-        })();
         cb(result);
         return;
       }
@@ -683,14 +650,12 @@ export default class LDClientImpl implements LDClient {
                 `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
                 defaultValue,
               );
-              // Method intentionally not awaited, puts event processing outside hot path.
               this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
               cb(errorRes, flag);
               return;
             }
           }
 
-          // Method intentionally not awaited, puts event processing outside hot path.
           this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
           cb(evalRes, flag);
         },
@@ -699,16 +664,15 @@ export default class LDClientImpl implements LDClient {
     });
   }
 
-  private async sendEvalEvent(
+  private sendEvalEvent(
     evalRes: EvalResult,
     eventFactory: EventFactory,
     flag: Flag,
     evalContext: Context,
     defaultValue: any,
   ) {
-    const indexSamplingRatio = await this.eventConfig.indexEventSamplingRatio();
     evalRes.events?.forEach((event) => {
-      this.eventProcessor.sendEvent({ ...event, indexSamplingRatio });
+      this.eventProcessor.sendEvent({ ...event });
     });
     this.eventProcessor.sendEvent(
       eventFactory.evalEvent(
@@ -717,7 +681,6 @@ export default class LDClientImpl implements LDClient {
         evalRes.detail,
         defaultValue,
         undefined,
-        indexSamplingRatio,
       ),
     );
   }

@@ -157,8 +157,6 @@ function makeAllData(flag?: any, segment?: any, override?: any, metric?: any): a
     data: {
       flags: {},
       segments: {},
-      configurationOverrides: {},
-      metrics: {},
     },
   };
 
@@ -167,12 +165,6 @@ function makeAllData(flag?: any, segment?: any, override?: any, metric?: any): a
   }
   if (segment) {
     allData.data.segments.segmentName = segment;
-  }
-  if (override) {
-    allData.data.configurationOverrides.overrideName = override;
-  }
-  if (metric) {
-    allData.data.metrics.metricName = metric;
   }
   return allData;
 }
@@ -185,12 +177,6 @@ function makePatchData(flag?: any, segment?: any, override?: any, metric?: any):
   let path = '/flags/flagName';
   if (segment) {
     path = '/segments/segmentName';
-  }
-  if (override) {
-    path = '/configurationOverrides/overrideName';
-  }
-  if (metric) {
-    path = '/metrics/metricName';
   }
   return {
     path,
@@ -254,29 +240,6 @@ describe('when deserializing all data', () => {
     expect(ref?.isValid).toBeTruthy();
   });
 
-  it('handles a config override', () => {
-    const override = {
-      key: 'overrideName',
-      value: 'potato',
-      version: 1,
-    };
-    const jsonString = makeSerializedAllData(undefined, undefined, override, undefined);
-    const parsed = deserializeAll(jsonString);
-    expect(parsed).toMatchObject({ data: { configurationOverrides: { overrideName: override } } });
-  });
-
-  it('handles a metric', () => {
-    const metric = {
-      key: 'metricName',
-      samplingRatio: 42,
-      version: 1,
-    };
-    const jsonString = makeSerializedAllData(undefined, undefined, undefined, metric);
-    const parsed = deserializeAll(jsonString);
-    expect(parsed).toMatchObject({ data: { metrics: { metricName: metric } } });
-  });
-});
-
 describe('when deserializing patch data', () => {
   it('handles a flag with an attribute literal in a clause', () => {
     const jsonString = makeSerializedPatchData(flagWithAttributeNameInClause);
@@ -325,42 +288,6 @@ describe('when deserializing patch data', () => {
     const parsed = deserializePatch(jsonString);
     const ref = (parsed?.data as Flag).rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
-  });
-
-  it('handles a config override', () => {
-    const override = {
-      key: 'overrideName',
-      value: 'potato',
-      version: 1,
-    };
-    const jsonString = makeSerializedPatchData(undefined, undefined, override, undefined);
-    const parsed = deserializePatch(jsonString);
-    expect(parsed).toEqual({
-      data: override,
-      path: '/configurationOverrides/overrideName',
-      kind: {
-        namespace: 'configurationOverrides',
-        streamApiPath: '/configurationOverrides/',
-      },
-    });
-  });
-
-  it('handles a metric', () => {
-    const metric = {
-      key: 'metricName',
-      samplingRatio: 42,
-      version: 1,
-    };
-    const jsonString = makeSerializedPatchData(undefined, undefined, undefined, metric);
-    const parsed = deserializePatch(jsonString);
-    expect(parsed).toEqual({
-      data: metric,
-      path: '/metrics/metricName',
-      kind: {
-        namespace: 'metrics',
-        streamApiPath: '/metrics/',
-      },
-    });
   });
 });
 
