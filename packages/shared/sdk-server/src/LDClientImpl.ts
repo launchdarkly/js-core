@@ -417,6 +417,8 @@ export default class LDClientImpl implements LDClient {
           const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
           const checkRatio = flag?.migration?.checkRatio;
           const samplingRatio = flag?.samplingRatio;
+          // Can be null for compatibility reasons.
+          const variationIndex = detail.variationIndex === null ? undefined : detail.variationIndex;
           if (!IsMigrationStage(detail.value)) {
             const error = new Error(
               `Unrecognized MigrationState for "${key}"; returning default value.`,
@@ -424,7 +426,7 @@ export default class LDClientImpl implements LDClient {
             this.onError(error);
             const reason = {
               kind: 'ERROR',
-              errorKind: 'WRONG_TYPE',
+              errorKind: ErrorKinds.WrongType,
             };
             resolve({
               value: defaultValue,
@@ -435,9 +437,10 @@ export default class LDClientImpl implements LDClient {
                 defaultValue,
                 reason,
                 checkRatio,
-                undefined,
-                undefined,
+                variationIndex,
+                flag?.version,
                 samplingRatio,
+                this.logger,
               ),
             });
             return;
@@ -451,10 +454,10 @@ export default class LDClientImpl implements LDClient {
               detail.value,
               detail.reason,
               checkRatio,
-              // Can be null for compatibility reasons.
-              detail.variationIndex === null ? undefined : detail.variationIndex,
+              variationIndex,
               flag?.version,
               samplingRatio,
+              this.logger,
             ),
           });
         },
