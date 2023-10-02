@@ -11,7 +11,9 @@ inputs:
   workspace_path:
     description: 'Path to the package to release.'
     required: true
-
+  should_build_docs:
+    description: 'Whether docs should be built. It will be by default.'
+    default: true
 runs:
   using: composite
   steps:
@@ -40,5 +42,5 @@ runs:
 
     - name: Build Docs
       shell: bash
-      if: ${{inputs.workspace_name != '@launchdarkly/private-js-mocks'}}
+      if: ${{inputs.should_build_docs == 'true'}}
       run: yarn build:doc -- ${{ inputs.workspace_path }}

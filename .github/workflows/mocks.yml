@@ -22,3 +22,4 @@ jobs:
         with:
           workspace_name: '@launchdarkly/private-js-mocks'
           workspace_path: packages/shared/mocks
+          should_build_docs: false
