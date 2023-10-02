@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "test": "npx jest --ci",
+    "build-types": "npx tsc --declaration true --emitDeclarationOnly true --declarationDir dist",
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
