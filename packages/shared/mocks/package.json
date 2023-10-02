@@ -24,7 +24,8 @@
   ],
   "scripts": {
     "test": "",
-    "build": "npx tsc",
+    "build-types": "yarn workspace @launchdarkly/js-sdk-common build-types",
+    "build": "yarn build-types && npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint  --ext .ts",
     "lint:fix": "yarn run lint -- --fix"
