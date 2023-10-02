@@ -1,4 +1,4 @@
-name: sdk/cloudflare
+name: shared/mocks
 
 on:
   push:

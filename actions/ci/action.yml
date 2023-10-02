@@ -40,4 +40,5 @@ runs:
 
     - name: Build Docs
       shell: bash
+      if: ${{inputs.workspace_name != '@launchdarkly/private-js-mocks'}}
       run: yarn build:doc -- ${{ inputs.workspace_path }}
