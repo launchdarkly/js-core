@@ -1,4 +1,5 @@
-import { basicPlatform } from '../mocks';
+import { basicPlatform } from '@launchdarkly/private-js-mocks';
+
 import DiagnosticsManager from './DiagnosticsManager';
 
 describe('given a diagnostics manager', () => {

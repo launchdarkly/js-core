@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 /* eslint-disable class-methods-use-this */
 import {
   ClientContext,
@@ -9,8 +7,6 @@ import {
   LDContext,
   LDEvaluationDetail,
   LDLogger,
-  LDPollingError,
-  LDStreamingError,
   Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -25,7 +21,7 @@ import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
-import { allAsync, allSeriesAsync } from './evaluation/collection';
+import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
 import ErrorKinds from './evaluation/ErrorKinds';
@@ -485,11 +481,9 @@ export default class LDClientImpl implements LDClient {
     this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
   }
 
-  private dataSourceErrorHandler(e: LDStreamingError | LDPollingError) {
+  private dataSourceErrorHandler(e: any) {
     const error =
-      e instanceof LDStreamingError && e.code === 401
-        ? new Error('Authentication failed. Double check your SDK key.')
-        : e;
+      e.code === 401 ? new Error('Authentication failed. Double check your SDK key.') : e;
 
     this.onError(error);
     this.onFailed(error);

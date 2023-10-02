@@ -23,7 +23,6 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
 
   // Logger is not currently used, but is included to reduce the chance of a
   // compatibility break to add a log.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(
     options?: LDRedisOptions,
     private readonly logger?: LDLogger,

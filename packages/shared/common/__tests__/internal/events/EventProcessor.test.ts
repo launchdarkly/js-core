@@ -1,9 +1,9 @@
+import { clientContext, ContextDeduplicator } from '@launchdarkly/private-js-mocks';
+
 import { Context } from '../../../src';
-import { LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
+import { LDContextDeduplicator, LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
-import { clientContext } from '../../../src/internal/mocks';
-import ContextDeduplicator from '../../../src/internal/mocks/contextDeduplicator';
 import BasicLogger from '../../../src/logging/BasicLogger';
 import format from '../../../src/logging/format';
 
@@ -84,7 +84,7 @@ function makeFeatureEvent(
 }
 
 describe('given an event processor', () => {
-  let contextDeduplicator: ContextDeduplicator;
+  let contextDeduplicator: LDContextDeduplicator;
   let eventProcessor: EventProcessor;
 
   const eventProcessorConfig: EventProcessorOptions = {

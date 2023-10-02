@@ -1,8 +1,10 @@
-import { EventName, ProcessStreamResponse } from '../../api';
-import { LDStreamingError } from '../../errors';
-import { ClientContext } from '../../options';
-import { DiagnosticsManager } from '../diagnostics';
-import { type StreamingErrorHandler } from '../stream';
+import type {
+  ClientContext,
+  EventName,
+  internal,
+  LDStreamingError,
+  ProcessStreamResponse,
+} from '@common';
 
 export const MockStreamingProcessor = jest.fn();
 
@@ -12,14 +14,20 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
       sdkKey: string,
       clientContext: ClientContext,
       listeners: Map<EventName, ProcessStreamResponse>,
-      diagnosticsManager: DiagnosticsManager,
-      errorHandler: StreamingErrorHandler,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      streamInitialReconnectDelay,
+      diagnosticsManager: internal.DiagnosticsManager,
+      errorHandler: internal.StreamingErrorHandler,
+      _streamInitialReconnectDelay: number,
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
-          process.nextTick(() => errorHandler(new LDStreamingError('test-error', 401)));
+          process.nextTick(() => {
+            const unauthorized: LDStreamingError = {
+              code: 401,
+              name: 'LaunchDarklyStreamingError',
+              message: 'test-error',
+            };
+            errorHandler(unauthorized);
+          });
         } else {
           // execute put which will resolve the init promise
           process.nextTick(

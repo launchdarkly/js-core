@@ -1,4 +1,5 @@
-import { AttributeReference, Context, internal, LDContext } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
@@ -10,8 +11,6 @@ import {
   makeClauseThatMatchesUser,
 } from './flags';
 import noQueries from './mocks/noQueries';
-
-const { mocks } = internal;
 
 const evaluator = new Evaluator(mocks.basicPlatform, noQueries);
 

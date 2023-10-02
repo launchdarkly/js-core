@@ -1,4 +1,5 @@
-import { AttributeReference, ClientContext, internal } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, ClientContext } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../../src/evaluation/data/Flag';
 import { FlagRule } from '../../../src/evaluation/data/FlagRule';
@@ -7,8 +8,6 @@ import Configuration from '../../../src/options/Configuration';
 import AsyncStoreFacade from '../../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../../src/store/VersionedDataKinds';
-
-const { mocks } = internal;
 
 const basicBooleanFlag: Flag = {
   fallthrough: {

@@ -1,4 +1,4 @@
-import { Crypto, Hasher, Hmac } from '../../api';
+import type { Crypto, Hasher, Hmac } from '@common';
 
 export const hasher: Hasher = {
   update: jest.fn(),

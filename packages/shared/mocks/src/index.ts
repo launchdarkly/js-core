@@ -1,4 +1,5 @@
 import clientContext from './clientContext';
+import ContextDeduplicator from './contextDeduplicator';
 import { crypto, hasher } from './hasher';
 import logger from './logger';
 import basicPlatform from './platform';
@@ -10,6 +11,7 @@ export {
   crypto,
   logger,
   hasher,
+  ContextDeduplicator,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
 };

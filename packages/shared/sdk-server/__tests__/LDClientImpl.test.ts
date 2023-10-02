@@ -1,5 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { internal } from '@launchdarkly/js-sdk-common';
+import {
+  basicPlatform,
+  MockStreamingProcessor,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl, LDOptions } from '../src';
 
@@ -10,14 +13,11 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
     ...{
       internal: {
         ...actual.internal,
-        StreamingProcessor: actual.internal.mocks.MockStreamingProcessor,
+        StreamingProcessor: MockStreamingProcessor,
       },
     },
   };
 });
-const {
-  mocks: { basicPlatform, setupMockStreamingProcessor },
-} = internal;
 
 describe('LDClientImpl', () => {
   let client: LDClientImpl;

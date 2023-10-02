@@ -1,10 +1,9 @@
 import { Context, internal } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import makeCallbacks from './makeCallbacks';
-
-const { mocks } = internal;
 
 const defaultUser = { key: 'user' };
 const anonymousUser = { key: 'anon-user', anonymous: true };
