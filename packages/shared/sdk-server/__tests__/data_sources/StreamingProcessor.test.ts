@@ -164,21 +164,21 @@ describe('given a stream processor with mock event source', () => {
   });
 
   describe('when patching a message', () => {
-    it.each([
-      VersionedDataKinds.Features,
-      VersionedDataKinds.Segments,
-    ])('patches a item of each kind: %j', async (kind) => {
-      streamProcessor.start();
-      const patchData = {
-        path: `${kind.streamApiPath}itemKey`,
-        data: { key: 'itemKey', version: 1 },
-      };
+    it.each([VersionedDataKinds.Features, VersionedDataKinds.Segments])(
+      'patches a item of each kind: %j',
+      async (kind) => {
+        streamProcessor.start();
+        const patchData = {
+          path: `${kind.streamApiPath}itemKey`,
+          data: { key: 'itemKey', version: 1 },
+        };
 
-      es.handlers.patch({ data: JSON.stringify(patchData) });
+        es.handlers.patch({ data: JSON.stringify(patchData) });
 
-      const f = await asyncStore.get(kind, 'itemKey');
-      expect(f!.version).toEqual(1);
-    });
+        const f = await asyncStore.get(kind, 'itemKey');
+        expect(f!.version).toEqual(1);
+      },
+    );
 
     it('passes error to callback if data is invalid', async () => {
       streamProcessor.start();
@@ -191,23 +191,23 @@ describe('given a stream processor with mock event source', () => {
   });
 
   describe('when deleting a message', () => {
-    it.each([
-      VersionedDataKinds.Features,
-      VersionedDataKinds.Segments,
-    ])('deletes each data kind: %j', async (kind) => {
-      streamProcessor.start();
-      const item = { key: 'itemKey', version: 1 };
-      await asyncStore.upsert(kind, item);
-      const stored = await asyncStore.get(kind, 'itemKey');
-      expect(stored!.version).toEqual(1);
+    it.each([VersionedDataKinds.Features, VersionedDataKinds.Segments])(
+      'deletes each data kind: %j',
+      async (kind) => {
+        streamProcessor.start();
+        const item = { key: 'itemKey', version: 1 };
+        await asyncStore.upsert(kind, item);
+        const stored = await asyncStore.get(kind, 'itemKey');
+        expect(stored!.version).toEqual(1);
 
-      const deleteData = { path: `${kind.streamApiPath}${item.key}`, version: 2 };
+        const deleteData = { path: `${kind.streamApiPath}${item.key}`, version: 2 };
 
-      es.handlers.delete({ data: JSON.stringify(deleteData) });
+        es.handlers.delete({ data: JSON.stringify(deleteData) });
 
-      const stored2 = await asyncStore.get(VersionedDataKinds.Features, 'itemKey');
-      expect(stored2).toBe(null);
-    });
+        const stored2 = await asyncStore.get(VersionedDataKinds.Features, 'itemKey');
+        expect(stored2).toBe(null);
+      },
+    );
 
     it('passes error to callback if data is invalid', async () => {
       streamProcessor.start();

@@ -345,7 +345,6 @@ describe('given an event processor with diagnostics manager', () => {
       creationDate: 1000,
       context,
       samplingRatio: 1,
-      indexSamplingRatio: 1,
     });
     eventProcessor.sendEvent({
       kind: 'custom',
@@ -353,7 +352,6 @@ describe('given an event processor with diagnostics manager', () => {
       creationDate: 1001,
       context,
       samplingRatio: 1,
-      indexSamplingRatio: 1,
     });
     await eventProcessor.flush();
 

@@ -152,7 +152,7 @@ const segmentWithBucketBy = {
   deleted: false,
 };
 
-function makeAllData(flag?: any, segment?: any, override?: any, metric?: any): any {
+function makeAllData(flag?: any, segment?: any): any {
   const allData: any = {
     data: {
       flags: {},
@@ -169,23 +169,23 @@ function makeAllData(flag?: any, segment?: any, override?: any, metric?: any): a
   return allData;
 }
 
-function makeSerializedAllData(flag?: any, segment?: any, override?: any, metric?: any): string {
-  return JSON.stringify(makeAllData(flag, segment, override, metric));
+function makeSerializedAllData(flag?: any, segment?: any): string {
+  return JSON.stringify(makeAllData(flag, segment));
 }
 
-function makePatchData(flag?: any, segment?: any, override?: any, metric?: any): any {
+function makePatchData(flag?: any, segment?: any): any {
   let path = '/flags/flagName';
   if (segment) {
     path = '/segments/segmentName';
   }
   return {
     path,
-    data: flag ?? segment ?? override ?? metric,
+    data: flag ?? segment,
   };
 }
 
-function makeSerializedPatchData(flag?: any, segment?: any, override?: any, metric?: any): string {
-  return JSON.stringify(makePatchData(flag, segment, override, metric));
+function makeSerializedPatchData(flag?: any, segment?: any): string {
+  return JSON.stringify(makePatchData(flag, segment));
 }
 
 describe('when deserializing all data', () => {
@@ -239,6 +239,7 @@ describe('when deserializing all data', () => {
     const ref = parsed?.data.flags.flagName.rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
+});
 
 describe('when deserializing patch data', () => {
   it('handles a flag with an attribute literal in a clause', () => {

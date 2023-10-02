@@ -552,12 +552,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor.sendEvent(
-      this.eventFactoryDefault.customEvent(
-        key,
-        checkedContext!,
-        data,
-        metricValue,
-      ),
+      this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
     );
   }
 
@@ -620,13 +615,9 @@ export default class LDClientImpl implements LDClient {
         );
         this.onError(error);
         const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
-          this.eventProcessor.sendEvent(
-            this.eventFactoryDefault.unknownFlagEvent(
-              flagKey,
-              evalContext,
-              result.detail,
-            ),
-          );
+        this.eventProcessor.sendEvent(
+          this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
+        );
         cb(result);
         return;
       }
@@ -675,13 +666,7 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor.sendEvent({ ...event });
     });
     this.eventProcessor.sendEvent(
-      eventFactory.evalEvent(
-        flag,
-        evalContext,
-        evalRes.detail,
-        defaultValue,
-        undefined,
-      ),
+      eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue, undefined),
     );
   }
 

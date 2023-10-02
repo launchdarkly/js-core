@@ -35,11 +35,7 @@ export default class EventFactory {
     );
   }
 
-  unknownFlagEvent(
-    key: string,
-    context: Context,
-    detail: LDEvaluationDetail,
-  ) {
+  unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
     return new internal.InputEvalEvent(
       this.withReasons,
       context,
