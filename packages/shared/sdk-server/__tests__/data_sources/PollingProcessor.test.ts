@@ -19,8 +19,6 @@ describe('given an event processor', () => {
   const allData = {
     flags: { flag: { version: 1 } },
     segments: { segment: { version: 1 } },
-    configurationOverrides: { override: { version: 1 } },
-    metrics: { metric: { version: 1 } },
   };
   const jsonData = JSON.stringify(allData);
 
@@ -74,10 +72,6 @@ describe('given an event processor', () => {
     expect(flags).toEqual(allData.flags);
     const segments = await storeFacade.all(VersionedDataKinds.Segments);
     expect(segments).toEqual(allData.segments);
-    const configurationOverrides = await storeFacade.all(VersionedDataKinds.ConfigurationOverrides);
-    expect(configurationOverrides).toEqual(allData.configurationOverrides);
-    const metrics = await storeFacade.all(VersionedDataKinds.Metrics);
-    expect(metrics).toEqual(allData.metrics);
   });
 });
 

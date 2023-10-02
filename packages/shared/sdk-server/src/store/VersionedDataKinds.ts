@@ -16,14 +16,4 @@ export default class VersionedDataKinds {
     namespace: 'segments',
     streamApiPath: '/segments/',
   };
-
-  static readonly ConfigurationOverrides: VersionedDataKind = {
-    namespace: 'configurationOverrides',
-    streamApiPath: '/configurationOverrides/',
-  };
-
-  static readonly Metrics: VersionedDataKind = {
-    namespace: 'metrics',
-    streamApiPath: '/metrics/',
-  };
 }

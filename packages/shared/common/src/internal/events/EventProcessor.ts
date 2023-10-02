@@ -251,14 +251,14 @@ export default class EventProcessor implements LDEventProcessor {
 
     const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
-    if (addIndexEvent && shouldSample(inputEvent.indexSamplingRatio)) {
+    if (addIndexEvent) {
       this.enqueue(
         this.makeOutputEvent(
           {
             kind: 'index',
             creationDate: inputEvent.creationDate,
             context: inputEvent.context,
-            samplingRatio: inputEvent.indexSamplingRatio,
+            samplingRatio: 1,
           },
           false,
         ),
