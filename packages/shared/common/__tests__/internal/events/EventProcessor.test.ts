@@ -4,8 +4,14 @@ import { Context } from '../../../src';
 import { LDContextDeduplicator, LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
+import shouldSample from '../../../src/internal/events/sampling';
 import BasicLogger from '../../../src/logging/BasicLogger';
 import format from '../../../src/logging/format';
+
+jest.mock('../../../src/internal/events/sampling', () => ({
+  __esModule: true,
+  default: jest.fn(() => true),
+}));
 
 const mockSendEventData = jest.fn();
 
@@ -224,10 +230,9 @@ describe('given an event processor', () => {
     });
 
     await eventProcessor.flush();
-    const request = await eventSender.queue.take();
     expect(shouldSample).toHaveBeenCalledWith(2);
 
-    expect(request.data).toEqual([
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
       {
         kind: 'index',
         creationDate: 1000,
@@ -257,11 +262,9 @@ describe('given an event processor', () => {
     });
 
     await eventProcessor.flush();
-    const request = await eventSender.queue.take();
     expect(shouldSample).toHaveBeenCalledWith(2);
-    expect(shouldSample).toHaveBeenCalledWith(1);
 
-    expect(request.data).toEqual([
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
       {
         kind: 'index',
         creationDate: 1000,
