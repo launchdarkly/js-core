@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk",
-  "version": "8.2.3",
+  "version": "8.2.4",
   "description": "LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-node",
   "repository": {
@@ -45,11 +45,12 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "1.2.2",
+    "@launchdarkly/js-server-sdk-common": "1.2.3",
     "https-proxy-agent": "^5.0.1",
     "launchdarkly-eventsource": "2.0.1"
   },
   "devDependencies": {
+    "@launchdarkly/private-js-mocks": "0.0.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.1.0",

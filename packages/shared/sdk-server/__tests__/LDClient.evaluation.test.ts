@@ -1,13 +1,30 @@
-import { LDClientImpl } from '../src';
-import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
-import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
+import { subsystem } from '@launchdarkly/js-sdk-common';
+import {
+  basicPlatform,
+  MockStreamingProcessor,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
+
+import { LDClientImpl, LDFeatureStore } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
-import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
+
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  return {
+    ...actual,
+    ...{
+      internal: {
+        ...actual.internal,
+        StreamingProcessor: MockStreamingProcessor,
+      },
+    },
+  };
+});
 
 const defaultUser = { key: 'user' };
 
@@ -301,9 +318,8 @@ describe('given an offline client', () => {
   });
 });
 
-class InertUpdateProcessor implements LDStreamProcessor {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  start(fn?: ((err?: any) => void) | undefined) {
+class InertUpdateProcessor implements subsystem.LDStreamProcessor {
+  start(_fn?: ((err?: any) => void) | undefined) {
     // Never initialize.
   }
 
@@ -376,12 +392,12 @@ describe('given a client that is un-initialized and store that is initialized', 
       },
       segments: {},
     });
+    setupMockStreamingProcessor(true);
 
     client = new LDClientImpl(
       'sdk-key',
       basicPlatform,
       {
-        updateProcessor: new NullUpdateProcessor(),
         sendEvents: false,
         featureStore: store,
       },

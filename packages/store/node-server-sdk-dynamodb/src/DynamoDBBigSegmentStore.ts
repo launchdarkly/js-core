@@ -39,7 +39,6 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
 
   // Logger is not currently used, but is included to reduce the chance of a
   // compatibility break to add a log.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(
     private readonly tableName: string,
     options?: LDDynamoDBOptions,

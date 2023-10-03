@@ -26,13 +26,13 @@ export function reviver(this: any, key: string, value: any): any {
   return value;
 }
 
-interface AllData {
+export interface FlagsAndSegments {
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
 }
 
-interface AllDataStream {
-  data: AllData;
+export interface AllData {
+  data: FlagsAndSegments;
 }
 
 /**
@@ -81,7 +81,7 @@ export function replacer(this: any, key: string, value: any): any {
   return value;
 }
 
-interface DeleteData extends Omit<VersionedData, 'key'> {
+export interface DeleteData extends Omit<VersionedData, 'key'> {
   path: string;
   kind?: VersionedDataKind;
 }
@@ -89,7 +89,7 @@ interface DeleteData extends Omit<VersionedData, 'key'> {
 type VersionedFlag = VersionedData & Flag;
 type VersionedSegment = VersionedData & Segment;
 
-interface PatchData {
+export interface PatchData {
   path: string;
   data: VersionedFlag | VersionedSegment;
   kind?: VersionedDataKind;
@@ -192,14 +192,14 @@ function tryParse(data: string): any {
 /**
  * @internal
  */
-export function deserializeAll(data: string): AllDataStream | undefined {
+export function deserializeAll(data: string): AllData | undefined {
   // The reviver lacks the context of where a different key exists, being as it
   // starts at the deepest level and works outward. As a result attributes are
   // translated into references after the initial parsing. That way we can be sure
   // they are the correct ones. For instance if we added 'attribute' as a new field to
   // the schema for something that was NOT an attribute reference, then we wouldn't
   // want to construct an attribute reference out of it.
-  const parsed = tryParse(data) as AllDataStream;
+  const parsed = tryParse(data) as AllData;
 
   if (!parsed) {
     return undefined;
@@ -223,8 +223,8 @@ export function deserializeAll(data: string): AllDataStream | undefined {
  * @param data String data from launchdarkly.
  * @returns The parsed and processed data.
  */
-export function deserializePoll(data: string): AllData | undefined {
-  const parsed = tryParse(data) as AllData;
+export function deserializePoll(data: string): FlagsAndSegments | undefined {
+  const parsed = tryParse(data) as FlagsAndSegments;
 
   if (!parsed) {
     return undefined;

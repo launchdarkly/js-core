@@ -1,6 +1,7 @@
+import * as mocks from '@launchdarkly/private-js-mocks';
+
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
 
@@ -16,7 +17,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -108,28 +109,28 @@ describe('given an LDClient with test data', () => {
       on: false,
       offVariation: 0,
       variations: ['a'],
-      clientSide: false,
     });
     td.usePreconfiguredFlag({
       key: 'server-side-2',
       on: false,
       offVariation: 0,
       variations: ['b'],
-      clientSide: false,
+      // Absence and false should be equivalent, so we add a false one here.
+      clientSideAvailability: { usingEnvironmentId: false },
     });
     td.usePreconfiguredFlag({
       key: 'client-side-1',
       on: false,
       offVariation: 0,
       variations: ['value1'],
-      clientSide: true,
+      clientSideAvailability: { usingEnvironmentId: true },
     });
     td.usePreconfiguredFlag({
       key: 'client-side-2',
       on: false,
       offVariation: 0,
       variations: ['value2'],
-      clientSide: true,
+      clientSideAvailability: { usingEnvironmentId: true },
     });
     const state = await client.allFlagsState(defaultUser, { clientSideOnly: true });
     expect(state.valid).toEqual(true);
@@ -241,28 +242,26 @@ describe('given an LDClient with test data', () => {
       on: false,
       offVariation: 0,
       variations: ['a'],
-      clientSide: false,
     });
     td.usePreconfiguredFlag({
       key: 'server-side-2',
       on: false,
       offVariation: 0,
       variations: ['b'],
-      clientSide: false,
     });
     td.usePreconfiguredFlag({
       key: 'client-side-1',
       on: false,
       offVariation: 0,
       variations: ['value1'],
-      clientSide: true,
+      clientSideAvailability: { usingEnvironmentId: true },
     });
     td.usePreconfiguredFlag({
       key: 'client-side-2',
       on: false,
       offVariation: 0,
       variations: ['value2'],
-      clientSide: true,
+      clientSideAvailability: { usingEnvironmentId: true },
     });
     client.allFlagsState(defaultUser, { clientSideOnly: true }, (err, state) => {
       expect(state.valid).toEqual(true);
@@ -282,7 +281,7 @@ describe('given an offline client', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         offline: true,
         updateProcessor: td.getFactory(),

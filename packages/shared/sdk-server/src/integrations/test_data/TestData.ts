@@ -1,7 +1,7 @@
-import { LDClientContext } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
-import { LDStreamProcessor } from '../../api';
-import { LDFeatureStore } from '../../api/subsystems';
+import { LDFeatureStore } from '../../api';
+import { createStreamListeners } from '../../data_sources/createStreamListeners';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
 import AsyncStoreFacade from '../../store/AsyncStoreFacade';
@@ -58,22 +58,32 @@ export default class TestData {
   getFactory(): (
     clientContext: LDClientContext,
     featureStore: LDFeatureStore,
-  ) => LDStreamProcessor {
+    initSuccessHandler: VoidFunction,
+    errorHandler?: (e: Error) => void,
+  ) => subsystem.LDStreamProcessor {
     // Provides an arrow function to prevent needed to bind the method to
     // maintain `this`.
     return (
-      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       clientContext: LDClientContext,
       featureStore: LDFeatureStore,
+      initSuccessHandler: VoidFunction,
+      _errorHandler?: (e: Error) => void,
     ) => {
+      const listeners = createStreamListeners(
+        featureStore,
+        clientContext.basicConfiguration.logger,
+        {
+          put: initSuccessHandler,
+        },
+      );
       const newSource = new TestDataSource(
         new AsyncStoreFacade(featureStore),
         this.currentFlags,
-
         this.currentSegments,
         (tds) => {
           this.dataSources.splice(this.dataSources.indexOf(tds));
         },
+        listeners,
       );
 
       this.dataSources.push(newSource);

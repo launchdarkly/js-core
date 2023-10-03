@@ -39,8 +39,7 @@ const flagData = `
 
 class MyCustomStoreProvider implements EdgeProvider {
   // root key is formatted as LD-Env-{Launchdarkly environment client ID}
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async get(rootKey: string): Promise<string> {
+  async get(_rootKey: string): Promise<string> {
     // you should provide an implementation to retrieve your flags from launchdarkly's https://sdk.launchdarkly.com/sdk/latest-all endpoint.
     // see https://docs.launchdarkly.com/sdk/features/flags-from-files for more information.
     return flagData;

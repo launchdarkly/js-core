@@ -1,4 +1,5 @@
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
@@ -10,9 +11,8 @@ import {
   makeClauseThatMatchesUser,
 } from './flags';
 import noQueries from './mocks/noQueries';
-import basicPlatform from './mocks/platform';
 
-const evaluator = new Evaluator(basicPlatform, noQueries);
+const evaluator = new Evaluator(mocks.basicPlatform, noQueries);
 
 // Either a legacy user, or context with equivalent user.
 describe('given user clauses and contexts', () => {

@@ -16,4 +16,10 @@ export default class VersionedDataKinds {
     namespace: 'segments',
     streamApiPath: '/segments/',
   };
+
+  static getKeyFromPath(kind: VersionedDataKind, path: string): string | undefined {
+    return path.startsWith(kind.streamApiPath)
+      ? path.substring(kind.streamApiPath.length)
+      : undefined;
+  }
 }

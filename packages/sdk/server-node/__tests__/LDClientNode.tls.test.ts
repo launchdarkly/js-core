@@ -6,19 +6,14 @@ import {
   TestHttpServer,
 } from 'launchdarkly-js-test-helpers';
 
-import { basicLogger, LDClient, LDLogger } from '../src';
+import { logger } from '@launchdarkly/private-js-mocks';
+
+import { LDClient } from '../src';
 import LDClientNode from '../src/LDClientNode';
 
 describe('When using a TLS connection', () => {
   let client: LDClient;
   let server: TestHttpServer;
-  let logger: LDLogger;
-
-  beforeEach(() => {
-    logger = basicLogger({
-      destination: () => {},
-    });
-  });
 
   it('can connect via HTTPS to a server with a self-signed certificate, if CA is specified', async () => {
     server = await TestHttpServer.startSecure();
@@ -87,6 +82,7 @@ describe('When using a TLS connection', () => {
       stream: false,
       tlsParams: { ca: server.certificate },
       diagnosticOptOut: true,
+      logger,
     });
 
     await client.waitForInitialization();

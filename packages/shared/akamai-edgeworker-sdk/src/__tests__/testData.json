@@ -97,7 +97,7 @@
       "variations": [true, false],
       "clientSideAvailability": {
         "usingMobileKey": true,
-        "usingEnvironmentId": true
+        "usingEnvironmentId": false
       },
       "clientSide": false,
       "salt": "aef830243d6640d0a973be89988e008d",

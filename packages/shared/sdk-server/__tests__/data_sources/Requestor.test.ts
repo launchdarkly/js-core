@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   EventSource,
   EventSourceInitDict,
@@ -7,11 +6,11 @@ import {
   Requests,
   Response,
 } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
 import Configuration from '../../src/options/Configuration';
-import basicPlatform from '../evaluation/mocks/platform';
 
 describe('given a requestor', () => {
   let requestor: Requestor;
@@ -35,7 +34,6 @@ describe('given a requestor', () => {
     resetRequestState();
 
     const requests: Requests = {
-      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       async fetch(url: string, options?: Options): Promise<Response> {
         return new Promise<Response>((a, r) => {
           if (throwThis) {
@@ -74,13 +72,12 @@ describe('given a requestor', () => {
         });
       },
 
-      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
       createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
         throw new Error('Function not implemented.');
       },
     };
 
-    requestor = new Requestor('sdkKey', new Configuration({}), basicPlatform.info, requests);
+    requestor = new Requestor('sdkKey', new Configuration({}), mocks.basicPlatform.info, requests);
   });
 
   it('gets data', (done) => {

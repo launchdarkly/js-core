@@ -1,10 +1,10 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
 import { Context, internal } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
-import basicPlatform from './evaluation/mocks/platform';
 import makeCallbacks from './makeCallbacks';
 
 const defaultUser = { key: 'user' };
@@ -27,7 +27,7 @@ describe('given a client with mock event processor', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      mocks.basicPlatform,
       {
         updateProcessor: td.getFactory(),
       },

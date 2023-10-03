@@ -50,6 +50,20 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from ^1.2.1 to ^1.2.2
 
+## [0.3.4](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v0.3.3...akamai-edgeworker-sdk-common-v0.3.4) (2023-09-06)
+
+
+### Bug Fixes
+
+* Use clientSideAvailability instead of clientSide for filtering client side flags. ([#270](https://github.com/launchdarkly/js-core/issues/270)) ([2702342](https://github.com/launchdarkly/js-core/commit/27023429d36986466cda46aa4d95eb01c10cd455))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^1.2.2 to ^1.2.3
+
 ## [0.3.0](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v0.2.7...akamai-edgeworker-sdk-common-v0.3.0) (2023-08-14)
 
 
