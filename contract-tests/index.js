@@ -30,8 +30,6 @@ app.get('/', (req, res) => {
       'user-type',
       'migrations',
       'event-sampling',
-      'config-override-kind',
-      'metric-kind',
       'strongly-typed',
     ],
   });
