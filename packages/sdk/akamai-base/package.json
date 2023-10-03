@@ -72,7 +72,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/akamai-edgeworker-sdk-common": "^0.3.4",
+    "@launchdarkly/akamai-edgeworker-sdk-common": "1.0.0-alpha.1",
     "@launchdarkly/js-server-sdk-common": "^1.2.3"
   }
 }
