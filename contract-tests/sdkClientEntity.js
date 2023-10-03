@@ -9,6 +9,7 @@ export { badCommandError };
 export function makeSdkConfig(options, tag) {
   const cf = {
     logger: sdkLogger(tag),
+    diagnosticOptOut: true
   };
   const maybeTime = (seconds) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
