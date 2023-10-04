@@ -1,12 +1,11 @@
-import { ClientContext, internal, subsystem } from '@launchdarkly/js-sdk-common';
+import { ClientContext, internal, Platform, subsystem } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
-import { PlatformDom } from '../platform/PlatformDom';
 
 const createEventProcessor = (
   clientSideID: string,
   config: Configuration,
-  platform: PlatformDom,
+  platform: Platform,
   diagnosticsManager?: internal.DiagnosticsManager,
 ): subsystem.LDEventProcessor =>
   config.sendEvents

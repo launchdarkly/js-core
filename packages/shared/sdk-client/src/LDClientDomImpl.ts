@@ -8,6 +8,7 @@ import {
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
+  Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -16,18 +17,20 @@ import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
-import { PlatformDom, Storage } from './platform/PlatformDom';
+import fetchFeatures from './fetchFeatures/fetchFeatures';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
-  ldContext: LDContext;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
-  storage: Storage;
-  private streamer?: subsystem.LDStreamProcessor;
 
-  constructor(clientSideID: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
-    if (!clientSideID) {
+  constructor(
+    public readonly sdkKey: string,
+    public readonly context: LDContext,
+    public readonly platform: Platform,
+    options: LDOptions,
+  ) {
+    if (!sdkKey) {
       throw new Error('You must configure the client with a client-side SDK key');
     }
 
@@ -36,34 +39,18 @@ export default class LDClientDomImpl implements LDClientDom {
       throw new Error('Context was unspecified or had no key');
     }
 
-    this.ldContext = context;
     this.config = new Configuration(options);
-    this.storage = platform.storage;
-    this.diagnosticsManager = createDiagnosticsManager(clientSideID, this.config, platform);
+    this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
-      clientSideID,
+      sdkKey,
       this.config,
       platform,
       this.diagnosticsManager,
     );
-
-    // if (this.config.stream) {
-    //   this.streamer = new internal.StreamingProcessor(
-    //     sdkKey,
-    //     clientContext,
-    //     listeners,
-    //     this.diagnosticsManager,
-    //     (e) => this.dataSourceErrorHandler(e),
-    //     this.config.streamInitialReconnectDelay,
-    //   );
-    // }
   }
 
-  /**
-   * TODO:
-   */
   async start() {
-    const flags = await fetch(this.config.serviceEndpoints.polling);
+    const flags = await fetchFeatures(this.sdkKey, this.context, this.config, this.platform);
   }
 
   allFlags(): LDFlagSet {
