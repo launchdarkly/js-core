@@ -1,4 +1,5 @@
 import {
+  ApplicationTags,
   createSafeLogger,
   LDFlagSet,
   NumberWithMinimum,
@@ -36,6 +37,7 @@ export default class Configuration {
   public readonly inspectors: LDInspection[] = [];
   public readonly privateAttributes: string[] = [];
 
+  public readonly tags: ApplicationTags;
   public readonly application?: { id?: string; version?: string };
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
@@ -54,6 +56,7 @@ export default class Configuration {
     errors.forEach((e: string) => this.logger.warn(e));
 
     this.serviceEndpoints = new ServiceEndpoints(this.streamUri, this.baseUri, this.eventsUri);
+    this.tags = new ApplicationTags({ application: this.application, logger: this.logger });
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {
