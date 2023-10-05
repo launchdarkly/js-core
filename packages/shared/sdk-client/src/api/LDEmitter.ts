@@ -49,6 +49,7 @@ export default class LDEmitter {
   }
 
   /**
+   * Unsubscribe one or all events.
    *
    * @param name
    * @param listener Optional. If unspecified, all listeners for the event will be removed.
