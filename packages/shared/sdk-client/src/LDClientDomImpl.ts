@@ -16,8 +16,8 @@ import { LDClientDom } from './api/LDClientDom';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
+import fetchFlags from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
-import fetchFeatures from './fetchFeatures/fetchFeatures';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
@@ -54,7 +54,7 @@ export default class LDClientDomImpl implements LDClientDom {
   }
 
   async start() {
-    const flags = await fetchFeatures(this.sdkKey, this.context, this.config, this.platform);
+    const flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
   }
 
   allFlags(): LDFlagSet {

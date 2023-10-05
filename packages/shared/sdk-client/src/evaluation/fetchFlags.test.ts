@@ -4,7 +4,7 @@ import { LDContext } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
-import fetchFeatures from './fetchFeatures';
+import fetchFlags from './fetchFlags';
 import * as mockResponse from './mockResponse.json';
 import * as mockResponseWithReasons from './mockResponseWithReasons.json';
 
@@ -36,7 +36,7 @@ describe('fetchFeatures', () => {
   });
 
   test('get', async () => {
-    const json = await fetchFeatures(sdkKey, context, config, basicPlatform);
+    const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
     expect(fetchMock).toBeCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9',
@@ -50,7 +50,7 @@ describe('fetchFeatures', () => {
 
   test('report', async () => {
     config = new Configuration({ useReport: true });
-    const json = await fetchFeatures(sdkKey, context, config, basicPlatform);
+    const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
     expect(fetchMock).toBeCalledWith('https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/context', {
       method: 'REPORT',
@@ -64,7 +64,7 @@ describe('fetchFeatures', () => {
     fetchMock.resetMocks();
     fetchMock.mockOnce(JSON.stringify(mockResponseWithReasons));
     config = new Configuration({ withReasons: true });
-    const json = await fetchFeatures(sdkKey, context, config, basicPlatform);
+    const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
     expect(fetchMock).toBeCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?withReasons=true',
@@ -78,7 +78,7 @@ describe('fetchFeatures', () => {
 
   test('hash', async () => {
     config = new Configuration({ hash: 'test-hash', withReasons: false });
-    const json = await fetchFeatures(sdkKey, context, config, basicPlatform);
+    const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
     expect(fetchMock).toBeCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?h=test-hash',
