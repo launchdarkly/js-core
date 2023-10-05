@@ -34,13 +34,13 @@ export const createQueryString = (hash: string | undefined, withReasons: boolean
 
 export const createFetchUrl = (sdkKey: string, context: LDContext, config: Configuration) => {
   const {
-    evaluationReasons,
+    withReasons,
     hash,
     serviceEndpoints: { polling },
     useReport,
   } = config;
   const path = createFetchPath(sdkKey, context, polling, useReport);
-  const qs = createQueryString(hash, evaluationReasons);
+  const qs = createQueryString(hash, withReasons);
 
   return qs ? `${path}?${qs}` : path;
 };

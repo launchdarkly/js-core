@@ -24,6 +24,9 @@ export default class LDClientDomImpl implements LDClientDom {
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
 
+  /**
+   * Creates the client object synchronously. No async, no network calls.
+   */
   constructor(
     public readonly sdkKey: string,
     public readonly context: LDContext,
@@ -47,6 +50,7 @@ export default class LDClientDomImpl implements LDClientDom {
       platform,
       this.diagnosticsManager,
     );
+    // TODO: create streamer
   }
 
   async start() {

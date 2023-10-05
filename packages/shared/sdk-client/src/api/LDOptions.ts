@@ -98,7 +98,7 @@ export default interface LDOptions {
    * {@link LDClientDom.variationDetail} method. Since this increases the size of network requests,
    * such information is not sent unless you set this option to true.
    */
-  evaluationReasons?: boolean;
+  withReasons?: boolean;
 
   /**
    * Whether to send analytics events back to LaunchDarkly. By default, this is true.

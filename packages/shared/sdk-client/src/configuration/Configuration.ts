@@ -29,7 +29,7 @@ export default class Configuration {
 
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
-  public readonly evaluationReasons = false;
+  public readonly withReasons = false;
   public readonly sendEvents = true;
   public readonly sendLDHeaders = true;
   public readonly useReport = false;

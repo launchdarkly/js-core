@@ -63,7 +63,7 @@ describe('fetchFeatures', () => {
   test('withReasons', async () => {
     fetchMock.resetMocks();
     fetchMock.mockOnce(JSON.stringify(mockResponseWithReasons));
-    config = new Configuration({ evaluationReasons: true });
+    config = new Configuration({ withReasons: true });
     const json = await fetchFeatures(sdkKey, context, config, basicPlatform);
 
     expect(fetchMock).toBeCalledWith(
@@ -77,7 +77,7 @@ describe('fetchFeatures', () => {
   });
 
   test('hash', async () => {
-    config = new Configuration({ hash: 'test-hash', evaluationReasons: false });
+    config = new Configuration({ hash: 'test-hash', withReasons: false });
     const json = await fetchFeatures(sdkKey, context, config, basicPlatform);
 
     expect(fetchMock).toBeCalledWith(
