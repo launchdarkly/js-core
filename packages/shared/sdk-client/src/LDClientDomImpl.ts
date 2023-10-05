@@ -104,7 +104,7 @@ export default class LDClientDomImpl implements LDClientDom {
 
   setStreaming(value?: boolean): void {}
 
-  track(key: string, context: LDContext, data?: any, metricValue?: number): void {}
+  track(key: string, data?: any, metricValue?: number): void {}
 
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
     return undefined;
