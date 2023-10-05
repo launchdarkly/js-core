@@ -54,7 +54,6 @@ export default class LDClientDomImpl implements LDClientDom {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
-    // TODO: create streamer
   }
 
   async start() {
