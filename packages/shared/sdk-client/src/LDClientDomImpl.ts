@@ -8,6 +8,7 @@ import {
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
+  LDLogger,
   Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -26,6 +27,7 @@ export default class LDClientDomImpl implements LDClientDom {
   eventProcessor: subsystem.LDEventProcessor;
   private emitter: LDEmitter;
   private flags: Flags = {};
+  private logger: LDLogger;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -46,6 +48,7 @@ export default class LDClientDomImpl implements LDClientDom {
     }
 
     this.config = new Configuration(options);
+    this.logger = this.config.logger;
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
       sdkKey,
@@ -61,7 +64,7 @@ export default class LDClientDomImpl implements LDClientDom {
       this.flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
       this.emitter.emit('ready');
     } catch (error: any) {
-      this.config.logger.error(error);
+      this.logger.error(error);
       this.emitter.emit('error', error);
       this.emitter.emit('failed', error);
     }
@@ -101,7 +104,7 @@ export default class LDClientDomImpl implements LDClientDom {
 
   setStreaming(value?: boolean): void {}
 
-  track(key: string, data?: any, metricValue?: number): void {}
+  track(key: string, context: LDContext, data?: any, metricValue?: number): void {}
 
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
     return undefined;
