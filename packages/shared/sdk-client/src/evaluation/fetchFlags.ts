@@ -16,6 +16,9 @@ export type Flags = {
   [k: string]: Flag;
 };
 
+/**
+ * Dom api usage: fetch.
+ */
 const fetchFlags = async (
   sdkKey: string,
   context: LDContext,

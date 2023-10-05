@@ -13,16 +13,19 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { LDClientDom } from './api/LDClientDom';
+import LDEmitter, { EventName } from './api/LDEmitter';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import fetchFlags from './evaluation/fetchFlags';
+import fetchFlags, { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 
 export default class LDClientDomImpl implements LDClientDom {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
+  private emitter: LDEmitter;
+  private flags: Flags = {};
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -50,11 +53,19 @@ export default class LDClientDomImpl implements LDClientDom {
       platform,
       this.diagnosticsManager,
     );
+    this.emitter = new LDEmitter();
     // TODO: create streamer
   }
 
   async start() {
-    const flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
+    try {
+      this.flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
+      this.emitter.emit('ready');
+    } catch (error: any) {
+      this.config.logger.error(error);
+      this.emitter.emit('error', error);
+      this.emitter.emit('failed', error);
+    }
   }
 
   allFlags(): LDFlagSet {
@@ -81,9 +92,13 @@ export default class LDClientDomImpl implements LDClientDom {
     return Promise.resolve({});
   }
 
-  off(key: string, callback: (...args: any[]) => void, context?: any): void {}
+  off(eventName: EventName, listener?: Function): void {
+    this.emitter.off(eventName, listener);
+  }
 
-  on(key: string, callback: (...args: any[]) => void, context?: any): void {}
+  on(eventName: EventName, listener: Function): void {
+    this.emitter.on(eventName, listener);
+  }
 
   setStreaming(value?: boolean): void {}
 

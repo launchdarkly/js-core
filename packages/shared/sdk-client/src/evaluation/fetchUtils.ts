@@ -2,7 +2,17 @@ import { defaultHeaders, Info, LDContext } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
 
-// Ripped from https://thewoods.blog/base64url/
+/**
+ * Dom api usage: btoa.
+ *
+ * In react-native use base64-js to polyfill btoa. This is safe
+ * because the react-native repo uses it too. Set the global.btoa to the encode
+ * function of base64-js.
+ * https://github.com/beatgammit/base64-js
+ * https://github.com/axios/axios/issues/2235#issuecomment-512204616
+ *
+ * Ripped from https://thewoods.blog/base64url/
+ */
 export const base64UrlEncode = (url: string): string =>
   btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
