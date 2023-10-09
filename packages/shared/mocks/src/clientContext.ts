@@ -1,13 +1,19 @@
 import type { ClientContext } from '@common';
 
-import platform from './platform';
+import { basicPlatform, basicPlatformDom } from './platform';
 
-const clientContext: ClientContext = {
+export const clientContext: ClientContext = {
   basicConfiguration: {
     sdkKey: 'testSdkKey',
     serviceEndpoints: { events: '', polling: '', streaming: 'https://mockstream.ld.com' },
   },
-  platform,
+  platform: basicPlatform,
 };
 
-export default clientContext;
+export const clientContextDom: ClientContext = {
+  basicConfiguration: {
+    sdkKey: 'testSdkKey',
+    serviceEndpoints: { events: '', polling: '', streaming: 'https://mockstream.ld.com' },
+  },
+  platform: basicPlatformDom,
+};

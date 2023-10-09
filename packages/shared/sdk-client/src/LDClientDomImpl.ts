@@ -9,7 +9,7 @@ import {
   LDFlagSet,
   LDFlagValue,
   LDLogger,
-  Platform,
+  PlatformDom,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -35,7 +35,7 @@ export default class LDClientDomImpl implements LDClientDom {
   constructor(
     public readonly sdkKey: string,
     public readonly context: LDContext,
-    public readonly platform: Platform,
+    public readonly platform: PlatformDom,
     options: LDOptions,
   ) {
     if (!sdkKey) {

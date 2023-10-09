@@ -1,3 +1,4 @@
+export * from './Base64';
 export * from './Crypto';
 export * from './Filesystem';
 export * from './Info';

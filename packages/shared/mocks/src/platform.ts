@@ -1,6 +1,10 @@
-import type { Info, Platform, PlatformData, Requests, SdkData } from '@common';
+import type { Base64, Info, Platform, PlatformData, PlatformDom, Requests, SdkData } from '@common';
 
 import { crypto } from './hasher';
+
+const base64: Base64 = {
+  btoa: (s: string) => Buffer.from(s).toString('base64'),
+};
 
 const info: Info = {
   platformData(): PlatformData {
@@ -32,10 +36,10 @@ const requests: Requests = {
   createEventSource: jest.fn(),
 };
 
-const basicPlatform: Platform = {
+export const basicPlatform: Platform = {
   info,
   crypto,
   requests,
 };
 
-export default basicPlatform;
+export const basicPlatformDom: PlatformDom = { ...basicPlatform, base64 };
