@@ -1,9 +1,4 @@
-import {
-  LDContext,
-  LDEvaluationReason,
-  LDFlagValue,
-  PlatformDom,
-} from '@launchdarkly/js-sdk-common';
+import { LDContext, LDEvaluationReason, LDFlagValue, Platform } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
 import { createFetchOptions, createFetchUrl } from './fetchUtils';
@@ -28,9 +23,9 @@ const fetchFlags = async (
   sdkKey: string,
   context: LDContext,
   config: Configuration,
-  platform: PlatformDom,
+  platform: Platform,
 ): Promise<Flags> => {
-  const fetchUrl = createFetchUrl(sdkKey, context, config, platform.base64);
+  const fetchUrl = createFetchUrl(sdkKey, context, config, platform.encoding);
   const fetchOptions: RequestInit = createFetchOptions(sdkKey, context, config, platform.info);
   const response = await fetch(fetchUrl, fetchOptions);
   return response.json();

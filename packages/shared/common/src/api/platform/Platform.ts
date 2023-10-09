@@ -1,10 +1,15 @@
-import { Base64 } from './Base64';
 import { Crypto } from './Crypto';
+import { Encoding } from './Encoding';
 import { Filesystem } from './Filesystem';
 import { Info } from './Info';
 import { Requests } from './Requests';
 
 export interface Platform {
+  /**
+   * The interface for performing base64 operations.
+   */
+  encoding: Encoding;
+
   /**
    * The interface for getting information about the platform and the execution
    * environment.
@@ -26,11 +31,4 @@ export interface Platform {
    * The interface for performing http/https requests.
    */
   requests: Requests;
-}
-
-export interface PlatformDom extends Platform {
-  /**
-   * The interface for performing base64 operations.
-   */
-  base64: Base64;
 }
