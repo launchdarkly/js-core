@@ -4,8 +4,14 @@ import { Context } from '../../../src';
 import { LDContextDeduplicator, LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
 import { EventProcessorOptions } from '../../../src/internal/events/EventProcessor';
+import shouldSample from '../../../src/internal/events/sampling';
 import BasicLogger from '../../../src/logging/BasicLogger';
 import format from '../../../src/logging/format';
+
+jest.mock('../../../src/internal/events/sampling', () => ({
+  __esModule: true,
+  default: jest.fn(() => true),
+}));
 
 const mockSendEventData = jest.fn();
 
@@ -194,6 +200,8 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: true,
       default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -201,6 +209,67 @@ describe('given an event processor', () => {
     expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
       testIndexEvent,
       makeFeatureEvent(1000, 11),
+      makeSummary(1000, 1000, 1, 11),
+    ]);
+  });
+
+  it('uses sampling ratio for feature events', async () => {
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      key: 'flagkey',
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      default: 'default',
+      samplingRatio: 2,
+      withReasons: true,
+    });
+
+    await eventProcessor.flush();
+    expect(shouldSample).toHaveBeenCalledWith(2);
+
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
+      {
+        kind: 'index',
+        creationDate: 1000,
+        context: { ...user, kind: 'user' },
+      },
+      { ...makeFeatureEvent(1000, 11), samplingRatio: 2 },
+      makeSummary(1000, 1000, 1, 11),
+    ]);
+  });
+
+  it('excludes feature events that are not sampled', async () => {
+    // @ts-ignore
+    shouldSample.mockImplementation((ratio) => ratio !== 2);
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      key: 'flagkey',
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      default: 'default',
+      samplingRatio: 2,
+      withReasons: true,
+    });
+
+    await eventProcessor.flush();
+    expect(shouldSample).toHaveBeenCalledWith(2);
+
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
+      {
+        kind: 'index',
+        creationDate: 1000,
+        context: { ...user, kind: 'user' },
+      },
       makeSummary(1000, 1000, 1, 11),
     ]);
   });
@@ -217,6 +286,8 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: true,
       default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -241,6 +312,8 @@ describe('given an event processor', () => {
       trackEvents: false,
       debugEventsUntilDate: 2000,
       default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -265,6 +338,8 @@ describe('given an event processor', () => {
       trackEvents: true,
       debugEventsUntilDate: 2000,
       default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -291,6 +366,8 @@ describe('given an event processor', () => {
       trackEvents: false,
       debugEventsUntilDate: 1500,
       default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -319,6 +396,8 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: true,
       default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
     });
     eventProcessor.sendEvent({
       kind: 'feature',
@@ -330,6 +409,8 @@ describe('given an event processor', () => {
       value: 'carrot',
       trackEvents: true,
       default: 'potato',
+      samplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -391,6 +472,8 @@ describe('given an event processor', () => {
       value: 'value',
       trackEvents: false,
       default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
     });
     eventProcessor.sendEvent({
       kind: 'feature',
@@ -402,6 +485,8 @@ describe('given an event processor', () => {
       value: 'carrot',
       trackEvents: false,
       default: 'potato',
+      samplingRatio: 1,
+      withReasons: true,
     });
 
     await eventProcessor.flush();
@@ -455,6 +540,7 @@ describe('given an event processor', () => {
       context: Context.fromLDContext(user),
       key: 'eventkey',
       data: { thing: 'stuff' },
+      samplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -484,6 +570,7 @@ describe('given an event processor', () => {
       context: Context.fromLDContext(anonUser),
       key: 'eventkey',
       data: { thing: 'stuff' },
+      samplingRatio: 1,
     });
 
     await eventProcessor.flush();
@@ -515,6 +602,7 @@ describe('given an event processor', () => {
       key: 'eventkey',
       data: { thing: 'stuff' },
       metricValue: 1.5,
+      samplingRatio: 1,
     });
 
     await eventProcessor.flush();

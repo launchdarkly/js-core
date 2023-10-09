@@ -276,10 +276,10 @@ describe('given an event processor with diagnostics manager', () => {
 
   it('counts events in queue from last flush and dropped events', async () => {
     const context = Context.fromLDContext(user);
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1000, context });
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1001, context });
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1002, context });
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1003, context });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1000, context, samplingRatio: 1 });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1001, context, samplingRatio: 1 });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1002, context, samplingRatio: 1 });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1003, context, samplingRatio: 1 });
     await eventProcessor.flush();
 
     await waitForMessages(3);
@@ -321,12 +321,14 @@ describe('given an event processor with diagnostics manager', () => {
       key: 'eventkey1',
       creationDate: 1000,
       context,
+      samplingRatio: 1,
     });
     eventProcessor.sendEvent({
       kind: 'custom',
       key: 'eventkey2',
       creationDate: 1001,
       context,
+      samplingRatio: 1,
     });
     await eventProcessor.flush();
 

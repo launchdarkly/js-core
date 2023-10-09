@@ -174,8 +174,12 @@ function makeSerializedAllData(flag?: any, segment?: any): string {
 }
 
 function makePatchData(flag?: any, segment?: any): any {
+  let path = '/flags/flagName';
+  if (segment) {
+    path = '/segments/segmentName';
+  }
   return {
-    path: flag ? '/flags/flagName' : '/segments/segmentName',
+    path,
     data: flag ?? segment,
   };
 }

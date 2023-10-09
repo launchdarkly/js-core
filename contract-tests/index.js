@@ -28,6 +28,9 @@ app.get('/', (req, res) => {
       'tags',
       'big-segments',
       'user-type',
+      'migrations',
+      'event-sampling',
+      'strongly-typed',
     ],
   });
 });

@@ -172,6 +172,19 @@ export class DateValidator implements TypeValidator {
 }
 
 /**
+ * Validates that a string is a valid kind.
+ */
+export class KindValidator extends StringMatchingRegex {
+  constructor() {
+    super(/^(\w|\.|-)+$/);
+  }
+
+  override is(u: unknown): u is string {
+    return super.is(u) && u !== 'kind';
+  }
+}
+
+/**
  * A set of standard type validators.
  */
 export class TypeValidators {
@@ -203,5 +216,6 @@ export class TypeValidators {
 
   static readonly Date = new DateValidator();
 
+  static readonly Kind = new KindValidator();
   static readonly NullableBoolean = new NullableBoolean();
 }

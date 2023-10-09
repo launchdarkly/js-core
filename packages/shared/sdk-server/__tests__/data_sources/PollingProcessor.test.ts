@@ -15,7 +15,10 @@ describe('given an event processor', () => {
     requestAllData: jest.fn(),
   };
   const longInterval = 100000;
-  const allData = { flags: { flag: { version: 1 } }, segments: { segment: { version: 1 } } };
+  const allData = {
+    flags: { flag: { version: 1 } },
+    segments: { segment: { version: 1 } },
+  };
   const jsonData = JSON.stringify(allData);
 
   let store: LDFeatureStore;

@@ -30,20 +30,51 @@ export default class EventFactory {
       prereqOfFlag?.key,
       this.withReasons || addExperimentData ? detail.reason : undefined,
       flag.debugEventsUntilDate,
+      flag.excludeFromSummaries,
+      flag.samplingRatio,
     );
   }
 
   unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
-    return new internal.InputEvalEvent(this.withReasons, context, key, detail.value, detail);
+    return new internal.InputEvalEvent(
+      this.withReasons,
+      context,
+      key,
+      detail.value,
+      detail,
+      // This isn't ideal, but the purpose of the factory is to at least
+      // handle this situation.
+      undefined, // version
+      undefined, // variation index
+      undefined, // track events
+      undefined, // prereqOf
+      undefined, // reason
+      undefined, // debugEventsUntilDate
+      undefined, // exclude from summaries
+      undefined, // sampling ratio
+    );
   }
 
   /* eslint-disable-next-line class-methods-use-this */
   identifyEvent(context: Context) {
-    return new internal.InputIdentifyEvent(context);
+    // Currently sampling for identify events is always 1.
+    return new internal.InputIdentifyEvent(context, 1);
   }
 
   /* eslint-disable-next-line class-methods-use-this */
-  customEvent(key: string, context: Context, data?: any, metricValue?: number) {
-    return new internal.InputCustomEvent(context, key, data ?? undefined, metricValue ?? undefined);
+  customEvent(
+    key: string,
+    context: Context,
+    data?: any,
+    metricValue?: number,
+    samplingRatio: number = 1,
+  ) {
+    return new internal.InputCustomEvent(
+      context,
+      key,
+      data ?? undefined,
+      metricValue ?? undefined,
+      samplingRatio,
+    );
   }
 }

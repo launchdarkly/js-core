@@ -6,12 +6,24 @@ import {
   LDClientError,
   LDContext,
   LDEvaluationDetail,
+  LDEvaluationDetailTyped,
   LDLogger,
   Platform,
   subsystem,
+  TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, LDFeatureStore, LDFlagsState, LDFlagsStateOptions, LDOptions } from './api';
+import {
+  IsMigrationStage,
+  LDClient,
+  LDFeatureStore,
+  LDFlagsState,
+  LDFlagsStateOptions,
+  LDMigrationOpEvent,
+  LDMigrationStage,
+  LDMigrationVariation,
+  LDOptions,
+} from './api';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -32,8 +44,10 @@ import ContextDeduplicator from './events/ContextDeduplicator';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
+import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
+import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
-import { AsyncStoreFacade } from './store';
+import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { NullEventProcessor } = internal;
@@ -257,6 +271,168 @@ export default class LDClientImpl implements LDClient {
     });
   }
 
+  private typedEval<TResult>(
+    key: string,
+    context: LDContext,
+    defaultValue: TResult,
+    eventFactory: EventFactory,
+    typeChecker: (value: unknown) => [boolean, string],
+  ): Promise<LDEvaluationDetail> {
+    return new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
+      this.evaluateIfPossible(
+        key,
+        context,
+        defaultValue,
+        eventFactory,
+        (res) => {
+          const typedRes: LDEvaluationDetailTyped<TResult> = {
+            value: res.detail.value as TResult,
+            reason: res.detail.reason,
+            variationIndex: res.detail.variationIndex,
+          };
+          resolve(typedRes);
+        },
+        typeChecker,
+      );
+    });
+  }
+
+  async boolVariation(key: string, context: LDContext, defaultValue: boolean): Promise<boolean> {
+    return (
+      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
+        TypeValidators.Boolean.is(value),
+        TypeValidators.Boolean.getType(),
+      ])
+    ).value;
+  }
+
+  async numberVariation(key: string, context: LDContext, defaultValue: number): Promise<number> {
+    return (
+      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
+        TypeValidators.Number.is(value),
+        TypeValidators.Number.getType(),
+      ])
+    ).value;
+  }
+
+  async stringVariation(key: string, context: LDContext, defaultValue: string): Promise<string> {
+    return (
+      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
+        TypeValidators.String.is(value),
+        TypeValidators.String.getType(),
+      ])
+    ).value;
+  }
+
+  jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown> {
+    return this.variation(key, context, defaultValue);
+  }
+
+  boolVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: boolean,
+  ): Promise<LDEvaluationDetailTyped<boolean>> {
+    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Boolean.is(value),
+      TypeValidators.Boolean.getType(),
+    ]);
+  }
+
+  numberVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: number,
+  ): Promise<LDEvaluationDetailTyped<number>> {
+    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]);
+  }
+
+  stringVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: string,
+  ): Promise<LDEvaluationDetailTyped<string>> {
+    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
+    ]);
+  }
+
+  jsonVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: unknown,
+  ): Promise<LDEvaluationDetailTyped<unknown>> {
+    return this.variationDetail(key, context, defaultValue);
+  }
+
+  async migrationVariation(
+    key: string,
+    context: LDContext,
+    defaultValue: LDMigrationStage,
+  ): Promise<LDMigrationVariation> {
+    const convertedContext = Context.fromLDContext(context);
+    return new Promise((resolve) => {
+      this.evaluateIfPossible(
+        key,
+        context,
+        defaultValue,
+        this.eventFactoryWithReasons,
+        ({ detail }, flag) => {
+          const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
+          const checkRatio = flag?.migration?.checkRatio;
+          const samplingRatio = flag?.samplingRatio;
+
+          if (!IsMigrationStage(detail.value)) {
+            const error = new Error(
+              `Unrecognized MigrationState for "${key}"; returning default value.`,
+            );
+            this.onError(error);
+            const reason = {
+              kind: 'ERROR',
+              errorKind: ErrorKinds.WrongType,
+            };
+            resolve({
+              value: defaultValue,
+              tracker: new MigrationOpTracker(
+                key,
+                contextKeys,
+                defaultValue,
+                defaultValue,
+                reason,
+                checkRatio,
+                undefined,
+                flag?.version,
+                samplingRatio,
+                this.logger,
+              ),
+            });
+            return;
+          }
+          resolve({
+            value: detail.value as LDMigrationStage,
+            tracker: new MigrationOpTracker(
+              key,
+              contextKeys,
+              defaultValue,
+              detail.value,
+              detail.reason,
+              checkRatio,
+              // Can be null for compatibility reasons.
+              detail.variationIndex === null ? undefined : detail.variationIndex,
+              flag?.version,
+              samplingRatio,
+              this.logger,
+            ),
+          });
+        },
+      );
+    });
+  }
+
   allFlagsState(
     context: LDContext,
     options?: LDFlagsStateOptions,
@@ -369,9 +545,19 @@ export default class LDClientImpl implements LDClient {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
+
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
     );
+  }
+
+  trackMigration(event: LDMigrationOpEvent): void {
+    const converted = MigrationOpEventToInputEvent(event);
+    if (!converted) {
+      return;
+    }
+
+    this.eventProcessor.sendEvent(converted);
   }
 
   identify(context: LDContext): void {
@@ -397,7 +583,8 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-    cb: (res: EvalResult) => void,
+    cb: (res: EvalResult, flag?: Flag) => void,
+    typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (this.config.offline) {
       this.logger?.info('Variation called in offline mode. Returning default value.');
@@ -440,17 +627,42 @@ export default class LDClientImpl implements LDClient {
             this.logger?.debug('Result value is null in variation');
             evalRes.setDefault(defaultValue);
           }
-          evalRes.events?.forEach((event) => {
-            this.eventProcessor.sendEvent(event);
-          });
-          this.eventProcessor.sendEvent(
-            eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue),
-          );
-          cb(evalRes);
+
+          if (typeChecker) {
+            const [matched, type] = typeChecker(evalRes.detail.value);
+            if (!matched) {
+              const errorRes = EvalResult.forError(
+                ErrorKinds.WrongType,
+                `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
+                defaultValue,
+              );
+              this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
+              cb(errorRes, flag);
+              return;
+            }
+          }
+
+          this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
+          cb(evalRes, flag);
         },
         eventFactory,
       );
     });
+  }
+
+  private sendEvalEvent(
+    evalRes: EvalResult,
+    eventFactory: EventFactory,
+    flag: Flag,
+    evalContext: Context,
+    defaultValue: any,
+  ) {
+    evalRes.events?.forEach((event) => {
+      this.eventProcessor.sendEvent({ ...event });
+    });
+    this.eventProcessor.sendEvent(
+      eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue, undefined),
+    );
   }
 
   private evaluateIfPossible(
@@ -458,7 +670,8 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-    cb: (res: EvalResult) => void,
+    cb: (res: EvalResult, flag?: Flag) => void,
+    typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (!this.initialized()) {
       this.featureStore.initialized((storeInitialized) => {
@@ -467,7 +680,7 @@ export default class LDClientImpl implements LDClient {
             'Variation called before LaunchDarkly client initialization completed' +
               " (did you wait for the 'ready' event?) - using last known values from feature store",
           );
-          this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
+          this.variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
           return;
         }
         this.logger?.warn(
@@ -478,7 +691,7 @@ export default class LDClientImpl implements LDClient {
       });
       return;
     }
-    this.variationInternal(flagKey, context, defaultValue, eventFactory, cb);
+    this.variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
   }
 
   private dataSourceErrorHandler(e: any) {

@@ -1,4 +1,12 @@
-import ld from 'node-server-sdk';
+import got from 'got';
+import ld, {
+  LDConcurrentExecution,
+  LDExecutionOrdering,
+  LDMigrationError,
+  LDMigrationSuccess,
+  LDSerialExecution,
+  createMigration,
+} from 'node-server-sdk';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
@@ -9,6 +17,7 @@ export { badCommandError };
 export function makeSdkConfig(options, tag) {
   const cf = {
     logger: sdkLogger(tag),
+    diagnosticOptOut: true
   };
   const maybeTime = (seconds) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
@@ -54,6 +63,30 @@ export function makeSdkConfig(options, tag) {
   return cf;
 }
 
+function getExecution(order) {
+  switch (order) {
+    case 'serial': {
+      return new LDSerialExecution(LDExecutionOrdering.Fixed);
+    }
+    case 'random': {
+      return new LDSerialExecution(LDExecutionOrdering.Random);
+    }
+    case 'concurrent': {
+      return new LDConcurrentExecution();
+    }
+    default: {
+      throw new Error('Unsupported execution order.');
+    }
+  }
+}
+
+function makeMigrationPostOptions(payload) {
+  if (payload) {
+    return { body: payload };
+  }
+  return {};
+}
+
 export async function newSdkClientEntity(options) {
   const c = {};
   const log = Log(options.tag);
@@ -92,10 +125,30 @@ export async function newSdkClientEntity(options) {
       case 'evaluate': {
         const pe = params.evaluate;
         if (pe.detail) {
-          return await client.variationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+          switch(pe.valueType) {
+            case "bool":
+              return await client.boolVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+            case "int": // Intentional fallthrough.
+            case "double":
+              return await client.numberVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+            case "string":
+              return await client.stringVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+            default:
+              return await client.variationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+          }
+
         } else {
-          const value = await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue);
-          return { value };
+          switch(pe.valueType) {
+            case "bool":
+              return {value: await client.boolVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            case "int": // Intentional fallthrough.
+            case "double":
+              return {value: await client.numberVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            case "string":
+              return {value: await client.stringVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+            default:
+              return {value: await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+          }
         }
       }
 
@@ -125,6 +178,101 @@ export async function newSdkClientEntity(options) {
 
       case 'getBigSegmentStoreStatus':
         return await client.bigSegmentStoreStatusProvider.requireStatus();
+
+      case 'migrationVariation':
+        const migrationVariation = params.migrationVariation;
+        const res = await client.migrationVariation(
+          migrationVariation.key,
+          migrationVariation.context,
+          migrationVariation.defaultStage,
+        );
+        return { result: res.value };
+
+      case 'migrationOperation':
+        const migrationOperation = params.migrationOperation;
+        const readExecutionOrder = migrationOperation.readExecutionOrder;
+
+        const migration = createMigration(client, {
+          execution: getExecution(readExecutionOrder),
+          latencyTracking: migrationOperation.trackLatency,
+          errorTracking: migrationOperation.trackErrors,
+          check: migrationOperation.trackConsistency ? (a, b) => a === b : undefined,
+          readNew: async (payload) => {
+            try {
+              const res = await got.post(
+                migrationOperation.newEndpoint,
+                makeMigrationPostOptions(payload),
+              );
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+          writeNew: async (payload) => {
+            try {
+              const res = await got.post(
+                migrationOperation.newEndpoint,
+                makeMigrationPostOptions(payload),
+              );
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+          readOld: async (payload) => {
+            try {
+              const res = await got.post(
+                migrationOperation.oldEndpoint,
+                makeMigrationPostOptions(payload),
+              );
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+          writeOld: async (payload) => {
+            try {
+              const res = await got.post(
+                migrationOperation.oldEndpoint,
+                makeMigrationPostOptions(payload),
+              );
+              return LDMigrationSuccess(res.body);
+            } catch (err) {
+              return LDMigrationError(err.message);
+            }
+          },
+        });
+
+        switch (migrationOperation.operation) {
+          case 'read': {
+            const res = await migration.read(
+              migrationOperation.key,
+              migrationOperation.context,
+              migrationOperation.defaultStage,
+              migrationOperation.payload,
+            );
+            if (res.success) {
+              return { result: res.result };
+            } else {
+              return { result: res.error };
+            }
+          }
+          case 'write': {
+            const res = await migration.write(
+              migrationOperation.key,
+              migrationOperation.context,
+              migrationOperation.defaultStage,
+              migrationOperation.payload,
+            );
+
+            if (res.authoritative.success) {
+              return { result: res.authoritative.result };
+            } else {
+              return { result: res.authoritative.error };
+            }
+          }
+        }
+        return undefined;
 
       default:
         throw badCommandError;
