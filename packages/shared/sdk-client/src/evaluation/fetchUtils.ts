@@ -13,8 +13,8 @@ import Configuration from '../configuration';
  *
  * Ripped from https://thewoods.blog/base64url/
  */
-export const base64UrlEncode = (url: string, base64: Base64): string =>
-  base64.btoa(url).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+export const base64UrlEncode = (s: string, base64: Base64): string =>
+  base64.btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 export const createFetchPath = (
   sdkKey: string,
