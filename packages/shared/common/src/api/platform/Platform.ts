@@ -6,7 +6,7 @@ import { Requests } from './Requests';
 
 export interface Platform {
   /**
-   * The interface for performing base64 operations.
+   * The interface for performing encoding operations.
    */
   encoding: Encoding;
 
