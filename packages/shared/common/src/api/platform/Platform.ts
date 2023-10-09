@@ -8,7 +8,7 @@ export interface Platform {
   /**
    * The interface for performing encoding operations.
    */
-  encoding: Encoding;
+  encoding?: Encoding;
 
   /**
    * The interface for getting information about the platform and the execution
