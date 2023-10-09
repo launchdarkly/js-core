@@ -354,7 +354,6 @@ class Migration<
     let start;
     let end;
     let result: TResult;
-    // TODO: Need to validate performance existence check with edge SDKs.
     if (typeof performance !== undefined) {
       start = performance.now();
       result = await method();
