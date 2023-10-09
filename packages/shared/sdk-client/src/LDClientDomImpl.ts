@@ -47,6 +47,10 @@ export default class LDClientDomImpl implements LDClientDom {
       throw new Error('Context was unspecified or had no key');
     }
 
+    if (!platform.encoding) {
+      throw new Error('Platform must implement Encoding because btoa is required.');
+    }
+
     this.config = new Configuration(options);
     this.logger = this.config.logger;
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);

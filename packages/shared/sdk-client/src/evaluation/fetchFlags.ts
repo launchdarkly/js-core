@@ -25,7 +25,7 @@ const fetchFlags = async (
   config: Configuration,
   platform: Platform,
 ): Promise<Flags> => {
-  const fetchUrl = createFetchUrl(sdkKey, context, config, platform.encoding);
+  const fetchUrl = createFetchUrl(sdkKey, context, config, platform.encoding!);
   const fetchOptions: RequestInit = createFetchOptions(sdkKey, context, config, platform.info);
   const response = await fetch(fetchUrl, fetchOptions);
   return response.json();
