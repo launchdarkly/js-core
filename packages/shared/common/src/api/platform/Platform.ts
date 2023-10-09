@@ -1,9 +1,15 @@
 import { Crypto } from './Crypto';
+import { Encoding } from './Encoding';
 import { Filesystem } from './Filesystem';
 import { Info } from './Info';
 import { Requests } from './Requests';
 
 export interface Platform {
+  /**
+   * The interface for performing encoding operations.
+   */
+  encoding?: Encoding;
+
   /**
    * The interface for getting information about the platform and the execution
    * environment.

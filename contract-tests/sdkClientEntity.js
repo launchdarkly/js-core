@@ -1,11 +1,11 @@
 import got from 'got';
 import ld, {
+  createMigration,
   LDConcurrentExecution,
   LDExecutionOrdering,
   LDMigrationError,
   LDMigrationSuccess,
   LDSerialExecution,
-  createMigration,
 } from 'node-server-sdk';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
@@ -17,7 +17,7 @@ export { badCommandError };
 export function makeSdkConfig(options, tag) {
   const cf = {
     logger: sdkLogger(tag),
-    diagnosticOptOut: true
+    diagnosticOptOut: true,
   };
   const maybeTime = (seconds) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
@@ -125,29 +125,64 @@ export async function newSdkClientEntity(options) {
       case 'evaluate': {
         const pe = params.evaluate;
         if (pe.detail) {
-          switch(pe.valueType) {
-            case "bool":
-              return await client.boolVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
-            case "int": // Intentional fallthrough.
-            case "double":
-              return await client.numberVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
-            case "string":
-              return await client.stringVariationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+          switch (pe.valueType) {
+            case 'bool':
+              return await client.boolVariationDetail(
+                pe.flagKey,
+                pe.context || pe.user,
+                pe.defaultValue,
+              );
+            case 'int': // Intentional fallthrough.
+            case 'double':
+              return await client.numberVariationDetail(
+                pe.flagKey,
+                pe.context || pe.user,
+                pe.defaultValue,
+              );
+            case 'string':
+              return await client.stringVariationDetail(
+                pe.flagKey,
+                pe.context || pe.user,
+                pe.defaultValue,
+              );
             default:
-              return await client.variationDetail(pe.flagKey, pe.context || pe.user, pe.defaultValue);
+              return await client.variationDetail(
+                pe.flagKey,
+                pe.context || pe.user,
+                pe.defaultValue,
+              );
           }
-
         } else {
-          switch(pe.valueType) {
-            case "bool":
-              return {value: await client.boolVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
-            case "int": // Intentional fallthrough.
-            case "double":
-              return {value: await client.numberVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
-            case "string":
-              return {value: await client.stringVariation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+          switch (pe.valueType) {
+            case 'bool':
+              return {
+                value: await client.boolVariation(
+                  pe.flagKey,
+                  pe.context || pe.user,
+                  pe.defaultValue,
+                ),
+              };
+            case 'int': // Intentional fallthrough.
+            case 'double':
+              return {
+                value: await client.numberVariation(
+                  pe.flagKey,
+                  pe.context || pe.user,
+                  pe.defaultValue,
+                ),
+              };
+            case 'string':
+              return {
+                value: await client.stringVariation(
+                  pe.flagKey,
+                  pe.context || pe.user,
+                  pe.defaultValue,
+                ),
+              };
             default:
-              return {value: await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue)};
+              return {
+                value: await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue),
+              };
           }
         }
       }
