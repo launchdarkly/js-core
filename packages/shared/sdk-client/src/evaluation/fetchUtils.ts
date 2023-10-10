@@ -3,8 +3,6 @@ import { defaultHeaders, Encoding, Info, LDContext, Options } from '@launchdarkl
 import Configuration from '../configuration';
 
 /**
- * Dom api usage: btoa.
- *
  * In react-native use base64-js to polyfill btoa. This is safe
  * because the react-native repo uses it too. Set the global.btoa to the encode
  * function of base64-js.
