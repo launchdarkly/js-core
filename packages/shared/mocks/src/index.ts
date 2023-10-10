@@ -1,15 +1,15 @@
 import clientContext from './clientContext';
 import ContextDeduplicator from './contextDeduplicator';
-import createResponse from './createResponse';
 import { crypto, hasher } from './hasher';
 import logger from './logger';
+import mockFetch from './mockFetch';
 import basicPlatform from './platform';
 import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
 
 export {
   basicPlatform,
   clientContext,
-  createResponse,
+  mockFetch,
   crypto,
   logger,
   hasher,
