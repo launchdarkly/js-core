@@ -1,7 +1,5 @@
-import fetchMock from 'jest-fetch-mock';
-
 import { LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { basicPlatform, mockFetch } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
 import fetchFlags from './fetchFlags';
@@ -24,21 +22,21 @@ describe('fetchFeatures', () => {
   };
 
   let config: Configuration;
+  const platformFetch = basicPlatform.requests.fetch as jest.Mock;
 
   beforeEach(() => {
-    fetchMock.mockOnce(JSON.stringify(mockResponse));
+    mockFetch(mockResponse);
     config = new Configuration();
   });
 
   afterEach(() => {
-    fetchMock.resetMocks();
     jest.resetAllMocks();
   });
 
   test('get', async () => {
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
-    expect(fetchMock).toBeCalledWith(
+    expect(platformFetch).toBeCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9',
       {
         method: 'GET',
@@ -52,21 +50,23 @@ describe('fetchFeatures', () => {
     config = new Configuration({ useReport: true });
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
-    expect(fetchMock).toBeCalledWith('https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/context', {
-      method: 'REPORT',
-      headers: reportHeaders,
-      body: '{"kind":"user","key":"test-user-key-1"}',
-    });
+    expect(platformFetch).toBeCalledWith(
+      'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/context',
+      {
+        method: 'REPORT',
+        headers: reportHeaders,
+        body: '{"kind":"user","key":"test-user-key-1"}',
+      },
+    );
     expect(json).toEqual(mockResponse);
   });
 
   test('withReasons', async () => {
-    fetchMock.resetMocks();
-    fetchMock.mockOnce(JSON.stringify(mockResponseWithReasons));
+    mockFetch(mockResponseWithReasons);
     config = new Configuration({ withReasons: true });
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
-    expect(fetchMock).toBeCalledWith(
+    expect(platformFetch).toBeCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?withReasons=true',
       {
         method: 'GET',
@@ -80,7 +80,7 @@ describe('fetchFeatures', () => {
     config = new Configuration({ hash: 'test-hash', withReasons: false });
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
-    expect(fetchMock).toBeCalledWith(
+    expect(platformFetch).toBeCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?h=test-hash',
       {
         method: 'GET',

@@ -1,10 +1,8 @@
-import { defaultHeaders, Encoding, Info, LDContext } from '@launchdarkly/js-sdk-common';
+import { defaultHeaders, Encoding, Info, LDContext, Options } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
 
 /**
- * Dom api usage: btoa.
- *
  * In react-native use base64-js to polyfill btoa. This is safe
  * because the react-native repo uses it too. Set the global.btoa to the encode
  * function of base64-js.
@@ -69,7 +67,7 @@ export const createFetchOptions = (
   context: LDContext,
   config: Configuration,
   info: Info,
-): RequestInit => {
+): Options => {
   const { useReport, tags } = config;
   const headers = defaultHeaders(sdkKey, info, tags);
 

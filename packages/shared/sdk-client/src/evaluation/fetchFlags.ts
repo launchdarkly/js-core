@@ -16,18 +16,15 @@ export type Flags = {
   [k: string]: Flag;
 };
 
-/**
- * Dom api usage: fetch.
- */
 const fetchFlags = async (
   sdkKey: string,
   context: LDContext,
   config: Configuration,
-  platform: Platform,
+  { encoding, info, requests }: Platform,
 ): Promise<Flags> => {
-  const fetchUrl = createFetchUrl(sdkKey, context, config, platform.encoding!);
-  const fetchOptions: RequestInit = createFetchOptions(sdkKey, context, config, platform.info);
-  const response = await fetch(fetchUrl, fetchOptions);
+  const fetchUrl = createFetchUrl(sdkKey, context, config, encoding!);
+  const fetchOptions = createFetchOptions(sdkKey, context, config, info);
+  const response = await requests.fetch(fetchUrl, fetchOptions);
   return response.json();
 };
 
