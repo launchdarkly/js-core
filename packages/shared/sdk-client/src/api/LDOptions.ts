@@ -15,7 +15,7 @@ export default interface LDOptions {
    *
    * If `"localStorage"` is specified, the flags will be saved and retrieved from browser local
    * storage. Alternatively, an {@link LDFlagSet} can be specified which will be used as the initial
-   * source of flag values. In the latter case, the flag values will be available via {@link LDClientDom.variation}
+   * source of flag values. In the latter case, the flag values will be available via {@link LDClient.variation}
    * immediately after calling `initialize()` (normally they would not be available until the
    * client signals that it is ready).
    *
@@ -49,7 +49,7 @@ export default interface LDOptions {
    *
    * If this is true, the client will always attempt to maintain a streaming connection; if false,
    * it never will. If you leave the value undefined (the default), the client will open a streaming
-   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClientDom.on}).
+   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
    *
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
@@ -95,7 +95,7 @@ export default interface LDOptions {
    * calculated.
    *
    * The additional information will then be available through the client's
-   * {@link LDClientDom.variationDetail} method. Since this increases the size of network requests,
+   * {@link LDClient.variationDetail} method. Since this increases the size of network requests,
    * such information is not sent unless you set this option to true.
    */
   withReasons?: boolean;

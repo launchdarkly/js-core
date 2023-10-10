@@ -7,7 +7,7 @@ import { LDContext, LDEvaluationDetail, LDFlagSet, LDFlagValue } from '@launchda
  *
  * @ignore (don't need to show this separately in TypeDoc output; all methods will be shown in LDClient)
  */
-export interface LDClientDom {
+export interface LDClient {
   /**
    * Returns a Promise that tracks the client's initialization state.
    *
@@ -172,7 +172,7 @@ export interface LDClientDom {
    *
    * If this is true, the client will always attempt to maintain a streaming connection; if false,
    * it never will. If you leave the value undefined (the default), the client will open a streaming
-   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClientDom.on}).
+   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
    *
    * This can also be set as the `streaming` property of {@link LDOptions}.
    */
@@ -206,7 +206,7 @@ export interface LDClientDom {
    * The `"change"` and `"change:FLAG-KEY"` events have special behavior: by default, the
    * client will open a streaming connection to receive live changes if and only if
    * you are listening for one of these events. This behavior can be overridden by
-   * setting `streaming` in {@link LDOptions} or calling {@link LDClientDom.setStreaming}.
+   * setting `streaming` in {@link LDOptions} or calling {@link LDClient.setStreaming}.
    *
    * @param key
    *   The name of the event for which to listen.

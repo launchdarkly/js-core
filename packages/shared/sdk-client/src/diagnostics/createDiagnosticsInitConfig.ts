@@ -3,7 +3,7 @@ import { secondsToMillis, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
 import Configuration from '../configuration';
 
 export type DiagnosticsInitConfig = {
-  // dom & server common properties
+  // client & server common properties
   customBaseURI: boolean;
   customStreamURI: boolean;
   customEventsURI: boolean;
@@ -14,7 +14,7 @@ export type DiagnosticsInitConfig = {
   streamingDisabled: boolean;
   allAttributesPrivate: boolean;
 
-  // dom specific properties
+  // client specific properties
   usingSecureMode: boolean;
   bootstrapMode: boolean;
 };

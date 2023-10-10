@@ -13,7 +13,7 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClientDom } from './api/LDClientDom';
+import { LDClient } from './api/LDClient';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
@@ -21,7 +21,7 @@ import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import fetchFlags, { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 
-export default class LDClientImpl implements LDClientDom {
+export default class LDClientImpl implements LDClient {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;

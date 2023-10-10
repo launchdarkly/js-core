@@ -5,7 +5,7 @@ type CustomEventListeners = {
   custom: Function;
 };
 /**
- * Dom api usage: EventTarget.
+ * Native api usage: EventTarget.
  *
  * This is an event emitter using the standard built-in EventTarget web api.
  * https://developer.mozilla.org/en-US/docs/Web/API/EventTarget
