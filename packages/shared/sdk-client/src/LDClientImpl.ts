@@ -21,7 +21,7 @@ import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import fetchFlags, { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 
-export default class LDClientDomImpl implements LDClientDom {
+export default class LDClientImpl implements LDClientDom {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
