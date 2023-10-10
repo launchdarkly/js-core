@@ -1,4 +1,4 @@
-import { defaultHeaders, Encoding, Info, LDContext } from '@launchdarkly/js-sdk-common';
+import { defaultHeaders, Encoding, Info, LDContext, Options } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
 
@@ -69,7 +69,7 @@ export const createFetchOptions = (
   context: LDContext,
   config: Configuration,
   info: Info,
-): RequestInit => {
+): Options => {
   const { useReport, tags } = config;
   const headers = defaultHeaders(sdkKey, info, tags);
 

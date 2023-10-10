@@ -1,7 +1,5 @@
-import fetchMock from 'jest-fetch-mock';
-
 import { LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { basicPlatform, createResponse } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
 import fetchFlags from './fetchFlags';
@@ -23,15 +21,15 @@ describe('fetchFeatures', () => {
     'x-launchdarkly-wrapper': 'Rapper/1.2.3',
   };
 
+  const fetchMock = basicPlatform.requests.fetch as jest.Mock;
   let config: Configuration;
 
   beforeEach(() => {
-    fetchMock.mockOnce(JSON.stringify(mockResponse));
+    fetchMock.mockResolvedValue(createResponse(mockResponse));
     config = new Configuration();
   });
 
   afterEach(() => {
-    fetchMock.resetMocks();
     jest.resetAllMocks();
   });
 
@@ -61,8 +59,7 @@ describe('fetchFeatures', () => {
   });
 
   test('withReasons', async () => {
-    fetchMock.resetMocks();
-    fetchMock.mockOnce(JSON.stringify(mockResponseWithReasons));
+    fetchMock.mockResolvedValue(createResponse(mockResponseWithReasons));
     config = new Configuration({ withReasons: true });
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
