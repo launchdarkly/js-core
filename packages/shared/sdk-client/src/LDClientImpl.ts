@@ -2,37 +2,76 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  Context,
   internal,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
   LDFlagValue,
+  LDLogger,
+  Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClientDom } from './api/LDClientDom';
+import { LDClient } from './api/LDClient';
+import LDEmitter, { EventName } from './api/LDEmitter';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
+import fetchFlags, { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
-import { PlatformDom, Storage } from './platform/PlatformDom';
 
-export default class LDClientDomImpl implements LDClientDom {
+export default class LDClientImpl implements LDClient {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
-  storage: Storage;
+  private emitter: LDEmitter;
+  private flags: Flags = {};
+  private logger: LDLogger;
 
-  constructor(clientSideID: string, context: LDContext, options: LDOptions, platform: PlatformDom) {
+  /**
+   * Creates the client object synchronously. No async, no network calls.
+   */
+  constructor(
+    public readonly sdkKey: string,
+    public readonly context: LDContext,
+    public readonly platform: Platform,
+    options: LDOptions,
+  ) {
+    if (!sdkKey) {
+      throw new Error('You must configure the client with a client-side SDK key');
+    }
+
+    const checkedContext = Context.fromLDContext(context);
+    if (!checkedContext.valid) {
+      throw new Error('Context was unspecified or had no key');
+    }
+
+    if (!platform.encoding) {
+      throw new Error('Platform must implement Encoding because btoa is required.');
+    }
+
     this.config = new Configuration(options);
-    this.storage = platform.storage;
-    this.diagnosticsManager = createDiagnosticsManager(clientSideID, this.config, platform);
+    this.logger = this.config.logger;
+    this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
-      clientSideID,
+      sdkKey,
       this.config,
       platform,
       this.diagnosticsManager,
     );
+    this.emitter = new LDEmitter();
+  }
+
+  async start() {
+    try {
+      this.flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
+      this.emitter.emit('ready');
+    } catch (error: any) {
+      this.logger.error(error);
+      this.emitter.emit('error', error);
+      this.emitter.emit('failed', error);
+    }
   }
 
   allFlags(): LDFlagSet {
@@ -59,9 +98,13 @@ export default class LDClientDomImpl implements LDClientDom {
     return Promise.resolve({});
   }
 
-  off(key: string, callback: (...args: any[]) => void, context?: any): void {}
+  off(eventName: EventName, listener?: Function): void {
+    this.emitter.off(eventName, listener);
+  }
 
-  on(key: string, callback: (...args: any[]) => void, context?: any): void {}
+  on(eventName: EventName, listener: Function): void {
+    this.emitter.on(eventName, listener);
+  }
 
   setStreaming(value?: boolean): void {}
 

@@ -1,4 +1,5 @@
 import {
+  ApplicationTags,
   createSafeLogger,
   LDFlagSet,
   NumberWithMinimum,
@@ -12,7 +13,7 @@ import type LDOptions from '../api/LDOptions';
 import validators from './validators';
 
 export default class Configuration {
-  public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
+  public static DEFAULT_POLLING = 'https://sdk.launchdarkly.com';
   public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
 
   public readonly logger = createSafeLogger();
@@ -28,7 +29,7 @@ export default class Configuration {
 
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
-  public readonly evaluationReasons = false;
+  public readonly withReasons = false;
   public readonly sendEvents = true;
   public readonly sendLDHeaders = true;
   public readonly useReport = false;
@@ -36,6 +37,7 @@ export default class Configuration {
   public readonly inspectors: LDInspection[] = [];
   public readonly privateAttributes: string[] = [];
 
+  public readonly tags: ApplicationTags;
   public readonly application?: { id?: string; version?: string };
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
@@ -54,6 +56,7 @@ export default class Configuration {
     errors.forEach((e: string) => this.logger.warn(e));
 
     this.serviceEndpoints = new ServiceEndpoints(this.streamUri, this.baseUri, this.eventsUri);
+    this.tags = new ApplicationTags({ application: this.application, logger: this.logger });
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {

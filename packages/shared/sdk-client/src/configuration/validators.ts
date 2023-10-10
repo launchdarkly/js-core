@@ -27,7 +27,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
 
   allAttributesPrivate: TypeValidators.Boolean,
   diagnosticOptOut: TypeValidators.Boolean,
-  evaluationReasons: TypeValidators.Boolean,
+  withReasons: TypeValidators.Boolean,
   sendEvents: TypeValidators.Boolean,
   sendLDHeaders: TypeValidators.Boolean,
   useReport: TypeValidators.Boolean,

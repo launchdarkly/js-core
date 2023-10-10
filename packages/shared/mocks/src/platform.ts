@@ -1,6 +1,10 @@
-import type { Info, Platform, PlatformData, Requests, SdkData } from '@common';
+import type { Encoding, Info, Platform, PlatformData, Requests, SdkData } from '@common';
 
 import { crypto } from './hasher';
+
+const encoding: Encoding = {
+  btoa: (s: string) => Buffer.from(s).toString('base64'),
+};
 
 const info: Info = {
   platformData(): PlatformData {
@@ -33,6 +37,7 @@ const requests: Requests = {
 };
 
 const basicPlatform: Platform = {
+  encoding,
   info,
   crypto,
   requests,

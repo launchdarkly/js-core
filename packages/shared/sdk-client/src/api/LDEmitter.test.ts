@@ -1,3 +1,5 @@
+import { LDContext } from '@launchdarkly/js-sdk-common';
+
 import LDEmitter from './LDEmitter';
 
 describe('LDEmitter', () => {
@@ -73,5 +75,61 @@ describe('LDEmitter', () => {
 
     expect(emitter.listenerCount('error')).toEqual(2);
     expect(emitter.listenerCount('change')).toEqual(1);
+  });
+
+  test('on listener with arguments', () => {
+    const context = { kind: 'user', key: 'test-user-1' };
+    const onListener = jest.fn((c: LDContext) => c);
+
+    emitter.on('change', onListener);
+    emitter.emit('change', context);
+
+    expect(onListener).toBeCalledWith(context);
+  });
+
+  test('unsubscribe one of many listeners', () => {
+    const errorHandler1 = jest.fn();
+    const errorHandler2 = jest.fn();
+
+    emitter.on('error', errorHandler1);
+    emitter.on('error', errorHandler2);
+    emitter.off('error', errorHandler2);
+    emitter.emit('error');
+
+    expect(emitter.listenerCount('error')).toEqual(1);
+    expect(errorHandler2).not.toBeCalled();
+  });
+
+  test('unsubscribe all listeners manually', () => {
+    const errorHandler1 = jest.fn();
+    const errorHandler2 = jest.fn();
+
+    emitter.on('error', errorHandler1);
+    emitter.on('error', errorHandler2);
+
+    // intentional duplicate calls to ensure no errors are thrown if the
+    // same handler gets removed multiple times
+    emitter.off('error', errorHandler1);
+    emitter.off('error', errorHandler1);
+    emitter.off('error', errorHandler2);
+    emitter.emit('error');
+
+    expect(emitter.listenerCount('error')).toEqual(0);
+    expect(errorHandler1).not.toBeCalled();
+    expect(errorHandler2).not.toBeCalled();
+  });
+
+  test('unsubscribe all listeners by event name', () => {
+    const errorHandler1 = jest.fn();
+    const errorHandler2 = jest.fn();
+
+    emitter.on('error', errorHandler1);
+    emitter.on('error', errorHandler2);
+    emitter.off('error');
+    emitter.emit('error');
+
+    expect(emitter.listenerCount('error')).toEqual(0);
+    expect(errorHandler1).not.toBeCalled();
+    expect(errorHandler2).not.toBeCalled();
   });
 });
