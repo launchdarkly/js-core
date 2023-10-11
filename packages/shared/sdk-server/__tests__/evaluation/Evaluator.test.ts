@@ -15,7 +15,7 @@ const offBaseFlag = {
   variations: ['zero', 'one', 'two'],
 };
 
-describe.each<[Flag, LDContext, EvalResult | undefined]>([
+describe.each<[Flag, LDContext, internal.EvalResult | undefined]>([
   [
     {
       ...offBaseFlag,
@@ -57,7 +57,7 @@ const targetBaseFlag = {
   variations: ['zero', 'one', 'two'],
 };
 
-describe.each<[Flag, LDContext, EvalResult | undefined]>([
+describe.each<[Flag, LDContext, internal.EvalResult | undefined]>([
   [
     {
       ...targetBaseFlag,

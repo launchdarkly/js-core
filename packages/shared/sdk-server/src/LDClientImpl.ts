@@ -37,6 +37,7 @@ import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
 import Evaluator from './evaluation/Evaluator';
+import EventFactory from './evaluation/EventFactory';
 import { Queries } from './evaluation/Queries';
 import ContextDeduplicator from './events/ContextDeduplicator';
 import isExperiment from './events/isExperiment';
@@ -47,7 +48,7 @@ import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
-const { ErrorKinds, EvalResult, EventFactory, NullEventProcessor } = internal;
+const { ErrorKinds, EvalResult, NullEventProcessor } = internal;
 enum InitState {
   Initializing,
   Initialized,
@@ -272,7 +273,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: TResult,
-    eventFactory: internal.EventFactory,
+    eventFactory: EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): Promise<LDEvaluationDetail> {
     return new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
@@ -579,7 +580,7 @@ export default class LDClientImpl implements LDClient {
     flagKey: string,
     context: LDContext,
     defaultValue: any,
-    eventFactory: internal.EventFactory,
+    eventFactory: EventFactory,
     cb: (res: internal.EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
@@ -649,7 +650,7 @@ export default class LDClientImpl implements LDClient {
 
   private sendEvalEvent(
     evalRes: internal.EvalResult,
-    eventFactory: internal.EventFactory,
+    eventFactory: EventFactory,
     flag: Flag,
     evalContext: Context,
     defaultValue: any,
@@ -658,7 +659,7 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor.sendEvent({ ...event });
     });
     this.eventProcessor.sendEvent(
-      eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue, undefined),
+      eventFactory.evalEventServer(flag, evalContext, evalRes.detail, defaultValue, undefined),
     );
   }
 
@@ -666,7 +667,7 @@ export default class LDClientImpl implements LDClient {
     flagKey: string,
     context: LDContext,
     defaultValue: any,
-    eventFactory: internal.EventFactory,
+    eventFactory: EventFactory,
     cb: (res: internal.EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {

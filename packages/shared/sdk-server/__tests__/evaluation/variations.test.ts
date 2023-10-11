@@ -15,7 +15,7 @@ const baseFlag = {
 
 const givenReason = Reasons.TargetMatch;
 
-describe.each<[Flag, any, EvalResult]>([
+describe.each<[Flag, any, internal.EvalResult]>([
   [{ ...baseFlag }, 0, EvalResult.forSuccess('zero', givenReason, 0)],
   [{ ...baseFlag }, 1, EvalResult.forSuccess('one', givenReason, 1)],
   [{ ...baseFlag }, 2, EvalResult.forSuccess('two', givenReason, 2)],
@@ -43,7 +43,7 @@ describe.each<[Flag, any, EvalResult]>([
   });
 });
 
-describe.each<[Flag, EvalResult]>([
+describe.each<[Flag, internal.EvalResult]>([
   [{ ...baseFlag, offVariation: 0 }, EvalResult.forSuccess('zero', Reasons.Off, 0)],
   [{ ...baseFlag, offVariation: 1 }, EvalResult.forSuccess('one', Reasons.Off, 1)],
   [{ ...baseFlag, offVariation: 2 }, EvalResult.forSuccess('two', Reasons.Off, 2)],

@@ -13,7 +13,7 @@ const baseFlag = {
   variations: ['zero', 'one', 'two'],
 };
 
-describe.each<[Flag, LDContext, EvalResult | undefined]>([
+describe.each<[Flag, LDContext, internal.EvalResult | undefined]>([
   [
     {
       ...baseFlag,

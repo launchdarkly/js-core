@@ -2,34 +2,39 @@ import { LDEvaluationDetail } from '../../api';
 import Context from '../../Context';
 import { InputCustomEvent, InputEvalEvent, InputIdentifyEvent } from '../events';
 
-export default class EventFactory {
+export default class EventFactoryBase {
   constructor(private readonly withReasons: boolean) {}
 
-  // evalEvent(
-  //   flag: Flag,
-  //   context: Context,
-  //   detail: LDEvaluationDetail,
-  //   defaultVal: any,
-  //   prereqOfFlag?: Flag,
-  // ): InputEvalEvent {
-  //   const addExperimentData = isExperiment(flag, detail.reason);
-  //   return new InputEvalEvent(
-  //     this.withReasons,
-  //     context,
-  //     flag.key,
-  //     defaultVal,
-  //     detail,
-  //     flag.version,
-  //     // Exclude null as a possibility.
-  //     detail.variationIndex ?? undefined,
-  //     flag.trackEvents || addExperimentData,
-  //     prereqOfFlag?.key,
-  //     this.withReasons || addExperimentData ? detail.reason : undefined,
-  //     flag.debugEventsUntilDate,
-  //     flag.excludeFromSummaries,
-  //     flag.samplingRatio,
-  //   );
-  // }
+  evalEvent(
+    flagKey: string,
+    version: number,
+    trackEvents: boolean,
+    context: Context,
+    detail: LDEvaluationDetail,
+    defaultVal: any,
+    debugEventsUntilDate?: number,
+    prereqOfFlagKey?: string,
+    excludeFromSummaries?: boolean,
+    samplingRatio?: number,
+    addExperimentData?: boolean,
+  ): InputEvalEvent {
+    return new InputEvalEvent(
+      this.withReasons,
+      context,
+      flagKey,
+      defaultVal,
+      detail,
+      version,
+      // Exclude null as a possibility.
+      detail.variationIndex ?? undefined,
+      trackEvents || addExperimentData,
+      prereqOfFlagKey,
+      this.withReasons || addExperimentData ? detail.reason : undefined,
+      debugEventsUntilDate,
+      excludeFromSummaries,
+      samplingRatio,
+    );
+  }
 
   unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
     return new InputEvalEvent(

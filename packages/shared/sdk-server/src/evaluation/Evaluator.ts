@@ -13,6 +13,7 @@ import { Segment } from './data/Segment';
 import { SegmentRule } from './data/SegmentRule';
 import { VariationOrRollout } from './data/VariationOrRollout';
 import evalTargets from './evalTargets';
+import EventFactory from './EventFactory';
 import makeBigSegmentRef from './makeBigSegmentRef';
 import matchClauseWithoutSegmentOperations, { maybeNegate } from './matchClause';
 import matchSegmentTargets from './matchSegmentTargets';
@@ -114,7 +115,7 @@ export default class Evaluator {
   async evaluate(
     flag: Flag,
     context: Context,
-    eventFactory?: internal.EventFactory,
+    eventFactory?: EventFactory,
   ): Promise<internal.EvalResult> {
     return new Promise<internal.EvalResult>((resolve) => {
       const state: EvalState = {};
@@ -142,7 +143,7 @@ export default class Evaluator {
     flag: Flag,
     context: Context,
     cb: (res: internal.EvalResult) => void,
-    eventFactory?: internal.EventFactory,
+    eventFactory?: EventFactory,
   ) {
     const state: EvalState = {};
     this.evaluateInternal(
@@ -180,7 +181,7 @@ export default class Evaluator {
     state: EvalState,
     visitedFlags: string[],
     cb: (res: internal.EvalResult) => void,
-    eventFactory?: internal.EventFactory,
+    eventFactory?: EventFactory,
   ): void {
     if (!flag.on) {
       cb(getOffVariation(flag, Reasons.Off));
@@ -235,7 +236,7 @@ export default class Evaluator {
     state: EvalState,
     visitedFlags: string[],
     cb: (res: internal.EvalResult | undefined) => void,
-    eventFactory?: internal.EventFactory,
+    eventFactory?: EventFactory,
   ): void {
     let prereqResult: internal.EvalResult | undefined;
 
@@ -277,7 +278,7 @@ export default class Evaluator {
 
               if (eventFactory) {
                 state.events.push(
-                  eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag),
+                  eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
                 );
               }
 
