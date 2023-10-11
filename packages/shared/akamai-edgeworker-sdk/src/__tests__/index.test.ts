@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/extensions
 import { EdgeProvider, init, LDLogger, LDMultiKindContext, LDSingleKindContext } from '../..';
 import * as testData from './testData.json';
 

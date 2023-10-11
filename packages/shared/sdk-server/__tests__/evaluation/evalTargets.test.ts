@@ -1,9 +1,9 @@
-import { Context, LDContext } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDContext } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from '../../src/evaluation/data/Flag';
-import EvalResult from '../../src/evaluation/EvalResult';
 import evalTargets from '../../src/evaluation/evalTargets';
-import Reasons from '../../src/evaluation/Reasons';
+
+const { EvalResult, Reasons } = internal;
 
 const baseFlag = {
   key: 'feature0',

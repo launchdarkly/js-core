@@ -1,13 +1,13 @@
-import { Context } from '@launchdarkly/js-sdk-common';
+import { Context, internal } from '@launchdarkly/js-sdk-common';
 
 import { firstResult } from './collection';
 import { Flag } from './data/Flag';
 import { Target } from './data/Target';
-import EvalResult from './EvalResult';
-import Reasons from './Reasons';
 import { getVariation } from './variations';
 
-function evalTarget(flag: Flag, target: Target, context: Context): EvalResult | undefined {
+const { Reasons } = internal;
+
+function evalTarget(flag: Flag, target: Target, context: Context): internal.EvalResult | undefined {
   const contextKey = context.key(target.contextKind);
   if (contextKey !== undefined) {
     const found = target.values.indexOf(contextKey) >= 0;
@@ -27,7 +27,7 @@ function evalTarget(flag: Flag, target: Target, context: Context): EvalResult | 
  *
  * @internal
  */
-export default function evalTargets(flag: Flag, context: Context): EvalResult | undefined {
+export default function evalTargets(flag: Flag, context: Context): internal.EvalResult | undefined {
   if (!flag.contextTargets?.length) {
     // There are not context targets, so we are going to evaluate the user targets.
     return firstResult(flag.targets, (target) => evalTarget(flag, target, context));

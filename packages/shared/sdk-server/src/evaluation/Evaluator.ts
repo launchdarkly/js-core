@@ -4,7 +4,6 @@
 import { Context, internal, LDEvaluationReason, Platform } from '@launchdarkly/js-sdk-common';
 
 import { BigSegmentStoreMembership } from '../api/interfaces';
-import EventFactory from '../events/EventFactory';
 import Bucketer from './Bucketer';
 import { allSeriesAsync, firstSeriesAsync } from './collection';
 import { Clause } from './data/Clause';
@@ -13,15 +12,14 @@ import { FlagRule } from './data/FlagRule';
 import { Segment } from './data/Segment';
 import { SegmentRule } from './data/SegmentRule';
 import { VariationOrRollout } from './data/VariationOrRollout';
-import ErrorKinds from './ErrorKinds';
-import EvalResult from './EvalResult';
 import evalTargets from './evalTargets';
 import makeBigSegmentRef from './makeBigSegmentRef';
 import matchClauseWithoutSegmentOperations, { maybeNegate } from './matchClause';
 import matchSegmentTargets from './matchSegmentTargets';
 import { Queries } from './Queries';
-import Reasons from './Reasons';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
+
+const { ErrorKinds, EvalResult, Reasons } = internal;
 
 /**
  * PERFORMANCE NOTE: The evaluation algorithm uses callbacks instead of async/await to optimize
@@ -82,14 +80,14 @@ interface Match {
 interface MatchError {
   error: true;
   isMatch: false;
-  result?: EvalResult;
+  result?: internal.EvalResult;
 }
 
 function makeMatch(match: boolean): Match {
   return { error: false, isMatch: match, result: undefined };
 }
 
-function makeError(result: EvalResult): MatchError {
+function makeError(result: internal.EvalResult): MatchError {
   return { error: true, isMatch: false, result };
 }
 
@@ -113,8 +111,12 @@ export default class Evaluator {
     this.bucketer = new Bucketer(platform.crypto);
   }
 
-  async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
-    return new Promise<EvalResult>((resolve) => {
+  async evaluate(
+    flag: Flag,
+    context: Context,
+    eventFactory?: internal.EventFactory,
+  ): Promise<internal.EvalResult> {
+    return new Promise<internal.EvalResult>((resolve) => {
       const state: EvalState = {};
       this.evaluateInternal(
         flag,
@@ -139,8 +141,8 @@ export default class Evaluator {
   evaluateCb(
     flag: Flag,
     context: Context,
-    cb: (res: EvalResult) => void,
-    eventFactory?: EventFactory,
+    cb: (res: internal.EvalResult) => void,
+    eventFactory?: internal.EventFactory,
   ) {
     const state: EvalState = {};
     this.evaluateInternal(
@@ -177,8 +179,8 @@ export default class Evaluator {
     context: Context,
     state: EvalState,
     visitedFlags: string[],
-    cb: (res: EvalResult) => void,
-    eventFactory?: EventFactory,
+    cb: (res: internal.EvalResult) => void,
+    eventFactory?: internal.EventFactory,
   ): void {
     if (!flag.on) {
       cb(getOffVariation(flag, Reasons.Off));
@@ -232,10 +234,10 @@ export default class Evaluator {
     context: Context,
     state: EvalState,
     visitedFlags: string[],
-    cb: (res: EvalResult | undefined) => void,
-    eventFactory?: EventFactory,
+    cb: (res: internal.EvalResult | undefined) => void,
+    eventFactory?: internal.EventFactory,
   ): void {
-    let prereqResult: EvalResult | undefined;
+    let prereqResult: internal.EvalResult | undefined;
 
     if (!flag.prerequisites || !flag.prerequisites.length) {
       cb(undefined);
@@ -313,9 +315,9 @@ export default class Evaluator {
     flag: Flag,
     context: Context,
     state: EvalState,
-    cb: (res: EvalResult | undefined) => void,
+    cb: (res: internal.EvalResult | undefined) => void,
   ): void {
-    let ruleResult: EvalResult | undefined;
+    let ruleResult: internal.EvalResult | undefined;
 
     firstSeriesAsync(
       flag.rules,
@@ -336,7 +338,7 @@ export default class Evaluator {
     state: EvalState,
     cb: (res: MatchOrError) => void,
   ): void {
-    let errorResult: EvalResult | undefined;
+    let errorResult: internal.EvalResult | undefined;
     if (clause.op === 'segmentMatch') {
       firstSeriesAsync(
         clause.values,
@@ -405,13 +407,13 @@ export default class Evaluator {
     context: Context,
     state: EvalState,
     segmentsVisited: string[],
-    cb: (res: EvalResult | undefined) => void,
+    cb: (res: internal.EvalResult | undefined) => void,
   ): void {
     if (!rule.clauses) {
       cb(undefined);
       return;
     }
-    let errorResult: EvalResult | undefined;
+    let errorResult: internal.EvalResult | undefined;
     allSeriesAsync(
       rule.clauses,
       (clause, _index, iterCb) => {
@@ -440,7 +442,7 @@ export default class Evaluator {
     context: Context,
     flag: Flag,
     reason: LDEvaluationReason,
-  ): EvalResult {
+  ): internal.EvalResult {
     if (varOrRollout === undefined) {
       // By spec this field should be defined, but better to be overly cautious.
       return EvalResult.forError(ErrorKinds.MalformedFlag, 'Fallthrough variation undefined');
@@ -517,7 +519,7 @@ export default class Evaluator {
     segmentsVisited: string[],
     cb: (res: MatchOrError) => void,
   ): void {
-    let errorResult: EvalResult | undefined;
+    let errorResult: internal.EvalResult | undefined;
     allSeriesAsync(
       rule.clauses,
       (clause, _index, iterCb) => {
@@ -578,7 +580,7 @@ export default class Evaluator {
       }
     }
 
-    let evalResult: EvalResult | undefined;
+    let evalResult: internal.EvalResult | undefined;
     firstSeriesAsync(
       segment.rules,
       (rule, _index, iterCb) => {

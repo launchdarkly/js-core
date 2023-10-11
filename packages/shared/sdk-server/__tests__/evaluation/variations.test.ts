@@ -1,8 +1,9 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { Flag } from '../../src/evaluation/data/Flag';
-import ErrorKinds from '../../src/evaluation/ErrorKinds';
-import EvalResult from '../../src/evaluation/EvalResult';
-import Reasons from '../../src/evaluation/Reasons';
 import { getOffVariation, getVariation } from '../../src/evaluation/variations';
+
+const { ErrorKinds, EvalResult, Reasons } = internal;
 
 const baseFlag = {
   key: 'feature0',

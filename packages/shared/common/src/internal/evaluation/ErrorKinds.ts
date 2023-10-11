@@ -1,7 +1,5 @@
 /**
  * Different kinds of error which may be encountered during evaluation.
- *
- * @internal
  */
 enum ErrorKinds {
   MalformedFlag = 'MALFORMED_FLAG',
@@ -11,7 +9,4 @@ enum ErrorKinds {
   WrongType = 'WRONG_TYPE',
 }
 
-/**
- * @internal
- */
 export default ErrorKinds;

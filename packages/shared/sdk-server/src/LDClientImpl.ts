@@ -36,12 +36,9 @@ import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConf
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
-import ErrorKinds from './evaluation/ErrorKinds';
-import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
 import ContextDeduplicator from './events/ContextDeduplicator';
-import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
@@ -50,7 +47,7 @@ import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
-const { NullEventProcessor } = internal;
+const { ErrorKinds, EvalResult, EventFactory, NullEventProcessor } = internal;
 enum InitState {
   Initializing,
   Initialized,
@@ -275,7 +272,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: TResult,
-    eventFactory: EventFactory,
+    eventFactory: internal.EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): Promise<LDEvaluationDetail> {
     return new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
@@ -582,8 +579,8 @@ export default class LDClientImpl implements LDClient {
     flagKey: string,
     context: LDContext,
     defaultValue: any,
-    eventFactory: EventFactory,
-    cb: (res: EvalResult, flag?: Flag) => void,
+    eventFactory: internal.EventFactory,
+    cb: (res: internal.EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (this.config.offline) {
@@ -636,7 +633,7 @@ export default class LDClientImpl implements LDClient {
                 `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
                 defaultValue,
               );
-              this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
+              this.sendEvalEvent(errorRes, eventFactory, flag, evalContext, defaultValue);
               cb(errorRes, flag);
               return;
             }
@@ -651,8 +648,8 @@ export default class LDClientImpl implements LDClient {
   }
 
   private sendEvalEvent(
-    evalRes: EvalResult,
-    eventFactory: EventFactory,
+    evalRes: internal.EvalResult,
+    eventFactory: internal.EventFactory,
     flag: Flag,
     evalContext: Context,
     defaultValue: any,
@@ -669,8 +666,8 @@ export default class LDClientImpl implements LDClient {
     flagKey: string,
     context: LDContext,
     defaultValue: any,
-    eventFactory: EventFactory,
-    cb: (res: EvalResult, flag?: Flag) => void,
+    eventFactory: internal.EventFactory,
+    cb: (res: internal.EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (!this.initialized()) {

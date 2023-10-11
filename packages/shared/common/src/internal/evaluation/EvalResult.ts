@@ -1,16 +1,14 @@
-import { internal, LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
-
+import { LDEvaluationDetail, LDEvaluationReason } from '../../api';
+import { InputEvalEvent } from '../events';
 import ErrorKinds from './ErrorKinds';
 import Reasons from './Reasons';
 
 /**
  * A class which encapsulates the result of an evaluation. It allows for differentiating between
  * successful and error result types.
- *
- * @internal
  */
 export default class EvalResult {
-  public events?: internal.InputEvalEvent[];
+  public events?: InputEvalEvent[];
 
   protected constructor(
     public readonly isError: boolean,

@@ -1,11 +1,11 @@
-import { Context, LDContext } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDContext } from '@launchdarkly/js-sdk-common';
 import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../src/evaluation/data/Flag';
-import EvalResult from '../../src/evaluation/EvalResult';
 import Evaluator from '../../src/evaluation/Evaluator';
-import Reasons from '../../src/evaluation/Reasons';
 import noQueries from './mocks/noQueries';
+
+const { EvalResult, Reasons } = internal;
 
 const offBaseFlag = {
   key: 'feature0',

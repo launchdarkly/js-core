@@ -4,6 +4,7 @@
 import {
   Context,
   internal,
+  LDClientError,
   LDContext,
   LDEvaluationDetail,
   LDFlagSet,
@@ -12,21 +13,24 @@ import {
   Platform,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
+import { InputEvalEvent } from '@launchdarkly/js-sdk-common/dist/internal';
 
 import { LDClient } from './api/LDClient';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import fetchFlags, { Flags } from './evaluation/fetchFlags';
+import fetchFlags, { RawFlag, RawFlags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
+
+const { ErrorKinds, EvalResult } = internal;
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
   private emitter: LDEmitter;
-  private flags: Flags = {};
+  private rawFlags: RawFlags = {};
   private logger: LDLogger;
 
   /**
@@ -65,7 +69,7 @@ export default class LDClientImpl implements LDClient {
 
   async start() {
     try {
-      this.flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
+      this.rawFlags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
       this.emitter.emit('ready');
     } catch (error: any) {
       this.logger.error(error);
@@ -75,7 +79,7 @@ export default class LDClientImpl implements LDClient {
   }
 
   allFlags(): LDFlagSet {
-    return {};
+    return this.rawFlags;
   }
 
   close(onDone?: () => void): Promise<void> {
@@ -93,7 +97,7 @@ export default class LDClientImpl implements LDClient {
   identify(
     context: LDContext,
     hash?: string,
-    onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
+    onDone?: (err: Error | null, rawFlags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> {
     return Promise.resolve({});
   }
@@ -110,8 +114,76 @@ export default class LDClientImpl implements LDClient {
 
   track(key: string, data?: any, metricValue?: number): void {}
 
-  variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
-    return undefined;
+  createEvalEvent(flagKey: string, defaultValue: LDFlagValue, flag: RawFlag) {
+    // const event = {
+    //   kind: 'feature',
+    //   creationDate: now.getTime(),
+    //   key: key,
+    //   value: value,
+    //   default: defaultValue,
+    //   //prereq
+    //   variation: detail ? detail.variationIndex : null,
+    //   context,
+    // };
+    // const flag = flags[key];
+    // if (flag) {
+    //   event.version = flag.flagVersion ? flag.flagVersion : flag.version;
+    //   event.trackEvents = flag.trackEvents;
+    //   event.debugEventsUntilDate = flag.debugEventsUntilDate;
+    // }
+    // if ((includeReason || (flag && flag.trackReason)) && detail) {
+    //   event.reason = detail.reason;
+    // }
+
+    return new InputEvalEvent(
+      this.config.withReasons,
+      Context.fromLDContext(this.context),
+      flagKey,
+      defaultValue,
+      detail,
+      flag.version,
+      flag.variation,
+      flag.trackEvents,
+      undefined,
+      this.config.withReasons ? detail.reason : undefined,
+      flag.debugEventsUntilDate,
+    );
+  }
+  variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
+    const found = this.rawFlags[flagKey];
+
+    if (!found) {
+      const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
+      this.emitter.emit('error', error);
+      const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
+      const e = this.createEvalEvent(flagKey, defaultValue, found);
+      this.eventProcessor.sendEvent(
+        this.eventFactoryDefault.unknownFlagEvent(flagKey, this.context, result.detail),
+      );
+      return defaultValue;
+    }
+
+    const { value, variation } = this.rawFlags[found];
+    if (!variation) {
+      this.logger.debug('Result value is null in variation');
+      // evalRes.setDefault(defaultValue);
+    }
+
+    if (typeChecker) {
+      const [matched, type] = typeChecker(value);
+      if (!matched) {
+        const errorRes = EvalResult.forError(
+          ErrorKinds.WrongType,
+          `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
+          defaultValue,
+        );
+        // this.sendEvalEvent(errorRes, eventFactory, flag, evalContext, defaultValue);
+        return value;
+      }
+    }
+
+    // this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
+    return value;
   }
 
   variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
