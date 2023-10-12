@@ -1,4 +1,4 @@
-// TODO: fetchUtils tests
+// TODO:
 describe('fetchUtils', () => {
   test('sucesss', () => {});
 });
