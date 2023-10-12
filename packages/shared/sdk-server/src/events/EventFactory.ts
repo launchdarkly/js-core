@@ -1,8 +1,11 @@
 import { Context, internal, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
 
-import isExperiment from '../events/isExperiment';
-import { Flag } from './data/Flag';
+import { Flag } from '../evaluation/data/Flag';
+import isExperiment from './isExperiment';
 
+/**
+ * @internal
+ */
 export default class EventFactory extends internal.EventFactoryBase {
   evalEventServer(
     flag: Flag,

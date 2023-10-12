@@ -4,6 +4,7 @@
 import { Context, internal, LDEvaluationReason, Platform } from '@launchdarkly/js-sdk-common';
 
 import { BigSegmentStoreMembership } from '../api/interfaces';
+import EventFactory from '../events/EventFactory';
 import Bucketer from './Bucketer';
 import { allSeriesAsync, firstSeriesAsync } from './collection';
 import { Clause } from './data/Clause';
@@ -13,7 +14,6 @@ import { Segment } from './data/Segment';
 import { SegmentRule } from './data/SegmentRule';
 import { VariationOrRollout } from './data/VariationOrRollout';
 import evalTargets from './evalTargets';
-import EventFactory from './EventFactory';
 import makeBigSegmentRef from './makeBigSegmentRef';
 import matchClauseWithoutSegmentOperations, { maybeNegate } from './matchClause';
 import matchSegmentTargets from './matchSegmentTargets';
