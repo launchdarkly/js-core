@@ -26,6 +26,8 @@ const fetchFlags = async (
 ): Promise<RawFlags> => {
   const fetchUrl = createFetchUrl(sdkKey, context, config, encoding!);
   const fetchOptions = createFetchOptions(sdkKey, context, config, info);
+
+  // TODO: add error handling, retry and timeout
   const response = await requests.fetch(fetchUrl, fetchOptions);
   return response.json();
 };
