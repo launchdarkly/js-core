@@ -94,7 +94,6 @@ export default class LDClientImpl implements LDClient {
   }
 
   close(): void {
-    // TODO:
     this.eventProcessor.close();
   }
 
