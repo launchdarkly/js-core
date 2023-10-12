@@ -1,3 +1,4 @@
+import ClientMessages from './ClientMessages';
 import EventProcessor from './EventProcessor';
 import InputCustomEvent from './InputCustomEvent';
 import InputEvalEvent from './InputEvalEvent';
@@ -8,6 +9,7 @@ import NullEventProcessor from './NullEventProcessor';
 import shouldSample from './sampling';
 
 export {
+  ClientMessages,
   InputCustomEvent,
   InputEvalEvent,
   InputEvent,

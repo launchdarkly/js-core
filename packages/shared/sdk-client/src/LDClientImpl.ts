@@ -25,7 +25,7 @@ import fetchFlags, { RawFlag, RawFlags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
-const { ErrorKinds, EvalResult } = internal;
+const { ClientMessages, ErrorKinds, EvalResult } = internal;
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
@@ -70,6 +70,8 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
+
+    // TODO: init streamer
   }
 
   async start() {
@@ -84,11 +86,12 @@ export default class LDClientImpl implements LDClient {
   }
 
   allFlags(): LDFlagSet {
-    // TODO:
+    // TODO: return flattened flags like this { key1: val1, key2: val2 }
     return this.rawFlags;
   }
 
   close(): void {
+    // TODO:
     this.eventProcessor.close();
   }
 
@@ -110,6 +113,7 @@ export default class LDClientImpl implements LDClient {
     hash?: string,
     onDone?: (err: Error | null, rawFlags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> {
+    // TODO:
     return Promise.resolve({});
   }
 
@@ -126,7 +130,15 @@ export default class LDClientImpl implements LDClient {
   }
 
   track(key: string, data?: any, metricValue?: number): void {
-    // TODO:
+    const checkedContext = Context.fromLDContext(this.context);
+    if (!checkedContext.valid) {
+      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
+    }
+
+    this.eventProcessor.sendEvent(
+      this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
+    );
   }
 
   private sendEvalEvent(
@@ -206,6 +218,7 @@ export default class LDClientImpl implements LDClient {
     return this.variationInternal(key, defaultValue, eventFactory, typeChecker);
   }
 
+  // TODO: add other typed variation functions
   boolVariation(key: string, defaultValue: boolean): boolean {
     return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
       TypeValidators.Boolean.is(value),

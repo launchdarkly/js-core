@@ -27,7 +27,6 @@ import {
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
-import ClientMessages from './ClientMessages';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
@@ -48,7 +47,7 @@ import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
-const { ErrorKinds, EvalResult, NullEventProcessor } = internal;
+const { ClientMessages, ErrorKinds, EvalResult, NullEventProcessor } = internal;
 enum InitState {
   Initializing,
   Initialized,

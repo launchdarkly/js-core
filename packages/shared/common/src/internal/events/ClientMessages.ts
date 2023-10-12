@@ -1,7 +1,5 @@
 /**
  * Messages for issues which can be encountered processing client requests.
- *
- * @internal
  */
 export default class ClientMessages {
   static readonly missingContextKeyNoEvent =
