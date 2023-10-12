@@ -86,8 +86,11 @@ export default class LDClientImpl implements LDClient {
   }
 
   allFlags(): LDFlagSet {
-    // TODO: return flattened flags like this { key1: val1, key2: val2 }
-    return this.rawFlags;
+    const result: LDFlagSet = {};
+    Object.entries(this.rawFlags).forEach(([k, r]) => {
+      result[k] = r.value;
+    });
+    return result;
   }
 
   close(): void {
