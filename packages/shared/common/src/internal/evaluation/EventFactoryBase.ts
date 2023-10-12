@@ -12,11 +12,11 @@ export default class EventFactoryBase {
     context: Context,
     detail: LDEvaluationDetail,
     defaultVal: any,
+    addExperimentData?: boolean,
     debugEventsUntilDate?: number,
     prereqOfFlagKey?: string,
     excludeFromSummaries?: boolean,
     samplingRatio?: number,
-    addExperimentData?: boolean,
   ): InputEvalEvent {
     return new InputEvalEvent(
       this.withReasons,

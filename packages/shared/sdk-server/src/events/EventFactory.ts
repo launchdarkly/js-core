@@ -22,11 +22,11 @@ export default class EventFactory extends internal.EventFactoryBase {
       context,
       detail,
       defaultVal,
+      addExperimentData,
       flag.debugEventsUntilDate,
       prereqOfFlag?.key,
       flag.excludeFromSummaries,
       flag.samplingRatio,
-      addExperimentData,
     );
   }
 }

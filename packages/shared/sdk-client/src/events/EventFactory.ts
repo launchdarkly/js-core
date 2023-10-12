@@ -13,6 +13,8 @@ export default class EventFactory extends internal.EventFactoryBase {
     detail: LDEvaluationDetail,
     defaultVal: any,
   ): internal.InputEvalEvent {
+    const { reason } = detail;
+    const addExperimentData = flag.trackReason || reason?.inExperiment;
     return super.evalEvent(
       flagKey,
       flag.version,
@@ -20,6 +22,7 @@ export default class EventFactory extends internal.EventFactoryBase {
       context,
       detail,
       defaultVal,
+      addExperimentData,
       flag.debugEventsUntilDate,
     );
   }
