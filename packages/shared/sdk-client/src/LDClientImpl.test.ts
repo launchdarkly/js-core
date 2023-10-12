@@ -19,13 +19,16 @@ describe('sdk-client object', () => {
   const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
   const mockFetchFlags = fetchFlags as jest.Mock;
 
-  beforeEach(() => {
+  let ldc: LDClientImpl;
+
+  beforeEach(async () => {
     mockFetchFlags.mockResolvedValue(mockResponseJson);
+
+    ldc = new LDClientImpl(testSdkKey, context, basicPlatform, {});
+    await ldc.start();
   });
 
   test('instantiate with blank options', () => {
-    const ldc = new LDClientImpl(testSdkKey, context, basicPlatform, {});
-
     expect(ldc.config).toMatchObject({
       allAttributesPrivate: false,
       baseUri: 'https://sdk.launchdarkly.com',
@@ -58,8 +61,6 @@ describe('sdk-client object', () => {
   });
 
   test('all flags', async () => {
-    const ldc = new LDClientImpl(testSdkKey, context, basicPlatform, {});
-    await ldc.start();
     const all = ldc.allFlags();
 
     expect(all).toEqual({
@@ -72,5 +73,11 @@ describe('sdk-client object', () => {
       test1: 's1',
       'this-is-a-test': true,
     });
+  });
+
+  test('variation', async () => {
+    const devTestFlag = ldc.variation('dev-test-flag');
+
+    expect(devTestFlag).toBe(true);
   });
 });

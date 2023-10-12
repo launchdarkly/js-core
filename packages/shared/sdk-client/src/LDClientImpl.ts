@@ -205,7 +205,8 @@ export default class LDClientImpl implements LDClient {
   }
 
   variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
-    return this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault).value;
+    const evalResult = this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault);
+    return evalResult.detail.value;
   }
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
     return this.variationInternal(flagKey, defaultValue, this.eventFactoryWithReasons);
