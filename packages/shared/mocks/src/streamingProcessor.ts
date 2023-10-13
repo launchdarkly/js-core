@@ -13,6 +13,7 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
     (
       sdkKey: string,
       clientContext: ClientContext,
+      streamUriPath: string,
       listeners: Map<EventName, ProcessStreamResponse>,
       diagnosticsManager: internal.DiagnosticsManager,
       errorHandler: internal.StreamingErrorHandler,

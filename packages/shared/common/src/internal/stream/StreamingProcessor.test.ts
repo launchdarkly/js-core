@@ -79,6 +79,7 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor = new StreamingProcessor(
       sdkKey,
       clientContext,
+      '/all',
       listeners,
       diagnosticsManager,
       mockErrorHandler,
@@ -110,6 +111,7 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor = new StreamingProcessor(
       sdkKey,
       clientContext,
+      '/all',
       listeners,
       diagnosticsManager,
       mockErrorHandler,
