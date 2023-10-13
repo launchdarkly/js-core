@@ -27,7 +27,6 @@ import {
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
-import ClientMessages from './ClientMessages';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
@@ -36,7 +35,6 @@ import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConf
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
-import ErrorKinds from './evaluation/ErrorKinds';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
@@ -50,7 +48,7 @@ import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
-const { NullEventProcessor } = internal;
+const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
 enum InitState {
   Initializing,
   Initialized,
@@ -611,7 +609,7 @@ export default class LDClientImpl implements LDClient {
         this.onError(error);
         const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
         this.eventProcessor.sendEvent(
-          this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
+          this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue, evalContext),
         );
         cb(result);
         return;
@@ -636,7 +634,7 @@ export default class LDClientImpl implements LDClient {
                 `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
                 defaultValue,
               );
-              this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
+              this.sendEvalEvent(errorRes, eventFactory, flag, evalContext, defaultValue);
               cb(errorRes, flag);
               return;
             }
@@ -661,7 +659,7 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor.sendEvent({ ...event });
     });
     this.eventProcessor.sendEvent(
-      eventFactory.evalEvent(flag, evalContext, evalRes.detail, defaultValue, undefined),
+      eventFactory.evalEventServer(flag, evalContext, evalRes.detail, defaultValue, undefined),
     );
   }
 

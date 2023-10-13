@@ -2,15 +2,19 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  clone,
   Context,
   internal,
+  LDClientError,
   LDContext,
   LDEvaluationDetail,
+  LDEvaluationDetailTyped,
   LDFlagSet,
   LDFlagValue,
   LDLogger,
   Platform,
   subsystem,
+  TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDClient } from './api/LDClient';
@@ -20,11 +24,18 @@ import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import fetchFlags, { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
+import EventFactory from './events/EventFactory';
+
+const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
+  internal;
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
+
+  private eventFactoryDefault = new EventFactory(false);
+  private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
   private logger: LDLogger;
@@ -61,6 +72,8 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
+
+    // TODO: init streamer
   }
 
   async start() {
@@ -75,19 +88,29 @@ export default class LDClientImpl implements LDClient {
   }
 
   allFlags(): LDFlagSet {
-    return {};
+    const result: LDFlagSet = {};
+    Object.entries(this.flags).forEach(([k, r]) => {
+      result[k] = r.value;
+    });
+    return result;
   }
 
-  close(onDone?: () => void): Promise<void> {
-    return Promise.resolve(undefined);
+  async close(): Promise<void> {
+    await this.flush();
+    this.eventProcessor.close();
   }
 
-  flush(onDone?: () => void): Promise<void> {
-    return Promise.resolve(undefined);
+  async flush(): Promise<{ error?: Error; result: boolean }> {
+    try {
+      await this.eventProcessor.flush();
+    } catch (e) {
+      return { error: e as Error, result: false };
+    }
+    return { result: true };
   }
 
   getContext(): LDContext {
-    return { kind: 'user', key: 'test-context-1' };
+    return clone(this.context);
   }
 
   identify(
@@ -95,6 +118,7 @@ export default class LDClientImpl implements LDClient {
     hash?: string,
     onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> {
+    // TODO:
     return Promise.resolve({});
   }
 
@@ -106,28 +130,103 @@ export default class LDClientImpl implements LDClient {
     this.emitter.on(eventName, listener);
   }
 
-  setStreaming(value?: boolean): void {}
-
-  track(key: string, data?: any, metricValue?: number): void {}
-
-  variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
-    return undefined;
+  setStreaming(value?: boolean): void {
+    // TODO:
   }
 
-  variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
-    const defaultDetail = {
-      value: defaultValue,
-      variationIndex: null,
-      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-    };
-    return defaultDetail;
+  track(key: string, data?: any, metricValue?: number): void {
+    const checkedContext = Context.fromLDContext(this.context);
+
+    if (!checkedContext.valid) {
+      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
+    }
+
+    this.eventProcessor.sendEvent(
+      this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
+    );
+  }
+
+  private variationInternal(
+    flagKey: string,
+    defaultValue: any,
+    eventFactory: EventFactory,
+    typeChecker?: (value: any) => [boolean, string],
+  ): LDFlagValue {
+    const evalContext = Context.fromLDContext(this.context);
+    const found = this.flags[flagKey];
+
+    if (!found) {
+      const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
+      this.emitter.emit('error', error);
+      this.eventProcessor.sendEvent(
+        this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
+      );
+      return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
+    }
+
+    const { reason, value, variation } = found;
+
+    if (typeChecker) {
+      const [matched, type] = typeChecker(value);
+      if (!matched) {
+        this.eventProcessor.sendEvent(
+          eventFactory.evalEventClient(
+            flagKey,
+            defaultValue, // track default value on type errors
+            defaultValue,
+            found,
+            evalContext,
+            reason,
+          ),
+        );
+        return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
+      }
+    }
+
+    const successDetail = createSuccessEvaluationDetail(value, variation, reason);
+    if (variation === undefined || variation === null) {
+      this.logger.debug('Result value is null in variation');
+      successDetail.value = defaultValue;
+    }
+    this.eventProcessor.sendEvent(
+      eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
+    );
+    return successDetail;
+  }
+
+  variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
+    const { value } = this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault);
+    return value;
+  }
+  variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
+    return this.variationInternal(flagKey, defaultValue, this.eventFactoryWithReasons);
+  }
+
+  private typedEval<T>(
+    key: string,
+    defaultValue: T,
+    eventFactory: EventFactory,
+    typeChecker: (value: unknown) => [boolean, string],
+  ): LDEvaluationDetailTyped<T> {
+    return this.variationInternal(key, defaultValue, eventFactory, typeChecker);
+  }
+
+  // TODO: add other typed variation functions
+  boolVariation(key: string, defaultValue: boolean): boolean {
+    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+      TypeValidators.Boolean.is(value),
+      TypeValidators.Boolean.getType(),
+    ]).value;
   }
 
   waitForInitialization(): Promise<void> {
+    // TODO:
     return Promise.resolve(undefined);
   }
 
   waitUntilReady(): Promise<void> {
+    // TODO:
     return Promise.resolve(undefined);
   }
 }

@@ -9,7 +9,9 @@ export type Flag = {
   value: LDFlagValue;
   variation: number;
   trackEvents: boolean;
+  trackReason?: boolean;
   reason?: LDEvaluationReason;
+  debugEventsUntilDate?: number;
 };
 
 export type Flags = {
@@ -24,6 +26,8 @@ const fetchFlags = async (
 ): Promise<Flags> => {
   const fetchUrl = createFetchUrl(sdkKey, context, config, encoding!);
   const fetchOptions = createFetchOptions(sdkKey, context, config, info);
+
+  // TODO: add error handling, retry and timeout
   const response = await requests.fetch(fetchUrl, fetchOptions);
   return response.json();
 };
