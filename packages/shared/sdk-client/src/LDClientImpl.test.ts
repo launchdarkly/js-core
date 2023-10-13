@@ -1,12 +1,12 @@
 import { LDContext } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
-import fetchFlags from './evaluation/fetchFlags';
-import * as mockResponseJson from './evaluation/mockResponse.json';
+import fetchFlags from './data_sources/fetchFlags';
+import * as mockResponseJson from './data_sources/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 
-jest.mock('./evaluation/fetchFlags', () => {
-  const actual = jest.requireActual('./evaluation/fetchFlags');
+jest.mock('./data_sources/fetchFlags', () => {
+  const actual = jest.requireActual('./data_sources/fetchFlags');
   return {
     __esModule: true,
     ...actual,

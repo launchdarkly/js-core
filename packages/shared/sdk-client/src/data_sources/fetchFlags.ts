@@ -15,7 +15,7 @@ export type Flag = {
 };
 
 export type Flags = {
-  [k: string]: Flag;
+  [flagKey: string]: Flag;
 };
 
 const fetchFlags = async (

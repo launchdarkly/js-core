@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  ClientContext,
   clone,
   Context,
   internal,
@@ -16,13 +17,15 @@ import {
   subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
+import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { LDClient } from './api/LDClient';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
+import { createStreamListeners } from './data_sources/createStreamListeners';
+import fetchFlags, { Flags } from './data_sources/fetchFlags';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import fetchFlags, { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -37,6 +40,7 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
+  private streamer: LDStreamProcessor;
   private flags: Flags = {};
   private logger: LDLogger;
 
@@ -73,7 +77,24 @@ export default class LDClientImpl implements LDClient {
     );
     this.emitter = new LDEmitter();
 
-    // TODO: init streamer
+    // init streamer
+    const clientContext = new ClientContext(sdkKey, this.config, platform);
+    const listeners = createStreamListeners(this.flags, this.onPut, this.logger);
+    this.streamer = new internal.StreamingProcessor(
+      sdkKey,
+      clientContext,
+      listeners,
+      this.diagnosticsManager,
+      (e) => {
+        // TODO: implement stream error handler
+        this.logger?.error(e);
+      },
+      this.config.streamInitialReconnectDelay,
+    );
+  }
+
+  private onPut(putFlags: Flags) {
+    this.flags = putFlags;
   }
 
   async start() {
