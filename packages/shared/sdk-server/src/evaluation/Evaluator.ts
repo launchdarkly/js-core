@@ -272,7 +272,7 @@ export default class Evaluator {
             updatedVisitedFlags,
             (res) => {
               // eslint-disable-next-line no-param-reassign
-              state.events = state.events ?? [];
+              state.events ??= [];
 
               if (eventFactory) {
                 state.events.push(
