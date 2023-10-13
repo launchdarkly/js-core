@@ -6,6 +6,7 @@ export const createErrorEvaluationDetail = (errorKind: ErrorKinds, def?: LDFlagV
   variationIndex: null,
   reason: { kind: 'ERROR', errorKind },
 });
+
 export const createSuccessEvaluationDetail = (
   value: LDFlagValue,
   variationIndex?: number,
