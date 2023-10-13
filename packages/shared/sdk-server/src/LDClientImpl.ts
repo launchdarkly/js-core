@@ -192,6 +192,7 @@ export default class LDClientImpl implements LDClient {
         ? new internal.StreamingProcessor(
             sdkKey,
             clientContext,
+            '/all',
             listeners,
             this.diagnosticsManager,
             (e) => this.dataSourceErrorHandler(e),
