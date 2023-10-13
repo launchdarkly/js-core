@@ -32,6 +32,7 @@ class StreamingProcessor implements LDStreamProcessor {
   constructor(
     sdkKey: string,
     clientContext: ClientContext,
+    streamUriPath: string,
     private readonly listeners: Map<EventName, ProcessStreamResponse>,
     private readonly diagnosticsManager?: DiagnosticsManager,
     private readonly errorHandler?: StreamingErrorHandler,
@@ -44,7 +45,7 @@ class StreamingProcessor implements LDStreamProcessor {
     this.headers = defaultHeaders(sdkKey, info, tags);
     this.logger = logger;
     this.requests = requests;
-    this.streamUri = `${basicConfiguration.serviceEndpoints.streaming}/all`;
+    this.streamUri = `${basicConfiguration.serviceEndpoints.streaming}${streamUriPath}`;
   }
 
   private logConnectionStarted() {
