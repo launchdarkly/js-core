@@ -1,6 +1,6 @@
 import { Context, internal, LDEvaluationReason, LDFlagValue } from '@launchdarkly/js-sdk-common';
 
-import { RawFlag } from '../evaluation/fetchFlags';
+import { Flag } from '../evaluation/fetchFlags';
 
 /**
  * @internal
@@ -10,15 +10,14 @@ export default class EventFactory extends internal.EventFactoryBase {
     flagKey: string,
     value: LDFlagValue,
     defaultVal: any,
-    flag: RawFlag,
+    flag: Flag,
     context: Context,
     reason?: LDEvaluationReason,
   ): internal.InputEvalEvent {
-    const { trackEvents, debugEventsUntilDate, version, variation } = flag;
-    const addExperimentData = flag.trackReason || !!reason?.inExperiment;
+    const { trackEvents, debugEventsUntilDate, trackReason, version, variation } = flag;
 
     return super.evalEvent({
-      addExperimentData,
+      addExperimentData: trackReason,
       context,
       debugEventsUntilDate,
       defaultVal,

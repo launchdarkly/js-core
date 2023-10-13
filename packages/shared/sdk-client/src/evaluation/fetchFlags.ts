@@ -3,7 +3,7 @@ import { LDContext, LDEvaluationReason, LDFlagValue, Platform } from '@launchdar
 import Configuration from '../configuration';
 import { createFetchOptions, createFetchUrl } from './fetchUtils';
 
-export type RawFlag = {
+export type Flag = {
   version: number;
   flagVersion: number;
   value: LDFlagValue;
@@ -14,8 +14,8 @@ export type RawFlag = {
   debugEventsUntilDate?: number;
 };
 
-export type RawFlags = {
-  [k: string]: RawFlag;
+export type Flags = {
+  [k: string]: Flag;
 };
 
 const fetchFlags = async (
@@ -23,7 +23,7 @@ const fetchFlags = async (
   context: LDContext,
   config: Configuration,
   { encoding, info, requests }: Platform,
-): Promise<RawFlags> => {
+): Promise<Flags> => {
   const fetchUrl = createFetchUrl(sdkKey, context, config, encoding!);
   const fetchOptions = createFetchOptions(sdkKey, context, config, info);
 

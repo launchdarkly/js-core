@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  clone,
   Context,
   internal,
   LDClientError,
@@ -21,7 +22,7 @@ import LDEmitter, { EventName } from './api/LDEmitter';
 import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import fetchFlags, { RawFlag, RawFlags } from './evaluation/fetchFlags';
+import fetchFlags, { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -36,7 +37,7 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
-  private rawFlags: RawFlags = {};
+  private flags: Flags = {};
   private logger: LDLogger;
 
   /**
@@ -77,7 +78,7 @@ export default class LDClientImpl implements LDClient {
 
   async start() {
     try {
-      this.rawFlags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
+      this.flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
       this.emitter.emit('ready');
     } catch (error: any) {
       this.logger.error(error);
@@ -88,33 +89,34 @@ export default class LDClientImpl implements LDClient {
 
   allFlags(): LDFlagSet {
     const result: LDFlagSet = {};
-    Object.entries(this.rawFlags).forEach(([k, r]) => {
+    Object.entries(this.flags).forEach(([k, r]) => {
       result[k] = r.value;
     });
     return result;
   }
 
-  close(): void {
+  async close(): Promise<void> {
+    await this.flush();
     this.eventProcessor.close();
   }
 
-  async flush(callback?: (err: Error | null, res: boolean) => void): Promise<void> {
+  async flush(): Promise<{ error?: Error; result: boolean }> {
     try {
       await this.eventProcessor.flush();
-    } catch (err) {
-      callback?.(err as Error, false);
+    } catch (e) {
+      return { error: e as Error, result: false };
     }
-    callback?.(null, true);
+    return { result: true };
   }
 
   getContext(): LDContext {
-    return { ...this.context };
+    return clone(this.context);
   }
 
   identify(
     context: LDContext,
     hash?: string,
-    onDone?: (err: Error | null, rawFlags: LDFlagSet | null) => void,
+    onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> {
     // TODO:
     return Promise.resolve({});
@@ -152,7 +154,7 @@ export default class LDClientImpl implements LDClient {
     typeChecker?: (value: any) => [boolean, string],
   ): LDFlagValue {
     const evalContext = Context.fromLDContext(this.context);
-    const found = this.rawFlags[flagKey];
+    const found = this.flags[flagKey];
 
     if (!found) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);

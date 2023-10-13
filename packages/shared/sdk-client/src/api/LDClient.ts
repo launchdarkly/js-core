@@ -119,16 +119,11 @@ export interface LDClient {
    * Normally, batches of events are delivered in the background at intervals determined by the
    * `flushInterval` property of {@link LDOptions}. Calling `flush()` triggers an immediate delivery.
    *
-   * @param onDone
-   *   A function which will be called when the flush completes. If omitted, you
-   *   will receive a Promise instead.
-   *
    * @returns
-   *   If you provided a callback, then nothing. Otherwise, a Promise which resolves once
-   *   flushing is finished. Note that the Promise will be rejected if the HTTP request
-   *   fails, so be sure to attach a rejection handler to it.
+   *   A Promise which resolves once
+   *   flushing is finished. You can inspect the result of the flush for errors.
    */
-  flush(onDone?: () => void): Promise<void>;
+  flush(): Promise<{ error?: Error; result: boolean }>;
 
   /**
    * Determines the variation of a feature flag for the current context.
