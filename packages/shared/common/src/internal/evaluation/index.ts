@@ -1,6 +1,11 @@
 import ErrorKinds from './ErrorKinds';
-import EvalResult from './EvalResult';
-import EventFactoryBase from './EventFactoryBase';
-import Reasons from './Reasons';
+import { createErrorEvaluationDetail, createSuccessEvaluationDetail } from './evaluationDetail';
+import EventFactoryBase, { EvalEventArgs } from './EventFactoryBase';
 
-export { ErrorKinds, EvalResult, EventFactoryBase, Reasons };
+export {
+  createSuccessEvaluationDetail,
+  createErrorEvaluationDetail,
+  ErrorKinds,
+  EvalEventArgs,
+  EventFactoryBase,
+};

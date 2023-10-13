@@ -25,7 +25,8 @@ import fetchFlags, { RawFlag, RawFlags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
-const { ClientMessages, ErrorKinds, EvalResult } = internal;
+const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
+  internal;
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
@@ -133,6 +134,7 @@ export default class LDClientImpl implements LDClient {
 
   track(key: string, data?: any, metricValue?: number): void {
     const checkedContext = Context.fromLDContext(this.context);
+
     if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
       return;
@@ -140,22 +142,6 @@ export default class LDClientImpl implements LDClient {
 
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
-    );
-  }
-
-  private sendEvalEvent(
-    evalRes: internal.EvalResult,
-    eventFactory: EventFactory,
-    rawFlag: RawFlag,
-    evalContext: Context,
-    defaultValue: any,
-    flagKey: string,
-  ) {
-    evalRes.events?.forEach((event) => {
-      this.eventProcessor.sendEvent({ ...event });
-    });
-    this.eventProcessor.sendEvent(
-      eventFactory.evalEventClient(flagKey, rawFlag, evalContext, evalRes.detail, defaultValue),
     );
   }
 
@@ -171,11 +157,10 @@ export default class LDClientImpl implements LDClient {
     if (!found) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
       this.emitter.emit('error', error);
-      const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
       this.eventProcessor.sendEvent(
-        this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
+        this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
       );
-      return result;
+      return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
     }
 
     const { reason, value, variation } = found;
@@ -183,30 +168,34 @@ export default class LDClientImpl implements LDClient {
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
       if (!matched) {
-        const errorRes = EvalResult.forError(
-          ErrorKinds.WrongType,
-          `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
-          defaultValue,
+        this.eventProcessor.sendEvent(
+          eventFactory.evalEventClient(
+            flagKey,
+            defaultValue, // track default value on type errors
+            defaultValue,
+            found,
+            evalContext,
+            reason,
+          ),
         );
-        this.sendEvalEvent(errorRes, eventFactory, found, evalContext, defaultValue, flagKey);
-        return errorRes;
+        return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
 
-    // TODO: fix reason is nullable
-    // @ts-ignore
-    const finalResult = EvalResult.forSuccess(value, reason, variation);
+    const successDetail = createSuccessEvaluationDetail(value, variation, reason);
     if (variation === undefined || variation === null) {
       this.logger.debug('Result value is null in variation');
-      finalResult.setDefault(defaultValue);
+      successDetail.value = defaultValue;
     }
-    this.sendEvalEvent(finalResult, eventFactory, found, evalContext, defaultValue, flagKey);
-    return finalResult;
+    this.eventProcessor.sendEvent(
+      eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
+    );
+    return successDetail;
   }
 
   variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
-    const evalResult = this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault);
-    return evalResult.detail.value;
+    const { value } = this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault);
+    return value;
   }
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
     return this.variationInternal(flagKey, defaultValue, this.eventFactoryWithReasons);

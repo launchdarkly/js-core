@@ -15,18 +15,20 @@ export default class EventFactory extends internal.EventFactoryBase {
     prereqOfFlag?: Flag,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
-    return super.evalEvent(
-      flag.key,
-      flag.version,
-      flag.trackEvents || addExperimentData,
-      context,
-      detail,
-      defaultVal,
+    return super.evalEvent({
       addExperimentData,
-      flag.debugEventsUntilDate,
-      prereqOfFlag?.key,
-      flag.excludeFromSummaries,
-      flag.samplingRatio,
-    );
+      context,
+      debugEventsUntilDate: flag.debugEventsUntilDate,
+      defaultVal,
+      excludeFromSummaries: flag.excludeFromSummaries,
+      flagKey: flag.key,
+      prereqOfFlagKey: prereqOfFlag?.key,
+      reason: detail.reason,
+      samplingRatio: flag.samplingRatio,
+      trackEvents: flag.trackEvents || addExperimentData,
+      value: detail.value,
+      variation: detail.variationIndex ?? undefined,
+      version: flag.version,
+    });
   }
 }

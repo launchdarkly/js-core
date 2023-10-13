@@ -1,9 +1,9 @@
-import { Context, internal, LDContext } from '@launchdarkly/js-sdk-common';
+import { Context, LDContext } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from '../../src/evaluation/data/Flag';
+import EvalResult from '../../src/evaluation/EvalResult';
 import evalTargets from '../../src/evaluation/evalTargets';
-
-const { EvalResult, Reasons } = internal;
+import Reasons from '../../src/evaluation/Reasons';
 
 const baseFlag = {
   key: 'feature0',
@@ -13,7 +13,7 @@ const baseFlag = {
   variations: ['zero', 'one', 'two'],
 };
 
-describe.each<[Flag, LDContext, internal.EvalResult | undefined]>([
+describe.each<[Flag, LDContext, EvalResult | undefined]>([
   [
     {
       ...baseFlag,

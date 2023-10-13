@@ -1,48 +1,52 @@
-import { LDEvaluationDetail } from '../../api';
+import { LDEvaluationReason, LDFlagValue } from '../../api';
 import Context from '../../Context';
 import { InputCustomEvent, InputEvalEvent, InputIdentifyEvent } from '../events';
+
+export type EvalEventArgs = {
+  addExperimentData?: boolean;
+  context: Context;
+  debugEventsUntilDate?: number;
+  defaultVal: any;
+  excludeFromSummaries?: boolean;
+  flagKey: string;
+  prereqOfFlagKey?: string;
+  reason?: LDEvaluationReason;
+  samplingRatio?: number;
+  trackEvents: boolean;
+  value: LDFlagValue;
+  variation?: number;
+  version: number;
+};
 
 export default class EventFactoryBase {
   constructor(private readonly withReasons: boolean) {}
 
-  evalEvent(
-    flagKey: string,
-    version: number,
-    trackEvents: boolean,
-    context: Context,
-    detail: LDEvaluationDetail,
-    defaultVal: any,
-    addExperimentData?: boolean,
-    debugEventsUntilDate?: number,
-    prereqOfFlagKey?: string,
-    excludeFromSummaries?: boolean,
-    samplingRatio?: number,
-  ): InputEvalEvent {
+  evalEvent(e: EvalEventArgs): InputEvalEvent {
     return new InputEvalEvent(
       this.withReasons,
-      context,
-      flagKey,
-      defaultVal,
-      detail,
-      version,
+      e.context,
+      e.flagKey,
+      e.value,
+      e.defaultVal,
+      e.version,
       // Exclude null as a possibility.
-      detail.variationIndex ?? undefined,
-      trackEvents || addExperimentData,
-      prereqOfFlagKey,
-      this.withReasons || addExperimentData ? detail.reason : undefined,
-      debugEventsUntilDate,
-      excludeFromSummaries,
-      samplingRatio,
+      e.variation ?? undefined,
+      e.trackEvents || e.addExperimentData,
+      e.prereqOfFlagKey,
+      this.withReasons || e.addExperimentData ? e.reason : undefined,
+      e.debugEventsUntilDate,
+      e.excludeFromSummaries,
+      e.samplingRatio,
     );
   }
 
-  unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
+  unknownFlagEvent(key: string, defVal: LDFlagValue, context: Context) {
     return new InputEvalEvent(
       this.withReasons,
       context,
       key,
-      detail.value,
-      detail,
+      defVal,
+      defVal,
       // This isn't ideal, but the purpose of the factory is to at least
       // handle this situation.
       undefined, // version

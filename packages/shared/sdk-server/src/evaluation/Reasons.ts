@@ -1,7 +1,9 @@
-import { LDEvaluationReason } from '../../api';
+import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 
 /**
  * A set of static evaluation reasons and methods for creating specific reason instances.
+ *
+ * @internal
  */
 export default class Reasons {
   static readonly Fallthrough: LDEvaluationReason = { kind: 'FALLTHROUGH' };

@@ -6,8 +6,9 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from './data/Flag';
+import EvalResult from './EvalResult';
 
-const { ErrorKinds, EvalResult } = internal;
+const { ErrorKinds } = internal;
 const KEY_ATTR_REF = new AttributeReference('key');
 
 /**
@@ -21,11 +22,7 @@ const KEY_ATTR_REF = new AttributeReference('key');
  *
  * @internal
  */
-export function getVariation(
-  flag: Flag,
-  index: number,
-  reason: LDEvaluationReason,
-): internal.EvalResult {
+export function getVariation(flag: Flag, index: number, reason: LDEvaluationReason): EvalResult {
   if (TypeValidators.Number.is(index) && index >= 0 && index < flag.variations.length) {
     return EvalResult.forSuccess(flag.variations[index], reason, index);
   }
@@ -42,7 +39,7 @@ export function getVariation(
  *
  * @internal
  */
-export function getOffVariation(flag: Flag, reason: LDEvaluationReason): internal.EvalResult {
+export function getOffVariation(flag: Flag, reason: LDEvaluationReason): EvalResult {
   if (!TypeValidators.Number.is(flag.offVariation)) {
     return EvalResult.forSuccess(null, reason);
   }

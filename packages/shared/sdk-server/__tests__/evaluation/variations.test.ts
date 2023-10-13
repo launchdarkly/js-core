@@ -1,9 +1,11 @@
 import { internal } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from '../../src/evaluation/data/Flag';
+import EvalResult from '../../src/evaluation/EvalResult';
+import Reasons from '../../src/evaluation/Reasons';
 import { getOffVariation, getVariation } from '../../src/evaluation/variations';
 
-const { ErrorKinds, EvalResult, Reasons } = internal;
+const { ErrorKinds } = internal;
 
 const baseFlag = {
   key: 'feature0',
@@ -15,7 +17,7 @@ const baseFlag = {
 
 const givenReason = Reasons.TargetMatch;
 
-describe.each<[Flag, any, internal.EvalResult]>([
+describe.each<[Flag, any, EvalResult]>([
   [{ ...baseFlag }, 0, EvalResult.forSuccess('zero', givenReason, 0)],
   [{ ...baseFlag }, 1, EvalResult.forSuccess('one', givenReason, 1)],
   [{ ...baseFlag }, 2, EvalResult.forSuccess('two', givenReason, 2)],
@@ -43,7 +45,7 @@ describe.each<[Flag, any, internal.EvalResult]>([
   });
 });
 
-describe.each<[Flag, internal.EvalResult]>([
+describe.each<[Flag, EvalResult]>([
   [{ ...baseFlag, offVariation: 0 }, EvalResult.forSuccess('zero', Reasons.Off, 0)],
   [{ ...baseFlag, offVariation: 1 }, EvalResult.forSuccess('one', Reasons.Off, 1)],
   [{ ...baseFlag, offVariation: 2 }, EvalResult.forSuccess('two', Reasons.Off, 2)],

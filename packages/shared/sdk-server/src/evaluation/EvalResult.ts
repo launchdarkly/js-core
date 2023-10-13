@@ -1,14 +1,16 @@
-import { LDEvaluationDetail, LDEvaluationReason } from '../../api';
-import { InputEvalEvent } from '../events';
-import ErrorKinds from './ErrorKinds';
+import { internal, LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
+
 import Reasons from './Reasons';
 
+const { createErrorEvaluationDetail, createSuccessEvaluationDetail } = internal;
 /**
  * A class which encapsulates the result of an evaluation. It allows for differentiating between
  * successful and error result types.
+ *
+ * @internal
  */
 export default class EvalResult {
-  public events?: InputEvalEvent[];
+  public events?: internal.InputEvalEvent[];
 
   protected constructor(
     public readonly isError: boolean,
@@ -28,23 +30,12 @@ export default class EvalResult {
     this.detail.value = def;
   }
 
-  static forError(errorKind: ErrorKinds, message?: string, def?: any): EvalResult {
-    return new EvalResult(
-      true,
-      {
-        value: def ?? null,
-        variationIndex: null,
-        reason: { kind: 'ERROR', errorKind },
-      },
-      message,
-    );
+  static forError(errorKind: internal.ErrorKinds, message?: string, def?: any): EvalResult {
+    return new EvalResult(true, createErrorEvaluationDetail(errorKind, def), message);
   }
 
   static forSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
-    return new EvalResult(false, {
-      value,
-      variationIndex: variationIndex === undefined ? null : variationIndex,
-      reason,
-    });
+    const successDetail = createSuccessEvaluationDetail(value, variationIndex, reason);
+    return new EvalResult(false, successDetail as LDEvaluationDetail);
   }
 }

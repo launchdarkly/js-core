@@ -35,6 +35,7 @@ import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConf
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
 import { Segment } from './evaluation/data/Segment';
+import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
 import ContextDeduplicator from './events/ContextDeduplicator';
@@ -47,7 +48,7 @@ import Configuration from './options/Configuration';
 import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
-const { ClientMessages, ErrorKinds, EvalResult, NullEventProcessor } = internal;
+const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
 enum InitState {
   Initializing,
   Initialized,
@@ -580,7 +581,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-    cb: (res: internal.EvalResult, flag?: Flag) => void,
+    cb: (res: EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (this.config.offline) {
@@ -608,7 +609,7 @@ export default class LDClientImpl implements LDClient {
         this.onError(error);
         const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
         this.eventProcessor.sendEvent(
-          this.eventFactoryDefault.unknownFlagEvent(flagKey, evalContext, result.detail),
+          this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue, evalContext),
         );
         cb(result);
         return;
@@ -648,7 +649,7 @@ export default class LDClientImpl implements LDClient {
   }
 
   private sendEvalEvent(
-    evalRes: internal.EvalResult,
+    evalRes: EvalResult,
     eventFactory: EventFactory,
     flag: Flag,
     evalContext: Context,
@@ -667,7 +668,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: any,
     eventFactory: EventFactory,
-    cb: (res: internal.EvalResult, flag?: Flag) => void,
+    cb: (res: EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (!this.initialized()) {
