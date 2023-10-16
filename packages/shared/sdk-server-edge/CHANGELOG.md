@@ -66,6 +66,24 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 1.2.2 to 1.2.3
 
+## [2.0.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.13...js-server-sdk-common-edge-v2.0.0) (2023-10-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293))
+
+### Features
+
+* Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293)) ([c66aa6e](https://github.com/launchdarkly/js-core/commit/c66aa6ea0d12e1e4e565cb8378d367c31fab9c1b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.3 to 2.0.0
+
 ## [1.0.8](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.7...js-server-sdk-common-edge-v1.0.8) (2023-08-10)
 
 

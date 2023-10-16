@@ -2,6 +2,24 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.0.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.2.3...js-server-sdk-common-v2.0.0) (2023-10-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293))
+
+### Features
+
+* Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293)) ([c66aa6e](https://github.com/launchdarkly/js-core/commit/c66aa6ea0d12e1e4e565cb8378d367c31fab9c1b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 1.1.0 to 2.0.0
+
 ## [1.2.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v1.2.2...js-server-sdk-common-v1.2.3) (2023-09-06)
 
 

@@ -2,6 +2,19 @@
 
 All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+## [1.1.5](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.1.4...vercel-server-sdk-v1.1.5) (2023-10-16)
+
+### Features:
+- A new `Migration` type which provides an out-of-the-box configurable migration framework.
+- For more advanced use cases, added new `migrationVariation` and `trackMigration` methods on LdClient.
+- Added typed variation method `boolVariation`, `stringVariation`, `boolVariation`, `numVariation`, and `jsonVariation` for type-safe usage in TypeScript.
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 1.0.13 to 2.0.0
+
 ## [1.1.4](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.1.3...vercel-server-sdk-v1.1.4) (2023-09-06)
 
 ### Bug Fixes
