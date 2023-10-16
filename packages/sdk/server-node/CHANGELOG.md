@@ -2,6 +2,11 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.0.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.0.0...node-server-sdk-v9.0.1) (2023-10-16)
+
+### Bug Fixes
+* Export missed Migration types.
+
 ### Dependencies
 
 * The following workspace dependencies were updated
