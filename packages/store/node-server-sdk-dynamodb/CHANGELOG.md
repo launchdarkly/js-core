@@ -54,6 +54,24 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 8.2.3 to 8.2.4
 
+## [6.0.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v5.0.11...node-server-sdk-dynamodb-v6.0.0) (2023-10-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293))
+
+### Features
+
+* Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293)) ([c66aa6e](https://github.com/launchdarkly/js-core/commit/c66aa6ea0d12e1e4e565cb8378d367c31fab9c1b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 8.2.4 to 9.0.0
+
 ## [5.0.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v5.0.5...node-server-sdk-dynamodb-v5.0.6) (2023-08-10)
 
 
