@@ -4,15 +4,23 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
 
 ## [9.0.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.4...node-server-sdk-v9.0.0) (2023-10-16)
 
+The latest version of this SDK supports the ability to manage migrations or modernizations, using migration flags. You might use this functionality if you are optimizing queries, upgrading to new tech stacks, migrating from one database to another, or other similar technology changes. Migration flags are part of LaunchDarkly's Early Access Program. This feature is available to all LaunchDarkly customers but may undergo additional changes before it is finalized.
+
+For detailed information about this version, refer to the list below. For information on how to upgrade from the previous version, read the [migration guide](https://docs.launchdarkly.com/sdk/server-side/node/migration-8-to-9).
 
 ### ⚠ BREAKING CHANGES
 
 * Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293))
+* A new `Migration` type which provides an out-of-the-box configurable migration framework.
+* For more advanced use cases, added new `migrationVariation` and `trackMigration` methods on LdClient.
+* Added typed variation method `boolVariation`, `stringVariation`, `boolVariation`, `numVariation`, and `jsonVariation` for type-safe usage in TypeScript.
 
 ### Features
 
 * Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293)) ([c66aa6e](https://github.com/launchdarkly/js-core/commit/c66aa6ea0d12e1e4e565cb8378d367c31fab9c1b))
 
+### Changed:
+- Changes to common code to support upcoming client-side SDKs written in TypeScript.
 
 ### Dependencies
 
