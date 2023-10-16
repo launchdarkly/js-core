@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/vercel-server-sdk",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "LaunchDarkly Server-Side SDK for Vercel Edge",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/vercel",
   "repository": {
@@ -36,7 +36,7 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common-edge": "2.0.0",
+    "@launchdarkly/js-server-sdk-common-edge": "2.0.1",
     "@vercel/edge-config": "^0.1.8",
     "crypto-js": "^4.1.1"
   },
