@@ -1,13 +1,14 @@
 import {
   AttributeReference,
+  internal,
   LDEvaluationReason,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from './data/Flag';
-import ErrorKinds from './ErrorKinds';
 import EvalResult from './EvalResult';
 
+const { ErrorKinds } = internal;
 const KEY_ATTR_REF = new AttributeReference('key');
 
 /**

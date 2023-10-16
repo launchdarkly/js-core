@@ -23,7 +23,7 @@
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix"
+    "lint:fix": "yarn run lint --fix"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -31,6 +31,7 @@
     "semver": "7.5.4"
   },
   "devDependencies": {
+    "@launchdarkly/private-js-mocks": "0.0.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@types/semver": "^7.3.13",

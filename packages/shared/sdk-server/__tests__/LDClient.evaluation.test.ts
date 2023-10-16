@@ -1,13 +1,30 @@
-import { LDClientImpl } from '../src';
-import { LDFeatureStore, LDStreamProcessor } from '../src/api/subsystems';
-import NullUpdateProcessor from '../src/data_sources/NullUpdateProcessor';
+import { subsystem } from '@launchdarkly/js-sdk-common';
+import {
+  basicPlatform,
+  MockStreamingProcessor,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
+
+import { LDClientImpl, LDFeatureStore } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
-import basicPlatform from './evaluation/mocks/platform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
+
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  return {
+    ...actual,
+    ...{
+      internal: {
+        ...actual.internal,
+        StreamingProcessor: MockStreamingProcessor,
+      },
+    },
+  };
+});
 
 const defaultUser = { key: 'user' };
 
@@ -160,6 +177,99 @@ describe('given an LDClient with test data', () => {
     const valueB = await client.variation('my-feature-flag-1', userContextObject, 'default');
     expect(valueB).toEqual(true);
   });
+
+  it('evaluates with jsonVariation', async () => {
+    td.update(td.flag('flagkey').booleanFlag().on(true));
+    const boolRes: boolean = (await client.jsonVariation('flagkey', defaultUser, false)) as boolean;
+    expect(boolRes).toBe(true);
+
+    td.update(td.flag('flagkey').valueForAll(62));
+    const numericRes: number = (await client.jsonVariation(
+      'flagkey',
+      defaultUser,
+      false,
+    )) as number;
+    expect(numericRes).toBe(62);
+
+    td.update(td.flag('flagkey').valueForAll('potato'));
+    const stringRes: string = (await client.jsonVariation('flagkey', defaultUser, false)) as string;
+    expect(stringRes).toBe('potato');
+  });
+
+  it('evaluates an existing boolean flag', async () => {
+    td.update(td.flag('flagkey').booleanFlag().on(true));
+    expect(await client.boolVariation('flagkey', defaultUser, false)).toEqual(true);
+  });
+
+  it('it uses the default value when a boolean variation is for a flag of the wrong type', async () => {
+    td.update(td.flag('flagkey').valueForAll('potato'));
+    expect(await client.boolVariation('flagkey', defaultUser, false)).toEqual(false);
+  });
+
+  it('evaluates an existing numeric flag', async () => {
+    td.update(td.flag('flagkey').booleanFlag().valueForAll(18));
+    expect(await client.numberVariation('flagkey', defaultUser, 36)).toEqual(18);
+  });
+
+  it('it uses the default value when a numeric variation is for a flag of the wrong type', async () => {
+    td.update(td.flag('flagkey').valueForAll('potato'));
+    expect(await client.numberVariation('flagkey', defaultUser, 36)).toEqual(36);
+  });
+
+  it('evaluates an existing string flag', async () => {
+    td.update(td.flag('flagkey').booleanFlag().valueForAll('potato'));
+    expect(await client.stringVariation('flagkey', defaultUser, 'default')).toEqual('potato');
+  });
+
+  it('it uses the default value when a string variation is for a flag of the wrong type', async () => {
+    td.update(td.flag('flagkey').valueForAll(8));
+    expect(await client.stringVariation('flagkey', defaultUser, 'default')).toEqual('default');
+  });
+
+  it('evaluates an existing boolean flag with detail', async () => {
+    td.update(td.flag('flagkey').booleanFlag().on(true));
+    const res = await client.boolVariationDetail('flagkey', defaultUser, false);
+    expect(res.value).toEqual(true);
+    expect(res.reason.kind).toBe('FALLTHROUGH');
+  });
+
+  it('it uses the default value when a boolean variation is for a flag of the wrong type with detail', async () => {
+    td.update(td.flag('flagkey').valueForAll('potato'));
+    const res = await client.boolVariationDetail('flagkey', defaultUser, false);
+    expect(res.value).toEqual(false);
+    expect(res.reason.kind).toEqual('ERROR');
+    expect(res.reason.errorKind).toEqual('WRONG_TYPE');
+  });
+
+  it('evaluates an existing numeric flag with detail', async () => {
+    td.update(td.flag('flagkey').booleanFlag().valueForAll(18));
+    const res = await client.numberVariationDetail('flagkey', defaultUser, 36);
+    expect(res.value).toEqual(18);
+    expect(res.reason.kind).toBe('FALLTHROUGH');
+  });
+
+  it('it uses the default value when a numeric variation is for a flag of the wrong type with detail', async () => {
+    td.update(td.flag('flagkey').valueForAll('potato'));
+    const res = await client.numberVariationDetail('flagkey', defaultUser, 36);
+    expect(res.value).toEqual(36);
+    expect(res.reason.kind).toEqual('ERROR');
+    expect(res.reason.errorKind).toEqual('WRONG_TYPE');
+  });
+
+  it('evaluates an existing string flag with detail', async () => {
+    td.update(td.flag('flagkey').booleanFlag().valueForAll('potato'));
+    const res = await client.stringVariationDetail('flagkey', defaultUser, 'default');
+    expect(res.value).toEqual('potato');
+    expect(res.reason.kind).toBe('FALLTHROUGH');
+  });
+
+  it('it uses the default value when a string variation is for a flag of the wrong type with detail', async () => {
+    td.update(td.flag('flagkey').valueForAll(8));
+    const res = await client.stringVariationDetail('flagkey', defaultUser, 'default');
+    expect(res.value).toEqual('default');
+    expect(res.reason.kind).toEqual('ERROR');
+    expect(res.reason.errorKind).toEqual('WRONG_TYPE');
+  });
 });
 
 describe('given an offline client', () => {
@@ -208,9 +318,8 @@ describe('given an offline client', () => {
   });
 });
 
-class InertUpdateProcessor implements LDStreamProcessor {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  start(fn?: ((err?: any) => void) | undefined) {
+class InertUpdateProcessor implements subsystem.LDStreamProcessor {
+  start(_fn?: ((err?: any) => void) | undefined) {
     // Never initialize.
   }
 
@@ -283,12 +392,12 @@ describe('given a client that is un-initialized and store that is initialized', 
       },
       segments: {},
     });
+    setupMockStreamingProcessor(true);
 
     client = new LDClientImpl(
       'sdk-key',
       basicPlatform,
       {
-        updateProcessor: new NullUpdateProcessor(),
         sendEvents: false,
         featureStore: store,
       },

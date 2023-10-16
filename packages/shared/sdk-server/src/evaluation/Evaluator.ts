@@ -13,7 +13,6 @@ import { FlagRule } from './data/FlagRule';
 import { Segment } from './data/Segment';
 import { SegmentRule } from './data/SegmentRule';
 import { VariationOrRollout } from './data/VariationOrRollout';
-import ErrorKinds from './ErrorKinds';
 import EvalResult from './EvalResult';
 import evalTargets from './evalTargets';
 import makeBigSegmentRef from './makeBigSegmentRef';
@@ -22,6 +21,8 @@ import matchSegmentTargets from './matchSegmentTargets';
 import { Queries } from './Queries';
 import Reasons from './Reasons';
 import { getBucketBy, getOffVariation, getVariation } from './variations';
+
+const { ErrorKinds } = internal;
 
 /**
  * PERFORMANCE NOTE: The evaluation algorithm uses callbacks instead of async/await to optimize
@@ -175,7 +176,6 @@ export default class Evaluator {
   private evaluateInternal(
     flag: Flag,
     context: Context,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
     visitedFlags: string[],
     cb: (res: EvalResult) => void,
@@ -272,11 +272,11 @@ export default class Evaluator {
             updatedVisitedFlags,
             (res) => {
               // eslint-disable-next-line no-param-reassign
-              state.events = state.events ?? [];
+              state.events ??= [];
 
               if (eventFactory) {
                 state.events.push(
-                  eventFactory.evalEvent(prereqFlag, context, res.detail, null, flag),
+                  eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
                 );
               }
 
@@ -601,9 +601,7 @@ export default class Evaluator {
   segmentMatchContext(
     segment: Segment,
     context: Context,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     state: EvalState,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     segmentsVisited: string[],
     cb: (res: MatchOrError) => void,
   ): void {

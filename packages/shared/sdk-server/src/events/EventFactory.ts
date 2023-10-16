@@ -6,10 +6,8 @@ import isExperiment from './isExperiment';
 /**
  * @internal
  */
-export default class EventFactory {
-  constructor(private readonly withReasons: boolean) {}
-
-  evalEvent(
+export default class EventFactory extends internal.EventFactoryBase {
+  evalEventServer(
     flag: Flag,
     context: Context,
     detail: LDEvaluationDetail,
@@ -17,33 +15,20 @@ export default class EventFactory {
     prereqOfFlag?: Flag,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
-    return new internal.InputEvalEvent(
-      this.withReasons,
+    return super.evalEvent({
+      addExperimentData,
       context,
-      flag.key,
+      debugEventsUntilDate: flag.debugEventsUntilDate,
       defaultVal,
-      detail,
-      flag.version,
-      // Exclude null as a possibility.
-      detail.variationIndex ?? undefined,
-      flag.trackEvents || addExperimentData,
-      prereqOfFlag?.key,
-      this.withReasons || addExperimentData ? detail.reason : undefined,
-      flag.debugEventsUntilDate,
-    );
-  }
-
-  unknownFlagEvent(key: string, context: Context, detail: LDEvaluationDetail) {
-    return new internal.InputEvalEvent(this.withReasons, context, key, detail.value, detail);
-  }
-
-  /* eslint-disable-next-line class-methods-use-this */
-  identifyEvent(context: Context) {
-    return new internal.InputIdentifyEvent(context);
-  }
-
-  /* eslint-disable-next-line class-methods-use-this */
-  customEvent(key: string, context: Context, data?: any, metricValue?: number) {
-    return new internal.InputCustomEvent(context, key, data ?? undefined, metricValue ?? undefined);
+      excludeFromSummaries: flag.excludeFromSummaries,
+      flagKey: flag.key,
+      prereqOfFlagKey: prereqOfFlag?.key,
+      reason: detail.reason,
+      samplingRatio: flag.samplingRatio,
+      trackEvents: flag.trackEvents || addExperimentData,
+      value: detail.value,
+      variation: detail.variationIndex ?? undefined,
+      version: flag.version,
+    });
   }
 }

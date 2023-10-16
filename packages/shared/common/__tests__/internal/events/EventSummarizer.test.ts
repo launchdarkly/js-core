@@ -25,6 +25,20 @@ describe('given an event summarizer', () => {
     expect(beforeSummary).toEqual(afterSummary);
   });
 
+  it('does nothing for an event with excludeFromSummaries set to true', () => {
+    const event = {
+      kind: 'feature',
+      creationDate: 2000,
+      key: 'key',
+      context,
+      excludeFromSummaries: true,
+    };
+    const beforeSummary = summarizer.getSummary();
+    summarizer.summarizeEvent(event as any);
+    const afterSummary = summarizer.getSummary();
+    expect(beforeSummary).toEqual(afterSummary);
+  });
+
   it('sets start and end dates for feature events', () => {
     const event1 = {
       kind: 'feature',
