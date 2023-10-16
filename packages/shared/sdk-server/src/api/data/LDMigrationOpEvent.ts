@@ -60,7 +60,7 @@ export type LDMigrationMeasurement =
  * Event used to track information about a migration operation.
  *
  * Generally this event should not be created directly and instead an
- * {@link MigrationOpTracker} should be used to generate it.
+ * LDMigrationOpTracker should be used to generate it.
  */
 export interface LDMigrationOpEvent {
   kind: 'migration_op';
