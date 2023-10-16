@@ -12,6 +12,10 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
 ### Features
 
 * Implement Migrations. Refactor for client SDKs. ([#293](https://github.com/launchdarkly/js-core/issues/293)) ([c66aa6e](https://github.com/launchdarkly/js-core/commit/c66aa6ea0d12e1e4e565cb8378d367c31fab9c1b))
+* A new `Migration` type which provides an out-of-the-box configurable migration framework.
+* For more advanced use cases, added new `migrationVariation` and `trackMigration` methods on LdClient.
+* Added typed variation method `boolVariation`, `stringVariation`, `boolVariation`, `numVariation`, and `jsonVariation` for type-safe usage in TypeScript.
+
 
 
 ### Dependencies
