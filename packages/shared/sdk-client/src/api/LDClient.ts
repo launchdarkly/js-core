@@ -89,21 +89,10 @@ export interface LDClient {
    *   The context properties. Must contain at least the `key` property.
    * @param hash
    *   The signed context key if you are using [Secure Mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
-   * @param onDone
-   *   A function which will be called as soon as the flag values for the new context are available,
-   *   with two parameters: an error value (if any), and an {@link LDFlagSet} containing the new values
-   *   (which can also be obtained by calling {@link variation}). If the callback is omitted, you will
-   *   receive a Promise instead.
    * @returns
-   *   If you provided a callback, then nothing. Otherwise, a Promise which resolve once the flag
-   *   values for the new context are available, providing an {@link LDFlagSet} containing the new values
-   *   (which can also be obtained by calling {@link variation}).
+   *   A Promise which resolve once the flag values for the new context are available.
    */
-  identify(
-    context: LDContext,
-    hash?: string,
-    onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
-  ): Promise<LDFlagSet>;
+  identify(context: LDContext, hash?: string): Promise<void>;
 
   /**
    * Returns the client's current context.
