@@ -1,7 +1,7 @@
 {
   "name": "@launchdarkly/react-native-client-sdk",
-  "version": "0.1.0",
-  "description": "ld",
+  "version": "0.0.1-alpha.1",
+  "description": "LaunchDarkly Client-side SDK for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
@@ -35,20 +35,15 @@
     "release": "release-it"
   },
   "keywords": [
-    "react-native",
-    "ios",
-    "android"
+    "launchdarkly",
+    "react-native"
   ],
-  "repository": "https://github.com/yusinto/launchdarkly-react-native-client-sdk",
-  "author": "Yusinto Ngadiman <yusinto@gmail.com> (https://github.com/yusinto)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/yusinto/launchdarkly-react-native-client-sdk/issues"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
   },
-  "homepage": "https://github.com/yusinto/launchdarkly-react-native-client-sdk#readme",
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
-  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native#readme",
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",
     "@react-native/eslint-config": "^0.72.2",
@@ -128,9 +123,12 @@
       [
         "typescript",
         {
-          "project": "tsconfig.build.json"
+          "project": "tsconfig.ref.json"
         }
       ]
     ]
+  },
+  "installConfig": {
+    "hoistingLimits": "workspaces"
   }
 }
