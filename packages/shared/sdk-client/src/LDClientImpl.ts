@@ -44,17 +44,12 @@ export default class LDClientImpl implements LDClient {
    */
   constructor(
     public readonly sdkKey: string,
-    public readonly context: LDContext,
+    public context: LDContext,
     public readonly platform: Platform,
     options: LDOptions,
   ) {
     if (!sdkKey) {
       throw new Error('You must configure the client with a client-side SDK key');
-    }
-
-    const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext.valid) {
-      throw new Error('Context was unspecified or had no key');
     }
 
     if (!platform.encoding) {
@@ -77,12 +72,11 @@ export default class LDClientImpl implements LDClient {
 
   async start() {
     try {
-      this.flags = await fetchFlags(this.sdkKey, this.context, this.config, this.platform);
+      await this.identify(this.context);
       this.emitter.emit('ready');
     } catch (error: any) {
-      this.logger.error(error);
-      this.emitter.emit('error', error);
       this.emitter.emit('failed', error);
+      throw error;
     }
   }
 
@@ -112,13 +106,24 @@ export default class LDClientImpl implements LDClient {
     return clone(this.context);
   }
 
-  identify(
-    context: LDContext,
-    hash?: string,
-    onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
-  ): Promise<LDFlagSet> {
-    // TODO:
-    return Promise.resolve({});
+  // TODO: implement secure mode
+  async identify(context: LDContext, hash?: string): Promise<void> {
+    const checkedContext = Context.fromLDContext(context);
+    if (!checkedContext.valid) {
+      const error = new Error('Context was unspecified or had no key');
+      this.logger.error(error);
+      this.emitter.emit('error', error);
+      throw error;
+    }
+
+    try {
+      this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
+      this.context = context;
+    } catch (error: any) {
+      this.logger.error(error);
+      this.emitter.emit('error', error);
+      throw error;
+    }
   }
 
   off(eventName: EventName, listener?: Function): void {
