@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 
+import { StyleSheet, View, Text } from 'react-native';
 import { multiply } from '@launchdarkly/react-native-client-sdk';
 
 export default function App() {
