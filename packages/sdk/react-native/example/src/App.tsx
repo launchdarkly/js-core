@@ -1,13 +1,13 @@
 import * as React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from '@launchdarkly/react-native-client-sdk';
+import init from '@launchdarkly/react-native-client-sdk';
 
 export default function App() {
   const [result, setResult] = React.useState<number | undefined>();
 
   React.useEffect(() => {
-    multiply(3, 7).then(setResult);
+    // init()
   }, []);
 
   return (

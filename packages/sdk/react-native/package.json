@@ -103,13 +103,6 @@
       }
     }
   },
-  "eslintConfig": {
-    "root": true,
-    "extends": [
-      "@react-native",
-      "prettier"
-    ]
-  },
   "eslintIgnore": [
     "node_modules/",
     "lib/"
@@ -131,7 +124,16 @@
   "installConfig": {
     "hoistingLimits": "workspaces"
   },
+  "eslintConfig": {
+    "root": true,
+    "extends": [
+      "@react-native",
+      "prettier"
+    ]
+  },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "^0.0.1"
+    "@launchdarkly/js-client-sdk-common": "^0.0.1",
+    "base64-js": "^1.5.1",
+    "react-native-sse": "^1.1.0"
   }
 }
