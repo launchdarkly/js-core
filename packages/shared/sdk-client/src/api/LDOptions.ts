@@ -2,7 +2,7 @@ import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import type { LDInspection } from './LDInspection';
 
-export default interface LDOptions {
+export interface LDOptions {
   /**
    * An object that will perform logging for the client.
    *

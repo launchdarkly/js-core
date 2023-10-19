@@ -130,5 +130,8 @@
   },
   "installConfig": {
     "hoistingLimits": "workspaces"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk-common": "^0.0.1"
   }
 }

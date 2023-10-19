@@ -1,7 +1,7 @@
 import { noop, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
+import { type LDOptions } from '../api';
 import { LDInspection } from '../api/LDInspection';
-import LDOptions from '../api/LDOptions';
 
 class BootStrapValidator implements TypeValidator {
   is(u: unknown): boolean {
