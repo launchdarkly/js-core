@@ -1,8 +1,11 @@
 /* eslint-disable max-classes-per-file */
 import type {
+  Crypto,
   Encoding,
   EventSource,
   EventSourceInitDict,
+  Hasher,
+  Hmac,
   Info,
   Options,
   Platform,
@@ -13,7 +16,7 @@ import type {
 } from '@launchdarkly/js-sdk-common';
 
 import { name, version } from '../package.json';
-import { btoa } from './utils';
+import { btoa, uuidv4 } from './utils';
 
 class PlatformRequests implements Requests {
   createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
@@ -46,8 +49,21 @@ class PlatformInfo implements Info {
   }
 }
 
-// @ts-ignore
+class PlatformCrypto implements Crypto {
+  createHash(_algorithm: string): Hasher {
+    throw new Error('not implemented');
+  }
+
+  createHmac(_algorithm: string, _key: string): Hmac {
+    throw new Error('not implemented');
+  }
+
+  randomUUID(): string {
+    return uuidv4();
+  }
+}
 const platform: Platform = {
+  crypto: new PlatformCrypto(),
   info: new PlatformInfo(),
   requests: new PlatformRequests(),
   encoding: new PlatformEncoding(),

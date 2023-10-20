@@ -1,12 +1,32 @@
 import { CLIENT_SIDE_SDK_KEY } from '@env';
-import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import init, { type LDClientImpl } from '@launchdarkly/react-native-client-sdk';
+
+const context = { kind: 'user', key: 'test-user-1' };
+
 export default function App() {
+  const [ldc, setLdc] = useState<LDClientImpl>();
+  const [flag, setFlag] = useState<boolean>(false);
+
+  useEffect(() => {
+    init(CLIENT_SIDE_SDK_KEY, context)
+      .then((c) => {
+        setLdc(c);
+      })
+      .catch((e) => console.log(e));
+  }, []);
+
+  // useEffect(() => {
+  //   const f = ldc?.boolVariation('dev-test-flag', false);
+  //   setFlag(f ?? false);
+  // }, [ldc]);
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app! {CLIENT_SIDE_SDK_KEY}</Text>
-      <StatusBar style="auto" />
+      <Text>hello</Text>
+      <Text>{flag ? <>devTestFlag: {flag}</> : <>loading...</>}</Text>
     </View>
   );
 }
@@ -14,8 +34,12 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  box: {
+    width: 60,
+    height: 60,
+    marginVertical: 20,
   },
 });
