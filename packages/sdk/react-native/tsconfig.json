@@ -1,27 +1,22 @@
 {
   "compilerOptions": {
+    // Uses "." so it can load package.json.
     "rootDir": ".",
     "outDir": "dist",
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "jsx": "react",
-    "lib": ["esnext"],
-    "module": "esnext",
-    "moduleResolution": "node",
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noImplicitUseStrict": false,
-    "noStrictGenericChecks": false,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
+    "target": "ES2017",
+    "lib": ["es6"],
+    "module": "ES6",
     "strict": true,
-    "target": "esnext",
-    "verbatimModuleSyntax": true
+    "noImplicitOverride": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true, // enables importers to jump to source
+    "resolveJsonModule": true,
+    "stripInternal": true,
+    "moduleResolution": "node",
+    "types": ["jest", "node"],
+    "skipLibCheck": true
   },
-  "exclude": ["example"]
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
 }

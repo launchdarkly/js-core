@@ -8,6 +8,7 @@ function convertToByteArray(s: string) {
   return Uint8Array.from(b);
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export function btoa(s: string) {
   return fromByteArray(convertToByteArray(s));
 }

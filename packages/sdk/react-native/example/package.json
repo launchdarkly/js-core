@@ -1,5 +1,5 @@
 {
-  "name": "@launchdarkly/react-native-client-sdk-example",
+  "name": "react-native-example",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -9,20 +9,15 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "0.0.1-alpha.1",
-    "expo": "~49.0.13",
+    "expo": "~49.0.15",
     "expo-status-bar": "~1.6.0",
     "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-native": "0.72.5",
-    "react-native-web": "~0.19.6"
+    "react-native": "0.72.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@expo/webpack-config": "^18.0.1",
-    "babel-loader": "^8.1.0",
-    "babel-plugin-module-resolver": "^5.0.0",
-    "react-native-dotenv": "^3.4.9"
-  },
-  "private": true
+    "@types/react": "~18.2.14",
+    "react-native-dotenv": "^3.4.9",
+    "typescript": "^5.1.3"
+  }
 }

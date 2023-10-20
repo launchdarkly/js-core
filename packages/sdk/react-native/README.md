@@ -1,14 +1,57 @@
-# LaunchDarkly Client-Side SDK for React Native
+# LaunchDarkly React Native SDK
 
-## LaunchDarkly overview
+[![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]
+[![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]
+[![Documentation][sdk-react-native-ghp-badge]][sdk-react-native-ghp-link]
+[![NPM][sdk-react-native-dm-badge]][sdk-react-native-npm-link]
+[![NPM][sdk-react-native-dt-badge]][sdk-react-native-npm-link]
 
-[LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves trillions of feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
+The LaunchDarkly React Native SDK is designed primarily for use in mobile environments. It follows the client-side LaunchDarkly model for multi-user contexts.
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/intent/follow?screen_name=launchdarkly)
+This SDK is a replacement of [launchdarkly-react-native-client-sdk](https://github.com/launchdarkly/react-native-client-sdk). Please consider updating your application to use this package instead.
 
-## Contributing
+For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/client-side/react-native).
 
-We encourage pull requests and other contributions from the community. Check out our [contributing guidelines](CONTRIBUTING.md) for instructions on how to contribute to this SDK.
+## Install
+
+```shell
+yarn add @launchdarkly/react-native-client-sdk
+```
+
+## Quickstart
+
+Initialize the ldClient with your client side sdk key and the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings):
+
+```typescript
+import { init as initLD } from '@launchdarkly/react-native-client-sdk';
+
+export default {
+  async fetch(request: Request, env: Bindings): Promise<Response> {
+    const sdkKey = 'test-sdk-key';
+    const flagKey = 'testFlag1';
+    const context = { kind: 'user', key: 'test-user-key-1' };
+
+    // init the ldClient, wait and finally evaluate
+    const client = initLD(sdkKey, env.LD_KV);
+    await client.waitForInitialization();
+    const flagValue = await client.variation(flagKey, context, false);
+
+    return new Response(`${flagKey}: ${flagValue}`);
+  },
+};
+```
+
+See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare/example).
+
+## Developing this SDK
+
+```shell
+# at js-core repo root
+yarn && yarn build && cd packages/sdk/react-native
+
+# run tests
+yarn test
+```
 
 ## About LaunchDarkly
 
@@ -23,3 +66,12 @@ We encourage pull requests and other contributions from the community. Check out
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[sdk-react-native-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/react-native.yml/badge.svg
+[sdk-react-native-ci]: https://github.com/launchdarkly/js-core/actions/workflows/react-native.yml
+[sdk-react-native-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/react-native-client-sdk.svg?style=flat-square
+[sdk-react-native-npm-link]: https://www.npmjs.com/package/@launchdarkly/react-native-client-sdk
+[sdk-react-native-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-react-native-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/react-native/docs/
+[sdk-react-native-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/react-native-client-sdk.svg?style=flat-square
+[sdk-react-native-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/react-native-client-sdk.svg?style=flat-square
