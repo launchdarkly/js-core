@@ -1,18 +1,30 @@
-import * as React from 'react';
+import { CLIENT_SIDE_SDK_KEY } from '@env';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import init from '@launchdarkly/react-native-client-sdk';
+import init, { type LDClientImpl } from '@launchdarkly/react-native-client-sdk';
+
+const context = { kind: 'user', key: 'test-user-1' };
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
+  const [ldc, setLdc] = useState<LDClientImpl>();
+  const [flag, setFlag] = useState<boolean>(false);
 
-  React.useEffect(() => {
-    // init()
+  useEffect(() => {
+    init(CLIENT_SIDE_SDK_KEY, context).then((c) => {
+      setLdc(c);
+    });
   }, []);
+
+  useEffect(() => {
+    const f = ldc?.boolVariation('dev-test-flag', false);
+    setFlag(f ?? false);
+  }, [ldc]);
 
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Text>hello</Text>
+      <Text>{flag ? <>devTestFlag: {flag}</> : <>loading...</>}</Text>
     </View>
   );
 }

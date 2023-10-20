@@ -28,6 +28,7 @@
   "scripts": {
     "example": "yarn workspace @launchdarkly/react-native-client-sdk-example",
     "test": "jest",
+    "build": "npx tsc",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli lib",
@@ -127,12 +128,11 @@
   "eslintConfig": {
     "root": true,
     "extends": [
-      "@react-native",
-      "prettier"
+      "@react-native"
     ]
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "^0.0.1",
+    "@launchdarkly/js-client-sdk-common": "0.0.1",
     "base64-js": "^1.5.1",
     "react-native-sse": "^1.1.0"
   }

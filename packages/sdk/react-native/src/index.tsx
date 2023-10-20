@@ -5,7 +5,9 @@ import platform from './platform';
 
 const init = async (sdkKey: string, context: LDContext, options: LDOptions = {}) => {
   const ldc = new LDClientImpl(sdkKey, context, platform, options);
-  return ldc.start();
+  await ldc.start();
+  return ldc;
 };
 
+export * from '@launchdarkly/js-client-sdk-common';
 export default init;
