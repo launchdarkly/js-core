@@ -14,6 +14,10 @@ export function btoa(s: string) {
 }
 
 /**
+ * To avoid dependencies on uuid, this is good enough for now.
+ * Ripped from the react-native repo:
+ * https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Blob/BlobManager.js#L27
+ *
  * Based on the rfc4122-compliant solution posted at
  * http://stackoverflow.com/questions/105034
  */

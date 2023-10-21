@@ -1,8 +1,21 @@
+// @ts-ignore
 import { CLIENT_SIDE_SDK_KEY } from '@env';
+// import EventTarget from 'event-target-shim';
+// @ts-ignore
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import init, { type LDClientImpl } from '@launchdarkly/react-native-client-sdk';
+import { init, type LDClientImpl, setupPolyfills } from '@launchdarkly/react-native-client-sdk';
+
+// import CustomEvent from './CustomEvent';
+
+// @ts-ignore
+// Object.assign(global, {
+//   EventTarget,
+//   CustomEvent,
+// });
+
+setupPolyfills();
 
 const context = { kind: 'user', key: 'test-user-1' };
 
@@ -18,15 +31,15 @@ export default function App() {
       .catch((e) => console.log(e));
   }, []);
 
-  // useEffect(() => {
-  //   const f = ldc?.boolVariation('dev-test-flag', false);
-  //   setFlag(f ?? false);
-  // }, [ldc]);
+  useEffect(() => {
+    const f = ldc?.boolVariation('dev-test-flag', false);
+    setFlag(f ?? false);
+  }, [ldc]);
 
   return (
     <View style={styles.container}>
       <Text>hello</Text>
-      <Text>{flag ? <>devTestFlag: {flag}</> : <>loading...</>}</Text>
+      <Text>{flag ? <>devTestFlag: {`${flag}`}</> : <>loading...</>}</Text>
     </View>
   );
 }
