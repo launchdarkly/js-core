@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 import { fromByteArray } from 'base64-js';
 
 function convertToByteArray(s: string) {

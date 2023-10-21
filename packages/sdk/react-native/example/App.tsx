@@ -1,6 +1,4 @@
-// @ts-ignore
 import { CLIENT_SIDE_SDK_KEY } from '@env';
-// @ts-ignore
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 

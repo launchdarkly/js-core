@@ -20,28 +20,15 @@ yarn add @launchdarkly/react-native-client-sdk
 
 ## Quickstart
 
-Initialize the ldClient with your client side sdk key and the [Cloudflare KV namespace](https://developers.cloudflare.com/workers/runtime-apis/kv#kv-bindings):
+TODO
 
 ```typescript
-import { init as initLD } from '@launchdarkly/react-native-client-sdk';
+import { init } from '@launchdarkly/react-native-client-sdk';
 
-export default {
-  async fetch(request: Request, env: Bindings): Promise<Response> {
-    const sdkKey = 'test-sdk-key';
-    const flagKey = 'testFlag1';
-    const context = { kind: 'user', key: 'test-user-key-1' };
-
-    // init the ldClient, wait and finally evaluate
-    const client = initLD(sdkKey, env.LD_KV);
-    await client.waitForInitialization();
-    const flagValue = await client.variation(flagKey, context, false);
-
-    return new Response(`${flagKey}: ${flagValue}`);
-  },
-};
+// TODO
 ```
 
-See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare/example).
+See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native/example).
 
 ## Developing this SDK
 
