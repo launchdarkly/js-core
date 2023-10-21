@@ -27,8 +27,6 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "rb": "rollup -c --configPlugin typescript",
-    "rbw": "yarn rb --watch",
     "build": "npx tsc && yarn link-dev",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",

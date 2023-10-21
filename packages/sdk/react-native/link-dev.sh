@@ -21,7 +21,7 @@ do
   rsync -aq node_modules "$SDK_DIR"
   rsync -aq ../../shared/common/ "$SDK_DIR"/node_modules/@launchdarkly/js-sdk-common
   rm -rf "$SDK_DIR"/node_modules/@launchdarkly/js-client-sdk-common
-  rsync -av ../../shared/sdk-client/ "$SDK_DIR"/node_modules/@launchdarkly/js-client-sdk-common
-  rsync -av src "$SDK_DIR"
+  rsync -aq ../../shared/sdk-client/ "$SDK_DIR"/node_modules/@launchdarkly/js-client-sdk-common
+  rsync -aq src "$SDK_DIR"
   rsync -av dist "$SDK_DIR"
 done
