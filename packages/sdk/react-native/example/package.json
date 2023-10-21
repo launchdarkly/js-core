@@ -6,11 +6,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
-    "postinstall": "cd ../ && yarn link-dev"
+    "web": "expo start --web"
   },
   "dependencies": {
-    "event-target-shim": "^6.0.2",
     "expo": "~49.0.15",
     "expo-status-bar": "~1.6.0",
     "react": "18.2.0",

@@ -43,11 +43,11 @@
     "react-native": "*"
   },
   "dependencies": {
+    "@launchdarkly/js-client-sdk-common": "0.0.1",
     "base64-js": "^1.5.1",
     "event-target-shim": "^6.0.2"
   },
   "devDependencies": {
-    "@launchdarkly/js-client-sdk-common": "0.0.1",
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.2.1",
@@ -77,9 +77,6 @@
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   },
-  "bundledDependencies": [
-    "@launchdarkly/js-client-sdk-common"
-  ],
   "installConfig": {
     "hoistingLimits": "workspaces"
   }

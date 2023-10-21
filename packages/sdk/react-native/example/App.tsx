@@ -1,21 +1,11 @@
 // @ts-ignore
 import { CLIENT_SIDE_SDK_KEY } from '@env';
-// import EventTarget from 'event-target-shim';
 // @ts-ignore
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { init, type LDClientImpl, setupPolyfills } from '@launchdarkly/react-native-client-sdk';
-
-// import CustomEvent from './CustomEvent';
-
-// @ts-ignore
-// Object.assign(global, {
-//   EventTarget,
-//   CustomEvent,
-// });
-
-setupPolyfills();
+import '@launchdarkly/react-native-client-sdk';
+import { init, type LDClientImpl } from '@launchdarkly/react-native-client-sdk';
 
 const context = { kind: 'user', key: 'test-user-1' };
 
