@@ -4,7 +4,6 @@ import { CLIENT_SIDE_SDK_KEY } from '@env';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import '@launchdarkly/react-native-client-sdk';
 import { init, type LDClientImpl } from '@launchdarkly/react-native-client-sdk';
 
 const context = { kind: 'user', key: 'test-user-1' };
@@ -28,7 +27,6 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>hello</Text>
       <Text>{flag ? <>devTestFlag: {`${flag}`}</> : <>loading...</>}</Text>
     </View>
   );

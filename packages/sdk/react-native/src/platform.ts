@@ -16,7 +16,7 @@ import type {
 } from '@launchdarkly/js-sdk-common';
 
 import { name, version } from '../package.json';
-import { btoa, uuidv4 } from './utils';
+import { btoa, uuidv4 } from './polyfills';
 
 class PlatformRequests implements Requests {
   createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {

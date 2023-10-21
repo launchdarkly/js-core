@@ -1,7 +1,7 @@
 import init from './init';
-import setupPolyfills from './polyfills';
+import { setupPolyfill } from './polyfills';
 
-setupPolyfills();
+setupPolyfill();
 
 export * from '@launchdarkly/js-client-sdk-common';
 
