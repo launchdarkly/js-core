@@ -7,7 +7,7 @@
  *
  * @packageDocumentation
  */
-import { useVariation } from './hooks';
+import { useLDClient, useVariation } from './hooks';
 import { setupPolyfill } from './polyfills';
 import { LDProvider } from './provider';
 
@@ -15,4 +15,4 @@ setupPolyfill();
 
 export * from '@launchdarkly/js-client-sdk-common';
 
-export { LDProvider, useVariation };
+export { LDProvider, useLDClient, useVariation };

@@ -216,11 +216,28 @@ export default class LDClientImpl implements LDClient {
     return this.variationInternal(key, defaultValue, eventFactory, typeChecker);
   }
 
-  // TODO: add other typed variation functions
   boolVariation(key: string, defaultValue: boolean): boolean {
     return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
       TypeValidators.Boolean.is(value),
       TypeValidators.Boolean.getType(),
+    ]).value;
+  }
+
+  jsonVariation(key: string, defaultValue: unknown): unknown {
+    return this.variation(key, defaultValue);
+  }
+
+  numberVariation(key: string, defaultValue: number): number {
+    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]).value;
+  }
+
+  stringVariation(key: string, defaultValue: string): string {
+    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
     ]).value;
   }
 
@@ -232,5 +249,30 @@ export default class LDClientImpl implements LDClient {
   waitUntilReady(): Promise<void> {
     // TODO:
     return Promise.resolve(undefined);
+  }
+
+  boolVariationDetail(key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Boolean.is(value),
+      TypeValidators.Boolean.getType(),
+    ]);
+  }
+
+  numberVariationDetail(key: string, defaultValue: number): LDEvaluationDetailTyped<number> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]);
+  }
+
+  stringVariationDetail(key: string, defaultValue: string): LDEvaluationDetailTyped<string> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
+    ]);
+  }
+
+  jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
+    return this.variationDetail(key, defaultValue);
   }
 }

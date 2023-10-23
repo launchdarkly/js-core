@@ -1,4 +1,4 @@
 import useVariation from './useVariation';
+import useLDClient from './useLDClient';
 
-// eslint-disable-next-line import/prefer-default-export
-export { useVariation };
+export { useLDClient, useVariation };

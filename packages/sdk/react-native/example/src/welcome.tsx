@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useVariation } from '@launchdarkly/react-native-client-sdk';
+import { useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const flag = useVariation('dev-test-flag');
+  const flag = useLDClient()?.variation('dev-test-flag');
 
   return (
     <View style={styles.container}>
