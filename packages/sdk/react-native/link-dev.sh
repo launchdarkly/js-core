@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "===== Installing all dependencies..."
-yarn
+echo "===== Installing prod dependencies..."
+yarn workspaces focus --production
 
 declare -a examples=(example)
 

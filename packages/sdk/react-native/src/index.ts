@@ -7,11 +7,12 @@
  *
  * @packageDocumentation
  */
-import init from './init';
+import { useVariation } from './hooks';
 import { setupPolyfill } from './polyfills';
+import { LDProvider } from './provider';
 
 setupPolyfill();
 
 export * from '@launchdarkly/js-client-sdk-common';
 
-export { init };
+export { LDProvider, useVariation };
