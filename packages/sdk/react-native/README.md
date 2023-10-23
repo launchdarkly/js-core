@@ -38,11 +38,11 @@ See the full [example app](https://github.com/launchdarkly/js-core/tree/main/pac
 # at js-core repo root
 yarn && yarn build
 
-# run android or ios app
+# at sdk/react-native repo
 yarn android | ios
 ```
 
-Then run the sdk code in the example app. See the [README](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/react-native/example/README.md#L1).
+:information_source: You will need to setup your sdk key in the example dir. See the example [README](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/react-native/example/README.md#L1).
 
 ## About LaunchDarkly
 
