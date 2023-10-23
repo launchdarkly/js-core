@@ -17,9 +17,8 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient } from './api/LDClient';
+import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
-import LDOptions from './api/LDOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import fetchFlags, { Flags } from './evaluation/fetchFlags';

@@ -8,8 +8,8 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
+import { type LDOptions } from '../api';
 import { LDInspection } from '../api/LDInspection';
-import type LDOptions from '../api/LDOptions';
 import validators from './validators';
 
 export default class Configuration {
