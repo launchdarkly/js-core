@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useLDClient } from '@launchdarkly/react-native-client-sdk';
+import { useBoolVariation } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const flag = useLDClient()?.variation('dev-test-flag');
+  const flag = useBoolVariation('dev-test-flag', false);
 
   return (
     <View style={styles.container}>

@@ -134,8 +134,8 @@ export default class LDClientImpl implements LDClient {
     this.emitter.on(eventName, listener);
   }
 
+  // TODO: setStreaming
   setStreaming(value?: boolean): void {
-    // TODO:
   }
 
   track(key: string, data?: any, metricValue?: number): void {
@@ -241,13 +241,13 @@ export default class LDClientImpl implements LDClient {
     ]).value;
   }
 
+  // TODO: waitForInitialization
   waitForInitialization(): Promise<void> {
-    // TODO:
     return Promise.resolve(undefined);
   }
 
+  // TODO: waitUntilReady
   waitUntilReady(): Promise<void> {
-    // TODO:
     return Promise.resolve(undefined);
   }
 

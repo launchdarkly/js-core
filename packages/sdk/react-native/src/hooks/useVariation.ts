@@ -1,13 +1,15 @@
-import { useContext } from 'react';
-
 import { LDFlagValue } from '@launchdarkly/js-client-sdk-common';
 
-import { context, ReactSdkContext } from '../provider/reactSdkContext';
+import useLDClient from './useLDClient';
 
-const useVariation = (flagKey: string, defaultValue?: any): LDFlagValue => {
-  const { ldClient } = useContext<ReactSdkContext>(context);
+export const useVariation = (flagKey: string, defaultValue?: any): LDFlagValue => {
+  const ldClient = useLDClient();
+  return ldClient?.variation(flagKey, defaultValue) ?? defaultValue;
+};
 
-  return ldClient?.variation(flagKey) ?? defaultValue;
+export const useVariationDetail = (flagKey: string, defaultValue?: any): LDFlagValue => {
+  const ldClient = useLDClient();
+  return ldClient?.variationDetail(flagKey, defaultValue) ?? defaultValue;
 };
 
 export default useVariation;
