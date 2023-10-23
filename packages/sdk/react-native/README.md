@@ -38,8 +38,8 @@ See the full [example app](https://github.com/launchdarkly/js-core/tree/main/pac
 # at js-core repo root
 yarn && yarn build
 
-# run tests
-yarn test
+# run android or ios app
+yarn android | ios
 ```
 
 Then run the sdk code in the example app. See the [README](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/react-native/example/README.md#L1).
