@@ -26,6 +26,9 @@
       "path": "./packages/sdk/cloudflare/tsconfig.ref.json"
     },
     {
+      "path": "./packages/sdk/react-native/tsconfig.ref.json"
+    },
+    {
       "path": "./packages/sdk/vercel/tsconfig.ref.json"
     },
     {
