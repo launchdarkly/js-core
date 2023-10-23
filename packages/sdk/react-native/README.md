@@ -6,6 +6,10 @@
 [![NPM][sdk-react-native-dm-badge]][sdk-react-native-npm-link]
 [![NPM][sdk-react-native-dt-badge]][sdk-react-native-npm-link]
 
+:warning: UNSUPPORTED
+
+This SDK is in pre-release development and is not supported.
+
 The LaunchDarkly React Native SDK is designed primarily for use in mobile environments. It follows the client-side LaunchDarkly model for multi-user contexts.
 
 This SDK is a replacement of [launchdarkly-react-native-client-sdk](https://github.com/launchdarkly/react-native-client-sdk). Please consider updating your application to use this package instead.
