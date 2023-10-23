@@ -135,8 +135,7 @@ export default class LDClientImpl implements LDClient {
   }
 
   // TODO: setStreaming
-  setStreaming(value?: boolean): void {
-  }
+  setStreaming(value?: boolean): void {}
 
   track(key: string, data?: any, metricValue?: number): void {
     const checkedContext = Context.fromLDContext(this.context);
