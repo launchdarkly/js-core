@@ -11,7 +11,7 @@ on:
       - '**.md'
 
 jobs:
-  build-test-cloudflare:
+  build-test-react-native:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
