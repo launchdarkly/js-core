@@ -35,7 +35,9 @@
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test",
-    "link-dev": "./link-dev.sh"
+    "link-dev": "./link-dev.sh",
+    "android": "yarn ./example android",
+    "ios": "yarn ./example ios"
   },
   "peerDependencies": {
     "react-native": "*"
