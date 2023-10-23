@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "===== Installing prod dependencies..."
-yarn workspaces focus --production
+echo "===== Installing all dependencies..."
+yarn
 
 declare -a examples=(example)
 
@@ -18,13 +18,19 @@ do
   mkdir -p "$COMMON_DIR"
   mkdir -p "$CLIENT_COMMON_DIR"
 
+  rsync -av dist "$SDK_DIR"
+  rsync -aq src "$SDK_DIR"
   rsync -aq package.json "$SDK_DIR"
   rsync -aq LICENSE "$SDK_DIR"
-  rsync -aq node_modules "$SDK_DIR"
-  rsync -aq src "$SDK_DIR"
-  rsync -av dist "$SDK_DIR"
+  rsync -aq node_modules/base64-js "$SDK_DIR"/node_modules
+  rsync -aq node_modules/event-target-shim "$SDK_DIR"/node_modules
 
-  rsync -aq ../../shared/common/ "$COMMON_DIR"
+  rsync -aq ../../shared/common/dist "$COMMON_DIR"
+  rsync -aq ../../shared/common/src "$COMMON_DIR"
+  rsync -aq ../../shared/common/package.json "$COMMON_DIR"
+
   rm -rf "$CLIENT_COMMON_DIR"
-  rsync -aq ../../shared/sdk-client/ "$CLIENT_COMMON_DIR"
+  rsync -aq ../../shared/sdk-client/dist "$CLIENT_COMMON_DIR"
+  rsync -aq ../../shared/sdk-client/src "$CLIENT_COMMON_DIR"
+  rsync -aq ../../shared/sdk-client/package.json "$CLIENT_COMMON_DIR"
 done
