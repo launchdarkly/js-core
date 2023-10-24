@@ -7,7 +7,12 @@ export const useBoolVariation = (flagKey: string, defaultValue: boolean) => {
 
 export const useBoolVariationDetail = (flagKey: string, defaultValue: boolean) => {
   const ldClient = useLDClient();
-  return ldClient?.boolVariationDetail(flagKey, defaultValue) ?? defaultValue;
+  const def = {
+    value: defaultValue,
+    variationIndex: null,
+    reason: null,
+  };
+  return ldClient?.boolVariationDetail(flagKey, defaultValue) ?? def;
 };
 
 export default useBoolVariation;

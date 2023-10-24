@@ -1,14 +1,19 @@
 import { createContext } from 'react';
 
-import { LDClient, LDFlagSet } from '@launchdarkly/js-client-sdk-common';
+import { LDClient } from '@launchdarkly/js-client-sdk-common';
 
-type ReactSdkContext = {
-  allFlags?: LDFlagSet;
-  ldClient?: LDClient;
+export type LDContextInfo = {
+  status?: 'loading' | 'error' | 'success';
+  error?: Error;
 };
 
-const context = createContext<ReactSdkContext>({});
+export type ReactSdkContext = {
+  client?: LDClient;
+  ldContextInfo: LDContextInfo;
+};
+
+export const context = createContext<ReactSdkContext>({ ldContextInfo: {} });
 
 const { Provider, Consumer } = context;
 
-export { context, Provider, Consumer, ReactSdkContext };
+export { Provider, Consumer };

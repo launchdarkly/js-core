@@ -30,6 +30,7 @@ const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessag
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
+  context?: LDContext;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
 
@@ -44,7 +45,6 @@ export default class LDClientImpl implements LDClient {
    */
   constructor(
     public readonly sdkKey: string,
-    public context: LDContext,
     public readonly platform: Platform,
     options: LDOptions,
   ) {
@@ -70,12 +70,22 @@ export default class LDClientImpl implements LDClient {
     // TODO: init streamer
   }
 
-  async start() {
+  // TODO: implement secure mode
+  async identify(context: LDContext, _hash?: string): Promise<void> {
+    const checkedContext = Context.fromLDContext(context);
+    if (!checkedContext.valid) {
+      const error = new Error('Context was unspecified or had no key');
+      this.logger.error(error);
+      this.emitter.emit('error', error);
+      throw error;
+    }
+
     try {
-      await this.identify(this.context);
-      this.emitter.emit('ready');
+      this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
+      this.context = context;
     } catch (error: any) {
-      this.emitter.emit('failed', error);
+      this.logger.error(error);
+      this.emitter.emit('error', error);
       throw error;
     }
   }
@@ -104,26 +114,6 @@ export default class LDClientImpl implements LDClient {
 
   getContext(): LDContext {
     return clone(this.context);
-  }
-
-  // TODO: implement secure mode
-  async identify(context: LDContext, hash?: string): Promise<void> {
-    const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext.valid) {
-      const error = new Error('Context was unspecified or had no key');
-      this.logger.error(error);
-      this.emitter.emit('error', error);
-      throw error;
-    }
-
-    try {
-      this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
-      this.context = context;
-    } catch (error: any) {
-      this.logger.error(error);
-      this.emitter.emit('error', error);
-      throw error;
-    }
   }
 
   off(eventName: EventName, listener?: Function): void {

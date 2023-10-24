@@ -1,14 +1,15 @@
 import { CLIENT_SIDE_SDK_KEY } from '@env';
 
-import { LDProvider } from '@launchdarkly/react-native-client-sdk';
+import { LDProvider, ReactNativeLDClient } from '@launchdarkly/react-native-client-sdk';
 
 import Welcome from './src/welcome';
 
+const featureClient = new ReactNativeLDClient(CLIENT_SIDE_SDK_KEY);
 const context = { kind: 'user', key: 'test-user-1' };
 
 const App = () => {
   return (
-    <LDProvider clientSideSdkKey={CLIENT_SIDE_SDK_KEY} context={context}>
+    <LDProvider client={featureClient} context={context}>
       <Welcome />
     </LDProvider>
   );

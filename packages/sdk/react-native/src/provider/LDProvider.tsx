@@ -1,27 +1,30 @@
 import { PropsWithChildren, useEffect, useState } from 'react';
 
-import { LDClient, LDContext, LDOptions } from '@launchdarkly/js-client-sdk-common';
+import { LDContext } from '@launchdarkly/js-client-sdk-common';
 
-import init from '../init';
+import ReactNativeLDClient from '../ReactNativeLDClient';
 import { Provider, ReactSdkContext } from './reactSdkContext';
 
 type LDProps = {
-  clientSideSdkKey: string;
-  context: LDContext;
-  options?: LDOptions;
+  client: ReactNativeLDClient;
+  context?: LDContext;
 };
-const LDProvider = ({
-  clientSideSdkKey,
-  context,
-  options,
-  children,
-}: PropsWithChildren<LDProps>) => {
-  const [value, setValue] = useState<ReactSdkContext>({});
+
+const LDProvider = ({ client, context, children }: PropsWithChildren<LDProps>) => {
+  const [value, setValue] = useState<ReactSdkContext>({ client, ldContextInfo: {} });
 
   useEffect(() => {
-    init(clientSideSdkKey, context, options).then((ldClient: LDClient) => {
-      setValue({ allFlags: ldClient.allFlags(), ldClient });
-    });
+    if (context) {
+      setValue({ client, ldContextInfo: { status: 'loading' } });
+      client
+        .identify(context)
+        .then(() => {
+          setValue({ client, ldContextInfo: { status: 'success' } });
+        })
+        .catch((e) => {
+          setValue({ client, ldContextInfo: { error: e, status: 'error' } });
+        });
+    }
   }, []);
 
   return <Provider value={value}>{children}</Provider>;

@@ -7,37 +7,13 @@
  *
  * @packageDocumentation
  */
-import {
-  useBoolVariation,
-  useBoolVariationDetail,
-  useJsonVariation,
-  useJsonVariationDetail,
-  useLDClient,
-  useNumberVariation,
-  useNumberVariationDetail,
-  useStringVariation,
-  useStringVariationDetail,
-  useVariation,
-  useVariationDetail,
-} from './hooks';
 import { setupPolyfill } from './polyfills';
-import { LDProvider } from './provider';
+import ReactNativeLDClient from './ReactNativeLDClient';
 
 setupPolyfill();
 
 export * from '@launchdarkly/js-client-sdk-common';
 
-export {
-  LDProvider,
-  useLDClient,
-  useVariation,
-  useVariationDetail,
-  useNumberVariation,
-  useNumberVariationDetail,
-  useBoolVariation,
-  useBoolVariationDetail,
-  useStringVariation,
-  useStringVariationDetail,
-  useJsonVariationDetail,
-  useJsonVariation,
-};
+export * from './hooks';
+export * from './provider';
+export { ReactNativeLDClient };

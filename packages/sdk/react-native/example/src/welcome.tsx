@@ -1,14 +1,17 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useBoolVariation } from '@launchdarkly/react-native-client-sdk';
+import { useBoolVariation, useLDContextInfo } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
+  const { error, status } = useLDContextInfo();
   const flag = useBoolVariation('dev-test-flag', false);
 
   return (
     <View style={styles.container}>
       <Text>Welcome to LaunchDarkly</Text>
-      <Text>{flag ? <>devTestFlag: {`${flag}`}</> : <>loading...</>}</Text>
+      <Text>status: {status}</Text>
+      <Text>error: {error?.message}</Text>
+      <Text>devTestFlag: {`${flag}`}</Text>
     </View>
   );
 }
