@@ -9,27 +9,29 @@ const setupListeners = (
   client: ReactNativeLDClient,
   setState: Dispatch<SetStateAction<ReactSdkContext>>,
 ) => {
+  const { logger } = client;
+
   client.on('identify:loading', (c: LDContext) => {
-    console.log(`=========== identify:loading: ${JSON.stringify(c)}`);
+    logger.debug(`=========== identify:loading: ${JSON.stringify(c)}`);
     setState({ client, ldContextInfo: { context: c, identifyStatus: 'loading' } });
   });
 
   client.on('identify:success', (c: LDContext) => {
-    console.log(`=========== identify:success: ${JSON.stringify(c)}`);
+    logger.debug(`=========== identify:success: ${JSON.stringify(c)}`);
     setState({ client, ldContextInfo: { context: c, identifyStatus: 'success' } });
   });
 
   client.on('identify:error', (c: LDContext, e: any) => {
-    console.log(`=========== identify:error: ${JSON.stringify(c)}, ${e}`);
+    logger.debug(`=========== identify:error: ${JSON.stringify(c)}, ${e}`);
     setState({ client, ldContextInfo: { context: c, identifyStatus: 'error', error: e } });
   });
 
   client.on('variation:error', (c: LDContext, e: any) => {
-    console.log(`=========== variation:error: ${JSON.stringify(c)}, ${e}`);
+    logger.debug(`=========== variation:error: ${JSON.stringify(c)}, ${e}`);
   });
 
   client.on('variation:success', (c: LDContext) => {
-    console.log(`=========== variation:success: ${JSON.stringify(c)}`);
+    logger.debug(`=========== variation:success: ${JSON.stringify(c)}`);
   });
 };
 
