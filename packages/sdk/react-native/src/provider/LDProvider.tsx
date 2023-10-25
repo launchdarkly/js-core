@@ -20,8 +20,7 @@ const LDProvider = ({ client, context, children }: PropsWithChildren<LDProps>) =
     if (context) {
       client
         .identify(context)
-        // TODO: change to client.logger
-        .catch((e) => console.log(`LaunchDarkly React Native Sdk identify error: ${e}`));
+        .catch((e) => client.logger.debug(`LaunchDarkly React Native Sdk identify error: ${e}`));
     }
   }, []);
 

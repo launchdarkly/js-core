@@ -4,6 +4,7 @@ import {
   LDEvaluationDetailTyped,
   LDFlagSet,
   LDFlagValue,
+  LDLogger,
 } from '@launchdarkly/js-sdk-common';
 
 /**
@@ -140,6 +141,13 @@ export interface LDClient {
    *   the result (as an{@link LDEvaluationDetailTyped<unknown>}).
    */
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown>;
+
+  /**
+   * Returns the logger configured as part of LDOptions during construction.
+   *
+   * For more, read {@link LDOptions.logger}.
+   */
+  logger: LDLogger;
 
   /**
    * Determines the numeric variation of a feature flag.

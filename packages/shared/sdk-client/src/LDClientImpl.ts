@@ -33,8 +33,6 @@ export default class LDClientImpl implements LDClient {
   context?: LDContext;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
-
-  // TODO: expose logger in api
   logger: LDLogger;
 
   private eventFactoryDefault = new EventFactory(false);
