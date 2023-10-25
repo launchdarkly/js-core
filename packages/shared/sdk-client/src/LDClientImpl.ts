@@ -6,13 +6,13 @@ import {
   Context,
   internal,
   LDClientError,
-  LDContext,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDFlagSet,
-  LDFlagValue,
-  LDLogger,
-  Platform,
+  type LDContext,
+  type LDEvaluationDetail,
+  type LDEvaluationDetailTyped,
+  type LDFlagSet,
+  type LDFlagValue,
+  type LDLogger,
+  type Platform,
   subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -34,11 +34,13 @@ export default class LDClientImpl implements LDClient {
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
 
+  // TODO: expose logger in api
+  logger: LDLogger;
+
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
-  private logger: LDLogger;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -72,20 +74,23 @@ export default class LDClientImpl implements LDClient {
 
   // TODO: implement secure mode
   async identify(context: LDContext, _hash?: string): Promise<void> {
+    this.context = context;
     const checkedContext = Context.fromLDContext(context);
+
     if (!checkedContext.valid) {
       const error = new Error('Context was unspecified or had no key');
       this.logger.error(error);
-      this.emitter.emit('error', error);
+      this.emitter.emit('identify:error', context, error);
       throw error;
     }
 
     try {
+      this.emitter.emit('identify:loading', context);
       this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
-      this.context = context;
+      this.emitter.emit('identify:success', context);
     } catch (error: any) {
       this.logger.error(error);
-      this.emitter.emit('error', error);
+      this.emitter.emit('identify:error', context, error);
       throw error;
     }
   }
@@ -151,7 +156,7 @@ export default class LDClientImpl implements LDClient {
 
     if (!found) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
-      this.emitter.emit('error', error);
+      this.emitter.emit('variation:error', this.context, error);
       this.eventProcessor.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
       );
@@ -173,6 +178,10 @@ export default class LDClientImpl implements LDClient {
             reason,
           ),
         );
+        const error = new LDClientError(
+          `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
+        );
+        this.emitter.emit('variation:error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -182,6 +191,7 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Result value is null in variation');
       successDetail.value = defaultValue;
     }
+    this.emitter.emit('variation:success', this.context);
     this.eventProcessor.sendEvent(
       eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
     );

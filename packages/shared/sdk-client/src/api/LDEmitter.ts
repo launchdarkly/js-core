@@ -1,4 +1,9 @@
-export type EventName = 'change' | 'ready' | 'failed' | 'error';
+export type EventName =
+  | 'identify:loading'
+  | 'identify:success'
+  | 'identify:error'
+  | 'variation:success'
+  | 'variation:error';
 
 type CustomEventListeners = {
   original: Function;

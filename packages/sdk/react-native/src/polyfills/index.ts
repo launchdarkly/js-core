@@ -10,4 +10,5 @@ function setupPolyfill() {
     CustomEvent,
   });
 }
+
 export { btoa, setupPolyfill, uuidv4 };

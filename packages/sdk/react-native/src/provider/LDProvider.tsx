@@ -1,9 +1,10 @@
-import { PropsWithChildren, useEffect, useState } from 'react';
+import { Dispatch, PropsWithChildren, SetStateAction, useEffect, useState } from 'react';
 
-import { LDContext } from '@launchdarkly/js-client-sdk-common';
+import { type LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import ReactNativeLDClient from '../ReactNativeLDClient';
 import { Provider, ReactSdkContext } from './reactSdkContext';
+import setupListeners from './setupListeners';
 
 type LDProps = {
   client: ReactNativeLDClient;
@@ -11,23 +12,20 @@ type LDProps = {
 };
 
 const LDProvider = ({ client, context, children }: PropsWithChildren<LDProps>) => {
-  const [value, setValue] = useState<ReactSdkContext>({ client, ldContextInfo: {} });
+  const [state, setState] = useState<ReactSdkContext>({ client, ldContextInfo: { context } });
 
   useEffect(() => {
+    setupListeners(client, setState);
+
     if (context) {
-      setValue({ client, ldContextInfo: { status: 'loading' } });
       client
         .identify(context)
-        .then(() => {
-          setValue({ client, ldContextInfo: { status: 'success' } });
-        })
-        .catch((e) => {
-          setValue({ client, ldContextInfo: { error: e, status: 'error' } });
-        });
+        // TODO: change to client.logger
+        .catch((e) => console.log(`LaunchDarkly React Native Sdk identify error: ${e}`));
     }
   }, []);
 
-  return <Provider value={value}>{children}</Provider>;
+  return <Provider value={state}>{children}</Provider>;
 };
 
 export default LDProvider;
