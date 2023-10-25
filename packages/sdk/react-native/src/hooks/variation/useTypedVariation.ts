@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk-common';
 
 import useLDClient from '../useLDClient';
@@ -35,6 +37,14 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
 ): LDEvaluationDetailTyped<T> => {
   const ldClient = useLDClient();
   const { identifyStatus } = useLDContextInfo();
+  const unsupportedType = useMemo(
+    () => ({
+      value: defaultValue,
+      variationIndex: null,
+      reason: { kind: 'ERROR', errorKind: 'UNSUPPORTED_VARIATION_TYPE' },
+    }),
+    [defaultValue],
+  );
 
   if (identifyStatus === 'success') {
     switch (typeof defaultValue) {
@@ -57,18 +67,10 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
       case 'object':
         return ldClient.jsonVariationDetail(flagKey, defaultValue) as LDEvaluationDetailTyped<T>;
       default: {
-        return {
-          value: defaultValue,
-          variationIndex: null,
-          reason: { kind: 'ERROR', errorKind: 'UNSUPPORTED_VARIATION_TYPE' },
-        };
+        return unsupportedType;
       }
     }
   }
 
-  return {
-    value: defaultValue,
-    variationIndex: null,
-    reason: { kind: 'ERROR', errorKind: 'UNSUPPORTED_VARIATION_TYPE' },
-  };
+  return unsupportedType;
 };
