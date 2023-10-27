@@ -2,17 +2,18 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  ClientContext,
   clone,
   Context,
   internal,
   LDClientError,
-  LDContext,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDFlagSet,
-  LDFlagValue,
-  LDLogger,
-  Platform,
+  type LDContext,
+  type LDEvaluationDetail,
+  type LDEvaluationDetailTyped,
+  type LDFlagSet,
+  type LDFlagValue,
+  type LDLogger,
+  type Platform,
   subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -20,8 +21,10 @@ import {
 import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
+import { createStreamListeners } from './data_sources/createStreamListeners';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import fetchFlags, { Flags } from './evaluation/fetchFlags';
+import { base64UrlEncode } from './evaluation/fetchUtils';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -32,19 +35,22 @@ export default class LDClientImpl implements LDClient {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
+  context?: LDContext;
+  logger: LDLogger;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
+  private clientContext: ClientContext;
+  private streamListeners;
+  private streamer?: subsystem.LDStreamProcessor;
   private flags: Flags = {};
-  private logger: LDLogger;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
   constructor(
     public readonly sdkKey: string,
-    public context: LDContext,
     public readonly platform: Platform,
     options: LDOptions,
   ) {
@@ -67,17 +73,13 @@ export default class LDClientImpl implements LDClient {
     );
     this.emitter = new LDEmitter();
 
-    // TODO: init streamer
-  }
-
-  async start() {
-    try {
-      await this.identify(this.context);
-      this.emitter.emit('ready');
-    } catch (error: any) {
-      this.emitter.emit('failed', error);
-      throw error;
-    }
+    // streamer uses these. init once on construction.
+    this.clientContext = new ClientContext(this.sdkKey, this.config, this.platform);
+    this.streamListeners = createStreamListeners(this.flags, this.logger, {
+      put: () => {
+        this.emitter.emit('identify:success', this.context);
+      },
+    });
   }
 
   allFlags(): LDFlagSet {
@@ -106,24 +108,48 @@ export default class LDClientImpl implements LDClient {
     return clone(this.context);
   }
 
+  private createStreamer(ctx: LDContext) {
+    const encodedCtx = base64UrlEncode(JSON.stringify(ctx), this.platform.encoding!);
+
+    return new internal.StreamingProcessor(
+      this.sdkKey,
+      this.clientContext,
+      `/meval/${encodedCtx}`,
+      this.streamListeners,
+      this.diagnosticsManager,
+      (e) => {
+        this.logger.error(e);
+        this.emitter.emit('stream:error', this.context, e);
+        throw e;
+      },
+      this.config.streamInitialReconnectDelay,
+    );
+  }
+
   // TODO: implement secure mode
-  async identify(context: LDContext, hash?: string): Promise<void> {
+  async identify(context: LDContext, _hash?: string): Promise<void> {
+    this.context = context;
     const checkedContext = Context.fromLDContext(context);
+
     if (!checkedContext.valid) {
       const error = new Error('Context was unspecified or had no key');
       this.logger.error(error);
-      this.emitter.emit('error', error);
+      this.emitter.emit('identify:error', context, error);
       throw error;
     }
 
-    try {
-      this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
-      this.context = context;
-    } catch (error: any) {
-      this.logger.error(error);
-      this.emitter.emit('error', error);
-      throw error;
-    }
+    this.streamer = this.createStreamer(context);
+    this.emitter.emit('identify:loading', context);
+    this.streamer.start();
+
+    // try {
+    //   this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
+    //   this.context = context;
+    // } catch (error: any) {
+    //   this.logger.error(error);
+    //   this.emitter.emit('error', error);
+    //   throw error;
+    // }
   }
 
   off(eventName: EventName, listener?: Function): void {
@@ -162,7 +188,7 @@ export default class LDClientImpl implements LDClient {
 
     if (!found) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
-      this.emitter.emit('error', error);
+      this.emitter.emit('variation:error', this.context, error);
       this.eventProcessor.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
       );
@@ -184,6 +210,10 @@ export default class LDClientImpl implements LDClient {
             reason,
           ),
         );
+        const error = new LDClientError(
+          `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
+        );
+        this.emitter.emit('variation:error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -193,6 +223,7 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Result value is null in variation');
       successDetail.value = defaultValue;
     }
+    this.emitter.emit('variation:success', this.context);
     this.eventProcessor.sendEvent(
       eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
     );
@@ -216,7 +247,6 @@ export default class LDClientImpl implements LDClient {
     return this.variationInternal(key, defaultValue, eventFactory, typeChecker);
   }
 
-  // TODO: add other typed variation functions
   boolVariation(key: string, defaultValue: boolean): boolean {
     return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
       TypeValidators.Boolean.is(value),
@@ -224,13 +254,56 @@ export default class LDClientImpl implements LDClient {
     ]).value;
   }
 
+  jsonVariation(key: string, defaultValue: unknown): unknown {
+    return this.variation(key, defaultValue);
+  }
+
+  numberVariation(key: string, defaultValue: number): number {
+    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]).value;
+  }
+
+  stringVariation(key: string, defaultValue: string): string {
+    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
+    ]).value;
+  }
+
+  // TODO: waitForInitialization
   waitForInitialization(): Promise<void> {
-    // TODO:
     return Promise.resolve(undefined);
   }
 
+  // TODO: waitUntilReady
   waitUntilReady(): Promise<void> {
-    // TODO:
     return Promise.resolve(undefined);
+  }
+
+  boolVariationDetail(key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Boolean.is(value),
+      TypeValidators.Boolean.getType(),
+    ]);
+  }
+
+  numberVariationDetail(key: string, defaultValue: number): LDEvaluationDetailTyped<number> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]);
+  }
+
+  stringVariationDetail(key: string, defaultValue: string): LDEvaluationDetailTyped<string> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
+    ]);
+  }
+
+  jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
+    return this.variationDetail(key, defaultValue);
   }
 }
