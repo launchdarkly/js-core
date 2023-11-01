@@ -5,7 +5,6 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
 
 ## [1.0.10](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.0.9...akamai-server-edgekv-sdk-v1.0.10) (2023-11-01)
 
-
 ### Bug Fixes
 
 * Correct comparison for typeof check. ([#308](https://github.com/launchdarkly/js-core/issues/308)) ([568f2ab](https://github.com/launchdarkly/js-core/commit/568f2ab04d308da53b8a53bb6157a9ccd80c0b08))

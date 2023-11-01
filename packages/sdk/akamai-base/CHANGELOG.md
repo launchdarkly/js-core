@@ -8,7 +8,6 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
 
 * Correct comparison for typeof check. ([#308](https://github.com/launchdarkly/js-core/issues/308)) ([568f2ab](https://github.com/launchdarkly/js-core/commit/568f2ab04d308da53b8a53bb6157a9ccd80c0b08))
 
-
 ### Dependencies
 
 * The following workspace dependencies were updated
