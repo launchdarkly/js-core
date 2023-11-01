@@ -2,6 +2,12 @@
 
 All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.0.1 to 2.0.2
+
 ## [1.1.6](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.1.5...vercel-server-sdk-v1.1.6) (2023-10-16)
 
 ### Bug Fixes
