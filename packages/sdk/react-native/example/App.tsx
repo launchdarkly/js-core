@@ -1,31 +1,32 @@
 import { CLIENT_SIDE_SDK_KEY } from '@env';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { init, type LDClientImpl } from '@launchdarkly/react-native-client-sdk';
-
-const context = { kind: 'user', key: 'test-user-1' };
-
 export default function App() {
-  const [ldc, setLdc] = useState<LDClientImpl>();
-  const [flag, setFlag] = useState<boolean>(false);
-
   useEffect(() => {
-    init(CLIENT_SIDE_SDK_KEY, context)
-      .then((c) => {
-        setLdc(c);
-      })
-      .catch((e) => console.log(e));
+    const startES = async () => {
+      const response = await fetch(
+        'https://clientstream.launchdarkly.com/meval/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9',
+        {
+          headers: {
+            accept: 'text/event-stream',
+            authorization: CLIENT_SIDE_SDK_KEY,
+          },
+        },
+      );
+      const j = await response.json();
+      console.log(`===============${j}`);
+    };
+
+    startES()
+      .then(() => console.log('finish startES'))
+      .catch((e: any) => console.log(e));
   }, []);
-
-  useEffect(() => {
-    const f = ldc?.boolVariation('dev-test-flag', false);
-    setFlag(f ?? false);
-  }, [ldc]);
 
   return (
     <View style={styles.container}>
-      <Text>{flag ? <>devTestFlag: {`${flag}`}</> : <>loading...</>}</Text>
+      {/*<Text>{flag ? <>devTestFlag: {`${flag}`}</> : <>loading...</>}</Text>*/}
+      <Text>hello</Text>
     </View>
   );
 }

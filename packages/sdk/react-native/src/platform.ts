@@ -24,6 +24,7 @@ class PlatformRequests implements Requests {
   }
 
   fetch(url: string, options?: Options): Promise<Response> {
+    // @ts-ignore
     return fetch(url, options);
   }
 }
