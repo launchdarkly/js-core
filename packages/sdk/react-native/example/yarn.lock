@@ -4371,6 +4371,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-splash-screen@npm:~0.20.5":
+  version: 0.20.5
+  resolution: "expo-splash-screen@npm:0.20.5"
+  dependencies:
+    "@expo/prebuild-config": 6.2.6
+  peerDependencies:
+    expo: "*"
+  checksum: c4b0db3d0e8ab755a9f4afb1f20824229fa84ea2410528e4316a62e676e08f990157c9edd4af0978f79183d6b47cf3d4843b86f76c084274a40e07adfd697889
+  languageName: node
+  linkType: hard
+
 "expo-status-bar@npm:~1.7.1":
   version: 1.7.1
   resolution: "expo-status-bar@npm:1.7.1"
@@ -7472,13 +7483,22 @@ __metadata:
     "@types/react": ~18.2.14
     "@types/react-native-dotenv": ^0.2.1
     expo: ~49.0.16
+    expo-splash-screen: ~0.20.5
     expo-status-bar: ~1.7.1
     react: 18.2.0
     react-native: 0.72.6
     react-native-dotenv: ^3.4.9
+    react-native-sse: ^1.2.0
     typescript: ^5.2.2
   languageName: unknown
   linkType: soft
+
+"react-native-sse@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "react-native-sse@npm:1.2.0"
+  checksum: 746283ee8b1c0963bfa7a4056b16333088af0b44e87249516bfb381a7349ae67967301219bb76aeb1e20601a55328e671bd0da02f597f126bed2464f7f578f1e
+  languageName: node
+  linkType: hard
 
 "react-native@npm:0.72.6":
   version: 0.72.6
