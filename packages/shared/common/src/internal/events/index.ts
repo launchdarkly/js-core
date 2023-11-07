@@ -5,9 +5,9 @@ import InputEvalEvent from './InputEvalEvent';
 import InputEvent from './InputEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
 import InputMigrationEvent from './InputMigrationEvent';
+import type { LDInternalOptions } from './LDInternalOptions';
 import NullEventProcessor from './NullEventProcessor';
 import shouldSample from './sampling';
-import type { LDInternalOptions } from './LDInternalOptions';
 
 export {
   ClientMessages,
