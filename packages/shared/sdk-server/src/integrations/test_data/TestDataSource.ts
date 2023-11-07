@@ -1,28 +1,34 @@
-import { LDStreamProcessor } from '../../api';
-import { DataKind } from '../../api/interfaces';
-import { LDKeyedFeatureStoreItem } from '../../api/subsystems';
+import { EventName, ProcessStreamResponse, subsystem } from '@launchdarkly/js-sdk-common';
+
+import { DataKind, LDKeyedFeatureStoreItem } from '../../api';
 import { Flag } from '../../evaluation/data/Flag';
 import { Segment } from '../../evaluation/data/Segment';
 import AsyncStoreFacade from '../../store/AsyncStoreFacade';
-import VersionedDataKinds from '../../store/VersionedDataKinds';
 
 /**
  * @internal
  */
-export default class TestDataSource implements LDStreamProcessor {
+export default class TestDataSource implements subsystem.LDStreamProcessor {
+  private readonly flags: Record<string, Flag>;
+  private readonly segments: Record<string, Segment>;
   constructor(
     private readonly featureStore: AsyncStoreFacade,
-    private readonly flags: Record<string, Flag>,
-    private readonly segments: Record<string, Segment>,
+    initialFlags: Record<string, Flag>,
+    initialSegments: Record<string, Segment>,
     private readonly onStop: (tfs: TestDataSource) => void,
-  ) {}
+    private readonly listeners: Map<EventName, ProcessStreamResponse>,
+  ) {
+    // make copies of these objects to decouple them from the originals
+    // so updates made to the originals don't affect these internal data.
+    this.flags = { ...initialFlags };
+    this.segments = { ...initialSegments };
+  }
 
-  async start(fn?: ((err?: any) => void) | undefined) {
-    await this.featureStore.init({
-      [VersionedDataKinds.Features.namespace]: { ...this.flags },
-      [VersionedDataKinds.Segments.namespace]: { ...this.segments },
+  async start() {
+    this.listeners.forEach(({ processJson }) => {
+      const dataJson = { data: { flags: this.flags, segments: this.segments } };
+      processJson(dataJson);
     });
-    fn?.();
   }
 
   stop() {

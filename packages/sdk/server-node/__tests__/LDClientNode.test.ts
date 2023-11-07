@@ -1,4 +1,5 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
+import { logger } from '@launchdarkly/private-js-mocks';
 
 import { init } from '../src';
 
@@ -10,23 +11,24 @@ it('fires ready event in offline mode', (done) => {
   });
 });
 
-it('fires the failed event if initialization fails', (done) => {
+it('fires the failed event if initialization fails', async () => {
+  jest.useFakeTimers();
+
+  const failedHandler = jest.fn().mockName('failedHandler');
   const client = init('sdk_key', {
-    updateProcessor: {
-      start: (fn: (err: any) => void) => {
-        setTimeout(() => {
-          fn(new Error('BAD THINGS'));
-        }, 0);
+    sendEvents: false,
+    logger,
+    updateProcessor: (clientContext, dataSourceUpdates, initSuccessHandler, errorHandler) => ({
+      start: () => {
+        setTimeout(() => errorHandler?.(new Error('Something unexpected happened')), 0);
       },
-      stop: () => {},
-      close: () => {},
-      sendEvents: false,
-    },
+      close: jest.fn(),
+    }),
   });
-  client.on('failed', () => {
-    client.close();
-    done();
-  });
+  client.on('failed', failedHandler);
+  jest.runAllTimers();
+
+  expect(failedHandler).toBeCalledWith(new Error('Something unexpected happened'));
 });
 
 // These tests are done in the node implementation because common doesn't have a crypto

@@ -6,10 +6,10 @@ function canonicalizeUri(uri: string): string {
  * Specifies the base service URIs used by SDK components.
  */
 export default class ServiceEndpoints {
+  public static DEFAULT_EVENTS = 'https://events.launchdarkly.com';
+
   public readonly streaming: string;
-
   public readonly polling: string;
-
   public readonly events: string;
 
   /** Valid paths are:
@@ -32,7 +32,7 @@ export default class ServiceEndpoints {
   public constructor(
     streaming: string,
     polling: string,
-    events: string,
+    events: string = ServiceEndpoints.DEFAULT_EVENTS,
     analyticsEventPath: string = '/bulk',
     diagnosticEventPath: string = '/diagnostic',
     includeAuthorizationHeader: boolean = true,

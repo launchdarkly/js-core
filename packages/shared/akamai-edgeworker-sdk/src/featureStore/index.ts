@@ -60,7 +60,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
           callback(item.segments[dataKey]);
           break;
         default:
-          throw new Error(`Unsupported DataKind: ${namespace}`);
+          callback(null);
       }
     } catch (err) {
       this.logger.error(err);

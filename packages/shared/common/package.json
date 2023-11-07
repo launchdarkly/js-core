@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-sdk-common",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,13 +20,15 @@
   ],
   "scripts": {
     "test": "npx jest --ci",
+    "build-types": "npx tsc --declaration true --emitDeclarationOnly true --declarationDir dist",
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix"
+    "lint:fix": "yarn run lint --fix"
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@launchdarkly/private-js-mocks": "0.0.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.1.0",

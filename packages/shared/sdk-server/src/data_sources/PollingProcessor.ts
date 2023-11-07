@@ -1,18 +1,24 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import {
+  httpErrorMessage,
+  isHttpRecoverable,
+  LDLogger,
+  LDPollingError,
+  subsystem,
+  VoidFunction,
+} from '@launchdarkly/js-sdk-common';
 
-import { LDStreamProcessor } from '../api';
 import { LDDataSourceUpdates } from '../api/subsystems';
-import { isHttpRecoverable, LDPollingError } from '../errors';
 import Configuration from '../options/Configuration';
-import { deserializePoll } from '../store/serialization';
+import { deserializePoll } from '../store';
 import VersionedDataKinds from '../store/VersionedDataKinds';
-import httpErrorMessage from './httpErrorMessage';
 import Requestor from './Requestor';
+
+export type PollingErrorHandler = (err: LDPollingError) => void;
 
 /**
  * @internal
  */
-export default class PollingProcessor implements LDStreamProcessor {
+export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private stopped = false;
 
   private logger?: LDLogger;
@@ -25,13 +31,14 @@ export default class PollingProcessor implements LDStreamProcessor {
     config: Configuration,
     private readonly requestor: Requestor,
     private readonly featureStore: LDDataSourceUpdates,
+    private readonly initSuccessHandler: VoidFunction = () => {},
+    private readonly errorHandler?: PollingErrorHandler,
   ) {
     this.logger = config.logger;
     this.pollInterval = config.pollInterval;
-    this.featureStore = featureStore;
   }
 
-  private poll(fn?: ((err?: any) => void) | undefined) {
+  private poll() {
     if (this.stopped) {
       return;
     }
@@ -39,7 +46,7 @@ export default class PollingProcessor implements LDStreamProcessor {
     const reportJsonError = (data: string) => {
       this.logger?.error('Polling received invalid data');
       this.logger?.debug(`Invalid JSON follows: ${data}`);
-      fn?.(new LDPollingError('Malformed JSON data in polling response'));
+      this.errorHandler?.(new LDPollingError('Malformed JSON data in polling response'));
     };
 
     const startTime = Date.now();
@@ -50,10 +57,11 @@ export default class PollingProcessor implements LDStreamProcessor {
 
       this.logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
       if (err) {
-        if (err.status && !isHttpRecoverable(err.status)) {
+        const { status } = err;
+        if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
           this.logger?.error(message);
-          fn?.(new LDPollingError(message));
+          this.errorHandler?.(new LDPollingError(message, status));
           // It is not recoverable, return and do not trigger another
           // poll.
           return;
@@ -71,10 +79,10 @@ export default class PollingProcessor implements LDStreamProcessor {
             [VersionedDataKinds.Segments.namespace]: parsed.segments,
           };
           this.featureStore.init(initData, () => {
-            fn?.();
+            this.initSuccessHandler();
             // Triggering the next poll after the init has completed.
             this.timeoutHandle = setTimeout(() => {
-              this.poll(fn);
+              this.poll();
             }, sleepFor);
           });
           // The poll will be triggered by  the feature store initialization
@@ -86,13 +94,13 @@ export default class PollingProcessor implements LDStreamProcessor {
       // Falling through, there was some type of error and we need to trigger
       // a new poll.
       this.timeoutHandle = setTimeout(() => {
-        this.poll(fn);
+        this.poll();
       }, sleepFor);
     });
   }
 
-  start(fn?: ((err?: any) => void) | undefined) {
-    this.poll(fn);
+  start() {
+    this.poll();
   }
 
   stop() {

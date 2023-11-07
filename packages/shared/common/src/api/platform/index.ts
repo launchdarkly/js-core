@@ -1,3 +1,4 @@
+export * from './Encoding';
 export * from './Crypto';
 export * from './Filesystem';
 export * from './Info';

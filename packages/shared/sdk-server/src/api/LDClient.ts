@@ -1,7 +1,14 @@
-import { LDContext, LDEvaluationDetail, LDFlagValue } from '@launchdarkly/js-sdk-common';
+import {
+  LDContext,
+  LDEvaluationDetail,
+  LDEvaluationDetailTyped,
+  LDFlagValue,
+} from '@launchdarkly/js-sdk-common';
 
+import { LDMigrationOpEvent, LDMigrationVariation } from './data';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
+import { LDMigrationStage } from './data/LDMigrationStage';
 
 /**
  * The LaunchDarkly SDK client object.
@@ -121,6 +128,202 @@ export interface LDClient {
   ): Promise<LDEvaluationDetail>;
 
   /**
+   * Returns the migration stage of the migration feature flag for the given
+   * evaluation context.
+   *
+   * If the evaluated value of the flag cannot be converted to an LDMigrationStage, then the default
+   * value will be returned and error will be logged.
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result (as an{@link LDMigrationVariation}).
+   */
+  migrationVariation(
+    key: string,
+    context: LDContext,
+    defaultValue: LDMigrationStage,
+  ): Promise<LDMigrationVariation>;
+
+  /**
+   * Determines the boolean variation of a feature flag for a context.
+   *
+   * If the flag variation does not have a boolean value, defaultValue is returned.
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result value.
+   */
+  boolVariation(key: string, context: LDContext, defaultValue: boolean): Promise<boolean>;
+
+  /**
+   * Determines the numeric variation of a feature flag for a context.
+   *
+   * If the flag variation does not have a numeric value, defaultValue is returned.
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result value.
+   */
+  numberVariation(key: string, context: LDContext, defaultValue: number): Promise<number>;
+
+  /**
+   * Determines the string variation of a feature flag for a context.
+   *
+   * If the flag variation does not have a string value, defaultValue is returned.
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result value.
+   */
+  stringVariation(key: string, context: LDContext, defaultValue: string): Promise<string>;
+
+  /**
+   * Determines the variation of a feature flag for a context.
+   *
+   * This version may be favored in TypeScript versus `variation` because it returns
+   * an `unknown` type instead of `any`. `unknown` will require a cast before usage.
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result value.
+   */
+  jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown>;
+
+  /**
+   * Determines the boolean variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
+   *
+   * If the flag variation does not have a boolean value, defaultValue is returned. The reason will
+   * indicate an error of the type `WRONG_KIND` in this case.
+   *
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result
+   *  (as an {@link LDEvaluationDetailTyped<boolean>}).
+   */
+  boolVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: boolean,
+  ): Promise<LDEvaluationDetailTyped<boolean>>;
+
+  /**
+   * Determines the numeric variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
+   *
+   * If the flag variation does not have a numeric value, defaultValue is returned. The reason will
+   * indicate an error of the type `WRONG_KIND` in this case.
+   *
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result
+   *  (as an {@link LDEvaluationDetailTyped<number>}).
+   */
+  numberVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: number,
+  ): Promise<LDEvaluationDetailTyped<number>>;
+
+  /**
+   * Determines the string variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
+   *
+   * If the flag variation does not have a string value, defaultValue is returned. The reason will
+   * indicate an error of the type `WRONG_KIND` in this case.
+   *
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   A Promise which will be resolved with the result
+   *  (as an {@link LDEvaluationDetailTyped<string>}).
+   */
+  stringVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: string,
+  ): Promise<LDEvaluationDetailTyped<string>>;
+
+  /**
+   * Determines the variation of a feature flag for a context, along with information about how it
+   * was calculated.
+   *
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
+   *
+   * This version may be favored in TypeScript versus `variation` because it returns
+   * an `unknown` type instead of `any`. `unknown` will require a cast before usage.
+   *
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#nodejs-server-side).
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param callback A Node-style callback to receive the result (as an {@link LDEvaluationDetail}).
+   *   If omitted, you will receive a Promise instead.
+   * @returns
+   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
+   *   the result (as an{@link LDEvaluationDetailTyped<unknown>}).
+   */
+  jsonVariationDetail(
+    key: string,
+    context: LDContext,
+    defaultValue: unknown,
+  ): Promise<LDEvaluationDetailTyped<unknown>>;
+
+  /**
    * Builds an object that encapsulates the state of all feature flags for a given context.
    * This includes the flag values and also metadata that can be used on the front end. This
    * method does not send analytics events back to LaunchDarkly.
@@ -196,6 +399,13 @@ export interface LDClient {
    *   will also be returned as part of the custom event for Data Export.
    */
   track(key: string, context: LDContext, data?: any, metricValue?: number): void;
+
+  /**
+   * Track the details of a migration.
+   *
+   * @param event Event containing information about the migration operation.
+   */
+  trackMigration(event: LDMigrationOpEvent): void;
 
   /**
    * Identifies a context to LaunchDarkly.

@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common",
-  "version": "1.2.3",
+  "version": "2.0.2",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,14 +23,15 @@
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix"
+    "lint:fix": "yarn run lint --fix"
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "1.1.0",
+    "@launchdarkly/js-sdk-common": "2.0.0",
     "semver": "7.5.4"
   },
   "devDependencies": {
+    "@launchdarkly/private-js-mocks": "0.0.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@types/semver": "^7.3.13",

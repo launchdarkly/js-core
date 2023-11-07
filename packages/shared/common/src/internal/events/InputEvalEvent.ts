@@ -1,12 +1,10 @@
-import { LDEvaluationDetail, LDEvaluationReason } from '../../api/data';
+import { LDEvaluationReason, LDFlagValue } from '../../api/data';
 import Context from '../../Context';
 
 export default class InputEvalEvent {
   public readonly kind = 'feature';
 
   public readonly creationDate: number;
-
-  public readonly context: Context;
 
   public readonly default: any;
 
@@ -24,24 +22,26 @@ export default class InputEvalEvent {
 
   public readonly version?: number;
 
+  public readonly excludeFromSummaries?: boolean;
+
   constructor(
-    withReasons: boolean,
-    context: Context,
+    public readonly withReasons: boolean,
+    public readonly context: Context,
     public readonly key: string,
+    value: LDFlagValue,
     defValue: any, // default is a reserved keyword in this context.
-    detail: LDEvaluationDetail,
     version?: number,
     variation?: number,
     trackEvents?: boolean,
     prereqOf?: string,
     reason?: LDEvaluationReason,
     debugEventsUntilDate?: number,
+    excludeFromSummaries?: boolean,
+    public readonly samplingRatio: number = 1,
   ) {
     this.creationDate = Date.now();
-    this.context = context;
+    this.value = value;
     this.default = defValue;
-    this.variation = detail.variationIndex ?? undefined;
-    this.value = detail.value;
 
     if (version !== undefined) {
       this.version = version;
@@ -65,6 +65,10 @@ export default class InputEvalEvent {
 
     if (debugEventsUntilDate !== undefined) {
       this.debugEventsUntilDate = debugEventsUntilDate;
+    }
+
+    if (excludeFromSummaries !== undefined) {
+      this.excludeFromSummaries = excludeFromSummaries;
     }
   }
 }

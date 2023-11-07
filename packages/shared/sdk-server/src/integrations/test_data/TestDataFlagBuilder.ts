@@ -18,6 +18,10 @@ interface BuilderData {
   // Each target being a context kind and a list of keys for that kind.
   targetsByVariation?: Record<number, Record<string, string[]>>;
   rules?: TestDataRuleBuilder<TestDataFlagBuilder>[];
+  migration?: {
+    checkRatio?: number;
+  };
+  samplingRatio?: number;
 }
 
 /**
@@ -367,6 +371,17 @@ export default class TestDataFlagBuilder {
     return flagRuleBuilder.andNotMatch(contextKind, attribute, ...values);
   }
 
+  checkRatio(ratio: number): TestDataFlagBuilder {
+    this.data.migration = this.data.migration ?? {};
+    this.data.migration.checkRatio = ratio;
+    return this;
+  }
+
+  samplingRatio(ratio: number): TestDataFlagBuilder {
+    this.data.samplingRatio = ratio;
+    return this;
+  }
+
   /**
    * @internal
    */
@@ -390,6 +405,8 @@ export default class TestDataFlagBuilder {
         variation: this.data.fallthroughVariation,
       },
       variations: [...this.data.variations],
+      migration: this.data.migration,
+      samplingRatio: this.data.samplingRatio,
     };
 
     if (this.data.targetsByVariation) {

@@ -1,15 +1,19 @@
-import { LDEvaluationReason } from '../../api/data/LDEvaluationReason';
-import { LDLogger } from '../../api/logging/LDLogger';
+import { LDEvaluationReason, LDLogger } from '../../api';
+import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
 import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
 import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
-import LDEventSender, { LDDeliveryStatus, LDEventType } from '../../api/subsystem/LDEventSender';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
-import ClientContext from '../../options/ClientContext';
+import { ClientContext } from '../../options';
+import { DiagnosticsManager } from '../diagnostics';
+import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
-import { isFeature, isIdentify } from './guards';
+import { isFeature, isIdentify, isMigration } from './guards';
 import InputEvent from './InputEvent';
+import InputIdentifyEvent from './InputIdentifyEvent';
+import InputMigrationEvent from './InputMigrationEvent';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
+import shouldSample from './sampling';
 
 type FilteredContext = any;
 
@@ -20,6 +24,7 @@ interface IdentifyOutputEvent {
   kind: 'identify' | 'index';
   creationDate: number;
   context: FilteredContext;
+  samplingRatio?: number;
 }
 
 interface CustomOutputEvent {
@@ -29,6 +34,7 @@ interface CustomOutputEvent {
   contextKeys: Record<string, string>;
   data?: any;
   metricValue?: number;
+  samplingRatio?: number;
 }
 
 interface FeatureOutputEvent {
@@ -43,6 +49,11 @@ interface FeatureOutputEvent {
   reason?: LDEvaluationReason;
   context?: FilteredContext;
   contextKeys?: Record<string, string>;
+  samplingRatio?: number;
+}
+
+interface IndexInputEvent extends Omit<InputIdentifyEvent, 'kind'> {
+  kind: 'index';
 }
 
 /**
@@ -51,12 +62,18 @@ interface FeatureOutputEvent {
  */
 type DiagnosticEvent = any;
 
+interface MigrationOutputEvent extends Omit<InputMigrationEvent, 'samplingRatio'> {
+  // Make the sampling ratio optional so we can omit it when it is one.
+  samplingRatio?: number;
+}
+
 type OutputEvent =
   | IdentifyOutputEvent
   | CustomOutputEvent
   | FeatureOutputEvent
   | SummarizedFlagsEvent
-  | DiagnosticEvent;
+  | DiagnosticEvent
+  | MigrationOutputEvent;
 
 export interface EventProcessorOptions {
   allAttributesPrivate: boolean;
@@ -66,72 +83,53 @@ export interface EventProcessorOptions {
   diagnosticRecordingInterval: number;
 }
 
-interface LDDiagnosticsManager {
-  createInitEvent(): DiagnosticEvent;
-  createStatsEventAndReset(
-    droppedEvents: number,
-    deduplicatedUsers: number,
-    eventsInLastBatch: number,
-  ): DiagnosticEvent;
-}
-
 export default class EventProcessor implements LDEventProcessor {
+  private eventSender: EventSender;
   private summarizer = new EventSummarizer();
-
   private queue: OutputEvent[] = [];
-
   private lastKnownPastTime = 0;
-
   private droppedEvents = 0;
-
   private deduplicatedUsers = 0;
-
   private exceededCapacity = false;
-
   private eventsInLastBatch = 0;
-
   private shutdown = false;
-
   private capacity: number;
-
   private logger?: LDLogger;
-
   private contextFilter: ContextFilter;
 
   // Using any here, because setInterval handles are not the same
   // between node and web.
   private diagnosticsTimer: any;
-
   private flushTimer: any;
-
   private flushUsersTimer: any = null;
 
   constructor(
     config: EventProcessorOptions,
     clientContext: ClientContext,
-    private readonly eventSender: LDEventSender,
-    private readonly contextDeduplicator: LDContextDeduplicator,
-    private readonly diagnosticsManager?: LDDiagnosticsManager,
+    private readonly contextDeduplicator?: LDContextDeduplicator,
+    private readonly diagnosticsManager?: DiagnosticsManager,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
+    this.eventSender = new EventSender(clientContext);
 
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
-    if (this.contextDeduplicator.flushInterval !== undefined) {
+    if (this.contextDeduplicator?.flushInterval !== undefined) {
       this.flushUsersTimer = setInterval(() => {
-        this.contextDeduplicator.flush();
+        this.contextDeduplicator?.flush();
       }, this.contextDeduplicator.flushInterval * 1000);
     }
 
     this.flushTimer = setInterval(async () => {
       try {
         await this.flush();
-      } catch {
-        // Eat the errors.
+      } catch (e) {
+        // Log errors and swallow them
+        this.logger?.debug(`Flush failed: ${e}`);
       }
     }, config.flushInterval * 1000);
 
@@ -196,14 +194,32 @@ export default class EventProcessor implements LDEventProcessor {
       return;
     }
 
+    if (isMigration(inputEvent)) {
+      // These conditions are not combined, because we always want to stop
+      // processing at this point for a migration event. It cannot generate
+      // an index event or debug event.
+      if (shouldSample(inputEvent.samplingRatio)) {
+        const migrationEvent: MigrationOutputEvent = {
+          ...inputEvent,
+        };
+        if (migrationEvent.samplingRatio === 1) {
+          delete migrationEvent.samplingRatio;
+        }
+        this.enqueue(migrationEvent);
+      }
+      return;
+    }
+
     this.summarizer.summarizeEvent(inputEvent);
 
     const isFeatureEvent = isFeature(inputEvent);
+
     const addFullEvent = (isFeatureEvent && inputEvent.trackEvents) || !isFeatureEvent;
+
     const addDebugEvent = this.shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
-    const shouldNotDeduplicate = this.contextDeduplicator.processContext(inputEvent.context);
+    const shouldNotDeduplicate = this.contextDeduplicator?.processContext(inputEvent.context);
 
     // If there is no cache, then it will never be in the cache.
     if (!shouldNotDeduplicate) {
@@ -215,21 +231,27 @@ export default class EventProcessor implements LDEventProcessor {
     const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
     if (addIndexEvent) {
-      this.enqueue({
-        kind: 'index',
-        creationDate: inputEvent.creationDate,
-        context: this.contextFilter.filter(inputEvent.context),
-      });
+      this.enqueue(
+        this.makeOutputEvent(
+          {
+            kind: 'index',
+            creationDate: inputEvent.creationDate,
+            context: inputEvent.context,
+            samplingRatio: 1,
+          },
+          false,
+        ),
+      );
     }
-    if (addFullEvent) {
+    if (addFullEvent && shouldSample(inputEvent.samplingRatio)) {
       this.enqueue(this.makeOutputEvent(inputEvent, false));
     }
-    if (addDebugEvent) {
+    if (addDebugEvent && shouldSample(inputEvent.samplingRatio)) {
       this.enqueue(this.makeOutputEvent(inputEvent, true));
     }
   }
 
-  private makeOutputEvent(event: InputEvent, debug: boolean): OutputEvent {
+  private makeOutputEvent(event: InputEvent | IndexInputEvent, debug: boolean): OutputEvent {
     switch (event.kind) {
       case 'feature': {
         const out: FeatureOutputEvent = {
@@ -238,8 +260,13 @@ export default class EventProcessor implements LDEventProcessor {
           key: event.key,
           value: event.value,
           default: event.default,
-          prereqOf: event.prereqOf,
         };
+        if (event.samplingRatio !== 1) {
+          out.samplingRatio = event.samplingRatio;
+        }
+        if (event.prereqOf) {
+          out.prereqOf = event.prereqOf;
+        }
         if (event.variation !== undefined) {
           out.variation = event.variation;
         }
@@ -256,12 +283,17 @@ export default class EventProcessor implements LDEventProcessor {
         }
         return out;
       }
+      case 'index': // Intentional fallthrough.
       case 'identify': {
-        return {
-          kind: 'identify',
+        const out: IdentifyOutputEvent = {
+          kind: event.kind,
           creationDate: event.creationDate,
           context: this.contextFilter.filter(event.context),
         };
+        if (event.samplingRatio !== 1) {
+          out.samplingRatio = event.samplingRatio;
+        }
+        return out;
       }
       case 'custom': {
         const out: CustomOutputEvent = {
@@ -270,6 +302,10 @@ export default class EventProcessor implements LDEventProcessor {
           key: event.key,
           contextKeys: event.context.kindsAndKeys,
         };
+
+        if (event.samplingRatio !== 1) {
+          out.samplingRatio = event.samplingRatio;
+        }
 
         if (event.data !== undefined) {
           out.data = event.data;

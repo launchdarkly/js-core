@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // eslint-disable-next-line import/prefer-default-export
 export const createCallbacks = () => ({
-  onError: (err: Error) => {},
-  onFailed: (err: Error) => {},
+  onError: (_err: Error) => {},
+  onFailed: (_err: Error) => {},
   onReady: () => {},
-  onUpdate: (key: string) => {},
+  onUpdate: (_key: string) => {},
   hasEventListeners: () => false,
 });

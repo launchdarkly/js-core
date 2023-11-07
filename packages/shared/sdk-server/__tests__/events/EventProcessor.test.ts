@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ClientContext,
   Context,
@@ -15,13 +14,11 @@ import {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
+import * as mocks from '@launchdarkly/private-js-mocks';
 
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
-import DiagnosticsManager from '../../src/events/DiagnosticsManager';
-import EventSender from '../../src/events/EventSender';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
-import basicPlatform from '../evaluation/mocks/platform';
 
 const SDK_KEY = 'sdk-key';
 
@@ -68,9 +65,8 @@ function makePlatform(requestState: RequestState) {
     });
 
   const requests: Requests = {
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     fetch(url: string, options?: Options): Promise<Response> {
-      return new Promise<Response>((a, r) => {
+      return new Promise<Response>((a) => {
         const headers: Headers = {
           get(name: string): string | null {
             return requestState.testHeaders[name] || null;
@@ -84,7 +80,7 @@ function makePlatform(requestState: RequestState) {
           entries(): Iterable<[string, string]> {
             throw new Error('Function not implemented.');
           },
-          has(name: string): boolean {
+          has(_name: string): boolean {
             throw new Error('Function not implemented.');
           },
         };
@@ -106,8 +102,7 @@ function makePlatform(requestState: RequestState) {
       });
     },
 
-    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-    createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+    createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
       throw new Error('Function not implemented.');
     },
   };
@@ -172,21 +167,22 @@ describe('given an event processor with diagnostics manager', () => {
     // we need to make an object and replace the value.
     const testConfig = { ...config, diagnosticRecordingInterval: 0.1 };
 
-    const diagnosticsManager = new DiagnosticsManager(
+    const diagnosticsManager = new internal.DiagnosticsManager(
       'sdk-key',
-      testConfig,
       {
-        ...basicPlatform,
+        ...mocks.basicPlatform,
         // Replace info and requests.
         info,
         requests,
         crypto,
       },
-      store,
+      {
+        config1: 'test',
+      },
     );
 
     const clientContext = new ClientContext(SDK_KEY, testConfig, {
-      ...basicPlatform,
+      ...mocks.basicPlatform,
       info,
       requests,
     });
@@ -194,7 +190,6 @@ describe('given an event processor with diagnostics manager', () => {
     eventProcessor = new internal.EventProcessor(
       testConfig,
       clientContext,
-      new EventSender(config, clientContext),
       new ContextDeduplicator(config),
       diagnosticsManager,
     );
@@ -209,25 +204,7 @@ describe('given an event processor with diagnostics manager', () => {
     expect(requestState.requestsMade.length).toEqual(1);
     expect(JSON.parse(requestState.requestsMade[0].options.body!)).toEqual({
       configuration: {
-        allAttributesPrivate: false,
-        connectTimeoutMillis: 5000,
-        contextKeysCapacity: 1000,
-        contextKeysFlushIntervalMillis: 300000,
-        customBaseURI: false,
-        customEventsURI: false,
-        customStreamURI: false,
-        dataStoreType: 'memory',
-        diagnosticRecordingIntervalMillis: 100,
-        eventsCapacity: 3,
-        eventsFlushIntervalMillis: 5000,
-        offline: false,
-        pollingIntervalMillis: 30000,
-        reconnectTimeMillis: 1000,
-        socketTimeoutMillis: 5000,
-        streamingDisabled: false,
-        usingProxy: false,
-        usingProxyAuthenticator: false,
-        usingRelayDaemon: false,
+        config1: 'test',
       },
       creationDate: 1000,
       id: {
@@ -299,10 +276,10 @@ describe('given an event processor with diagnostics manager', () => {
 
   it('counts events in queue from last flush and dropped events', async () => {
     const context = Context.fromLDContext(user);
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1000, context });
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1001, context });
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1002, context });
-    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1003, context });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1000, context, samplingRatio: 1 });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1001, context, samplingRatio: 1 });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1002, context, samplingRatio: 1 });
+    eventProcessor.sendEvent({ kind: 'identify', creationDate: 1003, context, samplingRatio: 1 });
     await eventProcessor.flush();
 
     await waitForMessages(3);
@@ -344,12 +321,14 @@ describe('given an event processor with diagnostics manager', () => {
       key: 'eventkey1',
       creationDate: 1000,
       context,
+      samplingRatio: 1,
     });
     eventProcessor.sendEvent({
       kind: 'custom',
       key: 'eventkey2',
       creationDate: 1001,
       context,
+      samplingRatio: 1,
     });
     await eventProcessor.flush();
 
