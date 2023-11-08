@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "2.0.2",
-    "crypto-js": "^4.1.1"
+    "crypto-js": "^4.2.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
