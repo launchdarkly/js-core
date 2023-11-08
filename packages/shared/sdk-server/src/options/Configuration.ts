@@ -229,6 +229,7 @@ export default class Configuration {
       validatedOptions.eventsUri,
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
+      internalOptions.includeAuthorizationHeader,
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;

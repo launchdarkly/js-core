@@ -9,7 +9,7 @@ import createOptions from './createOptions';
 /**
  * The LaunchDarkly SDK edge client object.
  */
-export class LDClient extends LDClientImpl {
+export default class LDClient extends LDClientImpl {
   emitter: EventEmitter;
 
   // clientSideID is only used to query the edge key-value store and send analytics, not to initialize with LD servers
@@ -25,5 +25,3 @@ export class LDClient extends LDClientImpl {
     this.emitter = em;
   }
 }
-
-export default LDClient;

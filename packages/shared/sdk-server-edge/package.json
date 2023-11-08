@@ -40,6 +40,7 @@
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
+    "@launchdarkly/private-js-mocks": "0.0.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/crypto-js": "^4.1.1",
     "@types/jest": "^29.5.0",

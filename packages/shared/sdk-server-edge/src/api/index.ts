@@ -1,2 +1,4 @@
+import LDClient from './LDClient';
+
 export * from './EdgeFeatureStore';
-export * from './LDClient';
+export { LDClient };
