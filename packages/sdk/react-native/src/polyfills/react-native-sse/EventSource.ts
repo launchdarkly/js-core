@@ -1,68 +1,75 @@
 /**
  * Ripped from https://github.com/binaryminds/react-native-sse
  */
-import type { EventSourceOptions } from './types';
+import { EventListener } from '@launchdarkly/js-client-sdk-common';
+
+import type { EventSourceOptions, EventType } from './types';
 
 const XMLReadyStateMap = ['UNSENT', 'OPENED', 'HEADERS_RECEIVED', 'LOADING', 'DONE'];
+
+const defaultOptions: EventSourceOptions = {
+  body: undefined,
+  debug: false,
+  headers: {},
+  method: 'GET',
+  pollingInterval: 5000,
+  timeout: 0,
+  timeoutBeforeConnection: 500,
+  withCredentials: false,
+};
 
 class EventSource {
   ERROR = -1;
   CONNECTING = 0;
   OPEN = 1;
   CLOSED = 2;
-  private lastEventId: null;
-  private lastIndexProcessed: number;
-  private eventType: undefined;
-  private status: number;
-  private eventHandlers: {
-    message: any[];
-    error: any[];
-    close: any[];
-    open: any[];
+
+  private lastEventId: undefined | string;
+  private lastIndexProcessed = 0;
+  private eventType: undefined | string;
+  private status = this.CONNECTING;
+  private eventHandlers = {
+    open: [],
+    message: [],
+    error: [],
+    close: [],
   };
 
-  constructor(url: URL | string, options?: EventSourceOptions) {
-    this.lastEventId = null;
-    this.lastIndexProcessed = 0;
-    this.eventType = undefined;
-    this.status = this.CONNECTING;
+  private method: string;
+  private timeout: number;
+  private timeoutBeforeConnection: number;
+  private withCredentials: boolean;
+  private headers: Record<string, any>;
+  private body: any;
+  private debug: boolean;
+  private url: string;
+  private xhr: XMLHttpRequest = new XMLHttpRequest();
+  private pollTimer: any;
+  private pollingInterval: number;
 
-    this.eventHandlers = {
-      open: [],
-      message: [],
-      error: [],
-      close: [],
+  constructor(url: string, options?: EventSourceOptions) {
+    const opts = {
+      ...defaultOptions,
+      ...options,
     };
 
-    this.method = options.method || 'GET';
-    this.timeout = options.timeout ?? 0;
-    this.timeoutBeforeConnection = options.timeoutBeforeConnection ?? 500;
-    this.withCredentials = options.withCredentials || false;
-    this.headers = options.headers || {};
-    this.body = options.body || undefined;
-    this.debug = options.debug || false;
-    this.interval = options.pollingInterval ?? 5000;
+    this.url = url;
+    this.method = opts.method!;
+    this.timeout = opts.timeout!;
+    this.timeoutBeforeConnection = opts.timeoutBeforeConnection!;
+    this.withCredentials = opts.withCredentials!;
+    this.headers = opts.headers!;
+    this.body = opts.body;
+    this.debug = opts.debug!;
+    this.pollingInterval = opts.pollingInterval!;
 
-    this._xhr = null;
-    this._pollTimer = null;
-
-    if (!url || (typeof url !== 'string' && typeof url.toString !== 'function')) {
-      throw new SyntaxError('[EventSource] Invalid URL argument.');
-    }
-
-    if (typeof url.toString === 'function') {
-      this.url = url.toString();
-    } else {
-      this.url = url;
-    }
-
-    this._pollAgain(this.timeoutBeforeConnection, true);
+    this.pollAgain(this.timeoutBeforeConnection, true);
   }
 
-  _pollAgain(time, allowZero) {
+  private pollAgain(time: number, allowZero: boolean) {
     if (time > 0 || allowZero) {
-      this._logDebug(`[EventSource] Will open new connection in ${time} ms.`);
-      this._pollTimer = setTimeout(() => {
+      this.logDebug(`[EventSource] Will open new connection in ${time} ms.`);
+      this.pollTimer = setTimeout(() => {
         this.open();
       }, time);
     }
@@ -72,77 +79,73 @@ class EventSource {
     try {
       this.lastIndexProcessed = 0;
       this.status = this.CONNECTING;
-
-      this._xhr = new XMLHttpRequest();
-      this._xhr.open(this.method, this.url, true);
+      this.xhr.open(this.method, this.url, true);
 
       if (this.withCredentials) {
-        this._xhr.withCredentials = true;
+        this.xhr.withCredentials = true;
       }
 
-      this._xhr.setRequestHeader('Accept', 'text/event-stream');
-      this._xhr.setRequestHeader('Cache-Control', 'no-cache');
-      this._xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      this.xhr.setRequestHeader('Accept', 'text/event-stream');
+      this.xhr.setRequestHeader('Cache-Control', 'no-cache');
+      this.xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
       if (this.headers) {
         for (const [key, value] of Object.entries(this.headers)) {
-          this._xhr.setRequestHeader(key, value);
+          this.xhr.setRequestHeader(key, value);
         }
       }
 
-      if (this.lastEventId !== null) {
-        this._xhr.setRequestHeader('Last-Event-ID', this.lastEventId);
+      if (typeof this.lastEventId !== 'undefined') {
+        this.xhr.setRequestHeader('Last-Event-ID', this.lastEventId);
       }
 
-      this._xhr.timeout = this.timeout;
+      this.xhr.timeout = this.timeout;
 
-      this._xhr.onreadystatechange = () => {
+      this.xhr.onreadystatechange = () => {
         if (this.status === this.CLOSED) {
           return;
         }
 
-        const xhr = this._xhr;
-
-        this._logDebug(
+        this.logDebug(
           `[EventSource][onreadystatechange] ReadyState: ${
-            XMLReadyStateMap[xhr.readyState] || 'Unknown'
-          }(${xhr.readyState}), status: ${xhr.status}`,
+            XMLReadyStateMap[this.xhr.readyState] || 'Unknown'
+          }(${this.xhr.readyState}), status: ${this.xhr.status}`,
         );
 
-        if (![XMLHttpRequest.DONE, XMLHttpRequest.LOADING].includes(xhr.readyState)) {
+        if (![XMLHttpRequest.DONE, XMLHttpRequest.LOADING].includes(this.xhr.readyState)) {
           return;
         }
 
-        if (xhr.status >= 200 && xhr.status < 400) {
+        if (this.xhr.status >= 200 && this.xhr.status < 400) {
           if (this.status === this.CONNECTING) {
             this.status = this.OPEN;
             this.dispatch('open', { type: 'open' });
-            this._logDebug('[EventSource][onreadystatechange][OPEN] Connection opened.');
+            this.logDebug('[EventSource][onreadystatechange][OPEN] Connection opened.');
           }
 
-          this._handleEvent(xhr.responseText || '');
+          this.handleEvent(this.xhr.responseText || '');
 
-          if (xhr.readyState === XMLHttpRequest.DONE) {
-            this._logDebug('[EventSource][onreadystatechange][DONE] Operation done.');
-            this._pollAgain(this.interval, false);
+          if (this.xhr.readyState === XMLHttpRequest.DONE) {
+            this.logDebug('[EventSource][onreadystatechange][DONE] Operation done.');
+            this.pollAgain(this.pollingInterval, false);
           }
-        } else if (xhr.status !== 0) {
+        } else if (this.xhr.status !== 0) {
           this.status = this.ERROR;
           this.dispatch('error', {
             type: 'error',
-            message: xhr.responseText,
-            xhrStatus: xhr.status,
-            xhrState: xhr.readyState,
+            message: this.xhr.responseText,
+            xhrStatus: this.xhr.status,
+            xhrState: this.xhr.readyState,
           });
 
-          if (xhr.readyState === XMLHttpRequest.DONE) {
-            this._logDebug('[EventSource][onreadystatechange][ERROR] Response status error.');
-            this._pollAgain(this.interval, false);
+          if (this.xhr.readyState === XMLHttpRequest.DONE) {
+            this.logDebug('[EventSource][onreadystatechange][ERROR] Response status error.');
+            this.pollAgain(this.pollingInterval, false);
           }
         }
       };
 
-      this._xhr.onerror = () => {
+      this.xhr.onerror = () => {
         if (this.status === this.CLOSED) {
           return;
         }
@@ -150,27 +153,27 @@ class EventSource {
         this.status = this.ERROR;
         this.dispatch('error', {
           type: 'error',
-          message: this._xhr.responseText,
-          xhrStatus: this._xhr.status,
-          xhrState: this._xhr.readyState,
+          message: this.xhr.responseText,
+          xhrStatus: this.xhr.status,
+          xhrState: this.xhr.readyState,
         });
       };
 
       if (this.body) {
-        this._xhr.send(this.body);
+        this.xhr.send(this.body);
       } else {
-        this._xhr.send();
+        this.xhr.send();
       }
 
       if (this.timeout > 0) {
         setTimeout(() => {
-          if (this._xhr.readyState === XMLHttpRequest.LOADING) {
+          if (this.xhr.readyState === XMLHttpRequest.LOADING) {
             this.dispatch('error', { type: 'timeout' });
             this.close();
           }
         }, this.timeout);
       }
-    } catch (e) {
+    } catch (e: any) {
       this.status = this.ERROR;
       this.dispatch('error', {
         type: 'exception',
@@ -180,17 +183,17 @@ class EventSource {
     }
   }
 
-  _logDebug(...msg) {
+  private logDebug(...msg: string[]) {
     if (this.debug) {
       console.debug(...msg);
     }
   }
 
-  _handleEvent(response) {
-    const parts = response.substr(this.lastIndexProcessed).split('\n');
+  private handleEvent(response: string) {
+    const parts = response.slice(this.lastIndexProcessed).split('\n');
 
     const indexOfDoubleNewline = response.lastIndexOf('\n\n');
-    if (indexOfDoubleNewline != -1) {
+    if (indexOfDoubleNewline !== -1) {
       this.lastIndexProcessed = indexOfDoubleNewline + 2;
     }
 
@@ -198,21 +201,22 @@ class EventSource {
     let retry = 0;
     let line = '';
 
+    // eslint-disable-next-line no-plusplus
     for (let i = 0; i < parts.length; i++) {
       line = parts[i].replace(/^(\s|\u00A0)+|(\s|\u00A0)+$/g, '');
       if (line.indexOf('event') === 0) {
         this.eventType = line.replace(/event:?\s*/, '');
       } else if (line.indexOf('retry') === 0) {
         retry = parseInt(line.replace(/retry:?\s*/, ''), 10);
-        if (!isNaN(retry)) {
-          this.interval = retry;
+        if (!Number.isNaN(retry)) {
+          this.pollingInterval = retry;
         }
       } else if (line.indexOf('data') === 0) {
         data.push(line.replace(/data:?\s*/, ''));
       } else if (line.indexOf('id:') === 0) {
         this.lastEventId = line.replace(/id:?\s*/, '');
       } else if (line.indexOf('id') === 0) {
-        this.lastEventId = null;
+        this.lastEventId = undefined;
       } else if (line === '') {
         if (data.length > 0) {
           const eventType = this.eventType || 'message';
@@ -232,7 +236,7 @@ class EventSource {
     }
   }
 
-  addEventListener(type, listener) {
+  addEventListener(type: EventType, listener: EventListener): void {
     if (this.eventHandlers[type] === undefined) {
       this.eventHandlers[type] = [];
     }
@@ -240,13 +244,13 @@ class EventSource {
     this.eventHandlers[type].push(listener);
   }
 
-  removeEventListener(type, listener) {
+  removeEventListener(type: EventName, listener: EventListener): void {
     if (this.eventHandlers[type] !== undefined) {
       this.eventHandlers[type] = this.eventHandlers[type].filter((handler) => handler !== listener);
     }
   }
 
-  removeAllEventListeners(type) {
+  removeAllEventListeners(type: EventName) {
     const availableTypes = Object.keys(this.eventHandlers);
 
     if (type === undefined) {
@@ -276,9 +280,9 @@ class EventSource {
 
   close() {
     this.status = this.CLOSED;
-    clearTimeout(this._pollTimer);
-    if (this._xhr) {
-      this._xhr.abort();
+    clearTimeout(this.pollTimer);
+    if (this.xhr) {
+      this.xhr.abort();
     }
 
     this.dispatch('close', { type: 'close' });
