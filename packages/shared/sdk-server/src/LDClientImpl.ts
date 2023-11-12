@@ -120,13 +120,14 @@ export default class LDClientImpl implements LDClient {
     private platform: Platform,
     options: LDOptions,
     callbacks: LDClientCallbacks,
+    internalOptions?: internal.LDInternalOptions,
   ) {
     this.onError = callbacks.onError;
     this.onFailed = callbacks.onFailed;
     this.onReady = callbacks.onReady;
 
     const { onUpdate, hasEventListeners } = callbacks;
-    const config = new Configuration(options);
+    const config = new Configuration(options, internalOptions);
 
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
