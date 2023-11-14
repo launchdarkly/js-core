@@ -7,8 +7,7 @@
     "packages/sdk/server-node": {},
     "packages/sdk/cloudflare": {},
     "packages/sdk/vercel": {
-      "extra-files": ["src/createPlatformInfo.ts"],
-      "release-as": "1.2.0"
+      "extra-files": ["src/createPlatformInfo.ts"]
     },
     "packages/sdk/akamai-base": {
       "extra-files": ["src/index.ts"]
