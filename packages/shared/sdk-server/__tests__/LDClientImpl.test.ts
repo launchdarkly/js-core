@@ -74,6 +74,21 @@ describe('LDClientImpl', () => {
     expect(callbacks.onError).toBeCalled();
   });
 
+  it('initialization promise is rejected even if the failure happens before wait is called', (done) => {
+    setupMockStreamingProcessor(true);
+    client = createClient();
+
+    setTimeout(async () => {
+      await expect(client.waitForInitialization()).rejects.toThrow('failed');
+
+      expect(client.initialized()).toBeFalsy();
+      expect(callbacks.onReady).not.toBeCalled();
+      expect(callbacks.onFailed).toBeCalled();
+      expect(callbacks.onError).toBeCalled();
+      done();
+    }, 100);
+  });
+
   it('isOffline returns true in offline mode', () => {
     client = createClient({ offline: true });
     expect(client.isOffline()).toEqual(true);
