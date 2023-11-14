@@ -90,6 +90,8 @@ export default class LDClientImpl implements LDClient {
 
   private initReject?: (err: Error) => void;
 
+  private rejectionReason: Error | undefined;
+
   private initializedPromise?: Promise<LDClient>;
 
   private logger?: LDLogger;
@@ -231,9 +233,30 @@ export default class LDClientImpl implements LDClient {
   }
 
   waitForInitialization(): Promise<LDClient> {
-    if (this.initState === InitState.Initialized) {
-      return Promise.resolve(this);
+    // An initialization promise is only created if someone is going to use that promise.
+    // If we always created an initialization promise, and there was no call waitForInitialization
+    // by the time the promise was rejected, then that would result in an unhandled promise
+    // rejection.
+
+    // Initialization promise was created by a previous call to waitForInitialization.
+    if (this.initializedPromise) {
+      return this.initializedPromise;
     }
+
+    // Initialization completed before waitForInitialization was called, so we have completed
+    // and there was no promise. So we make a resolved promise and return it.
+    if (this.initState === InitState.Initialized) {
+      this.initializedPromise = Promise.resolve(this);
+      return this.initializedPromise;
+    }
+
+    // Initialization failed before waitForInitialization was called, so we have completed
+    // and there was no promise. So we make a rejected promise and return it.
+    if (this.initState === InitState.Failed) {
+      this.initializedPromise = Promise.reject(this.rejectionReason);
+      return this.initializedPromise;
+    }
+
     if (!this.initializedPromise) {
       this.initializedPromise = new Promise((resolve, reject) => {
         this.initResolve = resolve;
@@ -703,6 +726,7 @@ export default class LDClientImpl implements LDClient {
 
     if (!this.initialized()) {
       this.initState = InitState.Failed;
+      this.rejectionReason = error;
       this.initReject?.(error);
     }
   }
