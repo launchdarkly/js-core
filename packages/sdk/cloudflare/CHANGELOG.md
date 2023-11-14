@@ -3,6 +3,20 @@
 All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
 
+## [2.3.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.2.3...cloudflare-server-sdk-v2.3.0) (2023-11-14)
+
+
+### Features
+
+* edge sdks should send events to bulk/environment endpoint ([#256](https://github.com/launchdarkly/js-core/issues/256)) ([f45910f](https://github.com/launchdarkly/js-core/commit/f45910f171d434ca080bb6486331fbfbd2793985))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.0.2 to 2.1.0
+
 ## [2.2.3](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.2.2...cloudflare-server-sdk-v2.2.3) (2023-11-01)
 
 ### Bug Fixes
