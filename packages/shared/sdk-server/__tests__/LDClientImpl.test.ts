@@ -51,6 +51,17 @@ describe('LDClientImpl', () => {
     expect(callbacks.onError).not.toBeCalled();
   });
 
+  it('wait for initialization completes even if initialization completes before it is called', (done) => {
+    setupMockStreamingProcessor();
+    client = createClient();
+
+    setTimeout(async () => {
+      const initializedClient = await client.waitForInitialization();
+      expect(initializedClient).toEqual(client);
+      done();
+    }, 10);
+  });
+
   it('fires ready event in offline mode', async () => {
     client = createClient({ offline: true });
     const initializedClient = await client.waitForInitialization();
@@ -86,7 +97,7 @@ describe('LDClientImpl', () => {
       expect(callbacks.onFailed).toBeCalled();
       expect(callbacks.onError).toBeCalled();
       done();
-    }, 100);
+    }, 10);
   });
 
   it('isOffline returns true in offline mode', () => {
