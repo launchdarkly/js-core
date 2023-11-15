@@ -35,20 +35,20 @@ export type { LDClient };
  * (`new LDClient()/new LDClientImpl()/new LDClient()`); the SDK does not currently support
  * this.
  *
+ * @param clientSideID
+ *  The client side ID. This is only used to query the kvNamespace above,
+ *  not to connect with LaunchDarkly servers.
  * @param kvNamespace
  *  The Cloudflare KV configured for LaunchDarkly.
- * @param sdkKey
- *  The client side SDK key. This is only used to query the kvNamespace above,
- *  not to connect with LaunchDarkly servers.
  * @param options
  *  Optional configuration settings. The only supported option is logger.
  * @return
  *  The new {@link LDClient} instance.
  */
-export const init = (sdkKey: string, kvNamespace: KVNamespace, options: LDOptions = {}) => {
+export const init = (clientSideID: string, kvNamespace: KVNamespace, options: LDOptions = {}) => {
   const logger = options.logger ?? BasicLogger.get();
-  return initEdge(sdkKey, createPlatformInfo(), {
-    featureStore: new EdgeFeatureStore(kvNamespace, sdkKey, 'Cloudflare', logger),
+  return initEdge(clientSideID, createPlatformInfo(), {
+    featureStore: new EdgeFeatureStore(kvNamespace, clientSideID, 'Cloudflare', logger),
     logger,
     ...options,
   });

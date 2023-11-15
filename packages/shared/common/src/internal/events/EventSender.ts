@@ -20,12 +20,21 @@ export default class EventSender implements LDEventSender {
 
   constructor(clientContext: ClientContext) {
     const { basicConfiguration, platform } = clientContext;
-    const { sdkKey, serviceEndpoints, tags } = basicConfiguration;
+    const {
+      sdkKey,
+      serviceEndpoints: {
+        events,
+        analyticsEventPath,
+        diagnosticEventPath,
+        includeAuthorizationHeader,
+      },
+      tags,
+    } = basicConfiguration;
     const { crypto, info, requests } = platform;
 
-    this.defaultHeaders = defaultHeaders(sdkKey, info, tags);
-    this.eventsUri = `${serviceEndpoints.events}/bulk`;
-    this.diagnosticEventsUri = `${serviceEndpoints.events}/diagnostic`;
+    this.defaultHeaders = defaultHeaders(sdkKey, info, tags, includeAuthorizationHeader);
+    this.eventsUri = `${events}${analyticsEventPath}`;
+    this.diagnosticEventsUri = `${events}${diagnosticEventPath}`;
     this.requests = requests;
     this.crypto = crypto;
   }
