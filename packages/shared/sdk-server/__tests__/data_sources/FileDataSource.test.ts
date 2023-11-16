@@ -443,4 +443,92 @@ describe('given a mock filesystem and memory feature store', () => {
     expect(filesystem.readFile).toHaveBeenCalledTimes(1);
     expect(yamlParser).toHaveBeenCalledWith('the data');
   });
+
+  it('it updates the version numbers for value based flags when their values change', async () => {
+    await createFileDataSource(
+      true,
+      [
+        {
+          path: 'file1.json',
+          data: `{
+            "flagValues": 
+            {
+              "${flag2Key}": "${flag2Value}"
+            }
+          }`,
+        },
+      ],
+      false,
+      true,
+    );
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    // Need to update the timestamp, or it will think the file has not changed.
+    filesystem.fileData['file1.json'] = {
+      timestamp: 100,
+      data: `{
+      "flagValues": 
+      {
+        "${flag2Key}": "differentValue"
+      }
+    }`,
+    };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    await jest.runAllTimersAsync();
+
+    const readFlag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag2Key);
+    expect(readFlag?.version).toEqual(2);
+  });
+
+  it('it does not update the version when the value does not change', async () => {
+    await createFileDataSource(
+      true,
+      [
+        {
+          path: 'file1.json',
+          data: `{
+            "flagValues": 
+            {
+              "${flag2Key}": "${flag2Value}"
+            }
+          }`,
+        },
+      ],
+      false,
+      true,
+    );
+
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+
+    const flags = await asyncFeatureStore.all(VersionedDataKinds.Features);
+    expect(Object.keys(flags).length).toEqual(1);
+
+    const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
+    expect(Object.keys(segments).length).toEqual(0);
+
+    // Need to update the timestamp, or it will think the file has not changed.
+    filesystem.fileData['file1.json'] = {
+      timestamp: 100,
+      data: `{
+      "flagValues": 
+      {
+        "${flag2Key}": "${flag2Value}"
+      }
+    }`,
+    };
+    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+
+    await jest.runAllTimersAsync();
+
+    const readFlag = await asyncFeatureStore.get(VersionedDataKinds.Features, flag2Key);
+    expect(readFlag?.version).toEqual(1);
+  });
 });
