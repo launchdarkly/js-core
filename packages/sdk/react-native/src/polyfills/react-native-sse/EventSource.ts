@@ -1,9 +1,7 @@
 /**
  * Ripped from https://github.com/binaryminds/react-native-sse
  */
-import { EventListener } from '@launchdarkly/js-client-sdk-common';
-
-import type { EventSourceOptions, EventType } from './types';
+import type { EventSourceEvent, EventSourceListener, EventSourceOptions, EventType } from './types';
 
 const XMLReadyStateMap = ['UNSENT', 'OPENED', 'HEADERS_RECEIVED', 'LOADING', 'DONE'];
 
@@ -18,7 +16,7 @@ const defaultOptions: EventSourceOptions = {
   withCredentials: false,
 };
 
-class EventSource {
+class EventSource<E extends string = never> {
   ERROR = -1;
   CONNECTING = 0;
   OPEN = 1;
@@ -26,9 +24,9 @@ class EventSource {
 
   private lastEventId: undefined | string;
   private lastIndexProcessed = 0;
-  private eventType: undefined | string;
+  private eventType: undefined | EventType<E>;
   private status = this.CONNECTING;
-  private eventHandlers = {
+  private eventHandlers: any = {
     open: [],
     message: [],
     error: [],
@@ -90,9 +88,9 @@ class EventSource {
       this.xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
       if (this.headers) {
-        for (const [key, value] of Object.entries(this.headers)) {
+        Object.entries(this.headers).forEach(([key, value]) => {
           this.xhr.setRequestHeader(key, value);
-        }
+        });
       }
 
       if (typeof this.lastEventId !== 'undefined') {
@@ -112,7 +110,10 @@ class EventSource {
           }(${this.xhr.readyState}), status: ${this.xhr.status}`,
         );
 
-        if (![XMLHttpRequest.DONE, XMLHttpRequest.LOADING].includes(this.xhr.readyState)) {
+        if (
+          this.xhr.readyState !== XMLHttpRequest.DONE &&
+          this.xhr.readyState !== XMLHttpRequest.LOADING
+        ) {
           return;
         }
 
@@ -205,7 +206,7 @@ class EventSource {
     for (let i = 0; i < parts.length; i++) {
       line = parts[i].replace(/^(\s|\u00A0)+|(\s|\u00A0)+$/g, '');
       if (line.indexOf('event') === 0) {
-        this.eventType = line.replace(/event:?\s*/, '');
+        this.eventType = line.replace(/event:?\s*/, '') as EventType<E>;
       } else if (line.indexOf('retry') === 0) {
         retry = parseInt(line.replace(/retry:?\s*/, ''), 10);
         if (!Number.isNaN(retry)) {
@@ -220,7 +221,7 @@ class EventSource {
       } else if (line === '') {
         if (data.length > 0) {
           const eventType = this.eventType || 'message';
-          const event = {
+          const event: any = {
             type: eventType,
             data: data.join('\n'),
             url: this.url,
@@ -236,7 +237,7 @@ class EventSource {
     }
   }
 
-  addEventListener(type: EventType, listener: EventListener): void {
+  addEventListener<T extends EventType<E>>(type: T, listener: EventSourceListener<E, T>): void {
     if (this.eventHandlers[type] === undefined) {
       this.eventHandlers[type] = [];
     }
@@ -244,19 +245,21 @@ class EventSource {
     this.eventHandlers[type].push(listener);
   }
 
-  removeEventListener(type: EventName, listener: EventListener): void {
+  removeEventListener<T extends EventType<E>>(type: T, listener: EventSourceListener<E, T>): void {
     if (this.eventHandlers[type] !== undefined) {
-      this.eventHandlers[type] = this.eventHandlers[type].filter((handler) => handler !== listener);
+      this.eventHandlers[type] = this.eventHandlers[type].filter(
+        (handler: EventSourceListener<E, T>) => handler !== listener,
+      );
     }
   }
 
-  removeAllEventListeners(type: EventName) {
+  removeAllEventListeners<T extends EventType<E>>(type?: T) {
     const availableTypes = Object.keys(this.eventHandlers);
 
     if (type === undefined) {
-      for (const eventType of availableTypes) {
+      availableTypes.forEach((eventType) => {
         this.eventHandlers[eventType] = [];
-      }
+      });
     } else {
       if (!availableTypes.includes(type)) {
         throw Error(`[EventSource] '${type}' type is not supported event type.`);
@@ -266,16 +269,14 @@ class EventSource {
     }
   }
 
-  dispatch(type, data) {
+  dispatch<T extends EventType<E>>(type: T, data: EventSourceEvent<T>) {
     const availableTypes = Object.keys(this.eventHandlers);
 
     if (!availableTypes.includes(type)) {
       return;
     }
 
-    for (const handler of Object.values(this.eventHandlers[type])) {
-      handler(data);
-    }
+    this.eventHandlers[type].forEach((handler: EventSourceListener<E, T>) => handler(data));
   }
 
   close() {
