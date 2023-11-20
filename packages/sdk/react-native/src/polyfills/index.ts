@@ -2,6 +2,7 @@ import EventTarget from 'event-target-shim';
 
 import btoa from './btoa';
 import CustomEvent from './CustomEvent';
+import EventSource from './react-native-sse';
 import uuidv4 from './uuid';
 
 function setupPolyfill() {
@@ -10,4 +11,4 @@ function setupPolyfill() {
     CustomEvent,
   });
 }
-export { btoa, setupPolyfill, uuidv4 };
+export { btoa, EventSource, setupPolyfill, uuidv4 };

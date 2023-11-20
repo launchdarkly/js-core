@@ -14,13 +14,14 @@ import type {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
+import { EventName } from '@launchdarkly/js-sdk-common';
 
 import { name, version } from '../package.json';
-import { btoa, uuidv4 } from './polyfills';
+import { btoa, EventSource as RNEventSource, uuidv4 } from './polyfills';
 
 class PlatformRequests implements Requests {
-  createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
-    throw new Error('todo');
+  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+    return new RNEventSource<EventName>(url, eventSourceInitDict);
   }
 
   fetch(url: string, options?: Options): Promise<Response> {

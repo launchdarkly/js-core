@@ -16,7 +16,7 @@ const defaultOptions: EventSourceOptions = {
   withCredentials: false,
 };
 
-class EventSource<E extends string = never> {
+export default class EventSource<E extends string = never> {
   ERROR = -1;
   CONNECTING = 0;
   OPEN = 1;
@@ -290,5 +290,3 @@ class EventSource<E extends string = never> {
     this.dispatch('close', { type: 'close' });
   }
 }
-
-export default EventSource;
