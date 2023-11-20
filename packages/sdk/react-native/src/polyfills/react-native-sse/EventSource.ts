@@ -186,6 +186,7 @@ class EventSource<E extends string = never> {
 
   private logDebug(...msg: string[]) {
     if (this.debug) {
+      // eslint-disable-next-line no-console
       console.debug(...msg);
     }
   }
