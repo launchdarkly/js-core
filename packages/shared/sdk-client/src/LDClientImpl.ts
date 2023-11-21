@@ -24,7 +24,7 @@ import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import fetchFlags, { Flags } from './evaluation/fetchFlags';
+import type { Flags } from './evaluation/fetchFlags';
 import { base64UrlEncode } from './evaluation/fetchUtils';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
@@ -36,7 +36,7 @@ export default class LDClientImpl implements LDClient {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
-  streamer: internal.StreamingProcessor;
+  streamer?: internal.StreamingProcessor;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
@@ -71,15 +71,6 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
-
-    this.streamer = new internal.StreamingProcessor(
-      sdkKey,
-      new ClientContext(sdkKey, this.config, platform),
-      `/meval/${base64UrlEncode(JSON.stringify(this.context), platform.encoding)}`,
-      this.createStreamListeners(),
-      this.diagnosticsManager,
-      (e) => this.logger.error(e),
-    );
   }
 
   private createStreamListeners(): Map<StreamEventName, ProcessStreamResponse> {
@@ -115,7 +106,27 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
-  async start() {
+  private createStreamer(context: LDContext) {
+    return new internal.StreamingProcessor(
+      this.sdkKey,
+      new ClientContext(this.sdkKey, this.config, this.platform),
+      `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`,
+      this.createStreamListeners(),
+      this.diagnosticsManager,
+      (e) => this.logger.error(e),
+    );
+  }
+  // TODO: implement secure mode
+  async identify(context: LDContext, hash?: string): Promise<void> {
+    const checkedContext = Context.fromLDContext(context);
+    if (!checkedContext.valid) {
+      const error = new Error('Context was unspecified or had no key');
+      this.logger.error(error);
+      this.emitter.emit('error', error);
+      throw error;
+    }
+
+    this.streamer = this.createStreamer(context);
     this.streamer.start();
   }
 
@@ -143,26 +154,6 @@ export default class LDClientImpl implements LDClient {
 
   getContext(): LDContext {
     return clone(this.context);
-  }
-
-  // TODO: implement secure mode
-  async identify(context: LDContext, hash?: string): Promise<void> {
-    const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext.valid) {
-      const error = new Error('Context was unspecified or had no key');
-      this.logger.error(error);
-      this.emitter.emit('error', error);
-      throw error;
-    }
-
-    try {
-      this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
-      this.context = context;
-    } catch (error: any) {
-      this.logger.error(error);
-      this.emitter.emit('error', error);
-      throw error;
-    }
   }
 
   off(eventName: EventName, listener?: Function): void {
