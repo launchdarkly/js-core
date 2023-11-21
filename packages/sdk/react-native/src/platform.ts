@@ -2,6 +2,7 @@
 import type {
   Crypto,
   Encoding,
+  EventName,
   EventSource,
   EventSourceInitDict,
   Hasher,
@@ -13,8 +14,7 @@ import type {
   Requests,
   Response,
   SdkData,
-} from '@launchdarkly/js-sdk-common';
-import { EventName } from '@launchdarkly/js-sdk-common';
+} from '@launchdarkly/js-client-sdk-common';
 
 import { name, version } from '../package.json';
 import { btoa, EventSource as RNEventSource, uuidv4 } from './polyfills';

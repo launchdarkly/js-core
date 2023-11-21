@@ -1,4 +1,4 @@
-export type BuiltInEventType = 'open' | 'message' | 'error' | 'close';
+export type BuiltInEventType = 'open' | 'message' | 'error' | 'close' | 'retry';
 export type EventType<E extends string = never> = E | BuiltInEventType;
 
 export interface MessageEvent {
@@ -14,6 +14,10 @@ export interface OpenEvent {
 
 export interface CloseEvent {
   type: 'close';
+}
+
+export interface RetryEvent {
+  type: 'retry';
 }
 
 export interface TimeoutEvent {
@@ -56,11 +60,13 @@ type BuiltInEventMap = {
   open: OpenEvent;
   close: CloseEvent;
   error: ErrorEvent | TimeoutEvent | ExceptionEvent;
+  retry: RetryEvent;
 };
 
 export type EventSourceEvent<E extends T, T extends string = any> = E extends BuiltInEventType
   ? BuiltInEventMap[E]
   : CustomEvent<E>;
+
 export type EventSourceListener<E extends string = never, T extends EventType<E> = EventType<E>> = (
   event: EventSourceEvent<T>,
 ) => void;

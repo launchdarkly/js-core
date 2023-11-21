@@ -67,6 +67,7 @@ export default class EventSource<E extends string = never> {
   private pollAgain(time: number, allowZero: boolean) {
     if (time > 0 || allowZero) {
       this.logDebug(`[EventSource] Will open new connection in ${time} ms.`);
+      this.dispatch('retry', { type: 'retry' });
       this.pollTimer = setTimeout(() => {
         this.open();
       }, time);
@@ -271,13 +272,24 @@ export default class EventSource<E extends string = never> {
   }
 
   dispatch<T extends EventType<E>>(type: T, data: EventSourceEvent<T>) {
-    const availableTypes = Object.keys(this.eventHandlers);
+    this.eventHandlers[type]?.forEach((handler: EventSourceListener<E, T>) => handler(data));
 
-    if (!availableTypes.includes(type)) {
-      return;
+    switch (type) {
+      case 'open':
+        this.onopen();
+        break;
+      case 'close':
+        this.onclose();
+        break;
+      case 'error':
+        this.onerror();
+        break;
+      case 'retry':
+        this.onretrying();
+        break;
+      default:
+        break;
     }
-
-    this.eventHandlers[type].forEach((handler: EventSourceListener<E, T>) => handler(data));
   }
 
   close() {
@@ -289,4 +301,9 @@ export default class EventSource<E extends string = never> {
 
     this.dispatch('close', { type: 'close' });
   }
+
+  onopen() {}
+  onclose() {}
+  onerror() {}
+  onretrying() {}
 }
