@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  ClientContext,
   clone,
   Context,
   internal,
@@ -13,6 +14,8 @@ import {
   LDFlagValue,
   LDLogger,
   Platform,
+  ProcessStreamResponse,
+  EventName as StreamEventName,
   subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -22,6 +25,7 @@ import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import fetchFlags, { Flags } from './evaluation/fetchFlags';
+import { base64UrlEncode } from './evaluation/fetchUtils';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -32,6 +36,7 @@ export default class LDClientImpl implements LDClient {
   config: Configuration;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
+  streamer: internal.StreamingProcessor;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
@@ -67,17 +72,51 @@ export default class LDClientImpl implements LDClient {
     );
     this.emitter = new LDEmitter();
 
-    // TODO: init streamer
+    this.streamer = new internal.StreamingProcessor(
+      sdkKey,
+      new ClientContext(sdkKey, this.config, platform),
+      `/meval/${base64UrlEncode(JSON.stringify(this.context), platform.encoding)}`,
+      this.createStreamListeners(),
+      this.diagnosticsManager,
+      (e) => this.logger.error(e),
+    );
+  }
+
+  private createStreamListeners(): Map<StreamEventName, ProcessStreamResponse> {
+    const listeners = new Map<StreamEventName, ProcessStreamResponse>();
+
+    listeners.set('put', {
+      deserializeData: JSON.parse,
+      processJson: ({ data }) => {
+        this.logger.debug('Initializing all data');
+        this.flags = {};
+        Object.keys(data).forEach((key) => {
+          this.flags[key] = data[key];
+        });
+      },
+    });
+
+    listeners.set('patch', {
+      deserializeData: JSON.parse,
+      processJson: ({ data }) => {
+        this.logger.debug(`Updating ${data.key}`);
+        this.flags[data.key] = data;
+      },
+    });
+
+    listeners.set('patch', {
+      deserializeData: JSON.parse,
+      processJson: ({ data }) => {
+        this.logger.debug(`Deleting ${data.key}`);
+        delete this.flags[data.key];
+      },
+    });
+
+    return listeners;
   }
 
   async start() {
-    try {
-      await this.identify(this.context);
-      this.emitter.emit('ready');
-    } catch (error: any) {
-      this.emitter.emit('failed', error);
-      throw error;
-    }
+    this.streamer.start();
   }
 
   allFlags(): LDFlagSet {
