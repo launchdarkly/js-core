@@ -1,4 +1,5 @@
-import { Info } from '../api';
+import { HttpErrorResponse, Info } from '../api';
+import { isHttpRecoverable } from '../errors';
 import { ApplicationTags } from '../options';
 
 export type LDHeaders = {
@@ -45,4 +46,8 @@ export function httpErrorMessage(
   }
   const action = retryMessage ?? 'giving up permanently';
   return `Received ${desc} for ${context} - ${action}`;
+}
+
+export function shouldRetry(err: HttpErrorResponse) {
+  return !(err.status && !isHttpRecoverable(err.status));
 }
