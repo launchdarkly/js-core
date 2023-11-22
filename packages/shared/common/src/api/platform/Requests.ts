@@ -1,7 +1,7 @@
 // The interfaces in this file are intended to be as close as possible to the
 // interfaces used for the `fetch` Web API. Doing so should allow implementations
 // which are more easily portable.
-import { EventSource, EventSourceInitDict } from './EventSource';
+import type { EventSource, EventSourceInitDict } from './EventSource';
 
 // These are not full specifications of the interface, but instead subsets
 // based on the functionality needed by the SDK. Exposure of the full standard
@@ -81,7 +81,7 @@ export interface Options {
 export interface Requests {
   fetch(url: string, options?: Options): Promise<Response>;
 
-  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource;
+  createEventSource(url: string, eventSourceInitDict?: EventSourceInitDict | any): EventSource;
 
   /**
    * Returns true if a proxy is configured.
@@ -92,4 +92,9 @@ export interface Requests {
    * Returns true if the proxy uses authentication.
    */
   usingProxyAuth?(): boolean;
+}
+
+export interface HttpErrorResponse {
+  status: number;
+  message: string;
 }

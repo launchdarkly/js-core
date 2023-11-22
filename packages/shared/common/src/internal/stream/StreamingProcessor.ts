@@ -1,4 +1,11 @@
-import { EventName, EventSource, LDLogger, ProcessStreamResponse, Requests } from '../../api';
+import {
+  EventName,
+  EventSource,
+  HttpErrorResponse,
+  LDLogger,
+  ProcessStreamResponse,
+  Requests,
+} from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { isHttpRecoverable, LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
@@ -64,28 +71,33 @@ class StreamingProcessor implements LDStreamProcessor {
     this.connectionAttemptStartTime = undefined;
   }
 
+  /**
+   * @param err The error to be logged and handled
+   * @private
+   * @return boolean whether to retry the connection.
+   */
+  private logAndHandleErrors(err: HttpErrorResponse): boolean {
+    if (err.status && !isHttpRecoverable(err.status)) {
+      this.logConnectionResult(false);
+      this.errorHandler?.(new LDStreamingError(err.message, err.status));
+      this.logger?.error(httpErrorMessage(err, 'streaming request'));
+      return false;
+    }
+
+    this.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
+    this.logConnectionResult(false);
+    this.logConnectionStarted();
+    return true;
+  }
+
   start() {
     this.logConnectionStarted();
-
-    const errorFilter = (err: { status: number; message: string }): boolean => {
-      if (err.status && !isHttpRecoverable(err.status)) {
-        this.logConnectionResult(false);
-        this.errorHandler?.(new LDStreamingError(err.message, err.status));
-        this.logger?.error(httpErrorMessage(err, 'streaming request'));
-        return false;
-      }
-
-      this.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
-      this.logConnectionResult(false);
-      this.logConnectionStarted();
-      return true;
-    };
 
     // TLS is handled by the platform implementation.
 
     const eventSource = this.requests.createEventSource(this.streamUri, {
       headers: this.headers,
-      errorFilter,
+      errorFilter: (err: HttpErrorResponse) => this.logAndHandleErrors(err),
       initialRetryDelayMillis: 1000 * this.streamInitialReconnectDelay,
       readTimeoutMillis: STREAM_READ_TIMEOUT_MS,
       retryResetIntervalMillis: RETRY_RESET_INTERVAL_MS,
@@ -96,8 +108,8 @@ class StreamingProcessor implements LDStreamProcessor {
       this.logger?.info('Closed LaunchDarkly stream connection');
     };
 
-    eventSource.onerror = () => {
-      // The work is done by `errorFilter`.
+    eventSource.onerror = (err: HttpErrorResponse) => {
+      this.logAndHandleErrors(err);
     };
 
     eventSource.onopen = () => {
