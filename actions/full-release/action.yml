@@ -34,6 +34,7 @@ runs:
     - uses: ./actions/publish
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
+        workspace_path: ${{ inputs.workspace_path }}
         prerelease: false
         dry_run: false
     - uses: ./actions/publish-docs
