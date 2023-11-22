@@ -81,7 +81,7 @@ export interface Options {
 export interface Requests {
   fetch(url: string, options?: Options): Promise<Response>;
 
-  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource;
+  createEventSource(url: string, eventSourceInitDict?: EventSourceInitDict | any): EventSource;
 
   /**
    * Returns true if a proxy is configured.

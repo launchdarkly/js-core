@@ -2,6 +2,8 @@
 import {
   ClientContext,
   Context,
+  defaultHeaders,
+  EventSource,
   internal,
   LDClientError,
   LDContext,
@@ -187,16 +189,31 @@ export default class LDClientImpl implements LDClient {
     const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
       put: () => this.initSuccess(),
     });
+
+    const createEventSource = (errorFilter: any): EventSource => {
+      const {
+        basicConfiguration: { serviceEndpoints, tags },
+      } = clientContext;
+      const { info, requests } = platform;
+      const streamUri = `${serviceEndpoints.streaming}/all`;
+
+      return requests.createEventSource(streamUri, {
+        headers: defaultHeaders(sdkKey, info, tags),
+        errorFilter,
+        initialRetryDelayMillis: 1000 * this.config.streamInitialReconnectDelay,
+        readTimeoutMillis: 5 * 60 * 1000,
+        retryResetIntervalMillis: 60 * 1000,
+      });
+    };
+
     const makeDefaultProcessor = () =>
       config.stream
         ? new internal.StreamingProcessor(
-            sdkKey,
-            clientContext,
-            '/all',
+            createEventSource,
             listeners,
             this.diagnosticsManager,
-            (e) => this.dataSourceErrorHandler(e),
-            this.config.streamInitialReconnectDelay,
+            (e: any) => this.dataSourceErrorHandler(e),
+            this.logger,
           )
         : new PollingProcessor(
             config,

@@ -7,7 +7,7 @@ export type ProcessStreamResponse = {
 
 export interface EventSource {
   onclose: (() => void) | undefined;
-  onerror: (() => void) | undefined;
+  onerror: ((err?: any) => void) | undefined;
   onopen: (() => void) | undefined;
   onretrying: ((e: { delayMillis: number }) => void) | undefined;
 

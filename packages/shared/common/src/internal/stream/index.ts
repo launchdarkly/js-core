@@ -1,4 +1,4 @@
 import StreamingProcessor from './StreamingProcessor';
-import { type StreamingErrorHandler } from './types';
+import type { ErrorFilterFunction, StreamingErrorHandler } from './types';
 
-export { StreamingProcessor, type StreamingErrorHandler };
+export { StreamingProcessor, type ErrorFilterFunction, type StreamingErrorHandler };

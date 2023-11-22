@@ -28,7 +28,7 @@ export interface ErrorEvent {
   type: 'error';
   message: string;
   xhrState: number;
-  xhrStatus: number;
+  status: number;
 }
 
 export interface CustomEvent<E extends string> {

@@ -136,7 +136,7 @@ export default class EventSource<E extends string = never> {
           this.dispatch('error', {
             type: 'error',
             message: this.xhr.responseText,
-            xhrStatus: this.xhr.status,
+            status: this.xhr.status,
             xhrState: this.xhr.readyState,
           });
 
@@ -156,7 +156,7 @@ export default class EventSource<E extends string = never> {
         this.dispatch('error', {
           type: 'error',
           message: this.xhr.responseText,
-          xhrStatus: this.xhr.status,
+          status: this.xhr.status,
           xhrState: this.xhr.readyState,
         });
       };

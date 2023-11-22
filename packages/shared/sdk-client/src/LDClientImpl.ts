@@ -37,6 +37,7 @@ export default class LDClientImpl implements LDClient {
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
   streamer?: internal.StreamingProcessor;
+  context?: LDContext;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
@@ -49,7 +50,6 @@ export default class LDClientImpl implements LDClient {
    */
   constructor(
     public readonly sdkKey: string,
-    public context: LDContext,
     public readonly platform: Platform,
     options: LDOptions,
   ) {
@@ -106,16 +106,16 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
-  private createStreamer(context: LDContext) {
-    return new internal.StreamingProcessor(
-      this.sdkKey,
-      new ClientContext(this.sdkKey, this.config, this.platform),
-      `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`,
-      this.createStreamListeners(),
-      this.diagnosticsManager,
-      (e) => this.logger.error(e),
-    );
+  makeEventSource(context: LDContext) {
+    const { encoding, info, requests } = this.platform;
+    const streamUri = `${this.config.serviceEndpoints.streaming}/meval/${base64UrlEncode(
+      JSON.stringify(context),
+      encoding!,
+    )}`;
+
+    return requests.createEventSource(streamUri);
   }
+
   // TODO: implement secure mode
   async identify(context: LDContext, hash?: string): Promise<void> {
     const checkedContext = Context.fromLDContext(context);
@@ -126,8 +126,26 @@ export default class LDClientImpl implements LDClient {
       throw error;
     }
 
-    this.streamer = this.createStreamer(context);
+    this.context = context;
+
+    // initialize streamer
+    this.streamer = new internal.StreamingProcessor(
+      this.makeEventSource(this.context),
+      this.createStreamListeners(),
+      this.diagnosticsManager,
+      (e) => this.logger.error(e),
+      this.logger,
+    );
+    this.emitter.emit('connecting', context);
     this.streamer.start();
+
+    this.streamer.eventSource!.onopen = () => {
+      this.emitter.emit('ready', context);
+    };
+    this.streamer.eventSource!.onerror = (err: any) => {
+      this.streamer!.errorFilter(err);
+      this.emitter.emit('error', context);
+    };
   }
 
   allFlags(): LDFlagSet {

@@ -1,23 +1,22 @@
 import type {
-  ClientContext,
   EventName,
   internal,
+  LDLogger,
   LDStreamingError,
   ProcessStreamResponse,
 } from '@common';
+import { EventSource } from '@common';
 
 export const MockStreamingProcessor = jest.fn();
 
 export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
   MockStreamingProcessor.mockImplementation(
     (
-      sdkKey: string,
-      clientContext: ClientContext,
-      streamUriPath: string,
+      _makeEventSource: (errorFilter?: internal.ErrorFilterFunction) => EventSource,
       listeners: Map<EventName, ProcessStreamResponse>,
-      diagnosticsManager: internal.DiagnosticsManager,
+      _diagnosticsManager: internal.DiagnosticsManager,
       errorHandler: internal.StreamingErrorHandler,
-      _streamInitialReconnectDelay: number,
+      _logger: LDLogger,
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
