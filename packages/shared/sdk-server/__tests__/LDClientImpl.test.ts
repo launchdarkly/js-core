@@ -97,4 +97,40 @@ describe('LDClientImpl', () => {
 
     expect(p2).toBe(p1);
   });
+
+  it('creates only one Promise when waiting for initialization', async () => {
+    client = createClient();
+    const p1 = client.waitForInitialization();
+    const p2 = client.waitForInitialization();
+
+    expect(p2).toBe(p1);
+  });
+
+  it('createEventSource with expected uri and init dict', () => {
+    client = createClient();
+
+    expect(basicPlatform.requests.createEventSource).toBeCalledWith(
+      'https://stream.launchdarkly.com/all',
+      {
+        errorFilter: expect.any(Function),
+        headers: {
+          authorization: 'sdk-key',
+          'user-agent': 'TestUserAgent/2.0.2',
+          'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+        },
+        initialRetryDelayMillis: 1000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
+    );
+  });
+
+  it('sets streamInitialReconnectDelay correctly', () => {
+    client = createClient({ streamInitialReconnectDelay: 22 });
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      'https://stream.launchdarkly.com/all',
+      expect.objectContaining({ initialRetryDelayMillis: 22000 }),
+    );
+  });
 });

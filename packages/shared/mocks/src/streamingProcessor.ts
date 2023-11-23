@@ -12,13 +12,15 @@ export const MockStreamingProcessor = jest.fn();
 export const setupMockStreamingProcessor = (shouldError: boolean = false) => {
   MockStreamingProcessor.mockImplementation(
     (
-      _createEventSource: () => EventSource,
+      createEventSource: () => EventSource,
       listeners: Map<EventName, ProcessStreamResponse>,
       _diagnosticsManager: internal.DiagnosticsManager,
       errorHandler: internal.StreamingErrorHandler,
       _logger: LDLogger,
     ) => ({
       start: jest.fn(async () => {
+        createEventSource();
+
         if (shouldError) {
           process.nextTick(() => {
             const unauthorized: LDStreamingError = {
