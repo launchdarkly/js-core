@@ -78,6 +78,20 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.0.1 to 2.0.2
 
+## [2.1.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.0.2...js-server-sdk-common-edge-v2.1.0) (2023-11-14)
+
+
+### Features
+
+* edge sdks should send events to bulk/environment endpoint ([#256](https://github.com/launchdarkly/js-core/issues/256)) ([f45910f](https://github.com/launchdarkly/js-core/commit/f45910f171d434ca080bb6486331fbfbd2793985))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.0.2 to 2.1.0
+
 ## [2.0.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.13...js-server-sdk-common-edge-v2.0.0) (2023-10-16)
 
 

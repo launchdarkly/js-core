@@ -18,7 +18,7 @@
               "negate": false
             }
           ],
-          "trackEvents": false,
+          "trackEvents": true,
           "rollout": {
             "bucketBy": "bucket",
             "variations": [{ "variation": 1, "weight": 100 }]
@@ -36,7 +36,7 @@
       },
       "clientSide": true,
       "salt": "aef830243d6640d0a973be89988e008d",
-      "trackEvents": false,
+      "trackEvents": true,
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
       "version": 2,
@@ -65,7 +65,7 @@
       },
       "clientSide": true,
       "salt": "aef830243d6640d0a973be89988e008d",
-      "trackEvents": false,
+      "trackEvents": true,
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
       "version": 2,
@@ -87,7 +87,7 @@
               "negate": false
             }
           ],
-          "trackEvents": false
+          "trackEvents": true
         }
       ],
       "fallthrough": {
@@ -101,7 +101,7 @@
       },
       "clientSide": true,
       "salt": "aef830243d6640d0a973be89988e008d",
-      "trackEvents": false,
+      "trackEvents": true,
       "trackEventsFallthrough": false,
       "debugEventsUntilDate": null,
       "version": 2,

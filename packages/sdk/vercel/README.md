@@ -49,6 +49,14 @@ const flagValue = await ldClient.variation('my-flag', ldContext, true);
 
 To learn more, see the [examples](examples/README.md) in this repository or head straight to the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/server-side/vercel).
 
+
+> **⚠️ experimental**
+> 
+> This SDK has experimental support for sending analytic events to LaunchDarkly. It can be enabled by setting `sendEvents` to `true` in the SDK options. 
+>```typescript
+>    const client = initLD(sdkKey, env.LD_KV, {sendEvents: true});
+>```
+
 ## Developing this SDK
 
 ```shell
