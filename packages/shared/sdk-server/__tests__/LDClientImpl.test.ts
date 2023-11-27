@@ -93,7 +93,7 @@ describe('LDClientImpl', () => {
     expect(callbacks.onError).toBeCalled();
   });
 
-  it.only('initialization promise is rejected even if the failure happens before wait is called', (done) => {
+  it('initialization promise is rejected even if the failure happens before wait is called', (done) => {
     setupMockStreamingProcessor(true);
     client = createClient();
 
