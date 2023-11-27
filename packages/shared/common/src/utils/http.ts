@@ -3,19 +3,29 @@ import { isHttpRecoverable } from '../errors';
 import { ApplicationTags } from '../options';
 
 export type LDHeaders = {
-  authorization: string;
+  authorization?: string;
   'user-agent': string;
   'x-launchdarkly-wrapper'?: string;
   'x-launchdarkly-tags'?: string;
 };
 
-export function defaultHeaders(sdkKey: string, info: Info, tags?: ApplicationTags): LDHeaders {
+export function defaultHeaders(
+  sdkKey: string,
+  info: Info,
+  tags?: ApplicationTags,
+  includeAuthorizationHeader: boolean = true,
+): LDHeaders {
   const { userAgentBase, version, wrapperName, wrapperVersion } = info.sdkData();
 
   const headers: LDHeaders = {
-    authorization: sdkKey,
     'user-agent': `${userAgentBase ?? 'NodeJSClient'}/${version}`,
   };
+
+  // edge sdks sets this to false because they use the clientSideID
+  // and they don't need the authorization header
+  if (includeAuthorizationHeader) {
+    headers.authorization = sdkKey;
+  }
 
   if (wrapperName) {
     headers['x-launchdarkly-wrapper'] = wrapperVersion

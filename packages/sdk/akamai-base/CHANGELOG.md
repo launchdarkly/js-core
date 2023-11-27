@@ -2,6 +2,13 @@
 
 All notable changes to the LaunchDarkly SDK for Akamai Workers will be documented in this file. This project adheres to [Semantic Versioning](https://semver.org).
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.0.2 to ^1.0.3
+    * @launchdarkly/js-server-sdk-common bumped from ^2.0.2 to ^2.1.0
+
 ## [2.0.2](https://github.com/launchdarkly/js-core/compare/akamai-server-base-sdk-v2.0.1...akamai-server-base-sdk-v2.0.2) (2023-11-01)
 
 ### Bug Fixes

@@ -12,7 +12,14 @@ jest.mock('../../utils', () => {
 
 const basicConfig = {
   tags: new ApplicationTags({ application: { id: 'testApplication1', version: '1.0.0' } }),
-  serviceEndpoints: { events: 'https://events.fake.com', streaming: '', polling: '' },
+  serviceEndpoints: {
+    events: 'https://events.fake.com',
+    streaming: '',
+    polling: '',
+    analyticsEventPath: '/bulk',
+    diagnosticEventPath: '/diagnostic',
+    includeAuthorizationHeader: true,
+  },
 };
 const testEventData1 = { eventId: 'test-event-data-1' };
 const testEventData2 = { eventId: 'test-event-data-2' };

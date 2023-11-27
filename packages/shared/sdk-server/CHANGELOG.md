@@ -2,6 +2,25 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.0.2...js-server-sdk-common-v2.1.0) (2023-11-14)
+
+
+### Features
+
+* edge sdks should send events to bulk/environment endpoint ([#256](https://github.com/launchdarkly/js-core/issues/256)) ([f45910f](https://github.com/launchdarkly/js-core/commit/f45910f171d434ca080bb6486331fbfbd2793985))
+
+
+### Bug Fixes
+
+* Better handle waiting for initialization for failure cases. ([#314](https://github.com/launchdarkly/js-core/issues/314)) ([16515df](https://github.com/launchdarkly/js-core/commit/16515df8526a0c1b884987294eaca848c38f7388)), closes [#312](https://github.com/launchdarkly/js-core/issues/312)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.0.0 to 2.1.0
+
 ## [2.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.0.1...js-server-sdk-common-v2.0.2) (2023-11-01)
 
 

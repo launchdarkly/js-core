@@ -17,7 +17,8 @@ import type {
 } from '@launchdarkly/js-client-sdk-common';
 
 import { name, version } from '../package.json';
-import { btoa, EventSource as RNEventSource, uuidv4 } from './polyfills';
+import { btoa, uuidv4 } from './polyfills';
+import RNEventSource from './react-native-sse';
 
 class PlatformRequests implements Requests {
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {

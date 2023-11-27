@@ -5,7 +5,14 @@ import basicPlatform from './platform';
 const clientContext: ClientContext = {
   basicConfiguration: {
     sdkKey: 'testSdkKey',
-    serviceEndpoints: { events: '', polling: '', streaming: 'https://mockstream.ld.com' },
+    serviceEndpoints: {
+      events: '',
+      polling: '',
+      streaming: 'https://mockstream.ld.com',
+      diagnosticEventPath: '/diagnostic',
+      analyticsEventPath: '/bulk',
+      includeAuthorizationHeader: true,
+    },
   },
   platform: basicPlatform,
 };

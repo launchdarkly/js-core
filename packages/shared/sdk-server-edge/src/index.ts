@@ -19,9 +19,9 @@ export type { LDClient, LDOptions, EdgeProvider };
  *
  * This is an internal API to be used directly only by LaunchDarkly Edge SDKs.
  */
-export const init = (sdkKey: string, platformInfo: Info, options: LDOptionsInternal) => {
+export const init = (clientSideID: string, platformInfo: Info, options: LDOptionsInternal) => {
   // this throws if options are invalid
-  validateOptions(sdkKey, options);
+  validateOptions(clientSideID, options);
 
-  return new LDClient(sdkKey, platformInfo, options);
+  return new LDClient(clientSideID, platformInfo, options);
 };
