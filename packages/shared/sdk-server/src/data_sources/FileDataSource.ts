@@ -22,7 +22,7 @@ function makeFlagWithValue(key: string, value: any, version: number): Flag {
     on: true,
     fallthrough: { variation: 0 },
     variations: [value],
-    version: version ?? 1,
+    version,
   };
 }
 
