@@ -55,6 +55,6 @@ export function httpErrorMessage(
   return `Received ${desc} for ${context} - ${action}`;
 }
 
-export function shouldRetry(err: HttpErrorResponse) {
-  return !(err.status && !isHttpRecoverable(err.status));
+export function shouldRetry({ status }: HttpErrorResponse) {
+  return status ? isHttpRecoverable(status) : true;
 }
