@@ -94,7 +94,7 @@ describe('given a stream processor with mock event source', () => {
     jest.resetAllMocks();
   });
 
-  it.only('uses expected uri and eventSource init args', () => {
+  it('uses expected uri and eventSource init args', () => {
     expect(basicPlatform.requests.createEventSource).toBeCalledWith(
       `${serviceEndpoints.streaming}/all`,
       {
@@ -192,7 +192,7 @@ describe('given a stream processor with mock event source', () => {
   });
 
   describe.each([400, 408, 429, 500, 503])('given recoverable http errors', (status) => {
-    it.only(`continues retrying after error: ${status}`, () => {
+    it(`continues retrying after error: ${status}`, () => {
       const startTime = Date.now();
       const testError = { status, message: 'retry. recoverable.' };
       const willRetry = simulateError(testError);
