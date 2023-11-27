@@ -95,6 +95,6 @@ export interface Requests {
 }
 
 export interface HttpErrorResponse {
-  status: number;
   message: string;
+  status?: number;
 }
