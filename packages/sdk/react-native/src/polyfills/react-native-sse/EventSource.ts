@@ -1,5 +1,10 @@
 /**
  * Ripped from https://github.com/binaryminds/react-native-sse
+ * These changes are made from the above repo at fork-time:
+ * 1. converted to ts and fix ts related errors.
+ * 2. added onopen, onclose, onerror, onretrying functions.
+ * 3. modified dispatch to work with functions added in 2.
+ * 4. replaced all for of loops with foreach
  */
 import type { EventSourceEvent, EventSourceListener, EventSourceOptions, EventType } from './types';
 
