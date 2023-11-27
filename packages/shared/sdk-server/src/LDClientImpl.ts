@@ -2,7 +2,6 @@
 import {
   ClientContext,
   Context,
-  defaultHeaders,
   internal,
   LDClientError,
   LDContext,
@@ -10,7 +9,6 @@ import {
   LDEvaluationDetailTyped,
   LDLogger,
   Platform,
-  shouldRetry,
   subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -189,31 +187,16 @@ export default class LDClientImpl implements LDClient {
     const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
       put: () => this.initSuccess(),
     });
-
-    const createEventSource = () => {
-      const {
-        basicConfiguration: { serviceEndpoints, tags },
-      } = clientContext;
-      const { info, requests } = platform;
-      const streamUri = `${serviceEndpoints.streaming}/all`;
-
-      return requests.createEventSource(streamUri, {
-        headers: defaultHeaders(sdkKey, info, tags),
-        errorFilter: shouldRetry,
-        initialRetryDelayMillis: 1000 * this.config.streamInitialReconnectDelay,
-        readTimeoutMillis: 5 * 60 * 1000,
-        retryResetIntervalMillis: 60 * 1000,
-      });
-    };
-
     const makeDefaultProcessor = () =>
       config.stream
         ? new internal.StreamingProcessor(
-            createEventSource,
+            sdkKey,
+            clientContext,
+            '/all',
             listeners,
             this.diagnosticsManager,
-            (e: any) => this.dataSourceErrorHandler(e),
-            this.logger,
+            (e) => this.dataSourceErrorHandler(e),
+            this.config.streamInitialReconnectDelay,
           )
         : new PollingProcessor(
             config,

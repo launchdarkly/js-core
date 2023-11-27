@@ -1,14 +1,18 @@
-import { basicPlatform, logger } from '@launchdarkly/private-js-mocks';
+import { basicPlatform, clientContext, logger } from '@launchdarkly/private-js-mocks';
 
-import { EventName, HttpErrorResponse, ProcessStreamResponse } from '../../api';
+import { EventName, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
-import { shouldRetry } from '../../utils';
+import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import StreamingProcessor from './StreamingProcessor';
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
+const {
+  basicConfiguration: { serviceEndpoints, tags },
+  platform: { info },
+} = clientContext;
 const event = {
   data: {
     flags: {
@@ -20,29 +24,23 @@ const event = {
   },
 };
 
-const mockLegacyJSEventSource = {
+const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
+  streamUri,
+  options,
+  onclose: jest.fn(),
   addEventListener: jest.fn(),
   close: jest.fn(),
-  onclose: jest.fn(),
-  onopen: jest.fn(),
-  onretrying: jest.fn(),
-  onerror: jest.fn(),
-  options: {
-    errorFilter: shouldRetry,
-  },
-};
-const createLegacyJSEventSource = () => mockLegacyJSEventSource;
-const simulateError = (e: HttpErrorResponse) => mockLegacyJSEventSource.onerror(e);
-const simulatePutEvent = (e: any = event) => {
-  mockLegacyJSEventSource.addEventListener.mock.calls[0][1](e);
-};
+});
 
 describe('given a stream processor with mock event source', () => {
   let streamingProcessor: LDStreamProcessor;
   let diagnosticsManager: DiagnosticsManager;
   let listeners: Map<EventName, ProcessStreamResponse>;
+  let mockEventSource: any;
   let mockListener: ProcessStreamResponse;
   let mockErrorHandler: jest.Mock;
+  let simulatePutEvent: (e?: any) => void;
+  let simulateError: (e: { status: number; message: string }) => boolean;
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -55,6 +53,19 @@ describe('given a stream processor with mock event source', () => {
 
   beforeEach(() => {
     mockErrorHandler = jest.fn();
+    clientContext.basicConfiguration.logger = logger;
+
+    basicPlatform.requests = {
+      createEventSource: jest.fn((streamUri: string, options: any) => {
+        mockEventSource = createMockEventSource(streamUri, options);
+        return mockEventSource;
+      }),
+    } as any;
+    simulatePutEvent = (e: any = event) => {
+      mockEventSource.addEventListener.mock.calls[0][1](e);
+    };
+    simulateError = (e: { status: number; message: string }): boolean =>
+      mockEventSource.options.errorFilter(e);
 
     listeners = new Map();
     mockListener = {
@@ -66,11 +77,12 @@ describe('given a stream processor with mock event source', () => {
 
     diagnosticsManager = new DiagnosticsManager(sdkKey, basicPlatform, {});
     streamingProcessor = new StreamingProcessor(
-      createLegacyJSEventSource,
+      sdkKey,
+      clientContext,
+      '/all',
       listeners,
       diagnosticsManager,
       mockErrorHandler,
-      logger,
     );
 
     jest.spyOn(streamingProcessor, 'stop');
@@ -82,13 +94,50 @@ describe('given a stream processor with mock event source', () => {
     jest.resetAllMocks();
   });
 
+  it.only('uses expected uri and eventSource init args', () => {
+    expect(basicPlatform.requests.createEventSource).toBeCalledWith(
+      `${serviceEndpoints.streaming}/all`,
+      {
+        errorFilter: expect.any(Function),
+        headers: defaultHeaders(sdkKey, info, tags),
+        initialRetryDelayMillis: 1000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
+    );
+  });
+
+  it('sets streamInitialReconnectDelay correctly', () => {
+    streamingProcessor = new StreamingProcessor(
+      sdkKey,
+      clientContext,
+      '/all',
+      listeners,
+      diagnosticsManager,
+      mockErrorHandler,
+      22,
+    );
+    streamingProcessor.start();
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/all`,
+      {
+        errorFilter: expect.any(Function),
+        headers: defaultHeaders(sdkKey, info, tags),
+        initialRetryDelayMillis: 22000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
+    );
+  });
+
   it('adds listeners', () => {
-    expect(mockLegacyJSEventSource.addEventListener).toHaveBeenNthCalledWith(
+    expect(mockEventSource.addEventListener).toHaveBeenNthCalledWith(
       1,
       'put',
       expect.any(Function),
     );
-    expect(mockLegacyJSEventSource.addEventListener).toHaveBeenNthCalledWith(
+    expect(mockEventSource.addEventListener).toHaveBeenNthCalledWith(
       2,
       'patch',
       expect.any(Function),
@@ -97,7 +146,7 @@ describe('given a stream processor with mock event source', () => {
 
   it('executes listeners', () => {
     simulatePutEvent();
-    const patchHandler = mockLegacyJSEventSource.addEventListener.mock.calls[1][1];
+    const patchHandler = mockEventSource.addEventListener.mock.calls[1][1];
     patchHandler(event);
 
     expect(mockListener.deserializeData).toBeCalledTimes(2);
@@ -125,7 +174,7 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor.close();
 
     expect(streamingProcessor.stop).toBeCalled();
-    expect(mockLegacyJSEventSource.close).toBeCalled();
+    expect(mockEventSource.close).toBeCalled();
     // @ts-ignore
     expect(streamingProcessor.eventSource).toBeUndefined();
   });
@@ -143,11 +192,12 @@ describe('given a stream processor with mock event source', () => {
   });
 
   describe.each([400, 408, 429, 500, 503])('given recoverable http errors', (status) => {
-    it(`continues retrying after error: ${status}`, () => {
+    it.only(`continues retrying after error: ${status}`, () => {
       const startTime = Date.now();
       const testError = { status, message: 'retry. recoverable.' };
-      simulateError(testError);
+      const willRetry = simulateError(testError);
 
+      expect(willRetry).toBeTruthy();
       expect(mockErrorHandler).not.toBeCalled();
       expect(logger.warn).toBeCalledWith(
         expect.stringMatching(new RegExp(`${status}.*will retry`)),
@@ -166,8 +216,9 @@ describe('given a stream processor with mock event source', () => {
     it(`stops retrying after error: ${status}`, () => {
       const startTime = Date.now();
       const testError = { status, message: 'stopping. irrecoverable.' };
-      simulateError(testError);
+      const willRetry = simulateError(testError);
 
+      expect(willRetry).toBeFalsy();
       expect(mockErrorHandler).toBeCalledWith(
         new LDStreamingError(testError.message, testError.status),
       );

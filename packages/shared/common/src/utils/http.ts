@@ -31,10 +31,7 @@ export function defaultHeaders(sdkKey: string, info: Info, tags?: ApplicationTag
 }
 
 export function httpErrorMessage(
-  err: {
-    status: number;
-    message: string;
-  },
+  err: HttpErrorResponse,
   context: string,
   retryMessage?: string,
 ): string {

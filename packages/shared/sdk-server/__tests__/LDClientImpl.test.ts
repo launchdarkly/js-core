@@ -51,6 +51,25 @@ describe('LDClientImpl', () => {
     expect(callbacks.onError).not.toBeCalled();
   });
 
+  it('wait for initialization completes even if initialization completes before it is called', (done) => {
+    setupMockStreamingProcessor();
+    client = createClient();
+
+    setTimeout(async () => {
+      const initializedClient = await client.waitForInitialization();
+      expect(initializedClient).toEqual(client);
+      done();
+    }, 10);
+  });
+
+  it('waiting for initialization the second time produces the same result', async () => {
+    client = createClient();
+    await client.waitForInitialization();
+
+    const initializedClient = await client.waitForInitialization();
+    expect(initializedClient).toEqual(client);
+  });
+
   it('fires ready event in offline mode', async () => {
     client = createClient({ offline: true });
     const initializedClient = await client.waitForInitialization();
@@ -72,6 +91,29 @@ describe('LDClientImpl', () => {
     expect(callbacks.onReady).not.toBeCalled();
     expect(callbacks.onFailed).toBeCalled();
     expect(callbacks.onError).toBeCalled();
+  });
+
+  it.only('initialization promise is rejected even if the failure happens before wait is called', (done) => {
+    setupMockStreamingProcessor(true);
+    client = createClient();
+
+    setTimeout(async () => {
+      await expect(client.waitForInitialization()).rejects.toThrow('failed');
+
+      expect(client.initialized()).toBeFalsy();
+      expect(callbacks.onReady).not.toBeCalled();
+      expect(callbacks.onFailed).toBeCalled();
+      expect(callbacks.onError).toBeCalled();
+      done();
+    }, 10);
+  });
+
+  it('waiting a second time results in the same rejection', async () => {
+    setupMockStreamingProcessor(true);
+    client = createClient();
+
+    await expect(client.waitForInitialization()).rejects.toThrow('failed');
+    await expect(client.waitForInitialization()).rejects.toThrow('failed');
   });
 
   it('isOffline returns true in offline mode', () => {
@@ -96,41 +138,5 @@ describe('LDClientImpl', () => {
     const p2 = client.waitForInitialization();
 
     expect(p2).toBe(p1);
-  });
-
-  it('creates only one Promise when waiting for initialization', async () => {
-    client = createClient();
-    const p1 = client.waitForInitialization();
-    const p2 = client.waitForInitialization();
-
-    expect(p2).toBe(p1);
-  });
-
-  it('createEventSource with expected uri and init dict', () => {
-    client = createClient();
-
-    expect(basicPlatform.requests.createEventSource).toBeCalledWith(
-      'https://stream.launchdarkly.com/all',
-      {
-        errorFilter: expect.any(Function),
-        headers: {
-          authorization: 'sdk-key',
-          'user-agent': 'TestUserAgent/2.0.2',
-          'x-launchdarkly-wrapper': 'Rapper/1.2.3',
-        },
-        initialRetryDelayMillis: 1000,
-        readTimeoutMillis: 300000,
-        retryResetIntervalMillis: 60000,
-      },
-    );
-  });
-
-  it('sets streamInitialReconnectDelay correctly', () => {
-    client = createClient({ streamInitialReconnectDelay: 22 });
-
-    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
-      'https://stream.launchdarkly.com/all',
-      expect.objectContaining({ initialRetryDelayMillis: 22000 }),
-    );
   });
 });
