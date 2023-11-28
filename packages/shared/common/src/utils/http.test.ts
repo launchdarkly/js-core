@@ -1,6 +1,6 @@
 import { Info, PlatformData, SdkData } from '../api';
 import { ApplicationTags } from '../options';
-import { defaultHeaders, httpErrorMessage } from './http';
+import { defaultHeaders, httpErrorMessage, shouldRetry } from './http';
 
 describe('defaultHeaders', () => {
   const makeInfo = (
@@ -115,5 +115,26 @@ describe('httpErrorMessage', () => {
     const result = httpErrorMessage(error, context, retryMessage);
 
     expect(result).toBe('Received error 500 for fake error context message - will retry');
+  });
+
+  test('should retry', () => {
+    const error = { status: 500, message: 'denied' };
+    const result = shouldRetry(error);
+
+    expect(result).toBeTruthy();
+  });
+
+  test('status undefined, should retry', () => {
+    const error = { message: 'custom error' };
+    const result = shouldRetry(error);
+
+    expect(result).toBeTruthy();
+  });
+
+  test('should not retry', () => {
+    const error = { status: 401, message: 'unauthorized' };
+    const result = shouldRetry(error);
+
+    expect(result).toBeFalsy();
   });
 });

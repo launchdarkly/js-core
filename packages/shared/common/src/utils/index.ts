@@ -1,6 +1,6 @@
 import clone from './clone';
 import { secondsToMillis } from './date';
-import { defaultHeaders, httpErrorMessage, LDHeaders } from './http';
+import { defaultHeaders, httpErrorMessage, LDHeaders, shouldRetry } from './http';
 import noop from './noop';
 import sleep from './sleep';
 import { VoidFunction } from './VoidFunction';
@@ -11,6 +11,7 @@ export {
   httpErrorMessage,
   noop,
   LDHeaders,
+  shouldRetry,
   secondsToMillis,
   sleep,
   VoidFunction,
