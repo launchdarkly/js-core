@@ -106,28 +106,28 @@ export default class LDClientImpl implements LDClient {
 
     listeners.set('put', {
       deserializeData: JSON.parse,
-      processJson: ({ data }) => {
+      processJson: (dataJson) => {
         this.logger.debug('Initializing all data');
         this.flags = {};
-        Object.keys(data).forEach((key) => {
-          this.flags[key] = data[key];
+        Object.keys(dataJson).forEach((key) => {
+          this.flags[key] = dataJson[key];
         });
       },
     });
 
     listeners.set('patch', {
       deserializeData: JSON.parse,
-      processJson: ({ data }) => {
-        this.logger.debug(`Updating ${data.key}`);
-        this.flags[data.key] = data;
+      processJson: (dataJson) => {
+        this.logger.debug(`Updating ${dataJson.key}`);
+        this.flags[dataJson.key] = dataJson;
       },
     });
 
     listeners.set('patch', {
       deserializeData: JSON.parse,
-      processJson: ({ data }) => {
-        this.logger.debug(`Deleting ${data.key}`);
-        delete this.flags[data.key];
+      processJson: (dataJson) => {
+        this.logger.debug(`Deleting ${dataJson.key}`);
+        delete this.flags[dataJson.key];
       },
     });
 

@@ -56,7 +56,9 @@ export default class EventSource<E extends string = never> {
       ...options,
     };
 
-    this.url = url;
+    // TODO: debug why uri is malformed from LDClientImpl
+    this.url =
+      'https://clientstream.launchdarkly.com/meval/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9';
     this.method = opts.method!;
     this.timeout = opts.timeout!;
     this.timeoutBeforeConnection = opts.timeoutBeforeConnection!;
@@ -287,7 +289,7 @@ export default class EventSource<E extends string = never> {
         this.onclose();
         break;
       case 'error':
-        this.onerror();
+        this.onerror(data);
         break;
       case 'retry':
         this.onretrying();
@@ -309,6 +311,6 @@ export default class EventSource<E extends string = never> {
 
   onopen() {}
   onclose() {}
-  onerror() {}
+  onerror(_err: any) {}
   onretrying() {}
 }
