@@ -2,6 +2,7 @@
 import type {
   Crypto,
   Encoding,
+  EventName,
   EventSource,
   EventSourceInitDict,
   Hasher,
@@ -13,17 +14,20 @@ import type {
   Requests,
   Response,
   SdkData,
-} from '@launchdarkly/js-sdk-common';
+} from '@launchdarkly/js-client-sdk-common';
 
 import { name, version } from '../package.json';
 import { btoa, uuidv4 } from './polyfills';
+import RNEventSource from './react-native-sse';
 
 class PlatformRequests implements Requests {
-  createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
-    throw new Error('todo');
+  createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
+    // TODO: add retry logic
+    return new RNEventSource<EventName>(url, eventSourceInitDict);
   }
 
   fetch(url: string, options?: Options): Promise<Response> {
+    // @ts-ignore
     return fetch(url, options);
   }
 }

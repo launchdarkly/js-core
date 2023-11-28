@@ -1,13 +1,17 @@
-import { EventName, EventSource, LDLogger, ProcessStreamResponse, Requests } from '../../api';
+import {
+  EventName,
+  EventSource,
+  HttpErrorResponse,
+  LDLogger,
+  ProcessStreamResponse,
+  Requests,
+} from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
-import { isHttpRecoverable, LDStreamingError } from '../../errors';
+import { LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
-import { defaultHeaders, httpErrorMessage } from '../../utils';
+import { defaultHeaders, httpErrorMessage, shouldRetry } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import { StreamingErrorHandler } from './types';
-
-const STREAM_READ_TIMEOUT_MS = 5 * 60 * 1000;
-const RETRY_RESET_INTERVAL_MS = 60 * 1000;
 
 const reportJsonError = (
   type: string,
@@ -64,31 +68,39 @@ class StreamingProcessor implements LDStreamProcessor {
     this.connectionAttemptStartTime = undefined;
   }
 
+  /**
+   * This is a wrapper around the passed errorHandler which adds additional
+   * diagnostics and logging logic.
+   *
+   * @param err The error to be logged and handled.
+   * @return boolean whether to retry the connection.
+   *
+   * @private
+   */
+  private retryAndHandleError(err: HttpErrorResponse) {
+    if (!shouldRetry(err)) {
+      this.logConnectionResult(false);
+      this.errorHandler?.(new LDStreamingError(err.message, err.status));
+      this.logger?.error(httpErrorMessage(err, 'streaming request'));
+      return false;
+    }
+
+    this.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
+    this.logConnectionResult(false);
+    this.logConnectionStarted();
+    return true;
+  }
+
   start() {
     this.logConnectionStarted();
 
-    const errorFilter = (err: { status: number; message: string }): boolean => {
-      if (err.status && !isHttpRecoverable(err.status)) {
-        this.logConnectionResult(false);
-        this.errorHandler?.(new LDStreamingError(err.message, err.status));
-        this.logger?.error(httpErrorMessage(err, 'streaming request'));
-        return false;
-      }
-
-      this.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
-      this.logConnectionResult(false);
-      this.logConnectionStarted();
-      return true;
-    };
-
     // TLS is handled by the platform implementation.
-
     const eventSource = this.requests.createEventSource(this.streamUri, {
       headers: this.headers,
-      errorFilter,
+      errorFilter: (error: HttpErrorResponse) => this.retryAndHandleError(error),
       initialRetryDelayMillis: 1000 * this.streamInitialReconnectDelay,
-      readTimeoutMillis: STREAM_READ_TIMEOUT_MS,
-      retryResetIntervalMillis: RETRY_RESET_INTERVAL_MS,
+      readTimeoutMillis: 5 * 60 * 1000,
+      retryResetIntervalMillis: 60 * 1000,
     });
     this.eventSource = eventSource;
 

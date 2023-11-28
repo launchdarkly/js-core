@@ -1,3 +1,5 @@
+import type { HttpErrorResponse } from './Requests';
+
 export type EventName = 'delete' | 'patch' | 'ping' | 'put';
 export type EventListener = (event?: { data?: any }) => void;
 export type ProcessStreamResponse = {
@@ -7,7 +9,7 @@ export type ProcessStreamResponse = {
 
 export interface EventSource {
   onclose: (() => void) | undefined;
-  onerror: (() => void) | undefined;
+  onerror: ((err?: HttpErrorResponse) => void) | undefined;
   onopen: (() => void) | undefined;
   onretrying: ((e: { delayMillis: number }) => void) | undefined;
 
@@ -16,7 +18,7 @@ export interface EventSource {
 }
 
 export interface EventSourceInitDict {
-  errorFilter: (err: { status: number; message: string }) => boolean;
+  errorFilter: (err: HttpErrorResponse) => boolean;
   headers: { [key: string]: string | string[] };
   initialRetryDelayMillis: number;
   readTimeoutMillis: number;
