@@ -134,11 +134,8 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
-  makeStreamUri(context: LDContext) {
-    return `${this.config.serviceEndpoints.streaming}/meval/${base64UrlEncode(
-      JSON.stringify(context),
-      this.platform.encoding!,
-    )}`;
+  private createStreamUriPath(context: LDContext) {
+    return `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`;
   }
 
   // TODO: implement secure mode
@@ -156,7 +153,7 @@ export default class LDClientImpl implements LDClient {
     this.streamer = new internal.StreamingProcessor(
       this.sdkKey,
       this.clientContext,
-      this.makeStreamUri(context),
+      this.createStreamUriPath(context),
       this.createStreamListeners(),
       this.diagnosticsManager,
       (e) => this.logger.error(e),

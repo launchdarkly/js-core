@@ -56,9 +56,7 @@ export default class EventSource<E extends string = never> {
       ...options,
     };
 
-    // TODO: debug why uri is malformed from LDClientImpl
-    this.url =
-      'https://clientstream.launchdarkly.com/meval/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9';
+    this.url = url;
     this.method = opts.method!;
     this.timeout = opts.timeout!;
     this.timeoutBeforeConnection = opts.timeoutBeforeConnection!;
