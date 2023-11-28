@@ -6,7 +6,7 @@ To run the example app:
 2. Add your client-side sdk key to that `.env` file:
 
 ```shell
-CLIENT_SIDE_SDK_KEY=abcdef12456
+MOBILE_KEY=abcdef12456
 ```
 
 3.  Finally

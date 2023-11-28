@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  ClientContext,
   clone,
   Context,
   internal,
@@ -13,6 +14,8 @@ import {
   LDFlagValue,
   LDLogger,
   Platform,
+  ProcessStreamResponse,
+  EventName as StreamEventName,
   subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -21,7 +24,8 @@ import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import fetchFlags, { Flags } from './evaluation/fetchFlags';
+import { Flags } from './evaluation/fetchFlags';
+import { base64UrlEncode } from './evaluation/fetchUtils';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -30,21 +34,23 @@ const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessag
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
+  context?: LDContext;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor: subsystem.LDEventProcessor;
+  streamer?: internal.StreamingProcessor;
+  logger: LDLogger;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
-  private logger: LDLogger;
+  private readonly clientContext: ClientContext;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
   constructor(
     public readonly sdkKey: string,
-    public context: LDContext,
     public readonly platform: Platform,
     options: LDOptions,
   ) {
@@ -57,6 +63,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.config = new Configuration(options);
+    this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
@@ -66,18 +73,6 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
-
-    // TODO: init streamer
-  }
-
-  async start() {
-    try {
-      await this.identify(this.context);
-      this.emitter.emit('ready');
-    } catch (error: any) {
-      this.emitter.emit('failed', error);
-      throw error;
-    }
   }
 
   allFlags(): LDFlagSet {
@@ -106,24 +101,75 @@ export default class LDClientImpl implements LDClient {
     return clone(this.context);
   }
 
+  private createStreamListeners(): Map<StreamEventName, ProcessStreamResponse> {
+    const listeners = new Map<StreamEventName, ProcessStreamResponse>();
+
+    listeners.set('put', {
+      deserializeData: JSON.parse,
+      processJson: ({ data }) => {
+        this.logger.debug('Initializing all data');
+        this.flags = {};
+        Object.keys(data).forEach((key) => {
+          this.flags[key] = data[key];
+        });
+      },
+    });
+
+    listeners.set('patch', {
+      deserializeData: JSON.parse,
+      processJson: ({ data }) => {
+        this.logger.debug(`Updating ${data.key}`);
+        this.flags[data.key] = data;
+      },
+    });
+
+    listeners.set('patch', {
+      deserializeData: JSON.parse,
+      processJson: ({ data }) => {
+        this.logger.debug(`Deleting ${data.key}`);
+        delete this.flags[data.key];
+      },
+    });
+
+    return listeners;
+  }
+
+  makeStreamUri(context: LDContext) {
+    return `${this.config.serviceEndpoints.streaming}/meval/${base64UrlEncode(
+      JSON.stringify(context),
+      this.platform.encoding!,
+    )}`;
+  }
+
   // TODO: implement secure mode
-  async identify(context: LDContext, hash?: string): Promise<void> {
+  async identify(context: LDContext, _hash?: string): Promise<void> {
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
       const error = new Error('Context was unspecified or had no key');
       this.logger.error(error);
-      this.emitter.emit('error', error);
+      this.emitter.emit('error', context, error);
       throw error;
     }
 
-    try {
-      this.flags = await fetchFlags(this.sdkKey, context, this.config, this.platform);
-      this.context = context;
-    } catch (error: any) {
-      this.logger.error(error);
-      this.emitter.emit('error', error);
-      throw error;
-    }
+    this.context = context;
+
+    this.streamer = new internal.StreamingProcessor(
+      this.sdkKey,
+      this.clientContext,
+      this.makeStreamUri(context),
+      this.createStreamListeners(),
+      this.diagnosticsManager,
+      (e) => this.logger.error(e),
+    );
+
+    this.emitter.emit('connecting', context);
+    this.streamer.start();
+    this.streamer.eventSource!.onopen = () => {
+      this.emitter.emit('ready', context);
+    };
+    this.streamer.eventSource!.onerror = (err: any) => {
+      this.emitter.emit('error', context, err);
+    };
   }
 
   off(eventName: EventName, listener?: Function): void {
@@ -162,7 +208,7 @@ export default class LDClientImpl implements LDClient {
 
     if (!found) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
-      this.emitter.emit('error', error);
+      this.emitter.emit('variation:error', this.context, error);
       this.eventProcessor.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
       );
@@ -184,6 +230,10 @@ export default class LDClientImpl implements LDClient {
             reason,
           ),
         );
+        const error = new LDClientError(
+          `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
+        );
+        this.emitter.emit('variation:error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -193,6 +243,7 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Result value is null in variation');
       successDetail.value = defaultValue;
     }
+    this.emitter.emit('variation:success', this.context);
     this.eventProcessor.sendEvent(
       eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
     );
@@ -216,12 +267,54 @@ export default class LDClientImpl implements LDClient {
     return this.variationInternal(key, defaultValue, eventFactory, typeChecker);
   }
 
-  // TODO: add other typed variation functions
   boolVariation(key: string, defaultValue: boolean): boolean {
     return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
       TypeValidators.Boolean.is(value),
       TypeValidators.Boolean.getType(),
     ]).value;
+  }
+
+  jsonVariation(key: string, defaultValue: unknown): unknown {
+    return this.variation(key, defaultValue);
+  }
+
+  numberVariation(key: string, defaultValue: number): number {
+    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]).value;
+  }
+
+  stringVariation(key: string, defaultValue: string): string {
+    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
+    ]).value;
+  }
+
+  boolVariationDetail(key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Boolean.is(value),
+      TypeValidators.Boolean.getType(),
+    ]);
+  }
+
+  numberVariationDetail(key: string, defaultValue: number): LDEvaluationDetailTyped<number> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.Number.is(value),
+      TypeValidators.Number.getType(),
+    ]);
+  }
+
+  stringVariationDetail(key: string, defaultValue: string): LDEvaluationDetailTyped<string> {
+    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+      TypeValidators.String.is(value),
+      TypeValidators.String.getType(),
+    ]);
+  }
+
+  jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
+    return this.variationDetail(key, defaultValue);
   }
 
   waitForInitialization(): Promise<void> {

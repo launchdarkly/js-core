@@ -7,11 +7,13 @@
  *
  * @packageDocumentation
  */
-import init from './init';
 import { setupPolyfill } from './polyfills';
+import ReactNativeLDClient from './ReactNativeLDClient';
 
 setupPolyfill();
 
 export * from '@launchdarkly/js-client-sdk-common';
 
-export { init };
+export * from './hooks';
+export * from './provider';
+export { ReactNativeLDClient };
