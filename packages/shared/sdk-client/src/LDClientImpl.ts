@@ -2,6 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  base64UrlEncode,
   ClientContext,
   clone,
   Context,
@@ -25,7 +26,6 @@ import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import { Flags } from './evaluation/fetchFlags';
-import { base64UrlEncode } from './evaluation/fetchUtils';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -135,8 +135,22 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
-  private createStreamUriPath(context: LDContext) {
-    return `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`;
+  /**
+   * Generates the url subpath for streamer.
+   *
+   * For mobile key: /meval/${base64-encoded-context}
+   * For clientSideId: /eval/${envId}/${base64-encoded-context}
+   *
+   * @param context The LD context object to be base64 encoded and appended to
+   * the path
+   *
+   * @protected This function must be overridden in subclasses for streamer
+   * to work
+   */
+  protected createStreamUriPath(context: LDContext) {
+    throw new Error(
+      'createStreamUriPath not implemented. client sdks must implement createStreamUriPath for streamer to work',
+    );
   }
 
   // TODO: implement secure mode
