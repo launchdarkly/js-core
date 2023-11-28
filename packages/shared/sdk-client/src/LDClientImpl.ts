@@ -194,8 +194,11 @@ export default class LDClientImpl implements LDClient {
   }
 
   track(key: string, data?: any, metricValue?: number): void {
+    if (!this.context) {
+      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return;
+    }
     const checkedContext = Context.fromLDContext(this.context);
-
     if (!checkedContext.valid) {
       this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
       return;
@@ -212,6 +215,11 @@ export default class LDClientImpl implements LDClient {
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
   ): LDFlagValue {
+    if (!this.context) {
+      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
+    }
+
     const evalContext = Context.fromLDContext(this.context);
     const found = this.flags[flagKey];
 

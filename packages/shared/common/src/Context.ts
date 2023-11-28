@@ -348,7 +348,7 @@ export default class Context {
    * @returns a {@link Context}, if the context was not valid, then the returned contexts `valid`
    * property will be false.
    */
-  public static fromLDContext(context?: LDContext): Context {
+  public static fromLDContext(context: LDContext): Context {
     if (!context) {
       return Context.contextForError('unknown', 'No context specified. Returning default value');
     }
