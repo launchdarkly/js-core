@@ -112,6 +112,7 @@ export default class LDClientImpl implements LDClient {
         Object.keys(dataJson).forEach((key) => {
           this.flags[key] = dataJson[key];
         });
+        this.emitter.emit('ready', this.context);
       },
     });
 
@@ -161,9 +162,6 @@ export default class LDClientImpl implements LDClient {
 
     this.emitter.emit('connecting', context);
     this.streamer.start();
-    this.streamer.eventSource!.onopen = () => {
-      this.emitter.emit('ready', context);
-    };
     this.streamer.eventSource!.onerror = (err: any) => {
       this.emitter.emit('error', context, err);
     };

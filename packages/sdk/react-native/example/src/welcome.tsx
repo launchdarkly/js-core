@@ -1,18 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import {
-  useBoolVariation,
-  useLDClient,
-  useLDDataSourceStatus,
-} from '@launchdarkly/react-native-client-sdk';
+import { useBoolVariation, useLDDataSourceStatus } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
   const { error, status } = useLDDataSourceStatus();
-  const client = useLDClient();
-  const flag = client.boolVariation('dev-test-flag', false);
-
-  // TODO: debug why typed variation hooks don't work.
-  // const flag = useBoolVariation('dev-test-flag', false);
+  const flag = useBoolVariation('dev-test-flag', false);
   console.log(`============== status: ${status}`);
 
   return (
