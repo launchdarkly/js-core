@@ -147,7 +147,7 @@ export default class LDClientImpl implements LDClient {
    * @protected This function must be overridden in subclasses for streamer
    * to work
    */
-  protected createStreamUriPath(context: LDContext) {
+  protected createStreamUriPath(context: LDContext): string {
     throw new Error(
       'createStreamUriPath not implemented. client sdks must implement createStreamUriPath for streamer to work',
     );
