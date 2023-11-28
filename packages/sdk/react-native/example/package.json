@@ -4,13 +4,21 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android --clear",
-    "ios": "expo start --ios --clear",
+    "expo-clean": "expo prebuild --clean",
+    "android": "expo run:android",
+    "android-release": "expo run:android --variant release",
+    "android-go": "expo start --android --clear",
+    "android-log": "react-native log-android",
+    "ios": "expo run:ios",
+    "ios-release": "expo run:ios --configuration Release",
+    "ios-go": "expo start --ios --clear",
+    "ios-log": "react-native log-ios",
     "web": "expo start --web --clear",
-    "clean": "yarn cache clean && rm -rf node_modules"
+    "clean": "expo prebuild --clean && yarn cache clean && rm -rf node_modules && rm -rf .expo"
   },
   "dependencies": {
     "expo": "~49.0.16",
+    "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.7.1",
     "react": "18.2.0",
     "react-native": "0.72.6"
