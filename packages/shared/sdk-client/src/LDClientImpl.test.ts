@@ -6,12 +6,9 @@ import {
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
 
-import LDEmitter from './api/LDEmitter';
-import fetchFlags from './evaluation/fetchFlags';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 
-jest.mock('./api/LDEmitter');
 jest.mock('./evaluation/fetchFlags');
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -28,22 +25,15 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 describe('sdk-client object', () => {
   const testSdkKey = 'test-sdk-key';
   const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
-  const mockFetchFlags = fetchFlags as jest.Mock;
-
   let ldc: LDClientImpl;
-  let mockEmitter: LDEmitter;
 
   beforeEach(() => {
-    jest.useFakeTimers();
     setupMockStreamingProcessor(false, mockResponseJson);
-
-    mockFetchFlags.mockResolvedValue(mockResponseJson);
 
     ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger });
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
-    [mockEmitter] = (LDEmitter as jest.Mock).mock.instances;
   });
 
   afterEach(() => {
@@ -83,9 +73,8 @@ describe('sdk-client object', () => {
     });
   });
 
-  test.only('all flags', async () => {
+  test('all flags', async () => {
     await ldc.identify(context);
-    jest.runAllTicks();
     const all = ldc.allFlags();
 
     expect(all).toEqual({
@@ -109,7 +98,6 @@ describe('sdk-client object', () => {
 
   test('identify success', async () => {
     mockResponseJson['dev-test-flag'].value = false;
-    mockFetchFlags.mockResolvedValue(mockResponseJson);
     const carContext: LDContext = { kind: 'car', key: 'mazda-cx7' };
 
     await ldc.identify(carContext);
@@ -128,18 +116,18 @@ describe('sdk-client object', () => {
 
     await expect(ldc.identify(carContext)).rejects.toThrowError(/no key/);
     expect(logger.error).toBeCalledTimes(1);
-    expect(mockEmitter.emit).toHaveBeenNthCalledWith(1, 'error', expect.any(Error));
-    expect(ldc.getContext()).toEqual(context);
+    expect(ldc.getContext()).toBeUndefined();
   });
 
-  test('identify error fetch error', async () => {
-    // @ts-ignore
-    mockFetchFlags.mockRejectedValue(new Error('unknown test fetch error'));
+  test('identify error stream error', async () => {
+    setupMockStreamingProcessor(true);
     const carContext: LDContext = { kind: 'car', key: 'mazda-3' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrowError(/fetch error/);
+    await expect(ldc.identify(carContext)).rejects.toMatchObject({
+      code: 401,
+      message: 'test-error',
+    });
     expect(logger.error).toBeCalledTimes(1);
-    expect(mockEmitter.emit).toHaveBeenNthCalledWith(1, 'error', expect.any(Error));
-    expect(ldc.getContext()).toEqual(context);
+    expect(ldc.getContext()).toEqual(carContext);
   });
 });

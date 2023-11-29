@@ -98,7 +98,7 @@ export default class LDClientImpl implements LDClient {
   }
 
   getContext(): LDContext {
-    return clone(this.context);
+    return this.context ? clone(this.context) : undefined;
   }
 
   private createStreamListeners(): Map<StreamEventName, ProcessStreamResponse> {
@@ -165,20 +165,36 @@ export default class LDClientImpl implements LDClient {
 
     this.context = context;
 
+    const p = new Promise<void>((resolve, reject) => {
+      this.emitter.on('ready', (c: LDContext) => {
+        if (c === context) {
+          this.logger.debug(`ready: ${JSON.stringify(c)}`);
+          resolve();
+        }
+      });
+
+      this.emitter.on('error', (c: LDContext, err: any) => {
+        this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
+        if (c === context) {
+          reject(err);
+        }
+      });
+    });
+
     this.streamer = new internal.StreamingProcessor(
       this.sdkKey,
       this.clientContext,
       this.createStreamUriPath(context),
       this.createStreamListeners(),
       this.diagnosticsManager,
-      (e) => this.logger.error(e),
+      (e) => {
+        this.logger.error(e);
+        this.emitter.emit('error', context, e);
+      },
     );
-
     this.emitter.emit('connecting', context);
     this.streamer.start();
-    this.streamer.eventSource!.onerror = (err: any) => {
-      this.emitter.emit('error', context, err);
-    };
+    return p;
   }
 
   off(eventName: EventName, listener?: Function): void {
