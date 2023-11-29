@@ -136,16 +136,16 @@ export default class LDClientImpl implements LDClient {
   }
 
   /**
-   * Generates the url subpath for streamer.
+   * Generates the url path for streamer.
    *
    * For mobile key: /meval/${base64-encoded-context}
    * For clientSideId: /eval/${envId}/${base64-encoded-context}
    *
    * @param context The LD context object to be base64 encoded and appended to
-   * the path
+   * the path.
    *
    * @protected This function must be overridden in subclasses for streamer
-   * to work
+   * to work.
    */
   protected createStreamUriPath(context: LDContext): string {
     throw new Error(

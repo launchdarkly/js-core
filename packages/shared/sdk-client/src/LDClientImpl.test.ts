@@ -1,5 +1,10 @@
 import { LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger } from '@launchdarkly/private-js-mocks';
+import {
+  basicPlatform,
+  logger,
+  MockStreamingProcessor,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import LDEmitter from './api/LDEmitter';
 import fetchFlags from './evaluation/fetchFlags';
@@ -8,7 +13,18 @@ import LDClientImpl from './LDClientImpl';
 
 jest.mock('./api/LDEmitter');
 jest.mock('./evaluation/fetchFlags');
-
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  return {
+    ...actual,
+    ...{
+      internal: {
+        ...actual.internal,
+        StreamingProcessor: MockStreamingProcessor,
+      },
+    },
+  };
+});
 describe('sdk-client object', () => {
   const testSdkKey = 'test-sdk-key';
   const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
@@ -18,9 +34,15 @@ describe('sdk-client object', () => {
   let mockEmitter: LDEmitter;
 
   beforeEach(() => {
+    jest.useFakeTimers();
+    setupMockStreamingProcessor(false, mockResponseJson);
+
     mockFetchFlags.mockResolvedValue(mockResponseJson);
 
     ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger });
+    jest
+      .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
+      .mockReturnValue('/stream/path');
     [mockEmitter] = (LDEmitter as jest.Mock).mock.instances;
   });
 
@@ -61,8 +83,9 @@ describe('sdk-client object', () => {
     });
   });
 
-  test('all flags', async () => {
+  test.only('all flags', async () => {
     await ldc.identify(context);
+    jest.runAllTicks();
     const all = ldc.allFlags();
 
     expect(all).toEqual({
