@@ -164,7 +164,7 @@ export default class LDClientImpl implements LDClient {
         this.emitter.off('ready', this.identifyReadyListener);
       }
       if (this.identifyErrorListener) {
-        this.emitter.off('ready', this.identifyErrorListener);
+        this.emitter.off('error', this.identifyErrorListener);
       }
 
       this.identifyReadyListener = (c: LDContext) => {
