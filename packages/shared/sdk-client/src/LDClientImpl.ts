@@ -243,7 +243,7 @@ export default class LDClientImpl implements LDClient {
     typeChecker?: (value: any) => [boolean, string],
   ): LDFlagValue {
     if (!this.context) {
-      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      this.logger?.debug(ClientMessages.missingContextKeyNoEvent);
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
