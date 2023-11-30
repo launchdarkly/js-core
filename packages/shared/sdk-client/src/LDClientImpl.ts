@@ -101,18 +101,19 @@ export default class LDClientImpl implements LDClient {
     return this.context ? clone(this.context) : undefined;
   }
 
-  private createStreamListeners(): Map<StreamEventName, ProcessStreamResponse> {
+  private createStreamListeners(context: LDContext): Map<StreamEventName, ProcessStreamResponse> {
     const listeners = new Map<StreamEventName, ProcessStreamResponse>();
 
     listeners.set('put', {
       deserializeData: JSON.parse,
       processJson: (dataJson) => {
         this.logger.debug('Initializing all data');
+        this.context = context;
         this.flags = {};
         Object.keys(dataJson).forEach((key) => {
           this.flags[key] = dataJson[key];
         });
-        this.emitter.emit('ready', this.context);
+        this.emitter.emit('ready', context);
       },
     });
 
@@ -121,14 +122,16 @@ export default class LDClientImpl implements LDClient {
       processJson: (dataJson) => {
         this.logger.debug(`Updating ${dataJson.key}`);
         this.flags[dataJson.key] = dataJson;
+        this.emitter.emit('change', context, dataJson.key);
       },
     });
 
-    listeners.set('patch', {
+    listeners.set('delete', {
       deserializeData: JSON.parse,
       processJson: (dataJson) => {
         this.logger.debug(`Deleting ${dataJson.key}`);
         delete this.flags[dataJson.key];
+        this.emitter.emit('change', context, dataJson.key);
       },
     });
 
@@ -160,10 +163,8 @@ export default class LDClientImpl implements LDClient {
       const error = new Error('Context was unspecified or had no key');
       this.logger.error(error);
       this.emitter.emit('error', context, error);
-      throw error;
+      return Promise.reject(error);
     }
-
-    this.context = context;
 
     const p = new Promise<void>((resolve, reject) => {
       this.emitter.on('ready', (c: LDContext) => {
@@ -185,7 +186,7 @@ export default class LDClientImpl implements LDClient {
       this.sdkKey,
       this.clientContext,
       this.createStreamUriPath(context),
-      this.createStreamListeners(),
+      this.createStreamListeners(context),
       this.diagnosticsManager,
       (e) => {
         this.logger.error(e);
@@ -242,7 +243,7 @@ export default class LDClientImpl implements LDClient {
 
     if (!found) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
-      this.emitter.emit('variation:error', this.context, error);
+      this.emitter.emit('error', this.context, error);
       this.eventProcessor.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
       );
@@ -267,7 +268,7 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.emitter.emit('variation:error', this.context, error);
+        this.emitter.emit('error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -277,7 +278,6 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Result value is null in variation');
       successDetail.value = defaultValue;
     }
-    this.emitter.emit('variation:success', this.context);
     this.eventProcessor.sendEvent(
       eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
     );

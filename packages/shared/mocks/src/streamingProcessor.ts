@@ -8,7 +8,10 @@ import type {
 
 export const MockStreamingProcessor = jest.fn();
 
-export const setupMockStreamingProcessor = (shouldError: boolean = false, putJson?: any) => {
+export const setupMockStreamingProcessor = (
+  shouldError: boolean = false,
+  putResponseJson: any = { data: { flags: {}, segments: {} } },
+) => {
   MockStreamingProcessor.mockImplementation(
     (
       sdkKey: string,
@@ -31,10 +34,7 @@ export const setupMockStreamingProcessor = (shouldError: boolean = false, putJso
           });
         } else {
           // execute put which will resolve the init promise
-          process.nextTick(
-            () =>
-              listeners.get('put')?.processJson(putJson ?? { data: { flags: {}, segments: {} } }),
-          );
+          process.nextTick(() => listeners.get('put')?.processJson(putResponseJson));
         }
       }),
       close: jest.fn(),

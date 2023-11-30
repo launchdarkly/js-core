@@ -128,6 +128,6 @@ describe('sdk-client object', () => {
       message: 'test-error',
     });
     expect(logger.error).toBeCalledTimes(1);
-    expect(ldc.getContext()).toEqual(carContext);
+    expect(ldc.getContext()).toBeUndefined();
   });
 });
