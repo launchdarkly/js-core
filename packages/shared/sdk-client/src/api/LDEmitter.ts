@@ -1,9 +1,8 @@
 export type EventName =
-  | 'change'
-  | 'ready'
-  | 'failed'
-  | 'error'
   | 'connecting'
+  | 'ready'
+  | 'error'
+  | 'change'
   | 'variation:success'
   | 'variation:error';
 

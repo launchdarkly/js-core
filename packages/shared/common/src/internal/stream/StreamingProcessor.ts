@@ -25,12 +25,11 @@ const reportJsonError = (
 };
 
 class StreamingProcessor implements LDStreamProcessor {
-  eventSource?: EventSource;
-
   private readonly headers: { [key: string]: string | string[] };
   private readonly streamUri: string;
   private readonly logger?: LDLogger;
 
+  private eventSource?: EventSource;
   private requests: Requests;
   private connectionAttemptStartTime?: number;
 
