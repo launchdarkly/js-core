@@ -2,29 +2,57 @@ import { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk-common';
 
 import useLDClient from '../useLDClient';
 
+/**
+ * Determines the strongly typed variation of a feature flag.
+ *
+ * @param key The unique key of the feature flag.
+ * @param defaultValue The default value of the flag, to be used if the value is not available
+ *   from LaunchDarkly.
+ * @returns
+ *   The strongly typed value.
+ */
 export const useTypedVariation = <T extends boolean | number | string | unknown>(
-  flagKey: string,
+  key: string,
   defaultValue: T,
 ): T => {
   const ldClient = useLDClient();
 
   switch (typeof defaultValue) {
     case 'boolean':
-      return ldClient.boolVariation(flagKey, defaultValue as boolean) as T;
+      return ldClient.boolVariation(key, defaultValue as boolean) as T;
     case 'number':
-      return ldClient.numberVariation(flagKey, defaultValue as number) as T;
+      return ldClient.numberVariation(key, defaultValue as number) as T;
     case 'string':
-      return ldClient.stringVariation(flagKey, defaultValue as string) as T;
+      return ldClient.stringVariation(key, defaultValue as string) as T;
     case 'undefined':
     case 'object':
-      return ldClient.jsonVariation(flagKey, defaultValue) as T;
+      return ldClient.jsonVariation(key, defaultValue) as T;
     default:
-      return ldClient.variation(flagKey, defaultValue);
+      return ldClient.variation(key, defaultValue);
   }
 };
 
+/**
+ * Determines the strongly typed variation of a feature flag for a context, along with information about
+ * how it was calculated.
+ *
+ * The `reason` property of the result will also be included in analytics events, if you are
+ * capturing detailed event data for this flag.
+ *
+ * If the flag variation does not have the specified type, defaultValue is returned. The reason will
+ * indicate an error of the type `WRONG_KIND` in this case.
+ *
+ * For more information, see the [SDK reference
+ * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#react-native).
+ *
+ * @param key The unique key of the feature flag.
+ * @param defaultValue The default value of the flag, to be used if the value is not available
+ *   from LaunchDarkly.
+ * @returns
+ *  The result (as an {@link LDEvaluationDetailTyped<T>}).
+ */
 export const useTypedVariationDetail = <T extends boolean | number | string | unknown>(
-  flagKey: string,
+  key: string,
   defaultValue: T,
 ): LDEvaluationDetailTyped<T> => {
   const ldClient = useLDClient();
@@ -32,23 +60,23 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
   switch (typeof defaultValue) {
     case 'boolean':
       return ldClient.boolVariationDetail(
-        flagKey,
+        key,
         defaultValue as boolean,
       ) as LDEvaluationDetailTyped<T>;
     case 'number':
       return ldClient.numberVariationDetail(
-        flagKey,
+        key,
         defaultValue as number,
       ) as LDEvaluationDetailTyped<T>;
     case 'string':
       return ldClient.stringVariationDetail(
-        flagKey,
+        key,
         defaultValue as string,
       ) as LDEvaluationDetailTyped<T>;
     case 'undefined':
     case 'object':
-      return ldClient.jsonVariationDetail(flagKey, defaultValue) as LDEvaluationDetailTyped<T>;
+      return ldClient.jsonVariationDetail(key, defaultValue) as LDEvaluationDetailTyped<T>;
     default:
-      return ldClient.variationDetail(flagKey, defaultValue);
+      return ldClient.variationDetail(key, defaultValue);
   }
 };

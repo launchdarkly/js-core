@@ -55,7 +55,7 @@ export interface LDClient {
    * @param defaultValue The default value of the flag, to be used if the value is not available
    *   from LaunchDarkly.
    * @returns
-   *  The result (as an {@link LDEvaluationDetailTyped<number>}).
+   *  The result (as an {@link LDEvaluationDetailTyped<boolean>}).
    */
   boolVariationDetail(key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean>;
 
@@ -121,7 +121,7 @@ export interface LDClient {
   jsonVariation(key: string, defaultValue: unknown): unknown;
 
   /**
-   * Determines the variation of a feature flag for a context, along with information about how it
+   * Determines the json variation of a feature flag for a context, along with information about how it
    * was calculated.
    *
    * The `reason` property of the result will also be included in analytics events, if you are
