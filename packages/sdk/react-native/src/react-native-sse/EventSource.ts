@@ -287,7 +287,7 @@ export default class EventSource<E extends string = never> {
         this.onclose();
         break;
       case 'error':
-        this.onerror();
+        this.onerror(data);
         break;
       case 'retry':
         this.onretrying();
@@ -309,6 +309,6 @@ export default class EventSource<E extends string = never> {
 
   onopen() {}
   onclose() {}
-  onerror() {}
+  onerror(_err: any) {}
   onretrying() {}
 }

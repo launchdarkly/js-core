@@ -1,18 +1,13 @@
-import { defaultHeaders, Encoding, Info, LDContext, Options } from '@launchdarkly/js-sdk-common';
+import {
+  base64UrlEncode,
+  defaultHeaders,
+  Encoding,
+  Info,
+  LDContext,
+  Options,
+} from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
-
-/**
- * In react-native use base64-js to polyfill btoa. This is safe
- * because the react-native repo uses it too. Set the global.btoa to the encode
- * function of base64-js.
- * https://github.com/beatgammit/base64-js
- * https://github.com/axios/axios/issues/2235#issuecomment-512204616
- *
- * Ripped from https://thewoods.blog/base64url/
- */
-export const base64UrlEncode = (s: string, encoding: Encoding): string =>
-  encoding.btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 export const createFetchPath = (
   sdkKey: string,

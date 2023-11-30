@@ -1,44 +1,18 @@
-import { CLIENT_SIDE_SDK_KEY } from '@env';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { MOBILE_KEY } from '@env';
 
-import { init, type LDClientImpl } from '@launchdarkly/react-native-client-sdk';
+import { LDProvider, ReactNativeLDClient } from '@launchdarkly/react-native-client-sdk';
 
+import Welcome from './src/welcome';
+
+const featureClient = new ReactNativeLDClient(MOBILE_KEY);
 const context = { kind: 'user', key: 'test-user-1' };
 
-export default function App() {
-  const [ldc, setLdc] = useState<LDClientImpl>();
-  const [flag, setFlag] = useState<boolean>(false);
-
-  useEffect(() => {
-    init(CLIENT_SIDE_SDK_KEY, context)
-      .then((c) => {
-        setLdc(c);
-      })
-      .catch((e) => console.log(e));
-  }, []);
-
-  useEffect(() => {
-    const f = ldc?.boolVariation('dev-test-flag', false);
-    setFlag(f ?? false);
-  }, [ldc]);
-
+const App = () => {
   return (
-    <View style={styles.container}>
-      <Text>{flag ? <>devTestFlag: {`${flag}`}</> : <>loading...</>}</Text>
-    </View>
+    <LDProvider client={featureClient} context={context}>
+      <Welcome />
+    </LDProvider>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
-});
+export default App;

@@ -1,27 +1,39 @@
 import { LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger } from '@launchdarkly/private-js-mocks';
+import {
+  basicPlatform,
+  logger,
+  MockStreamingProcessor,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
-import LDEmitter from './api/LDEmitter';
-import fetchFlags from './evaluation/fetchFlags';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 
-jest.mock('./api/LDEmitter');
 jest.mock('./evaluation/fetchFlags');
-
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  return {
+    ...actual,
+    ...{
+      internal: {
+        ...actual.internal,
+        StreamingProcessor: MockStreamingProcessor,
+      },
+    },
+  };
+});
 describe('sdk-client object', () => {
   const testSdkKey = 'test-sdk-key';
   const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
-  const mockFetchFlags = fetchFlags as jest.Mock;
-
   let ldc: LDClientImpl;
-  let mockEmitter: LDEmitter;
 
   beforeEach(() => {
-    mockFetchFlags.mockResolvedValue(mockResponseJson);
+    setupMockStreamingProcessor(false, mockResponseJson);
 
-    ldc = new LDClientImpl(testSdkKey, context, basicPlatform, { logger });
-    [mockEmitter] = (LDEmitter as jest.Mock).mock.instances;
+    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger });
+    jest
+      .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
+      .mockReturnValue('/stream/path');
   });
 
   afterEach(() => {
@@ -29,7 +41,7 @@ describe('sdk-client object', () => {
   });
 
   test('instantiate with blank options', () => {
-    ldc = new LDClientImpl(testSdkKey, context, basicPlatform, {});
+    ldc = new LDClientImpl(testSdkKey, basicPlatform, {});
     expect(ldc.config).toMatchObject({
       allAttributesPrivate: false,
       baseUri: 'https://sdk.launchdarkly.com',
@@ -62,7 +74,7 @@ describe('sdk-client object', () => {
   });
 
   test('all flags', async () => {
-    await ldc.start();
+    await ldc.identify(context);
     const all = ldc.allFlags();
 
     expect(all).toEqual({
@@ -78,7 +90,7 @@ describe('sdk-client object', () => {
   });
 
   test('variation', async () => {
-    await ldc.start();
+    await ldc.identify(context);
     const devTestFlag = ldc.variation('dev-test-flag');
 
     expect(devTestFlag).toBe(true);
@@ -86,7 +98,6 @@ describe('sdk-client object', () => {
 
   test('identify success', async () => {
     mockResponseJson['dev-test-flag'].value = false;
-    mockFetchFlags.mockResolvedValue(mockResponseJson);
     const carContext: LDContext = { kind: 'car', key: 'mazda-cx7' };
 
     await ldc.identify(carContext);
@@ -105,18 +116,34 @@ describe('sdk-client object', () => {
 
     await expect(ldc.identify(carContext)).rejects.toThrowError(/no key/);
     expect(logger.error).toBeCalledTimes(1);
-    expect(mockEmitter.emit).toHaveBeenNthCalledWith(1, 'error', expect.any(Error));
-    expect(ldc.getContext()).toEqual(context);
+    expect(ldc.getContext()).toBeUndefined();
   });
 
-  test('identify error fetch error', async () => {
-    // @ts-ignore
-    mockFetchFlags.mockRejectedValue(new Error('unknown test fetch error'));
+  test('identify error stream error', async () => {
+    setupMockStreamingProcessor(true);
     const carContext: LDContext = { kind: 'car', key: 'mazda-3' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrowError(/fetch error/);
+    await expect(ldc.identify(carContext)).rejects.toMatchObject({
+      code: 401,
+      message: 'test-error',
+    });
     expect(logger.error).toBeCalledTimes(1);
-    expect(mockEmitter.emit).toHaveBeenNthCalledWith(1, 'error', expect.any(Error));
-    expect(ldc.getContext()).toEqual(context);
+    expect(ldc.getContext()).toBeUndefined();
+  });
+
+  test('identify ready and error listeners', async () => {
+    // @ts-ignore
+    const { emitter } = ldc;
+
+    await ldc.identify(context);
+
+    const carContext1: LDContext = { kind: 'car', key: 'mazda-cx' };
+    await ldc.identify(carContext1);
+
+    const carContext2: LDContext = { kind: 'car', key: 'subaru-forrester' };
+    await ldc.identify(carContext2);
+
+    expect(emitter.listenerCount('ready')).toEqual(1);
+    expect(emitter.listenerCount('error')).toEqual(1);
   });
 });

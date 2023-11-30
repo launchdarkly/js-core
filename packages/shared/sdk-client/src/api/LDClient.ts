@@ -1,4 +1,11 @@
-import { LDContext, LDEvaluationDetail, LDFlagSet, LDFlagValue } from '@launchdarkly/js-sdk-common';
+import {
+  LDContext,
+  LDEvaluationDetail,
+  LDEvaluationDetailTyped,
+  LDFlagSet,
+  LDFlagValue,
+  LDLogger,
+} from '@launchdarkly/js-sdk-common';
 
 /**
  * The basic interface for the LaunchDarkly client. Platform-specific SDKs may add some methods of their own.
@@ -9,70 +16,75 @@ import { LDContext, LDEvaluationDetail, LDFlagSet, LDFlagValue } from '@launchda
  */
 export interface LDClient {
   /**
-   * Returns a Promise that tracks the client's initialization state.
-   *
-   * The returned Promise will be resolved once the client has either successfully initialized
-   * or failed to initialize (e.g. due to an invalid environment key or a server error). It will
-   * never be rejected.
-   *
-   * ```
-   *     // using a Promise then() handler
-   *     client.waitUntilReady().then(() => {
-   *         doSomethingWithClient();
-   *     });
-   *
-   *     // using async/await
-   *     await client.waitUntilReady();
-   *     doSomethingWithClient();
-   * ```
-   *
-   * If you want to distinguish between these success and failure conditions, use
-   * {@link waitForInitialization} instead.
-   *
-   * If you prefer to use event listeners ({@link on}) rather than Promises, you can listen on the
-   * client for a `"ready"` event, which will be fired in either case.
+   * Returns a map of all available flags to the current context's values.
    *
    * @returns
-   *   A Promise that will be resolved once the client is no longer trying to initialize.
+   *   An object in which each key is a feature flag key and each value is the flag value.
+   *   Note that there is no way to specify a default value for each flag as there is with
+   *   {@link variation}, so any flag that cannot be evaluated will have a null value.
    */
-  waitUntilReady(): Promise<void>;
+  allFlags(): LDFlagSet;
 
   /**
-   * Returns a Promise that tracks the client's initialization state.
+   * Determines the boolean variation of a feature flag.
    *
-   * The Promise will be resolved if the client successfully initializes, or rejected if client
-   * initialization has irrevocably failed (for instance, if it detects that the SDK key is invalid).
+   * If the flag variation does not have a boolean value, defaultValue is returned.
    *
-   * ```
-   *     // using Promise then() and catch() handlers
-   *     client.waitForInitialization().then(() => {
-   *         doSomethingWithSuccessfullyInitializedClient();
-   *     }).catch(err => {
-   *         doSomethingForFailedStartup(err);
-   *     });
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   The boolean value.
+   */
+  boolVariation(key: string, defaultValue: boolean): boolean;
+
+  /**
+   * Determines the boolean variation of a feature flag for a context, along with information about
+   * how it was calculated.
    *
-   *     // using async/await
-   *     try {
-   *         await client.waitForInitialization();
-   *         doSomethingWithSuccessfullyInitializedClient();
-   *     } catch (err) {
-   *         doSomethingForFailedStartup(err);
-   *     }
-   * ```
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
    *
-   * It is important that you handle the rejection case; otherwise it will become an unhandled Promise
-   * rejection, which is a serious error on some platforms. The Promise is not created unless you
-   * request it, so if you never call `waitForInitialization()` then you do not have to worry about
-   * unhandled rejections.
+   * If the flag variation does not have a boolean value, defaultValue is returned. The reason will
+   * indicate an error of the type `WRONG_KIND` in this case.
    *
-   * Note that you can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
-   * indicates success, and `"failed"` indicates failure.
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#react-native).
+   *
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *  The result (as an {@link LDEvaluationDetailTyped<boolean>}).
+   */
+  boolVariationDetail(key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean>;
+
+  /**
+   * Shuts down the client and releases its resources, after delivering any pending analytics
+   * events. After the client is closed, all calls to {@link variation} will return default values,
+   * and it will not make any requests to LaunchDarkly.
+   */
+  close(): void;
+
+  /**
+   * Flushes all pending analytics events.
+   *
+   * Normally, batches of events are delivered in the background at intervals determined by the
+   * `flushInterval` property of {@link LDOptions}. Calling `flush()` triggers an immediate delivery.
    *
    * @returns
-   *   A Promise that will be resolved if the client initializes successfully, or rejected if it
-   *   fails.
+   *   A Promise which resolves once
+   *   flushing is finished. You can inspect the result of the flush for errors.
    */
-  waitForInitialization(): Promise<void>;
+  flush(): Promise<{ error?: Error; result: boolean }>;
+
+  /**
+   * Returns the client's current context.
+   *
+   * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
+   * been called, the initial context specified when the client was created.
+   */
+  getContext(): LDContext;
 
   /**
    * Identifies a context to LaunchDarkly.
@@ -95,72 +107,93 @@ export interface LDClient {
   identify(context: LDContext, hash?: string): Promise<void>;
 
   /**
-   * Returns the client's current context.
+   * Determines the json variation of a feature flag.
    *
-   * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
-   * been called, the initial context specified when the client was created.
-   */
-  getContext(): LDContext;
-
-  /**
-   * Flushes all pending analytics events.
+   * This version may be favored in TypeScript versus `variation` because it returns
+   * an `unknown` type instead of `any`. `unknown` will require a cast before usage.
    *
-   * Normally, batches of events are delivered in the background at intervals determined by the
-   * `flushInterval` property of {@link LDOptions}. Calling `flush()` triggers an immediate delivery.
-   *
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
    * @returns
-   *   A Promise which resolves once
-   *   flushing is finished. You can inspect the result of the flush for errors.
+   *   The json value.
    */
-  flush(): Promise<{ error?: Error; result: boolean }>;
+  jsonVariation(key: string, defaultValue: unknown): unknown;
 
   /**
-   * Determines the variation of a feature flag for the current context.
-   *
-   * In the client-side JavaScript SDKs, this is always a fast synchronous operation because all of
-   * the feature flag values for the current context have already been loaded into memory.
-   *
-   * @param key
-   *   The unique key of the feature flag.
-   * @param defaultValue
-   *   The default value of the flag, to be used if the value is not available from LaunchDarkly.
-   * @returns
-   *   The flag's value.
-   */
-  variation(key: string, defaultValue?: LDFlagValue): LDFlagValue;
-
-  /**
-   * Determines the variation of a feature flag for a context, along with information about how it was
-   * calculated.
-   *
-   * Note that this will only work if you have set `evaluationExplanations` to true in {@link LDOptions}.
-   * Otherwise, the `reason` property of the result will be null.
+   * Determines the json variation of a feature flag for a context, along with information about how it
+   * was calculated.
    *
    * The `reason` property of the result will also be included in analytics events, if you are
    * capturing detailed event data for this flag.
    *
-   * For more information, see the [SDK reference guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#javascript).
+   * This version may be favored in TypeScript versus `variation` because it returns
+   * an `unknown` type instead of `any`. `unknown` will require a cast before usage.
    *
-   * @param key
-   *   The unique key of the feature flag.
-   * @param defaultValue
-   *   The default value of the flag, to be used if the value is not available from LaunchDarkly.
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#react-native).
    *
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
    * @returns
-   *   An {@link LDEvaluationDetail} object containing the value and explanation.
+   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
+   *   the result (as an{@link LDEvaluationDetailTyped<unknown>}).
    */
-  variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail;
+  jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown>;
 
   /**
-   * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
+   * Returns the logger configured as part of LDOptions during construction.
    *
-   * If this is true, the client will always attempt to maintain a streaming connection; if false,
-   * it never will. If you leave the value undefined (the default), the client will open a streaming
-   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
-   *
-   * This can also be set as the `streaming` property of {@link LDOptions}.
+   * For more, read {@link LDOptions.logger}.
    */
-  setStreaming(value?: boolean): void;
+  logger: LDLogger;
+
+  /**
+   * Determines the numeric variation of a feature flag.
+   *
+   * If the flag variation does not have a numeric value, defaultValue is returned.
+   *
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   The numeric value.
+   */
+  numberVariation(key: string, defaultValue: number): number;
+
+  /**
+   * Determines the numeric variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
+   *
+   * If the flag variation does not have a numeric value, defaultValue is returned. The reason will
+   * indicate an error of the type `WRONG_KIND` in this case.
+   *
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#react-native).
+   *
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   The result (as an {@link LDEvaluationDetailTyped<number>}).
+   */
+  numberVariationDetail(key: string, defaultValue: number): LDEvaluationDetailTyped<number>;
+
+  /**
+   * Deregisters an event listener. See {@link on} for the available event types.
+   *
+   * @param key
+   *   The name of the event for which to stop listening.
+   * @param callback
+   *   The function to deregister.
+   * @param context
+   *   The `this` context for the callback, if one was specified for {@link on}.
+   */
+  off(key: string, callback: (...args: any[]) => void, context?: any): void;
 
   /**
    * Registers an event listener.
@@ -203,16 +236,49 @@ export interface LDClient {
   on(key: string, callback: (...args: any[]) => void, context?: any): void;
 
   /**
-   * Deregisters an event listener. See {@link on} for the available event types.
+   * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
-   * @param key
-   *   The name of the event for which to stop listening.
-   * @param callback
-   *   The function to deregister.
-   * @param context
-   *   The `this` context for the callback, if one was specified for {@link on}.
+   * If this is true, the client will always attempt to maintain a streaming connection; if false,
+   * it never will. If you leave the value undefined (the default), the client will open a streaming
+   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
+   *
+   * This can also be set as the `streaming` property of {@link LDOptions}.
    */
-  off(key: string, callback: (...args: any[]) => void, context?: any): void;
+  setStreaming(value?: boolean): void;
+
+  /**
+   * Determines the string variation of a feature flag.
+   *
+   * If the flag variation does not have a string value, defaultValue is returned.
+   *
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   The string value.
+   */
+  stringVariation(key: string, defaultValue: string): string;
+
+  /**
+   * Determines the string variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
+   *
+   * If the flag variation does not have a string value, defaultValue is returned. The reason will
+   * indicate an error of the type `WRONG_KIND` in this case.
+   *
+   * For more information, see the [SDK reference
+   * guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#react-native).
+   *
+   * @param key The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @returns
+   *   The result (as an {@link LDEvaluationDetailTyped<string>}).
+   */
+  stringVariationDetail(key: string, defaultValue: string): LDEvaluationDetailTyped<string>;
 
   /**
    * Track page events to use in goals or A/B tests.
@@ -234,19 +300,105 @@ export interface LDClient {
   track(key: string, data?: any, metricValue?: number): void;
 
   /**
-   * Returns a map of all available flags to the current context's values.
+   * Determines the variation of a feature flag for the current context.
    *
+   * In the client-side JavaScript SDKs, this is always a fast synchronous operation because all of
+   * the feature flag values for the current context have already been loaded into memory.
+   *
+   * @param key
+   *   The unique key of the feature flag.
+   * @param defaultValue
+   *   The default value of the flag, to be used if the value is not available from LaunchDarkly.
    * @returns
-   *   An object in which each key is a feature flag key and each value is the flag value.
-   *   Note that there is no way to specify a default value for each flag as there is with
-   *   {@link variation}, so any flag that cannot be evaluated will have a null value.
+   *   The flag's value.
    */
-  allFlags(): LDFlagSet;
+  variation(key: string, defaultValue?: LDFlagValue): LDFlagValue;
 
   /**
-   * Shuts down the client and releases its resources, after delivering any pending analytics
-   * events. After the client is closed, all calls to {@link variation} will return default values,
-   * and it will not make any requests to LaunchDarkly.
+   * Determines the variation of a feature flag for a context, along with information about how it was
+   * calculated.
+   *
+   * Note that this will only work if you have set `evaluationExplanations` to true in {@link LDOptions}.
+   * Otherwise, the `reason` property of the result will be null.
+   *
+   * The `reason` property of the result will also be included in analytics events, if you are
+   * capturing detailed event data for this flag.
+   *
+   * For more information, see the [SDK reference guide](https://docs.launchdarkly.com/sdk/features/evaluation-reasons#javascript).
+   *
+   * @param key
+   *   The unique key of the feature flag.
+   * @param defaultValue
+   *   The default value of the flag, to be used if the value is not available from LaunchDarkly.
+   *
+   * @returns
+   *   An {@link LDEvaluationDetail} object containing the value and explanation.
    */
-  close(): void;
+  variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail;
+
+  /**
+   * Returns a Promise that tracks the client's initialization state.
+   *
+   * The Promise will be resolved if the client successfully initializes, or rejected if client
+   * initialization has irrevocably failed (for instance, if it detects that the SDK key is invalid).
+   *
+   * ```
+   *     // using Promise then() and catch() handlers
+   *     client.waitForInitialization().then(() => {
+   *         doSomethingWithSuccessfullyInitializedClient();
+   *     }).catch(err => {
+   *         doSomethingForFailedStartup(err);
+   *     });
+   *
+   *     // using async/await
+   *     try {
+   *         await client.waitForInitialization();
+   *         doSomethingWithSuccessfullyInitializedClient();
+   *     } catch (err) {
+   *         doSomethingForFailedStartup(err);
+   *     }
+   * ```
+   *
+   * It is important that you handle the rejection case; otherwise it will become an unhandled Promise
+   * rejection, which is a serious error on some platforms. The Promise is not created unless you
+   * request it, so if you never call `waitForInitialization()` then you do not have to worry about
+   * unhandled rejections.
+   *
+   * Note that you can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
+   * indicates success, and `"failed"` indicates failure.
+   *
+   * @returns
+   *   A Promise that will be resolved if the client initializes successfully, or rejected if it
+   *   fails.
+   */
+  waitForInitialization(): Promise<void>;
+
+  /**
+   * Returns a Promise that tracks the client's initialization state.
+   *
+   * The returned Promise will be resolved once the client has either successfully initialized
+   * or failed to initialize (e.g. due to an invalid environment key or a server error). It will
+   * never be rejected.
+   *
+   * ```
+   *     // using a Promise then() handler
+   *     client.waitUntilReady().then(() => {
+   *         doSomethingWithClient();
+   *     });
+   *
+   *     // using async/await
+   *     await client.waitUntilReady();
+   *     doSomethingWithClient();
+   * ```
+   *
+   * If you want to distinguish between these success and failure conditions, use
+   * {@link waitForInitialization} instead.
+   *
+   * If you prefer to use event listeners ({@link on}) rather than Promises, you can listen on the
+   * client for a `"ready"` event, which will be fired in either case.
+   *
+   * @returns
+   *   A Promise that will be resolved once the client is no longer trying to initialize.
+   */
+  waitUntilReady(): Promise<void>;
 }

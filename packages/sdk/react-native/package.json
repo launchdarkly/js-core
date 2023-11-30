@@ -40,7 +40,7 @@
     "ios": "yarn ./example && yarn build && yarn ./example ios"
   },
   "peerDependencies": {
-    "react-native": "*"
+    "react": "*"
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk-common": "0.0.1",
@@ -50,6 +50,7 @@
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.0",
+    "@types/react": "^18.2.31",
     "@typescript-eslint/eslint-plugin": "^6.1.0",
     "@typescript-eslint/parser": "^6.1.0",
     "eslint": "^8.45.0",
@@ -61,6 +62,7 @@
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
+    "react": "^18.2.0",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.0",
     "typedoc": "0.25.0",

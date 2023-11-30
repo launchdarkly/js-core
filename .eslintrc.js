@@ -25,6 +25,7 @@ module.exports = {
     ],
     'import/default': 'error',
     'import/export': 'error',
+    'import/extensions': ['error', 'never', { json: 'always' }],
     'import/no-self-import': 'error',
     'import/no-cycle': 'error',
     'import/no-useless-path-segments': 'error',
