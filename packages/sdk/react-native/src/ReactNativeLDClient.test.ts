@@ -6,7 +6,7 @@ describe('ReactNativeLDClient', () => {
   let ldc: ReactNativeLDClient;
 
   beforeEach(() => {
-    ldc = new ReactNativeLDClient('mob-test');
+    ldc = new ReactNativeLDClient('mob-test', { sendEvents: false });
   });
 
   test('constructor', () => {
