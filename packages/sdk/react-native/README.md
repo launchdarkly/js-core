@@ -25,8 +25,6 @@ yarn add @launchdarkly/react-native-client-sdk
 TODO
 
 ```typescript
-import { init } from '@launchdarkly/react-native-client-sdk';
-
 // TODO
 ```
 
@@ -34,15 +32,7 @@ See the full [example app](https://github.com/launchdarkly/js-core/tree/main/pac
 
 ## Developing this SDK
 
-:information_source: You will need to setup your sdk key in the example dir. See the example [README](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/react-native/example/README.md#L1).
-
-```shell
-# at js-core repo root
-yarn && yarn build
-
-# at sdk/react-native repo
-yarn android | ios
-```
+:information_source: See the example [README](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/react-native/example/README.md#L1).
 
 ## About LaunchDarkly
 
