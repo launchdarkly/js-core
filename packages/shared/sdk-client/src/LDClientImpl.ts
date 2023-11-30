@@ -44,8 +44,10 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
-  private readonly clientContext: ClientContext;
+  private identifyReadyListener?: (c: LDContext) => void;
+  private identifyErrorListener?: (c: LDContext, err: any) => void;
 
+  private readonly clientContext: ClientContext;
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
@@ -156,6 +158,29 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
+  private createIdentifyPromise() {
+    return new Promise<void>((resolve, reject) => {
+      if (this.identifyReadyListener) {
+        this.emitter.off('ready', this.identifyReadyListener);
+      }
+      if (this.identifyErrorListener) {
+        this.emitter.off('ready', this.identifyErrorListener);
+      }
+
+      this.identifyReadyListener = (c: LDContext) => {
+        this.logger.debug(`ready: ${JSON.stringify(c)}`);
+        resolve();
+      };
+      this.identifyErrorListener = (c: LDContext, err: any) => {
+        this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
+        reject(err);
+      };
+
+      this.emitter.on('ready', this.identifyReadyListener);
+      this.emitter.on('error', this.identifyErrorListener);
+    });
+  }
+
   // TODO: implement secure mode
   async identify(context: LDContext, _hash?: string): Promise<void> {
     const checkedContext = Context.fromLDContext(context);
@@ -165,22 +190,6 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
-
-    const p = new Promise<void>((resolve, reject) => {
-      this.emitter.on('ready', (c: LDContext) => {
-        if (c === context) {
-          this.logger.debug(`ready: ${JSON.stringify(c)}`);
-          resolve();
-        }
-      });
-
-      this.emitter.on('error', (c: LDContext, err: any) => {
-        this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
-        if (c === context) {
-          reject(err);
-        }
-      });
-    });
 
     this.streamer = new internal.StreamingProcessor(
       this.sdkKey,
@@ -196,7 +205,7 @@ export default class LDClientImpl implements LDClient {
     this.emitter.emit('connecting', context);
     this.streamer.start();
 
-    return p;
+    return this.createIdentifyPromise();
   }
 
   off(eventName: EventName, listener?: Function): void {
