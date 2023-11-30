@@ -10,6 +10,7 @@ export default function Welcome() {
   const { error, status } = useLDDataSourceStatus();
   const flag = useBoolVariation('dev-test-flag', false);
   const ldc = useLDClient();
+
   const login = () => {
     ldc.identify({ kind: 'user', key: 'test-user-2' });
   };
@@ -20,6 +21,7 @@ export default function Welcome() {
       <Text>status: {status ?? 'not connected'}</Text>
       {error ? <Text>error: {error.message}</Text> : null}
       <Text>devTestFlag: {`${flag}`}</Text>
+      <Text>context: {JSON.stringify(ldc.getContext())}</Text>
       <Button title="Login" onPress={login} />
     </View>
   );

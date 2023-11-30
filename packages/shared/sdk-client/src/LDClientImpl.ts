@@ -191,6 +191,7 @@ export default class LDClientImpl implements LDClient {
       return Promise.reject(error);
     }
 
+    this.streamer?.close();
     this.streamer = new internal.StreamingProcessor(
       this.sdkKey,
       this.clientContext,

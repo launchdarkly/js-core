@@ -97,6 +97,7 @@ describe('LDEmitter', () => {
     emitter.emit('error');
 
     expect(emitter.listenerCount('error')).toEqual(1);
+    expect(errorHandler1).toBeCalled();
     expect(errorHandler2).not.toBeCalled();
   });
 

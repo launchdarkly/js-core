@@ -130,4 +130,20 @@ describe('sdk-client object', () => {
     expect(logger.error).toBeCalledTimes(1);
     expect(ldc.getContext()).toBeUndefined();
   });
+
+  test('identify ready and error listeners', async () => {
+    // @ts-ignore
+    const { emitter } = ldc;
+
+    await ldc.identify(context);
+
+    const carContext1: LDContext = { kind: 'car', key: 'mazda-cx' };
+    await ldc.identify(carContext1);
+
+    const carContext2: LDContext = { kind: 'car', key: 'subaru-forrester' };
+    await ldc.identify(carContext2);
+
+    expect(emitter.listenerCount('ready')).toEqual(1);
+    expect(emitter.listenerCount('error')).toEqual(1);
+  });
 });
