@@ -25,7 +25,6 @@ class PlatformRequests implements Requests {
     return new RNEventSource<EventName>(url, {
       headers: eventSourceInitDict.headers,
       retryAndHandleError: eventSourceInitDict.errorFilter,
-      debug: true,
     });
   }
 
