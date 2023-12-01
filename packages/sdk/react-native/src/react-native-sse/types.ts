@@ -53,6 +53,7 @@ export interface EventSourceOptions {
   body?: any;
   debug?: boolean;
   pollingInterval?: number;
+  retryAndHandleError?: (err: any) => boolean;
 }
 
 type BuiltInEventMap = {
