@@ -307,7 +307,7 @@ export default class EventSource<E extends string = never> {
         this.onerror(data);
         break;
       case 'retry':
-        this.onretrying();
+        this.onretrying({ delayMillis: this.pollingInterval });
         break;
       default:
         break;
@@ -327,5 +327,5 @@ export default class EventSource<E extends string = never> {
   onopen() {}
   onclose() {}
   onerror(_err: any) {}
-  onretrying() {}
+  onretrying(_e: any) {}
 }
