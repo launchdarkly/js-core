@@ -17,7 +17,7 @@ const defaultOptions: EventSourceOptions = {
   method: 'GET',
   pollingInterval: 5000,
   timeout: 0,
-  timeoutBeforeConnection: 500,
+  timeoutBeforeConnection: 0,
   withCredentials: false,
 };
 
