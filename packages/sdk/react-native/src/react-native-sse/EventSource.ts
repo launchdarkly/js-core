@@ -17,8 +17,9 @@ const defaultOptions: EventSourceOptions = {
   method: 'GET',
   pollingInterval: 5000,
   timeout: 0,
-  timeoutBeforeConnection: 500,
+  timeoutBeforeConnection: 0,
   withCredentials: false,
+  retryAndHandleError: undefined,
 };
 
 export default class EventSource<E extends string = never> {
@@ -49,6 +50,7 @@ export default class EventSource<E extends string = never> {
   private xhr: XMLHttpRequest = new XMLHttpRequest();
   private pollTimer: any;
   private pollingInterval: number;
+  private retryAndHandleError?: (err: any) => boolean;
 
   constructor(url: string, options?: EventSourceOptions) {
     const opts = {
@@ -65,6 +67,7 @@ export default class EventSource<E extends string = never> {
     this.body = opts.body;
     this.debug = opts.debug!;
     this.pollingInterval = opts.pollingInterval!;
+    this.retryAndHandleError = opts.retryAndHandleError;
 
     this.pollAgain(this.timeoutBeforeConnection, true);
   }
@@ -147,7 +150,21 @@ export default class EventSource<E extends string = never> {
 
           if (this.xhr.readyState === XMLHttpRequest.DONE) {
             this.logDebug('[EventSource][onreadystatechange][ERROR] Response status error.');
-            this.pollAgain(this.pollingInterval, false);
+
+            if (!this.retryAndHandleError) {
+              // default implementation
+              this.pollAgain(this.pollingInterval, false);
+            } else {
+              // custom retry logic
+              const shouldRetry = this.retryAndHandleError({
+                status: this.xhr.status,
+                message: this.xhr.responseText,
+              });
+
+              if (shouldRetry) {
+                this.pollAgain(this.pollingInterval, true);
+              }
+            }
           }
         }
       };
@@ -290,7 +307,7 @@ export default class EventSource<E extends string = never> {
         this.onerror(data);
         break;
       case 'retry':
-        this.onretrying();
+        this.onretrying({ delayMillis: this.pollingInterval });
         break;
       default:
         break;
@@ -310,5 +327,5 @@ export default class EventSource<E extends string = never> {
   onopen() {}
   onclose() {}
   onerror(_err: any) {}
-  onretrying() {}
+  onretrying(_e: any) {}
 }

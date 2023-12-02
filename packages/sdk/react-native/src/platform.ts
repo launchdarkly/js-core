@@ -22,8 +22,10 @@ import RNEventSource from './react-native-sse';
 
 class PlatformRequests implements Requests {
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-    // TODO: add retry logic
-    return new RNEventSource<EventName>(url, eventSourceInitDict);
+    return new RNEventSource<EventName>(url, {
+      headers: eventSourceInitDict.headers,
+      retryAndHandleError: eventSourceInitDict.errorFilter,
+    });
   }
 
   fetch(url: string, options?: Options): Promise<Response> {
