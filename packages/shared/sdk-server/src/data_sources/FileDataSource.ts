@@ -6,8 +6,9 @@ import {
   VoidFunction,
 } from '@launchdarkly/js-sdk-common';
 
-import { DataKind, LDFeatureStore, LDFeatureStoreDataStorage } from '../api';
+import { DataKind, LDFeatureStoreDataStorage } from '../api';
 import { FileDataSourceOptions } from '../api/integrations';
+import { LDDataSourceUpdates } from '../api/subsystems';
 import { Flag } from '../evaluation/data/Flag';
 import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
@@ -15,13 +16,13 @@ import FileLoader from './FileLoader';
 
 export type FileDataSourceErrorHandler = (err: LDFileDataSourceError) => void;
 
-function makeFlagWithValue(key: string, value: any): Flag {
+function makeFlagWithValue(key: string, value: any, version: number): Flag {
   return {
     key,
     on: true,
     fallthrough: { variation: 0 },
     variations: [value],
-    version: 1,
+    version,
   };
 }
 
@@ -42,7 +43,7 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
   constructor(
     options: FileDataSourceOptions,
     filesystem: Filesystem,
-    private readonly featureStore: LDFeatureStore,
+    private readonly featureStore: LDDataSourceUpdates,
     private initSuccessHandler: VoidFunction = () => {},
     private readonly errorHandler?: FileDataSourceErrorHandler,
   ) {
@@ -102,6 +103,7 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
 
   private processFileData(fileData: { path: string; data: string }[]) {
     // Clear any existing data before re-populating it.
+    const oldData = this.allData;
     this.allData = {};
 
     // We let the parsers throw, and the caller can handle the rejection.
@@ -117,7 +119,7 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
         parsed = JSON.parse(fd.data);
       }
 
-      this.processParsedData(parsed);
+      this.processParsedData(parsed, oldData);
     });
 
     this.featureStore.init(this.allData, () => {
@@ -128,13 +130,22 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
     });
   }
 
-  private processParsedData(parsed: any) {
+  private processParsedData(parsed: any, oldData: LDFeatureStoreDataStorage) {
     Object.keys(parsed.flags || {}).forEach((key) => {
       processFlag(parsed.flags[key]);
       this.addItem(VersionedDataKinds.Features, parsed.flags[key]);
     });
     Object.keys(parsed.flagValues || {}).forEach((key) => {
-      const flag = makeFlagWithValue(key, parsed.flagValues[key]);
+      const previousInstance = oldData[VersionedDataKinds.Features.namespace]?.[key];
+      let { version } = previousInstance ?? { version: 1 };
+      // If the data is different, then we want to increment the version.
+      if (
+        previousInstance &&
+        JSON.stringify(parsed.flagValues[key]) !== JSON.stringify(previousInstance?.variations?.[0])
+      ) {
+        version += 1;
+      }
+      const flag = makeFlagWithValue(key, parsed.flagValues[key], version);
       processFlag(flag);
       this.addItem(VersionedDataKinds.Features, flag);
     });
