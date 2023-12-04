@@ -48,6 +48,7 @@
 <a href="platform-1.internal.StreamingProcessor.html#logConnectionStarted" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>log<wbr/>Connection<wbr/>Started</span></a>
 <a href="platform-1.internal.StreamingProcessor.html#logger" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>logger?</span></a>
 <a href="platform-1.internal.StreamingProcessor.html#requests" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>requests</span></a>
+<a href="platform-1.internal.StreamingProcessor.html#retryAndHandleError" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>retry<wbr/>And<wbr/>Handle<wbr/>Error</span></a>
 <a href="platform-1.internal.StreamingProcessor.html#streamInitialReconnectDelay" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>stream<wbr/>Initial<wbr/>Reconnect<wbr/>Delay</span></a>
 <a href="platform-1.internal.StreamingProcessor.html#streamUri" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>stream<wbr/>Uri</span></a>
 </div></section>
@@ -136,6 +137,19 @@
 <div class="tsd-signature"><span class="tsd-kind-property">requests</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
 <li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:15</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="retryAndHandleError" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>retry<wbr/>And<wbr/>Handle<wbr/>Error</span><a href="#retryAndHandleError" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">retry<wbr/>And<wbr/>Handle<wbr/>Error</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>This is a wrapper around the passed errorHandler which adds additional
+diagnostics and logging logic.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<h4>Param</h4><p>The error to be logged and handled.</p>
+
+<h4>Returns</h4><p>boolean whether to retry the connection.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:29</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="streamInitialReconnectDelay" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>stream<wbr/>Initial<wbr/>Reconnect<wbr/>Delay</span><a href="#streamInitialReconnectDelay" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">stream<wbr/>Initial<wbr/>Reconnect<wbr/>Delay</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
@@ -156,7 +170,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDStreamProcessor.close</p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:22</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:32</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="start" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>start</span><a href="#start" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -165,7 +179,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDStreamProcessor.start</p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:20</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:30</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="stop" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>stop</span><a href="#stop" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -174,7 +188,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDStreamProcessor.stop</p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:21</li></ul></aside></li></ul></section></section></div>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:31</li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -205,6 +219,7 @@
 <li><a href="#logConnectionStarted" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>log<wbr/>Connection<wbr/>Started</span></a></li>
 <li><a href="#logger" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>logger</span></a></li>
 <li><a href="#requests" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>requests</span></a></li>
+<li><a href="#retryAndHandleError" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>retry<wbr/>And<wbr/>Handle<wbr/>Error</span></a></li>
 <li><a href="#streamInitialReconnectDelay" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>stream<wbr/>Initial<wbr/>Reconnect<wbr/>Delay</span></a></li>
 <li><a href="#streamUri" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>stream<wbr/>Uri</span></a></li>
 <li><a href="#close" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>close</span></a></li>
@@ -234,6 +249,7 @@
 <li><a href="../modules.html#Hasher"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Hasher</span></a></li>
 <li><a href="../modules.html#Headers"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Headers</span></a></li>
 <li><a href="../modules.html#Hmac"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Hmac</span></a></li>
+<li><a href="../modules.html#HttpErrorResponse"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Http<wbr/>Error<wbr/>Response</span></a></li>
 <li><a href="../modules.html#Info"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Info</span></a></li>
 <li><a href="../modules.html#KindValidator"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Kind<wbr/>Validator</span></a></li>
 <li><a href="../modules.html#LDClientContext"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>LDClient<wbr/>Context</span></a></li>
@@ -280,6 +296,7 @@
 <li><a href="../modules.html#TypeValidators"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Type<wbr/>Validators</span></a></li>
 <li><a href="../modules.html#VoidFunction"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Void<wbr/>Function</span></a></li>
 <li><a href="../modules.html#WatchHandle"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Watch<wbr/>Handle</span></a></li>
+<li><a href="../modules.html#base64UrlEncode"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>base64<wbr/>Url<wbr/>Encode</span></a></li>
 <li><a href="../modules.html#clone"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>clone</span></a></li>
 <li><a href="../modules.html#createSafeLogger"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>create<wbr/>Safe<wbr/>Logger</span></a></li>
 <li><a href="../modules.html#defaultHeaders"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>default<wbr/>Headers</span></a></li>
@@ -288,6 +305,7 @@
 <li><a href="../modules.html#isHttpRecoverable"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>is<wbr/>Http<wbr/>Recoverable</span></a></li>
 <li><a href="../modules.html#noop"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>noop</span></a></li>
 <li><a href="../modules.html#secondsToMillis"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>seconds<wbr/>To<wbr/>Millis</span></a></li>
+<li><a href="../modules.html#shouldRetry"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>should<wbr/>Retry</span></a></li>
 <li><a href="../modules.html#sleep"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>sleep</span></a></li>
 <li><a href="../modules.html#subsystem"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>subsystem</span></a></li>
 <li><a href="../modules/integrations.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4"></use></svg><span>integrations</span></a></li>
@@ -352,6 +370,7 @@
 <li><a href="../interfaces/platform-1.Hasher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Hasher</span></a></li>
 <li><a href="../interfaces/platform-1.Headers.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Headers</span></a></li>
 <li><a href="../interfaces/platform-1.Hmac.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Hmac</span></a></li>
+<li><a href="../interfaces/platform-1.HttpErrorResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Http<wbr/>Error<wbr/>Response</span></a></li>
 <li><a href="../interfaces/platform-1.Info.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Info</span></a></li>
 <li><a href="../interfaces/platform-1.LDClientContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDClient<wbr/>Context</span></a></li>
 <li><a href="../interfaces/platform-1.LDContextCommon.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDContext<wbr/>Common</span></a></li>
@@ -380,6 +399,7 @@
 <li><a href="../types/platform-1.LDLogLevel.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDLog<wbr/>Level</span></a></li>
 <li><a href="../types/platform-1.ProcessStreamResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Process<wbr/>Stream<wbr/>Response</span></a></li>
 <li><a href="../types/platform-1.VoidFunction.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Void<wbr/>Function</span></a></li>
+<li><a href="../functions/platform-1.base64UrlEncode.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>base64<wbr/>Url<wbr/>Encode</span></a></li>
 <li><a href="../functions/platform-1.clone.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>clone</span></a></li>
 <li><a href="../functions/platform-1.createSafeLogger.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>create<wbr/>Safe<wbr/>Logger</span></a></li>
 <li><a href="../functions/platform-1.defaultHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>default<wbr/>Headers</span></a></li>
@@ -387,6 +407,7 @@
 <li><a href="../functions/platform-1.isHttpRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Recoverable</span></a></li>
 <li><a href="../functions/platform-1.noop.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>noop</span></a></li>
 <li><a href="../functions/platform-1.secondsToMillis.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>seconds<wbr/>To<wbr/>Millis</span></a></li>
+<li><a href="../functions/platform-1.shouldRetry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>should<wbr/>Retry</span></a></li>
 <li><a href="../functions/platform-1.sleep.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>sleep</span></a></li></ul></div></details></li>
 <li><a href="../modules/subsystems.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4"></use></svg><span>subsystems</span></a></li>
 <li><a href="../enums/LDConsistencyCheck.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>LDConsistency<wbr/>Check</span></a></li>
