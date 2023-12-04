@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.1.0...js-server-sdk-common-v2.1.1) (2023-12-04)
+
+
+### Bug Fixes
+
+* Increment version for changing flagValues ([#317](https://github.com/launchdarkly/js-core/issues/317)) ([e8e07ef](https://github.com/launchdarkly/js-core/commit/e8e07ef66966f1a248fa0da8b8c63b703dfbae99))
+
 ## [2.1.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.0.2...js-server-sdk-common-v2.1.0) (2023-11-14)
 
 
