@@ -34,20 +34,21 @@ const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessag
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
-  context?: LDContext;
-  diagnosticsManager?: internal.DiagnosticsManager;
-  eventProcessor: subsystem.LDEventProcessor;
-  streamer?: internal.StreamingProcessor;
   logger: LDLogger;
 
+  private context?: LDContext;
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
   private identifyReadyListener?: (c: LDContext) => void;
   private identifyErrorListener?: (c: LDContext, err: any) => void;
+  private streamer?: internal.StreamingProcessor;
 
+  private readonly diagnosticsManager?: internal.DiagnosticsManager;
+  private readonly eventProcessor: subsystem.LDEventProcessor;
   private readonly clientContext: ClientContext;
+
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
