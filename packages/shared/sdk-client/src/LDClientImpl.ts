@@ -250,6 +250,7 @@ export default class LDClientImpl implements LDClient {
 
     if (!found) {
       const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
+      this.logger.error(error);
       this.emitter.emit('error', this.context, error);
       this.eventProcessor.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
@@ -275,6 +276,7 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
+        this.logger.error(error);
         this.emitter.emit('error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }

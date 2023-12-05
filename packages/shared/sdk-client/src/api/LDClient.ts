@@ -196,20 +196,15 @@ export interface LDClient {
    *
    * The following event names (keys) are used by the client:
    *
-   * - `"ready"`: The client has finished starting up. This event will be sent regardless
-   *   of whether it successfully connected to LaunchDarkly, or encountered an error
-   *   and had to give up; to distinguish between these cases, see below.
+   * - `"connecting"`: The client sends this prior to connecting to LaunchDarkly.
+   * This is useful for displaying a spinner/loading feedback UI.
+   * - `"ready"`: Flags are ready to be used.
    * - `"error"`: General event for any kind of error condition during client operation.
-   *   The callback parameter is an Error object. If you do not listen for "error"
-   *   events, then the errors will be logged with `console.log()`.
+   *   The callback parameter is an Error object.
    * - `"change"`: The client has received new feature flag data. This can happen either
    *   because you have switched contexts with {@link identify}, or because the client has a
    *   stream connection and has received a live change to a flag value (see below).
    *   The callback parameter is an {@link LDFlagChangeset}.
-   * - `"change:FLAG-KEY"`: The client has received a new value for a specific flag
-   *   whose key is `FLAG-KEY`. The callback receives two parameters: the current (new)
-   *   flag value, and the previous value. This is always accompanied by a general
-   *   `"change"` event as described above; you can listen for either or both.
    *
    * @param key
    *   The name of the event for which to listen.
