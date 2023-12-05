@@ -88,6 +88,7 @@ export default class LDClientImpl implements LDClient {
   async close(): Promise<void> {
     await this.flush();
     this.eventProcessor.close();
+    this.streamer?.close();
   }
 
   async flush(): Promise<{ error?: Error; result: boolean }> {
@@ -209,16 +210,12 @@ export default class LDClientImpl implements LDClient {
     return this.createIdentifyPromise();
   }
 
-  off(eventName: EventName, listener?: Function): void {
+  off(eventName: EventName, listener: Function): void {
     this.emitter.off(eventName, listener);
   }
 
   on(eventName: EventName, listener: Function): void {
     this.emitter.on(eventName, listener);
-  }
-
-  setStreaming(value?: boolean): void {
-    // TODO:
   }
 
   track(key: string, data?: any, metricValue?: number): void {
@@ -359,15 +356,5 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
-  }
-
-  waitForInitialization(): Promise<void> {
-    // TODO:
-    return Promise.resolve(undefined);
-  }
-
-  waitUntilReady(): Promise<void> {
-    // TODO:
-    return Promise.resolve(undefined);
   }
 }
