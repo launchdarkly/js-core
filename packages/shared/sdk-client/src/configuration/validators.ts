@@ -29,8 +29,6 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   diagnosticOptOut: TypeValidators.Boolean,
   withReasons: TypeValidators.Boolean,
   sendEvents: TypeValidators.Boolean,
-  sendLDHeaders: TypeValidators.Boolean,
-  useReport: TypeValidators.Boolean,
 
   inspectors: TypeValidators.createTypeArray<LDInspection>('LDInspection[]', {
     type: 'flag-used',
@@ -41,8 +39,6 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
 
   application: TypeValidators.Object,
   bootstrap: new BootStrapValidator(),
-  requestHeaderTransform: TypeValidators.Function,
-  stream: TypeValidators.NullableBoolean,
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
   hash: TypeValidators.String,
