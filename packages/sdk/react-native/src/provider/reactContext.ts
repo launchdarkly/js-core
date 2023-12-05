@@ -5,6 +5,9 @@ import { LDClient, LDContext } from '@launchdarkly/js-client-sdk-common';
 export type ReactContext = {
   client: LDClient;
   context?: LDContext;
+  /**
+   * Information about the LDClient state.
+   */
   dataSource: {
     status?: 'connecting' | 'ready' | 'error';
     error?: Error;
