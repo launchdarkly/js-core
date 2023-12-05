@@ -33,7 +33,7 @@ const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessag
   internal;
 
 export default class LDClientImpl implements LDClient {
-  config: Configuration;
+  readonly config: Configuration;
   logger: LDLogger;
 
   private context?: LDContext;
