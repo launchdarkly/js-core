@@ -3,6 +3,7 @@ import { Encoding } from './Encoding';
 import { Filesystem } from './Filesystem';
 import { Info } from './Info';
 import { Requests } from './Requests';
+import { Storage } from './Storage';
 
 export interface Platform {
   /**
@@ -31,4 +32,10 @@ export interface Platform {
    * The interface for performing http/https requests.
    */
   requests: Requests;
+
+  /**
+   * The interface for session specific storage object. If the platform does not
+   * support local storage access, this may be undefined.
+   */
+  storage?: Storage;
 }

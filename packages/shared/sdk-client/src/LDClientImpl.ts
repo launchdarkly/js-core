@@ -191,6 +191,11 @@ export default class LDClientImpl implements LDClient {
       return Promise.reject(error);
     }
 
+    // TODO: check localStorage
+    const flagsInStorage = await this.platform.storage?.get(checkedContext.canonicalKey);
+    if (flagsInStorage) {
+    }
+
     this.streamer?.close();
     this.streamer = new internal.StreamingProcessor(
       this.sdkKey,
@@ -215,10 +220,6 @@ export default class LDClientImpl implements LDClient {
 
   on(eventName: EventName, listener: Function): void {
     this.emitter.on(eventName, listener);
-  }
-
-  setStreaming(value?: boolean): void {
-    // TODO:
   }
 
   track(key: string, data?: any, metricValue?: number): void {
@@ -359,15 +360,5 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
-  }
-
-  waitForInitialization(): Promise<void> {
-    // TODO:
-    return Promise.resolve(undefined);
-  }
-
-  waitUntilReady(): Promise<void> {
-    // TODO:
-    return Promise.resolve(undefined);
   }
 }
