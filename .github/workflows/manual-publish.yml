@@ -41,9 +41,7 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
-      - name: 'Install latest npm to support provenance publishing'
-        run: |
-          npm install -g npm
+      - uses: ./actions/install-latest-npm
       - name: 'Setup Redis'
         if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-redis' }}
         run: |

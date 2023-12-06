@@ -1,0 +1,8 @@
+name: Install latest npm
+description: Install the latest version of the npm CLI utility
+runs:
+  using: composite
+  steps:
+    - name: 'Install latest npm to support provenance publishing'
+      run: |
+        npm install -g npm
