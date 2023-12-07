@@ -4,5 +4,6 @@ runs:
   using: composite
   steps:
     - name: 'Install latest npm to support provenance publishing'
+      shell: bash
       run: |
         npm install -g npm
