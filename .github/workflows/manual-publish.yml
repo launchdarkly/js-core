@@ -41,7 +41,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-latest-npm
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - name: 'Setup Redis'
         if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-redis' }}
         run: |
