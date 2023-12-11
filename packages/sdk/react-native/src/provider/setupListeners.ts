@@ -9,8 +9,8 @@ const setupListeners = (
   client: ReactNativeLDClient,
   setState: Dispatch<SetStateAction<ReactContext>>,
 ) => {
-  client.on('connecting', (c: LDContext) => {
-    setState({ client, context: c, dataSource: { status: 'connecting' } });
+  client.on('initializing', (c: LDContext) => {
+    setState({ client, context: c, dataSource: { status: 'initializing' } });
   });
 
   client.on('ready', (c: LDContext) => {

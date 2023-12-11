@@ -208,7 +208,7 @@ export default class LDClientImpl implements LDClient {
         this.emitter.emit('error', context, e);
       },
     );
-    this.emitter.emit('connecting', context);
+    this.emitter.emit('initializing', context);
     this.streamer.start();
 
     return this.createIdentifyPromise();

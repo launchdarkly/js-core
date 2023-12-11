@@ -6,7 +6,7 @@ export type ReactContext = {
   client: LDClient;
   context?: LDContext;
   dataSource: {
-    status?: 'connecting' | 'ready' | 'error';
+    status?: 'initializing' | 'ready' | 'error';
     error?: Error;
   };
 };
