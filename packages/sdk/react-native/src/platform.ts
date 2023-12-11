@@ -1,4 +1,7 @@
 /* eslint-disable max-classes-per-file */
+// @ts-ignore
+import { AsyncStorage } from 'react-native';
+
 import type {
   Crypto,
   Encoding,
@@ -8,12 +11,14 @@ import type {
   Hasher,
   Hmac,
   Info,
+  LDLogger,
   Options,
   Platform,
   PlatformData,
   Requests,
   Response,
   SdkData,
+  Storage,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { name, version } from '../package.json';
@@ -68,11 +73,38 @@ class PlatformCrypto implements Crypto {
     return uuidv4();
   }
 }
-const platform: Platform = {
+
+class PlatformStorage implements Storage {
+  constructor(private readonly logger: LDLogger) {}
+  async clear(key: string): Promise<void> {
+    await AsyncStorage.clear(key);
+  }
+
+  async get(key: string): Promise<string | null> {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ?? null;
+    } catch (error) {
+      this.logger.debug(`Error getting AsyncStorage key: ${key}, error: ${error}`);
+      return null;
+    }
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (error) {
+      this.logger.debug(`Error saving AsyncStorage key: ${key}, value: ${value}, error: ${error}`);
+    }
+  }
+}
+
+const createPlatform = (logger: LDLogger): Platform => ({
   crypto: new PlatformCrypto(),
   info: new PlatformInfo(),
   requests: new PlatformRequests(),
   encoding: new PlatformEncoding(),
-};
+  storage: new PlatformStorage(logger),
+});
 
-export default platform;
+export default createPlatform;

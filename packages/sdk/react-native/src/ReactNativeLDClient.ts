@@ -6,7 +6,7 @@ import {
   type LDOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
-import platform from './platform';
+import createPlatform from './platform';
 
 export default class ReactNativeLDClient extends LDClientImpl {
   constructor(sdkKey: string, options: LDOptions = {}) {
@@ -17,10 +17,11 @@ export default class ReactNativeLDClient extends LDClientImpl {
         // eslint-disable-next-line no-console
         destination: console.log,
       });
-    super(sdkKey, platform, { ...options, logger });
+
+    super(sdkKey, createPlatform(logger), { ...options, logger });
   }
 
   override createStreamUriPath(context: LDContext) {
-    return `/meval/${base64UrlEncode(JSON.stringify(context), platform.encoding!)}`;
+    return `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`;
   }
 }

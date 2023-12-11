@@ -45,7 +45,8 @@
   "dependencies": {
     "@launchdarkly/js-client-sdk-common": "0.0.1",
     "base64-js": "^1.5.1",
-    "event-target-shim": "^6.0.2"
+    "event-target-shim": "^6.0.2",
+    "react-native": "^0.73.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
