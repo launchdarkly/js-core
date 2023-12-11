@@ -236,17 +236,6 @@ export interface LDClient {
   on(key: string, callback: (...args: any[]) => void, context?: any): void;
 
   /**
-   * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
-   *
-   * If this is true, the client will always attempt to maintain a streaming connection; if false,
-   * it never will. If you leave the value undefined (the default), the client will open a streaming
-   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
-   *
-   * This can also be set as the `streaming` property of {@link LDOptions}.
-   */
-  setStreaming(value?: boolean): void;
-
-  /**
    * Determines the string variation of a feature flag.
    *
    * If the flag variation does not have a string value, defaultValue is returned.
@@ -335,70 +324,4 @@ export interface LDClient {
    *   An {@link LDEvaluationDetail} object containing the value and explanation.
    */
   variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail;
-
-  /**
-   * Returns a Promise that tracks the client's initialization state.
-   *
-   * The Promise will be resolved if the client successfully initializes, or rejected if client
-   * initialization has irrevocably failed (for instance, if it detects that the SDK key is invalid).
-   *
-   * ```
-   *     // using Promise then() and catch() handlers
-   *     client.waitForInitialization().then(() => {
-   *         doSomethingWithSuccessfullyInitializedClient();
-   *     }).catch(err => {
-   *         doSomethingForFailedStartup(err);
-   *     });
-   *
-   *     // using async/await
-   *     try {
-   *         await client.waitForInitialization();
-   *         doSomethingWithSuccessfullyInitializedClient();
-   *     } catch (err) {
-   *         doSomethingForFailedStartup(err);
-   *     }
-   * ```
-   *
-   * It is important that you handle the rejection case; otherwise it will become an unhandled Promise
-   * rejection, which is a serious error on some platforms. The Promise is not created unless you
-   * request it, so if you never call `waitForInitialization()` then you do not have to worry about
-   * unhandled rejections.
-   *
-   * Note that you can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
-   * indicates success, and `"failed"` indicates failure.
-   *
-   * @returns
-   *   A Promise that will be resolved if the client initializes successfully, or rejected if it
-   *   fails.
-   */
-  waitForInitialization(): Promise<void>;
-
-  /**
-   * Returns a Promise that tracks the client's initialization state.
-   *
-   * The returned Promise will be resolved once the client has either successfully initialized
-   * or failed to initialize (e.g. due to an invalid environment key or a server error). It will
-   * never be rejected.
-   *
-   * ```
-   *     // using a Promise then() handler
-   *     client.waitUntilReady().then(() => {
-   *         doSomethingWithClient();
-   *     });
-   *
-   *     // using async/await
-   *     await client.waitUntilReady();
-   *     doSomethingWithClient();
-   * ```
-   *
-   * If you want to distinguish between these success and failure conditions, use
-   * {@link waitForInitialization} instead.
-   *
-   * If you prefer to use event listeners ({@link on}) rather than Promises, you can listen on the
-   * client for a `"ready"` event, which will be fired in either case.
-   *
-   * @returns
-   *   A Promise that will be resolved once the client is no longer trying to initialize.
-   */
-  waitUntilReady(): Promise<void>;
 }
