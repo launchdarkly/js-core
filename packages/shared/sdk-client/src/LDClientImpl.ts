@@ -1,8 +1,6 @@
-// temporarily allow unused vars for the duration of the migration
+import fastDeepEqual from 'fast-deep-equal';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  base64UrlEncode,
   ClientContext,
   clone,
   Context,
@@ -25,7 +23,7 @@ import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import { Flags } from './evaluation/fetchFlags';
+import type { Flags } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -103,19 +101,46 @@ export default class LDClientImpl implements LDClient {
     return this.context ? clone(this.context) : undefined;
   }
 
-  private createStreamListeners(context: LDContext): Map<StreamEventName, ProcessStreamResponse> {
+  private createStreamListeners(
+    context: LDContext,
+    canonicalKey: string,
+    initializedFromStorage: boolean,
+  ): Map<StreamEventName, ProcessStreamResponse> {
     const listeners = new Map<StreamEventName, ProcessStreamResponse>();
 
     listeners.set('put', {
       deserializeData: JSON.parse,
-      processJson: (dataJson) => {
-        this.logger.debug('Initializing all data');
-        this.context = context;
-        this.flags = {};
-        Object.keys(dataJson).forEach((key) => {
-          this.flags[key] = dataJson[key];
-        });
-        this.emitter.emit('ready', context);
+      processJson: async (dataJson: Flags) => {
+        if (initializedFromStorage) {
+          this.logger.debug('Synchronizing all data');
+          // TODO: sync and emit changes
+
+          Object.entries(this.flags).forEach(([k, v]) => {
+            const flagFromPut = dataJson[k];
+
+            if (!flagFromPut) {
+              // flag deleted
+              // TODO: emit change
+            } else if (!fastDeepEqual(v, flagFromPut)) {
+              // flag changed
+              // TODO: emit change
+            }
+          });
+
+          Object.entries(dataJson).forEach(([k, _v]) => {
+            const flagFromStorage = this.flags[k];
+            if (!flagFromStorage) {
+              // flag added
+              // TODO: emit change
+            }
+          });
+        } else {
+          this.logger.debug('Initializing all data from stream');
+          this.context = context;
+          this.flags = dataJson;
+          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
+          this.emitter.emit('ready', context);
+        }
       },
     });
 
@@ -152,7 +177,7 @@ export default class LDClientImpl implements LDClient {
    * @protected This function must be overridden in subclasses for streamer
    * to work.
    */
-  protected createStreamUriPath(context: LDContext): string {
+  protected createStreamUriPath(_context: LDContext): string {
     throw new Error(
       'createStreamUriPath not implemented. client sdks must implement createStreamUriPath for streamer to work',
     );
@@ -181,6 +206,11 @@ export default class LDClientImpl implements LDClient {
     });
   }
 
+  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
+    const f = await this.platform.storage?.get(canonicalKey);
+    return f ? JSON.parse(f) : undefined;
+  }
+
   // TODO: implement secure mode
   async identify(context: LDContext, _hash?: string): Promise<void> {
     const checkedContext = Context.fromLDContext(context);
@@ -191,9 +221,14 @@ export default class LDClientImpl implements LDClient {
       return Promise.reject(error);
     }
 
-    // TODO: check localStorage
-    const flagsInStorage = await this.platform.storage?.get(checkedContext.canonicalKey);
-    if (flagsInStorage) {
+    this.emitter.emit('initializing', context);
+
+    const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
+    if (flagsStorage) {
+      this.logger.debug('Initializing all data from storage');
+      this.context = context;
+      this.flags = flagsStorage;
+      this.emitter.emit('ready', context);
     }
 
     this.streamer?.close();
@@ -201,14 +236,13 @@ export default class LDClientImpl implements LDClient {
       this.sdkKey,
       this.clientContext,
       this.createStreamUriPath(context),
-      this.createStreamListeners(context),
+      this.createStreamListeners(context, checkedContext.canonicalKey, !!flagsStorage),
       this.diagnosticsManager,
       (e) => {
         this.logger.error(e);
         this.emitter.emit('error', context, e);
       },
     );
-    this.emitter.emit('initializing', context);
     this.streamer.start();
 
     return this.createIdentifyPromise();
