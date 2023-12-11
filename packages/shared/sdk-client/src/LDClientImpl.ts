@@ -9,6 +9,7 @@ import {
   LDContext,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
+  LDFlagChangeset,
   LDFlagSet,
   LDFlagValue,
   LDLogger,
@@ -113,27 +114,32 @@ export default class LDClientImpl implements LDClient {
       processJson: async (dataJson: Flags) => {
         if (initializedFromStorage) {
           this.logger.debug('Synchronizing all data');
-          // TODO: sync and emit changes
+          const changeset: LDFlagChangeset = {};
 
-          Object.entries(this.flags).forEach(([k, v]) => {
+          Object.entries(this.flags).forEach(([k, f]) => {
             const flagFromPut = dataJson[k];
-
             if (!flagFromPut) {
               // flag deleted
-              // TODO: emit change
-            } else if (!fastDeepEqual(v, flagFromPut)) {
+              changeset[k] = { previous: f.value };
+            } else if (!fastDeepEqual(f, flagFromPut)) {
               // flag changed
-              // TODO: emit change
+              changeset[k] = { previous: f.value, current: flagFromPut.value };
             }
           });
 
-          Object.entries(dataJson).forEach(([k, _v]) => {
+          Object.entries(dataJson).forEach(([k, v]) => {
             const flagFromStorage = this.flags[k];
             if (!flagFromStorage) {
               // flag added
-              // TODO: emit change
+              changeset[k] = { current: v };
             }
           });
+
+          this.flags = dataJson;
+          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
+          if (Object.keys(changeset).length > 0) {
+            this.emitter.emit('change', changeset);
+          }
         } else {
           this.logger.debug('Initializing all data from stream');
           this.context = context;
