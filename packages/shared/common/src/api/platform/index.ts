@@ -5,3 +5,4 @@ export * from './Info';
 export * from './Platform';
 export * from './Requests';
 export * from './EventSource';
+export * from './Storage';
