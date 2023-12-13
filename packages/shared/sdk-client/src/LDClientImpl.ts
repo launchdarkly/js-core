@@ -122,7 +122,7 @@ export default class LDClientImpl implements LDClient {
               changeset[k] = { previous: f.value };
             } else if (!fastDeepEqual(f, flagFromPut)) {
               // flag changed
-              changeset[k] = { previous: f.value, current: flagFromPut.value };
+              changeset[k] = { previous: f.value, current: flagFromPut };
             }
           });
 
