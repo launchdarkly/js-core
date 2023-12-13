@@ -30,7 +30,7 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     setupMockStreamingProcessor(false, mockResponseJson);
 
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger });
+    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');

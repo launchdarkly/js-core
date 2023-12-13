@@ -1,9 +1,8 @@
-import fastDeepEqual from 'fast-deep-equal';
-
 import {
   ClientContext,
   clone,
   Context,
+  fastDeepEqual,
   internal,
   LDClientError,
   LDContext,
@@ -138,7 +137,7 @@ export default class LDClientImpl implements LDClient {
           this.flags = dataJson;
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
           if (Object.keys(changeset).length > 0) {
-            this.emitter.emit('change', changeset);
+            this.emitter.emit('change', context, changeset);
           }
         } else {
           this.logger.debug('Initializing all data from stream');
@@ -189,7 +188,7 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  private createIdentifyPromise() {
+  private createPromiseWithListeners() {
     return new Promise<void>((resolve, reject) => {
       if (this.identifyReadyListener) {
         this.emitter.off('ready', this.identifyReadyListener);
@@ -227,6 +226,7 @@ export default class LDClientImpl implements LDClient {
       return Promise.reject(error);
     }
 
+    const p = this.createPromiseWithListeners();
     this.emitter.emit('initializing', context);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
@@ -251,7 +251,7 @@ export default class LDClientImpl implements LDClient {
     );
     this.streamer.start();
 
-    return this.createIdentifyPromise();
+    return p;
   }
 
   off(eventName: EventName, listener?: Function): void {
