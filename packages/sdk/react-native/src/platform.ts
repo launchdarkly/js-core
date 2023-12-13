@@ -1,7 +1,7 @@
 /* eslint-disable max-classes-per-file */
-// @ts-ignore
-import { AsyncStorage } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// @ts-ignore
 import type {
   Crypto,
   Encoding,
@@ -77,7 +77,7 @@ class PlatformCrypto implements Crypto {
 class PlatformStorage implements Storage {
   constructor(private readonly logger: LDLogger) {}
   async clear(key: string): Promise<void> {
-    await AsyncStorage.clear(key);
+    await AsyncStorage.removeItem(key);
   }
 
   async get(key: string): Promise<string | null> {
