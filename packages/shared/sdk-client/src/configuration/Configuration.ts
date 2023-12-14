@@ -60,8 +60,8 @@ export default class Configuration {
       this.streamUri,
       this.baseUri,
       this.eventsUri,
-      internalOptions.analyticsEventPath, // TODO: rn set to /mobile
-      internalOptions.diagnosticEventPath, // TODO: rn set to /mobile/events/diagnostic
+      internalOptions.analyticsEventPath,
+      internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
     );
     this.tags = new ApplicationTags({ application: this.application, logger: this.logger });

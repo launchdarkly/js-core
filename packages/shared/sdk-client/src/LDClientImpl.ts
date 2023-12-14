@@ -53,7 +53,7 @@ export default class LDClientImpl implements LDClient {
     public readonly sdkKey: string,
     public readonly platform: Platform,
     options: LDOptions,
-    internalOptions: internal.LDInternalOptions,
+    internalOptions?: internal.LDInternalOptions,
   ) {
     if (!sdkKey) {
       throw new Error('You must configure the client with a client-side SDK key');
