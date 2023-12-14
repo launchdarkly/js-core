@@ -53,6 +53,7 @@ export default class LDClientImpl implements LDClient {
     public readonly sdkKey: string,
     public readonly platform: Platform,
     options: LDOptions,
+    internalOptions: internal.LDInternalOptions,
   ) {
     if (!sdkKey) {
       throw new Error('You must configure the client with a client-side SDK key');
@@ -62,7 +63,7 @@ export default class LDClientImpl implements LDClient {
       throw new Error('Platform must implement Encoding because btoa is required.');
     }
 
-    this.config = new Configuration(options);
+    this.config = new Configuration(options, internalOptions);
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);

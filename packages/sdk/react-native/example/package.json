@@ -17,6 +17,7 @@
     "clean": "expo prebuild --clean && yarn cache clean && rm -rf node_modules && rm -rf .expo"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "1.18.2",
     "expo": "~49.0.16",
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.7.1",

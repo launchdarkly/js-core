@@ -1,6 +1,7 @@
 import {
   base64UrlEncode,
   BasicLogger,
+  internal,
   LDClientImpl,
   type LDContext,
   type LDOptions,
@@ -13,12 +14,17 @@ export default class ReactNativeLDClient extends LDClientImpl {
     const logger =
       options.logger ??
       new BasicLogger({
-        level: 'info',
+        level: 'debug',
         // eslint-disable-next-line no-console
         destination: console.log,
       });
 
-    super(sdkKey, createPlatform(logger), { ...options, logger });
+    const internalOptions: internal.LDInternalOptions = {
+      analyticsEventPath: `/mobile`,
+      diagnosticEventPath: `/mobile/events/diagnostic`,
+    };
+
+    super(sdkKey, createPlatform(logger), { ...options, logger }, internalOptions);
   }
 
   override createStreamUriPath(context: LDContext) {

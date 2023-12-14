@@ -1,6 +1,7 @@
 import {
   ApplicationTags,
   createSafeLogger,
+  internal,
   LDFlagSet,
   NumberWithMinimum,
   OptionMessages,
@@ -51,11 +52,18 @@ export default class Configuration {
   // Allow indexing Configuration by a string
   [index: string]: any;
 
-  constructor(pristineOptions: LDOptions = {}) {
+  constructor(pristineOptions: LDOptions = {}, internalOptions: internal.LDInternalOptions = {}) {
     const errors = this.validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
 
-    this.serviceEndpoints = new ServiceEndpoints(this.streamUri, this.baseUri, this.eventsUri);
+    this.serviceEndpoints = new ServiceEndpoints(
+      this.streamUri,
+      this.baseUri,
+      this.eventsUri,
+      internalOptions.analyticsEventPath, // TODO: rn set to /mobile
+      internalOptions.diagnosticEventPath, // TODO: rn set to /mobile/events/diagnostic
+      internalOptions.includeAuthorizationHeader,
+    );
     this.tags = new ApplicationTags({ application: this.application, logger: this.logger });
   }
 
