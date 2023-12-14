@@ -9,8 +9,16 @@ describe('ReactNativeLDClient', () => {
     ldc = new ReactNativeLDClient('mob-test', { sendEvents: false });
   });
 
-  test('constructor', () => {
+  test('constructing a new client', () => {
     expect(ldc.sdkKey).toEqual('mob-test');
+    expect(ldc.config.serviceEndpoints).toEqual({
+      analyticsEventPath: '/mobile',
+      diagnosticEventPath: '/mobile/events/diagnostic',
+      events: 'https://events.launchdarkly.com',
+      includeAuthorizationHeader: true,
+      polling: 'https://sdk.launchdarkly.com',
+      streaming: 'https://clientstream.launchdarkly.com',
+    });
   });
 
   test('createStreamUriPath', () => {
