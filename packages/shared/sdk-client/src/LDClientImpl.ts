@@ -113,7 +113,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('put', {
       deserializeData: JSON.parse,
       processJson: async (dataJson: Flags) => {
-        this.logger.debug(`Streamer PUT: ${dataJson}`);
+        this.logger.debug(`Streamer PUT: ${JSON.stringify(dataJson, null, 2)}`);
         if (initializedFromStorage) {
           this.logger.debug('Synchronizing all data');
           const changeset: LDFlagChangeset = {};
@@ -155,7 +155,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('patch', {
       deserializeData: JSON.parse,
       processJson: async (dataJson: PatchFlag) => {
-        this.logger.debug(`Streamer PATCH ${dataJson}`);
+        this.logger.debug(`Streamer PATCH ${JSON.stringify(dataJson, null, 2)}`);
         const existing = this.flags[dataJson.key];
 
         // add flag if it doesn't exist
@@ -180,7 +180,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('delete', {
       deserializeData: JSON.parse,
       processJson: async (dataJson: DeleteFlag) => {
-        this.logger.debug(`Streamer DELETE ${dataJson}`);
+        this.logger.debug(`Streamer DELETE ${JSON.stringify(dataJson, null, 2)}`);
         const existing = this.flags[dataJson.key];
 
         if (existing && existing.version <= dataJson.version) {
