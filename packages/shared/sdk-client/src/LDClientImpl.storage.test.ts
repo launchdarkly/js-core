@@ -316,9 +316,6 @@ describe('sdk-client storage', () => {
     });
   });
 
-  test.todo('delete should ignore newer version');
-  test.todo('delete should ignore non-existing flag');
-
   test('delete should emit change event', async () => {
     const deleteResponse = {
       key: 'dev-test-flag',
@@ -347,5 +344,36 @@ describe('sdk-client storage', () => {
         previous: true,
       },
     });
+  });
+
+  test('delete should not delete newer version', async () => {
+    const deleteResponse = {
+      key: 'dev-test-flag',
+      version: defaultPutResponse['dev-test-flag'].version - 1,
+    };
+
+    const allFlags = await identifyGetAllFlags(
+      false,
+      defaultPutResponse,
+      undefined,
+      deleteResponse,
+      false,
+    );
+
+    expect(allFlags).toHaveProperty('dev-test-flag');
+    expect(basicPlatform.storage.set).not.toHaveBeenCalled();
+    expect(emitter.emit).not.toHaveBeenCalledWith('change');
+  });
+
+  test('delete should ignore non-existing flag', async () => {
+    const deleteResponse = {
+      key: 'does-not-exist',
+      version: 1,
+    };
+
+    await identifyGetAllFlags(false, defaultPutResponse, undefined, deleteResponse, false);
+
+    expect(basicPlatform.storage.set).not.toHaveBeenCalled();
+    expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 });
