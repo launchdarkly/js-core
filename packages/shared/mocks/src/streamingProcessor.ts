@@ -11,6 +11,8 @@ export const MockStreamingProcessor = jest.fn();
 export const setupMockStreamingProcessor = (
   shouldError: boolean = false,
   putResponseJson: any = { data: { flags: {}, segments: {} } },
+  patchResponseJson?: any,
+  deleteResponseJson?: any,
 ) => {
   MockStreamingProcessor.mockImplementation(
     (
@@ -35,6 +37,14 @@ export const setupMockStreamingProcessor = (
         } else {
           // execute put which will resolve the init promise
           process.nextTick(() => listeners.get('put')?.processJson(putResponseJson));
+
+          if (patchResponseJson) {
+            process.nextTick(() => listeners.get('patch')?.processJson(patchResponseJson));
+          }
+
+          if (deleteResponseJson) {
+            process.nextTick(() => listeners.get('delete')?.processJson(deleteResponseJson));
+          }
         }
       }),
       close: jest.fn(),

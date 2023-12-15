@@ -136,9 +136,9 @@ export default class LDClientImpl implements LDClient {
             }
           });
 
-          this.flags = dataJson;
-          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
           if (Object.keys(changeset).length > 0) {
+            this.flags = dataJson;
+            await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
             this.emitter.emit('change', context, changeset);
           }
         } else {
@@ -160,13 +160,16 @@ export default class LDClientImpl implements LDClient {
         // add flag if it doesn't exist
         // if does, update it if version is newer
         if (!existing || (existing && dataJson.version > existing.version)) {
-          this.flags[dataJson.key] = dataJson;
-          const changeset: LDFlagChangeset = { current: dataJson.value };
+          const changeset: LDFlagChangeset = {};
+          changeset[dataJson.key] = {
+            current: dataJson.value,
+          };
 
           if (existing) {
             changeset[dataJson.key].previous = existing.value;
           }
 
+          this.flags[dataJson.key] = dataJson;
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
           this.emitter.emit('change', context, changeset);
         }
@@ -175,7 +178,7 @@ export default class LDClientImpl implements LDClient {
 
     listeners.set('delete', {
       deserializeData: JSON.parse,
-      processJson: (dataJson: DeleteFlag) => {
+      processJson: async (dataJson: DeleteFlag) => {
         this.logger.debug(`Streamer DELETE ${dataJson}`);
         const existing = this.flags[dataJson.key];
 
@@ -185,6 +188,7 @@ export default class LDClientImpl implements LDClient {
             previous: this.flags[dataJson.key].value,
           };
           delete this.flags[dataJson.key];
+          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
           this.emitter.emit('change', context, changeset);
         }
       },
