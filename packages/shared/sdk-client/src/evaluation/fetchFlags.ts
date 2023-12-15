@@ -3,7 +3,7 @@ import { LDContext, LDEvaluationReason, LDFlagValue, Platform } from '@launchdar
 import Configuration from '../configuration';
 import { createFetchOptions, createFetchUrl } from './fetchUtils';
 
-export type Flag = {
+export interface Flag {
   version: number;
   flagVersion: number;
   value: LDFlagValue;
@@ -12,7 +12,13 @@ export type Flag = {
   trackReason?: boolean;
   reason?: LDEvaluationReason;
   debugEventsUntilDate?: number;
-};
+}
+
+export interface PatchFlag extends Flag {
+  key: string;
+}
+
+export type DeleteFlag = Pick<PatchFlag, 'key' | 'version'>;
 
 export type Flags = {
   [k: string]: Flag;

@@ -84,7 +84,7 @@ export interface LDClient {
    * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
    * been called, the initial context specified when the client was created.
    */
-  getContext(): LDContext;
+  getContext(): LDContext | undefined;
 
   /**
    * Identifies a context to LaunchDarkly.

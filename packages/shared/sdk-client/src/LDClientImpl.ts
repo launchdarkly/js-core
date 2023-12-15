@@ -23,7 +23,7 @@ import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import type { Flags } from './evaluation/fetchFlags';
+import type { DeleteFlag, Flags, PatchFlag } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 
@@ -98,8 +98,8 @@ export default class LDClientImpl implements LDClient {
     return { result: true };
   }
 
-  getContext(): LDContext {
-    return this.context ? clone(this.context) : undefined;
+  getContext(): LDContext | undefined {
+    return this.context ? clone<LDContext>(this.context) : undefined;
   }
 
   private createStreamListeners(
@@ -112,6 +112,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('put', {
       deserializeData: JSON.parse,
       processJson: async (dataJson: Flags) => {
+        this.logger.debug(`Streamer PUT: ${dataJson}`);
         if (initializedFromStorage) {
           this.logger.debug('Synchronizing all data');
           const changeset: LDFlagChangeset = {};
@@ -123,15 +124,15 @@ export default class LDClientImpl implements LDClient {
               changeset[k] = { previous: f.value };
             } else if (!fastDeepEqual(f, flagFromPut)) {
               // flag changed
-              changeset[k] = { previous: f.value, current: flagFromPut };
+              changeset[k] = { previous: f.value, current: flagFromPut.value };
             }
           });
 
-          Object.entries(dataJson).forEach(([k, v]) => {
+          Object.entries(dataJson).forEach(([k, f]) => {
             const flagFromStorage = this.flags[k];
             if (!flagFromStorage) {
               // flag added
-              changeset[k] = { current: v };
+              changeset[k] = { current: f.value };
             }
           });
 
@@ -152,19 +153,40 @@ export default class LDClientImpl implements LDClient {
 
     listeners.set('patch', {
       deserializeData: JSON.parse,
-      processJson: (dataJson) => {
-        this.logger.debug(`Updating ${dataJson.key}`);
-        this.flags[dataJson.key] = dataJson;
-        this.emitter.emit('change', context, dataJson.key);
+      processJson: async (dataJson: PatchFlag) => {
+        this.logger.debug(`Streamer PATCH ${dataJson}`);
+        const existing = this.flags[dataJson.key];
+
+        // add flag if it doesn't exist
+        // if does, update it if version is newer
+        if (!existing || (existing && dataJson.version > existing.version)) {
+          this.flags[dataJson.key] = dataJson;
+          const changeset: LDFlagChangeset = { current: dataJson.value };
+
+          if (existing) {
+            changeset[dataJson.key].previous = existing.value;
+          }
+
+          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
+          this.emitter.emit('change', context, changeset);
+        }
       },
     });
 
     listeners.set('delete', {
       deserializeData: JSON.parse,
-      processJson: (dataJson) => {
-        this.logger.debug(`Deleting ${dataJson.key}`);
-        delete this.flags[dataJson.key];
-        this.emitter.emit('change', context, dataJson.key);
+      processJson: (dataJson: DeleteFlag) => {
+        this.logger.debug(`Streamer DELETE ${dataJson}`);
+        const existing = this.flags[dataJson.key];
+
+        if (existing && existing.version <= dataJson.version) {
+          const changeset: LDFlagChangeset = {};
+          changeset[dataJson.key] = {
+            previous: this.flags[dataJson.key].value,
+          };
+          delete this.flags[dataJson.key];
+          this.emitter.emit('change', context, changeset);
+        }
       },
     });
 

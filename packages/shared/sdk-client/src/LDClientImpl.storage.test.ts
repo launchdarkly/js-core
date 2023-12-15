@@ -2,6 +2,7 @@ import { clone, type LDContext, LDFlagChangeset } from '@launchdarkly/js-sdk-com
 import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
 import LDEmitter from './api/LDEmitter';
+import type { Flag, Flags } from './evaluation/fetchFlags';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 
@@ -21,6 +22,7 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
   };
 });
 
+const defaultPutResponse = mockResponseJson as Flags;
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 let ldc: LDClientImpl;
@@ -40,7 +42,7 @@ const onChangePromise = () =>
 // 3. Runs identify
 // 4. Get all flags
 const identifyGetAllFlags = async (
-  putResponse: any = mockResponseJson,
+  putResponse = defaultPutResponse,
   shouldError: boolean = false,
 ) => {
   setupMockStreamingProcessor(shouldError, putResponse);
@@ -64,7 +66,7 @@ const identifyGetAllFlags = async (
 describe('sdk-client storage', () => {
   beforeEach(() => {
     jest.useFakeTimers();
-    basicPlatform.storage.get.mockImplementation(() => JSON.stringify(mockResponseJson));
+    basicPlatform.storage.get.mockImplementation(() => JSON.stringify(defaultPutResponse));
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
@@ -82,7 +84,7 @@ describe('sdk-client storage', () => {
 
   test('initialize from storage succeeds without streamer', async () => {
     // make sure streamer errors
-    const allFlags = await identifyGetAllFlags(mockResponseJson, true);
+    const allFlags = await identifyGetAllFlags(defaultPutResponse, true);
 
     expect(basicPlatform.storage.get).toHaveBeenCalledWith('org:Testy Pizza');
 
@@ -109,7 +111,7 @@ describe('sdk-client storage', () => {
   });
 
   test('syncing storage when a flag is deleted', async () => {
-    const putResponse = clone(mockResponseJson);
+    const putResponse = clone<Flags>(defaultPutResponse);
     delete putResponse['dev-test-flag'];
     const allFlags = await identifyGetAllFlags(putResponse);
 
@@ -126,7 +128,7 @@ describe('sdk-client storage', () => {
   });
 
   test('syncing storage when a flag is added', async () => {
-    const putResponse = clone(mockResponseJson);
+    const putResponse = clone<Flags>(defaultPutResponse);
     const newFlag = {
       version: 1,
       flagVersion: 2,
@@ -138,14 +140,18 @@ describe('sdk-client storage', () => {
     const allFlags = await identifyGetAllFlags(putResponse);
 
     expect(allFlags).toMatchObject({ 'another-dev-test-flag': false });
+    expect(basicPlatform.storage.set).toHaveBeenCalledWith(
+      'org:Testy Pizza',
+      JSON.stringify(putResponse),
+    );
     expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'another-dev-test-flag': { current: newFlag },
+      'another-dev-test-flag': { current: newFlag.value },
     });
   });
 
   test('syncing storage when a flag is updated', async () => {
-    const putResponse = clone(mockResponseJson);
-    putResponse['dev-test-flag'].version = '999';
+    const putResponse = clone<Flags>(defaultPutResponse);
+    putResponse['dev-test-flag'].version = 999;
     putResponse['dev-test-flag'].value = false;
     const allFlags = await identifyGetAllFlags(putResponse);
 
@@ -153,14 +159,14 @@ describe('sdk-client storage', () => {
     expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
       'dev-test-flag': {
         previous: true,
-        current: putResponse['dev-test-flag'],
+        current: putResponse['dev-test-flag'].value,
       },
     });
   });
 
   test('syncing storage on multiple flag operations', async () => {
-    const putResponse = clone(mockResponseJson);
-    const newFlag = clone(putResponse['dev-test-flag']);
+    const putResponse = clone<Flags>(defaultPutResponse);
+    const newFlag = clone<Flag>(putResponse['dev-test-flag']);
 
     // flag updated, added and deleted
     putResponse['dev-test-flag'].value = false;
@@ -173,10 +179,33 @@ describe('sdk-client storage', () => {
     expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
       'dev-test-flag': {
         previous: true,
-        current: putResponse['dev-test-flag'],
+        current: putResponse['dev-test-flag'].value,
       },
-      'another-dev-test-flag': { current: newFlag },
+      'another-dev-test-flag': { current: newFlag.value },
       'moonshot-demo': { previous: true },
+    });
+  });
+
+  test('an update to inExperiment should emit change event', async () => {
+    const putResponse = clone<Flags>(defaultPutResponse);
+    putResponse['dev-test-flag'].reason = { kind: 'RULE_MATCH', inExperiment: true };
+
+    const allFlags = await identifyGetAllFlags(putResponse);
+    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.calls[0][1]) as Flags;
+
+    expect(allFlags).toMatchObject({ 'dev-test-flag': true });
+    expect(flagsInStorage['dev-test-flag'].reason).toEqual({
+      kind: 'RULE_MATCH',
+      inExperiment: true,
+    });
+
+    // both previous and current are true but inExperiment has changed
+    // so a change event should be emitted
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
+      'dev-test-flag': {
+        previous: true,
+        current: true,
+      },
     });
   });
 
