@@ -46,6 +46,7 @@ const identifyGetAllFlags = async (
   putResponse = defaultPutResponse,
   patchResponse?: PatchFlag,
   deleteResponse?: DeleteFlag,
+  waitForChange: boolean = true,
 ) => {
   setupMockStreamingProcessor(shouldError, putResponse, patchResponse, deleteResponse);
   const changePromise = onChangePromise();
@@ -58,7 +59,7 @@ const identifyGetAllFlags = async (
   jest.runAllTicks();
 
   // if streamer errors, don't wait for 'change' because it will not be sent.
-  if (!shouldError) {
+  if (waitForChange && !shouldError) {
     await changePromise;
   }
 
@@ -188,6 +189,31 @@ describe('sdk-client storage', () => {
     });
   });
 
+  test('syncing storage when PUT is consistent so no updates needed', async () => {
+    const allFlags = await identifyGetAllFlags(
+      false,
+      defaultPutResponse,
+      undefined,
+      undefined,
+      false,
+    );
+
+    expect(basicPlatform.storage.set).not.toHaveBeenCalled();
+    expect(emitter.emit).not.toHaveBeenCalledWith('change');
+
+    // this is defaultPutResponse
+    expect(allFlags).toEqual({
+      'dev-test-flag': true,
+      'easter-i-tunes-special': false,
+      'easter-specials': 'no specials',
+      fdsafdsafdsafdsa: true,
+      'log-level': 'warn',
+      'moonshot-demo': true,
+      test1: 's1',
+      'this-is-a-test': true,
+    });
+  });
+
   test('an update to inExperiment should emit change event', async () => {
     const putResponse = clone<Flags>(defaultPutResponse);
     putResponse['dev-test-flag'].reason = { kind: 'RULE_MATCH', inExperiment: true };
@@ -237,8 +263,59 @@ describe('sdk-client storage', () => {
     });
   });
 
-  test.todo('patch should ignore older version');
-  test.todo('patch should add new flags');
+  test('patch should add new flags', async () => {
+    const patchResponse = clone<PatchFlag>(defaultPutResponse['dev-test-flag']);
+    patchResponse.key = 'another-dev-test-flag';
+
+    const allFlags = await identifyGetAllFlags(false, defaultPutResponse, patchResponse);
+    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.calls[0][1]) as Flags;
+
+    expect(allFlags).toHaveProperty('another-dev-test-flag');
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(1);
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      1,
+      'org:Testy Pizza',
+      expect.stringContaining(JSON.stringify(patchResponse)),
+    );
+    expect(flagsInStorage).toHaveProperty('another-dev-test-flag');
+    expect(emitter.emit).toHaveBeenCalledTimes(3);
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
+      'another-dev-test-flag': {
+        current: true,
+      },
+    });
+  });
+
+  test('patch should ignore older version', async () => {
+    const patchResponse = clone<PatchFlag>(defaultPutResponse['dev-test-flag']);
+    patchResponse.key = 'dev-test-flag';
+    patchResponse.value = false;
+    patchResponse.version -= 1;
+
+    const allFlags = await identifyGetAllFlags(
+      false,
+      defaultPutResponse,
+      patchResponse,
+      undefined,
+      false,
+    );
+
+    expect(basicPlatform.storage.set).not.toHaveBeenCalled();
+    expect(emitter.emit).not.toHaveBeenCalledWith('change');
+
+    // this is defaultPutResponse
+    expect(allFlags).toEqual({
+      'dev-test-flag': true,
+      'easter-i-tunes-special': false,
+      'easter-specials': 'no specials',
+      fdsafdsafdsafdsa: true,
+      'log-level': 'warn',
+      'moonshot-demo': true,
+      test1: 's1',
+      'this-is-a-test': true,
+    });
+  });
+
   test.todo('delete should ignore newer version');
   test.todo('delete should ignore non-existing flag');
 
