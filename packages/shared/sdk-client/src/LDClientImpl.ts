@@ -46,6 +46,7 @@ export default class LDClientImpl implements LDClient {
   private identifyErrorListener?: (c: LDContext, err: any) => void;
 
   private readonly clientContext: ClientContext;
+
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
