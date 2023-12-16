@@ -18,6 +18,9 @@ const setupListeners = (
   });
 
   client.on('error', (c: LDContext, e: any) => {
+    // TODO: if a flag is deleted, variation will return the default value and
+    // emit an error. This setState will cause a re-render which will call
+    // variation again causing an infinite loop of setState and variation calls.
     setState({ client, context: c, dataSource: { status: 'error', error: e } });
   });
 
