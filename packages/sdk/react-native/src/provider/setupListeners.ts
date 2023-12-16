@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
-import { LDContext } from '@launchdarkly/js-client-sdk-common';
+import type { LDContext, LDFlagChangeset } from '@launchdarkly/js-client-sdk-common';
 
 import ReactNativeLDClient from '../ReactNativeLDClient';
 import { ReactContext } from './reactContext';
@@ -19,6 +19,10 @@ const setupListeners = (
 
   client.on('error', (c: LDContext, e: any) => {
     setState({ client, context: c, dataSource: { status: 'error', error: e } });
+  });
+
+  client.on('change', (c: LDContext, _changes: LDFlagChangeset) => {
+    setState({ client, context: c, dataSource: { status: 'change' } });
   });
 };
 

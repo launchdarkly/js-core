@@ -321,10 +321,13 @@ export default class LDClientImpl implements LDClient {
     const found = this.flags[flagKey];
 
     if (!found) {
-      const error = new LDClientError(`Unknown feature flag "${flagKey}"; returning default value`);
+      const defVal = defaultValue ?? null;
+      const error = new LDClientError(
+        `Unknown feature flag "${flagKey}"; returning default value ${defVal}`,
+      );
       this.emitter.emit('error', this.context, error);
       this.eventProcessor.sendEvent(
-        this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue ?? null, evalContext),
+        this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
       );
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
     }
