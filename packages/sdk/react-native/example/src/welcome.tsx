@@ -1,27 +1,29 @@
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import {
-  useBoolVariation,
-  useLDClient,
-  useLDDataSourceStatus,
-} from '@launchdarkly/react-native-client-sdk';
+import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const { error, status } = useLDDataSourceStatus();
   const flag = useBoolVariation('dev-test-flag', false);
   const ldc = useLDClient();
+  const [userKey, setUserKey] = useState('test-user-1');
 
   const login = () => {
-    ldc.identify({ kind: 'user', key: 'test-user-2' });
+    console.log(`identifying: ${userKey}`);
+    ldc.identify({ kind: 'user', key: userKey });
   };
 
   return (
     <View style={styles.container}>
       <Text>Welcome to LaunchDarkly</Text>
-      <Text>status: {status ?? 'not connected'}</Text>
-      {error ? <Text>error: {error.message}</Text> : null}
       <Text>devTestFlag: {`${flag}`}</Text>
       <Text>context: {JSON.stringify(ldc.getContext())}</Text>
+      <TextInput
+        style={styles.input}
+        onChangeText={setUserKey}
+        onSubmitEditing={login}
+        value={userKey}
+      />
       <Button title="Login" onPress={login} />
     </View>
   );
@@ -37,5 +39,11 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     marginVertical: 20,
+  },
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
   },
 });

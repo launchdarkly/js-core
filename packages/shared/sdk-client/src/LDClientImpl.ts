@@ -306,6 +306,8 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
+  // TODO: move variation functions to a separate file to make this file size
+  // more manageable.
   private variationInternal(
     flagKey: string,
     defaultValue: any,

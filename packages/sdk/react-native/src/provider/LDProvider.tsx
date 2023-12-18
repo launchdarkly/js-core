@@ -12,7 +12,7 @@ type LDProps = {
 };
 
 const LDProvider = ({ client, context, children }: PropsWithChildren<LDProps>) => {
-  const [state, setState] = useState<ReactContext>({ client, context, dataSource: {} });
+  const [state, setState] = useState<ReactContext>({ client });
 
   useEffect(() => {
     setupListeners(client, setState);

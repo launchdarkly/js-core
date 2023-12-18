@@ -9,7 +9,7 @@ const context = { kind: 'user', key: 'test-user-1' };
 
 const App = () => {
   return (
-    <LDProvider client={featureClient} context={context}>
+    <LDProvider client={featureClient}>
       <Welcome />
     </LDProvider>
   );
