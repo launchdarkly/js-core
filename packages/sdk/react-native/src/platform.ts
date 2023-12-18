@@ -15,7 +15,6 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// @ts-ignore
 import type {
   Crypto,
   Encoding,
