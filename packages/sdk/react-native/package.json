@@ -36,8 +36,8 @@
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test",
     "link-dev": "./link-dev.sh",
-    "android": "yarn ./example && yarn build && yarn ./example android",
-    "ios": "yarn ./example && yarn build && yarn ./example ios"
+    "android": "yarn && yarn ./example && yarn build && (cd example/ && yarn android-release)",
+    "ios": "yarn && yarn ./example && yarn build && (cd example/ && yarn ios-go)"
   },
   "peerDependencies": {
     "react": "*"

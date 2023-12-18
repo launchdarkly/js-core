@@ -32,7 +32,13 @@ See the full [example app](https://github.com/launchdarkly/js-core/tree/main/pac
 
 ## Developing this SDK
 
-:information_source: See the example [README](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/react-native/example/README.md#L1).
+```shell
+# ios
+yarn ios
+
+# android
+yarn android
+```
 
 ## About LaunchDarkly
 
