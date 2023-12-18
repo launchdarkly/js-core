@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const flag = useBoolVariation('dev-test-flag', false);
+  const [flagKey, setFlagKey] = useState('dev-test-flag');
+  const [userKey, setUserKey] = useState('');
+  const flagValue = useBoolVariation(flagKey, false);
   const ldc = useLDClient();
-  const [userKey, setUserKey] = useState('test-user-1');
 
-  const login = () => {
-    console.log(`identifying: ${userKey}`);
+  const onIdentify = () => {
     ldc
       .identify({ kind: 'user', key: userKey })
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
@@ -18,15 +18,29 @@ export default function Welcome() {
   return (
     <View style={styles.container}>
       <Text>Welcome to LaunchDarkly</Text>
-      <Text>devTestFlag: {`${flag}`}</Text>
+      <Text>
+        {flagKey}: {`${flagValue}`}
+      </Text>
       <Text>context: {JSON.stringify(ldc.getContext())}</Text>
       <TextInput
         style={styles.input}
+        autoCapitalize="none"
         onChangeText={setUserKey}
-        onSubmitEditing={login}
+        onSubmitEditing={onIdentify}
         value={userKey}
       />
-      <Button title="Login" onPress={login} />
+      <TouchableOpacity onPress={onIdentify} style={styles.buttonContainer}>
+        <Text style={styles.buttonText}>identify</Text>
+      </TouchableOpacity>
+      <TextInput
+        style={styles.input}
+        autoCapitalize="none"
+        onChangeText={setFlagKey}
+        value={flagKey}
+      />
+      <TouchableOpacity style={styles.buttonContainer}>
+        <Text style={styles.buttonText}>get flag value</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -37,15 +51,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
   input: {
     height: 40,
     margin: 12,
     borderWidth: 1,
     padding: 10,
+  },
+  buttonContainer: {
+    elevation: 8,
+    backgroundColor: '#009688',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: '#fff',
+    fontWeight: 'bold',
+    alignSelf: 'center',
+    textTransform: 'uppercase',
   },
 });
