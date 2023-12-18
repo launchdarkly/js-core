@@ -10,7 +10,9 @@ export default function Welcome() {
 
   const login = () => {
     console.log(`identifying: ${userKey}`);
-    ldc.identify({ kind: 'user', key: userKey });
+    ldc
+      .identify({ kind: 'user', key: userKey })
+      .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 
   return (
