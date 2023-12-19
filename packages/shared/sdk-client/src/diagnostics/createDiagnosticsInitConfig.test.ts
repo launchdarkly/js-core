@@ -23,7 +23,6 @@ describe('createDiagnosticsInitConfig', () => {
       eventsCapacity: 100,
       eventsFlushIntervalMillis: secondsToMillis(2),
       reconnectTimeMillis: secondsToMillis(1),
-      streamingDisabled: true,
       usingSecureMode: false,
     });
   });
@@ -38,7 +37,6 @@ describe('createDiagnosticsInitConfig', () => {
         flushInterval: 2,
         streamInitialReconnectDelay: 3,
         diagnosticRecordingInterval: 4,
-        stream: true,
         allAttributesPrivate: true,
         hash: 'test-hash',
         bootstrap: 'localStorage',
@@ -54,7 +52,6 @@ describe('createDiagnosticsInitConfig', () => {
       eventsCapacity: 1,
       eventsFlushIntervalMillis: 2000,
       reconnectTimeMillis: 3000,
-      streamingDisabled: false,
       usingSecureMode: true,
     });
   });

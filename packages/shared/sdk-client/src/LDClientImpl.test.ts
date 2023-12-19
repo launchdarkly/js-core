@@ -130,7 +130,7 @@ describe('sdk-client object', () => {
     expect(ldc.getContext()).toBeUndefined();
   });
 
-  test('identify ready and error listeners', async () => {
+  test('identify change and error listeners', async () => {
     // @ts-ignore
     const { emitter } = ldc;
 
@@ -142,7 +142,7 @@ describe('sdk-client object', () => {
     const carContext2: LDContext = { kind: 'car', key: 'subaru-forrester' };
     await ldc.identify(carContext2);
 
-    expect(emitter.listenerCount('ready')).toEqual(1);
+    expect(emitter.listenerCount('change')).toEqual(1);
     expect(emitter.listenerCount('error')).toEqual(1);
   });
 });

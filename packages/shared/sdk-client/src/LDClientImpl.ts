@@ -2,13 +2,11 @@ import {
   ClientContext,
   clone,
   Context,
-  fastDeepEqual,
   internal,
   LDClientError,
   LDContext,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
-  LDFlagChangeset,
   LDFlagSet,
   LDFlagValue,
   LDLogger,
@@ -23,9 +21,10 @@ import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
-import type { DeleteFlag, Flags, PatchFlag } from './evaluation/fetchFlags';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
+import { DeleteFlag, Flags, PatchFlag } from './types';
+import { calculateFlagChanges } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
@@ -42,7 +41,7 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
-  private identifyReadyListener?: (c: LDContext) => void;
+  private identifyChangeListener?: (c: LDContext) => void;
   private identifyErrorListener?: (c: LDContext, err: any) => void;
 
   private readonly clientContext: ClientContext;
@@ -107,7 +106,7 @@ export default class LDClientImpl implements LDClient {
   private createStreamListeners(
     context: LDContext,
     canonicalKey: string,
-    initializedFromStorage: boolean,
+    identifyResolve: any,
   ): Map<StreamEventName, ProcessStreamResponse> {
     const listeners = new Map<StreamEventName, ProcessStreamResponse>();
 
@@ -115,40 +114,17 @@ export default class LDClientImpl implements LDClient {
       deserializeData: JSON.parse,
       processJson: async (dataJson: Flags) => {
         this.logger.debug(`Streamer PUT: ${Object.keys(dataJson)}`);
-        if (initializedFromStorage) {
-          this.logger.debug('Synchronizing all data');
-          const changeset: LDFlagChangeset = {};
-
-          Object.entries(this.flags).forEach(([k, f]) => {
-            const flagFromPut = dataJson[k];
-            if (!flagFromPut) {
-              // flag deleted
-              changeset[k] = { previous: f.value };
-            } else if (!fastDeepEqual(f, flagFromPut)) {
-              // flag changed
-              changeset[k] = { previous: f.value, current: flagFromPut.value };
-            }
-          });
-
-          Object.entries(dataJson).forEach(([k, f]) => {
-            const flagFromStorage = this.flags[k];
-            if (!flagFromStorage) {
-              // flag added
-              changeset[k] = { current: f.value };
-            }
-          });
-
-          if (Object.keys(changeset).length > 0) {
-            this.flags = dataJson;
-            await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-            this.emitter.emit('change', context, changeset);
-          }
-        } else {
-          this.logger.debug('Initializing all data from stream');
+        const changedKeys = calculateFlagChanges(this.flags, dataJson);
+        if (changedKeys.length > 0) {
           this.context = context;
           this.flags = dataJson;
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-          this.emitter.emit('ready', context);
+
+          // this resolves identifyPromise
+          this.emitter.emit('change', context, changedKeys);
+        } else {
+          // manually resolve identify
+          identifyResolve();
         }
       },
     });
@@ -159,21 +135,11 @@ export default class LDClientImpl implements LDClient {
         this.logger.debug(`Streamer PATCH ${JSON.stringify(dataJson, null, 2)}`);
         const existing = this.flags[dataJson.key];
 
-        // add flag if it doesn't exist
-        // if does, update it if version is newer
+        // add flag if it doesn't exist or update it if version is newer
         if (!existing || (existing && dataJson.version > existing.version)) {
-          const changeset: LDFlagChangeset = {};
-          changeset[dataJson.key] = {
-            current: dataJson.value,
-          };
-
-          if (existing) {
-            changeset[dataJson.key].previous = existing.value;
-          }
-
           this.flags[dataJson.key] = dataJson;
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-          this.emitter.emit('change', context, changeset);
+          this.emitter.emit('change', context, [dataJson.key]);
         }
       },
     });
@@ -185,13 +151,9 @@ export default class LDClientImpl implements LDClient {
         const existing = this.flags[dataJson.key];
 
         if (existing && existing.version <= dataJson.version) {
-          const changeset: LDFlagChangeset = {};
-          changeset[dataJson.key] = {
-            previous: this.flags[dataJson.key].value,
-          };
           delete this.flags[dataJson.key];
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-          this.emitter.emit('change', context, changeset);
+          this.emitter.emit('change', context, [dataJson.key]);
         }
       },
     });
@@ -205,11 +167,11 @@ export default class LDClientImpl implements LDClient {
    * For mobile key: /meval/${base64-encoded-context}
    * For clientSideId: /eval/${envId}/${base64-encoded-context}
    *
-   * @param context The LD context object to be base64 encoded and appended to
    * the path.
    *
    * @protected This function must be overridden in subclasses for streamer
    * to work.
+   * @param _context The LDContext object
    */
   protected createStreamUriPath(_context: LDContext): string {
     throw new Error(
@@ -218,16 +180,19 @@ export default class LDClientImpl implements LDClient {
   }
 
   private createPromiseWithListeners() {
-    return new Promise<void>((resolve, reject) => {
-      if (this.identifyReadyListener) {
-        this.emitter.off('ready', this.identifyReadyListener);
+    let res: any;
+    const p = new Promise<void>((resolve, reject) => {
+      res = resolve;
+
+      if (this.identifyChangeListener) {
+        this.emitter.off('change', this.identifyChangeListener);
       }
       if (this.identifyErrorListener) {
         this.emitter.off('error', this.identifyErrorListener);
       }
 
-      this.identifyReadyListener = (c: LDContext) => {
-        this.logger.debug(`ready: ${JSON.stringify(c)}`);
+      this.identifyChangeListener = (c: LDContext) => {
+        this.logger.debug(`change: ${JSON.stringify(c)}`);
         resolve();
       };
       this.identifyErrorListener = (c: LDContext, err: any) => {
@@ -235,9 +200,11 @@ export default class LDClientImpl implements LDClient {
         reject(err);
       };
 
-      this.emitter.on('ready', this.identifyReadyListener);
+      this.emitter.on('change', this.identifyChangeListener);
       this.emitter.on('error', this.identifyErrorListener);
     });
+
+    return { identifyPromise: p, identifyResolve: res };
   }
 
   private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
@@ -255,15 +222,17 @@ export default class LDClientImpl implements LDClient {
       return Promise.reject(error);
     }
 
-    const p = this.createPromiseWithListeners();
-    this.emitter.emit('initializing', context);
+    const { identifyPromise, identifyResolve } = this.createPromiseWithListeners();
+    this.emitter.emit('identifying', context);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
     if (flagsStorage) {
-      this.logger.debug('Initializing all data from storage');
+      this.logger.debug('Using storage');
+
+      const changedKeys = calculateFlagChanges(this.flags, flagsStorage);
       this.context = context;
       this.flags = flagsStorage;
-      this.emitter.emit('ready', context);
+      this.emitter.emit('change', context, changedKeys);
     }
 
     this.streamer?.close();
@@ -271,7 +240,7 @@ export default class LDClientImpl implements LDClient {
       this.sdkKey,
       this.clientContext,
       this.createStreamUriPath(context),
-      this.createStreamListeners(context, checkedContext.canonicalKey, !!flagsStorage),
+      this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
       this.diagnosticsManager,
       (e) => {
         this.logger.error(e);
@@ -280,7 +249,7 @@ export default class LDClientImpl implements LDClient {
     );
     this.streamer.start();
 
-    return p;
+    return identifyPromise;
   }
 
   off(eventName: EventName, listener: Function): void {

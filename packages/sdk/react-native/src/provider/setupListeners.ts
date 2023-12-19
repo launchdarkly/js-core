@@ -7,10 +7,6 @@ const setupListeners = (
   client: ReactNativeLDClient,
   setState: Dispatch<SetStateAction<ReactContext>>,
 ) => {
-  client.on('ready', () => {
-    setState({ client });
-  });
-
   client.on('change', () => {
     setState({ client });
   });

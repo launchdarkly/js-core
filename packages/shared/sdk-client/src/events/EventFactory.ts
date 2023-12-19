@@ -1,6 +1,6 @@
 import { Context, internal, LDEvaluationReason, LDFlagValue } from '@launchdarkly/js-sdk-common';
 
-import { Flag } from '../evaluation/fetchFlags';
+import { Flag } from '../types';
 
 /**
  * @internal
