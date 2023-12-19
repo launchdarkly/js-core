@@ -21,7 +21,7 @@ export interface LDClient {
    * @returns
    *   An object in which each key is a feature flag key and each value is the flag value.
    *   Note that there is no way to specify a default value for each flag as there is with
-   *   {@link variation}, so any flag that cannot be evaluated will have a null value.
+   *   {@link variation}, so any flag that cannot be evaluated will be undefined.
    */
   allFlags(): LDFlagSet;
 
@@ -39,7 +39,7 @@ export interface LDClient {
   boolVariation(key: string, defaultValue: boolean): boolean;
 
   /**
-   * Determines the boolean variation of a feature flag for a context, along with information about
+   * Determines the boolean variation of a feature flag, along with information about
    * how it was calculated.
    *
    * The `reason` property of the result will also be included in analytics events, if you are
@@ -82,7 +82,7 @@ export interface LDClient {
    * Returns the client's current context.
    *
    * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
-   * been called, the initial context specified when the client was created.
+   * been called, this will be undefined.
    */
   getContext(): LDContext | undefined;
 
@@ -90,19 +90,18 @@ export interface LDClient {
    * Identifies a context to LaunchDarkly.
    *
    * Unlike the server-side SDKs, the client-side JavaScript SDKs maintain a current context state,
-   * which is set at initialization time. You only need to call `identify()` if the context has changed
-   * since then.
+   * which is set when you call `identify()`.
    *
    * Changing the current context also causes all feature flag values to be reloaded. Until that has
    * finished, calls to {@link variation} will still return flag values for the previous context. You can
-   * use a callback or a Promise to determine when the new flag values are available.
+   * await the Promise to determine when the new flag values are available.
    *
    * @param context
-   *   The context properties. Must contain at least the `key` property.
+   *   The LDContext object.
    * @param hash
    *   The signed context key if you are using [Secure Mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
    * @returns
-   *   A Promise which resolve once the flag values for the new context are available.
+   *   A Promise which resolves when the flag values for the specified context are available.
    */
   identify(context: LDContext, hash?: string): Promise<void>;
 
@@ -121,7 +120,7 @@ export interface LDClient {
   jsonVariation(key: string, defaultValue: unknown): unknown;
 
   /**
-   * Determines the json variation of a feature flag for a context, along with information about how it
+   * Determines the json variation of a feature flag, along with information about how it
    * was calculated.
    *
    * The `reason` property of the result will also be included in analytics events, if you are
@@ -137,8 +136,7 @@ export interface LDClient {
    * @param defaultValue The default value of the flag, to be used if the value is not available
    *   from LaunchDarkly.
    * @returns
-   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
-   *   the result (as an{@link LDEvaluationDetailTyped<unknown>}).
+   *  The result (as an {@link LDEvaluationDetailTyped<unknown>}).
    */
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown>;
 
@@ -184,16 +182,14 @@ export interface LDClient {
   numberVariationDetail(key: string, defaultValue: number): LDEvaluationDetailTyped<number>;
 
   /**
-   * Deregisters an event listener. See {@link on} for the available event types.
+   * Removes an event listener. See {@link on} for the available event types.
    *
    * @param key
    *   The name of the event for which to stop listening.
    * @param callback
    *   The function to deregister.
-   * @param context
-   *   The `this` context for the callback, if one was specified for {@link on}.
    */
-  off(key: string, callback: (...args: any[]) => void, context?: any): void;
+  off(key: string, callback: (...args: any[]) => void): void;
 
   /**
    * Registers an event listener.
@@ -215,25 +211,14 @@ export interface LDClient {
    *   because you have switched contexts with {@link identify}, or because the client has a
    *   stream connection and has received a live change to a flag value (see below).
    *   The callback parameter is an {@link LDFlagChangeset}.
-   * - `"change:FLAG-KEY"`: The client has received a new value for a specific flag
-   *   whose key is `FLAG-KEY`. The callback receives two parameters: the current (new)
-   *   flag value, and the previous value. This is always accompanied by a general
-   *   `"change"` event as described above; you can listen for either or both.
-   *
-   * The `"change"` and `"change:FLAG-KEY"` events have special behavior: by default, the
-   * client will open a streaming connection to receive live changes if and only if
-   * you are listening for one of these events. This behavior can be overridden by
-   * setting `streaming` in {@link LDOptions} or calling {@link LDClient.setStreaming}.
    *
    * @param key
    *   The name of the event for which to listen.
    * @param callback
    *   The function to execute when the event fires. The callback may or may not
    *   receive parameters, depending on the type of event.
-   * @param context
-   *   The `this` context to use for the callback.
    */
-  on(key: string, callback: (...args: any[]) => void, context?: any): void;
+  on(key: string, callback: (...args: any[]) => void): void;
 
   /**
    * Determines the string variation of a feature flag.
@@ -270,14 +255,10 @@ export interface LDClient {
   stringVariationDetail(key: string, defaultValue: string): LDEvaluationDetailTyped<string>;
 
   /**
-   * Track page events to use in goals or A/B tests.
-   *
-   * LaunchDarkly automatically tracks pageviews and clicks that are specified in the
-   * Goals section of their dashboard. This can be used to track custom goals or other
-   * events that do not currently have goals.
+   * Track events for experiments.
    *
    * @param key
-   *   The name of the event, which may correspond to a goal in A/B tests.
+   *   The name of the event, which may correspond to a goal in an experiment.
    * @param data
    *   Additional information to associate with the event.
    * @param metricValue
@@ -289,7 +270,10 @@ export interface LDClient {
   track(key: string, data?: any, metricValue?: number): void;
 
   /**
-   * Determines the variation of a feature flag for the current context.
+   * We recommend using strongly typed variation methods which perform
+   * type checks and handle type errors.
+   *
+   * Determines the variation of a feature flag.
    *
    * In the client-side JavaScript SDKs, this is always a fast synchronous operation because all of
    * the feature flag values for the current context have already been loaded into memory.
@@ -304,6 +288,9 @@ export interface LDClient {
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue;
 
   /**
+   * We recommend using strongly typed variation detail methods which perform
+   * type checks and handle type errors.
+   *
    * Determines the variation of a feature flag for a context, along with information about how it was
    * calculated.
    *

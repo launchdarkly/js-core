@@ -45,52 +45,6 @@ export interface LDOptions {
   streamUri?: string;
 
   /**
-   * Whether or not to open a streaming connection to LaunchDarkly for live flag updates.
-   *
-   * If this is true, the client will always attempt to maintain a streaming connection; if false,
-   * it never will. If you leave the value undefined (the default), the client will open a streaming
-   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
-   *
-   * This is equivalent to calling `client.setStreaming()` with the same value.
-   */
-  stream?: boolean;
-
-  /**
-   * Whether or not to use the REPORT verb to fetch flag settings.
-   *
-   * If this is true, flag settings will be fetched with a REPORT request
-   * including a JSON entity body with the context object.
-   *
-   * Otherwise (by default) a GET request will be issued with the context passed as
-   * a base64 uri-encoded path parameter.
-   *
-   * Do not use unless advised by LaunchDarkly.
-   */
-  useReport?: boolean;
-
-  /**
-   * Whether or not to include custom HTTP headers when requesting flags from LaunchDarkly.
-   *
-   * These are used to send metadata about the SDK (such as the version). They
-   * are also used to send the application.id and application.version set in
-   * the options.
-   *
-   * This defaults to true (custom headers will be sent). One reason you might
-   * want to set it to false is that the presence of custom headers causes
-   * browsers to make an extra OPTIONS request (a CORS preflight check) before
-   * each flag request, which could affect performance.
-   */
-  sendLDHeaders?: boolean;
-
-  /**
-   * A transform function for dynamic configuration of HTTP headers.
-   *
-   * This method will run last in the header generation sequence, so the function should have
-   * all system generated headers in case those also need to be modified.
-   */
-  requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
-
-  /**
    * Whether LaunchDarkly should provide additional information about how flag values were
    * calculated.
    *

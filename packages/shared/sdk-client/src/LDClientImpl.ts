@@ -88,6 +88,7 @@ export default class LDClientImpl implements LDClient {
   async close(): Promise<void> {
     await this.flush();
     this.eventProcessor.close();
+    this.streamer?.close();
   }
 
   async flush(): Promise<{ error?: Error; result: boolean }> {
@@ -113,7 +114,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('put', {
       deserializeData: JSON.parse,
       processJson: async (dataJson: Flags) => {
-        this.logger.debug(`Streamer PUT: ${JSON.stringify(dataJson, null, 2)}`);
+        this.logger.debug(`Streamer PUT: ${dataJson})}`);
         if (initializedFromStorage) {
           this.logger.debug('Synchronizing all data');
           const changeset: LDFlagChangeset = {};
@@ -282,7 +283,7 @@ export default class LDClientImpl implements LDClient {
     return p;
   }
 
-  off(eventName: EventName, listener?: Function): void {
+  off(eventName: EventName, listener: Function): void {
     this.emitter.off(eventName, listener);
   }
 
@@ -327,6 +328,7 @@ export default class LDClientImpl implements LDClient {
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}`,
       );
+      this.logger.error(error);
       this.emitter.emit('error', this.context, error);
       this.eventProcessor.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
@@ -352,6 +354,7 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
+        this.logger.error(error);
         this.emitter.emit('error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
