@@ -114,7 +114,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('put', {
       deserializeData: JSON.parse,
       processJson: async (dataJson: Flags) => {
-        this.logger.debug(`Streamer PUT: ${dataJson})}`);
+        this.logger.debug(`Streamer PUT: ${Object.keys(dataJson)}`);
         if (initializedFromStorage) {
           this.logger.debug('Synchronizing all data');
           const changeset: LDFlagChangeset = {};
