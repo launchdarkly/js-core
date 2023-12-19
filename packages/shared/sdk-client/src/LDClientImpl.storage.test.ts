@@ -1,10 +1,10 @@
-import { clone, type LDContext, LDFlagChangeset } from '@launchdarkly/js-sdk-common';
+import { clone, type LDContext } from '@launchdarkly/js-sdk-common';
 import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
 import LDEmitter from './api/LDEmitter';
-import type { DeleteFlag, Flag, Flags, PatchFlag } from './evaluation/fetchFlags';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
+import { DeleteFlag, Flag, Flags, PatchFlag } from './types';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -23,6 +23,7 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 });
 
 const defaultPutResponse = mockResponseJson as Flags;
+const defaultFlagKeys = Object.keys(defaultPutResponse);
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 let ldc: LDClientImpl;
@@ -30,9 +31,9 @@ let emitter: LDEmitter;
 
 // Promisify on.change listener so we can await it in tests.
 const onChangePromise = () =>
-  new Promise<LDFlagChangeset>((res) => {
-    ldc.on('change', (_context: LDContext, changeset: LDFlagChangeset) => {
-      res(changeset);
+  new Promise<string[]>((res) => {
+    ldc.on('change', (_context: LDContext, changes: string[]) => {
+      res(changes);
     });
   });
 
@@ -93,8 +94,8 @@ describe('sdk-client storage', () => {
 
     // 'change' should not have been emitted
     expect(emitter.emit).toHaveBeenCalledTimes(3);
-    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'initializing', context);
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'ready', context);
+    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'identifying', context);
+    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, defaultFlagKeys);
     expect(emitter.emit).toHaveBeenNthCalledWith(
       3,
       'error',
@@ -123,11 +124,9 @@ describe('sdk-client storage', () => {
       'org:Testy Pizza',
       JSON.stringify(putResponse),
     );
-    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'initializing', context);
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'ready', context);
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'dev-test-flag': { previous: true },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'identifying', context);
+    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, defaultFlagKeys);
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['dev-test-flag']);
   });
 
   test('syncing storage when a flag is added', async () => {
@@ -147,9 +146,7 @@ describe('sdk-client storage', () => {
       'org:Testy Pizza',
       JSON.stringify(putResponse),
     );
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'another-dev-test-flag': { current: newFlag.value },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['another-dev-test-flag']);
   });
 
   test('syncing storage when a flag is updated', async () => {
@@ -159,12 +156,7 @@ describe('sdk-client storage', () => {
     const allFlags = await identifyGetAllFlags(false, putResponse);
 
     expect(allFlags).toMatchObject({ 'dev-test-flag': false });
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'dev-test-flag': {
-        previous: true,
-        current: putResponse['dev-test-flag'].value,
-      },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['dev-test-flag']);
   });
 
   test('syncing storage on multiple flag operations', async () => {
@@ -179,17 +171,14 @@ describe('sdk-client storage', () => {
 
     expect(allFlags).toMatchObject({ 'dev-test-flag': false, 'another-dev-test-flag': true });
     expect(allFlags).not.toHaveProperty('moonshot-demo');
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'dev-test-flag': {
-        previous: true,
-        current: putResponse['dev-test-flag'].value,
-      },
-      'another-dev-test-flag': { current: newFlag.value },
-      'moonshot-demo': { previous: true },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, [
+      'moonshot-demo',
+      'dev-test-flag',
+      'another-dev-test-flag',
+    ]);
   });
 
-  test('syncing storage when PUT is consistent so no updates needed', async () => {
+  test('syncing storage when PUT is consistent so no change', async () => {
     const allFlags = await identifyGetAllFlags(
       false,
       defaultPutResponse,
@@ -229,12 +218,7 @@ describe('sdk-client storage', () => {
 
     // both previous and current are true but inExperiment has changed
     // so a change event should be emitted
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'dev-test-flag': {
-        previous: true,
-        current: true,
-      },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['dev-test-flag']);
   });
 
   test('patch should emit change event', async () => {
@@ -255,12 +239,7 @@ describe('sdk-client storage', () => {
     );
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
     expect(emitter.emit).toHaveBeenCalledTimes(3);
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'dev-test-flag': {
-        previous: true,
-        current: false,
-      },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['dev-test-flag']);
   });
 
   test('patch should add new flags', async () => {
@@ -279,11 +258,7 @@ describe('sdk-client storage', () => {
     );
     expect(flagsInStorage).toHaveProperty('another-dev-test-flag');
     expect(emitter.emit).toHaveBeenCalledTimes(3);
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'another-dev-test-flag': {
-        current: true,
-      },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['another-dev-test-flag']);
   });
 
   test('patch should ignore older version', async () => {
@@ -339,11 +314,7 @@ describe('sdk-client storage', () => {
     );
     expect(flagsInStorage['dev-test-flag']).toBeUndefined();
     expect(emitter.emit).toHaveBeenCalledTimes(3);
-    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, {
-      'dev-test-flag': {
-        previous: true,
-      },
-    });
+    expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['dev-test-flag']);
   });
 
   test('delete should not delete newer version', async () => {
