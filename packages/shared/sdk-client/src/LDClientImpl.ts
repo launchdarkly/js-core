@@ -116,6 +116,7 @@ export default class LDClientImpl implements LDClient {
         this.logger.debug(`Streamer PUT: ${Object.keys(dataJson)}`);
         const changedKeys = calculateFlagChanges(this.flags, dataJson);
         if (changedKeys.length > 0) {
+          this.logger.debug(`Detected changes from PUT: ${changedKeys}`);
           this.context = context;
           this.flags = dataJson;
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
