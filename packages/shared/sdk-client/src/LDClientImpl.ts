@@ -115,17 +115,17 @@ export default class LDClientImpl implements LDClient {
       processJson: async (dataJson: Flags) => {
         this.logger.debug(`Streamer PUT: ${Object.keys(dataJson)}`);
         const changedKeys = calculateFlagChanges(this.flags, dataJson);
-        if (changedKeys.length > 0) {
-          this.logger.debug(`Detected changes from PUT: ${changedKeys}`);
-          this.context = context;
-          this.flags = dataJson;
-          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
+        this.context = context;
+        this.flags = dataJson;
+        await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
 
-          // this resolves identifyPromise
+        if (changedKeys.length > 0) {
+          this.logger.debug(`Emitting changes from PUT: ${changedKeys}`);
+          // emitting change resolves identify
           this.emitter.emit('change', context, changedKeys);
         } else {
           // manually resolve identify
-          this.logger.debug('No changes from PUT');
+          this.logger.debug('Not emitting changes from PUT');
           identifyResolve();
         }
       },
@@ -141,7 +141,9 @@ export default class LDClientImpl implements LDClient {
         if (!existing || (existing && dataJson.version > existing.version)) {
           this.flags[dataJson.key] = dataJson;
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-          this.emitter.emit('change', context, [dataJson.key]);
+          const changedKeys = [dataJson.key];
+          this.logger.debug(`Emitting changes from PATCH: ${changedKeys}`);
+          this.emitter.emit('change', context, changedKeys);
         }
       },
     });
@@ -155,7 +157,9 @@ export default class LDClientImpl implements LDClient {
         if (existing && existing.version <= dataJson.version) {
           delete this.flags[dataJson.key];
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-          this.emitter.emit('change', context, [dataJson.key]);
+          const changedKeys = [dataJson.key];
+          this.logger.debug(`Emitting changes from DELETE: ${changedKeys}`);
+          this.emitter.emit('change', context, changedKeys);
         }
       },
     });
