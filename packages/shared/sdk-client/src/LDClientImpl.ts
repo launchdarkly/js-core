@@ -124,6 +124,7 @@ export default class LDClientImpl implements LDClient {
           this.emitter.emit('change', context, changedKeys);
         } else {
           // manually resolve identify
+          this.logger.debug('No changes from PUT');
           identifyResolve();
         }
       },

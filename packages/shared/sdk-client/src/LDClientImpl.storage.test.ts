@@ -114,6 +114,39 @@ describe('sdk-client storage', () => {
     });
   });
 
+  test('no storage, cold start from streamer', async () => {
+    // fake previously cached flags even though there's no storage for this context
+    // @ts-ignore
+    ldc.flags = defaultPutResponse;
+    basicPlatform.storage.get.mockImplementation(() => undefined);
+    setupMockStreamingProcessor(false, defaultPutResponse);
+
+    const p = ldc.identify(context);
+
+    // I'm not sure why but both runAllTimersAsync and runAllTicks are required
+    // here for the identify promise be resolved
+    await jest.runAllTimersAsync();
+    jest.runAllTicks();
+    await p;
+
+    expect(emitter.emit).toHaveBeenCalledTimes(1);
+    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'identifying', context);
+    expect(basicPlatform.storage.set).not.toHaveBeenCalled();
+    expect(ldc.logger.debug).toHaveBeenCalledWith('No changes from PUT');
+
+    // this is defaultPutResponse
+    expect(ldc.allFlags()).toEqual({
+      'dev-test-flag': true,
+      'easter-i-tunes-special': false,
+      'easter-specials': 'no specials',
+      fdsafdsafdsafdsa: true,
+      'log-level': 'warn',
+      'moonshot-demo': true,
+      test1: 's1',
+      'this-is-a-test': true,
+    });
+  });
+
   test('syncing storage when a flag is deleted', async () => {
     const putResponse = clone<Flags>(defaultPutResponse);
     delete putResponse['dev-test-flag'];
@@ -188,7 +221,8 @@ describe('sdk-client storage', () => {
     );
 
     expect(basicPlatform.storage.set).not.toHaveBeenCalled();
-    expect(emitter.emit).not.toHaveBeenCalledWith('change');
+    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, defaultFlagKeys);
 
     // this is defaultPutResponse
     expect(allFlags).toEqual({
