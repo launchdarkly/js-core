@@ -41,7 +41,7 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
-  private identifyChangeListener?: (c: LDContext) => void;
+  private identifyChangeListener?: (c: LDContext, changedKeys: string[]) => void;
   private identifyErrorListener?: (c: LDContext, err: any) => void;
 
   private readonly clientContext: ClientContext;
@@ -193,8 +193,8 @@ export default class LDClientImpl implements LDClient {
         this.emitter.off('error', this.identifyErrorListener);
       }
 
-      this.identifyChangeListener = (c: LDContext) => {
-        this.logger.debug(`change: ${JSON.stringify(c)}`);
+      this.identifyChangeListener = (c: LDContext, changedKeys: string[]) => {
+        this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
         resolve();
       };
       this.identifyErrorListener = (c: LDContext, err: any) => {
