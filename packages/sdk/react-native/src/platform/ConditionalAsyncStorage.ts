@@ -1,12 +1,13 @@
-import { lazy } from 'react';
-// @ts-ignore
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { AsyncStorage } from 'react-native';
+import rn from 'react-native';
 
 // eslint-disable-next-line import/no-mutable-exports
-let ConditionalAsyncStorage = AsyncStorage;
+let ConditionalAsyncStorage: any;
 
-if (!ConditionalAsyncStorage) {
+try {
+  // @ts-ignore
+  ConditionalAsyncStorage = rn.AsyncStorage;
+  console.log('============ Native AsyncStorage');
+} catch (e) {
   console.log('============ @react-native-async-storage/async-storage');
   /**
    * The LaunchDarkly SDK uses async-storage for bootstrapping and this is a native
@@ -21,12 +22,9 @@ if (!ConditionalAsyncStorage) {
    * does not work with transitive dependencies:
    * https://github.com/react-native-community/cli/issues/1347
    */
-  // eslint-disable-next-line global-require
-  // ConditionalAsyncStorage = require('@react-native-async-storage/async-storage').default;
   // @ts-ignore
-  ConditionalAsyncStorage = lazy(() => import('@react-native-async-storage/async-storage'));
-} else {
-  console.log('============ Native AsyncStorage');
+  // eslint-disable-next-line global-require
+  ConditionalAsyncStorage = require('@react-native-async-storage/async-storage').default;
 }
 
 export default ConditionalAsyncStorage;
