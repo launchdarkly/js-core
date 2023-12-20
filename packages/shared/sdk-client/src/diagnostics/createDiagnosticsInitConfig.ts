@@ -11,7 +11,6 @@ export type DiagnosticsInitConfig = {
   eventsFlushIntervalMillis: number;
   reconnectTimeMillis: number;
   diagnosticRecordingIntervalMillis: number;
-  streamingDisabled: boolean;
   allAttributesPrivate: boolean;
 
   // client specific properties
@@ -26,7 +25,6 @@ const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConf
   eventsFlushIntervalMillis: secondsToMillis(config.flushInterval),
   reconnectTimeMillis: secondsToMillis(config.streamInitialReconnectDelay),
   diagnosticRecordingIntervalMillis: secondsToMillis(config.diagnosticRecordingInterval),
-  streamingDisabled: !config.stream,
   allAttributesPrivate: config.allAttributesPrivate,
   usingSecureMode: !!config.hash,
   bootstrapMode: !!config.bootstrap,

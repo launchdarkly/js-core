@@ -36,8 +36,8 @@ describe('Configuration', () => {
   });
 
   test('specified options should be set', () => {
-    const config = new Configuration({ wrapperName: 'test', stream: true });
-    expect(config).toMatchObject({ wrapperName: 'test', stream: true });
+    const config = new Configuration({ wrapperName: 'test' });
+    expect(config).toMatchObject({ wrapperName: 'test' });
   });
 
   test('unknown option', () => {
@@ -52,7 +52,7 @@ describe('Configuration', () => {
     // @ts-ignore
     const config = new Configuration({ sendEvents: 0 });
 
-    expect(config.stream).toBeFalsy();
+    expect(config.sendEvents).toBeFalsy();
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('should be a boolean, got number, converting'),
     );
@@ -76,29 +76,6 @@ describe('Configuration', () => {
       1,
       expect.stringContaining('"flushInterval" had invalid value of 1, using minimum of 2 instead'),
     );
-  });
-
-  test('undefined stream should not log warning', () => {
-    const config = new Configuration({ stream: undefined });
-
-    expect(config.stream).toBeUndefined();
-    expect(console.error).not.toHaveBeenCalled();
-  });
-
-  test('null stream should default to undefined', () => {
-    // @ts-ignore
-    const config = new Configuration({ stream: null });
-
-    expect(config.stream).toBeUndefined();
-    expect(console.error).not.toHaveBeenCalled();
-  });
-
-  test('wrong stream type should be converted to boolean', () => {
-    // @ts-ignore
-    const config = new Configuration({ stream: 1 });
-
-    expect(config.stream).toBeTruthy();
-    expect(console.error).toHaveBeenCalled();
   });
 
   test('invalid bootstrap should use default', () => {

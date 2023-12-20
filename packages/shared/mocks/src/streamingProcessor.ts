@@ -35,7 +35,7 @@ export const setupMockStreamingProcessor = (
             errorHandler(unauthorized);
           });
         } else {
-          // execute put which will resolve the init promise
+          // execute put which will resolve the identify promise
           process.nextTick(() => listeners.get('put')?.processJson(putResponseJson));
 
           if (patchResponseJson) {

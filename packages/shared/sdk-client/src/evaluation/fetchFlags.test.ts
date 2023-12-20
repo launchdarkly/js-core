@@ -14,12 +14,6 @@ describe('fetchFeatures', () => {
     'user-agent': 'TestUserAgent/2.0.2',
     'x-launchdarkly-wrapper': 'Rapper/1.2.3',
   };
-  const reportHeaders = {
-    authorization: 'testSdkKey1',
-    'content-type': 'application/json',
-    'user-agent': 'TestUserAgent/2.0.2',
-    'x-launchdarkly-wrapper': 'Rapper/1.2.3',
-  };
 
   let config: Configuration;
   const platformFetch = basicPlatform.requests.fetch as jest.Mock;
@@ -41,21 +35,6 @@ describe('fetchFeatures', () => {
       {
         method: 'GET',
         headers: getHeaders,
-      },
-    );
-    expect(json).toEqual(mockResponse);
-  });
-
-  test('report', async () => {
-    config = new Configuration({ useReport: true });
-    const json = await fetchFlags(sdkKey, context, config, basicPlatform);
-
-    expect(platformFetch).toBeCalledWith(
-      'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/context',
-      {
-        method: 'REPORT',
-        headers: reportHeaders,
-        body: '{"kind":"user","key":"test-user-key-1"}',
       },
     );
     expect(json).toEqual(mockResponse);

@@ -196,21 +196,14 @@ export interface LDClient {
    *
    * The following event names (keys) are used by the client:
    *
-   * - `"ready"`: The client has finished starting up. This event will be sent regardless
-   *   of whether it successfully connected to LaunchDarkly, or encountered an error
-   *   and had to give up; to distinguish between these cases, see below.
-   * - `"initialized"`: The client successfully started up and has valid feature flag
-   *   data. This will always be accompanied by `"ready"`.
-   * - `"failed"`: The client encountered an error that prevented it from connecting to
-   *   LaunchDarkly, such as an invalid environment ID. All flag evaluations will
-   *   therefore receive default values. This will always be accompanied by `"ready"`.
+   * - `"identifying"`: The client starts to fetch feature flags.
    * - `"error"`: General event for any kind of error condition during client operation.
    *   The callback parameter is an Error object. If you do not listen for "error"
    *   events, then the errors will be logged with `console.log()`.
    * - `"change"`: The client has received new feature flag data. This can happen either
    *   because you have switched contexts with {@link identify}, or because the client has a
    *   stream connection and has received a live change to a flag value (see below).
-   *   The callback parameter is an {@link LDFlagChangeset}.
+   *   The callback parameters are the context and an array of flag keys that have changed.
    *
    * @param key
    *   The name of the event for which to listen.
