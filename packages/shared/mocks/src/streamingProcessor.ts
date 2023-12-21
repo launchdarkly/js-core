@@ -26,7 +26,7 @@ export const setupMockStreamingProcessor = (
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
-          process.nextTick(() => {
+          setTimeout(() => {
             const unauthorized: LDStreamingError = {
               code: 401,
               name: 'LaunchDarklyStreamingError',
@@ -36,14 +36,14 @@ export const setupMockStreamingProcessor = (
           });
         } else {
           // execute put which will resolve the identify promise
-          process.nextTick(() => listeners.get('put')?.processJson(putResponseJson));
+          setTimeout(() => listeners.get('put')?.processJson(putResponseJson));
 
           if (patchResponseJson) {
-            process.nextTick(() => listeners.get('patch')?.processJson(patchResponseJson));
+            setTimeout(() => listeners.get('patch')?.processJson(patchResponseJson));
           }
 
           if (deleteResponseJson) {
-            process.nextTick(() => listeners.get('delete')?.processJson(deleteResponseJson));
+            setTimeout(() => listeners.get('delete')?.processJson(deleteResponseJson));
           }
         }
       }),

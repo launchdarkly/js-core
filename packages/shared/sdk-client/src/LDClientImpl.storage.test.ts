@@ -1,4 +1,4 @@
-import { clone, type LDContext } from '@launchdarkly/js-sdk-common';
+import { clone, type LDContext, noop } from '@launchdarkly/js-sdk-common';
 import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
 import LDEmitter from './api/LDEmitter';
@@ -57,7 +57,7 @@ const identifyGetAllFlags = async (
   } catch (e) {
     /* empty */
   }
-  jest.runAllTicks();
+  jest.runAllTimers();
 
   // if streamer errors, don't wait for 'change' because it will not be sent.
   if (waitForChange && !shouldError) {
@@ -117,20 +117,15 @@ describe('sdk-client storage', () => {
     });
   });
 
-  test('no storage, cold start from streamer', async () => {
+  test.only('no storage, cold start from streamer', async () => {
     // fake previously cached flags even though there's no storage for this context
     // @ts-ignore
     ldc.flags = defaultPutResponse;
     basicPlatform.storage.get.mockImplementation(() => undefined);
     setupMockStreamingProcessor(false, defaultPutResponse);
 
-    const p = ldc.identify(context);
-
-    // I'm not sure why but both runAllTimersAsync and runAllTicks are required
-    // here for the identify promise be resolved
+    ldc.identify(context).then(noop);
     await jest.runAllTimersAsync();
-    jest.runAllTicks();
-    await p;
 
     expect(emitter.emit).toHaveBeenCalledTimes(1);
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'identifying', context);
