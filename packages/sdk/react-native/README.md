@@ -1,6 +1,7 @@
 # LaunchDarkly React Native SDK
 
-:warning: UNSUPPORTED This SDK is in pre-release development and is not supported.
+> [!WARNING]  
+> UNSUPPORTED This SDK is in pre-release development and is not supported.
 
 [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]
 [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]
@@ -20,12 +21,52 @@ For more information, see the [complete reference guide for this SDK](https://do
 yarn add @launchdarkly/react-native-client-sdk
 ```
 
+Additionally, the LaunchDarkly React-Native SDK uses
+[@react-native-async-storage/async-storage](https://github.com/react-native-async-storage/async-storage)
+for bootstrapping. This is a native dependency.
+
+If you are using expo, then installing this package from npm like above and re-running pod install should suffice.
+
+If you are not using expo, you will need to explicitly add
+@react-native-async-storage/async-storage as a dependency to your project
+and re-run pod install for [auto-linking to work](https://github.com/react-native-community/cli/issues/1347).
+
 ## Quickstart
 
-TODO
+1. Wrap your application with `LDProvider` passing it an LDClient and
+   an LDContext:
 
-```typescript
-// TODO
+```jsx
+// App.tsx
+import { LDProvider, ReactNativeLDClient } from '@launchdarkly/react-native-client-sdk';
+
+const featureClient = new ReactNativeLDClient('mobile-key');
+const userContext = { kind: 'user', key: 'test-user-1' };
+
+const App = () => (
+  <LDProvider client={featureClient} context={userContext}>
+    <Welcome />
+  </LDProvider>
+);
+
+export default App;
+```
+
+2. Then in a child component, evaluate flags with `useBoolVariation`:
+
+```jsx
+import { useBoolVariation } from '@launchdarkly/react-native-client-sdk';
+
+export default function Welcome() {
+  const flagValue = useBoolVariation('flag-key', false);
+
+  return (
+    <View style={styles.container}>
+      <Text>Welcome to LaunchDarkly</Text>
+      <Text>Flag value is {`${flagValue}`}</Text>
+    </View>
+  );
+}
 ```
 
 See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native/example).
@@ -33,11 +74,11 @@ See the full [example app](https://github.com/launchdarkly/js-core/tree/main/pac
 ## Developing this SDK
 
 ```shell
-# ios
-yarn ios
+# at js-core repo root
+yarn && yarn build && cd packages/sdk/react-native/example
 
-# android
-yarn android
+# in react-native/example
+yarn && yarn ios-go
 ```
 
 ## About LaunchDarkly
