@@ -117,7 +117,7 @@ describe('sdk-client storage', () => {
     });
   });
 
-  test.only('no storage, cold start from streamer', async () => {
+  test('no storage, cold start from streamer', async () => {
     // fake previously cached flags even though there's no storage for this context
     // @ts-ignore
     ldc.flags = defaultPutResponse;
