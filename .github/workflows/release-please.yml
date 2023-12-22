@@ -40,6 +40,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/shared/common
         uses: ./actions/full-release
@@ -60,6 +63,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/shared/sdk-server
         uses: ./actions/full-release
@@ -80,6 +86,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/shared/sdk-server-edge
         uses: ./actions/full-release
@@ -100,6 +109,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/shared/akamai-edgeworker-sdk
         uses: ./actions/full-release
@@ -120,6 +132,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/sdk/cloudflare
         uses: ./actions/full-release
@@ -140,6 +155,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/sdk/server-node
         uses: ./actions/full-release
@@ -160,6 +178,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/sdk/vercel
         uses: ./actions/full-release
@@ -180,6 +201,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/sdk/akamai-base
         uses: ./actions/full-release
@@ -200,6 +224,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/sdk/akamai-edgekv
         uses: ./actions/full-release
@@ -220,6 +247,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - run: |
           sudo apt-get update
           sudo apt-get install redis-server
@@ -244,6 +274,9 @@ jobs:
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with: 
+          npm_version: 9.5.0
       - run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local
       - id: release-common
