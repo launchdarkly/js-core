@@ -8,15 +8,13 @@ import { DeleteFlag, Flag, Flags, PatchFlag } from './types';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const { MockStreamingProcessor: mockStreamer } = jest.requireActual(
-    '@launchdarkly/private-js-mocks',
-  );
+  const { MockStreamingProcessor } = jest.requireActual('@launchdarkly/private-js-mocks');
   return {
     ...actual,
     ...{
       internal: {
         ...actual.internal,
-        StreamingProcessor: mockStreamer,
+        StreamingProcessor: MockStreamingProcessor,
       },
     },
   };
@@ -330,7 +328,7 @@ describe('sdk-client storage', () => {
   test('delete should emit change event', async () => {
     const deleteResponse = {
       key: 'dev-test-flag',
-      version: defaultPutResponse['dev-test-flag'].version,
+      version: defaultPutResponse['dev-test-flag'].version + 1,
     };
 
     const allFlags = await identifyGetAllFlags(
@@ -344,11 +342,30 @@ describe('sdk-client storage', () => {
     expect(allFlags).not.toHaveProperty('dev-test-flag');
     expect(basicPlatform.storage.set).toHaveBeenCalledWith(
       'org:Testy Pizza',
-      expect.not.stringContaining('dev-test-flag'),
+      expect.stringContaining('dev-test-flag'),
     );
-    expect(flagsInStorage['dev-test-flag']).toBeUndefined();
+    expect(flagsInStorage['dev-test-flag']).toMatchObject({ ...deleteResponse, deleted: true });
     expect(emitter.emit).toHaveBeenCalledTimes(3);
     expect(emitter.emit).toHaveBeenNthCalledWith(3, 'change', context, ['dev-test-flag']);
+  });
+
+  test('delete should not delete equal version', async () => {
+    const deleteResponse = {
+      key: 'dev-test-flag',
+      version: defaultPutResponse['dev-test-flag'].version,
+    };
+
+    const allFlags = await identifyGetAllFlags(
+      false,
+      defaultPutResponse,
+      undefined,
+      deleteResponse,
+      false,
+    );
+
+    expect(allFlags).toHaveProperty('dev-test-flag');
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(1);
+    expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
   test('delete should not delete newer version', async () => {
@@ -370,15 +387,17 @@ describe('sdk-client storage', () => {
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
-  test('delete should ignore non-existing flag', async () => {
+  test('delete should add and tombstone non-existing flag', async () => {
     const deleteResponse = {
       key: 'does-not-exist',
       version: 1,
     };
 
     await identifyGetAllFlags(false, defaultPutResponse, undefined, deleteResponse, false);
+    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
 
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(1);
-    expect(emitter.emit).not.toHaveBeenCalledWith('change');
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(flagsInStorage['does-not-exist']).toMatchObject({ ...deleteResponse, deleted: true });
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['does-not-exist']);
   });
 });
