@@ -20,11 +20,11 @@ MOBILE_KEY=abcdef12456
 
 ```shell
 # Note for android, there's an issue with Flipper interfering with streaming connections
-# so please run the release build. There's no such issue with ios.
-
-# android
-yarn && yarn android-release
+# so please run the release build. There's no such issues with ios.
 
 # ios
 yarn && yarn ios-go
+
+# android
+yarn && yarn android-release
 ```

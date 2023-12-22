@@ -73,10 +73,25 @@ See the full [example app](https://github.com/launchdarkly/js-core/tree/main/pac
 
 ## Developing this SDK
 
+1. Build all the code in the `js-core` repo:
+
 ```shell
 # at js-core repo root
-yarn && yarn build && cd packages/sdk/react-native/example
+yarn && yarn build
+```
 
+2. The example app uses [react-native-dotenv](https://github.com/goatandsheep/react-native-dotenv)
+   to manage environment variables. Under `packages/sdk/react-native/example`
+   create an `.env` file and add your mobile key:
+
+```shell
+echo "MOBILE_KEY=mob-abc" >> packages/sdk/react-native/example/.env
+```
+
+3. Run the example app. This will link the local react-native sdk code to the
+   example app for development:
+
+```shell
 # in react-native/example
 yarn && yarn ios-go
 ```
