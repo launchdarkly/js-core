@@ -79,7 +79,9 @@ export default class LDClientImpl implements LDClient {
   allFlags(): LDFlagSet {
     const result: LDFlagSet = {};
     Object.entries(this.flags).forEach(([k, r]) => {
-      result[k] = r.value;
+      if (!r.deleted) {
+        result[k] = r.value;
+      }
     });
     return result;
   }
@@ -154,8 +156,18 @@ export default class LDClientImpl implements LDClient {
         this.logger.debug(`Streamer DELETE ${JSON.stringify(dataJson, null, 2)}`);
         const existing = this.flags[dataJson.key];
 
-        if (existing && existing.version <= dataJson.version) {
-          delete this.flags[dataJson.key];
+        // the deleted flag is saved as tombstoned
+        if (!existing || existing.version < dataJson.version) {
+          this.flags[dataJson.key] = {
+            ...dataJson,
+            deleted: true,
+            // props below are set to sensible defaults. they are irrelevant
+            // because this flag has been deleted.
+            flagVersion: 0,
+            value: undefined,
+            variation: 0,
+            trackEvents: false,
+          };
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
           const changedKeys = [dataJson.key];
           this.logger.debug(`Emitting changes from DELETE: ${changedKeys}`);
@@ -299,7 +311,7 @@ export default class LDClientImpl implements LDClient {
     const evalContext = Context.fromLDContext(this.context);
     const found = this.flags[flagKey];
 
-    if (!found) {
+    if (!found || found.deleted) {
       const defVal = defaultValue ?? null;
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}`,
