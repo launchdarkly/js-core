@@ -30,7 +30,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "^2.0.0"
+    "@launchdarkly/js-sdk-common": "2.2.0-alpha"
   },
   "devDependencies": {
     "@launchdarkly/private-js-mocks": "0.0.1",
