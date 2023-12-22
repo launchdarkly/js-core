@@ -40,7 +40,8 @@
     "ios": "yarn && yarn ./example && yarn build && (cd example/ && yarn ios-go)"
   },
   "peerDependencies": {
-    "react": "*"
+    "react": "*",
+    "react-native": "*"
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk-common": "0.0.1",
@@ -64,6 +65,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "react": "^18.2.0",
+    "react-native": "^0.73.1",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.0",
     "typedoc": "0.25.0",
