@@ -22,10 +22,8 @@ let ConditionalAsyncStorage: any;
 try {
   // react-native version < 0.71
   ConditionalAsyncStorage = require('react-native').AsyncStorage;
-  console.log('============ Native AsyncStorage');
 } catch (e) {
   // react-native version >= 0.71
-  console.log('============ @react-native-async-storage/async-storage');
   ConditionalAsyncStorage = require('@react-native-async-storage/async-storage').default;
 }
 
