@@ -9,10 +9,12 @@ on:
         type: choice
         options:
           - packages/shared/common
+          - packages/shared/sdk-client
           - packages/shared/sdk-server
           - packages/shared/sdk-server-edge
           - packages/shared/akamai-edgeworker-sdk
           - packages/sdk/cloudflare
+          - packages/sdk/react-native
           - packages/sdk/server-node
           - packages/sdk/vercel
           - packages/sdk/akamai-base
@@ -42,7 +44,7 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
       - name: 'Setup Redis'
         if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-redis' }}
