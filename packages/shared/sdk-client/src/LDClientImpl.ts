@@ -154,7 +154,7 @@ export default class LDClientImpl implements LDClient {
         this.logger.debug(`Streamer DELETE ${JSON.stringify(dataJson, null, 2)}`);
         const existing = this.flags[dataJson.key];
 
-        if (existing && existing.version <= dataJson.version) {
+        if (existing && existing.version < dataJson.version) {
           delete this.flags[dataJson.key];
           await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
           const changedKeys = [dataJson.key];
