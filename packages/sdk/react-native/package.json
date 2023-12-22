@@ -41,7 +41,7 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "^0.73.1"
+    "react-native": "*"
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk-common": "0.0.1",
