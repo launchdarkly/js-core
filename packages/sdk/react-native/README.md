@@ -1,6 +1,7 @@
 # LaunchDarkly React Native SDK
 
-:warning: UNSUPPORTED This SDK is in pre-release development and is not supported.
+> [!WARNING]  
+> UNSUPPORTED This SDK is in pre-release development and is not supported.
 
 [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]
 [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]
@@ -20,19 +21,80 @@ For more information, see the [complete reference guide for this SDK](https://do
 yarn add @launchdarkly/react-native-client-sdk
 ```
 
+Additionally, the LaunchDarkly React-Native SDK uses
+[@react-native-async-storage/async-storage](https://github.com/react-native-async-storage/async-storage)
+for bootstrapping. This is a native dependency.
+
+If you are using expo, then installing this package from npm like above and re-running pod install should suffice.
+
+If you are not using expo, you will need to explicitly add
+@react-native-async-storage/async-storage as a dependency to your project
+and re-run pod install for [auto-linking to work](https://github.com/react-native-community/cli/issues/1347).
+
 ## Quickstart
 
-TODO
+1. Wrap your application with `LDProvider` passing it an LDClient and
+   an LDContext:
 
-```typescript
-// TODO
+```jsx
+// App.tsx
+import { LDProvider, ReactNativeLDClient } from '@launchdarkly/react-native-client-sdk';
+
+const featureClient = new ReactNativeLDClient('mobile-key');
+const userContext = { kind: 'user', key: 'test-user-1' };
+
+const App = () => (
+  <LDProvider client={featureClient} context={userContext}>
+    <Welcome />
+  </LDProvider>
+);
+
+export default App;
+```
+
+2. Then in a child component, evaluate flags with `useBoolVariation`:
+
+```jsx
+import { useBoolVariation } from '@launchdarkly/react-native-client-sdk';
+
+export default function Welcome() {
+  const flagValue = useBoolVariation('flag-key', false);
+
+  return (
+    <View style={styles.container}>
+      <Text>Welcome to LaunchDarkly</Text>
+      <Text>Flag value is {`${flagValue}`}</Text>
+    </View>
+  );
+}
 ```
 
 See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native/example).
 
 ## Developing this SDK
 
-:information_source: See the example [README](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/react-native/example/README.md#L1).
+1. Build all the code in the `js-core` repo:
+
+```shell
+# at js-core repo root
+yarn && yarn build
+```
+
+2. The example app uses [react-native-dotenv](https://github.com/goatandsheep/react-native-dotenv)
+   to manage environment variables. Under `packages/sdk/react-native/example`
+   create an `.env` file and add your mobile key:
+
+```shell
+echo "MOBILE_KEY=mob-abc" >> packages/sdk/react-native/example/.env
+```
+
+3. Run the example app. This will link the local react-native sdk code to the
+   example app for development:
+
+```shell
+# in react-native/example
+yarn && yarn ios-go
+```
 
 ## About LaunchDarkly
 

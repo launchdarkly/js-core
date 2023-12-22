@@ -11,6 +11,8 @@ export const MockStreamingProcessor = jest.fn();
 export const setupMockStreamingProcessor = (
   shouldError: boolean = false,
   putResponseJson: any = { data: { flags: {}, segments: {} } },
+  patchResponseJson?: any,
+  deleteResponseJson?: any,
 ) => {
   MockStreamingProcessor.mockImplementation(
     (
@@ -24,7 +26,7 @@ export const setupMockStreamingProcessor = (
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
-          process.nextTick(() => {
+          setTimeout(() => {
             const unauthorized: LDStreamingError = {
               code: 401,
               name: 'LaunchDarklyStreamingError',
@@ -33,8 +35,16 @@ export const setupMockStreamingProcessor = (
             errorHandler(unauthorized);
           });
         } else {
-          // execute put which will resolve the init promise
-          process.nextTick(() => listeners.get('put')?.processJson(putResponseJson));
+          // execute put which will resolve the identify promise
+          setTimeout(() => listeners.get('put')?.processJson(putResponseJson));
+
+          if (patchResponseJson) {
+            setTimeout(() => listeners.get('patch')?.processJson(patchResponseJson));
+          }
+
+          if (deleteResponseJson) {
+            setTimeout(() => listeners.get('delete')?.processJson(deleteResponseJson));
+          }
         }
       }),
       close: jest.fn(),

@@ -5,16 +5,18 @@
   "scripts": {
     "start": "expo start",
     "expo-clean": "expo prebuild --clean",
-    "android": "expo run:android",
-    "android-release": "expo run:android --variant release",
-    "android-go": "expo start --android --clear",
+    "android": "yarn link-dev && expo run:android",
+    "android-release": "yarn link-dev && expo run:android --variant release",
+    "android-go": "yarn link-dev && expo start --android --clear",
     "android-log": "react-native log-android",
-    "ios": "expo run:ios",
-    "ios-release": "expo run:ios --configuration Release",
-    "ios-go": "expo start --ios --clear",
+    "ios": "yarn link-dev && expo run:ios",
+    "ios-release": "yarn link-dev && expo run:ios --configuration Release",
+    "ios-go": "yarn link-dev && expo start --ios --clear",
     "ios-log": "react-native log-ios",
-    "web": "expo start --web --clear",
-    "clean": "expo prebuild --clean && yarn cache clean && rm -rf node_modules && rm -rf .expo"
+    "web": "yarn link-dev && expo start --web --clear",
+    "clean": "expo prebuild --clean && yarn cache clean && rm -rf node_modules && rm -rf .expo",
+    "link-dev": "(cd .. && yarn build)",
+    "postinstall": "yarn link-dev"
   },
   "dependencies": {
     "expo": "~49.0.16",

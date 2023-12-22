@@ -1,4 +1,4 @@
-import type { Encoding, Info, Platform, PlatformData, Requests, SdkData } from '@common';
+import type { Encoding, Info, Platform, PlatformData, Requests, SdkData, Storage } from '@common';
 
 import { crypto } from './hasher';
 
@@ -36,11 +36,18 @@ const requests: Requests = {
   createEventSource: jest.fn(),
 };
 
+const storage: Storage = {
+  get: jest.fn(),
+  set: jest.fn(),
+  clear: jest.fn(),
+};
+
 const basicPlatform: Platform = {
   encoding,
   info,
   crypto,
   requests,
+  storage,
 };
 
 export default basicPlatform;

@@ -5,11 +5,10 @@ import { LDProvider, ReactNativeLDClient } from '@launchdarkly/react-native-clie
 import Welcome from './src/welcome';
 
 const featureClient = new ReactNativeLDClient(MOBILE_KEY);
-const context = { kind: 'user', key: 'test-user-1' };
 
 const App = () => {
   return (
-    <LDProvider client={featureClient} context={context}>
+    <LDProvider client={featureClient}>
       <Welcome />
     </LDProvider>
   );

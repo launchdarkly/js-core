@@ -57,11 +57,11 @@ describe('LDEmitter', () => {
     const changeHandler = jest.fn();
     const readyHandler = jest.fn();
 
+    emitter.on('identifying', readyHandler);
     emitter.on('error', errorHandler1);
     emitter.on('change', changeHandler);
-    emitter.on('ready', readyHandler);
 
-    expect(emitter.eventNames()).toEqual(['error', 'change', 'ready']);
+    expect(emitter.eventNames()).toEqual(['identifying', 'error', 'change']);
   });
 
   test('listener count', () => {

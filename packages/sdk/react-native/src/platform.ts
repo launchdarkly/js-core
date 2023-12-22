@@ -1,4 +1,20 @@
 /* eslint-disable max-classes-per-file */
+
+/**
+ * The LaunchDarkly SDK uses async-storage for bootstrapping and this is a native
+ * dependency.
+ *
+ * If you are using expo, then adding the LaunchDarkly React Native
+ * SDK from npm and re-running pod install should suffice.
+ *
+ * If you are not using expo, you will need to explicitly add
+ * @react-native-async-storage/async-storage as a dependency to your project
+ * and re-run pod install for auto-linking to work. This is because auto-link
+ * does not work with transitive dependencies:
+ * https://github.com/react-native-community/cli/issues/1347
+ */
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import type {
   Crypto,
   Encoding,
@@ -8,12 +24,14 @@ import type {
   Hasher,
   Hmac,
   Info,
+  LDLogger,
   Options,
   Platform,
   PlatformData,
   Requests,
   Response,
   SdkData,
+  Storage,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { name, version } from '../package.json';
@@ -68,11 +86,38 @@ class PlatformCrypto implements Crypto {
     return uuidv4();
   }
 }
-const platform: Platform = {
+
+class PlatformStorage implements Storage {
+  constructor(private readonly logger: LDLogger) {}
+  async clear(key: string): Promise<void> {
+    await AsyncStorage.removeItem(key);
+  }
+
+  async get(key: string): Promise<string | null> {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      return value ?? null;
+    } catch (error) {
+      this.logger.debug(`Error getting AsyncStorage key: ${key}, error: ${error}`);
+      return null;
+    }
+  }
+
+  async set(key: string, value: string): Promise<void> {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (error) {
+      this.logger.debug(`Error saving AsyncStorage key: ${key}, value: ${value}, error: ${error}`);
+    }
+  }
+}
+
+const createPlatform = (logger: LDLogger): Platform => ({
   crypto: new PlatformCrypto(),
   info: new PlatformInfo(),
   requests: new PlatformRequests(),
   encoding: new PlatformEncoding(),
-};
+  storage: new PlatformStorage(logger),
+});
 
-export default platform;
+export default createPlatform;

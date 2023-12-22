@@ -1,17 +1,13 @@
-import { LDContext } from '@launchdarkly/js-sdk-common';
-import {
-  basicPlatform,
-  logger,
-  MockStreamingProcessor,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
+import { clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
+import { Flags } from './types';
 
-jest.mock('./evaluation/fetchFlags');
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  const { MockStreamingProcessor } = jest.requireActual('@launchdarkly/private-js-mocks');
   return {
     ...actual,
     ...{
@@ -22,15 +18,18 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
     },
   };
 });
+
+const testSdkKey = 'test-sdk-key';
+const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
+let ldc: LDClientImpl;
+let defaultPutResponse: Flags;
+
 describe('sdk-client object', () => {
-  const testSdkKey = 'test-sdk-key';
-  const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
-  let ldc: LDClientImpl;
-
   beforeEach(() => {
-    setupMockStreamingProcessor(false, mockResponseJson);
+    defaultPutResponse = clone<Flags>(mockResponseJson);
+    setupMockStreamingProcessor(false, defaultPutResponse);
 
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger });
+    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
@@ -96,8 +95,32 @@ describe('sdk-client object', () => {
     expect(devTestFlag).toBe(true);
   });
 
+  test('variationDetail flag not found', async () => {
+    await ldc.identify(context);
+    const flag = ldc.variationDetail('does-not-exist', 'not-found');
+
+    expect(flag).toEqual({
+      reason: { errorKind: 'FLAG_NOT_FOUND', kind: 'ERROR' },
+      value: 'not-found',
+      variationIndex: null,
+    });
+  });
+
+  test('variationDetail deleted flag not found', async () => {
+    await ldc.identify(context);
+    // @ts-ignore
+    ldc.flags['dev-test-flag'].deleted = true;
+    const flag = ldc.variationDetail('dev-test-flag', 'deleted');
+
+    expect(flag).toEqual({
+      reason: { errorKind: 'FLAG_NOT_FOUND', kind: 'ERROR' },
+      value: 'deleted',
+      variationIndex: null,
+    });
+  });
+
   test('identify success', async () => {
-    mockResponseJson['dev-test-flag'].value = false;
+    defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'mazda-cx7' };
 
     await ldc.identify(carContext);
@@ -131,7 +154,7 @@ describe('sdk-client object', () => {
     expect(ldc.getContext()).toBeUndefined();
   });
 
-  test('identify ready and error listeners', async () => {
+  test('identify change and error listeners', async () => {
     // @ts-ignore
     const { emitter } = ldc;
 
@@ -143,7 +166,7 @@ describe('sdk-client object', () => {
     const carContext2: LDContext = { kind: 'car', key: 'subaru-forrester' };
     await ldc.identify(carContext2);
 
-    expect(emitter.listenerCount('ready')).toEqual(1);
+    expect(emitter.listenerCount('change')).toEqual(1);
     expect(emitter.listenerCount('error')).toEqual(1);
   });
 });
