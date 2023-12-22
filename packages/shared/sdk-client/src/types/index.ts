@@ -9,6 +9,7 @@ export interface Flag {
   trackReason?: boolean;
   reason?: LDEvaluationReason;
   debugEventsUntilDate?: number;
+  deleted?: boolean;
 }
 
 export interface PatchFlag extends Flag {
