@@ -6,6 +6,7 @@ module.exports = {
   collectCoverageFrom: [
     'packages/sdk/server-node/src/**/*.ts',
     'packages/shared/common/src/**/*.ts',
+    'packages/shared/sdk-client/src/**/*.ts',
     'packages/shared/sdk-server/src/**/*.ts',
   ],
 };
