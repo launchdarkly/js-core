@@ -21,4 +21,4 @@ jobs:
         uses: ./actions/ci
         with:
           workspace_name: '@launchdarkly/js-client-sdk-common'
-          workspace_path: packages/sdk/cloudflare
+          workspace_path: packages/shared/sdk-client
