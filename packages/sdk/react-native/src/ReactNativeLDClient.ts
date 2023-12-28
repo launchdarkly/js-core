@@ -9,7 +9,26 @@ import {
 
 import createPlatform from './platform';
 
+/**
+ * The React Native LaunchDarkly client. Instantiate this class to create an
+ * instance of the ReactNativeLDClient and pass it to the {@link LDProvider}.
+ *
+ * @example
+ * ```tsx
+ * const featureClient = new ReactNativeLDClient(MOBILE_KEY);
+ *
+ * <LDProvider client={featureClient}>
+ *   <Welcome />
+ * </LDProvider>
+ * ```
+ */
 export default class ReactNativeLDClient extends LDClientImpl {
+  /**
+   * Creates an instance of the LaunchDarkly client.
+   *
+   * @param sdkKey The LaunchDarkly mobile key.
+   * @param options {@link LDOptions} to initialize the client with.
+   */
   constructor(sdkKey: string, options: LDOptions = {}) {
     const logger =
       options.logger ??
