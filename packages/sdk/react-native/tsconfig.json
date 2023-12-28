@@ -3,11 +3,8 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
-    "jsx": "react-native",
-    "lib": [
-      "es6",
-      "dom"
-    ],
+    "jsx": "react-jsx",
+    "lib": ["es6", "dom"],
     "module": "ES6",
     "moduleResolution": "node",
     "noImplicitOverride": true,
@@ -21,7 +18,8 @@
     "strict": true,
     "stripInternal": true,
     "target": "ES2017",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "esModuleInterop": true
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
 }
