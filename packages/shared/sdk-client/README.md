@@ -4,6 +4,9 @@
 [![Actions Status][shared-sdk-client-ci-badge]][shared-sdk-client-ci]
 [![Documentation][shared-sdk-client-ghp-badge]][shared-sdk-client-ghp-link]
 
+> [!CAUTION]  
+> This package is for internal use only. Do not use it directly.
+
 This project contains Typescript classes and interfaces that are applicable to client-side SDKs.
 
 This library is a beta version and should not be considered ready for production use while this message is visible.

@@ -1,19 +1,21 @@
 # LaunchDarkly React Native SDK
 
-> [!WARNING]  
-> UNSUPPORTED This SDK is in pre-release development and is not supported.
-
 [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]
 [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]
 [![Documentation][sdk-react-native-ghp-badge]][sdk-react-native-ghp-link]
 [![NPM][sdk-react-native-dm-badge]][sdk-react-native-npm-link]
 [![NPM][sdk-react-native-dt-badge]][sdk-react-native-npm-link]
 
+> [!WARNING]  
+> UNSUPPORTED This SDK is in pre-release development and is not supported.
+
 The LaunchDarkly React Native SDK is designed primarily for use in mobile environments. It follows the client-side LaunchDarkly model for multi-user contexts.
 
 This SDK is a replacement of [launchdarkly-react-native-client-sdk](https://github.com/launchdarkly/react-native-client-sdk). Please consider updating your application to use this package instead.
 
 For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/client-side/react-native).
+
+This library is an alpha version and should not be considered ready for production use while this message is visible.
 
 ## Install
 
