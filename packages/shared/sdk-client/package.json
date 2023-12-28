@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk-common",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,7 +30,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "^2.0.0"
+    "@launchdarkly/js-sdk-common": "2.1.0"
   },
   "devDependencies": {
     "@launchdarkly/private-js-mocks": "0.0.1",
@@ -52,7 +52,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "ts-jest": "^29.1.1",
-    "typedoc": "0.23.26",
-    "typescript": "^5.1.6"
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
   }
 }
