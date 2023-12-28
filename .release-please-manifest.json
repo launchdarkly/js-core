@@ -1,15 +1,15 @@
 {
   "packages/shared/common": "2.1.0",
-  "packages/shared/sdk-server": "2.1.1",
-  "packages/sdk/server-node": "9.0.4",
-  "packages/sdk/cloudflare": "2.3.1",
-  "packages/shared/sdk-server-edge": "2.1.1",
-  "packages/sdk/vercel": "1.2.1",
-  "packages/sdk/akamai-base": "2.0.4",
-  "packages/sdk/akamai-edgekv": "1.0.12",
-  "packages/shared/akamai-edgeworker-sdk": "1.0.4",
-  "packages/store/node-server-sdk-dynamodb": "6.0.4",
-  "packages/store/node-server-sdk-redis": "4.0.4",
+  "packages/shared/sdk-server": "2.1.2",
+  "packages/sdk/server-node": "9.0.5",
+  "packages/sdk/cloudflare": "2.3.2",
+  "packages/shared/sdk-server-edge": "2.1.2",
+  "packages/sdk/vercel": "1.2.2",
+  "packages/sdk/akamai-base": "2.0.5",
+  "packages/sdk/akamai-edgekv": "1.0.13",
+  "packages/shared/akamai-edgeworker-sdk": "1.0.5",
+  "packages/store/node-server-sdk-dynamodb": "6.0.5",
+  "packages/store/node-server-sdk-redis": "4.0.5",
   "packages/shared/sdk-client": "0.1.0",
-  "packages/sdk/react-native": "0.1.1"
+  "packages/sdk/react-native": "0.1.0"
 }
