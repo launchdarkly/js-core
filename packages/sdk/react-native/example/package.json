@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --reset-cache",
     "expo-clean": "expo prebuild --clean",
     "android": "yarn link-dev && expo run:android",
     "android-release": "yarn link-dev && expo run:android --variant release",
@@ -16,7 +16,10 @@
     "web": "yarn link-dev && expo start --web --clear",
     "clean": "expo prebuild --clean && yarn cache clean && rm -rf node_modules && rm -rf .expo",
     "link-dev": "(cd .. && yarn build)",
-    "postinstall": "yarn link-dev"
+    "postinstall": "yarn link-dev",
+    "detox-build-ios": "detox build -c ios.sim.debug",
+    "detox-run-ios": "detox test -c ios.sim.debug",
+    "detox-ios": "yarn detox-build-ios && yarn detox-run-ios"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.21.0",

@@ -28,6 +28,7 @@ export default function Welcome() {
         onChangeText={setUserKey}
         onSubmitEditing={onIdentify}
         value={userKey}
+        testID="userKey"
       />
       <TouchableOpacity onPress={onIdentify} style={styles.buttonContainer}>
         <Text style={styles.buttonText}>identify</Text>
@@ -37,6 +38,7 @@ export default function Welcome() {
         autoCapitalize="none"
         onChangeText={setFlagKey}
         value={flagKey}
+        testID="flagKey"
       />
       <TouchableOpacity style={styles.buttonContainer}>
         <Text style={styles.buttonText}>get flag value</Text>

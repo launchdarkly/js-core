@@ -1,6 +1,6 @@
-## LaunchDarkly React Native SDK example app
+# LaunchDarkly React Native SDK example app
 
-To run the example app:
+## Quickstart
 
 1. At the js-core repo root:
 
@@ -27,4 +27,25 @@ yarn && yarn ios-go
 
 # android
 yarn && yarn android-release
+```
+
+## Running Detox e2e tests
+
+1. Install the required tools on OS X:
+
+```shell
+brew tap wix/brew
+brew install applesimutils
+```
+
+2. On a terminal:
+
+```shell
+yarn && yarn start
+```
+
+3. On another terminal:
+
+```shell
+yarn detox-ios
 ```
