@@ -19,6 +19,7 @@
     "postinstall": "yarn link-dev"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.21.0",
     "expo": "~49.0.16",
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.7.1",
@@ -27,9 +28,14 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/detox": "^18.1.0",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.5",
     "@types/react": "~18.2.14",
     "@types/react-native-dotenv": "^0.2.1",
+    "detox": "^20.14.7",
     "react-native-dotenv": "^3.4.9",
+    "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
   }
 }
