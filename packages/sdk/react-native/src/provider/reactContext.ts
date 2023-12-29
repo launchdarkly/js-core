@@ -1,9 +1,9 @@
 import { createContext } from 'react';
 
-import { LDClient } from '@launchdarkly/js-client-sdk-common';
+import type ReactNativeLDClient from '../ReactNativeLDClient';
 
 export type ReactContext = {
-  client: LDClient;
+  client: ReactNativeLDClient;
 };
 
 export const context = createContext<ReactContext>({

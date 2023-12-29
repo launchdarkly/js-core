@@ -6,11 +6,11 @@ describe('ReactNativeLDClient', () => {
   let ldc: ReactNativeLDClient;
 
   beforeEach(() => {
-    ldc = new ReactNativeLDClient('mob-test', { sendEvents: false });
+    ldc = new ReactNativeLDClient('mobile-key', { sendEvents: false });
   });
 
   test('constructing a new client', () => {
-    expect(ldc.sdkKey).toEqual('mob-test');
+    expect(ldc.sdkKey).toEqual('mobile-key');
     expect(ldc.config.serviceEndpoints).toEqual({
       analyticsEventPath: '/mobile',
       diagnosticEventPath: '/mobile/events/diagnostic',
