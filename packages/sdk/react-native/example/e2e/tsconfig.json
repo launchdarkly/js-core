@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "lib": ["es6", "dom"],
+    "module": "ES6",
+    "moduleResolution": "node",
+    "strict": true,
+    "types": ["jest", "node"]
+  },
+  "include": ["**/*.ts"]
+}

@@ -1,4 +1,4 @@
-import { expect } from 'detox';
+import { by, device, element, expect } from 'detox';
 
 describe('Example', () => {
   beforeAll(async () => {

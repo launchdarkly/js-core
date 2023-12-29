@@ -1,6 +1,6 @@
 /** @type {import('@jest/types').Config.InitialOptions} */
 module.exports = {
-  preset: 'ts-jest',
+  preset: 'react-native',
   rootDir: '..',
   testMatch: ['<rootDir>/e2e/**/*.test.ts'],
   testTimeout: 120000,
