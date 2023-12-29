@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.1.2...react-native-client-sdk-v0.1.3) (2023-12-29)
+
+
+### Bug Fixes
+
+* Add more rn sdk unit tests. ([#339](https://github.com/launchdarkly/js-core/issues/339)) ([913bc00](https://github.com/launchdarkly/js-core/commit/913bc0009a39188b6b9785e5c4b4b79078061821))
+
 ## [0.1.2](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.1.1...react-native-client-sdk-v0.1.2) (2023-12-28)
 
 
