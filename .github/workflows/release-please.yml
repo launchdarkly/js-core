@@ -9,10 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       package-common-released: ${{ steps.release.outputs['packages/shared/common--release_created'] }}
+      package-sdk-client-released: ${{ steps.release.outputs['packages/shared/sdk-client--release_created'] }}
       package-sdk-server-released: ${{ steps.release.outputs['packages/shared/sdk-server--release_created'] }}
       package-sdk-server-edge-released: ${{ steps.release.outputs['packages/shared/sdk-server-edge--release_created'] }}
       package-akamai-edgeworker-sdk-released: ${{ steps.release.outputs['packages/shared/akamai-edgeworker-sdk--release_created'] }}
       package-cloudflare-released: ${{ steps.release.outputs['packages/sdk/cloudflare--release_created'] }}
+      package-react-native-released: ${{ steps.release.outputs['packages/sdk/react-native--release_created'] }}
       package-server-node-released: ${{ steps.release.outputs['packages/sdk/server-node--release_created'] }}
       package-vercel-released: ${{ steps.release.outputs['packages/sdk/vercel--release_created'] }}
       package-akamai-base-released: ${{ steps.release.outputs['packages/sdk/akamai-base--release_created'] }}
@@ -41,13 +43,36 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/shared/common
         uses: ./actions/full-release
         with:
           workspace_path: packages/shared/common
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-sdk-client:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-sdk-client-released }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with:
+          npm_version: 10.2.3
+      - id: release-sdk-client
+        name: Full release of packages/shared/sdk-client
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/shared/sdk-client
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-sdk-server:
@@ -64,9 +89,9 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-sdk-server
         name: Full release of packages/shared/sdk-server
         uses: ./actions/full-release
         with:
@@ -87,9 +112,9 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-sdk-server-edge
         name: Full release of packages/shared/sdk-server-edge
         uses: ./actions/full-release
         with:
@@ -110,9 +135,9 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-akamai-edgeworker-sdk
         name: Full release of packages/shared/akamai-edgeworker-sdk
         uses: ./actions/full-release
         with:
@@ -133,13 +158,36 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-cloudflare
         name: Full release of packages/sdk/cloudflare
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/cloudflare
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-react-native:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-react-native-released }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: 'https://registry.npmjs.org'
+      - uses: ./actions/install-npm-version
+        with:
+          npm_version: 10.2.3
+      - id: release-react-native
+        name: Full release of packages/sdk/react-native
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/sdk/react-native
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-server-node:
@@ -156,9 +204,9 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-server-node
         name: Full release of packages/sdk/server-node
         uses: ./actions/full-release
         with:
@@ -179,9 +227,9 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-vercel
         name: Full release of packages/sdk/vercel
         uses: ./actions/full-release
         with:
@@ -202,9 +250,9 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-akamai-base
         name: Full release of packages/sdk/akamai-base
         uses: ./actions/full-release
         with:
@@ -225,9 +273,9 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
-      - id: release-common
+      - id: release-akamai-edgekv
         name: Full release of packages/sdk/akamai-edgekv
         uses: ./actions/full-release
         with:
@@ -248,13 +296,13 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
       - run: |
           sudo apt-get update
           sudo apt-get install redis-server
           sudo service redis-server start
-      - id: release-common
+      - id: release-node-server-sdk-redis
         name: Full release of packages/store/node-server-sdk-redis
         uses: ./actions/full-release
         with:
@@ -275,11 +323,11 @@ jobs:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
       - uses: ./actions/install-npm-version
-        with: 
+        with:
           npm_version: 9.5.0
       - run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local
-      - id: release-common
+      - id: release-node-server-sdk-dynamodb
         name: Full release of packages/store/node-server-sdk-dynamodb
         uses: ./actions/full-release
         with:
