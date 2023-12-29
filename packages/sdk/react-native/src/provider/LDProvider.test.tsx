@@ -8,7 +8,7 @@ import LDProvider from './LDProvider';
 import setupListeners from './setupListeners';
 
 jest.mock('./setupListeners');
-jest.mock('../ReactNativeLDClient', () => jest.fn());
+jest.mock('../ReactNativeLDClient');
 
 const TestApp = () => {
   const ldClient = useLDClient();
@@ -21,7 +21,7 @@ const TestApp = () => {
   );
 };
 describe('LDProvider', () => {
-  let ldc: any;
+  let ldc: ReactNativeLDClient;
   let context: LDContext;
   let mockSetupListeners = setupListeners as jest.Mock;
 
