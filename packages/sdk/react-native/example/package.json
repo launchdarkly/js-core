@@ -4,7 +4,7 @@
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start --reset-cache",
-    "expo-clean": "expo prebuild --clean",
+    "expo-prebuild": "CI=1 expo prebuild --clean",
     "android": "yarn link-dev && expo run:android",
     "android-release": "yarn link-dev && expo run:android --variant release",
     "android-go": "yarn link-dev && expo start --android --clear",
@@ -14,7 +14,7 @@
     "ios-go": "yarn link-dev && expo start --ios --clear",
     "ios-log": "react-native log-ios",
     "web": "yarn link-dev && expo start --web --clear",
-    "clean": "expo prebuild --clean && yarn cache clean && rm -rf node_modules && rm -rf .expo",
+    "clean": "yarn expo-prebuild && yarn cache clean && rm -rf node_modules && rm -rf .expo",
     "link-dev": "(cd .. && yarn build)",
     "postinstall": "yarn link-dev",
     "detox-build-ios": "detox build -c ios.sim.debug",
