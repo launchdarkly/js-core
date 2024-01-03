@@ -17,23 +17,23 @@ describe('Example', () => {
 
   test('app loads and renders correctly', async () => {
     await expect(element(by.text(/welcome to launchdarkly/i))).toBeVisible();
-    await expect(element(by.text(/dev-test-flag: false/i))).toBeVisible();
+    await expect(element(by.text(/my-boolean-flag-1: false/i))).toBeVisible();
   });
 
   test('identify', async () => {
     await element(by.id('userKey')).typeText('test-user');
     await element(by.text(/identify/i)).tap();
 
-    await waitFor(element(by.text(/dev-test-flag: true/i)))
+    await waitFor(element(by.text(/my-boolean-flag-1: true/i)))
       .toBeVisible()
       .withTimeout(2000);
   });
 
   test('variation', async () => {
-    await element(by.id('flagKey')).replaceText('test-flag-1');
+    await element(by.id('flagKey')).replaceText('my-boolean-flag-2');
     await element(by.text(/get flag value/i)).tap();
 
-    await waitFor(element(by.text(/test-flag-1: true/i)))
+    await waitFor(element(by.text(/my-boolean-flag-2: true/i)))
       .toBeVisible()
       .withTimeout(2000);
   });

@@ -4,7 +4,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const [flagKey, setFlagKey] = useState('dev-test-flag');
+  const [flagKey, setFlagKey] = useState('my-boolean-flag-1');
   const [userKey, setUserKey] = useState('');
   const flagValue = useBoolVariation(flagKey, false);
   const ldc = useLDClient();
