@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
-    "start": "expo start",
-    "expo-clean": "expo prebuild --clean",
+    "start": "expo start --reset-cache",
+    "expo-prebuild": "CI=1 expo prebuild --clean",
     "android": "yarn link-dev && expo run:android",
     "android-release": "yarn link-dev && expo run:android --variant release",
     "android-go": "yarn link-dev && expo start --android --clear",
@@ -14,11 +14,15 @@
     "ios-go": "yarn link-dev && expo start --ios --clear",
     "ios-log": "react-native log-ios",
     "web": "yarn link-dev && expo start --web --clear",
-    "clean": "expo prebuild --clean && yarn cache clean && rm -rf node_modules && rm -rf .expo",
+    "clean": "yarn expo-prebuild && yarn cache clean && rm -rf node_modules && rm -rf .expo",
     "link-dev": "(cd .. && yarn build)",
-    "postinstall": "yarn link-dev"
+    "postinstall": "yarn link-dev",
+    "detox-build-ios": "detox build -c ios.sim.debug",
+    "detox-run-ios": "detox test -c ios.sim.debug",
+    "detox-ios": "yarn detox-build-ios && yarn detox-run-ios"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.21.0",
     "expo": "~49.0.16",
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.7.1",
@@ -27,9 +31,14 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/detox": "^18.1.0",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.5",
     "@types/react": "~18.2.14",
     "@types/react-native-dotenv": "^0.2.1",
+    "detox": "^20.14.7",
     "react-native-dotenv": "^3.4.9",
+    "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
   }
 }

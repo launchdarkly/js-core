@@ -1,12 +1,16 @@
 {
   "packages": {
     "packages/shared/common": {},
-    "packages/shared/sdk-client": {},
+    "packages/shared/sdk-client": {
+      "bump-minor-pre-major": true
+    },
     "packages/shared/sdk-server": {},
     "packages/shared/sdk-server-edge": {},
     "packages/shared/akamai-edgeworker-sdk": {},
     "packages/sdk/cloudflare": {},
-    "packages/sdk/react-native": {},
+    "packages/sdk/react-native": {
+      "bump-minor-pre-major": true
+    },
     "packages/sdk/server-node": {},
     "packages/sdk/vercel": {
       "extra-files": ["src/createPlatformInfo.ts"]

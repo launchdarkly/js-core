@@ -4,7 +4,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const [flagKey, setFlagKey] = useState('dev-test-flag');
+  const [flagKey, setFlagKey] = useState('my-boolean-flag-1');
   const [userKey, setUserKey] = useState('');
   const flagValue = useBoolVariation(flagKey, false);
   const ldc = useLDClient();
@@ -28,6 +28,7 @@ export default function Welcome() {
         onChangeText={setUserKey}
         onSubmitEditing={onIdentify}
         value={userKey}
+        testID="userKey"
       />
       <TouchableOpacity onPress={onIdentify} style={styles.buttonContainer}>
         <Text style={styles.buttonText}>identify</Text>
@@ -37,6 +38,7 @@ export default function Welcome() {
         autoCapitalize="none"
         onChangeText={setFlagKey}
         value={flagKey}
+        testID="flagKey"
       />
       <TouchableOpacity style={styles.buttonContainer}>
         <Text style={styles.buttonText}>get flag value</Text>

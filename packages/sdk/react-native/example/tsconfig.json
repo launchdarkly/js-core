@@ -3,5 +3,6 @@
   "compilerOptions": {
     "strict": true,
     "typeRoots": ["./types"]
-  }
+  },
+  "exclude": ["e2e"]
 }
