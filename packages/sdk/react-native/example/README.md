@@ -49,13 +49,13 @@ MOBILE_KEY=abcdef12456
 3. For the above mobile key, ensure two boolean flags exist `my-boolean-flag-1`
    and `my-boolean-flag-2` and they evaluate to true for `test-user`. Make sure these flags have client-side SDK availability checked for mobile sdks.
 
-4. On a terminal:
+4. In the example folder, on a terminal:
 
 ```shell
 yarn && yarn expo-prebuild && yarn start
 ```
 
-3. On another terminal:
+5. Still in the example folder but on another terminal:
 
 ```shell
 yarn detox-ios
