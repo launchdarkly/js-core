@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.1.3...react-native-client-sdk-v0.1.4) (2024-01-03)
+
+
+### Bug Fixes
+
+* Add Detox e2e tests. ([#340](https://github.com/launchdarkly/js-core/issues/340)) ([e7b9d29](https://github.com/launchdarkly/js-core/commit/e7b9d299fe1e1c34489f8688099de466a12a3622))
+
 ## [0.1.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.1.2...react-native-client-sdk-v0.1.3) (2023-12-29)
 
 
