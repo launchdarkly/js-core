@@ -231,20 +231,20 @@ export default class LDClientImpl implements LDClient {
   }
 
   // TODO: implement secure mode
-  async identify(c: LDContext, _hash?: string): Promise<void> {
-    const checkedContext = Context.fromLDContext(c);
+  async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
+    // the original context is injected with auto env attributes
+    const context = {
+      ...pristineContext,
+      ...this.config.autoEnv,
+    };
+
+    const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
       const error = new Error('Context was unspecified or had no key');
       this.logger.error(error);
-      this.emitter.emit('error', c, error);
+      this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
-
-    // TODO: add auto env attributes here
-    const context = {
-      ...c,
-      ...this.config.autoEnv,
-    };
 
     const { identifyPromise, identifyResolve } = this.createPromiseWithListeners();
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);

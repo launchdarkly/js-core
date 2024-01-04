@@ -70,7 +70,7 @@ export default class Configuration {
     );
     this.tags = new ApplicationTags({ application: this.application, logger: this.logger });
 
-    // TODO: save auto env attributes
+    // TODO: add logic to process auto env attributes correctly
     this.autoEnv = internalOptions.autoEnv;
   }
 

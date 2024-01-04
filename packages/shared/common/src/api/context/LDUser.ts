@@ -1,9 +1,11 @@
+import { LDAutoEnv } from './LDAutoEnv';
+
 /**
  * A LaunchDarkly user object.
  *
  * @deprecated
  */
-export interface LDUser {
+export interface LDUser extends LDAutoEnv {
   /**
    * A unique string identifying a user.
    */
