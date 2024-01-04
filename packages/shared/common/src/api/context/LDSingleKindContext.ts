@@ -1,3 +1,4 @@
+import { LDAutoEnv } from './LDAutoEnv';
 import { LDContextCommon } from './LDContextCommon';
 
 /**
@@ -16,7 +17,7 @@ import { LDContextCommon } from './LDContextCommon';
  * The above context would be a single kind context representing an organization. It has a key
  * for that organization, and a single attribute 'someAttribute'.
  */
-export interface LDSingleKindContext extends LDContextCommon {
+export interface LDSingleKindContext extends LDContextCommon, LDAutoEnv {
   /**
    * The kind of the context.
    */

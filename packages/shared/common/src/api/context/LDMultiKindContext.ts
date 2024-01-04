@@ -1,3 +1,4 @@
+import { LDAutoEnv } from './LDAutoEnv';
 import { LDContextCommon } from './LDContextCommon';
 
 /**
@@ -31,7 +32,7 @@ import { LDContextCommon } from './LDContextCommon';
  * The above multi-context contains both an 'org' and a 'user'. Each with their own key,
  * attributes, and _meta attributes.
  */
-export interface LDMultiKindContext {
+export interface LDMultiKindContext extends LDAutoEnv {
   /**
    * The kind of the context.
    */
@@ -40,8 +41,10 @@ export interface LDMultiKindContext {
   /**
    * The contexts which compose this multi-kind context.
    *
-   * These should be of type LDContextCommon. "multi" is to allow
-   * for the top level "kind" attribute.
+   * These should be of type LDContextCommon with these exceptions:
+   * "multi" is to allow for the top level "kind" attribute.
+   * "undefined" is to allow for the top level "ld_application" and ld_device
+   * attributes.
    */
-  [kind: string]: 'multi' | LDContextCommon;
+  [attribute: string]: 'multi' | LDContextCommon | undefined;
 }

@@ -1,7 +1,10 @@
-/* eslint-disable no-underscore-dangle */
-// eslint-disable-next-line max-classes-per-file
-import { LDContextCommon, LDMultiKindContext, LDSingleKindContext, LDUser } from './api/context';
-import { LDContext } from './api/context/LDContext';
+import type {
+  LDContext,
+  LDContextCommon,
+  LDMultiKindContext,
+  LDSingleKindContext,
+  LDUser,
+} from './api';
 import AttributeReference from './AttributeReference';
 import { TypeValidators } from './validators';
 
@@ -84,9 +87,9 @@ function isLegacyUser(context: LDContext): context is LDUser {
  * that as well.
  */
 function isContextCommon(
-  kindOrContext: 'multi' | LDContextCommon,
+  kindOrContext: 'multi' | LDContextCommon | undefined,
 ): kindOrContext is LDContextCommon {
-  return kindOrContext && TypeValidators.Object.is(kindOrContext);
+  return !!kindOrContext && TypeValidators.Object.is(kindOrContext);
 }
 
 /**
@@ -266,6 +269,7 @@ export default class Context {
       const singleContext = context[kind];
       if (isContextCommon(singleContext)) {
         acc[kind] = singleContext;
+        // eslint-disable-next-line no-underscore-dangle
         privateAttributes[kind] = processPrivateAttributes(singleContext._meta?.privateAttributes);
       } else {
         // No early break isn't the most efficient, but it is an error condition.

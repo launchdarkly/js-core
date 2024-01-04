@@ -193,7 +193,7 @@ export default class LDClientImpl implements LDClient {
    */
   protected createStreamUriPath(_context: LDContext): string {
     throw new Error(
-      'createStreamUriPath not implemented. client sdks must implement createStreamUriPath for streamer to work',
+      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work',
     );
   }
 
@@ -231,14 +231,20 @@ export default class LDClientImpl implements LDClient {
   }
 
   // TODO: implement secure mode
-  async identify(context: LDContext, _hash?: string): Promise<void> {
-    const checkedContext = Context.fromLDContext(context);
+  async identify(c: LDContext, _hash?: string): Promise<void> {
+    const checkedContext = Context.fromLDContext(c);
     if (!checkedContext.valid) {
       const error = new Error('Context was unspecified or had no key');
       this.logger.error(error);
-      this.emitter.emit('error', context, error);
+      this.emitter.emit('error', c, error);
       return Promise.reject(error);
     }
+
+    // TODO: add auto env attributes here
+    const context = {
+      ...c,
+      ...this.config.ldAutoEnv,
+    };
 
     const { identifyPromise, identifyResolve } = this.createPromiseWithListeners();
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);

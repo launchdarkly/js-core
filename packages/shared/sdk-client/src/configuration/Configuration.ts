@@ -2,6 +2,7 @@ import {
   ApplicationTags,
   createSafeLogger,
   internal,
+  LDAutoEnv,
   LDFlagSet,
   NumberWithMinimum,
   OptionMessages,
@@ -41,6 +42,8 @@ export default class Configuration {
   public readonly tags: ApplicationTags;
   public readonly application?: { id?: string; version?: string };
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
+
+  // TODO: implement requestHeaderTransform
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
   public readonly stream?: boolean;
   public readonly hash?: string;
@@ -48,6 +51,7 @@ export default class Configuration {
   public readonly wrapperVersion?: string;
 
   public readonly serviceEndpoints: ServiceEndpoints;
+  public readonly ldAutoEnv?: LDAutoEnv;
 
   // Allow indexing Configuration by a string
   [index: string]: any;
@@ -65,6 +69,9 @@ export default class Configuration {
       internalOptions.includeAuthorizationHeader,
     );
     this.tags = new ApplicationTags({ application: this.application, logger: this.logger });
+
+    // TODO: save auto env attributes
+    this.ldAutoEnv = internalOptions.ldAutoEnv;
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {
