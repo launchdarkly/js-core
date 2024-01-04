@@ -243,7 +243,7 @@ export default class LDClientImpl implements LDClient {
     // TODO: add auto env attributes here
     const context = {
       ...c,
-      ...this.config.ldAutoEnv,
+      ...this.config.autoEnv,
     };
 
     const { identifyPromise, identifyResolve } = this.createPromiseWithListeners();
