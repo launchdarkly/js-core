@@ -1,4 +1,5 @@
 /* eslint-disable import/no-mutable-exports,global-require */
+import { Platform } from 'react-native';
 
 /**
  * For react-native version >= 0.71, the LaunchDarkly React-Native SDK uses
@@ -19,12 +20,10 @@
  */
 let ConditionalAsyncStorage: any;
 
-try {
-  // react-native version < 0.71
-  ConditionalAsyncStorage = require('react-native').AsyncStorage;
-} catch (e) {
-  // react-native version >= 0.71
+if (Platform.OS === 'android' || Platform.OS === 'ios') {
   ConditionalAsyncStorage = require('@react-native-async-storage/async-storage').default;
+} else {
+  ConditionalAsyncStorage = require('react-native').AsyncStorage;
 }
 
 export default ConditionalAsyncStorage;
