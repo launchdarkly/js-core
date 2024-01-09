@@ -114,9 +114,11 @@ The SLSA framework specifies some [recommendations for verifying build artifacts
     - Build is triggered by a LaunchDarkly-owned repository
     - Build is executed by a LaunchDarkly-owned Github Actions workflow 
     - Build steps are trustworthy
-  - Check the public ledger's transparency log entry for:
-    - Provenance is signed by Sigstore to guarantee authenticity
-    - OIDC token used to publish the provenance (Github Workflow + Source Repository fields) are LaunchDarkly-owned
+  - Check the public ledger's transparency log entry to ensure the build provenance is authentic:
+    - Signature issuer is Sigstore 
+    - OIDC issuer is `https://token.actions.githubusercontent.com`
+    - GitHub Workflow Repository is a LaunchDarkly-owned repository
+    - GitHub Workflow SHA matches the SHA of the source commit
 
 The recommendations above may be adjusted to fit your organization's needs and supply chain security policies. For additional questions, please contact [security@launchdarkly.com](mailto:security@launchdarkly.com).
 
