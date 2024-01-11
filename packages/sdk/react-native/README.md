@@ -98,29 +98,9 @@ echo "MOBILE_KEY=mob-abc" >> packages/sdk/react-native/example/.env
 yarn && yarn ios-go
 ```
 
-## Validating SDK packages with the SLSA framework
+## Validating SDK packages with the SLSA framework (Supply-chain Levels for Software Artifacts)
 
-LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) to help developers make their supply chain more secure by ensuring the authenticity of our published SDK packages. As part of [SLSA requirements for level 3 compliance](https://slsa.dev/spec/v1.0/requirements), LaunchDarkly publishes provenance about our SDK package builds to NPM for distribution alongside our packages. 
-
-The SLSA framework specifies some [recommendations for verifying build artifacts](https://slsa.dev/spec/v1.0/verifying-artifacts) in their documentation. For npm packages that are published with provenance, npm already [validates the authenticity of the package using Sigstore](https://docs.npmjs.com/generating-provenance-statements#about-npm-provenance). In addition to npm's validation, we recommend the following steps:
-- Ensure that the @launchdarkly/react-native-client-sdk version you're downloading was published with npm-verified provenance  
-  - Check the [versions tab in npm](https://www.npmjs.com/package/@launchdarkly/react-native-client-sdk?activeTab) and ensure the version you're installing has a green checkmark 
-- Use the provenance published in npm to verify the authenticity of the build:
-  - Check the source commit for: 
-    - Source repository is a LaunchDarkly-owned repository
-    - Commit author is a LaunchDarkly entity
-    - (Optional) Code changes in the commit are trustworthy
-  - Check the build file and build summary for:
-    - Build is triggered by a LaunchDarkly-owned repository
-    - Build is executed by a LaunchDarkly-owned Github Actions workflow 
-    - Build steps are trustworthy
-  - Check the public ledger's transparency log entry to ensure the build provenance is authentic:
-    - Signature issuer is Sigstore 
-    - OIDC issuer is `https://token.actions.githubusercontent.com`
-    - GitHub Workflow Repository is a LaunchDarkly-owned repository
-    - GitHub Workflow SHA matches the SHA of the source commit
-
-The recommendations above may be adjusted to fit your organization's needs and supply chain security policies. For additional questions, please contact [security@launchdarkly.com](mailto:security@launchdarkly.com).
+LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) to help developers make their supply chain more secure by ensuring the authenticity and build integrity of our published SDK packages. To learn more, see the [provenance guide](PROVENANCE.md). 
 
 ## About LaunchDarkly
 
