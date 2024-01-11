@@ -10,7 +10,7 @@ This project contains Typescript classes and interfaces that are applicable to s
 
 See [Contributing](../CONTRIBUTING.md).
 
-## Validating SDK packages with the SLSA framework (Supply-chain Levels for Software Artifacts)
+## Verifying SDK packages with the SLSA framework (Supply-chain Levels for Software Artifacts)
 
 LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) to help developers make their supply chain more secure by ensuring the authenticity and build integrity of our published SDK packages. To learn more, see the [provenance guide](PROVENANCE.md). 
 
