@@ -178,7 +178,7 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   return singleKindContext;
 }
 
-function createAutoEnv({ ld_application, ld_device }: LDContext) {
+function reconstructAutoEnv({ ld_application, ld_device }: LDContext) {
   return { ld_application, ld_device };
 }
 
@@ -299,7 +299,7 @@ export default class Context {
       const kind = kinds[0];
       const created = new Context(true, kind);
       created.context = contexts[kind];
-      created.autoEnv = createAutoEnv(context);
+      created.autoEnv = reconstructAutoEnv(context);
       created.privateAttributeReferences = privateAttributes;
       created.isUser = kind === 'user';
       return created;
@@ -307,7 +307,7 @@ export default class Context {
 
     const created = new Context(true, context.kind);
     created.contexts = contexts;
-    created.autoEnv = createAutoEnv(context);
+    created.autoEnv = reconstructAutoEnv(context);
     created.privateAttributeReferences = privateAttributes;
     created.isMulti = true;
     return created;
@@ -332,7 +332,7 @@ export default class Context {
     const created = new Context(true, kind);
     created.isUser = kind === 'user';
     created.context = context;
-    created.autoEnv = createAutoEnv(context);
+    created.autoEnv = reconstructAutoEnv(context);
     created.privateAttributeReferences = {
       [kind]: privateAttributeReferences,
     };
@@ -346,7 +346,7 @@ export default class Context {
       return Context.contextForError('user', 'The key for the context was not valid');
     }
     const created = new Context(true, 'user');
-    created.autoEnv = createAutoEnv(context);
+    created.autoEnv = reconstructAutoEnv(context);
     created.isUser = true;
     created.wasLegacy = true;
     created.context = legacyToSingleKind(context);
