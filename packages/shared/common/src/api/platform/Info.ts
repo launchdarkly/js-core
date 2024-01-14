@@ -1,3 +1,5 @@
+import { LDAutoEnv } from '../context';
+
 /**
  * Information about the platform of the SDK and the environment it is executing.
  */
@@ -31,6 +33,12 @@ export interface PlatformData {
    * Any additional attributes associated with the platform.
    */
   additional?: Record<string, string>;
+
+  /**
+   * Additional information about the executing environment. Should be populated
+   * when available. Not all platforms will make this data accessible.
+   */
+  autoEnv?: LDAutoEnv;
 }
 
 export interface SdkData {

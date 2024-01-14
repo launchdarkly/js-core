@@ -7,8 +7,8 @@ import {
   type LDOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
-import createAutoEnv from './createAutoEnv';
 import createPlatform from './platform';
+import createAutoEnv from './platform/createAutoEnv';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
@@ -42,7 +42,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
     const internalOptions: internal.LDInternalOptions = {
       analyticsEventPath: `/mobile`,
       diagnosticEventPath: `/mobile/events/diagnostic`,
-      autoEnv: createAutoEnv(),
     };
 
     super(sdkKey, createPlatform(logger), { ...options, logger }, internalOptions);

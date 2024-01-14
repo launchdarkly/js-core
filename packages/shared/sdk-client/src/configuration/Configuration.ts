@@ -51,7 +51,6 @@ export default class Configuration {
   public readonly wrapperVersion?: string;
 
   public readonly serviceEndpoints: ServiceEndpoints;
-  public readonly autoEnv?: LDAutoEnv;
 
   // Allow indexing Configuration by a string
   [index: string]: any;
@@ -69,9 +68,6 @@ export default class Configuration {
       internalOptions.includeAuthorizationHeader,
     );
     this.tags = new ApplicationTags({ application: this.application, logger: this.logger });
-
-    // TODO: add logic to process auto env attributes correctly
-    this.autoEnv = internalOptions.autoEnv;
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {

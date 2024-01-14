@@ -1,5 +1,3 @@
-import { LDAutoEnv } from '../../api';
-
 /**
  * This is for internal use only.
  *
@@ -14,5 +12,4 @@ export type LDInternalOptions = {
   analyticsEventPath?: string;
   diagnosticEventPath?: string;
   includeAuthorizationHeader?: boolean;
-  autoEnv?: LDAutoEnv;
 };

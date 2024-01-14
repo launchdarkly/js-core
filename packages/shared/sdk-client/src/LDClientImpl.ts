@@ -3,6 +3,7 @@ import {
   clone,
   Context,
   internal,
+  LDAutoEnv,
   LDClientError,
   LDContext,
   LDEvaluationDetail,
@@ -45,6 +46,7 @@ export default class LDClientImpl implements LDClient {
   private identifyErrorListener?: (c: LDContext, err: any) => void;
 
   private readonly clientContext: ClientContext;
+  private readonly autoEnv?: LDAutoEnv;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -74,6 +76,9 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
+
+    // TODO: add logic to process auto env attributes correctly
+    this.autoEnv = platform.info.platformData().autoEnv;
   }
 
   allFlags(): LDFlagSet {
@@ -235,7 +240,7 @@ export default class LDClientImpl implements LDClient {
     // the original context is injected with auto env attributes
     const context = {
       ...pristineContext,
-      ...this.config.autoEnv,
+      ...this.autoEnv,
     };
 
     const checkedContext = Context.fromLDContext(context);
