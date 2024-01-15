@@ -16,21 +16,6 @@ const common: LDAutoEnvCommon = {
   envAttributesVersion: '1.0',
 };
 
-const iosDeviceSelector = () => {
-  const iosPlatform = Platform as PlatformIOSStatic;
-  console.log(`====== systemName: ${iosPlatform.constants.systemName}`);
-
-  if (iosPlatform.isTV) {
-    return 'appleTV';
-  }
-
-  if (iosPlatform.isPad) {
-    return 'iPad';
-  }
-
-  return 'iPhone';
-};
-
 const autoEnv: LDAutoEnv = {
   ld_application: {
     ...common,
@@ -47,12 +32,8 @@ const autoEnv: LDAutoEnv = {
       android: (Platform as PlatformAndroidStatic).constants.Manufacturer,
     }),
     model: Platform.select({
-      ios: iosDeviceSelector(),
       android: (Platform as PlatformAndroidStatic).constants.Model,
-      macos: 'mac',
     }),
-    // storageBytes: getTotalDiskCapacitySync().toString()
-    // memoryBytes: getMaxMemorySync().toString(),
     os: {
       family: Platform.select({
         ios: 'apple',
