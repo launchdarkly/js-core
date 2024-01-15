@@ -8,7 +8,6 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import createPlatform from './platform';
-import createAutoEnv from './platform/createAutoEnv';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an

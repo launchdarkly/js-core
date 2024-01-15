@@ -21,8 +21,8 @@ import type {
 import { name, version } from '../../package.json';
 import { btoa, uuidv4 } from '../polyfills';
 import RNEventSource from '../react-native-sse';
+import AutoEnv from './AutoEnv';
 import AsyncStorage from './ConditionalAsyncStorage';
-import createAutoEnv from './createAutoEnv';
 
 class PlatformRequests implements Requests {
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
@@ -47,7 +47,7 @@ class PlatformInfo implements Info {
   platformData(): PlatformData {
     return {
       name: 'React Native',
-      autoEnv: createAutoEnv(),
+      autoEnv: AutoEnv,
     };
   }
 
