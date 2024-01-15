@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, PlatformAndroidStatic, PlatformIOSStatic } from 'react-native';
 
 import type { LDAutoEnv, LDAutoEnvCommon } from '@launchdarkly/js-sdk-common';
 
@@ -16,6 +16,21 @@ const common: LDAutoEnvCommon = {
   envAttributesVersion: '1.0',
 };
 
+const iosDeviceSelector = () => {
+  const iosPlatform = Platform as PlatformIOSStatic;
+  console.log(`====== systemName: ${iosPlatform.constants.systemName}`);
+
+  if (iosPlatform.isTV) {
+    return 'appleTV';
+  }
+
+  if (iosPlatform.isPad) {
+    return 'iPad';
+  }
+
+  return 'iPhone';
+};
+
 const autoEnv: LDAutoEnv = {
   ld_application: {
     ...common,
@@ -27,8 +42,15 @@ const autoEnv: LDAutoEnv = {
   },
   ld_device: {
     ...common,
-    // manufacturer: getManufacturerSync(),
-    // model: getModel(),
+    manufacturer: Platform.select({
+      ios: 'apple',
+      android: (Platform as PlatformAndroidStatic).constants.Manufacturer,
+    }),
+    model: Platform.select({
+      ios: iosDeviceSelector(),
+      android: (Platform as PlatformAndroidStatic).constants.Model,
+      macos: 'mac',
+    }),
     // storageBytes: getTotalDiskCapacitySync().toString()
     // memoryBytes: getMaxMemorySync().toString(),
     os: {
