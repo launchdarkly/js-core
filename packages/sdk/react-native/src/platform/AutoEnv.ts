@@ -1,7 +1,8 @@
-/* eslint-disable import/no-mutable-exports,global-require */
 import { Platform } from 'react-native';
 
 import type { LDAutoEnv, LDAutoEnvCommon } from '@launchdarkly/js-sdk-common';
+
+import locale from '../utils/locale';
 
 /**
  * Priority for id, version and versionName:
@@ -15,58 +16,32 @@ const common: LDAutoEnvCommon = {
   envAttributesVersion: '1.0',
 };
 
-const defaultAutoEnv: LDAutoEnv = {
+const autoEnv: LDAutoEnv = {
   ld_application: {
     ...common,
+    // id: getBundleId(),
+    // name: getApplicationName(),
+    // version: getVersion(),
+    // versionName: getReadableVersion(),
+    locale,
   },
   ld_device: {
     ...common,
+    // manufacturer: getManufacturerSync(),
+    // model: getModel(),
+    // storageBytes: getTotalDiskCapacitySync().toString()
+    // memoryBytes: getMaxMemorySync().toString(),
     os: {
-      family: Platform.OS,
+      family: Platform.select({
+        ios: 'apple',
+        default: Platform.OS,
+      }),
       name: Platform.OS,
       version: Platform.Version.toString(),
     },
   },
 };
 
-let autoEnv = defaultAutoEnv;
-
-try {
-  const {
-    getApplicationName,
-    getBundleId,
-    getManufacturerSync,
-    getMaxMemorySync,
-    getModel,
-    getReadableVersion,
-    getTotalDiskCapacitySync,
-    getVersion,
-  } = require('react-native-device-info');
-  const { getLocales } = require('react-native-localize');
-
-  console.log(`======= DeviceInfo supported`);
-
-  autoEnv = {
-    // @ts-ignore
-    ld_application: {
-      ...defaultAutoEnv.ld_application,
-      id: getBundleId(),
-      name: getApplicationName(),
-      version: getVersion(),
-      versionName: getReadableVersion(),
-      locale: getLocales()[0].languageTag,
-    },
-    // @ts-ignore
-    ld_device: {
-      ...defaultAutoEnv.ld_device,
-      manufacturer: getManufacturerSync(),
-      model: getModel(),
-      storageBytes: getTotalDiskCapacitySync().toString(),
-      memoryBytes: getMaxMemorySync().toString(),
-    },
-  };
-} catch (e) {
-  console.log(`======= DeviceInfo not supported, using default values. Error: ${e}`);
-}
+console.log(`===== autoenv: ${JSON.stringify(autoEnv, null, 2)}`);
 
 export default autoEnv;
