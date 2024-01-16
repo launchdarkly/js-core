@@ -658,7 +658,9 @@ describe('given an event processor', () => {
     await expect(eventProcessor.flush()).rejects.toThrow('some error');
 
     eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
-    await expect(eventProcessor.flush()).rejects.toThrow(/SDK key is invalid/);
+    await expect(eventProcessor.flush()).rejects.toThrow(
+      'Events cannot be posted because a permanent error has been encountered.',
+    );
   });
 
   it('swallows errors from failed background flush', async () => {
