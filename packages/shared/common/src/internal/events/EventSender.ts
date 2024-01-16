@@ -5,7 +5,11 @@ import {
   LDEventSenderResult,
   LDEventType,
 } from '../../api/subsystem';
-import { isHttpRecoverable, LDUnexpectedResponseError } from '../../errors';
+import {
+  isHttpLocallyRecoverable,
+  isHttpRecoverable,
+  LDUnexpectedResponseError,
+} from '../../errors';
 import { ClientContext } from '../../options';
 import { defaultHeaders, httpErrorMessage, sleep } from '../../utils';
 
@@ -80,7 +84,15 @@ export default class EventSender implements LDEventSender {
       );
 
       if (!isHttpRecoverable(status)) {
-        tryRes.status = LDDeliveryStatus.FailedAndMustShutDown;
+        // If the HTTP request isn't recoverable. Meaning if we made the same request it
+        // would not recover, then we check if a different request could recover.
+        // If a different request could not recover, then we shutdown. If a different request could
+        // recover, then we just don't retry this specific request.
+        if (!isHttpLocallyRecoverable(status)) {
+          tryRes.status = LDDeliveryStatus.FailedAndMustShutDown;
+        } else {
+          tryRes.status = LDDeliveryStatus.Failed;
+        }
         tryRes.error = error;
         return tryRes;
       }

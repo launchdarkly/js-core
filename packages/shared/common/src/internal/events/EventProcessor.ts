@@ -168,7 +168,9 @@ export default class EventProcessor implements LDEventProcessor {
 
   async flush(): Promise<void> {
     if (this.shutdown) {
-      throw new LDInvalidSDKKeyError('Events cannot be posted because SDK key is invalid');
+      throw new LDInvalidSDKKeyError(
+        'Events cannot be posted because a permanent error has been encountered.',
+      );
     }
 
     const eventsToFlush = this.queue;
