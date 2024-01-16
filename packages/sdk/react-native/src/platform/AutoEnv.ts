@@ -1,4 +1,4 @@
-import { Platform, PlatformAndroidStatic, PlatformIOSStatic } from 'react-native';
+import { Platform, PlatformAndroidStatic } from 'react-native';
 
 import type { LDAutoEnv, LDAutoEnvCommon } from '@launchdarkly/js-sdk-common';
 
@@ -19,10 +19,6 @@ const common: LDAutoEnvCommon = {
 const autoEnv: LDAutoEnv = {
   ld_application: {
     ...common,
-    // id: getBundleId(),
-    // name: getApplicationName(),
-    // version: getVersion(),
-    // versionName: getReadableVersion(),
     locale,
   },
   ld_device: {
