@@ -43,7 +43,7 @@ function encodeKey(key: string): string {
  * @param context
  * @returns true if the context is a single kind context.
  */
-function isSingleKind(context: LDContext): context is LDSingleKindContext {
+export function isSingleKind(context: LDContext): context is LDSingleKindContext {
   if ('kind' in context) {
     return TypeValidators.String.is(context.kind) && context.kind !== 'multi';
   }
@@ -55,7 +55,7 @@ function isSingleKind(context: LDContext): context is LDSingleKindContext {
  * @param context
  * @returns true if it is a multi-kind context.
  */
-function isMultiKind(context: LDContext): context is LDMultiKindContext {
+export function isMultiKind(context: LDContext): context is LDMultiKindContext {
   if ('kind' in context) {
     return TypeValidators.String.is(context.kind) && context.kind === 'multi';
   }
@@ -67,7 +67,7 @@ function isMultiKind(context: LDContext): context is LDMultiKindContext {
  * @param context
  * @returns true if it is a legacy user context.
  */
-function isLegacyUser(context: LDContext): context is LDUser {
+export function isLegacyUser(context: LDContext): context is LDUser {
   return !('kind' in context) || context.kind === null || context.kind === undefined;
 }
 

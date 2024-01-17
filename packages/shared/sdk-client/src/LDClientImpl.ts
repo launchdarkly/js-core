@@ -25,6 +25,7 @@ import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 import { calculateFlagChanges } from './utils';
+import { ensureKey } from './utils/contextUtils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
@@ -232,6 +233,8 @@ export default class LDClientImpl implements LDClient {
 
   // TODO: implement secure mode
   async identify(context: LDContext, _hash?: string): Promise<void> {
+    await ensureKey(context, this.platform);
+
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
       const error = new Error('Context was unspecified or had no key');
