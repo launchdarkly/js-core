@@ -2,6 +2,14 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.1.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.1.0...js-sdk-common-v2.1.1) (2024-01-16)
+
+
+### Bug Fixes
+
+* remove type modifiers on imports for better TS compatibility ([#346](https://github.com/launchdarkly/js-core/issues/346)) ([3506349](https://github.com/launchdarkly/js-core/commit/3506349512f2288ba9bc2b2bd79d6ed38fd3684c))
+* Treat 413 HTTP status as recoverable for events. ([#348](https://github.com/launchdarkly/js-core/issues/348)) ([4a6d4c3](https://github.com/launchdarkly/js-core/commit/4a6d4c3cae25e4993a798d0fd315b51ef607d727))
+
 ## [2.1.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.0.0...js-sdk-common-v2.1.0) (2023-11-14)
 
 
