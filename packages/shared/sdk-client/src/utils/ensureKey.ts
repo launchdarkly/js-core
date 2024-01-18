@@ -8,8 +8,7 @@ import type {
 } from '@launchdarkly/js-sdk-common';
 import { isLegacyUser, isMultiKind, isSingleKind } from '@launchdarkly/js-sdk-common';
 
-// Namespace string is ripped from the Flutter SDK.
-export const ns = (s: string) => `LaunchDarkly_GeneratedContextKeys_${s}`;
+export const ns = (s: string) => `LaunchDarkly_AnonKeys_${s}`;
 
 export const getOrGenerateKey = async (kind: string, { crypto, storage }: Platform) => {
   const nsKind = ns(kind);
