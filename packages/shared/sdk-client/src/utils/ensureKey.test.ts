@@ -1,7 +1,7 @@
 import type { LDContext, LDContextCommon, LDUser } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
-import ensureKey, { getOrGenerateKey, ns } from './ensureKey';
+import ensureKey, { addNamespace, getOrGenerateKey } from './ensureKey';
 
 const { crypto, storage } = basicPlatform;
 describe('ensureKey', () => {
@@ -13,8 +13,8 @@ describe('ensureKey', () => {
     jest.resetAllMocks();
   });
 
-  test('ns', async () => {
-    const nsKey = await ns('org');
+  test('addNamespace', async () => {
+    const nsKey = await addNamespace('org');
     expect(nsKey).toEqual('LaunchDarkly_AnonKeys_org');
   });
 

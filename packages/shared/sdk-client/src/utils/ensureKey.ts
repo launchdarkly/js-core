@@ -8,10 +8,10 @@ import type {
 } from '@launchdarkly/js-sdk-common';
 import { isLegacyUser, isMultiKind, isSingleKind } from '@launchdarkly/js-sdk-common';
 
-export const ns = (s: string) => `LaunchDarkly_AnonKeys_${s}`;
+export const addNamespace = (s: string) => `LaunchDarkly_AnonKeys_${s}`;
 
 export const getOrGenerateKey = async (kind: string, { crypto, storage }: Platform) => {
-  const nsKind = ns(kind);
+  const nsKind = addNamespace(kind);
   let contextKey = await storage?.get(nsKind);
 
   if (!contextKey) {
