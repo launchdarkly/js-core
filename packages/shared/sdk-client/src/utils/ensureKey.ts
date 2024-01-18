@@ -26,7 +26,7 @@ export const getOrGenerateKey = async (kind: string, { crypto, storage }: Platfo
 /**
  * This is the root ensureKey function. All other ensureKey functions reduce to this.
  *
- * ensureKeyCommon // private root function
+ * - ensureKeyCommon // private root function
  *  - ensureKeySingle
  *  - ensureKeyMulti
  *  - ensureKeyLegacy

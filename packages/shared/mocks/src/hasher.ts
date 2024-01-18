@@ -16,10 +16,10 @@ export const crypto: Crypto = {
     // Not used for this test.
     throw new Error(`Function not implemented.${algorithm}${key}`);
   },
-  randomUUID(): string {
+  randomUUID: jest.fn(() => {
     counter += 1;
     // Will provide a unique value for tests.
     // Very much not a UUID of course.
     return `${counter}`;
-  },
+  }),
 };
