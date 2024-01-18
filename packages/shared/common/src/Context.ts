@@ -1,8 +1,14 @@
 /* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line max-classes-per-file
-import { LDContextCommon, LDMultiKindContext, LDSingleKindContext, LDUser } from './api/context';
-import { LDContext } from './api/context/LDContext';
+import type {
+  LDContext,
+  LDContextCommon,
+  LDMultiKindContext,
+  LDSingleKindContext,
+  LDUser,
+} from './api';
 import AttributeReference from './AttributeReference';
+import { isLegacyUser, isMultiKind, isSingleKind } from './internal/context';
 import { TypeValidators } from './validators';
 
 // The general strategy for the context is to transform the passed in context
@@ -36,39 +42,6 @@ function encodeKey(key: string): string {
     return key.replace(/%/g, '%25').replace(/:/g, '%3A');
   }
   return key;
-}
-
-/**
- * Check if a context is a single kind context.
- * @param context
- * @returns true if the context is a single kind context.
- */
-export function isSingleKind(context: LDContext): context is LDSingleKindContext {
-  if ('kind' in context) {
-    return TypeValidators.String.is(context.kind) && context.kind !== 'multi';
-  }
-  return false;
-}
-
-/**
- * Check if a context is a multi-kind context.
- * @param context
- * @returns true if it is a multi-kind context.
- */
-export function isMultiKind(context: LDContext): context is LDMultiKindContext {
-  if ('kind' in context) {
-    return TypeValidators.String.is(context.kind) && context.kind === 'multi';
-  }
-  return false;
-}
-
-/**
- * Check if a context is a legacy user context.
- * @param context
- * @returns true if it is a legacy user context.
- */
-export function isLegacyUser(context: LDContext): context is LDUser {
-  return !('kind' in context) || context.kind === null || context.kind === undefined;
 }
 
 /**

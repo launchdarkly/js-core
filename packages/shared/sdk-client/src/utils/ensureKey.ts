@@ -6,7 +6,9 @@ import type {
   LDUser,
   Platform,
 } from '@launchdarkly/js-sdk-common';
-import { isLegacyUser, isMultiKind, isSingleKind } from '@launchdarkly/js-sdk-common';
+import { internal } from '@launchdarkly/js-sdk-common';
+
+const { isLegacyUser, isMultiKind, isSingleKind } = internal;
 
 export const addNamespace = (s: string) => `LaunchDarkly_AnonKeys_${s}`;
 
