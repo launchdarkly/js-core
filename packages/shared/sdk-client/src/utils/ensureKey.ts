@@ -1,19 +1,17 @@
-import {
-  Crypto,
+import type {
   LDContext,
   LDContextCommon,
   LDMultiKindContext,
   LDSingleKindContext,
   LDUser,
   Platform,
-  Storage,
 } from '@launchdarkly/js-sdk-common';
-import { isLegacyUser, isMultiKind, isSingleKind } from '@launchdarkly/js-sdk-common/dist/Context';
+import { isLegacyUser, isMultiKind, isSingleKind } from '@launchdarkly/js-sdk-common';
 
 // Namespace string is ripped from the Flutter SDK.
 export const ns = (s: string) => `LaunchDarkly_GeneratedContextKeys_${s}`;
 
-export const getOrGenerateKey = async (kind: string, crypto: Crypto, storage?: Storage) => {
+export const getOrGenerateKey = async (kind: string, { crypto, storage }: Platform) => {
   const nsKind = ns(kind);
   let contextKey = await storage?.get(nsKind);
 
@@ -25,20 +23,33 @@ export const getOrGenerateKey = async (kind: string, crypto: Crypto, storage?: S
   return contextKey;
 };
 
-const ensureKeyCommon = async (kind: string, c: LDContextCommon, { crypto, storage }: Platform) => {
+/**
+ * This is the root ensureKey function. All other ensureKey functions reduce to this.
+ *
+ * ensureKeyCommon // private root function
+ *  - ensureKeySingle
+ *  - ensureKeyMulti
+ *  - ensureKeyLegacy
+ *    - ensureKey // exported for external use
+ *
+ * @param kind The LDContext kind
+ * @param c The LDContext object
+ * @param platform Platform containing crypto and storage needed for storing and querying keys.
+ */
+const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platform) => {
   const { anonymous, key } = c;
 
   if (anonymous && !key) {
     // eslint-disable-next-line no-param-reassign
-    c.key = await getOrGenerateKey(kind, crypto, storage);
+    c.key = await getOrGenerateKey(kind, platform);
   }
 };
 
-export const ensureKeySingle = async (c: LDSingleKindContext, platform: Platform) => {
+const ensureKeySingle = async (c: LDSingleKindContext, platform: Platform) => {
   await ensureKeyCommon(c.kind, c, platform);
 };
 
-export const ensureKeyMulti = async (multiContext: LDMultiKindContext, platform: Platform) => {
+const ensureKeyMulti = async (multiContext: LDMultiKindContext, platform: Platform) => {
   const { kind, ...singleContexts } = multiContext;
 
   return Promise.all(
@@ -48,11 +59,11 @@ export const ensureKeyMulti = async (multiContext: LDMultiKindContext, platform:
   );
 };
 
-export const ensureKeyLegacy = async (c: LDUser, platform: Platform) => {
+const ensureKeyLegacy = async (c: LDUser, platform: Platform) => {
   await ensureKeyCommon('user', c, platform);
 };
 
-export const ensureKey = async (c: LDContext, platform: Platform) => {
+const ensureKey = async (c: LDContext, platform: Platform) => {
   if (isSingleKind(c)) {
     await ensureKeySingle(c, platform);
   }
@@ -65,3 +76,5 @@ export const ensureKey = async (c: LDContext, platform: Platform) => {
     await ensureKeyLegacy(c, platform);
   }
 };
+
+export default ensureKey;
