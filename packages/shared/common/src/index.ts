@@ -7,7 +7,6 @@ export * from './validators';
 export * from './logging';
 export * from './options';
 export * from './utils';
-export * from './Context';
 
 export * as internal from './internal';
 export * from './errors';
