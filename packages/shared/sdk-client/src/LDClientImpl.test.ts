@@ -19,6 +19,7 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
   };
 });
 
+const { crypto } = basicPlatform;
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 let ldc: LDClientImpl;
@@ -28,6 +29,7 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
+    crypto.randomUUID.mockReturnValueOnce('random1');
 
     ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
     jest
@@ -128,6 +130,20 @@ describe('sdk-client object', () => {
     const all = ldc.allFlags();
 
     expect(carContext).toEqual(c);
+    expect(all).toMatchObject({
+      'dev-test-flag': false,
+    });
+  });
+
+  test('identify anonymous', async () => {
+    defaultPutResponse['dev-test-flag'].value = false;
+    const carContext: LDContext = { kind: 'car', anonymous: true, key: '' };
+
+    await ldc.identify(carContext);
+    const c = ldc.getContext();
+    const all = ldc.allFlags();
+
+    expect(c!.key).toEqual('random1');
     expect(all).toMatchObject({
       'dev-test-flag': false,
     });
