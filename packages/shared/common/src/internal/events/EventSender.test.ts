@@ -196,6 +196,23 @@ describe('given an event sender', () => {
     });
   });
 
+  it('given a result for too large of a payload', async () => {
+    setupMockFetch(413);
+    eventSenderResult = await eventSender.sendEventData(
+      LDEventType.AnalyticsEvents,
+      testEventData1,
+    );
+
+    const errorMessage = `Received error 413 for event posting - giving up permanently`;
+
+    const { status, error } = eventSenderResult;
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(status).toEqual(LDDeliveryStatus.Failed);
+    expect(error.name).toEqual('LaunchDarklyUnexpectedResponseError');
+    expect(error.message).toEqual(errorMessage);
+  });
+
   describe.each([401, 403])('given unrecoverable errors', (responseStatusCode) => {
     beforeEach(async () => {
       setupMockFetch(responseStatusCode);

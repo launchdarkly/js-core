@@ -16,6 +16,7 @@ describe('given a diagnostics manager', () => {
   });
 
   beforeEach(() => {
+    basicPlatform.crypto.randomUUID.mockReturnValueOnce('random1').mockReturnValueOnce('random2');
     manager = new DiagnosticsManager('my-sdk-key', basicPlatform, { test1: 'value1' });
   });
 

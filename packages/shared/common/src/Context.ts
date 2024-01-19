@@ -1,3 +1,5 @@
+/* eslint-disable no-underscore-dangle */
+// eslint-disable-next-line max-classes-per-file
 import type {
   LDContext,
   LDContextCommon,
@@ -6,6 +8,7 @@ import type {
   LDUser,
 } from './api';
 import AttributeReference from './AttributeReference';
+import { isLegacyUser, isMultiKind, isSingleKind } from './internal/context';
 import { TypeValidators } from './validators';
 
 // The general strategy for the context is to transform the passed in context
@@ -42,39 +45,6 @@ function encodeKey(key: string): string {
 }
 
 /**
- * Check if a context is a single kind context.
- * @param context
- * @returns true if the context is a single kind context.
- */
-function isSingleKind(context: LDContext): context is LDSingleKindContext {
-  if ('kind' in context) {
-    return TypeValidators.String.is(context.kind) && context.kind !== 'multi';
-  }
-  return false;
-}
-
-/**
- * Check if a context is a multi-kind context.
- * @param context
- * @returns true if it is a multi-kind context.
- */
-function isMultiKind(context: LDContext): context is LDMultiKindContext {
-  if ('kind' in context) {
-    return TypeValidators.String.is(context.kind) && context.kind === 'multi';
-  }
-  return false;
-}
-
-/**
- * Check if a context is a legacy user context.
- * @param context
- * @returns true if it is a legacy user context.
- */
-function isLegacyUser(context: LDContext): context is LDUser {
-  return !('kind' in context) || context.kind === null || context.kind === undefined;
-}
-
-/**
  * Check if the given value is a LDContextCommon.
  * @param kindOrContext
  * @returns true if it is an LDContextCommon
@@ -87,9 +57,9 @@ function isLegacyUser(context: LDContext): context is LDUser {
  * that as well.
  */
 function isContextCommon(
-  kindOrContext: 'multi' | LDContextCommon | undefined,
+  kindOrContext: 'multi' | LDContextCommon,
 ): kindOrContext is LDContextCommon {
-  return !!kindOrContext && TypeValidators.Object.is(kindOrContext);
+  return kindOrContext && TypeValidators.Object.is(kindOrContext);
 }
 
 /**
@@ -269,7 +239,6 @@ export default class Context {
       const singleContext = context[kind];
       if (isContextCommon(singleContext)) {
         acc[kind] = singleContext;
-        // eslint-disable-next-line no-underscore-dangle
         privateAttributes[kind] = processPrivateAttributes(singleContext._meta?.privateAttributes);
       } else {
         // No early break isn't the most efficient, but it is an error condition.
@@ -292,9 +261,6 @@ export default class Context {
       const kind = kinds[0];
       const created = new Context(true, kind);
       created.context = contexts[kind];
-
-      // TODO: make application and device first class citizens
-      // created.autoEnv = reconstructAutoEnv(context);
       created.privateAttributeReferences = privateAttributes;
       created.isUser = kind === 'user';
       return created;
@@ -302,8 +268,8 @@ export default class Context {
 
     const created = new Context(true, context.kind);
     created.contexts = contexts;
-    // created.autoEnv = reconstructAutoEnv(context);
     created.privateAttributeReferences = privateAttributes;
+
     created.isMulti = true;
     return created;
   }
@@ -327,7 +293,6 @@ export default class Context {
     const created = new Context(true, kind);
     created.isUser = kind === 'user';
     created.context = context;
-    // created.autoEnv = reconstructAutoEnv(context);
     created.privateAttributeReferences = {
       [kind]: privateAttributeReferences,
     };
@@ -341,7 +306,6 @@ export default class Context {
       return Context.contextForError('user', 'The key for the context was not valid');
     }
     const created = new Context(true, 'user');
-    // created.autoEnv = reconstructAutoEnv(context);
     created.isUser = true;
     created.wasLegacy = true;
     created.context = legacyToSingleKind(context);
