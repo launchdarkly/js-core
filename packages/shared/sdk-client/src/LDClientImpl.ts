@@ -231,8 +231,8 @@ export default class LDClientImpl implements LDClient {
   }
 
   // TODO: implement secure mode
-  async identify(context: LDContext, _hash?: string): Promise<void> {
-    await ensureKey(context, this.platform);
+  async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
+    const context = await ensureKey(pristineContext, this.platform);
 
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {

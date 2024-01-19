@@ -1,4 +1,9 @@
-import type { LDContext, LDContextCommon, LDUser } from '@launchdarkly/js-sdk-common';
+import type {
+  LDContext,
+  LDContextCommon,
+  LDMultiKindContext,
+  LDUser,
+} from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
 import ensureKey, { addNamespace, getOrGenerateKey } from './ensureKey';
@@ -14,7 +19,7 @@ describe('ensureKey', () => {
   });
 
   test('addNamespace', async () => {
-    const nsKey = await addNamespace('org');
+    const nsKey = addNamespace('org');
     expect(nsKey).toEqual('LaunchDarkly_AnonKeys_org');
   });
 
@@ -42,17 +47,17 @@ describe('ensureKey', () => {
 
   test('ensureKey should not override anonymous key if specified', async () => {
     const context: LDContext = { kind: 'org', anonymous: true, key: 'Testy Pizza' };
-    await ensureKey(context, basicPlatform);
+    const c = await ensureKey(context, basicPlatform);
 
-    expect(context.key).toEqual('Testy Pizza');
+    expect(c.key).toEqual('Testy Pizza');
   });
 
   test('ensureKey non-anonymous single context should be unchanged', async () => {
     const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
-    await ensureKey(context, basicPlatform);
+    const c = await ensureKey(context, basicPlatform);
 
-    expect(context.key).toEqual('Testy Pizza');
-    expect(context.anonymous).toBeFalsy();
+    expect(c.key).toEqual('Testy Pizza');
+    expect(c.anonymous).toBeFalsy();
   });
 
   test('ensureKey non-anonymous contexts in multi should be unchanged', async () => {
@@ -62,16 +67,16 @@ describe('ensureKey', () => {
       org: { key: 'orgKey' },
     };
 
-    await ensureKey(context, basicPlatform);
+    const c = (await ensureKey(context, basicPlatform)) as LDMultiKindContext;
 
-    expect((context.user as LDContextCommon).key).toEqual('userKey');
-    expect((context.org as LDContextCommon).key).toEqual('orgKey');
+    expect((c.user as LDContextCommon).key).toEqual('userKey');
+    expect((c.org as LDContextCommon).key).toEqual('orgKey');
   });
 
   test('ensureKey should create key for single anonymous context', async () => {
     const context: LDContext = { kind: 'org', anonymous: true, key: '' };
-    await ensureKey(context, basicPlatform);
-    expect(context.key).toEqual('random1');
+    const c = await ensureKey(context, basicPlatform);
+    expect(c.key).toEqual('random1');
   });
 
   test('ensureKey should create key for an anonymous context in multi', async () => {
@@ -81,10 +86,10 @@ describe('ensureKey', () => {
       org: { key: 'orgKey' },
     };
 
-    await ensureKey(context, basicPlatform);
+    const c = (await ensureKey(context, basicPlatform)) as LDMultiKindContext;
 
-    expect((context.user as LDContextCommon).key).toEqual('random1');
-    expect((context.org as LDContextCommon).key).toEqual('orgKey');
+    expect((c.user as LDContextCommon).key).toEqual('random1');
+    expect((c.org as LDContextCommon).key).toEqual('orgKey');
   });
 
   test('ensureKey should create key for all anonymous contexts in multi', async () => {
@@ -94,10 +99,10 @@ describe('ensureKey', () => {
       org: { anonymous: true, key: '' },
     };
 
-    await ensureKey(context, basicPlatform);
+    const c = (await ensureKey(context, basicPlatform)) as LDMultiKindContext;
 
-    expect((context.user as LDContextCommon).key).toEqual('random1');
-    expect((context.org as LDContextCommon).key).toEqual('random2');
+    expect((c.user as LDContextCommon).key).toEqual('random1');
+    expect((c.org as LDContextCommon).key).toEqual('random2');
   });
 
   test('ensureKey should create key for anonymous legacy user', async () => {
@@ -105,7 +110,7 @@ describe('ensureKey', () => {
       anonymous: true,
       key: '',
     };
-    await ensureKey(context, basicPlatform);
-    expect(context.key).toEqual('random1');
+    const c = await ensureKey(context, basicPlatform);
+    expect(c.key).toEqual('random1');
   });
 });

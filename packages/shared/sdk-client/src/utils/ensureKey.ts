@@ -1,4 +1,6 @@
-import type {
+import {
+  clone,
+  internal,
   LDContext,
   LDContextCommon,
   LDMultiKindContext,
@@ -6,7 +8,6 @@ import type {
   LDUser,
   Platform,
 } from '@launchdarkly/js-sdk-common';
-import { internal } from '@launchdarkly/js-sdk-common';
 
 const { isLegacyUser, isMultiKind, isSingleKind } = internal;
 
@@ -41,6 +42,7 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
   const { anonymous, key } = c;
 
   if (anonymous && !key) {
+    // This mutates a cloned copy of the original context from ensureyKey so this is safe.
     // eslint-disable-next-line no-param-reassign
     c.key = await getOrGenerateKey(kind, platform);
   }
@@ -64,18 +66,22 @@ const ensureKeyLegacy = async (c: LDUser, platform: Platform) => {
   await ensureKeyCommon('user', c, platform);
 };
 
-const ensureKey = async (c: LDContext, platform: Platform) => {
-  if (isSingleKind(c)) {
-    await ensureKeySingle(c, platform);
+const ensureKey = async (context: LDContext, platform: Platform) => {
+  const cloned = clone<LDContext>(context);
+
+  if (isSingleKind(cloned)) {
+    await ensureKeySingle(cloned as LDSingleKindContext, platform);
   }
 
-  if (isMultiKind(c)) {
-    await ensureKeyMulti(c, platform);
+  if (isMultiKind(cloned)) {
+    await ensureKeyMulti(cloned as LDMultiKindContext, platform);
   }
 
-  if (isLegacyUser(c)) {
-    await ensureKeyLegacy(c, platform);
+  if (isLegacyUser(cloned)) {
+    await ensureKeyLegacy(cloned as LDUser, platform);
   }
+
+  return cloned;
 };
 
 export default ensureKey;
