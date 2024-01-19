@@ -32,6 +32,7 @@ app.get('/', (req, res) => {
       'event-sampling',
       'strongly-typed',
       'inline-context',
+      'anonymous-redaction',
     ],
   });
 });
