@@ -6,7 +6,6 @@ const jestConfig: JestConfigWithTsJest = {
   preset: 'react-native',
   testEnvironment: 'jsdom',
   transform: {
-    '^.+\\.jsx$': 'babel-jest',
     '^.+\\.tsx?$': [
       'ts-jest',
       {
@@ -14,8 +13,6 @@ const jestConfig: JestConfigWithTsJest = {
       },
     ],
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  transformIgnorePatterns: ['node_modules/(?!(react-native|@react-native)/)'],
   testPathIgnorePatterns: ['node_modules', 'example', 'dist'],
   setupFiles: ['./jestSetupFile.ts'],
 };
