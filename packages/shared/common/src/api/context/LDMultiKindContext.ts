@@ -1,5 +1,4 @@
-import type { LDApplication, LDDevice } from '../platform';
-import type { LDContextCommon } from './LDContextCommon';
+import { LDContextCommon } from './LDContextCommon';
 
 /**
  * A context which represents multiple kinds. Each kind having its own key and attributes.
@@ -38,17 +37,11 @@ export interface LDMultiKindContext {
    */
   kind: 'multi';
 
-  ld_application?: LDApplication;
-
-  ld_device?: LDDevice;
-
   /**
    * The contexts which compose this multi-kind context.
    *
-   * These should be of type LDContextCommon with these exceptions:
-   * "multi" is to allow for the top level "kind" attribute.
-   * "undefined" is to allow for the top level "ld_application" and ld_device
-   * attributes.
+   * These should be of type LDContextCommon. "multi" is to allow
+   * for the top level "kind" attribute.
    */
-  [attribute: string]: 'multi' | LDContextCommon | undefined;
+  [kind: string]: 'multi' | LDContextCommon;
 }

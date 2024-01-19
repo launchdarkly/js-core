@@ -25,6 +25,7 @@ import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 import { calculateFlagChanges, ensureKey } from './utils';
+import injectAutoEnv from './utils/injectAutoEnv';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
@@ -235,8 +236,8 @@ export default class LDClientImpl implements LDClient {
 
   // TODO: implement secure mode
   async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
-    // TODO: inject auto env into context
-    const context = await ensureKey(pristineContext, this.platform);
+    let context = await ensureKey(pristineContext, this.platform);
+    context = await injectAutoEnv(context, this.platform, this.config);
 
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
