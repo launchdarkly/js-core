@@ -2,6 +2,8 @@ import { type LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import ReactNativeLDClient from './ReactNativeLDClient';
 
+// TODO: fix broken tests due to transform error after importing PlatformAndroidStatic in autoEnv.ts
+
 describe('ReactNativeLDClient', () => {
   let ldc: ReactNativeLDClient;
 

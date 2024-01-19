@@ -2,7 +2,6 @@ import {
   ApplicationTags,
   createSafeLogger,
   internal,
-  LDAutoEnv,
   LDFlagSet,
   NumberWithMinimum,
   OptionMessages,

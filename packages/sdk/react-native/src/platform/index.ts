@@ -21,7 +21,7 @@ import type {
 import { name, version } from '../../package.json';
 import { btoa, uuidv4 } from '../polyfills';
 import RNEventSource from '../react-native-sse';
-import AutoEnv from './AutoEnv';
+import { ldApplication, ldDevice } from './autoEnv';
 import AsyncStorage from './ConditionalAsyncStorage';
 
 class PlatformRequests implements Requests {
@@ -44,19 +44,28 @@ class PlatformEncoding implements Encoding {
 }
 
 class PlatformInfo implements Info {
+  constructor(private readonly logger: LDLogger) {}
+
   platformData(): PlatformData {
-    return {
+    const data = {
       name: 'React Native',
-      autoEnv: AutoEnv,
+      ld_application: ldApplication,
+      ld_device: ldDevice,
     };
+
+    this.logger.debug(`platformData: ${JSON.stringify(data, null, 2)}`);
+    return data;
   }
 
   sdkData(): SdkData {
-    return {
+    const data = {
       name,
       version,
       userAgentBase: 'ReactNativeClient',
     };
+
+    this.logger.debug(`sdkData: ${JSON.stringify(data, null, 2)}`);
+    return data;
   }
 }
 
@@ -101,7 +110,7 @@ class PlatformStorage implements Storage {
 
 const createPlatform = (logger: LDLogger): Platform => ({
   crypto: new PlatformCrypto(),
-  info: new PlatformInfo(),
+  info: new PlatformInfo(logger),
   requests: new PlatformRequests(),
   encoding: new PlatformEncoding(),
   storage: new PlatformStorage(logger),

@@ -1,4 +1,4 @@
-import { LDAutoEnv } from '../context';
+import type { LDApplication, LDDevice } from './AutoEnv';
 
 /**
  * Information about the platform of the SDK and the environment it is executing.
@@ -36,9 +36,15 @@ export interface PlatformData {
 
   /**
    * Additional information about the executing environment. Should be populated
-   * when available. Not all platforms will make this data accessible.
+   * when available. Not all platforms will have this data.
    */
-  autoEnv?: LDAutoEnv;
+  ld_application?: LDApplication;
+
+  /**
+   * Device hardware information. Should be populated when available. Not all
+   * platforms will have this data.
+   */
+  ld_device?: LDDevice;
 }
 
 export interface SdkData {

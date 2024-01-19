@@ -1,5 +1,4 @@
 import type {
-  LDAutoEnv,
   LDContext,
   LDContextCommon,
   LDMultiKindContext,
@@ -178,10 +177,6 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   return singleKindContext;
 }
 
-function reconstructAutoEnv({ ld_application, ld_device }: LDContext) {
-  return { ld_application, ld_device };
-}
-
 /**
  * Container for a context/contexts. Because contexts come from external code
  * they must be thoroughly validated and then formed to comply with
@@ -209,8 +204,6 @@ export default class Context {
   public readonly valid: boolean;
 
   public readonly message?: string;
-
-  public autoEnv?: LDAutoEnv;
 
   static readonly userKind: string = DEFAULT_KIND;
 
@@ -299,7 +292,9 @@ export default class Context {
       const kind = kinds[0];
       const created = new Context(true, kind);
       created.context = contexts[kind];
-      created.autoEnv = reconstructAutoEnv(context);
+
+      // TODO: make application and device first class citizens
+      // created.autoEnv = reconstructAutoEnv(context);
       created.privateAttributeReferences = privateAttributes;
       created.isUser = kind === 'user';
       return created;
@@ -307,7 +302,7 @@ export default class Context {
 
     const created = new Context(true, context.kind);
     created.contexts = contexts;
-    created.autoEnv = reconstructAutoEnv(context);
+    // created.autoEnv = reconstructAutoEnv(context);
     created.privateAttributeReferences = privateAttributes;
     created.isMulti = true;
     return created;
@@ -332,7 +327,7 @@ export default class Context {
     const created = new Context(true, kind);
     created.isUser = kind === 'user';
     created.context = context;
-    created.autoEnv = reconstructAutoEnv(context);
+    // created.autoEnv = reconstructAutoEnv(context);
     created.privateAttributeReferences = {
       [kind]: privateAttributeReferences,
     };
@@ -346,7 +341,7 @@ export default class Context {
       return Context.contextForError('user', 'The key for the context was not valid');
     }
     const created = new Context(true, 'user');
-    created.autoEnv = reconstructAutoEnv(context);
+    // created.autoEnv = reconstructAutoEnv(context);
     created.isUser = true;
     created.wasLegacy = true;
     created.context = legacyToSingleKind(context);

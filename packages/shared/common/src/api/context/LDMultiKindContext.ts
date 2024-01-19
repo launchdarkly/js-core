@@ -1,5 +1,5 @@
-import { LDAutoEnv } from './LDAutoEnv';
-import { LDContextCommon } from './LDContextCommon';
+import type { LDApplication, LDDevice } from '../platform';
+import type { LDContextCommon } from './LDContextCommon';
 
 /**
  * A context which represents multiple kinds. Each kind having its own key and attributes.
@@ -32,11 +32,15 @@ import { LDContextCommon } from './LDContextCommon';
  * The above multi-context contains both an 'org' and a 'user'. Each with their own key,
  * attributes, and _meta attributes.
  */
-export interface LDMultiKindContext extends LDAutoEnv {
+export interface LDMultiKindContext {
   /**
    * The kind of the context.
    */
   kind: 'multi';
+
+  ld_application?: LDApplication;
+
+  ld_device?: LDDevice;
 
   /**
    * The contexts which compose this multi-kind context.

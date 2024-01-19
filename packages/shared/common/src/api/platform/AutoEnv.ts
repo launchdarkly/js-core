@@ -1,4 +1,4 @@
-export interface LDAutoEnvCommon {
+interface AutoEnvCommon {
   /**
    * Unique key for the context kind.
    */
@@ -10,7 +10,7 @@ export interface LDAutoEnvCommon {
   envAttributesVersion: string;
 }
 
-export interface LDApplication extends LDAutoEnvCommon {
+export interface LDApplication extends AutoEnvCommon {
   /**
    * Unique identifier of the application.
    */
@@ -21,7 +21,7 @@ export interface LDApplication extends LDAutoEnvCommon {
   locale?: string;
 }
 
-export interface LDDevice extends LDAutoEnvCommon {
+export interface LDDevice extends AutoEnvCommon {
   manufacturer?: string;
   model?: string;
   storageBytes?: string;
@@ -34,9 +34,4 @@ export interface LDDevice extends LDAutoEnvCommon {
     name: string;
     version: string;
   };
-}
-
-export interface LDAutoEnv {
-  ld_application?: LDApplication;
-  ld_device?: LDDevice;
 }
