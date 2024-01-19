@@ -18,7 +18,7 @@
     "strict": true,
     "stripInternal": true,
     "target": "ES2017",
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "exclude": ["**/*.test.ts*", "dist", "node_modules", "__tests__", "example"]
 }
