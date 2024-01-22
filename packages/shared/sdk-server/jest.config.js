@@ -4,5 +4,5 @@ module.exports = {
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   collectCoverageFrom: ['src/**/*.ts'],
-  setupFilesAfterEnv: ['./jest-setupFilesAfterEnv.ts'],
+  setupFilesAfterEnv: ['@launchdarkly/private-js-mocks/setup'],
 };

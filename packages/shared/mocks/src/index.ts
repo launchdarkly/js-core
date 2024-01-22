@@ -4,7 +4,6 @@ import { hasher } from './crypto';
 import logger from './logger';
 import mockFetch from './mockFetch';
 import { basicPlatform } from './platform';
-import setupMocks from './setupMocks';
 import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
 
 export {
@@ -16,5 +15,4 @@ export {
   ContextDeduplicator,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
-  setupMocks,
 };
