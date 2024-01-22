@@ -93,10 +93,6 @@ describe('Bucketer.test', () => {
       expect(hasher.update).toHaveBeenCalledWith(expected);
       expect(hasher.digest).toHaveBeenCalledWith('hex');
     });
-
-    afterEach(() => {
-      jest.resetAllMocks();
-    });
   });
 
   describe.each([
@@ -126,8 +122,8 @@ describe('Bucketer.test', () => {
       );
       expect(bucket).toEqual(0);
       expect(hadContext).toEqual(kind === 'org');
-      expect(hasher.update).toBeCalledTimes(0);
-      expect(hasher.digest).toBeCalledTimes(0);
+      expect(hasher.update).toHaveBeenCalledTimes(0);
+      expect(hasher.digest).toHaveBeenCalledTimes(0);
     });
   });
 });
