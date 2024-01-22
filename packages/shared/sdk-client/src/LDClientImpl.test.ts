@@ -1,5 +1,10 @@
 import { clone, LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
+import {
+  basicPlatform,
+  hasher,
+  logger,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
@@ -44,7 +49,7 @@ describe('sdk-client object', () => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     basicPlatform.crypto.randomUUID.mockReturnValue('random1');
-    basicPlatform.crypto.hasher.digest.mockReturnValue('digested1');
+    hasher.digest.mockReturnValue('digested1');
 
     ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
     jest
