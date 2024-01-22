@@ -19,9 +19,23 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
   };
 });
 
-const { crypto } = basicPlatform;
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
+const autoEnv = {
+  ld_application: {
+    key: 'digested1',
+    envAttributesVersion: '1.0',
+    id: 'com.testapp.ld',
+    name: 'LDApplication.TestApp',
+    version: '1.1.1',
+  },
+  ld_device: {
+    key: 'random1',
+    envAttributesVersion: '1.0',
+    manufacturer: 'apple',
+    os: { family: 'apple', name: 'iOS', version: '17.17' },
+  },
+};
 let ldc: LDClientImpl;
 let defaultPutResponse: Flags;
 
@@ -29,7 +43,8 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
-    crypto.randomUUID.mockReturnValueOnce('random1');
+    basicPlatform.crypto.randomUUID.mockReturnValue('random1');
+    basicPlatform.crypto.hasher.digest.mockReturnValue('digested1');
 
     ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
     jest
@@ -129,7 +144,11 @@ describe('sdk-client object', () => {
     const c = ldc.getContext();
     const all = ldc.allFlags();
 
-    expect(carContext).toEqual(c);
+    expect(c).toEqual({
+      kind: 'multi',
+      car: { key: 'mazda-cx7' },
+      ...autoEnv,
+    });
     expect(all).toMatchObject({
       'dev-test-flag': false,
     });
@@ -143,18 +162,21 @@ describe('sdk-client object', () => {
     const c = ldc.getContext();
     const all = ldc.allFlags();
 
-    expect(c!.key).toEqual('random1');
+    expect(c).toEqual({
+      kind: 'multi',
+      car: { anonymous: true, key: 'random1' },
+      ...autoEnv,
+    });
     expect(all).toMatchObject({
       'dev-test-flag': false,
     });
   });
 
   test('identify error invalid context', async () => {
-    // @ts-ignore
-    const carContext: LDContext = { kind: 'car', key: undefined };
+    const carContext: LDContext = { kind: 'car', key: '' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrowError(/no key/);
-    expect(logger.error).toBeCalledTimes(1);
+    await expect(ldc.identify(carContext)).rejects.toThrow(/no key/);
+    expect(logger.error).toHaveBeenCalledTimes(1);
     expect(ldc.getContext()).toBeUndefined();
   });
 
@@ -166,7 +188,7 @@ describe('sdk-client object', () => {
       code: 401,
       message: 'test-error',
     });
-    expect(logger.error).toBeCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledTimes(1);
     expect(ldc.getContext()).toBeUndefined();
   });
 

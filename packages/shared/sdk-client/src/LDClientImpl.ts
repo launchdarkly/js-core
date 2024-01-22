@@ -24,8 +24,7 @@ import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import { DeleteFlag, Flags, PatchFlag } from './types';
-import { calculateFlagChanges, ensureKey } from './utils';
-import injectAutoEnv from './utils/injectAutoEnv';
+import { calculateFlagChanges, ensureKey, injectAutoEnv } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;

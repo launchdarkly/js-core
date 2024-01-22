@@ -6,9 +6,17 @@ import { Rollout } from '../../src/evaluation/data/Rollout';
 import Evaluator from '../../src/evaluation/Evaluator';
 import noQueries from './mocks/noQueries';
 
-const evaluator = new Evaluator(mocks.basicPlatform, noQueries);
-
 describe('given a flag with a rollout', () => {
+  let evaluator: Evaluator;
+
+  beforeEach(() => {
+    evaluator = new Evaluator(mocks.basicPlatform, noQueries);
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
   const seed = 61;
   const flagKey = 'flagkey';
   const salt = 'salt';

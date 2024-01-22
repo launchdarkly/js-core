@@ -6,7 +6,8 @@ import type {
 } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
-import ensureKey, { addNamespace, getOrGenerateKey } from './ensureKey';
+import ensureKey from './ensureKey';
+import { addNamespace, getOrGenerateKey } from './getOrGenerateKey';
 
 const { crypto, storage } = basicPlatform;
 describe('ensureKey', () => {

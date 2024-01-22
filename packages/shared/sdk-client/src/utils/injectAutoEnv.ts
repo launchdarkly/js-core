@@ -16,16 +16,24 @@ import { getOrGenerateKey } from './getOrGenerateKey';
 
 const { isLegacyUser, isSingleKind } = internal;
 
-const toMulti = (c: LDSingleKindContext) => {
+export const toMulti = (c: LDSingleKindContext) => {
   const { kind, ...contextCommon } = c;
 
   return {
-    kind,
-    [c.kind]: contextCommon,
+    kind: 'multi',
+    [kind]: contextCommon,
   };
 };
 
-const injectApplication = ({ crypto, info }: Platform, config: Configuration) => {
+/**
+ * Clones the LDApplication object and populates the key, id and version fields.
+ *
+ * @param crypto
+ * @param info
+ * @param config
+ * @return An LDApplication object with populated key, id and version.
+ */
+export const injectApplication = ({ crypto, info }: Platform, config: Configuration) => {
   const { name, version, wrapperName, wrapperVersion } = info.sdkData();
   const { ld_application } = info.platformData();
 
@@ -41,15 +49,29 @@ const injectApplication = ({ crypto, info }: Platform, config: Configuration) =>
   return ldApplication;
 };
 
-const injectDevice = async (platform: Platform) => {
-  const ldDevice = clone<LDDevice>(platform.info.platformData().ld_device);
-  if (ldDevice && !ldDevice.key) {
-    ldDevice.key = await getOrGenerateKey('ld_device', platform);
-  }
+/**
+ * Clones the LDDevice object and populates the key field.
+ *
+ * @param platform
+ * @return An LDDevice object with populated key.
+ */
+export const injectDevice = async (platform: Platform) => {
+  const { ld_device, os } = platform.info.platformData();
+  const ldDevice = clone<LDDevice>(ld_device);
+
+  // TODO: check for empty string
+  ldDevice.os.name = os?.name ?? ldDevice.os.name;
+  ldDevice.os.version = os?.version ?? ldDevice.os.version;
+  ldDevice.key = await getOrGenerateKey('ld_device', platform);
+
   return ldDevice;
 };
 
-const injectAutoEnv = async (context: LDContext, platform: Platform, config: Configuration) => {
+export const injectAutoEnv = async (
+  context: LDContext,
+  platform: Platform,
+  config: Configuration,
+) => {
   // LDUser is not supported for auto env reporting
   if (isLegacyUser(context)) {
     return context as LDUser;
@@ -66,5 +88,3 @@ const injectAutoEnv = async (context: LDContext, platform: Platform, config: Con
     ld_device: await injectDevice(platform),
   } as LDMultiKindContext;
 };
-
-export default injectAutoEnv;

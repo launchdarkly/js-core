@@ -1,6 +1,6 @@
 import type { Encoding, Info, Platform, PlatformData, Requests, SdkData, Storage } from '@common';
 
-import { crypto } from './hasher';
+import { setupCrypto } from './crypto';
 
 const encoding: Encoding = {
   btoa: (s: string) => Buffer.from(s).toString('base64'),
@@ -10,13 +10,26 @@ const info: Info = {
   platformData(): PlatformData {
     return {
       os: {
-        name: 'An OS',
-        version: '1.0.1',
-        arch: 'An Arch',
+        name: 'iOS',
+        version: '17.17',
+        arch: 'ARM64',
       },
       name: 'The SDK Name',
       additional: {
         nodeVersion: '42',
+      },
+      ld_application: {
+        key: '',
+        envAttributesVersion: '1.0',
+        id: 'com.testapp.ld',
+        name: 'LDApplication.TestApp',
+        version: '1.1.1',
+      },
+      ld_device: {
+        key: '',
+        envAttributesVersion: '1.0',
+        os: { name: 'ios', version: '17', family: 'apple' },
+        manufacturer: 'apple',
       },
     };
   },
@@ -42,12 +55,14 @@ const storage: Storage = {
   clear: jest.fn(),
 };
 
-const basicPlatform: Platform = {
-  encoding,
-  info,
-  crypto,
-  requests,
-  storage,
+// eslint-disable-next-line import/no-mutable-exports
+export let basicPlatform: Platform;
+export const setupBasicPlatform = () => {
+  basicPlatform = {
+    encoding,
+    info,
+    crypto: setupCrypto(),
+    requests,
+    storage,
+  };
 };
-
-export default basicPlatform;

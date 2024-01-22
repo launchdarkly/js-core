@@ -1,6 +1,6 @@
 import type { ClientContext } from '@common';
 
-import basicPlatform from './platform';
+import { basicPlatform } from './platform';
 
 const clientContext: ClientContext = {
   basicConfiguration: {
