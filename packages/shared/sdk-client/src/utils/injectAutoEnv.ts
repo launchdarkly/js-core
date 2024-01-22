@@ -38,9 +38,9 @@ export const injectApplication = ({ crypto, info }: Platform, config: Configurat
   const { ld_application } = info.platformData();
 
   const ldApplication = clone<LDApplication>(ld_application);
-  ldApplication.id = config.application?.id ?? ldApplication.id ?? name ?? wrapperName;
+  ldApplication.id = config.application?.id || ldApplication.id || name || wrapperName;
   ldApplication.version =
-    config.application?.version ?? ldApplication.version ?? version ?? wrapperVersion;
+    config.application?.version || ldApplication.version || version || wrapperVersion;
 
   const hasher = crypto.createHash('sha256');
   hasher.update(ldApplication.id!);
@@ -60,8 +60,8 @@ export const injectDevice = async (platform: Platform) => {
   const ldDevice = clone<LDDevice>(ld_device);
 
   // TODO: check for empty string
-  ldDevice.os.name = os?.name ?? ldDevice.os.name;
-  ldDevice.os.version = os?.version ?? ldDevice.os.version;
+  ldDevice.os.name = os?.name || ldDevice.os.name;
+  ldDevice.os.version = os?.version || ldDevice.os.version;
   ldDevice.key = await getOrGenerateKey('ld_device', platform);
 
   return ldDevice;
