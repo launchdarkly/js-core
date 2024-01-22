@@ -2,13 +2,13 @@
 // We cannot fully validate bucketing in the common tests. Platform implementations
 // should contain a consistency test.
 // Testing here can only validate we are providing correct inputs to the hashing algorithm.
-import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, type CryptoWithHash } from '@launchdarkly/private-js-mocks';
+import { AttributeReference, Context, Crypto, LDContext } from '@launchdarkly/js-sdk-common';
+import { basicPlatform, hasher } from '@launchdarkly/private-js-mocks';
 
 import Bucketer from '../../src/evaluation/Bucketer';
 
 describe('Bucketer.test', () => {
-  let crypto: CryptoWithHash;
+  let crypto: Crypto;
 
   beforeEach(() => {
     crypto = basicPlatform.crypto;
@@ -90,8 +90,8 @@ describe('Bucketer.test', () => {
       // in the expected way.
       expect(bucket).toBeCloseTo(0.07111111110140983, 5);
       expect(hadContext).toBeTruthy();
-      expect(crypto.hasher.update).toHaveBeenCalledWith(expected);
-      expect(crypto.hasher.digest).toHaveBeenCalledWith('hex');
+      expect(hasher.update).toHaveBeenCalledWith(expected);
+      expect(hasher.digest).toHaveBeenCalledWith('hex');
     });
 
     afterEach(() => {
@@ -126,8 +126,8 @@ describe('Bucketer.test', () => {
       );
       expect(bucket).toEqual(0);
       expect(hadContext).toEqual(kind === 'org');
-      expect(crypto.hasher.update).toBeCalledTimes(0);
-      expect(crypto.hasher.digest).toBeCalledTimes(0);
+      expect(hasher.update).toBeCalledTimes(0);
+      expect(hasher.digest).toBeCalledTimes(0);
     });
   });
 });

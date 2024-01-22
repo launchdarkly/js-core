@@ -1,19 +1,16 @@
-import type { Crypto, Hasher } from '@common';
+import type { Hasher } from '@common';
 
-// HACK: inject hasher so we can easily test calls to update & digest
-export type CryptoWithHash = Crypto & { hasher: Hasher };
 // eslint-disable-next-line import/no-mutable-exports
-export let crypto: CryptoWithHash;
+export let hasher: Hasher;
 
 export const setupCrypto = () => {
   let counter = 0;
-  const hasher: Hasher = {
+  hasher = {
     update: jest.fn(),
     digest: jest.fn(() => '1234567890123456'),
   };
 
-  crypto = {
-    hasher,
+  return {
     createHash: jest.fn(() => hasher),
     createHmac: jest.fn(),
     randomUUID: jest.fn(() => {
@@ -23,6 +20,4 @@ export const setupCrypto = () => {
       return `${counter}`;
     }),
   };
-
-  return crypto;
 };
