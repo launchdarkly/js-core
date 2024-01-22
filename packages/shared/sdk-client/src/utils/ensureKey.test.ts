@@ -41,8 +41,8 @@ describe('ensureKey', () => {
   });
 
   test('getOrGenerateKey existing key', async () => {
-    (storage.get as jest.Mock).mockImplementation((nsKind: string) =>
-      nsKind === 'LaunchDarkly_AnonKeys_org' ? 'random1' : undefined,
+    (storage.get as jest.Mock).mockImplementation((namespacedKind: string) =>
+      namespacedKind === 'LaunchDarkly_AnonKeys_org' ? 'random1' : undefined,
     );
 
     const key = await getOrGenerateKey('org', basicPlatform);
