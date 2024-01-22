@@ -76,7 +76,11 @@ describe('sdk-client storage', () => {
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
 
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
+    ldc = new LDClientImpl(testSdkKey, basicPlatform, {
+      autoEnvAttributes: false,
+      logger,
+      sendEvents: false,
+    });
 
     // @ts-ignore
     emitter = ldc.emitter;

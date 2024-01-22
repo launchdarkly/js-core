@@ -16,9 +16,10 @@ describe('fetchFeatures', () => {
   };
 
   let config: Configuration;
-  const platformFetch = basicPlatform.requests.fetch as jest.Mock;
+  let platformFetch: jest.Mock;
 
   beforeEach(() => {
+    platformFetch = basicPlatform.requests.fetch as jest.Mock;
     mockFetch(mockResponse);
     config = new Configuration();
   });
@@ -30,7 +31,7 @@ describe('fetchFeatures', () => {
   test('get', async () => {
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
-    expect(platformFetch).toBeCalledWith(
+    expect(platformFetch).toHaveBeenCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9',
       {
         method: 'GET',
@@ -45,7 +46,7 @@ describe('fetchFeatures', () => {
     config = new Configuration({ withReasons: true });
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
-    expect(platformFetch).toBeCalledWith(
+    expect(platformFetch).toHaveBeenCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?withReasons=true',
       {
         method: 'GET',
@@ -59,7 +60,7 @@ describe('fetchFeatures', () => {
     config = new Configuration({ hash: 'test-hash', withReasons: false });
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
-    expect(platformFetch).toBeCalledWith(
+    expect(platformFetch).toHaveBeenCalledWith(
       'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?h=test-hash',
       {
         method: 'GET',

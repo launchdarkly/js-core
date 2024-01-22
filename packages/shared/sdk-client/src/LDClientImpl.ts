@@ -74,9 +74,6 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
-
-    // TODO: add logic to process auto env attributes correctly
-    // this.autoEnv = platform.info.platformData().autoEnv;
   }
 
   allFlags(): LDFlagSet {
@@ -236,7 +233,10 @@ export default class LDClientImpl implements LDClient {
   // TODO: implement secure mode
   async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
     let context = await ensureKey(pristineContext, this.platform);
-    context = await injectAutoEnv(context, this.platform, this.config);
+
+    if (this.config.autoEnvAttributes) {
+      context = await injectAutoEnv(context, this.platform, this.config);
+    }
 
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {

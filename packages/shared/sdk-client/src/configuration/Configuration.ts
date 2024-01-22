@@ -28,6 +28,7 @@ export default class Configuration {
   public readonly flushInterval = 2;
   public readonly streamInitialReconnectDelay = 1;
 
+  public readonly autoEnvAttributes = true;
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
   public readonly withReasons = false;
