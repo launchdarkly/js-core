@@ -159,6 +159,25 @@ describe('sdk-client object', () => {
     });
   });
 
+  test('identify success without auto env', async () => {
+    defaultPutResponse['dev-test-flag'].value = false;
+    const carContext: LDContext = { kind: 'car', key: 'mazda-cx7' };
+    ldc = new LDClientImpl(testSdkKey, basicPlatform, {
+      autoEnvAttributes: false,
+      logger,
+      sendEvents: false,
+    });
+
+    await ldc.identify(carContext);
+    const c = ldc.getContext();
+    const all = ldc.allFlags();
+
+    expect(c).toEqual(carContext);
+    expect(all).toMatchObject({
+      'dev-test-flag': false,
+    });
+  });
+
   test('identify anonymous', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', anonymous: true, key: '' };

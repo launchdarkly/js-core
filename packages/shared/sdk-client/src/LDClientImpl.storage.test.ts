@@ -5,6 +5,7 @@ import LDEmitter from './api/LDEmitter';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { DeleteFlag, Flag, Flags, PatchFlag } from './types';
+import { toMulti } from './utils/addAutoEnv';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -105,6 +106,52 @@ describe('sdk-client storage', () => {
       3,
       'error',
       context,
+      expect.objectContaining({ message: 'test-error' }),
+    );
+    expect(allFlags).toEqual({
+      'dev-test-flag': true,
+      'easter-i-tunes-special': false,
+      'easter-specials': 'no specials',
+      fdsafdsafdsafdsa: true,
+      'log-level': 'warn',
+      'moonshot-demo': true,
+      test1: 's1',
+      'this-is-a-test': true,
+    });
+  });
+
+  test('initialize from storage succeeds with auto env', async () => {
+    ldc = new LDClientImpl(testSdkKey, basicPlatform, {
+      logger,
+      sendEvents: false,
+    });
+    // @ts-ignore
+    emitter = ldc.emitter;
+    jest.spyOn(emitter as LDEmitter, 'emit');
+
+    const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
+
+    expect(basicPlatform.storage.get).toHaveBeenLastCalledWith(
+      expect.stringMatching(/org:Testy Pizza$/),
+    );
+
+    // 'change' should not have been emitted
+    expect(emitter.emit).toHaveBeenCalledTimes(3);
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      1,
+      'identifying',
+      expect.objectContaining(toMulti(context)),
+    );
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      2,
+      'change',
+      expect.objectContaining(toMulti(context)),
+      defaultFlagKeys,
+    );
+    expect(emitter.emit).toHaveBeenNthCalledWith(
+      3,
+      'error',
+      expect.objectContaining(toMulti(context)),
       expect.objectContaining({ message: 'test-error' }),
     );
     expect(allFlags).toEqual({
