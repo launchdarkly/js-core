@@ -10,6 +10,7 @@
     "packages/sdk/server-node",
     "packages/sdk/cloudflare",
     "packages/sdk/cloudflare/example",
+    "packages/sdk/react",
     "packages/sdk/react-native",
     "packages/sdk/vercel",
     "packages/sdk/akamai-base",
