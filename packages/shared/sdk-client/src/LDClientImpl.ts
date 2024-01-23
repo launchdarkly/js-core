@@ -24,7 +24,7 @@ import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import { DeleteFlag, Flags, PatchFlag } from './types';
-import { calculateFlagChanges, ensureKey, injectAutoEnv } from './utils';
+import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
@@ -235,7 +235,7 @@ export default class LDClientImpl implements LDClient {
     let context = await ensureKey(pristineContext, this.platform);
 
     if (this.config.autoEnvAttributes) {
-      context = await injectAutoEnv(context, this.platform, this.config);
+      context = await addAutoEnv(context, this.platform, this.config);
     }
 
     const checkedContext = Context.fromLDContext(context);

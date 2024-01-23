@@ -2,9 +2,9 @@ import { Info, type LDContext, LDUser } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
-import { injectApplication, injectAutoEnv, injectDevice, toMulti } from './injectAutoEnv';
+import { addApplicationInfo, addAutoEnv, addDeviceInfo, toMulti } from './addAutoEnv';
 
-describe('injectAutoEnv', () => {
+describe('addAutoEnv', () => {
   let crypto: Crypto;
   let info: Info;
 
@@ -30,7 +30,7 @@ describe('injectAutoEnv', () => {
     const config = new Configuration();
     // const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
     const user: LDUser = { key: 'legacy-user-key', name: 'bob' };
-    const result = await injectAutoEnv(user, basicPlatform, config);
+    const result = await addAutoEnv(user, basicPlatform, config);
 
     expect(result).toEqual(user);
   });
@@ -39,7 +39,7 @@ describe('injectAutoEnv', () => {
     const config = new Configuration();
     const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
 
-    const result = await injectAutoEnv(context, basicPlatform, config);
+    const result = await addAutoEnv(context, basicPlatform, config);
 
     expect(result).toEqual({
       kind: 'multi',
@@ -67,7 +67,7 @@ describe('injectAutoEnv', () => {
       user: { key: 'test-user-key-1', name: 'bob' },
       org: { key: 'test-org-key-1', name: 'Best company' },
     };
-    const result = await injectAutoEnv(context, basicPlatform, config);
+    const result = await addAutoEnv(context, basicPlatform, config);
 
     expect(result).toEqual({
       kind: 'multi',
@@ -89,11 +89,11 @@ describe('injectAutoEnv', () => {
     });
   });
 
-  test('injectApplication with config application id, version', () => {
+  test('addApplicationInfo with config application id, version', () => {
     const config = new Configuration({
       application: { id: 'com.from-config.ld', version: '2.2.2' },
     });
-    const ldApplication = injectApplication(basicPlatform, config);
+    const ldApplication = addApplicationInfo(basicPlatform, config);
 
     expect(ldApplication).toEqual({
       envAttributesVersion: '1.0',
@@ -104,9 +104,9 @@ describe('injectAutoEnv', () => {
     });
   });
 
-  test('injectApplication with auto env application id, name, version', () => {
+  test('addApplicationInfo with auto env application id, name, version', () => {
     const config = new Configuration();
-    const ldApplication = injectApplication(basicPlatform, config);
+    const ldApplication = addApplicationInfo(basicPlatform, config);
 
     expect(ldApplication).toEqual({
       envAttributesVersion: '1.0',
@@ -117,12 +117,12 @@ describe('injectAutoEnv', () => {
     });
   });
 
-  test('injectApplication with sdk data name, version', () => {
-    const platformData = basicPlatform.info.platformData();
+  test('addApplicationInfo with sdk data name, version', () => {
+    const platformData = info.platformData();
     delete platformData.ld_application;
     delete platformData.ld_device;
-    basicPlatform.info.platformData = jest.fn().mockReturnValueOnce(platformData);
-    basicPlatform.info.sdkData = jest.fn().mockReturnValueOnce({
+    info.platformData = jest.fn().mockReturnValueOnce(platformData);
+    info.sdkData = jest.fn().mockReturnValueOnce({
       name: 'Name from sdk data',
       version: '3.3.3',
       userAgentBase: 'TestUserAgent',
@@ -131,7 +131,7 @@ describe('injectAutoEnv', () => {
     });
 
     const config = new Configuration();
-    const ldApplication = injectApplication(basicPlatform, config);
+    const ldApplication = addApplicationInfo(basicPlatform, config);
 
     expect(ldApplication).toEqual({
       envAttributesVersion: '1.0',
@@ -142,12 +142,12 @@ describe('injectAutoEnv', () => {
     });
   });
 
-  test('injectApplication with sdkData wrapperName, wrapperVersion', () => {
-    const platformData = basicPlatform.info.platformData();
+  test('addApplicationInfo with sdkData wrapperName, wrapperVersion', () => {
+    const platformData = info.platformData();
     delete platformData.ld_application;
     delete platformData.ld_device;
-    basicPlatform.info.platformData = jest.fn().mockReturnValueOnce(platformData);
-    basicPlatform.info.sdkData = jest.fn().mockReturnValueOnce({
+    info.platformData = jest.fn().mockReturnValueOnce(platformData);
+    info.sdkData = jest.fn().mockReturnValueOnce({
       name: '',
       version: '',
       userAgentBase: 'TestUserAgent',
@@ -156,7 +156,7 @@ describe('injectAutoEnv', () => {
     });
 
     const config = new Configuration();
-    const ldApplication = injectApplication(basicPlatform, config);
+    const ldApplication = addApplicationInfo(basicPlatform, config);
 
     expect(ldApplication).toEqual({
       envAttributesVersion: '1.0',
@@ -167,8 +167,8 @@ describe('injectAutoEnv', () => {
     });
   });
 
-  test('injectDevice with platformData os name, version', async () => {
-    const ldDevice = await injectDevice(basicPlatform);
+  test('addDeviceInfo with platformData os name, version', async () => {
+    const ldDevice = await addDeviceInfo(basicPlatform);
 
     expect(ldDevice).toEqual({
       envAttributesVersion: '1.0',
@@ -182,12 +182,12 @@ describe('injectAutoEnv', () => {
     });
   });
 
-  test('injectDevice with auto env os name, version', async () => {
-    const platformData = basicPlatform.info.platformData();
+  test('addDeviceInfo with auto env os name, version', async () => {
+    const platformData = info.platformData();
     delete platformData.os;
-    basicPlatform.info.platformData = jest.fn().mockReturnValueOnce(platformData);
+    info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-    const ldDevice = await injectDevice(basicPlatform);
+    const ldDevice = await addDeviceInfo(basicPlatform);
 
     expect(ldDevice).toEqual({
       envAttributesVersion: '1.0',
@@ -201,12 +201,12 @@ describe('injectAutoEnv', () => {
     });
   });
 
-  test('injectDevice with auto env os name, version when platform data are empty strings', async () => {
-    const platformData = basicPlatform.info.platformData();
+  test('addDeviceInfo with auto env os name, version when platform data are empty strings', async () => {
+    const platformData = info.platformData();
     platformData.os = { name: '', version: '' };
-    basicPlatform.info.platformData = jest.fn().mockReturnValueOnce(platformData);
+    info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-    const ldDevice = await injectDevice(basicPlatform);
+    const ldDevice = await addDeviceInfo(basicPlatform);
 
     expect(ldDevice).toEqual({
       envAttributesVersion: '1.0',

@@ -34,7 +34,7 @@ export const toMulti = (c: LDSingleKindContext) => {
  * @param config
  * @return An LDApplication object with populated key, id and version.
  */
-export const injectApplication = ({ crypto, info }: Platform, config: Configuration) => {
+export const addApplicationInfo = ({ crypto, info }: Platform, config: Configuration) => {
   const { name, version, wrapperName, wrapperVersion } = info.sdkData();
   const { ld_application } = info.platformData();
 
@@ -59,7 +59,7 @@ export const injectApplication = ({ crypto, info }: Platform, config: Configurat
  * @param platform
  * @return An LDDevice object with populated key.
  */
-export const injectDevice = async (platform: Platform) => {
+export const addDeviceInfo = async (platform: Platform) => {
   const { ld_device, os } = platform.info.platformData();
   const ldDevice = clone<LDDevice>(ld_device);
 
@@ -71,11 +71,7 @@ export const injectDevice = async (platform: Platform) => {
   return ldDevice;
 };
 
-export const injectAutoEnv = async (
-  context: LDContext,
-  platform: Platform,
-  config: Configuration,
-) => {
+export const addAutoEnv = async (context: LDContext, platform: Platform, config: Configuration) => {
   // LDUser is not supported for auto env reporting
   if (isLegacyUser(context)) {
     return context as LDUser;
@@ -85,7 +81,7 @@ export const injectAutoEnv = async (
 
   return {
     ...multi,
-    ld_application: injectApplication(platform, config),
-    ld_device: await injectDevice(platform),
+    ld_application: addApplicationInfo(platform, config),
+    ld_device: await addDeviceInfo(platform),
   } as LDMultiKindContext;
 };
