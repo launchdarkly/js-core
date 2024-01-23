@@ -6,9 +6,9 @@ const encoding: Encoding = {
   btoa: (s: string) => Buffer.from(s).toString('base64'),
 };
 
-const info: Info = {
-  platformData(): PlatformData {
-    return {
+const setupInfo = () => ({
+  platformData: jest.fn(
+    (): PlatformData => ({
       os: {
         name: 'iOS',
         version: '17.17',
@@ -31,18 +31,18 @@ const info: Info = {
         os: { name: 'ios', version: '17', family: 'apple' },
         manufacturer: 'apple',
       },
-    };
-  },
-  sdkData(): SdkData {
-    return {
+    }),
+  ),
+  sdkData: jest.fn(
+    (): SdkData => ({
       name: 'An SDK',
       version: '2.0.2',
       userAgentBase: 'TestUserAgent',
       wrapperName: 'Rapper',
       wrapperVersion: '1.2.3',
-    };
-  },
-};
+    }),
+  ),
+});
 
 const requests: Requests = {
   fetch: jest.fn(),
@@ -60,7 +60,7 @@ export let basicPlatform: Platform;
 export const setupBasicPlatform = () => {
   basicPlatform = {
     encoding,
-    info,
+    info: setupInfo(),
     crypto: setupCrypto(),
     requests,
     storage,
