@@ -71,11 +71,11 @@ class PlatformInfo implements Info {
 
 class PlatformCrypto implements Crypto {
   createHash(_algorithm: string): Hasher {
-    throw new Error('not implemented');
+    throw new Error('createHash not implemented');
   }
 
   createHmac(_algorithm: string, _key: string): Hmac {
-    throw new Error('not implemented');
+    throw new Error('createHmac not implemented');
   }
 
   randomUUID(): string {
