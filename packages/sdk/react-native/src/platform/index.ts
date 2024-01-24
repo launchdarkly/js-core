@@ -1,12 +1,9 @@
 /* eslint-disable max-classes-per-file */
 import type {
-  Crypto,
   Encoding,
   EventName,
   EventSource,
   EventSourceInitDict,
-  Hasher,
-  Hmac,
   Info,
   LDLogger,
   Options,
@@ -19,10 +16,11 @@ import type {
 } from '@launchdarkly/js-client-sdk-common';
 
 import { name, version } from '../../package.json';
-import { btoa, uuidv4 } from '../polyfills';
-import RNEventSource from '../react-native-sse';
+import RNEventSource from '../fromExternal/react-native-sse';
+import { btoa } from '../polyfills';
 import { ldApplication, ldDevice } from './autoEnv';
 import AsyncStorage from './ConditionalAsyncStorage';
+import PlatformCrypto from './crypto';
 
 class PlatformRequests implements Requests {
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
@@ -66,20 +64,6 @@ class PlatformInfo implements Info {
 
     this.logger.debug(`sdkData: ${JSON.stringify(data, null, 2)}`);
     return data;
-  }
-}
-
-class PlatformCrypto implements Crypto {
-  createHash(_algorithm: string): Hasher {
-    throw new Error('createHash not implemented');
-  }
-
-  createHmac(_algorithm: string, _key: string): Hmac {
-    throw new Error('createHmac not implemented');
-  }
-
-  randomUUID(): string {
-    return uuidv4();
   }
 }
 

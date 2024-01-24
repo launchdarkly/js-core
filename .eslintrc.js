@@ -8,7 +8,7 @@ module.exports = {
     project: './tsconfig.eslint.json',
   },
   plugins: ['@typescript-eslint', 'prettier'],
-  ignorePatterns: ['**/dist/**', '**/vercel/examples/**'],
+  ignorePatterns: ['**/dist/**', '**/vercel/examples/**', '**/fromExternal/**'],
   rules: {
     '@typescript-eslint/lines-between-class-members': 'off',
     '@typescript-eslint/no-unused-vars': [
