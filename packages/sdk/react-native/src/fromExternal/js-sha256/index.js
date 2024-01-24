@@ -67,9 +67,6 @@
 
   var createMethod = function (is224) {
     var method = createOutputMethod('hex', is224);
-    if (NODE_JS) {
-      method = nodeWrap(method, is224);
-    }
     method.create = function () {
       return new Sha256(is224);
     };
@@ -81,37 +78,6 @@
       method[type] = createOutputMethod(type, is224);
     }
     return method;
-  };
-
-  var nodeWrap = function (method, is224) {
-    var crypto = require('crypto');
-    var Buffer = require('buffer').Buffer;
-    var algorithm = is224 ? 'sha224' : 'sha256';
-    var bufferFrom;
-    if (Buffer.from && !root.JS_SHA256_NO_BUFFER_FROM) {
-      bufferFrom = Buffer.from;
-    } else {
-      bufferFrom = function (message) {
-        return new Buffer(message);
-      };
-    }
-    var nodeMethod = function (message) {
-      if (typeof message === 'string') {
-        return crypto.createHash(algorithm).update(message, 'utf8').digest('hex');
-      } else {
-        if (message === null || message === undefined) {
-          throw new Error(ERROR);
-        } else if (message.constructor === ArrayBuffer) {
-          message = new Uint8Array(message);
-        }
-      }
-      if (Array.isArray(message) || ArrayBuffer.isView(message) || message.constructor === Buffer) {
-        return crypto.createHash(algorithm).update(bufferFrom(message)).digest('hex');
-      } else {
-        return method(message);
-      }
-    };
-    return nodeMethod;
   };
 
   var createHmacOutputMethod = function (outputType, is224) {

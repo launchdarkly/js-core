@@ -1,3 +1,5 @@
+import { algo as CryptoAlgo } from 'crypto-js';
+
 import { Hasher as LDHasher } from '@launchdarkly/js-client-sdk-common';
 
 import { Hasher, sha256 } from '../../fromExternal/js-sha256';
@@ -8,11 +10,13 @@ export default class PlatformHasher implements LDHasher {
   private hasher: Hasher;
 
   constructor(algorithm: SupportedHashAlgorithm, hmacKey?: string) {
-    if (algorithm === 'sha256') {
-      this.hasher = hmacKey ? sha256.hmac.create(hmacKey) : sha256.create();
+    switch (algorithm) {
+      case 'sha256':
+        this.hasher = hmacKey ? sha256.hmac.create(hmacKey) : sha256.create();
+        break;
+      default:
+        throw new Error(`Unsupported hash algorithm: ${algorithm}. Only sha256 is supported.`);
     }
-
-    throw new Error('Unsupported hash algorithm. Only sha256 is supported.');
   }
 
   digest(encoding: SupportedOutputEncoding): string {
