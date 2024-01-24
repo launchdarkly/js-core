@@ -18,7 +18,16 @@
     "strict": true,
     "stripInternal": true,
     "target": "ES2017",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "allowJs": true
   },
-  "exclude": ["**/*.test.ts*", "dist", "node_modules", "__tests__", "example"]
+  "exclude": [
+    "jest.config.ts",
+    "jestSetupFile.ts",
+    "**/*.test.ts*",
+    "dist",
+    "node_modules",
+    "__tests__",
+    "example"
+  ]
 }
