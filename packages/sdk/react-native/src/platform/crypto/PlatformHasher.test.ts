@@ -28,7 +28,8 @@ describe('PlatformHasher', () => {
   test('unsupported hash algorithm', () => {
     expect(() => {
       // @ts-ignore
-      new PlatformHasher('sha1');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const h = new PlatformHasher('sha1');
     }).toThrow(/unsupported/i);
   });
 
@@ -37,7 +38,7 @@ describe('PlatformHasher', () => {
       const h = new PlatformHasher('sha256');
       h.update('test-app-id');
       // @ts-ignore
-      const output = h.digest('base122');
+      h.digest('base122');
     }).toThrow(/unsupported/i);
   });
 
