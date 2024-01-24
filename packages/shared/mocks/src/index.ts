@@ -1,4 +1,4 @@
-import clientContext from './clientContext';
+import { clientContext } from './clientContext';
 import ContextDeduplicator from './contextDeduplicator';
 import { hasher } from './crypto';
 import logger from './logger';
