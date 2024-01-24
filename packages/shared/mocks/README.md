@@ -44,13 +44,18 @@ import { basicPlatform, hasher } from '@launchdarkly/private-js-mocks';
 
 // DOES NOT WORK: crypto is undefined because basicPlatform must be inside a test
 // because it's setup by the package in beforeEach.
-// const { crypto } = basicPlatform; // DON'T DO THIS
+const { crypto } = basicPlatform; // DON'T DO THIS
 
 describe('button', () => {
+  // DOES NOT WORK: again must be inside an actual test. At the test suite,
+  // level, beforeEach has not been run.
+  const { crypto } = basicPlatform; // DON'T DO THIS
+
+  // DO THIS
   let crypto: Crypto;
 
   beforeEach(() => {
-    // WORKS: basicPlatform has been setup by the package
+    // WORKS: basicPlatform has been setup by the package.
     crypto = basicPlatform.crypto; // DO THIS
   });
 
