@@ -58,9 +58,9 @@ describe('given a diagnostics manager', () => {
     const { platform } = manager.createInitEvent();
     expect(platform).toEqual({
       name: 'The SDK Name',
-      osName: 'An OS',
-      osVersion: '1.0.1',
-      osArch: 'An Arch',
+      osName: 'iOS',
+      osVersion: '17.17',
+      osArch: 'ARM64',
       nodeVersion: '42',
     });
   });
