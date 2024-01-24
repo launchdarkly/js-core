@@ -30,9 +30,11 @@ module.exports = {
 ## Usage
 
 > [!IMPORTANT]  
-> basicPlatform must be used inside a test because it's setup before each test.
+> basicPlatform and clientContext must be used inside a test because it's setup before each test.
 
 - `basicPlatform`: a concrete but basic implementation of [Platform](https://github.com/launchdarkly/js-core/blob/main/packages/shared/common/src/api/platform/Platform.ts). This is setup beforeEach so it must be used inside a test.
+
+- `clientContext`: ClientContext object including `basicPlatform` above. This is setup beforeEach so it must be used inside a test as well.
 
 - `hasher`: a Hasher object returned by `Crypto.createHash`. All functions in this object are jest mocks. This is exported
   separately as a top level export because `Crypto` does not expose this publicly and we want to respect that.
@@ -40,23 +42,39 @@ module.exports = {
 ## Example
 
 ```tsx
-import { basicPlatform, hasher } from '@launchdarkly/private-js-mocks';
+import { basicPlatform, clientContext, hasher } from '@launchdarkly/private-js-mocks';
 
 // DOES NOT WORK: crypto is undefined because basicPlatform must be inside a test
 // because it's setup by the package in beforeEach.
-const { crypto } = basicPlatform; // DON'T DO THIS
+const { crypto } = basicPlatform; // DON'T DO THIS HERE
+
+// DOES NOT WORK: clientContext must be used inside a test. Otherwise all properties
+// of it will be undefined.
+const {
+  basicConfiguration: { serviceEndpoints, tags },
+  platform: { info },
+} = clientContext; // DON'T DO THIS HERE
 
 describe('button', () => {
   // DOES NOT WORK: again must be inside an actual test. At the test suite,
   // level, beforeEach has not been run.
-  const { crypto } = basicPlatform; // DON'T DO THIS
+  const { crypto } = basicPlatform; // DON'T DO THIS HERE
 
   // DO THIS
   let crypto: Crypto;
+  let info: Info;
+  let serviceEndpoints: ServiceEndpoints;
+  let tags: ApplicationTags;
 
   beforeEach(() => {
-    // WORKS: basicPlatform has been setup by the package.
-    crypto = basicPlatform.crypto; // DO THIS
+    // WORKS: basicPlatform and clientContext have been setup by the package.
+    ({ crypto, info } = basicPlatform);
+
+    // WORKS
+    ({
+      basicConfiguration: { serviceEndpoints, tags },
+      platform: { info },
+    } = clientContext);
   });
 
   afterEach(() => {
@@ -71,7 +89,12 @@ describe('button', () => {
     const [bucket, hadContext] = bucketer.bucket();
 
     // assert
+    // WORKS
     expect(crypto.createHash).toHaveBeenCalled();
+
+    // WORKS: alternatively you can just use the full path to access the properties
+    // of basicPlatform
+    expect(basicPlatform.crypto.createHash).toHaveBeenCalled();
 
     // GOTCHA: hasher is a separte import from crypto to respect
     // the public Crypto interface.

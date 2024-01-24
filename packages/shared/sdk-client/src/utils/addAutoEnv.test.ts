@@ -9,9 +9,7 @@ describe('addAutoEnv', () => {
   let info: Info;
 
   beforeEach(() => {
-    crypto = basicPlatform.crypto;
-    info = basicPlatform.info;
-
+    ({ crypto, info } = basicPlatform);
     (crypto.randomUUID as jest.Mock).mockResolvedValue('test-device-key-1');
   });
 
