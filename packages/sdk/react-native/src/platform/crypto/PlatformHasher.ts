@@ -1,5 +1,3 @@
-import { algo as CryptoAlgo } from 'crypto-js';
-
 import { Hasher as LDHasher } from '@launchdarkly/js-client-sdk-common';
 
 import { Hasher, sha256 } from '../../fromExternal/js-sha256';
@@ -26,7 +24,9 @@ export default class PlatformHasher implements LDHasher {
       case 'hex':
         return this.hasher.hex();
       default:
-        throw new Error('unsupported output encoding. Only base64 and hex are supported.');
+        throw new Error(
+          `unsupported output encoding: ${encoding}. Only base64 and hex are supported.`,
+        );
     }
   }
 
