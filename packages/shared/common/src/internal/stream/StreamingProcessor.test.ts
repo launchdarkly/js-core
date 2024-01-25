@@ -1,18 +1,15 @@
 import { basicPlatform, clientContext, logger } from '@launchdarkly/private-js-mocks';
 
-import { EventName, ProcessStreamResponse } from '../../api';
+import { EventName, Info, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
+import { ApplicationTags, ServiceEndpoints } from '../../options';
 import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import StreamingProcessor from './StreamingProcessor';
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
-const {
-  basicConfiguration: { serviceEndpoints, tags },
-  platform: { info },
-} = clientContext;
 const event = {
   data: {
     flags: {
@@ -33,6 +30,9 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
 });
 
 describe('given a stream processor with mock event source', () => {
+  let serviceEndpoints: ServiceEndpoints;
+  let tags: ApplicationTags;
+  let info: Info;
   let streamingProcessor: LDStreamProcessor;
   let diagnosticsManager: DiagnosticsManager;
   let listeners: Map<EventName, ProcessStreamResponse>;
@@ -53,8 +53,11 @@ describe('given a stream processor with mock event source', () => {
 
   beforeEach(() => {
     mockErrorHandler = jest.fn();
+    ({
+      basicConfiguration: { serviceEndpoints, tags },
+      platform: { info },
+    } = clientContext);
     clientContext.basicConfiguration.logger = logger;
-
     basicPlatform.requests = {
       createEventSource: jest.fn((streamUri: string, options: any) => {
         mockEventSource = createMockEventSource(streamUri, options);
