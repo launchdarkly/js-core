@@ -1,6 +1,6 @@
 import { Response } from '@common';
 
-import basicPlatform from './platform';
+import { basicPlatform } from './platform';
 
 const createMockResponse = (remoteJson: any, statusCode: number) => {
   const response: Response = {

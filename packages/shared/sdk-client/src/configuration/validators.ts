@@ -25,6 +25,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   flushInterval: TypeValidators.numberWithMin(2),
   streamInitialReconnectDelay: TypeValidators.numberWithMin(0),
 
+  autoEnvAttributes: TypeValidators.Boolean,
   allAttributesPrivate: TypeValidators.Boolean,
   diagnosticOptOut: TypeValidators.Boolean,
   withReasons: TypeValidators.Boolean,

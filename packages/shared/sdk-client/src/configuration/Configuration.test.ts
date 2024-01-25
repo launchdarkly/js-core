@@ -12,6 +12,7 @@ describe('Configuration', () => {
 
     expect(config).toMatchObject({
       allAttributesPrivate: false,
+      autoEnvAttributes: true,
       baseUri: 'https://sdk.launchdarkly.com',
       capacity: 100,
       diagnosticOptOut: false,

@@ -1,17 +1,25 @@
 import type {
+  Crypto,
   LDContext,
   LDContextCommon,
   LDMultiKindContext,
   LDUser,
+  Storage,
 } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
-import ensureKey, { addNamespace, getOrGenerateKey } from './ensureKey';
+import ensureKey from './ensureKey';
+import { addNamespace, getOrGenerateKey } from './getOrGenerateKey';
 
-const { crypto, storage } = basicPlatform;
 describe('ensureKey', () => {
+  let crypto: Crypto;
+  let storage: Storage;
+
   beforeEach(() => {
-    crypto.randomUUID.mockReturnValueOnce('random1').mockReturnValueOnce('random2');
+    crypto = basicPlatform.crypto;
+    storage = basicPlatform.storage;
+
+    (crypto.randomUUID as jest.Mock).mockReturnValueOnce('random1').mockReturnValueOnce('random2');
   });
 
   afterEach(() => {
@@ -33,8 +41,8 @@ describe('ensureKey', () => {
   });
 
   test('getOrGenerateKey existing key', async () => {
-    storage.get.mockImplementation((nsKind: string) =>
-      nsKind === 'LaunchDarkly_AnonKeys_org' ? 'random1' : undefined,
+    (storage.get as jest.Mock).mockImplementation((namespacedKind: string) =>
+      namespacedKind === 'LaunchDarkly_AnonKeys_org' ? 'random1' : undefined,
     );
 
     const key = await getOrGenerateKey('org', basicPlatform);

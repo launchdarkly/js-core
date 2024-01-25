@@ -24,7 +24,7 @@ import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import { DeleteFlag, Flags, PatchFlag } from './types';
-import { calculateFlagChanges, ensureKey } from './utils';
+import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
@@ -193,7 +193,7 @@ export default class LDClientImpl implements LDClient {
    */
   protected createStreamUriPath(_context: LDContext): string {
     throw new Error(
-      'createStreamUriPath not implemented. client sdks must implement createStreamUriPath for streamer to work',
+      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work',
     );
   }
 
@@ -232,7 +232,11 @@ export default class LDClientImpl implements LDClient {
 
   // TODO: implement secure mode
   async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
-    const context = await ensureKey(pristineContext, this.platform);
+    let context = await ensureKey(pristineContext, this.platform);
+
+    if (this.config.autoEnvAttributes) {
+      context = await addAutoEnv(context, this.platform, this.config);
+    }
 
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {

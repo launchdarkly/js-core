@@ -28,6 +28,7 @@ export default class Configuration {
   public readonly flushInterval = 2;
   public readonly streamInitialReconnectDelay = 1;
 
+  public readonly autoEnvAttributes = true;
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
   public readonly withReasons = false;
@@ -41,6 +42,8 @@ export default class Configuration {
   public readonly tags: ApplicationTags;
   public readonly application?: { id?: string; version?: string };
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
+
+  // TODO: implement requestHeaderTransform
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
   public readonly stream?: boolean;
   public readonly hash?: string;
