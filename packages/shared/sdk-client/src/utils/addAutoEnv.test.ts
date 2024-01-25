@@ -51,8 +51,8 @@ describe('addAutoEnv', () => {
       ld_device: {
         envAttributesVersion: '1.0',
         key: 'test-device-key-1',
-        manufacturer: 'apple',
-        os: { family: 'apple', name: 'iOS', version: '17.17' },
+        manufacturer: 'coconut',
+        os: { name: 'An OS', version: '1.0.1', family: 'orange' },
       },
       user: { key: 'test-user-key-1', name: 'bob' },
     });
@@ -81,8 +81,8 @@ describe('addAutoEnv', () => {
       ld_device: {
         envAttributesVersion: '1.0',
         key: 'test-device-key-1',
-        manufacturer: 'apple',
-        os: { family: 'apple', name: 'iOS', version: '17.17' },
+        manufacturer: 'coconut',
+        os: { name: 'An OS', version: '1.0.1', family: 'orange' },
       },
     });
   });
@@ -171,12 +171,8 @@ describe('addAutoEnv', () => {
     expect(ldDevice).toEqual({
       envAttributesVersion: '1.0',
       key: 'test-device-key-1',
-      manufacturer: 'apple',
-      os: {
-        family: 'apple',
-        name: 'iOS',
-        version: '17.17',
-      },
+      manufacturer: 'coconut',
+      os: { name: 'An OS', version: '1.0.1', family: 'orange' },
     });
   });
 
@@ -190,12 +186,8 @@ describe('addAutoEnv', () => {
     expect(ldDevice).toEqual({
       envAttributesVersion: '1.0',
       key: 'test-device-key-1',
-      manufacturer: 'apple',
-      os: {
-        family: 'apple',
-        name: 'ios',
-        version: '17',
-      },
+      manufacturer: 'coconut',
+      os: { name: 'Another OS', version: '99', family: 'orange' },
     });
   });
 
@@ -209,12 +201,8 @@ describe('addAutoEnv', () => {
     expect(ldDevice).toEqual({
       envAttributesVersion: '1.0',
       key: 'test-device-key-1',
-      manufacturer: 'apple',
-      os: {
-        family: 'apple',
-        name: 'ios',
-        version: '17',
-      },
+      manufacturer: 'coconut',
+      os: { name: 'Another OS', version: '99', family: 'orange' },
     });
   });
 });

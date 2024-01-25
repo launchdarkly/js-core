@@ -10,9 +10,9 @@ const setupInfo = () => ({
   platformData: jest.fn(
     (): PlatformData => ({
       os: {
-        name: 'iOS',
-        version: '17.17',
-        arch: 'ARM64',
+        name: 'An OS',
+        version: '1.0.1',
+        arch: 'An Arch',
       },
       name: 'The SDK Name',
       additional: {
@@ -28,8 +28,8 @@ const setupInfo = () => ({
       ld_device: {
         key: '',
         envAttributesVersion: '1.0',
-        os: { name: 'ios', version: '17', family: 'apple' },
-        manufacturer: 'apple',
+        os: { name: 'Another OS', version: '99', family: 'orange' },
+        manufacturer: 'coconut',
       },
     }),
   ),

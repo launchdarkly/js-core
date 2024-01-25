@@ -37,8 +37,8 @@ const autoEnv = {
   ld_device: {
     key: 'random1',
     envAttributesVersion: '1.0',
-    manufacturer: 'apple',
-    os: { family: 'apple', name: 'iOS', version: '17.17' },
+    manufacturer: 'coconut',
+    os: { name: 'An OS', version: '1.0.1', family: 'orange' },
   },
 };
 let ldc: LDClientImpl;
