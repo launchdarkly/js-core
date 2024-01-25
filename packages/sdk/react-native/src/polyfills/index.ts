@@ -1,8 +1,8 @@
 import EventTarget from 'event-target-shim';
 
-import btoa from './btoa';
+import { type Hasher, sha256 } from '../fromExternal/js-sha256';
+import { base64FromByteArray, btoa } from './btoa';
 import CustomEvent from './CustomEvent';
-import uuidv4 from './uuid';
 
 function setupPolyfill() {
   Object.assign(global, {
@@ -10,4 +10,4 @@ function setupPolyfill() {
     CustomEvent,
   });
 }
-export { btoa, setupPolyfill, uuidv4 };
+export { base64FromByteArray, btoa, type Hasher, setupPolyfill, sha256 };

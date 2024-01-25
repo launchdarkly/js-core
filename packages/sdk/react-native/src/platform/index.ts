@@ -1,12 +1,9 @@
 /* eslint-disable max-classes-per-file */
 import type {
-  Crypto,
   Encoding,
   EventName,
   EventSource,
   EventSourceInitDict,
-  Hasher,
-  Hmac,
   Info,
   LDLogger,
   Options,
@@ -19,9 +16,11 @@ import type {
 } from '@launchdarkly/js-client-sdk-common';
 
 import { name, version } from '../../package.json';
-import { btoa, uuidv4 } from '../polyfills';
-import RNEventSource from '../react-native-sse';
+import RNEventSource from '../fromExternal/react-native-sse';
+import { btoa } from '../polyfills';
+import { ldApplication, ldDevice } from './autoEnv';
 import AsyncStorage from './ConditionalAsyncStorage';
+import PlatformCrypto from './crypto';
 
 class PlatformRequests implements Requests {
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
@@ -43,32 +42,28 @@ class PlatformEncoding implements Encoding {
 }
 
 class PlatformInfo implements Info {
+  constructor(private readonly logger: LDLogger) {}
+
   platformData(): PlatformData {
-    return {
+    const data = {
       name: 'React Native',
+      ld_application: ldApplication,
+      ld_device: ldDevice,
     };
+
+    this.logger.debug(`platformData: ${JSON.stringify(data, null, 2)}`);
+    return data;
   }
 
   sdkData(): SdkData {
-    return {
+    const data = {
       name,
       version,
       userAgentBase: 'ReactNativeClient',
     };
-  }
-}
 
-class PlatformCrypto implements Crypto {
-  createHash(_algorithm: string): Hasher {
-    throw new Error('not implemented');
-  }
-
-  createHmac(_algorithm: string, _key: string): Hmac {
-    throw new Error('not implemented');
-  }
-
-  randomUUID(): string {
-    return uuidv4();
+    this.logger.debug(`sdkData: ${JSON.stringify(data, null, 2)}`);
+    return data;
   }
 }
 
@@ -99,7 +94,7 @@ class PlatformStorage implements Storage {
 
 const createPlatform = (logger: LDLogger): Platform => ({
   crypto: new PlatformCrypto(),
-  info: new PlatformInfo(),
+  info: new PlatformInfo(logger),
   requests: new PlatformRequests(),
   encoding: new PlatformEncoding(),
   storage: new PlatformStorage(logger),
