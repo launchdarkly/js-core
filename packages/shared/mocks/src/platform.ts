@@ -1,4 +1,4 @@
-import type { Encoding, Info, Platform, PlatformData, Requests, SdkData, Storage } from '@common';
+import type { Encoding, Platform, PlatformData, Requests, SdkData, Storage } from '@common';
 
 import { setupCrypto } from './crypto';
 

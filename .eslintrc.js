@@ -9,7 +9,12 @@ module.exports = {
     project: './tsconfig.eslint.json',
   },
   plugins: ['@typescript-eslint', 'prettier', 'jest'],
-  ignorePatterns: ['**/dist/**', '**/vercel/examples/**', '**/react-native/example/**', '**/fromExternal/**'],
+  ignorePatterns: [
+    '**/dist/**',
+    '**/vercel/examples/**',
+    '**/react-native/example/**',
+    '**/fromExternal/**',
+  ],
   rules: {
     '@typescript-eslint/lines-between-class-members': 'off',
     '@typescript-eslint/no-unused-vars': [
