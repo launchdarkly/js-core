@@ -1,6 +1,7 @@
 import { clone, type LDContext, noop } from '@launchdarkly/js-sdk-common';
 import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
+import { AutoEnvAttributes } from './api';
 import LDEmitter from './api/LDEmitter';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
@@ -77,8 +78,7 @@ describe('sdk-client storage', () => {
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
 
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, {
-      autoEnvAttributes: false,
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
       logger,
       sendEvents: false,
     });
@@ -121,7 +121,7 @@ describe('sdk-client storage', () => {
   });
 
   test('initialize from storage succeeds with auto env', async () => {
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
       logger,
       sendEvents: false,
     });
