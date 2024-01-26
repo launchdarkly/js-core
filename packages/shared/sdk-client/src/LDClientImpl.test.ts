@@ -1,4 +1,4 @@
-import { clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
 import {
   basicPlatform,
   hasher,
@@ -6,7 +6,6 @@ import {
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
 
-import { AutoEnvAttributes } from './api';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';

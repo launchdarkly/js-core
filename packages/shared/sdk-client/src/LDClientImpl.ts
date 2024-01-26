@@ -1,4 +1,5 @@
 import {
+  AutoEnvAttributes,
   ClientContext,
   clone,
   Context,
@@ -17,7 +18,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { AutoEnvAttributes, LDClient, type LDOptions } from './api';
+import { LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
