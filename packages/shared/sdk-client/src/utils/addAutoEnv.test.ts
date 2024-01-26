@@ -24,185 +24,262 @@ describe('addAutoEnv', () => {
     expect(multi).toEqual({ kind: 'multi', user: { key: 'test-user-key-1', name: 'bob' } });
   });
 
-  test('LDUser is unsupported', async () => {
-    const config = new Configuration();
-    // const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
-    const user: LDUser = { key: 'legacy-user-key', name: 'bob' };
-    const result = await addAutoEnv(user, basicPlatform, config);
+  describe('addAutoEnv', () => {
+    test('LDUser is unsupported', async () => {
+      const config = new Configuration();
+      const user: LDUser = { key: 'legacy-user-key', name: 'bob' };
+      const result = await addAutoEnv(user, basicPlatform, config);
 
-    expect(result).toEqual(user);
+      expect(result).toEqual(user);
+    });
+
+    test('nothing to add return context unchanged', async () => {
+      info.platformData = jest.fn().mockReturnValue({});
+      const config = new Configuration();
+      const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual(context);
+    });
+
+    test('single kind should be converted to multi', async () => {
+      const config = new Configuration();
+      const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
+
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual({
+        kind: 'multi',
+        ld_application: {
+          envAttributesVersion: '1.0',
+          id: 'com.testapp.ld',
+          key: '1234567890123456',
+          name: 'LDApplication.TestApp',
+          version: '1.1.1',
+        },
+        ld_device: {
+          envAttributesVersion: '1.0',
+          key: 'test-device-key-1',
+          manufacturer: 'coconut',
+          os: { name: 'An OS', version: '1.0.1', family: 'orange' },
+        },
+        user: { key: 'test-user-key-1', name: 'bob' },
+      });
+    });
+
+    test('multi kind', async () => {
+      const config = new Configuration();
+      const context: LDContext = {
+        kind: 'multi',
+        user: { key: 'test-user-key-1', name: 'bob' },
+        org: { key: 'test-org-key-1', name: 'Best company' },
+      };
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual({
+        kind: 'multi',
+        user: { key: 'test-user-key-1', name: 'bob' },
+        org: { key: 'test-org-key-1', name: 'Best company' },
+        ld_application: {
+          envAttributesVersion: '1.0',
+          id: 'com.testapp.ld',
+          key: '1234567890123456',
+          name: 'LDApplication.TestApp',
+          version: '1.1.1',
+        },
+        ld_device: {
+          envAttributesVersion: '1.0',
+          key: 'test-device-key-1',
+          manufacturer: 'coconut',
+          os: { name: 'An OS', version: '1.0.1', family: 'orange' },
+        },
+      });
+    });
   });
 
-  test('single kind should be converted to multi', async () => {
-    const config = new Configuration();
-    const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
+  describe('addApplicationInfo', () => {
+    test('add application tags id, version', () => {
+      const config = new Configuration({
+        application: { id: 'com.from-config.ld', version: '2.2.2' },
+      });
+      const ldApplication = addApplicationInfo(basicPlatform, config);
 
-    const result = await addAutoEnv(context, basicPlatform, config);
+      expect(ldApplication).toEqual({
+        envAttributesVersion: '1.0',
+        id: 'com.from-config.ld',
+        key: '1234567890123456',
+        name: 'LDApplication.TestApp',
+        version: '2.2.2',
+      });
+    });
 
-    expect(result).toEqual({
-      kind: 'multi',
-      ld_application: {
+    test('add auto env application id, name, version', () => {
+      const config = new Configuration();
+      const ldApplication = addApplicationInfo(basicPlatform, config);
+
+      expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
         id: 'com.testapp.ld',
         key: '1234567890123456',
         name: 'LDApplication.TestApp',
         version: '1.1.1',
-      },
-      ld_device: {
-        envAttributesVersion: '1.0',
-        key: 'test-device-key-1',
-        manufacturer: 'coconut',
-        os: { name: 'An OS', version: '1.0.1', family: 'orange' },
-      },
-      user: { key: 'test-user-key-1', name: 'bob' },
+      });
     });
-  });
 
-  test('multi kind', async () => {
-    const config = new Configuration();
-    const context: LDContext = {
-      kind: 'multi',
-      user: { key: 'test-user-key-1', name: 'bob' },
-      org: { key: 'test-org-key-1', name: 'Best company' },
-    };
-    const result = await addAutoEnv(context, basicPlatform, config);
+    test('final return value should not contain falsy values', () => {
+      const mockData = info.platformData();
+      info.platformData = jest.fn().mockReturnValueOnce({
+        ...mockData,
+        ld_application: {
+          ...mockData.ld_application,
+          name: '',
+          version: null,
+          versionName: undefined,
+          locale: '',
+          envAttributesVersion: 0,
+        },
+      });
+      const config = new Configuration();
+      const ldApplication = addApplicationInfo(basicPlatform, config);
 
-    expect(result).toEqual({
-      kind: 'multi',
-      user: { key: 'test-user-key-1', name: 'bob' },
-      org: { key: 'test-org-key-1', name: 'Best company' },
-      ld_application: {
+      expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
         id: 'com.testapp.ld',
         key: '1234567890123456',
-        name: 'LDApplication.TestApp',
-        version: '1.1.1',
-      },
-      ld_device: {
+      });
+    });
+
+    test('omit if both tags and auto generated data are unavailable', () => {
+      info.platformData = jest.fn().mockReturnValueOnce({});
+      const config = new Configuration();
+      const ldApplication = addApplicationInfo(basicPlatform, config);
+
+      expect(ldApplication).toBeUndefined();
+    });
+
+    test('omit if tags unavailable and auto generated data are falsy', () => {
+      const mockData = info.platformData();
+      info.platformData = jest.fn().mockReturnValueOnce({
+        ld_application: {
+          ...mockData.ld_application,
+          name: '',
+          version: null,
+          id: undefined,
+        },
+      });
+      const config = new Configuration();
+      const ldApplication = addApplicationInfo(basicPlatform, config);
+
+      expect(ldApplication).toBeUndefined();
+    });
+
+    test('omit if tags unavailable and auto generated data only contains key and attributesVersion', () => {
+      info.platformData = jest.fn().mockReturnValueOnce({
+        ld_application: { key: 'key-from-sdk', envAttributesVersion: '0.0.1' },
+      });
+      const config = new Configuration();
+      const ldApplication = addApplicationInfo(basicPlatform, config);
+
+      expect(ldApplication).toBeUndefined();
+    });
+
+    test('omit if no id specified', () => {
+      info.platformData = jest
+        .fn()
+        .mockReturnValueOnce({ ld_application: { version: null, locale: '' } });
+      const config = new Configuration({ application: { version: '1.2.3' } });
+      const ldApplication = addApplicationInfo(basicPlatform, config);
+
+      expect(ldApplication).toBeUndefined();
+    });
+  });
+
+  describe('addDeviceInfo', () => {
+    test('add platformData os name, version', async () => {
+      const ldDevice = await addDeviceInfo(basicPlatform);
+
+      expect(ldDevice).toEqual({
         envAttributesVersion: '1.0',
         key: 'test-device-key-1',
         manufacturer: 'coconut',
         os: { name: 'An OS', version: '1.0.1', family: 'orange' },
-      },
-    });
-  });
-
-  test('addApplicationInfo with config application id, version', () => {
-    const config = new Configuration({
-      application: { id: 'com.from-config.ld', version: '2.2.2' },
-    });
-    const ldApplication = addApplicationInfo(basicPlatform, config);
-
-    expect(ldApplication).toEqual({
-      envAttributesVersion: '1.0',
-      id: 'com.from-config.ld',
-      key: '1234567890123456',
-      name: 'LDApplication.TestApp',
-      version: '2.2.2',
-    });
-  });
-
-  test('addApplicationInfo with auto env application id, name, version', () => {
-    const config = new Configuration();
-    const ldApplication = addApplicationInfo(basicPlatform, config);
-
-    expect(ldApplication).toEqual({
-      envAttributesVersion: '1.0',
-      id: 'com.testapp.ld',
-      key: '1234567890123456',
-      name: 'LDApplication.TestApp',
-      version: '1.1.1',
-    });
-  });
-
-  test('addApplicationInfo with sdk data name, version', () => {
-    const platformData = info.platformData();
-    delete platformData.ld_application;
-    delete platformData.ld_device;
-    info.platformData = jest.fn().mockReturnValueOnce(platformData);
-    info.sdkData = jest.fn().mockReturnValueOnce({
-      name: 'Name from sdk data',
-      version: '3.3.3',
-      userAgentBase: 'TestUserAgent',
-      wrapperName: 'Rapper',
-      wrapperVersion: '9.9.9',
+      });
     });
 
-    const config = new Configuration();
-    const ldApplication = addApplicationInfo(basicPlatform, config);
+    test('add auto env os name, version', async () => {
+      const platformData = info.platformData();
+      delete platformData.os;
+      info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-    expect(ldApplication).toEqual({
-      envAttributesVersion: '1.0',
-      id: 'Name from sdk data',
-      key: '1234567890123456',
-      name: 'Name from sdk data',
-      version: '3.3.3',
-    });
-  });
+      const ldDevice = await addDeviceInfo(basicPlatform);
 
-  test('addApplicationInfo with sdkData wrapperName, wrapperVersion', () => {
-    const platformData = info.platformData();
-    delete platformData.ld_application;
-    delete platformData.ld_device;
-    info.platformData = jest.fn().mockReturnValueOnce(platformData);
-    info.sdkData = jest.fn().mockReturnValueOnce({
-      name: '',
-      version: '',
-      userAgentBase: 'TestUserAgent',
-      wrapperName: 'Rapper',
-      wrapperVersion: '9.9.9',
+      expect(ldDevice).toEqual({
+        envAttributesVersion: '1.0',
+        key: 'test-device-key-1',
+        manufacturer: 'coconut',
+        os: { name: 'Another OS', version: '99', family: 'orange' },
+      });
     });
 
-    const config = new Configuration();
-    const ldApplication = addApplicationInfo(basicPlatform, config);
+    test('add auto env os name, version when platform data are empty strings', async () => {
+      const platformData = info.platformData();
+      platformData.os = { name: '', version: '' };
+      info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-    expect(ldApplication).toEqual({
-      envAttributesVersion: '1.0',
-      id: 'Rapper',
-      key: '1234567890123456',
-      name: 'Rapper',
-      version: '9.9.9',
+      const ldDevice = await addDeviceInfo(basicPlatform);
+
+      expect(ldDevice).toEqual({
+        envAttributesVersion: '1.0',
+        key: 'test-device-key-1',
+        manufacturer: 'coconut',
+        os: { name: 'Another OS', version: '99', family: 'orange' },
+      });
     });
-  });
 
-  test('addDeviceInfo with platformData os name, version', async () => {
-    const ldDevice = await addDeviceInfo(basicPlatform);
-
-    expect(ldDevice).toEqual({
-      envAttributesVersion: '1.0',
-      key: 'test-device-key-1',
-      manufacturer: 'coconut',
-      os: { name: 'An OS', version: '1.0.1', family: 'orange' },
+    test('no data return undefined', async () => {
+      info.platformData = jest.fn().mockReturnValueOnce({});
+      const ldDevice = await addDeviceInfo(basicPlatform);
+      expect(ldDevice).toBeUndefined();
     });
-  });
 
-  test('addDeviceInfo with auto env os name, version', async () => {
-    const platformData = info.platformData();
-    delete platformData.os;
-    info.platformData = jest.fn().mockReturnValueOnce(platformData);
+    test('platformData os is defined but empty', async () => {
+      const platformData = info.platformData();
+      platformData.os = {};
+      info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-    const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(basicPlatform);
 
-    expect(ldDevice).toEqual({
-      envAttributesVersion: '1.0',
-      key: 'test-device-key-1',
-      manufacturer: 'coconut',
-      os: { name: 'Another OS', version: '99', family: 'orange' },
+      expect(ldDevice).toEqual({
+        envAttributesVersion: '1.0',
+        key: 'test-device-key-1',
+        manufacturer: 'coconut',
+        os: { name: 'Another OS', version: '99', family: 'orange' },
+      });
     });
-  });
 
-  test('addDeviceInfo with auto env os name, version when platform data are empty strings', async () => {
-    const platformData = info.platformData();
-    platformData.os = { name: '', version: '' };
-    info.platformData = jest.fn().mockReturnValueOnce(platformData);
+    test('only os family is defined', async () => {
+      info.platformData = jest
+        .fn()
+        .mockReturnValueOnce({ os: {}, ld_device: { os: { family: 'orange' } } });
 
-    const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(basicPlatform);
 
-    expect(ldDevice).toEqual({
-      envAttributesVersion: '1.0',
-      key: 'test-device-key-1',
-      manufacturer: 'coconut',
-      os: { name: 'Another OS', version: '99', family: 'orange' },
+      expect(ldDevice).toEqual({
+        envAttributesVersion: '1.0',
+        key: 'test-device-key-1',
+        os: { name: '', version: '', family: 'orange' },
+      });
+    });
+
+    test('return undefined when device only contains key and envAttributesVersion', async () => {
+      info.platformData = jest.fn().mockReturnValueOnce({
+        os: {},
+        ld_device: { key: 'test-device-key', envAttributesVersion: '0.1' },
+      });
+
+      const ldDevice = await addDeviceInfo(basicPlatform);
+
+      expect(ldDevice).toBeUndefined();
     });
   });
 });
