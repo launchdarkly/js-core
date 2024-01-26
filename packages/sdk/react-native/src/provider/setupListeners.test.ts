@@ -1,3 +1,5 @@
+import { AutoEnvAttributes } from '@launchdarkly/js-client-sdk-common';
+
 import ReactNativeLDClient from '../ReactNativeLDClient';
 import setupListeners from './setupListeners';
 
@@ -11,7 +13,7 @@ describe('setupListeners', () => {
 
   beforeEach(() => {
     mockSetState = jest.fn();
-    ldc = new ReactNativeLDClient('mob-test-key');
+    ldc = new ReactNativeLDClient('mob-test-key', AutoEnvAttributes.Enabled);
   });
 
   afterEach(() => resetAllMocks());
