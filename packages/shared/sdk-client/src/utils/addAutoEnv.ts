@@ -99,18 +99,28 @@ export const addAutoEnv = async (context: LDContext, platform: Platform, config:
   if (isLegacyUser(context)) {
     return context as LDUser;
   }
-  const ld_application = addApplicationInfo(platform, config);
-  const ld_device = await addDeviceInfo(platform);
 
-  if (!ld_application && !ld_device) {
-    return context;
+  let ld_application: LDApplication | undefined;
+  let ld_device: LDDevice | undefined;
+
+  // keep customer contexts if they exist
+  if (context.kind !== 'ld_application' && !context.ld_application) {
+    ld_application = addApplicationInfo(platform, config);
   }
 
-  const multi = isSingleKind(context) ? toMulti(context) : context;
+  if (context.kind !== 'ld_device' && !context.ld_device) {
+    ld_device = await addDeviceInfo(platform);
+  }
 
-  return {
-    ...multi,
-    ...(ld_application ? { ld_application } : {}),
-    ...(ld_device ? { ld_device } : {}),
-  } as LDMultiKindContext;
+  if (ld_application || ld_device) {
+    const multi = isSingleKind(context) ? toMulti(context) : context;
+
+    return {
+      ...multi,
+      ...(ld_application ? { ld_application } : {}),
+      ...(ld_device ? { ld_device } : {}),
+    } as LDMultiKindContext;
+  }
+
+  return context;
 };

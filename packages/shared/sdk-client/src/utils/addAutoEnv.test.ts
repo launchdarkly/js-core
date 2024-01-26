@@ -1,4 +1,4 @@
-import { Info, type LDContext, LDUser } from '@launchdarkly/js-sdk-common';
+import { Info, type LDContext, LDMultiKindContext, LDUser } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
@@ -31,6 +31,118 @@ describe('addAutoEnv', () => {
       const result = await addAutoEnv(user, basicPlatform, config);
 
       expect(result).toEqual(user);
+    });
+
+    test('customer provides single context of kind ld_application. should only add ld_device.', async () => {
+      const config = new Configuration();
+      const context = { kind: 'ld_application', key: 'test-customer-app-key-1', name: 'test-app' };
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual({
+        kind: 'multi',
+        ld_application: {
+          key: 'test-customer-app-key-1',
+          name: 'test-app',
+        },
+        ld_device: {
+          envAttributesVersion: '1.0',
+          key: 'test-device-key-1',
+          manufacturer: 'coconut',
+          os: {
+            family: 'orange',
+            name: 'An OS',
+            version: '1.0.1',
+          },
+        },
+      });
+    });
+
+    test('customer provides multi context with an ld_application context. should only add ld_device.', async () => {
+      const config = new Configuration();
+      const context = {
+        kind: 'multi',
+        ld_application: {
+          key: 'test-customer-app-key-1',
+          name: 'test-app',
+        },
+      } as LDMultiKindContext;
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual({
+        ...context,
+        ld_device: {
+          envAttributesVersion: '1.0',
+          key: 'test-device-key-1',
+          manufacturer: 'coconut',
+          os: {
+            family: 'orange',
+            name: 'An OS',
+            version: '1.0.1',
+          },
+        },
+      });
+    });
+
+    test('customer provides single context of kind ld_device. should only add ld_application.', async () => {
+      const config = new Configuration();
+      const context = { kind: 'ld_device', key: 'test-customer-dev-key-1', name: 'test-dev' };
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual({
+        kind: 'multi',
+        ld_device: {
+          key: 'test-customer-dev-key-1',
+          name: 'test-dev',
+        },
+        ld_application: {
+          envAttributesVersion: '1.0',
+          id: 'com.testapp.ld',
+          key: '1234567890123456',
+          name: 'LDApplication.TestApp',
+          version: '1.1.1',
+        },
+      });
+    });
+
+    test('customer provides multi context with ld_device context. should only add ld_application.', async () => {
+      const config = new Configuration();
+      const context = {
+        kind: 'multi',
+        ld_device: {
+          key: 'test-customer-dev-key-1',
+          name: 'test-dev',
+        },
+      } as LDMultiKindContext;
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual({
+        ...context,
+        ld_application: {
+          envAttributesVersion: '1.0',
+          id: 'com.testapp.ld',
+          key: '1234567890123456',
+          name: 'LDApplication.TestApp',
+          version: '1.1.1',
+        },
+      });
+    });
+
+    test('customer provides ld_application and ld_device contexts. no changes.', async () => {
+      const config = new Configuration();
+      const context = {
+        kind: 'multi',
+        ld_application: {
+          key: 'test-customer-app-key-1',
+          name: 'test-app',
+        },
+        ld_device: {
+          key: 'test-customer-dev-key-1',
+          name: 'test-dev',
+        },
+      } as LDMultiKindContext;
+      const result = await addAutoEnv(context, basicPlatform, config);
+
+      expect(result).toEqual(context);
     });
 
     test('nothing to add return context unchanged', async () => {
