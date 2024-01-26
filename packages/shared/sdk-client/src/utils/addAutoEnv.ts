@@ -72,15 +72,15 @@ export const addDeviceInfo = async (platform: Platform) => {
   const { ld_device, os } = platform.info.platformData();
   const device = deepCompact<LDDevice>(ld_device) ?? ({} as LDDevice);
 
-  const osName = os?.name || device.os?.name || '';
-  const osVersion = os?.version || device.os?.version || '';
-  const osFamily = device.os?.family || '';
+  const name = os?.name || device.os?.name;
+  const version = os?.version || device.os?.version;
+  const family = device.os?.family;
 
-  if (osName || osVersion || osFamily) {
+  if (name || version || family) {
     device.os = {
-      name: osName,
-      version: osVersion,
-      family: osFamily,
+      ...(name ? { name } : {}),
+      ...(version ? { version } : {}),
+      ...(family ? { family } : {}),
     };
   }
 

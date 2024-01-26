@@ -46,8 +46,8 @@ export interface LDDevice extends AutoEnvCommon {
     /**
      * The family of operating system.
      */
-    family: string;
-    name: string;
-    version: string;
+    family?: string;
+    name?: string;
+    version?: string;
   };
 }

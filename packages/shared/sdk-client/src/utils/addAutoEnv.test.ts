@@ -379,7 +379,7 @@ describe('addAutoEnv', () => {
       expect(ldDevice).toEqual({
         envAttributesVersion: '1.0',
         key: 'test-device-key-1',
-        os: { name: '', version: '', family: 'orange' },
+        os: { family: 'orange' },
       });
     });
 
