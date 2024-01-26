@@ -196,7 +196,7 @@ describe('when deserializing all data', () => {
     expect(ref?.isValid).toBeTruthy();
   });
 
-  it('handles a flag with an attribute literal in a clause', () => {
+  it('handles a flag with an attribute ref in a clause', () => {
     const jsonString = makeSerializedAllData(flagWithAttributeReferenceInClause);
     const parsed = deserializeAll(jsonString);
     const ref = parsed?.data.flags.flagName.rules?.[0].clauses?.[0].attributeReference;
@@ -249,7 +249,7 @@ describe('when deserializing patch data', () => {
     expect(ref?.isValid).toBeTruthy();
   });
 
-  it('handles a flag with an attribute literal in a clause', () => {
+  it('handles a flag with an attribute ref in a clause', () => {
     const jsonString = makeSerializedPatchData(flagWithAttributeReferenceInClause);
     const parsed = deserializePatch(jsonString);
     const ref = (parsed?.data as Flag).rules?.[0].clauses?.[0].attributeReference;
