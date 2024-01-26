@@ -76,8 +76,10 @@ export const addDeviceInfo = async (platform: Platform) => {
   const version = os?.version || device.os?.version;
   const family = device.os?.family;
 
+  // only add device.os if there's data
   if (name || version || family) {
     device.os = {
+      // only add props if they are defined
       ...(name ? { name } : {}),
       ...(version ? { version } : {}),
       ...(family ? { family } : {}),
@@ -103,14 +105,22 @@ export const addAutoEnv = async (context: LDContext, platform: Platform, config:
   let ld_application: LDApplication | undefined;
   let ld_device: LDDevice | undefined;
 
-  // keep customer contexts if they exist
+  // Check if customer contexts exist. Only override if they are not provided.
   if (context.kind !== 'ld_application' && !context.ld_application) {
     ld_application = addApplicationInfo(platform, config);
+  } else {
+    config.logger.warn(
+      'Not adding ld_application environment attributes because it already exists.',
+    );
   }
 
   if (context.kind !== 'ld_device' && !context.ld_device) {
     ld_device = await addDeviceInfo(platform);
+  } else {
+    config.logger.warn('Not adding ld_device environment attributes because it already exists.');
   }
+
+  // Unable to automatically add environment attributes for kind: {}.  {} already exists.
 
   if (ld_application || ld_device) {
     const multi = isSingleKind(context) ? toMulti(context) : context;

@@ -1,5 +1,5 @@
 import { Info, type LDContext, LDMultiKindContext, LDUser } from '@launchdarkly/js-sdk-common';
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { basicPlatform, logger } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
 import { addApplicationInfo, addAutoEnv, addDeviceInfo, toMulti } from './addAutoEnv';
@@ -206,6 +206,44 @@ describe('addAutoEnv', () => {
           os: { name: 'An OS', version: '1.0.1', family: 'orange' },
         },
       });
+    });
+
+    test('log warning when ld_application is not added', async () => {
+      const config = new Configuration({ logger });
+      const context: LDContext = {
+        kind: 'multi',
+        org: { key: 'test-org-key-1', name: 'Best company' },
+        ld_application: {
+          key: 'test-customer-app-key-1',
+          name: 'test-app',
+        },
+      };
+
+      await addAutoEnv(context, basicPlatform, config);
+
+      expect(config.logger.warn).toHaveBeenCalledTimes(1);
+      expect(config.logger.warn).toHaveBeenCalledWith(
+        expect.stringMatching(/ld_application.*already exists/),
+      );
+    });
+
+    test('log warning when ld_device is not added', async () => {
+      const config = new Configuration({ logger });
+      const context: LDContext = {
+        kind: 'multi',
+        org: { key: 'test-org-key-1', name: 'Best company' },
+        ld_device: {
+          key: 'test-customer-dev-key-1',
+          name: 'test-dev',
+        },
+      };
+
+      await addAutoEnv(context, basicPlatform, config);
+
+      expect(config.logger.warn).toHaveBeenCalledTimes(1);
+      expect(config.logger.warn).toHaveBeenCalledWith(
+        expect.stringMatching(/ld_device.*already exists/),
+      );
     });
   });
 
