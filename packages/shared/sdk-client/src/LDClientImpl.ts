@@ -1,4 +1,5 @@
 import {
+  AutoEnvAttributes,
   ClientContext,
   clone,
   Context,
@@ -51,6 +52,7 @@ export default class LDClientImpl implements LDClient {
    */
   constructor(
     public readonly sdkKey: string,
+    public readonly autoEnvAttributes: AutoEnvAttributes,
     public readonly platform: Platform,
     options: LDOptions,
     internalOptions?: internal.LDInternalOptions,
@@ -234,7 +236,7 @@ export default class LDClientImpl implements LDClient {
   async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
     let context = await ensureKey(pristineContext, this.platform);
 
-    if (this.config.autoEnvAttributes) {
+    if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
       context = await addAutoEnv(context, this.platform, this.config);
     }
 

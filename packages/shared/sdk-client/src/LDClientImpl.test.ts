@@ -1,4 +1,4 @@
-import { clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
 import {
   basicPlatform,
   hasher,
@@ -51,7 +51,10 @@ describe('sdk-client object', () => {
     basicPlatform.crypto.randomUUID.mockReturnValue('random1');
     hasher.digest.mockReturnValue('digested1');
 
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+      logger,
+      sendEvents: false,
+    });
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
@@ -62,7 +65,8 @@ describe('sdk-client object', () => {
   });
 
   test('instantiate with blank options', () => {
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, {});
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {});
+
     expect(ldc.config).toMatchObject({
       allAttributesPrivate: false,
       baseUri: 'https://sdk.launchdarkly.com',
@@ -162,8 +166,7 @@ describe('sdk-client object', () => {
   test('identify success without auto env', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'mazda-cx7' };
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, {
-      autoEnvAttributes: false,
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
       logger,
       sendEvents: false,
     });
