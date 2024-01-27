@@ -32,7 +32,7 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
   if (anonymous && !key) {
     // This mutates a cloned copy of the original context from ensureyKey so this is safe.
     // eslint-disable-next-line no-param-reassign
-    c.key = await getOrGenerateKey(kind, platform);
+    c.key = await getOrGenerateKey('anonymous', kind, platform);
   }
 };
 
