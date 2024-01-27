@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {
+  deepCompact,
   internal,
   LDApplication,
   LDContext,
@@ -9,12 +10,11 @@ import {
   LDUser,
   Platform,
 } from '@launchdarkly/js-sdk-common';
-import deepCompact from '@launchdarkly/js-sdk-common/dist/utils/deepCompact';
 
 import Configuration from '../configuration';
 import { getOrGenerateKey } from './getOrGenerateKey';
 
-const { isLegacyUser, isSingleKind } = internal;
+const { isLegacyUser, isSingleKind, isMultiKind } = internal;
 const defaultAutoEnvSchemaVersion = '1.0';
 
 export const toMulti = (c: LDSingleKindContext) => {
@@ -88,7 +88,7 @@ export const addDeviceInfo = async (platform: Platform) => {
 
   // Check if device has any meaningful data before we return it.
   if (Object.keys(device).filter((k) => k !== 'key' && k !== 'envAttributesVersion').length) {
-    device.key = await getOrGenerateKey('ld_device', platform);
+    device.key = await getOrGenerateKey('context', 'ld_device', platform);
     device.envAttributesVersion = device.envAttributesVersion || defaultAutoEnvSchemaVersion;
     return device;
   }
@@ -106,7 +106,10 @@ export const addAutoEnv = async (context: LDContext, platform: Platform, config:
   let ld_device: LDDevice | undefined;
 
   // Check if customer contexts exist. Only override if they are not provided.
-  if (context.kind !== 'ld_application' && !context.ld_application) {
+  if (
+    (isSingleKind(context) && context.kind !== 'ld_application') ||
+    (isMultiKind(context) && !context.ld_application)
+  ) {
     ld_application = addApplicationInfo(platform, config);
   } else {
     config.logger.warn(
@@ -114,7 +117,10 @@ export const addAutoEnv = async (context: LDContext, platform: Platform, config:
     );
   }
 
-  if (context.kind !== 'ld_device' && !context.ld_device) {
+  if (
+    (isSingleKind(context) && context.kind !== 'ld_device') ||
+    (isMultiKind(context) && !context.ld_device)
+  ) {
     ld_device = await addDeviceInfo(platform);
   } else {
     config.logger.warn('Not adding ld_device environment attributes because it already exists.');
