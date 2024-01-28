@@ -1,7 +1,10 @@
 import { MOBILE_KEY } from '@env';
 
-import { AutoEnvAttributes } from '@launchdarkly/js-client-sdk-common';
-import { LDProvider, ReactNativeLDClient } from '@launchdarkly/react-native-client-sdk';
+import {
+  AutoEnvAttributes,
+  LDProvider,
+  ReactNativeLDClient,
+} from '@launchdarkly/react-native-client-sdk';
 
 import Welcome from './src/welcome';
 
