@@ -50,6 +50,7 @@
     "typescript": "5.1.6"
   },
   "packageManager": "yarn@3.4.1",
+  "//": "There is a bug with @types/node: 20.11.8 where crypto types are erroneous. See https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/68351",
   "resolutions": {
     "@types/node": "20.11.7"
   }
