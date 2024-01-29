@@ -37,7 +37,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   }),
   privateAttributes: TypeValidators.StringArray,
 
-  application: TypeValidators.Object,
+  applicationInfo: TypeValidators.Object,
   bootstrap: new BootStrapValidator(),
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,

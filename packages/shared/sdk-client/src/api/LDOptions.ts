@@ -14,7 +14,7 @@ export interface LDOptions {
   /**
    * Information about the application where the LaunchDarkly SDK is running.
    */
-  application?: {
+  applicationInfo?: {
     /**
      * A unique identifier representing the application where the LaunchDarkly SDK is running.
      *
@@ -33,6 +33,22 @@ export interface LDOptions {
      * Example: `1.0.0` (standard version string) or `abcdef` (sha prefix)
      */
     version?: string;
+
+    /**
+     * A human-friendly application name representing the application where the LaunchDarkly SDK is running.
+     *
+     * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
+     * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
+     */
+    applicationName?: string;
+
+    /**
+     * A human-friendly name representing the version of the application where the LaunchDarkly SDK is running.
+     *
+     * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
+     * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
+     */
+    applicationVersionName?: string;
   };
 
   /**

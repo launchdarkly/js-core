@@ -318,9 +318,9 @@ describe('automatic environment attributes', () => {
   });
 
   describe('addApplicationInfo', () => {
-    test('add application tags id, version', () => {
+    test('add id, version', () => {
       config = new Configuration({
-        application: { id: 'com.from-config.ld', version: '2.2.2' },
+        applicationInfo: { id: 'com.from-config.ld', version: '2.2.2' },
       });
       const ldApplication = addApplicationInfo(basicPlatform, config);
 
@@ -368,7 +368,7 @@ describe('automatic environment attributes', () => {
       });
     });
 
-    test('omit if both tags and auto generated data are unavailable', () => {
+    test('omit if customer and auto env data are unavailable', () => {
       info.platformData = jest.fn().mockReturnValueOnce({});
 
       const ldApplication = addApplicationInfo(basicPlatform, config);
@@ -376,7 +376,7 @@ describe('automatic environment attributes', () => {
       expect(ldApplication).toBeUndefined();
     });
 
-    test('omit if tags unavailable and auto generated data are falsy', () => {
+    test('omit if customer unavailable and auto env data are falsy', () => {
       const mockData = info.platformData();
       info.platformData = jest.fn().mockReturnValueOnce({
         ld_application: {
@@ -392,7 +392,7 @@ describe('automatic environment attributes', () => {
       expect(ldApplication).toBeUndefined();
     });
 
-    test('omit if tags unavailable and auto generated data only contains key and attributesVersion', () => {
+    test('omit if customer data is unavailable and auto env data only contains key and attributesVersion', () => {
       info.platformData = jest.fn().mockReturnValueOnce({
         ld_application: { key: 'key-from-sdk', envAttributesVersion: '0.0.1' },
       });
@@ -406,7 +406,7 @@ describe('automatic environment attributes', () => {
       info.platformData = jest
         .fn()
         .mockReturnValueOnce({ ld_application: { version: null, locale: '' } });
-      config = new Configuration({ application: { version: '1.2.3' } });
+      config = new Configuration({ applicationInfo: { version: '1.2.3' } });
       const ldApplication = addApplicationInfo(basicPlatform, config);
 
       expect(ldApplication).toBeUndefined();
