@@ -40,16 +40,22 @@ export const addApplicationInfo = (
   { applicationInfo }: Configuration,
 ): LDApplication | undefined => {
   const { ld_application } = info.platformData();
-  const app = deepCompact<LDApplication>(ld_application) ?? ({} as LDApplication);
+  let app = deepCompact<LDApplication>(ld_application) ?? ({} as LDApplication);
   const id = applicationInfo?.id || app?.id;
 
   if (id) {
-    app.id = id;
-
     const version = applicationInfo?.version || app?.version;
-    if (version) {
-      app.version = version;
-    }
+    const name = applicationInfo?.name || app?.name;
+    const versionName = applicationInfo?.versionName || app?.versionName;
+
+    app = {
+      ...app,
+      id,
+      // only add props if they are defined
+      ...(version ? { version } : {}),
+      ...(name ? { name } : {}),
+      ...(versionName ? { versionName } : {}),
+    };
 
     const hasher = crypto.createHash('sha256');
     hasher.update(id);

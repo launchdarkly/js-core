@@ -40,7 +40,7 @@ export interface LDOptions {
      * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
      * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
      */
-    applicationName?: string;
+    name?: string;
 
     /**
      * A human-friendly name representing the version of the application where the LaunchDarkly SDK is running.
@@ -48,7 +48,7 @@ export interface LDOptions {
      * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
      * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
      */
-    applicationVersionName?: string;
+    versionName?: string;
   };
 
   /**

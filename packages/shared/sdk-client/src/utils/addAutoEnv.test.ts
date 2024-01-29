@@ -318,9 +318,14 @@ describe('automatic environment attributes', () => {
   });
 
   describe('addApplicationInfo', () => {
-    test('add id, version', () => {
+    test('add id, version, name, versionName', () => {
       config = new Configuration({
-        applicationInfo: { id: 'com.from-config.ld', version: '2.2.2' },
+        applicationInfo: {
+          id: 'com.from-config.ld',
+          version: '2.2.2',
+          name: 'test-ld-app-name',
+          versionName: 'test-ld-version-name',
+        },
       });
       const ldApplication = addApplicationInfo(basicPlatform, config);
 
@@ -328,8 +333,9 @@ describe('automatic environment attributes', () => {
         envAttributesVersion: '1.0',
         id: 'com.from-config.ld',
         key: '1234567890123456',
-        name: 'LDApplication.TestApp',
+        name: 'test-ld-app-name',
         version: '2.2.2',
+        versionName: 'test-ld-version-name',
       });
     });
 
