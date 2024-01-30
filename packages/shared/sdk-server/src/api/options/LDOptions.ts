@@ -224,6 +224,9 @@ export interface LDOptions {
 
   /**
    * Information about the application where the LaunchDarkly SDK is running.
+   *
+   * Note that this config option may be renamed to applicationInfo in a future major version
+   * to be consistent with other SDKs.
    */
   application?: {
     /**
