@@ -248,5 +248,21 @@ export interface LDOptions {
      * Example: `1.0.0` (standard version string) or `abcdef` (sha prefix)
      */
     version?: string;
+
+    /**
+     * A human-friendly application name representing the application where the LaunchDarkly SDK is running.
+     *
+     * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
+     * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
+     */
+    name?: string;
+
+    /**
+     * A human-friendly name representing the version of the application where the LaunchDarkly SDK is running.
+     *
+     * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
+     * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
+     */
+    versionName?: string;
   };
 }
