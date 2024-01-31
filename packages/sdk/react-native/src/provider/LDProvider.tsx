@@ -1,4 +1,5 @@
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { type LDContext } from '@launchdarkly/js-client-sdk-common';
 
@@ -25,6 +26,7 @@ type LDProps = {
  */
 const LDProvider = ({ client, context, children }: PropsWithChildren<LDProps>) => {
   const [state, setState] = useState<ReactContext>({ client });
+  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     setupListeners(client, setState);
@@ -36,6 +38,25 @@ const LDProvider = ({ client, context, children }: PropsWithChildren<LDProps>) =
           client.logger.debug(`LaunchDarkly React Native Sdk identify error: ${e}`),
         );
     }
+
+    const sub = AppState.addEventListener('change', (nextAppState) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        client.logger.debug('App has come to the foreground!');
+
+        // TODO: queue streamer open
+      } else {
+        client.logger.debug('App state', nextAppState);
+
+        if (nextAppState === 'background') {
+          // TODO: queue streamer close
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      sub.remove();
+    };
   }, []);
 
   return <Provider value={state}>{children}</Provider>;
