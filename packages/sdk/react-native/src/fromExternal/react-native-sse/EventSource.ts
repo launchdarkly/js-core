@@ -24,12 +24,12 @@ const defaultOptions: EventSourceOptions = {
 const maxRetryDelay = 30 * 1000; // Maximum retry delay 30 seconds.
 const jitterRatio = 0.5; // Delay should be 50%-100% of calculated time.
 
-function backoff(base: number, retryCount: number) {
+export function backoff(base: number, retryCount: number) {
   const delay = base * Math.pow(2, retryCount);
   return delay > maxRetryDelay ? maxRetryDelay : delay;
 }
 
-function jitter(computedDelayMillis: number) {
+export function jitter(computedDelayMillis: number) {
   return computedDelayMillis - Math.trunc(Math.random() * jitterRatio * computedDelayMillis);
 }
 
