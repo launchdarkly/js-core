@@ -26,7 +26,7 @@ const jitterRatio = 0.5; // Delay should be 50%-100% of calculated time.
 
 export function backoff(base: number, retryCount: number) {
   const delay = base * Math.pow(2, retryCount);
-  return delay > maxRetryDelay ? maxRetryDelay : delay;
+  return Math.min(delay, maxRetryDelay);
 }
 
 export function jitter(computedDelayMillis: number) {
