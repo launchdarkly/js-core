@@ -1,4 +1,4 @@
-import { EventName } from '@launchdarkly/js-sdk-common';
+import { type EventName } from '@launchdarkly/js-client-sdk-common';
 import { logger } from '@launchdarkly/private-js-mocks';
 
 import EventSource, { backoff, jitter } from './EventSource';
