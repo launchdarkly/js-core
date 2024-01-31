@@ -3,17 +3,24 @@ import { AppState, AppStateStatus } from 'react-native';
 
 import { debounce } from '@launchdarkly/js-client-sdk-common';
 
+import { PlatformRequests } from '../platform';
 import ReactNativeLDClient from '../ReactNativeLDClient';
 
 const useAppState = (client: ReactNativeLDClient) => {
   const appState = useRef(AppState.currentState);
+
+  const isEventSourceClosed = () => {
+    const { eventSource } = client.platform.requests as PlatformRequests;
+    return eventSource?.getStatus() === eventSource?.CLOSED;
+  };
+
   const onChange = (nextAppState: AppStateStatus) => {
     client.logger.debug(`App state prev ${appState.current}, next: ${nextAppState}`);
 
     if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
       client.logger.debug('App has come to the foreground.');
 
-      if (client.isEventSourceClosed()) {
+      if (isEventSourceClosed()) {
         client.logger.debug('Starting streamer after transitioning to foreground.');
         client.streamer?.start();
       } else {
