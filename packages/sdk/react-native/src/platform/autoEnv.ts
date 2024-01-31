@@ -1,6 +1,6 @@
 import { Platform, type PlatformAndroidStatic } from 'react-native';
 
-import type { LDApplication, LDDevice } from '@launchdarkly/js-sdk-common';
+import type { LDApplication, LDDevice } from '@launchdarkly/js-client-sdk-common';
 
 import locale from './locale';
 
