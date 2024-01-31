@@ -335,6 +335,10 @@ export default class EventSource<E extends string = never> {
     this.dispatch('close', { type: 'close' });
   }
 
+  getStatus() {
+    return this.status;
+  }
+
   onopen() {}
   onclose() {}
   onerror(_err: any) {}

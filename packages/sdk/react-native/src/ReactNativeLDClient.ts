@@ -8,7 +8,7 @@ import {
   type LDOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
-import createPlatform from './platform';
+import createPlatform, { PlatformRequests } from './platform';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
@@ -55,6 +55,11 @@ export default class ReactNativeLDClient extends LDClientImpl {
       { ...options, logger },
       internalOptions,
     );
+  }
+
+  isEventSourceClosed() {
+    const { eventSource } = this.platform.requests as PlatformRequests;
+    return eventSource?.getStatus() === eventSource?.CLOSED;
   }
 
   override createStreamUriPath(context: LDContext) {

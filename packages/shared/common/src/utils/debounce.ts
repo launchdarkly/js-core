@@ -22,13 +22,9 @@
  * @param delayMs
  */
 const debounce = <T extends (...args: any[]) => ReturnType<T>>(
-  fn?: T,
+  fn: T,
   delayMs: number = 5000,
-): ((...args: Parameters<T>) => void) | undefined => {
-  if (!fn) {
-    return fn;
-  }
-
+): ((...args: Parameters<T>) => void) => {
   let timer: ReturnType<typeof setTimeout>;
 
   return (...args: Parameters<T>) => {
@@ -38,4 +34,5 @@ const debounce = <T extends (...args: any[]) => ReturnType<T>>(
     }, delayMs);
   };
 };
+
 export default debounce;
