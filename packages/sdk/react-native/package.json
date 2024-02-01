@@ -50,6 +50,7 @@
     "event-target-shim": "^6.0.2"
   },
   "devDependencies": {
+    "@launchdarkly/private-js-mocks": "0.0.1",
     "@testing-library/react": "^14.1.2",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.11",
