@@ -1,4 +1,4 @@
-import { type LDContext } from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes, type LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import ReactNativeLDClient from './ReactNativeLDClient';
 
@@ -6,7 +6,7 @@ describe('ReactNativeLDClient', () => {
   let ldc: ReactNativeLDClient;
 
   beforeEach(() => {
-    ldc = new ReactNativeLDClient('mobile-key', { sendEvents: false });
+    ldc = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, { sendEvents: false });
   });
 
   test('constructing a new client', () => {

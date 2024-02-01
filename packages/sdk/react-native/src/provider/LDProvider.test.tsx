@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react';
 
-import type { LDContext, LDOptions } from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes, LDContext, LDOptions } from '@launchdarkly/js-client-sdk-common';
 
 import { useLDClient } from '../hooks';
 import ReactNativeLDClient from '../ReactNativeLDClient';
@@ -23,21 +23,22 @@ const TestApp = () => {
 describe('LDProvider', () => {
   let ldc: ReactNativeLDClient;
   let context: LDContext;
-  let mockSetupListeners = setupListeners as jest.Mock;
+  const mockSetupListeners = setupListeners as jest.Mock;
 
   beforeEach(() => {
     jest.useFakeTimers();
     (ReactNativeLDClient as jest.Mock).mockImplementation(
-      (mobileKey: string, _options?: LDOptions) => {
-        let context: LDContext;
+      (mobileKey: string, autoEnvAttributes: AutoEnvAttributes, _options?: LDOptions) => {
+        let internalCachedContext: LDContext;
 
         return {
           sdkKey: mobileKey,
+          autoEnvAttributes,
           identify: jest.fn((c: LDContext) => {
-            context = c;
+            internalCachedContext = c;
             return Promise.resolve();
           }),
-          getContext: jest.fn(() => context),
+          getContext: jest.fn(() => internalCachedContext),
           on: jest.fn(),
           logger: {
             debug: jest.fn(),
@@ -48,7 +49,7 @@ describe('LDProvider', () => {
     mockSetupListeners.mockImplementation((client: ReactNativeLDClient, setState: any) => {
       setState({ client });
     });
-    ldc = new ReactNativeLDClient('mobile-key');
+    ldc = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled);
     context = { kind: 'user', key: 'test-user-key-1' };
   });
 
@@ -82,10 +83,10 @@ describe('LDProvider', () => {
   });
 
   test('identify errors are caught', async () => {
-    (ldc.identify as jest.Mock).mockImplementation(() => {
-      return Promise.reject('faking error when identifying');
-    });
-    const { getByText } = render(
+    (ldc.identify as jest.Mock).mockImplementation(() =>
+      Promise.reject(new Error('faking error when identifying')),
+    );
+    render(
       <LDProvider client={ldc} context={context}>
         <TestApp />
       </LDProvider>,

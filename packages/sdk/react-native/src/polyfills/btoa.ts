@@ -8,6 +8,10 @@ function convertToByteArray(s: string) {
   return Uint8Array.from(b);
 }
 
-export default function btoa(s: string) {
+export function btoa(s: string) {
   return fromByteArray(convertToByteArray(s));
+}
+
+export function base64FromByteArray(a: Uint8Array) {
+  return fromByteArray(a);
 }

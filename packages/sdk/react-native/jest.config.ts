@@ -1,7 +1,9 @@
 import type { JestConfigWithTsJest } from 'ts-jest';
+import { defaults as tsjPreset } from 'ts-jest/presets';
 
 const jestConfig: JestConfigWithTsJest = {
-  preset: 'ts-jest',
+  ...tsjPreset,
+  preset: 'react-native',
   testEnvironment: 'jsdom',
   transform: {
     '^.+\\.tsx?$': [
@@ -12,6 +14,7 @@ const jestConfig: JestConfigWithTsJest = {
     ],
   },
   testPathIgnorePatterns: ['node_modules', 'example', 'dist'],
+  setupFiles: ['./jestSetupFile.ts'],
 };
 
 export default jestConfig;

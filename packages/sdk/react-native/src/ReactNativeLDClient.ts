@@ -1,4 +1,5 @@
 import {
+  AutoEnvAttributes,
   base64UrlEncode,
   BasicLogger,
   internal,
@@ -15,7 +16,7 @@ import createPlatform from './platform';
  *
  * @example
  * ```tsx
- * const featureClient = new ReactNativeLDClient(MOBILE_KEY);
+ * const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enabled);
  *
  * <LDProvider client={featureClient}>
  *   <Welcome />
@@ -27,9 +28,13 @@ export default class ReactNativeLDClient extends LDClientImpl {
    * Creates an instance of the LaunchDarkly client.
    *
    * @param sdkKey The LaunchDarkly mobile key.
+   * @param autoEnvAttributes Enable / disable Auto environment attributes. When enabled, the SDK will automatically
+   * provide data about the mobile environment where the application is running. To learn more,
+   * read [Automatic environment attributes](https://docs.launchdarkly.com/sdk/features/environment-attributes).
+   * for more documentation.
    * @param options {@link LDOptions} to initialize the client with.
    */
-  constructor(sdkKey: string, options: LDOptions = {}) {
+  constructor(sdkKey: string, autoEnvAttributes: AutoEnvAttributes, options: LDOptions = {}) {
     const logger =
       options.logger ??
       new BasicLogger({
@@ -43,7 +48,13 @@ export default class ReactNativeLDClient extends LDClientImpl {
       diagnosticEventPath: `/mobile/events/diagnostic`,
     };
 
-    super(sdkKey, createPlatform(logger), { ...options, logger }, internalOptions);
+    super(
+      sdkKey,
+      autoEnvAttributes,
+      createPlatform(logger),
+      { ...options, logger },
+      internalOptions,
+    );
   }
 
   override createStreamUriPath(context: LDContext) {
