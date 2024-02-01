@@ -27,27 +27,28 @@ const tagValidator = {
 export default class ApplicationTags {
   public readonly value?: string;
 
-  constructor(options: { application?: { id?: string; version?: string }; logger?: LDLogger }) {
+  constructor(options: {
+    application?: { id?: string; version?: string; name?: string; versionName?: string };
+    logger?: LDLogger;
+  }) {
     const tags: Record<string, string[]> = {};
     const application = options?.application;
+    const logger = options?.logger;
 
-    if (application?.id !== null && application?.id !== undefined) {
-      const { valid, message } = tagValidator.is(application.id, 'application.id');
+    if (application) {
+      Object.entries(application).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          const { valid, message } = tagValidator.is(value, `application.${key}`);
 
-      if (!valid) {
-        options.logger?.warn(message);
-      } else {
-        tags['application-id'] = [application.id];
-      }
-    }
-
-    if (application?.version !== null && application?.version !== undefined) {
-      const { valid, message } = tagValidator.is(application.version, 'application.version');
-      if (!valid) {
-        options.logger?.warn(message);
-      } else {
-        tags['application-version'] = [application.version];
-      }
+          if (!valid) {
+            logger?.warn(message);
+          } else if (key === 'versionName') {
+            tags[`application-version-name`] = [value];
+          } else {
+            tags[`application-${key}`] = [value];
+          }
+        }
+      });
     }
 
     const tagKeys = Object.keys(tags);

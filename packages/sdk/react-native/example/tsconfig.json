@@ -3,7 +3,7 @@
   "compilerOptions": {
     "jsx": "react",
     "strict": true,
-    "typeRoots": ["./types"]
+    "typeRoots": ["./types"],
   },
-  "exclude": ["e2e"]
+  "exclude": ["e2e"],
 }
