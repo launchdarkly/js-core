@@ -1,9 +1,6 @@
 /**
  * Wait before calling the same function. Useful for expensive calls.
- *
- * Adapted from:
- * https://amitd.co/code/typescript/debounce
- *
+ * Adapted from https://amitd.co/code/typescript/debounce.
  *
  * @return The debounced function.
  *
@@ -18,8 +15,8 @@
  * debouncedFunction('Hello world');
  * debouncedFunction('Hello world again');
  * ```
- * @param fn
- * @param delayMs
+ * @param fn The function to be debounced.
+ * @param delayMs Defaults to 5 seconds.
  */
 const debounce = <T extends (...args: any[]) => ReturnType<T>>(
   fn: T,
