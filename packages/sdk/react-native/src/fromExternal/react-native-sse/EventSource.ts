@@ -12,15 +12,26 @@ const XMLReadyStateMap = ['UNSENT', 'OPENED', 'HEADERS_RECEIVED', 'LOADING', 'DO
 
 const defaultOptions: EventSourceOptions = {
   body: undefined,
-  debug: false,
   headers: {},
   method: 'GET',
-  pollingInterval: 5000,
   timeout: 0,
-  timeoutBeforeConnection: 0,
   withCredentials: false,
   retryAndHandleError: undefined,
+  initialRetryDelayMillis: 1000,
+  logger: undefined,
 };
+
+const maxRetryDelay = 30 * 1000; // Maximum retry delay 30 seconds.
+const jitterRatio = 0.5; // Delay should be 50%-100% of calculated time.
+
+export function backoff(base: number, retryCount: number) {
+  const delay = base * Math.pow(2, retryCount);
+  return Math.min(delay, maxRetryDelay);
+}
+
+export function jitter(computedDelayMillis: number) {
+  return computedDelayMillis - Math.trunc(Math.random() * jitterRatio * computedDelayMillis);
+}
 
 export default class EventSource<E extends string = never> {
   ERROR = -1;
@@ -41,16 +52,16 @@ export default class EventSource<E extends string = never> {
 
   private method: string;
   private timeout: number;
-  private timeoutBeforeConnection: number;
   private withCredentials: boolean;
   private headers: Record<string, any>;
   private body: any;
-  private debug: boolean;
   private url: string;
   private xhr: XMLHttpRequest = new XMLHttpRequest();
   private pollTimer: any;
-  private pollingInterval: number;
   private retryAndHandleError?: (err: any) => boolean;
+  private initialRetryDelayMillis: number = 1000;
+  private retryCount: number = 0;
+  private logger?: any;
 
   constructor(url: string, options?: EventSourceOptions) {
     const opts = {
@@ -61,25 +72,29 @@ export default class EventSource<E extends string = never> {
     this.url = url;
     this.method = opts.method!;
     this.timeout = opts.timeout!;
-    this.timeoutBeforeConnection = opts.timeoutBeforeConnection!;
     this.withCredentials = opts.withCredentials!;
     this.headers = opts.headers!;
     this.body = opts.body;
-    this.debug = opts.debug!;
-    this.pollingInterval = opts.pollingInterval!;
     this.retryAndHandleError = opts.retryAndHandleError;
+    this.initialRetryDelayMillis = opts.initialRetryDelayMillis!;
+    this.logger = opts.logger;
 
-    this.pollAgain(this.timeoutBeforeConnection, true);
+    this.tryConnect(true);
   }
 
-  private pollAgain(time: number, allowZero: boolean) {
-    if (time > 0 || allowZero) {
-      this.logDebug(`[EventSource] Will open new connection in ${time} ms.`);
-      this.dispatch('retry', { type: 'retry' });
-      this.pollTimer = setTimeout(() => {
-        this.open();
-      }, time);
-    }
+  private getNextRetryDelay() {
+    const delay = jitter(backoff(this.initialRetryDelayMillis, this.retryCount));
+    this.retryCount += 1;
+    return delay;
+  }
+
+  private tryConnect(forceNoDelay: boolean = false) {
+    let delay = forceNoDelay ? 0 : this.getNextRetryDelay();
+    this.logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
+    this.dispatch('retry', { type: 'retry', delayMillis: delay });
+    this.pollTimer = setTimeout(() => {
+      this.open();
+    }, delay);
   }
 
   open() {
@@ -113,7 +128,7 @@ export default class EventSource<E extends string = never> {
           return;
         }
 
-        this.logDebug(
+        this.logger?.debug(
           `[EventSource][onreadystatechange] ReadyState: ${
             XMLReadyStateMap[this.xhr.readyState] || 'Unknown'
           }(${this.xhr.readyState}), status: ${this.xhr.status}`,
@@ -128,16 +143,18 @@ export default class EventSource<E extends string = never> {
 
         if (this.xhr.status >= 200 && this.xhr.status < 400) {
           if (this.status === this.CONNECTING) {
+            this.retryCount = 0;
             this.status = this.OPEN;
             this.dispatch('open', { type: 'open' });
-            this.logDebug('[EventSource][onreadystatechange][OPEN] Connection opened.');
+            this.logger?.debug('[EventSource][onreadystatechange][OPEN] Connection opened.');
           }
 
+          // retry from server gets set here
           this.handleEvent(this.xhr.responseText || '');
 
           if (this.xhr.readyState === XMLHttpRequest.DONE) {
-            this.logDebug('[EventSource][onreadystatechange][DONE] Operation done.');
-            this.pollAgain(this.pollingInterval, false);
+            this.logger?.debug('[EventSource][onreadystatechange][DONE] Operation done.');
+            this.tryConnect();
           }
         } else if (this.xhr.status !== 0) {
           this.status = this.ERROR;
@@ -149,20 +166,20 @@ export default class EventSource<E extends string = never> {
           });
 
           if (this.xhr.readyState === XMLHttpRequest.DONE) {
-            this.logDebug('[EventSource][onreadystatechange][ERROR] Response status error.');
+            this.logger?.debug('[EventSource][onreadystatechange][ERROR] Response status error.');
 
             if (!this.retryAndHandleError) {
-              // default implementation
-              this.pollAgain(this.pollingInterval, false);
+              // by default just try and reconnect if there's an error.
+              this.tryConnect();
             } else {
-              // custom retry logic
+              // custom retry logic taking into account status codes.
               const shouldRetry = this.retryAndHandleError({
                 status: this.xhr.status,
                 message: this.xhr.responseText,
               });
 
               if (shouldRetry) {
-                this.pollAgain(this.pollingInterval, true);
+                this.tryConnect();
               }
             }
           }
@@ -207,13 +224,6 @@ export default class EventSource<E extends string = never> {
     }
   }
 
-  private logDebug(...msg: string[]) {
-    if (this.debug) {
-      // eslint-disable-next-line no-console
-      console.debug(...msg);
-    }
-  }
-
   private handleEvent(response: string) {
     const parts = response.slice(this.lastIndexProcessed).split('\n');
 
@@ -234,7 +244,8 @@ export default class EventSource<E extends string = never> {
       } else if (line.indexOf('retry') === 0) {
         retry = parseInt(line.replace(/retry:?\s*/, ''), 10);
         if (!Number.isNaN(retry)) {
-          this.pollingInterval = retry;
+          // GOTCHA: Ignore the server retry recommendation. Use our own custom getNextRetryDelay logic.
+          // this.pollingInterval = retry;
         }
       } else if (line.indexOf('data') === 0) {
         data.push(line.replace(/data:?\s*/, ''));
@@ -307,7 +318,7 @@ export default class EventSource<E extends string = never> {
         this.onerror(data);
         break;
       case 'retry':
-        this.onretrying({ delayMillis: this.pollingInterval });
+        this.onretrying(data);
         break;
       default:
         break;

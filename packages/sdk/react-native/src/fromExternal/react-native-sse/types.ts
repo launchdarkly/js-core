@@ -18,6 +18,7 @@ export interface CloseEvent {
 
 export interface RetryEvent {
   type: 'retry';
+  delayMillis: number;
 }
 
 export interface TimeoutEvent {
@@ -47,13 +48,12 @@ export interface ExceptionEvent {
 export interface EventSourceOptions {
   method?: string;
   timeout?: number;
-  timeoutBeforeConnection?: number;
   withCredentials?: boolean;
   headers?: Record<string, any>;
   body?: any;
-  debug?: boolean;
-  pollingInterval?: number;
   retryAndHandleError?: (err: any) => boolean;
+  initialRetryDelayMillis?: number;
+  logger?: any;
 }
 
 type BuiltInEventMap = {

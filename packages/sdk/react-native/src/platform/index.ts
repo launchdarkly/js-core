@@ -23,10 +23,13 @@ import AsyncStorage from './ConditionalAsyncStorage';
 import PlatformCrypto from './crypto';
 
 class PlatformRequests implements Requests {
+  constructor(private readonly logger: LDLogger) {}
+
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
     return new RNEventSource<EventName>(url, {
       headers: eventSourceInitDict.headers,
       retryAndHandleError: eventSourceInitDict.errorFilter,
+      logger: this.logger,
     });
   }
 
@@ -95,7 +98,7 @@ class PlatformStorage implements Storage {
 const createPlatform = (logger: LDLogger): Platform => ({
   crypto: new PlatformCrypto(),
   info: new PlatformInfo(logger),
-  requests: new PlatformRequests(),
+  requests: new PlatformRequests(logger),
   encoding: new PlatformEncoding(),
   storage: new PlatformStorage(logger),
 });
