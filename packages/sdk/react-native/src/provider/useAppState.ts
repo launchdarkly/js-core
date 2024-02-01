@@ -6,6 +6,15 @@ import { debounce } from '@launchdarkly/js-client-sdk-common';
 import { PlatformRequests } from '../platform';
 import ReactNativeLDClient from '../ReactNativeLDClient';
 
+/**
+ * Manages streamer connection based on AppState. Debouncing is used to prevent excessive starting
+ * and stopping of the EventSource which are expensive.
+ *
+ * background to active - start streamer.
+ * active to background - stop streamer.
+ *
+ * @param client
+ */
 const useAppState = (client: ReactNativeLDClient) => {
   const appState = useRef(AppState.currentState);
 
@@ -15,7 +24,7 @@ const useAppState = (client: ReactNativeLDClient) => {
   };
 
   const onChange = (nextAppState: AppStateStatus) => {
-    client.logger.debug(`App state prev ${appState.current}, next: ${nextAppState}`);
+    client.logger.debug(`App state prev: ${appState.current}, next: ${nextAppState}`);
 
     if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
       if (isEventSourceClosed()) {
@@ -33,6 +42,8 @@ const useAppState = (client: ReactNativeLDClient) => {
 
     appState.current = nextAppState;
   };
+
+  // debounce with a default delay of 5 seconds.
   const debouncedOnChange = debounce(onChange);
 
   useEffect(() => {
