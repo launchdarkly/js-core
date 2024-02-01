@@ -22,15 +22,19 @@ import { ldApplication, ldDevice } from './autoEnv';
 import AsyncStorage from './ConditionalAsyncStorage';
 import PlatformCrypto from './crypto';
 
-class PlatformRequests implements Requests {
+export class PlatformRequests implements Requests {
+  eventSource?: RNEventSource<EventName>;
+
   constructor(private readonly logger: LDLogger) {}
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-    return new RNEventSource<EventName>(url, {
+    this.eventSource = new RNEventSource<EventName>(url, {
       headers: eventSourceInitDict.headers,
       retryAndHandleError: eventSourceInitDict.errorFilter,
       logger: this.logger,
     });
+
+    return this.eventSource;
   }
 
   fetch(url: string, options?: Options): Promise<Response> {
@@ -38,6 +42,7 @@ class PlatformRequests implements Requests {
     return fetch(url, options);
   }
 }
+
 class PlatformEncoding implements Encoding {
   btoa(data: string): string {
     return btoa(data);

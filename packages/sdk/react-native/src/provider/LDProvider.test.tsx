@@ -7,8 +7,9 @@ import ReactNativeLDClient from '../ReactNativeLDClient';
 import LDProvider from './LDProvider';
 import setupListeners from './setupListeners';
 
-jest.mock('./setupListeners');
+jest.mock('../provider/useAppState');
 jest.mock('../ReactNativeLDClient');
+jest.mock('./setupListeners');
 
 const TestApp = () => {
   const ldClient = useLDClient();

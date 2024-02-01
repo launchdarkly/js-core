@@ -5,6 +5,7 @@ import { type LDContext } from '@launchdarkly/js-client-sdk-common';
 import ReactNativeLDClient from '../ReactNativeLDClient';
 import { Provider, ReactContext } from './reactContext';
 import setupListeners from './setupListeners';
+import useAppState from './useAppState';
 
 type LDProps = {
   client: ReactNativeLDClient;
@@ -37,6 +38,8 @@ const LDProvider = ({ client, context, children }: PropsWithChildren<LDProps>) =
         );
     }
   }, []);
+
+  useAppState(client);
 
   return <Provider value={state}>{children}</Provider>;
 };
