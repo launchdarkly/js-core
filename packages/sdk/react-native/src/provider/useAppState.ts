@@ -18,8 +18,6 @@ const useAppState = (client: ReactNativeLDClient) => {
     client.logger.debug(`App state prev ${appState.current}, next: ${nextAppState}`);
 
     if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-      client.logger.debug('App has come to the foreground.');
-
       if (isEventSourceClosed()) {
         client.logger.debug('Starting streamer after transitioning to foreground.');
         client.streamer?.start();
@@ -35,7 +33,7 @@ const useAppState = (client: ReactNativeLDClient) => {
 
     appState.current = nextAppState;
   };
-  const debouncedOnChange = debounce(onChange, 5000);
+  const debouncedOnChange = debounce(onChange);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', debouncedOnChange);
