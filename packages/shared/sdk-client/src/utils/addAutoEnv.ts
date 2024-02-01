@@ -31,28 +31,34 @@ export const toMulti = (c: LDSingleKindContext) => {
  *
  * @param crypto
  * @param info
- * @param applicationTags
+ * @param applicationInfo
  * @param config
  * @return An LDApplication object with populated key, envAttributesVersion, id and version.
  */
 export const addApplicationInfo = (
   { crypto, info }: Platform,
-  { application: applicationTags }: Configuration,
+  { applicationInfo }: Configuration,
 ): LDApplication | undefined => {
   const { ld_application } = info.platformData();
-  const app = deepCompact<LDApplication>(ld_application) ?? ({} as LDApplication);
-  const id = applicationTags?.id || app?.id;
+  let app = deepCompact<LDApplication>(ld_application) ?? ({} as LDApplication);
+  const id = applicationInfo?.id || app?.id;
 
   if (id) {
-    app.id = id;
+    const version = applicationInfo?.version || app?.version;
+    const name = applicationInfo?.name || app?.name;
+    const versionName = applicationInfo?.versionName || app?.versionName;
 
-    const version = applicationTags?.version || app?.version;
-    if (version) {
-      app.version = version;
-    }
+    app = {
+      ...app,
+      id,
+      // only add props if they are defined
+      ...(version ? { version } : {}),
+      ...(name ? { name } : {}),
+      ...(versionName ? { versionName } : {}),
+    };
 
     const hasher = crypto.createHash('sha256');
-    hasher.update(app.id);
+    hasher.update(id);
     app.key = hasher.digest('base64');
     app.envAttributesVersion = app.envAttributesVersion || defaultAutoEnvSchemaVersion;
 

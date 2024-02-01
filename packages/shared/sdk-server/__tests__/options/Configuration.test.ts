@@ -347,8 +347,19 @@ describe('when setting different options', () => {
   // This is more thoroughly tested in the application tags test.
   it.each([
     [{ application: { id: 'valid-id', version: 'valid-version' } }, 0],
+    [
+      {
+        application: {
+          id: 'valid-id',
+          version: 'valid-version',
+          name: 'valid-name',
+          versionName: 'valid-versionName',
+        },
+      },
+      0,
+    ],
     [{ application: 'tomato' }, 1],
-  ])('handles application tag settings', (values, warnings) => {
+  ])('handles application tag settings %j', (values, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ ...values }));
     expect(logger(config).getCount()).toEqual(warnings);

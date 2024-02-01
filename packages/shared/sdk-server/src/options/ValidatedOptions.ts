@@ -33,7 +33,7 @@ export interface ValidatedOptions {
   updateProcessor?: subsystem.LDStreamProcessor;
   wrapperName?: string;
   wrapperVersion?: string;
-  application?: { id?: string; version?: string };
+  application?: { id?: string; version?: string; name?: string; versionName?: string };
   proxyOptions?: LDProxyOptions;
   logger?: LDLogger;
   // Allow indexing this by a string for the validation step.

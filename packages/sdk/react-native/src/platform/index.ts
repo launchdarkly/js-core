@@ -22,7 +22,7 @@ import { ldApplication, ldDevice } from './autoEnv';
 import AsyncStorage from './ConditionalAsyncStorage';
 import PlatformCrypto from './crypto';
 
-export class PlatformRequests implements Requests {
+class PlatformRequests implements Requests {
   eventSource?: RNEventSource<EventName>;
 
   constructor(private readonly logger: LDLogger) {}
