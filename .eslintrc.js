@@ -8,7 +8,7 @@ module.exports = {
   parserOptions: {
     project: './tsconfig.eslint.json',
   },
-  plugins: ['jest', '@typescript-eslint', 'prettier'],
+  plugins: ['@typescript-eslint', 'prettier', 'jest'],
   ignorePatterns: [
     '**/dist/**',
     '**/vercel/examples/**',
