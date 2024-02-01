@@ -1,14 +1,14 @@
 import type { Encoding, Info, Platform, PlatformData, Requests, SdkData, Storage } from '@common';
 
-import { crypto } from './hasher';
+import { setupCrypto } from './crypto';
 
 const encoding: Encoding = {
   btoa: (s: string) => Buffer.from(s).toString('base64'),
 };
 
-const info: Info = {
-  platformData(): PlatformData {
-    return {
+const setupInfo = () => ({
+  platformData: jest.fn(
+    (): PlatformData => ({
       os: {
         name: 'An OS',
         version: '1.0.1',
@@ -18,18 +18,31 @@ const info: Info = {
       additional: {
         nodeVersion: '42',
       },
-    };
-  },
-  sdkData(): SdkData {
-    return {
+      ld_application: {
+        key: '',
+        envAttributesVersion: '1.0',
+        id: 'com.testapp.ld',
+        name: 'LDApplication.TestApp',
+        version: '1.1.1',
+      },
+      ld_device: {
+        key: '',
+        envAttributesVersion: '1.0',
+        os: { name: 'Another OS', version: '99', family: 'orange' },
+        manufacturer: 'coconut',
+      },
+    }),
+  ),
+  sdkData: jest.fn(
+    (): SdkData => ({
       name: 'An SDK',
       version: '2.0.2',
       userAgentBase: 'TestUserAgent',
       wrapperName: 'Rapper',
       wrapperVersion: '1.2.3',
-    };
-  },
-};
+    }),
+  ),
+});
 
 const requests: Requests = {
   fetch: jest.fn(),
@@ -42,12 +55,14 @@ const storage: Storage = {
   clear: jest.fn(),
 };
 
-const basicPlatform: Platform = {
-  encoding,
-  info,
-  crypto,
-  requests,
-  storage,
+// eslint-disable-next-line import/no-mutable-exports
+export let basicPlatform: Platform;
+export const setupBasicPlatform = () => {
+  basicPlatform = {
+    encoding,
+    info: setupInfo(),
+    crypto: setupCrypto(),
+    requests,
+    storage,
+  };
 };
-
-export default basicPlatform;

@@ -5,6 +5,12 @@
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./setup": {
+      "default": "./dist/setupMocks.js"
+    }
+  },
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/common",
   "repository": {
     "type": "git",

@@ -1,47 +1,55 @@
 import type {
+  Crypto,
   LDContext,
   LDContextCommon,
   LDMultiKindContext,
   LDUser,
+  Storage,
 } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
-import ensureKey, { addNamespace, getOrGenerateKey } from './ensureKey';
+import ensureKey from './ensureKey';
+import { getOrGenerateKey, prefixNamespace } from './getOrGenerateKey';
 
-const { crypto, storage } = basicPlatform;
 describe('ensureKey', () => {
+  let crypto: Crypto;
+  let storage: Storage;
+
   beforeEach(() => {
-    crypto.randomUUID.mockReturnValueOnce('random1').mockReturnValueOnce('random2');
+    crypto = basicPlatform.crypto;
+    storage = basicPlatform.storage;
+
+    (crypto.randomUUID as jest.Mock).mockReturnValueOnce('random1').mockReturnValueOnce('random2');
   });
 
   afterEach(() => {
     jest.resetAllMocks();
   });
 
-  test('addNamespace', async () => {
-    const nsKey = addNamespace('org');
-    expect(nsKey).toEqual('LaunchDarkly_AnonKeys_org');
+  test('prefixNamespace', async () => {
+    const nsKey = prefixNamespace('anonymous', 'org');
+    expect(nsKey).toEqual('LaunchDarkly_AnonymousKeys_org');
   });
 
   test('getOrGenerateKey create new key', async () => {
-    const key = await getOrGenerateKey('org', basicPlatform);
+    const key = await getOrGenerateKey('anonymous', 'org', basicPlatform);
 
     expect(key).toEqual('random1');
     expect(crypto.randomUUID).toHaveBeenCalled();
-    expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonKeys_org');
-    expect(storage.set).toHaveBeenCalledWith('LaunchDarkly_AnonKeys_org', 'random1');
+    expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
+    expect(storage.set).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org', 'random1');
   });
 
   test('getOrGenerateKey existing key', async () => {
-    storage.get.mockImplementation((nsKind: string) =>
-      nsKind === 'LaunchDarkly_AnonKeys_org' ? 'random1' : undefined,
+    (storage.get as jest.Mock).mockImplementation((namespacedKind: string) =>
+      namespacedKind === 'LaunchDarkly_AnonymousKeys_org' ? 'random1' : undefined,
     );
 
-    const key = await getOrGenerateKey('org', basicPlatform);
+    const key = await getOrGenerateKey('anonymous', 'org', basicPlatform);
 
     expect(key).toEqual('random1');
     expect(crypto.randomUUID).not.toHaveBeenCalled();
-    expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonKeys_org');
+    expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
     expect(storage.set).not.toHaveBeenCalled();
   });
 

@@ -1,5 +1,10 @@
-import { clone, LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
+import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
+import {
+  basicPlatform,
+  hasher,
+  logger,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
@@ -19,9 +24,23 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
   };
 });
 
-const { crypto } = basicPlatform;
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
+const autoEnv = {
+  ld_application: {
+    key: 'digested1',
+    envAttributesVersion: '1.0',
+    id: 'com.testapp.ld',
+    name: 'LDApplication.TestApp',
+    version: '1.1.1',
+  },
+  ld_device: {
+    key: 'random1',
+    envAttributesVersion: '1.0',
+    manufacturer: 'coconut',
+    os: { name: 'An OS', version: '1.0.1', family: 'orange' },
+  },
+};
 let ldc: LDClientImpl;
 let defaultPutResponse: Flags;
 
@@ -29,9 +48,13 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
-    crypto.randomUUID.mockReturnValueOnce('random1');
+    basicPlatform.crypto.randomUUID.mockReturnValue('random1');
+    hasher.digest.mockReturnValue('digested1');
 
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, { logger, sendEvents: false });
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+      logger,
+      sendEvents: false,
+    });
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
@@ -42,7 +65,8 @@ describe('sdk-client object', () => {
   });
 
   test('instantiate with blank options', () => {
-    ldc = new LDClientImpl(testSdkKey, basicPlatform, {});
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {});
+
     expect(ldc.config).toMatchObject({
       allAttributesPrivate: false,
       baseUri: 'https://sdk.launchdarkly.com',
@@ -129,7 +153,29 @@ describe('sdk-client object', () => {
     const c = ldc.getContext();
     const all = ldc.allFlags();
 
-    expect(carContext).toEqual(c);
+    expect(c).toEqual({
+      kind: 'multi',
+      car: { key: 'mazda-cx7' },
+      ...autoEnv,
+    });
+    expect(all).toMatchObject({
+      'dev-test-flag': false,
+    });
+  });
+
+  test('identify success without auto env', async () => {
+    defaultPutResponse['dev-test-flag'].value = false;
+    const carContext: LDContext = { kind: 'car', key: 'mazda-cx7' };
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
+      logger,
+      sendEvents: false,
+    });
+
+    await ldc.identify(carContext);
+    const c = ldc.getContext();
+    const all = ldc.allFlags();
+
+    expect(c).toEqual(carContext);
     expect(all).toMatchObject({
       'dev-test-flag': false,
     });
@@ -143,18 +189,21 @@ describe('sdk-client object', () => {
     const c = ldc.getContext();
     const all = ldc.allFlags();
 
-    expect(c!.key).toEqual('random1');
+    expect(c).toEqual({
+      kind: 'multi',
+      car: { anonymous: true, key: 'random1' },
+      ...autoEnv,
+    });
     expect(all).toMatchObject({
       'dev-test-flag': false,
     });
   });
 
   test('identify error invalid context', async () => {
-    // @ts-ignore
-    const carContext: LDContext = { kind: 'car', key: undefined };
+    const carContext: LDContext = { kind: 'car', key: '' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrowError(/no key/);
-    expect(logger.error).toBeCalledTimes(1);
+    await expect(ldc.identify(carContext)).rejects.toThrow(/no key/);
+    expect(logger.error).toHaveBeenCalledTimes(1);
     expect(ldc.getContext()).toBeUndefined();
   });
 
@@ -166,7 +215,7 @@ describe('sdk-client object', () => {
       code: 401,
       message: 'test-error',
     });
-    expect(logger.error).toBeCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledTimes(1);
     expect(ldc.getContext()).toBeUndefined();
   });
 

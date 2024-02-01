@@ -24,7 +24,6 @@ export interface LDOptions {
      * Example: `authentication-service`
      */
     id?: string;
-
     /**
      * A unique identifier representing the version of the application where the LaunchDarkly SDK is running.
      *

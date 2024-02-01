@@ -41,6 +41,8 @@ export default class Configuration {
   public readonly tags: ApplicationTags;
   public readonly application?: { id?: string; version?: string };
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
+
+  // TODO: implement requestHeaderTransform
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
   public readonly stream?: boolean;
   public readonly hash?: string;
