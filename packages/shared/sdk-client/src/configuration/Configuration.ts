@@ -39,7 +39,12 @@ export default class Configuration {
   public readonly privateAttributes: string[] = [];
 
   public readonly tags: ApplicationTags;
-  public readonly application?: { id?: string; version?: string };
+  public readonly applicationInfo?: {
+    id?: string;
+    version?: string;
+    name?: string;
+    versionName?: string;
+  };
   public readonly bootstrap?: 'localStorage' | LDFlagSet;
 
   // TODO: implement requestHeaderTransform
@@ -66,7 +71,7 @@ export default class Configuration {
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
     );
-    this.tags = new ApplicationTags({ application: this.application, logger: this.logger });
+    this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {
