@@ -8,14 +8,19 @@ const createEventProcessor = (
   config: Configuration,
   platform: Platform,
   diagnosticsManager?: internal.DiagnosticsManager,
-): EventProcessor | undefined =>
-  config.sendEvents && config.connectionMode !== 'offline'
-    ? new internal.EventProcessor(
-        { ...config, eventsCapacity: config.capacity },
-        new ClientContext(clientSideID, config, platform),
-        undefined,
-        diagnosticsManager,
-      )
-    : undefined;
+  start: boolean = false,
+): EventProcessor | undefined => {
+  if (config.sendEvents) {
+    return new internal.EventProcessor(
+      { ...config, eventsCapacity: config.capacity },
+      new ClientContext(clientSideID, config, platform),
+      undefined,
+      diagnosticsManager,
+      start,
+    );
+  }
+
+  return undefined;
+};
 
 export default createEventProcessor;

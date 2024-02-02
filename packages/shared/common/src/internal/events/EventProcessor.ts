@@ -108,6 +108,7 @@ export default class EventProcessor implements LDEventProcessor {
     clientContext: ClientContext,
     private readonly contextDeduplicator?: LDContextDeduplicator,
     private readonly diagnosticsManager?: DiagnosticsManager,
+    start: boolean = true,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
@@ -118,7 +119,9 @@ export default class EventProcessor implements LDEventProcessor {
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
-    this.start();
+    if (start) {
+      this.start();
+    }
   }
 
   start() {
@@ -154,6 +157,8 @@ export default class EventProcessor implements LDEventProcessor {
         this.postDiagnosticEvent(statsEvent);
       }, this.config.diagnosticRecordingInterval * 1000);
     }
+
+    this.logger?.debug('Started EventProcessor.');
   }
 
   private postDiagnosticEvent(event: DiagnosticEvent) {

@@ -68,35 +68,33 @@ export default class LDClientImpl implements LDClient {
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
     this.emitter = new LDEmitter();
-
-    this.initEventProcessor();
-  }
-
-  initEventProcessor() {
     this.diagnosticsManager = createDiagnosticsManager(this.sdkKey, this.config, this.platform);
     this.eventProcessor = createEventProcessor(
       this.sdkKey,
       this.config,
       this.platform,
       this.diagnosticsManager,
+      !this.isOffline(),
     );
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
+    if (this.config.connectionMode === mode) {
+      this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
+      return Promise.resolve();
+    }
+
     this.config.connectionMode = mode;
+    this.logger.debug(`setConnectionMode ${mode}.`);
 
     switch (mode) {
       case 'offline':
-        // flush, close streamer & eventProcessor
         return this.close();
       case 'streaming':
-        if (!this.eventProcessor) {
-          this.initEventProcessor();
-        }
         this.eventProcessor?.start();
 
-        // start streamer by calling identify
         if (this.context) {
+          // identify will start streamer
           return this.identify(this.context);
         }
         break;
@@ -128,14 +126,18 @@ export default class LDClientImpl implements LDClient {
     await this.flush();
     this.eventProcessor?.close();
     this.streamer?.close();
+    this.logger.debug('Closed eventProcessor and streamer.');
   }
 
   async flush(): Promise<{ error?: Error; result: boolean }> {
     try {
       await this.eventProcessor?.flush();
+      this.logger.debug('Successfully flushed eventProcessor.');
     } catch (e) {
+      this.logger.error(`Error flushing eventProcessor: ${e}.`);
       return { error: e as Error, result: false };
     }
+
     return { result: true };
   }
 
@@ -268,7 +270,6 @@ export default class LDClientImpl implements LDClient {
     return f ? JSON.parse(f) : undefined;
   }
 
-  // TODO: implement secure mode
   async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
     let context = await ensureKey(pristineContext, this.platform);
 
@@ -299,9 +300,14 @@ export default class LDClientImpl implements LDClient {
     }
 
     if (this.isOffline()) {
-      this.context = context;
-      this.flags = {};
-      identifyResolve();
+      if (flagsStorage) {
+        this.logger.debug('Offline identify using storage flags.');
+      } else {
+        this.logger.debug('Offline identify no storage. Defaults will be used.');
+        this.context = context;
+        this.flags = {};
+        identifyResolve();
+      }
     } else {
       this.streamer?.close();
       this.streamer = new internal.StreamingProcessor(
@@ -345,8 +351,6 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  // TODO: move variation functions to a separate file to make this file size
-  // more manageable.
   private variationInternal(
     flagKey: string,
     defaultValue: any,
@@ -358,25 +362,13 @@ export default class LDClientImpl implements LDClient {
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
-    // TODO: Double check if we need to record diagnostics here
-    if (this.isOffline()) {
-      this.logger?.debug(
-        `Offline variation for "${flagKey}"; returning default value ${defaultValue}`,
-      );
-      return {
-        value: defaultValue,
-        variationIndex: null,
-        reason: null,
-      };
-    }
-
     const evalContext = Context.fromLDContext(this.context);
     const found = this.flags[flagKey];
 
     if (!found || found.deleted) {
       const defVal = defaultValue ?? null;
       const error = new LDClientError(
-        `Unknown feature flag "${flagKey}"; returning default value ${defVal}`,
+        `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
       this.logger.error(error);
       this.emitter.emit('error', this.context, error);
