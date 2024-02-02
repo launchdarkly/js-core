@@ -67,15 +67,15 @@ export default class LDClientImpl implements LDClient {
     this.config = new Configuration(options, internalOptions);
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
-    this.emitter = new LDEmitter();
-    this.diagnosticsManager = createDiagnosticsManager(this.sdkKey, this.config, this.platform);
+    this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
-      this.sdkKey,
+      sdkKey,
       this.config,
-      this.platform,
+      platform,
       this.diagnosticsManager,
       !this.isOffline(),
     );
+    this.emitter = new LDEmitter();
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
