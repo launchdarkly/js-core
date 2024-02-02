@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { ConnectionMode } from '@launchdarkly/js-client-sdk-common';
 import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
@@ -13,6 +14,10 @@ export default function Welcome() {
     ldc
       .identify({ kind: 'user', key: userKey })
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
+  };
+
+  const setConnectionMode = (m: ConnectionMode) => {
+    ldc.setConnectionMode(m);
   };
 
   return (
@@ -40,8 +45,14 @@ export default function Welcome() {
         value={flagKey}
         testID="flagKey"
       />
-      <TouchableOpacity style={styles.buttonContainer}>
-        <Text style={styles.buttonText}>get flag value</Text>
+      <TouchableOpacity style={styles.buttonContainer} onPress={() => setConnectionMode('offline')}>
+        <Text style={styles.buttonText}>Set offline</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.buttonContainer}
+        onPress={() => setConnectionMode('streaming')}
+      >
+        <Text style={styles.buttonText}>Set online</Text>
       </TouchableOpacity>
     </View>
   );
