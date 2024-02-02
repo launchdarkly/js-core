@@ -686,10 +686,11 @@ describe('given an event processor', () => {
     eventProcessor.sendEvent(new InputIdentifyEvent(Context.fromLDContext(user)));
     await jest.advanceTimersByTimeAsync(eventProcessorConfig.flushInterval * 1000);
 
-    expect(mockConsole).toBeCalledTimes(2);
-    expect(mockConsole).toHaveBeenNthCalledWith(1, 'debug: [LaunchDarkly] Flushing 1 events');
+    expect(mockConsole).toHaveBeenCalledTimes(3);
+    expect(mockConsole).toHaveBeenNthCalledWith(1, 'debug: [LaunchDarkly] Started EventProcessor.');
+    expect(mockConsole).toHaveBeenNthCalledWith(2, 'debug: [LaunchDarkly] Flushing 1 events');
     expect(mockConsole).toHaveBeenNthCalledWith(
-      2,
+      3,
       'debug: [LaunchDarkly] Flush failed: Error: some error',
     );
   });
