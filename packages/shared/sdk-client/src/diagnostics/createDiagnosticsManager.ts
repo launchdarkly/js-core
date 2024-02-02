@@ -8,7 +8,7 @@ const createDiagnosticsManager = (
   config: Configuration,
   platform: Platform,
 ) => {
-  if (config.sendEvents && !config.diagnosticOptOut) {
+  if (config.sendEvents && config.connectionMode !== 'offline' && !config.diagnosticOptOut) {
     return new internal.DiagnosticsManager(
       clientSideID,
       platform,

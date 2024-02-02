@@ -14,11 +14,10 @@ import {
   Platform,
   ProcessStreamResponse,
   EventName as StreamEventName,
-  subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, type LDOptions } from './api';
+import { ConnectionMode, LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
@@ -34,9 +33,9 @@ export default class LDClientImpl implements LDClient {
   config: Configuration;
   context?: LDContext;
   diagnosticsManager?: internal.DiagnosticsManager;
-  eventProcessor: subsystem.LDEventProcessor;
-  streamer?: internal.StreamingProcessor;
+  eventProcessor?: internal.EventProcessor;
   logger: LDLogger;
+  streamer?: internal.StreamingProcessor;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
@@ -68,14 +67,51 @@ export default class LDClientImpl implements LDClient {
     this.config = new Configuration(options, internalOptions);
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
-    this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
+    this.emitter = new LDEmitter();
+
+    this.initEventProcessor();
+  }
+
+  initEventProcessor() {
+    this.diagnosticsManager = createDiagnosticsManager(this.sdkKey, this.config, this.platform);
     this.eventProcessor = createEventProcessor(
-      sdkKey,
+      this.sdkKey,
       this.config,
-      platform,
+      this.platform,
       this.diagnosticsManager,
     );
-    this.emitter = new LDEmitter();
+  }
+
+  async setConnectionMode(mode: ConnectionMode): Promise<void> {
+    this.config.connectionMode = mode;
+
+    switch (mode) {
+      case 'offline':
+        // flush, close streamer & eventProcessor
+        return this.close();
+      case 'streaming':
+        if (!this.eventProcessor) {
+          this.initEventProcessor();
+        }
+        this.eventProcessor?.start();
+
+        // start streamer by calling identify
+        if (this.context) {
+          return this.identify(this.context);
+        }
+        break;
+      default:
+        this.logger.warn(
+          `Unknown ConnectionMode: ${mode}. Only 'offline' and 'streaming' are supported.`,
+        );
+        break;
+    }
+
+    return Promise.resolve();
+  }
+
+  isOffline() {
+    return this.config.connectionMode === 'offline';
   }
 
   allFlags(): LDFlagSet {
@@ -90,13 +126,13 @@ export default class LDClientImpl implements LDClient {
 
   async close(): Promise<void> {
     await this.flush();
-    this.eventProcessor.close();
+    this.eventProcessor?.close();
     this.streamer?.close();
   }
 
   async flush(): Promise<{ error?: Error; result: boolean }> {
     try {
-      await this.eventProcessor.flush();
+      await this.eventProcessor?.flush();
     } catch (e) {
       return { error: e as Error, result: false };
     }
@@ -262,19 +298,25 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('change', context, changedKeys);
     }
 
-    this.streamer?.close();
-    this.streamer = new internal.StreamingProcessor(
-      this.sdkKey,
-      this.clientContext,
-      this.createStreamUriPath(context),
-      this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
-      this.diagnosticsManager,
-      (e) => {
-        this.logger.error(e);
-        this.emitter.emit('error', context, e);
-      },
-    );
-    this.streamer.start();
+    if (this.isOffline()) {
+      this.context = context;
+      this.flags = {};
+      identifyResolve();
+    } else {
+      this.streamer?.close();
+      this.streamer = new internal.StreamingProcessor(
+        this.sdkKey,
+        this.clientContext,
+        this.createStreamUriPath(context),
+        this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
+        this.diagnosticsManager,
+        (e) => {
+          this.logger.error(e);
+          this.emitter.emit('error', context, e);
+        },
+      );
+      this.streamer.start();
+    }
 
     return identifyPromise;
   }
@@ -298,7 +340,7 @@ export default class LDClientImpl implements LDClient {
       return;
     }
 
-    this.eventProcessor.sendEvent(
+    this.eventProcessor?.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
     );
   }
@@ -316,6 +358,18 @@ export default class LDClientImpl implements LDClient {
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
+    // TODO: Double check if we need to record diagnostics here
+    if (this.isOffline()) {
+      this.logger?.debug(
+        `Offline variation for "${flagKey}"; returning default value ${defaultValue}`,
+      );
+      return {
+        value: defaultValue,
+        variationIndex: null,
+        reason: null,
+      };
+    }
+
     const evalContext = Context.fromLDContext(this.context);
     const found = this.flags[flagKey];
 
@@ -326,7 +380,7 @@ export default class LDClientImpl implements LDClient {
       );
       this.logger.error(error);
       this.emitter.emit('error', this.context, error);
-      this.eventProcessor.sendEvent(
+      this.eventProcessor?.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
       );
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
@@ -337,7 +391,7 @@ export default class LDClientImpl implements LDClient {
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
       if (!matched) {
-        this.eventProcessor.sendEvent(
+        this.eventProcessor?.sendEvent(
           eventFactory.evalEventClient(
             flagKey,
             defaultValue, // track default value on type errors
@@ -361,7 +415,7 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Result value is null in variation');
       successDetail.value = defaultValue;
     }
-    this.eventProcessor.sendEvent(
+    this.eventProcessor?.sendEvent(
       eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
     );
     return successDetail;

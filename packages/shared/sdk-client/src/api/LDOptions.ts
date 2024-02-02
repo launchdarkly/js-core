@@ -1,5 +1,6 @@
 import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
 
+import ConnectionMode from './ConnectionMode';
 import type { LDInspection } from './LDInspection';
 
 export interface LDOptions {
@@ -59,17 +60,11 @@ export interface LDOptions {
   baseUri?: string;
 
   /**
+   * TODO: bootstrap
    * The initial set of flags to use until the remote set is retrieved.
-   *
-   * If `"localStorage"` is specified, the flags will be saved and retrieved from browser local
-   * storage. Alternatively, an {@link LDFlagSet} can be specified which will be used as the initial
-   * source of flag values. In the latter case, the flag values will be available via {@link LDClient.variation}
-   * immediately after calling `initialize()` (normally they would not be available until the
-   * client signals that it is ready).
-   *
-   * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/features/bootstrapping#javascript).
+   * @alpha
    */
-  bootstrap?: 'localStorage' | LDFlagSet;
+  bootstrap?: LDFlagSet;
 
   /**
    * The capacity of the analytics events queue.
@@ -119,15 +114,23 @@ export interface LDOptions {
   flushInterval?: number;
 
   /**
+   * TODO: secure mode
    * The signed context key for Secure Mode.
-   *
-   * For more information, see the JavaScript SDK Reference Guide on
-   * [Secure mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
+   * @alpha
    */
   hash?: string;
 
   /**
+   * Sets the mode to use for connections when the SDK is initialized.
+   *
+   * Defaults to streaming.
+   */
+  initialConnectionMode?: ConnectionMode;
+
+  /**
+   * TODO: inspectors
    * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
+   * @alpha
    */
   inspectors?: LDInspection[];
 

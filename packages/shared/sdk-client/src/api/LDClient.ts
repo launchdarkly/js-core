@@ -7,6 +7,8 @@ import {
   LDLogger,
 } from '@launchdarkly/js-sdk-common';
 
+import ConnectionMode from './ConnectionMode';
+
 /**
  * The basic interface for the LaunchDarkly client. Platform-specific SDKs may add some methods of their own.
  *
@@ -212,6 +214,13 @@ export interface LDClient {
    *   receive parameters, depending on the type of event.
    */
   on(key: string, callback: (...args: any[]) => void): void;
+
+  /**
+   * Sets the SDK connection mode.
+   *
+   * @param mode - One of supported {@link ConnectionMode}. By default, the SDK uses 'streaming'.
+   */
+  setConnectionMode(mode: ConnectionMode): void;
 
   /**
    * Determines the string variation of a feature flag.

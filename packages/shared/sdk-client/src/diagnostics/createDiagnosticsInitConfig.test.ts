@@ -39,7 +39,7 @@ describe('createDiagnosticsInitConfig', () => {
         diagnosticRecordingInterval: 4,
         allAttributesPrivate: true,
         hash: 'test-hash',
-        bootstrap: 'localStorage',
+        bootstrap: { testFlag: true },
       }),
     );
     expect(custom).toEqual({

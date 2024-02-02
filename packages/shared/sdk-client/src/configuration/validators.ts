@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import { noop, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { type LDOptions } from '../api';
@@ -5,15 +6,26 @@ import { LDInspection } from '../api/LDInspection';
 
 class BootStrapValidator implements TypeValidator {
   is(u: unknown): boolean {
-    return u === 'localStorage' || typeof u === 'object' || typeof u === 'undefined' || u === null;
+    return typeof u === 'object' || typeof u === 'undefined' || u === null;
   }
 
   getType(): string {
-    return `'localStorage' | LDFlagSet`;
+    return `LDFlagSet`;
+  }
+}
+
+class ConnectionModeValidator implements TypeValidator {
+  is(u: unknown): boolean {
+    return u === 'offline' || u === 'streaming';
+  }
+
+  getType(): string {
+    return `'offline' | streaming`;
   }
 }
 
 const validators: Record<keyof LDOptions, TypeValidator> = {
+  initialConnectionMode: new ConnectionModeValidator(),
   logger: TypeValidators.Object,
 
   baseUri: TypeValidators.String,
