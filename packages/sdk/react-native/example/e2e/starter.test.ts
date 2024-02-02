@@ -31,7 +31,6 @@ describe('Example', () => {
 
   test('variation', async () => {
     await element(by.id('flagKey')).replaceText('my-boolean-flag-2');
-    await element(by.text(/get flag value/i)).tap();
 
     await waitFor(element(by.text(/my-boolean-flag-2: true/i)))
       .toBeVisible()

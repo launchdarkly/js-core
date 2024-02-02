@@ -9,7 +9,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { type LDOptions } from '../api';
+import { ConnectionMode, type LDOptions } from '../api';
 import { LDInspection } from '../api/LDInspection';
 import validators from './validators';
 
@@ -30,13 +30,17 @@ export default class Configuration {
 
   public readonly allAttributesPrivate = false;
   public readonly diagnosticOptOut = false;
-  public readonly withReasons = false;
   public readonly sendEvents = true;
   public readonly sendLDHeaders = true;
+
   public readonly useReport = false;
+  public readonly withReasons = false;
 
   public readonly inspectors: LDInspection[] = [];
   public readonly privateAttributes: string[] = [];
+
+  public readonly initialConnectionMode: ConnectionMode = 'streaming';
+  public connectionMode: ConnectionMode;
 
   public readonly tags: ApplicationTags;
   public readonly applicationInfo?: {
@@ -45,7 +49,7 @@ export default class Configuration {
     name?: string;
     versionName?: string;
   };
-  public readonly bootstrap?: 'localStorage' | LDFlagSet;
+  public readonly bootstrap?: LDFlagSet;
 
   // TODO: implement requestHeaderTransform
   public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
@@ -72,6 +76,7 @@ export default class Configuration {
       internalOptions.includeAuthorizationHeader,
     );
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
+    this.connectionMode = this.initialConnectionMode;
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {

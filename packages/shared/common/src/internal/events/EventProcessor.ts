@@ -104,10 +104,11 @@ export default class EventProcessor implements LDEventProcessor {
   private flushUsersTimer: any = null;
 
   constructor(
-    config: EventProcessorOptions,
+    private readonly config: EventProcessorOptions,
     clientContext: ClientContext,
     private readonly contextDeduplicator?: LDContextDeduplicator,
     private readonly diagnosticsManager?: DiagnosticsManager,
+    start: boolean = true,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
@@ -118,6 +119,12 @@ export default class EventProcessor implements LDEventProcessor {
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
+    if (start) {
+      this.start();
+    }
+  }
+
+  start() {
     if (this.contextDeduplicator?.flushInterval !== undefined) {
       this.flushUsersTimer = setInterval(() => {
         this.contextDeduplicator?.flush();
@@ -131,10 +138,10 @@ export default class EventProcessor implements LDEventProcessor {
         // Log errors and swallow them
         this.logger?.debug(`Flush failed: ${e}`);
       }
-    }, config.flushInterval * 1000);
+    }, this.config.flushInterval * 1000);
 
     if (this.diagnosticsManager) {
-      const initEvent = diagnosticsManager!.createInitEvent();
+      const initEvent = this.diagnosticsManager!.createInitEvent();
       this.postDiagnosticEvent(initEvent);
 
       this.diagnosticsTimer = setInterval(() => {
@@ -148,8 +155,10 @@ export default class EventProcessor implements LDEventProcessor {
         this.deduplicatedUsers = 0;
 
         this.postDiagnosticEvent(statsEvent);
-      }, config.diagnosticRecordingInterval * 1000);
+      }, this.config.diagnosticRecordingInterval * 1000);
     }
+
+    this.logger?.debug('Started EventProcessor.');
   }
 
   private postDiagnosticEvent(event: DiagnosticEvent) {

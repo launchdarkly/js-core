@@ -85,7 +85,7 @@ describe('Configuration', () => {
     expect(config.bootstrap).toBeUndefined();
     expect(console.error).toHaveBeenNthCalledWith(
       1,
-      expect.stringContaining(`should be of type 'localStorage' | LDFlagSet, got string`),
+      expect.stringMatching(/should be of type LDFlagSet, got string/i),
     );
   });
 });
