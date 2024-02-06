@@ -15,6 +15,21 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * devDependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.1.1 to 2.1.2
 
+## [2.4.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.3.3...cloudflare-server-sdk-v2.4.0) (2024-02-06)
+
+
+### Features
+
+* React-native support for auto-env attributes. Only affects react-native package. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+* Update eslint jest configuration and versions. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.1.3 to 2.2.0
+
 ## [2.3.3](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.3.2...cloudflare-server-sdk-v2.3.3) (2024-01-16)
 
 

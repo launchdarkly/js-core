@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.1.5...react-native-client-sdk-v0.2.0) (2024-02-06)
+
+
+### Features
+
+* React-native support for auto-env attributes. Only affects react-native package. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+* Update eslint jest configuration and versions. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+
+
+### Bug Fixes
+
+* Add RN SDK offline support through ConnectionMode. ([#361](https://github.com/launchdarkly/js-core/issues/361)) ([d97ce82](https://github.com/launchdarkly/js-core/commit/d97ce82861438a1b79b93799a9d061cdfa1ab027))
+* Implement RN SDK EventSource jitter backoff. ([#359](https://github.com/launchdarkly/js-core/issues/359)) ([95e58bd](https://github.com/launchdarkly/js-core/commit/95e58bd666772b30b31ac98a462ca19407bc2bac))
+* Improvements and fixes from docs review. ([#362](https://github.com/launchdarkly/js-core/issues/362)) ([ba07fbf](https://github.com/launchdarkly/js-core/commit/ba07fbf4ea0b505c4bdc6376b6b36d7a9c1e5fda))
+* RN streamer connection in background and foreground. ([#360](https://github.com/launchdarkly/js-core/issues/360)) ([c69b768](https://github.com/launchdarkly/js-core/commit/c69b7686eed1971288adfbe527b4bf53ba5fe2b7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 0.1.2 to 0.2.0
+
 ## [0.1.5](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.1.4...react-native-client-sdk-v0.1.5) (2024-01-16)
 
 
