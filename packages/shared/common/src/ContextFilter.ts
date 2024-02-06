@@ -101,7 +101,12 @@ export default class ContextFilter {
   filter(context: Context, redactAnonymousAttributes: boolean = false): any {
     const contexts = context.getContexts();
     if (contexts.length === 1) {
-      return this.filterSingleKind(context, contexts[0][1], contexts[0][0], redactAnonymousAttributes);
+      return this.filterSingleKind(
+        context,
+        contexts[0][1],
+        contexts[0][0],
+        redactAnonymousAttributes,
+      );
     }
     const filteredMulti: any = {
       kind: 'multi',
@@ -112,7 +117,12 @@ export default class ContextFilter {
     return filteredMulti;
   }
 
-  private getAttributesToFilter(context: Context, single: LDContextCommon, kind: string, redactAllAttributes: boolean) {
+  private getAttributesToFilter(
+    context: Context,
+    single: LDContextCommon,
+    kind: string,
+    redactAllAttributes: boolean,
+  ) {
     return (
       redactAllAttributes
         ? Object.keys(single).map((k) => new AttributeReference(k, true))
@@ -120,8 +130,14 @@ export default class ContextFilter {
     ).filter((attr) => !protectedAttributes.some((protectedAttr) => protectedAttr.compare(attr)));
   }
 
-  private filterSingleKind(context: Context, single: LDContextCommon, kind: string, redactAnonymousAttributes: boolean): any {
-    const redactAllAttributes = this.allAttributesPrivate || (redactAnonymousAttributes && single.anonymous === true);
+  private filterSingleKind(
+    context: Context,
+    single: LDContextCommon,
+    kind: string,
+    redactAnonymousAttributes: boolean,
+  ): any {
+    const redactAllAttributes =
+      this.allAttributesPrivate || (redactAnonymousAttributes && single.anonymous === true);
     const { cloned, excluded } = cloneWithRedactions(
       single,
       this.getAttributesToFilter(context, single, kind, redactAllAttributes),
