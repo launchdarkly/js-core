@@ -24,6 +24,22 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
     * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.0.4 to ^1.0.5
     * @launchdarkly/js-server-sdk-common bumped from ^2.1.1 to ^2.1.2
 
+## [1.1.0](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.0.14...akamai-server-edgekv-sdk-v1.1.0) (2024-02-06)
+
+
+### Features
+
+* React-native support for auto-env attributes. Only affects react-native package. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+* Update eslint jest configuration and versions. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.0.6 to ^1.1.0
+    * @launchdarkly/js-server-sdk-common bumped from ^2.1.3 to ^2.2.0
+
 ## [1.0.14](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.0.13...akamai-server-edgekv-sdk-v1.0.14) (2024-01-16)
 
 

@@ -8,6 +8,21 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.1.1 to 2.1.2
 
+## [9.1.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.0.6...node-server-sdk-v9.1.0) (2024-02-06)
+
+
+### Features
+
+* React-native support for auto-env attributes. Only affects react-native package. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+* Update eslint jest configuration and versions. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.1.3 to 2.2.0
+
 ## [9.0.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.0.5...node-server-sdk-v9.0.6) (2024-01-16)
 
 
