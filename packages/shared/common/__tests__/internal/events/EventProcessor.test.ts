@@ -73,19 +73,11 @@ function makeFeatureEvent(
     variation,
     value,
     default: def,
-    ...(debug
-      ? {
-          context: {
-            key: 'userKey',
-            name: 'Red',
-            kind: 'user',
-          },
-        }
-      : {
-          contextKeys: {
-            user: 'userKey',
-          },
-        }),
+    context: {
+      key: 'userKey',
+      name: 'Red',
+      kind: 'user',
+    },
   };
 }
 
