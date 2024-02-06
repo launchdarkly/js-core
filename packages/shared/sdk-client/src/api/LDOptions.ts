@@ -81,6 +81,13 @@ export interface LDOptions {
   capacity?: number;
 
   /**
+   * Enables logging for debugging.
+   *
+   * The default value is false.
+   */
+  debug?: boolean;
+
+  /**
    * Set to true to opt out of sending diagnostics data.
    *
    * Unless `diagnosticOptOut` is set to true, the client will send some diagnostics data to the LaunchDarkly

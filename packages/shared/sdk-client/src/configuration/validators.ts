@@ -38,6 +38,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   streamInitialReconnectDelay: TypeValidators.numberWithMin(0),
 
   allAttributesPrivate: TypeValidators.Boolean,
+  debug: TypeValidators.Boolean,
   diagnosticOptOut: TypeValidators.Boolean,
   withReasons: TypeValidators.Boolean,
   sendEvents: TypeValidators.Boolean,

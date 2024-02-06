@@ -8,7 +8,13 @@ import {
 
 import Welcome from './src/welcome';
 
-const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enabled);
+const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enabled, {
+  debug: true,
+  applicationInfo: {
+    id: 'ld-rn-test-app',
+    version: '0.0.1',
+  },
+});
 
 const App = () => {
   return (
