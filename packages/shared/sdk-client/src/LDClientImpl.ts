@@ -78,6 +78,11 @@ export default class LDClientImpl implements LDClient {
     this.emitter = new LDEmitter();
   }
 
+  /**
+   * Sets the SDK connection mode.
+   *
+   * @param mode - One of supported {@link ConnectionMode}. Default is 'streaming'.
+   */
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
     if (this.config.connectionMode === mode) {
       this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
@@ -106,6 +111,13 @@ export default class LDClientImpl implements LDClient {
     }
 
     return Promise.resolve();
+  }
+
+  /**
+   * Gets the SDK connection mode.
+   */
+  getConnectionMode(): ConnectionMode {
+    return this.config.connectionMode;
   }
 
   isOffline() {
@@ -270,7 +282,7 @@ export default class LDClientImpl implements LDClient {
     return f ? JSON.parse(f) : undefined;
   }
 
-  async identify(pristineContext: LDContext, _hash?: string): Promise<void> {
+  async identify(pristineContext: LDContext): Promise<void> {
     let context = await ensureKey(pristineContext, this.platform);
 
     if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
