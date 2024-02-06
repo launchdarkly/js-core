@@ -270,7 +270,7 @@ export default class EventProcessor implements LDEventProcessor {
         const out: FeatureOutputEvent = {
           kind: debug ? 'debug' : 'feature',
           creationDate: event.creationDate,
-          context: this.contextFilter.filter(event.context),
+          context: this.contextFilter.filter(event.context, !debug),
           key: event.key,
           value: event.value,
           default: event.default,

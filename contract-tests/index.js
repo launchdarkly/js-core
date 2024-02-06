@@ -33,6 +33,7 @@ app.get('/', (req, res) => {
       'strongly-typed',
       'polling-gzip',
       'inline-context',
+      'anonymous-redaction',
     ],
   });
 });

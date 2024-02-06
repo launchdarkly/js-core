@@ -98,32 +98,49 @@ export default class ContextFilter {
     private readonly privateAttributes: AttributeReference[],
   ) {}
 
-  filter(context: Context): any {
+  filter(context: Context, redactAnonymousAttributes: boolean = false): any {
     const contexts = context.getContexts();
     if (contexts.length === 1) {
-      return this.filterSingleKind(context, contexts[0][1], contexts[0][0]);
+      return this.filterSingleKind(
+        context,
+        contexts[0][1],
+        contexts[0][0],
+        redactAnonymousAttributes,
+      );
     }
     const filteredMulti: any = {
       kind: 'multi',
     };
     contexts.forEach(([kind, single]) => {
-      filteredMulti[kind] = this.filterSingleKind(context, single, kind);
+      filteredMulti[kind] = this.filterSingleKind(context, single, kind, redactAnonymousAttributes);
     });
     return filteredMulti;
   }
 
-  private getAttributesToFilter(context: Context, single: LDContextCommon, kind: string) {
+  private getAttributesToFilter(
+    context: Context,
+    single: LDContextCommon,
+    kind: string,
+    redactAllAttributes: boolean,
+  ) {
     return (
-      this.allAttributesPrivate
+      redactAllAttributes
         ? Object.keys(single).map((k) => new AttributeReference(k, true))
         : [...this.privateAttributes, ...context.privateAttributes(kind)]
     ).filter((attr) => !protectedAttributes.some((protectedAttr) => protectedAttr.compare(attr)));
   }
 
-  private filterSingleKind(context: Context, single: LDContextCommon, kind: string): any {
+  private filterSingleKind(
+    context: Context,
+    single: LDContextCommon,
+    kind: string,
+    redactAnonymousAttributes: boolean,
+  ): any {
+    const redactAllAttributes =
+      this.allAttributesPrivate || (redactAnonymousAttributes && single.anonymous === true);
     const { cloned, excluded } = cloneWithRedactions(
       single,
-      this.getAttributesToFilter(context, single, kind),
+      this.getAttributesToFilter(context, single, kind, redactAllAttributes),
     );
 
     if (context.legacy) {
