@@ -16,7 +16,7 @@ describe('ReactNativeLDClient', () => {
       diagnosticEventPath: '/mobile/events/diagnostic',
       events: 'https://events.launchdarkly.com',
       includeAuthorizationHeader: true,
-      polling: 'https://sdk.launchdarkly.com',
+      polling: 'https://clientsdk.launchdarkly.com',
       streaming: 'https://clientstream.launchdarkly.com',
     });
   });

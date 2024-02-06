@@ -32,7 +32,7 @@ describe('fetchFeatures', () => {
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
     expect(platformFetch).toHaveBeenCalledWith(
-      'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9',
+      'https://clientsdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9',
       {
         method: 'GET',
         headers: getHeaders,
@@ -47,7 +47,7 @@ describe('fetchFeatures', () => {
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
     expect(platformFetch).toHaveBeenCalledWith(
-      'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?withReasons=true',
+      'https://clientsdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?withReasons=true',
       {
         method: 'GET',
         headers: getHeaders,
@@ -61,7 +61,7 @@ describe('fetchFeatures', () => {
     const json = await fetchFlags(sdkKey, context, config, basicPlatform);
 
     expect(platformFetch).toHaveBeenCalledWith(
-      'https://sdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?h=test-hash',
+      'https://clientsdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?h=test-hash',
       {
         method: 'GET',
         headers: getHeaders,
