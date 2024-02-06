@@ -1,5 +1,6 @@
 import { clientContext, ContextDeduplicator } from '@launchdarkly/private-js-mocks';
 
+import { LDContextCommon, LDMultiKindContext } from '../../../dist';
 import { Context } from '../../../src';
 import { LDContextDeduplicator, LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
@@ -341,6 +342,92 @@ describe('given an event processor', () => {
       makeFeatureEvent(1000, 11, false),
       makeFeatureEvent(1000, 11, true),
       makeSummary(1000, 1000, 1, 11),
+    ]);
+  });
+
+  it('redacts all attributes from anonymous single-kind context for feature events', async () => {
+    const userObj = { key: 'user-key', kind: 'user', name: 'Example user', anonymous: true };
+    const context = Context.fromLDContext(userObj);
+
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      context,
+      key: 'flagkey',
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
+    });
+
+    await eventProcessor.flush();
+
+    const redactedContext = {
+      kind: 'user',
+      key: 'user-key',
+      anonymous: true,
+      _meta: {
+        redactedAttributes: ['name'],
+      },
+    };
+
+    const expectedIndexEvent = { ...testIndexEvent, context: userObj };
+    const expectedFeatureEvent = { ...makeFeatureEvent(1000, 11, false), context: redactedContext };
+
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
+      expectedIndexEvent,
+      expectedFeatureEvent,
+      makeSummary(1000, 1000, 1, 11),
+    ]);
+  });
+
+  it('redacts all attributes from anonymous multi-kind context for feature events', async () => {
+    const userObj: LDContextCommon = { key: 'user-key', name: 'Example user', anonymous: true };
+    const org: LDContextCommon = { key: 'org-key', name: 'Example org' };
+    const multi: LDMultiKindContext = { kind: 'multi', user: userObj, org };
+    const context = Context.fromLDContext(multi);
+
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      context,
+      key: 'flagkey',
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
+    });
+
+    await eventProcessor.flush();
+
+    const redactedUserContext = {
+      key: 'user-key',
+      anonymous: true,
+      _meta: {
+        redactedAttributes: ['name'],
+      },
+    };
+
+    const expectedIndexEvent = { ...testIndexEvent, context: multi };
+    const expectedFeatureEvent = {
+      ...makeFeatureEvent(1000, 11, false),
+      context: { ...multi, user: redactedUserContext },
+    };
+    const expectedSummaryEvent = makeSummary(1000, 1000, 1, 11);
+    expectedSummaryEvent.features.flagkey.contextKinds = ['user', 'org'];
+
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
+      expectedIndexEvent,
+      expectedFeatureEvent,
+      expectedSummaryEvent,
     ]);
   });
 
