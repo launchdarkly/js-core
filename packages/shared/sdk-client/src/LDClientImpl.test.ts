@@ -69,7 +69,7 @@ describe('sdk-client object', () => {
 
     expect(ldc.config).toMatchObject({
       allAttributesPrivate: false,
-      baseUri: 'https://sdk.launchdarkly.com',
+      baseUri: 'https://clientsdk.launchdarkly.com',
       capacity: 100,
       diagnosticOptOut: false,
       diagnosticRecordingInterval: 900,
@@ -87,7 +87,7 @@ describe('sdk-client object', () => {
       sendLDHeaders: true,
       serviceEndpoints: {
         events: 'https://events.launchdarkly.com',
-        polling: 'https://sdk.launchdarkly.com',
+        polling: 'https://clientsdk.launchdarkly.com',
         streaming: 'https://clientstream.launchdarkly.com',
       },
       streamInitialReconnectDelay: 1,

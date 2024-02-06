@@ -35,10 +35,11 @@ export default class ReactNativeLDClient extends LDClientImpl {
    * @param options {@link LDOptions} to initialize the client with.
    */
   constructor(sdkKey: string, autoEnvAttributes: AutoEnvAttributes, options: LDOptions = {}) {
+    const { logger: customLogger, debug } = options;
     const logger =
-      options.logger ??
+      customLogger ??
       new BasicLogger({
-        level: 'debug',
+        level: debug ? 'debug' : 'info',
         // eslint-disable-next-line no-console
         destination: console.log,
       });

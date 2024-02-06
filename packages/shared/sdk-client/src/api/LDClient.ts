@@ -100,12 +100,10 @@ export interface LDClient {
    *
    * @param context
    *   The LDContext object.
-   * @param hash
-   *   The signed context key if you are using [Secure Mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
    * @returns
    *   A Promise which resolves when the flag values for the specified context are available.
    */
-  identify(context: LDContext, hash?: string): Promise<void>;
+  identify(context: LDContext): Promise<void>;
 
   /**
    * Determines the json variation of a feature flag.

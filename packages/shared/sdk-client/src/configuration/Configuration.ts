@@ -14,7 +14,7 @@ import { LDInspection } from '../api/LDInspection';
 import validators from './validators';
 
 export default class Configuration {
-  public static DEFAULT_POLLING = 'https://sdk.launchdarkly.com';
+  public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
   public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
 
   public readonly logger = createSafeLogger();
@@ -29,6 +29,7 @@ export default class Configuration {
   public readonly streamInitialReconnectDelay = 1;
 
   public readonly allAttributesPrivate = false;
+  public readonly debug = false;
   public readonly diagnosticOptOut = false;
   public readonly sendEvents = true;
   public readonly sendLDHeaders = true;

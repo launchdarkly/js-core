@@ -5,20 +5,22 @@ import type { LDApplication, LDDevice } from '@launchdarkly/js-client-sdk-common
 import locale from './locale';
 
 export const ldApplication: LDApplication = {
-  // key is populated by client common sdk
+  // key is populated by common/client-sdk
   key: '',
   envAttributesVersion: '1.0',
 
-  // TODO: populate application ID, name, version, versionName
+  locale,
+
+  // These are not automatically generated. Use LDOptions.applicationInfo
+  // to specify these values.
   id: '',
   name: '',
   version: '',
   versionName: '',
-  locale,
 };
 
 export const ldDevice: LDDevice = {
-  // key is populated by client common sdk
+  // key is populated by common/client-sdk
   key: '',
   envAttributesVersion: '1.0',
   manufacturer: Platform.select({
