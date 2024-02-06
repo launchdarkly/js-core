@@ -81,7 +81,7 @@ export interface LDOptions {
   capacity?: number;
 
   /**
-   * Enables logging for debugging.
+   * Enables debug logging.
    *
    * The default value is false.
    */
