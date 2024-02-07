@@ -81,6 +81,11 @@ export interface LDClient {
   flush(): Promise<{ error?: Error; result: boolean }>;
 
   /**
+   * Gets the SDK connection mode.
+   */
+  getConnectionMode(): ConnectionMode;
+
+  /**
    * Returns the client's current context.
    *
    * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
