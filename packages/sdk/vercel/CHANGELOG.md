@@ -14,6 +14,21 @@ All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.1.1 to 2.1.2
 
+## [1.3.0](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.2.3...vercel-server-sdk-v1.3.0) (2024-02-06)
+
+
+### Features
+
+* React-native support for auto-env attributes. Only affects react-native package. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+* Update eslint jest configuration and versions. ([deea99c](https://github.com/launchdarkly/js-core/commit/deea99ca2fbb3865f2ce55a83b2cf12e0ae2db5e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.1.3 to 2.2.0
+
 ## [1.2.3](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.2.2...vercel-server-sdk-v1.2.3) (2024-01-16)
 
 

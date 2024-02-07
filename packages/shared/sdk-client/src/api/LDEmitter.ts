@@ -1,4 +1,4 @@
-export type EventName = 'identifying' | 'error' | 'change';
+export type EventName = 'error' | 'change';
 
 type CustomEventListeners = {
   original: Function;

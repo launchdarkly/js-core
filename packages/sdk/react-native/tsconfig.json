@@ -22,12 +22,14 @@
     "allowJs": true
   },
   "exclude": [
+    "__tests__",
+    "dist",
+    "docs",
+    "example",
+    "node_modules",
+    "babel.config.js",
     "jest.config.ts",
     "jestSetupFile.ts",
-    "**/*.test.ts*",
-    "dist",
-    "node_modules",
-    "__tests__",
-    "example"
+    "**/*.test.ts*"
   ]
 }
