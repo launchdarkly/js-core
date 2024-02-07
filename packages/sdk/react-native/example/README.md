@@ -52,11 +52,5 @@ MOBILE_KEY=abcdef12456
 4. In the example folder, on a terminal:
 
 ```shell
-yarn && yarn expo-prebuild && yarn start
-```
-
-5. Still in the example folder but on another terminal:
-
-```shell
-yarn detox-ios
+yarn test
 ```

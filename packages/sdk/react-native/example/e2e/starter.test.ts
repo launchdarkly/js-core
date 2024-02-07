@@ -15,6 +15,10 @@ describe('Example', () => {
   //   await device.reloadReactNative();
   // });
 
+  afterAll(async () => {
+    await device.terminateApp();
+  });
+
   test('app loads and renders correctly', async () => {
     await expect(element(by.text(/welcome to launchdarkly/i))).toBeVisible();
     await expect(element(by.text(/my-boolean-flag-1: false/i))).toBeVisible();
