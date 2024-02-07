@@ -2,7 +2,7 @@
  * Ripped from:
  * https://github.com/facebook/react-native/blob/main/packages/react-native/Libraries/Events/CustomEvent.js#L21
  */
-import { Event } from 'event-target-shim';
+import { Event } from 'event-target-shim/es5';
 
 type CustomEventOptions = {
   bubbles?: boolean;
