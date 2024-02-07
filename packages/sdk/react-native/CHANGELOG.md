@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.2.0...react-native-client-sdk-v0.2.1) (2024-02-07)
+
+
+### Bug Fixes
+
+* Babel TypeError due to event-target-shim ([#365](https://github.com/launchdarkly/js-core/issues/365)) ([c1c0086](https://github.com/launchdarkly/js-core/commit/c1c008610f36c8dd0c1e3da3cf9450c64d41874f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 0.2.0 to 0.2.1
+
 ## [0.2.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.1.5...react-native-client-sdk-v0.2.0) (2024-02-06)
 
 
