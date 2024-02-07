@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v0.2.0...js-client-sdk-common-v0.2.1) (2024-02-07)
+
+
+### Bug Fixes
+
+* Minor fixes from docs pr review. ([#363](https://github.com/launchdarkly/js-core/issues/363)) ([4768bf7](https://github.com/launchdarkly/js-core/commit/4768bf72a6c7c6f48fb2742fbb75f4c0851275f0))
+
 ## [0.2.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v0.1.2...js-client-sdk-common-v0.2.0) (2024-02-06)
 
 
