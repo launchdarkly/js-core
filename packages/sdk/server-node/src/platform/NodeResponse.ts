@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as http from 'http';
 import { pipeline, Writable } from 'stream';
 import * as zlib from 'zlib';
