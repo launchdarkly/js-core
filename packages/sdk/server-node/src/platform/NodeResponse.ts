@@ -1,6 +1,7 @@
+import * as fs from 'fs';
 import * as http from 'http';
+import { pipeline, Writable } from 'stream';
 import * as zlib from 'zlib';
-import { pipeline, Readable, Writable } from 'stream';
 
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
@@ -11,10 +12,13 @@ export default class NodeResponse implements platform.Response {
 
   chunks: any[] = [];
 
-  memoryStream: Writable = new Writable({decodeStrings: false, write: (chunk, _enc, next) => {
-    this.chunks.push(chunk);
-    next();
-  }});
+  memoryStream: Writable = new Writable({
+    decodeStrings: true,
+    write: (chunk, _enc, next) => {
+      this.chunks.push(chunk);
+      next();
+    },
+  });
 
   promise: Promise<string>;
 
@@ -29,16 +33,14 @@ export default class NodeResponse implements platform.Response {
     this.status = res.statusCode || 0;
     this.incomingMessage = res;
 
-
-
     this.promise = new Promise((resolve, reject) => {
       // Called on error or completion of the pipeline.
       const pipelineCallback = (err: any) => {
-        if(err) {
-          reject(err);
+        if (err) {
+          return reject(err);
         }
-        resolve(Buffer.concat(this.chunks).toString());
-    };
+        return resolve(Buffer.concat(this.chunks).toString());
+      };
       switch (res.headers['content-encoding']) {
         case 'gzip':
           pipeline(res, zlib.createGunzip(), this.memoryStream, pipelineCallback);

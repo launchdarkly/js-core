@@ -110,12 +110,22 @@ export default class NodeRequests implements platform.Requests {
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
 
+    // For get requests we are going to automatically support compressed responses.
+    // Note this does not affect SSE as the event source is not using this fetch implementation.
+    const headers =
+      options.method?.toLowerCase() === 'get'
+        ? {
+            ...options.headers,
+            'accept-encoding': 'gzip',
+          }
+        : options.headers;
+
     return new Promise((resolve, reject) => {
       const req = impl.request(
         url,
         {
           timeout: options.timeout,
-          headers: options.headers,
+          headers,
           method: options.method,
           agent: this.agent,
         },
