@@ -299,7 +299,6 @@ export default class LDClientImpl implements LDClient {
 
     const { identifyPromise, identifyResolve } = this.createPromiseWithListeners();
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
-    this.emitter.emit('identifying', context);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
     if (flagsStorage) {
