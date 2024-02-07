@@ -82,6 +82,9 @@ export interface LDClient {
 
   /**
    * Gets the SDK connection mode.
+   *
+   * @remarks
+   * Possible values are offline or streaming. See {@link ConnectionMode} for more information.
    */
   getConnectionMode(): ConnectionMode;
 
@@ -146,9 +149,12 @@ export interface LDClient {
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown>;
 
   /**
-   * Returns the logger configured as part of LDOptions during construction.
+   * The logger configured as part of LDOptions during construction.
    *
-   * For more, read {@link LDOptions.logger}.
+   * @remarks
+   * For more information, read {@link LDOptions.logger} and {@link LDLogger}.
+   *
+   * @returns The configured {@link LDLogger}.
    */
   logger: LDLogger;
 
@@ -169,6 +175,7 @@ export interface LDClient {
    * Determines the numeric variation of a feature flag for a context, along with information about
    * how it was calculated.
    *
+   * @remarks
    * The `reason` property of the result will also be included in analytics events, if you are
    * capturing detailed event data for this flag.
    *
@@ -199,15 +206,17 @@ export interface LDClient {
   /**
    * Registers an event listener.
    *
-   * The following event names (keys) are used by the client:
+   * @remarks
+   * You can subscribe to one of the supported {@link EventName}:
    *
-   * - `"error"`: General event for any kind of error condition during client operation.
-   *   The callback parameter is an Error object. If you do not listen for "error"
-   *   events, then the errors will be logged with `console.log()`.
    * - `"change"`: The client has received new feature flag data. This can happen either
    *   because you have switched contexts with {@link identify}, or because the client has a
    *   stream connection and has received a live change to a flag value (see below).
    *   The callback parameters are the context and an array of flag keys that have changed.
+   *
+   * - `"error"`: General event for any kind of error condition during client operation.
+   *   The callback parameters are the context and an Error object. Errors are also output by
+   *   the {@link logger} at the error level.
    *
    * @param key
    *   The name of the event for which to listen.
@@ -220,7 +229,7 @@ export interface LDClient {
   /**
    * Sets the SDK connection mode.
    *
-   * @param mode - One of supported {@link ConnectionMode}. By default, the SDK uses 'streaming'.
+   * @param mode - One of supported {@link ConnectionMode}. By default, the SDK uses streaming.
    */
   setConnectionMode(mode: ConnectionMode): void;
 
@@ -241,6 +250,7 @@ export interface LDClient {
    * Determines the string variation of a feature flag for a context, along with information about
    * how it was calculated.
    *
+   * @remarks
    * The `reason` property of the result will also be included in analytics events, if you are
    * capturing detailed event data for this flag.
    *
@@ -277,6 +287,7 @@ export interface LDClient {
    * We recommend using strongly typed variation methods which perform
    * type checks and handle type errors.
    *
+   * @remarks
    * Determines the variation of a feature flag.
    *
    * In the client-side JavaScript SDKs, this is always a fast synchronous operation because all of
@@ -295,6 +306,7 @@ export interface LDClient {
    * We recommend using strongly typed variation detail methods which perform
    * type checks and handle type errors.
    *
+   * @remarks
    * Determines the variation of a feature flag for a context, along with information about how it was
    * calculated.
    *
