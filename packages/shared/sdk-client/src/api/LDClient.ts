@@ -66,7 +66,7 @@ export interface LDClient {
    * events. After the client is closed, all calls to {@link variation} will return default values,
    * and it will not make any requests to LaunchDarkly.
    */
-  close(): void;
+  close(): Promise<void>;
 
   /**
    * Flushes all pending analytics events.
@@ -79,6 +79,11 @@ export interface LDClient {
    *   flushing is finished. You can inspect the result of the flush for errors.
    */
   flush(): Promise<{ error?: Error; result: boolean }>;
+
+  /**
+   * Gets the SDK connection mode.
+   */
+  getConnectionMode(): ConnectionMode;
 
   /**
    * Returns the client's current context.
@@ -196,7 +201,6 @@ export interface LDClient {
    *
    * The following event names (keys) are used by the client:
    *
-   * - `"identifying"`: The client starts to fetch feature flags.
    * - `"error"`: General event for any kind of error condition during client operation.
    *   The callback parameter is an Error object. If you do not listen for "error"
    *   events, then the errors will be logged with `console.log()`.
