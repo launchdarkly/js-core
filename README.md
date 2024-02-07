@@ -7,15 +7,17 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 | SDK packages                                                                   | npm                                                               | issues                                            | tests                                                                 |
 | ------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| [@launchdarkly/akamai-server-base-sdk](packages/sdk/akamai-base/README.md)     | [![NPM][sdk-akamai-base-npm-badge]][sdk-akamai-base-npm-link]     | [Akamai Base][package-sdk-akamai-base-issues]     | [![Actions Status][sdk-akamai-base-ci-badge]][sdk-akamai-base-ci]     |
+| [@launchdarkly/akamai-server-edgekv-sdk](packages/sdk/akamai-edgekv/README.md) | [![NPM][sdk-akamai-edgekv-npm-badge]][sdk-akamai-edgekv-npm-link] | [Akamai EdgeKV][package-sdk-akamai-edgekv-issues] | [![Actions Status][sdk-akamai-edgekv-ci-badge]][sdk-akamai-edgekv-ci] |
 | [@launchdarkly/cloudflare-server-sdk](packages/sdk/cloudflare/README.md)       | [![NPM][sdk-cloudflare-npm-badge]][sdk-cloudflare-npm-link]       | [Cloudflare][package-sdk-cloudflare-issues]       | [![Actions Status][sdk-cloudflare-ci-badge]][sdk-cloudflare-ci]       |
 | [@launchdarkly/node-server-sdk](packages/sdk/server-node/README.md)            | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link]     | [Node.js Server][package-sdk-server-node-issues]  | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci]     |
 | [@launchdarkly/vercel-server-sdk](packages/sdk/vercel/README.md)               | [![NPM][sdk-vercel-npm-badge]][sdk-vercel-npm-link]               | [Vercel][package-sdk-vercel-issues]               | [![Actions Status][sdk-vercel-ci-badge]][sdk-vercel-ci]               |
-| [@launchdarkly/akamai-server-base-sdk](packages/sdk/akamai-base/README.md)     | [![NPM][sdk-akamai-base-npm-badge]][sdk-akamai-base-npm-link]     | [Akamai Base][package-sdk-akamai-base-issues]     | [![Actions Status][sdk-akamai-base-ci-badge]][sdk-akamai-base-ci]     |
-| [@launchdarkly/akamai-server-edgekv-sdk](packages/sdk/akamai-edgekv/README.md) | [![NPM][sdk-akamai-edgekv-npm-badge]][sdk-akamai-edgekv-npm-link] | [Akamai EdgeKV][package-sdk-akamai-edgekv-issues] | [![Actions Status][sdk-akamai-edgekv-ci-badge]][sdk-akamai-edgekv-ci] |
+| [@launchdarkly/react-native-client-sdk](packages/sdk/react-native/README.md)   | [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]   | [React-Native][package-sdk-react-native-issues]   | [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]   |
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | [@launchdarkly/js-sdk-common](packages/shared/common/README.md)                      | [![NPM][common-npm-badge]][common-npm-link]                               | [Common][package-shared-common-issues]                      | [![Actions Status][shared-common-ci-badge]][shared-common-ci]                   |
+| [@launchdarkly/js-client-sdk-common](packages/shared/sdk-client/README.md)           | [![NPM][js-client-sdk-common-npm-badge]][js-client-sdk-common-npm-link]   | [Common Client][package-shared-sdk-client-issues]           | [![Actions Status][shared-sdk-client-ci-badge]][shared-sdk-client-ci]           |
 | [@launchdarkly/js-server-sdk-common](packages/shared/sdk-server/README.md)           | [![NPM][js-server-sdk-common-npm-badge]][js-server-sdk-common-npm-link]   | [Common Server][package-shared-sdk-server-issues]           | [![Actions Status][shared-sdk-server-ci-badge]][shared-sdk-server-ci]           |
 | [@launchdarkly/js-server-sdk-common-edge](packages/shared/sdk-server-edge/README.md) | [![NPM][js-server-sdk-common-edge-badge]][js-server-sdk-common-edge-link] | [Common Server Edge][package-shared-sdk-server-edge-issues] | [![Actions Status][shared-sdk-server-edge-ci-badge]][shared-sdk-server-edge-ci] |
 
@@ -74,6 +76,12 @@ We encourage pull requests and other contributions from the community. Check out
 [shared-sdk-server-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml/badge.svg
 [shared-sdk-server-ci]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-server.yml
 [package-shared-sdk-server-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+shared%2Fsdk-server%22+
+[//]: # 'shared/sdk-client'
+[js-client-sdk-common-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/js-client-sdk-common.svg?style=flat-square
+[js-client-sdk-common-npm-link]: https://www.npmjs.com/package/@launchdarkly/js-client-sdk-common
+[shared-sdk-client-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-client.yml/badge.svg
+[shared-sdk-client-ci]: https://github.com/launchdarkly/js-core/actions/workflows/sdk-client.yml
+[package-shared-sdk-client-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+shared%2Fsdk-client%22+
 [//]: # 'shared/sdk-server-edge'
 [js-server-sdk-common-edge-badge]: https://img.shields.io/npm/v/@launchdarkly/js-server-sdk-common-edge.svg?style=flat-square
 [js-server-sdk-common-edge-link]: https://www.npmjs.com/package/@launchdarkly/js-server-sdk-common-edge
@@ -106,6 +114,16 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-vercel-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [sdk-vercel-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/vercel-server-sdk.svg?style=flat-square
 [package-sdk-vercel-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fvercel%22+
+[//]: # 'sdk/react-native'
+[sdk-react-native-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/react-native.yml/badge.svg
+[sdk-react-native-ci]: https://github.com/launchdarkly/js-core/actions/workflows/react-native.yml
+[sdk-react-native-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/react-native-client-sdk.svg?style=flat-square
+[sdk-react-native-npm-link]: https://www.npmjs.com/package/@launchdarkly/react-native-client-sdk
+[sdk-react-native-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-react-native-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/react-native/docs/
+[sdk-react-native-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/react-native-client-sdk.svg?style=flat-square
+[sdk-react-native-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/react-native-client-sdk.svg?style=flat-square
+[package-sdk-react-native-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Freact-native%22+
 [//]: # 'sdk/akamai-base'
 [sdk-akamai-base-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-base.yml/badge.svg
 [sdk-akamai-base-ci]: https://github.com/launchdarkly/js-core/actions/workflows/akamai-base.yml
