@@ -23,7 +23,7 @@
   "scripts": {
     "clean": "yarn workspaces foreach -pt run clean",
     "build": "yarn workspaces foreach -p --topological-dev run build",
-    "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc packages/shared/common' for example.",
+    "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc -- packages/shared/common' for example.",
     "build:doc": "npx typedoc --options $1/typedoc.json",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
