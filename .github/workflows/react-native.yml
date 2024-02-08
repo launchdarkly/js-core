@@ -14,11 +14,37 @@ jobs:
   build-test-react-native:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
       - id: shared
         name: Shared CI Steps
         uses: ./actions/ci
         with:
           workspace_name: '@launchdarkly/react-native-client-sdk'
           workspace_path: packages/sdk/react-native
+  detox:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - name: Cache Detox build
+        id: cache-detox-build
+        uses: actions/cache@v4
+        with:
+          path: ios/build
+          key: ${{ runner.os }}-detox-build
+          restore-keys: |
+            ${{ runner.os }}-detox-build
+      - name: Install and run tests
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
+          cd packages/sdk/react-native/example
+
+          # TODO: get mobileKey from secrets
+          echo "MOBILE_KEY=mob-xxx" > .env
+
+          ./build-run-detox.sh
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
