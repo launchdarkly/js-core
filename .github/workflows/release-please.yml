@@ -1,131 +1,21 @@
 on:
   push:
     branches:
-      - main
+      - node-server-sdk-8.x
 name: release-please
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
     outputs:
-      package-common-released: ${{ steps.release.outputs['packages/shared/common--release_created'] }}
-      package-sdk-server-released: ${{ steps.release.outputs['packages/shared/sdk-server--release_created'] }}
-      package-sdk-server-edge-released: ${{ steps.release.outputs['packages/shared/sdk-server-edge--release_created'] }}
-      package-akamai-edgeworker-sdk-released: ${{ steps.release.outputs['packages/shared/akamai-edgeworker-sdk--release_created'] }}
-      package-cloudflare-released: ${{ steps.release.outputs['packages/sdk/cloudflare--release_created'] }}
       package-server-node-released: ${{ steps.release.outputs['packages/sdk/server-node--release_created'] }}
-      package-vercel-released: ${{ steps.release.outputs['packages/sdk/vercel--release_created'] }}
-      package-akamai-base-released: ${{ steps.release.outputs['packages/sdk/akamai-base--release_created'] }}
-      package-akamai-edgekv-released: ${{ steps.release.outputs['packages/sdk/akamai-edgekv--release_created'] }}
-      package-node-server-sdk-redis-release: ${{ steps.release.outputs['packages/store/node-server-sdk-redis--release_created'] }}
-      package-node-server-sdk-dynamodb-release: ${{ steps.release.outputs['packages/store/node-server-sdk-dynamodb--release_created'] }}
     steps:
       - uses: google-github-actions/release-please-action@v3
         id: release
         with:
           command: manifest
           token: ${{secrets.GITHUB_TOKEN}}
-          default-branch: main
-
-  release-common:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-common-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/shared/common
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/shared/common
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-sdk-server:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-server-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/shared/sdk-server
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/shared/sdk-server
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-sdk-server-edge:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-server-edge-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/shared/sdk-server-edge
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/shared/sdk-server-edge
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-akamai-edgeworker-sdk:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-edgeworker-sdk-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/shared/akamai-edgeworker-sdk
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/shared/akamai-edgeworker-sdk
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-cloudflare:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-cloudflare-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/sdk/cloudflare
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/sdk/cloudflare
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          default-branch: node-server-sdk-8.x
 
   release-server-node:
     runs-on: ubuntu-latest
@@ -145,110 +35,4 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/server-node
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-vercel:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-vercel-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/sdk/vercel
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/sdk/vercel
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-akamai-base:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-base-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/sdk/akamai-base
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/sdk/akamai-base
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-akamai-edgekv:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-edgekv-released }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - id: release-common
-        name: Full release of packages/sdk/akamai-edgekv
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/sdk/akamai-edgekv
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-node-server-sdk-redis:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-node-server-sdk-redis-release }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - run: |
-          sudo apt-get update
-          sudo apt-get install redis-server
-          sudo service redis-server start
-      - id: release-common
-        name: Full release of packages/store/node-server-sdk-redis
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/store/node-server-sdk-redis
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-
-  release-node-server-sdk-dynamodb:
-    runs-on: ubuntu-latest
-    needs: ['release-please']
-    permissions:
-      id-token: write
-      contents: write
-    if: ${{ needs.release-please.outputs.package-node-server-sdk-dynamodb-release }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-          registry-url: 'https://registry.npmjs.org'
-      - run: |
-          sudo docker run -d -p 8000:8000 amazon/dynamodb-local
-      - id: release-common
-        name: Full release of packages/store/node-server-sdk-dynamodb
-        uses: ./actions/full-release
-        with:
-          workspace_path: packages/store/node-server-sdk-dynamodb
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
