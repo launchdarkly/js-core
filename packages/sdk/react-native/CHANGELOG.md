@@ -1,5 +1,24 @@
 # Changelog
 
+## [10.0.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.2.1...react-native-client-sdk-v10.0.0) (2024-02-08)
+
+
+### Features
+
+* React Native SDK major release. ([#369](https://github.com/launchdarkly/js-core/issues/369)) ([1d5ca40](https://github.com/launchdarkly/js-core/commit/1d5ca40888c4db4bb938884ca55732750fb10614))
+
+
+### Bug Fixes
+
+* Fix Detox e2e tests broken after 0.73 update. ([#366](https://github.com/launchdarkly/js-core/issues/366)) ([6349b98](https://github.com/launchdarkly/js-core/commit/6349b98e70554d8240f0e8d6b1090e4c37bde6eb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 0.2.1 to 1.0.0
+
 ## [0.2.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.2.0...react-native-client-sdk-v0.2.1) (2024-02-07)
 
 
