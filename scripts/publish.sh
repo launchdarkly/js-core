@@ -7,6 +7,8 @@ else
     echo "Publishing with prerelease tag."
     yarn workspace $WORKSPACE npm publish --tag prerelease || { echo "npm publish failed" >&2; exit 1; }
   else
-    yarn workspace $WORKSPACE npm publish || { echo "npm publish failed" >&2; exit 1; }
+    # Using a maintenance tag prevents this release from getting tagged with "latest".
+    echo "Publishing with maintenance tag."
+    yarn workspace $WORKSPACE npm publish --tag maintenance || { echo "npm publish failed" >&2; exit 1; }
   fi
 fi

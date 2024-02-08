@@ -1,5 +1,9 @@
 # LaunchDarkly monorepo for JavaScript SDKs.
 
+> [!WARNING]
+> This branch is for maintenance of the `@launchdarkly/node-server-sdk` version 8.x.
+> Only 8.x releases will be created from this branch. If releases of shared packages are required, then they will require their own maintenance branches.
+
 This repository contains LaunchDarkly SDK packages which are designed for execution in JavaScript environments.
 This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
