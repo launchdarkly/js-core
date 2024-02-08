@@ -6,11 +6,6 @@ import mockFetch from './mockFetch';
 import { basicPlatform } from './platform';
 import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
 
-/**
- * Internal use only.
- * This project contains JavaScript mocks that are consumed in unit tests in client-side and server-side JavaScript SDKs.
- * @internal
- */
 export {
   basicPlatform,
   clientContext,
