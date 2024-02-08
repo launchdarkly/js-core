@@ -1,7 +1,6 @@
-import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
+import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import ConnectionMode from './ConnectionMode';
-import type { LDInspection } from './LDInspection';
 
 export interface LDOptions {
   /**
@@ -63,13 +62,6 @@ export interface LDOptions {
   baseUri?: string;
 
   /**
-   * TODO: bootstrap. This is not implemented and should not be used.
-   * The initial set of flags to use until the remote set is retrieved.
-   * @alpha
-   */
-  bootstrap?: LDFlagSet;
-
-  /**
    * The capacity of the analytics events queue.
    *
    * The client buffers up to this many events in memory before flushing. If the capacity is exceeded
@@ -128,13 +120,6 @@ export interface LDOptions {
   flushInterval?: number;
 
   /**
-   * TODO: secure mode hash. This is not implemented and should not be used.
-   * The signed context key for Secure Mode.
-   * @alpha
-   */
-  hash?: string;
-
-  /**
    * Sets the mode to use for connections when the SDK is initialized.
    *
    * @remarks
@@ -143,13 +128,6 @@ export interface LDOptions {
    * @defaultValue streaming.
    */
   initialConnectionMode?: ConnectionMode;
-
-  /**
-   * TODO: inspectors. This is not implemented and should not be used.
-   * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
-   * @alpha
-   */
-  inspectors?: LDInspection[];
 
   /**
    * An object that will perform logging for the client.

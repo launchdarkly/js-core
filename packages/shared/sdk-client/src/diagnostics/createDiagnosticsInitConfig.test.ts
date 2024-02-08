@@ -38,13 +38,14 @@ describe('createDiagnosticsInitConfig', () => {
         streamInitialReconnectDelay: 3,
         diagnosticRecordingInterval: 4,
         allAttributesPrivate: true,
-        hash: 'test-hash',
-        bootstrap: { testFlag: true },
+        // TODO: test Configuration hash and bootstrap
+        // hash: 'test-hash',
+        // bootstrap: { testFlag: true },
       }),
     );
     expect(custom).toEqual({
       allAttributesPrivate: true,
-      bootstrapMode: true,
+      bootstrapMode: false,
       customBaseURI: true,
       customEventsURI: true,
       customStreamURI: true,
@@ -52,7 +53,7 @@ describe('createDiagnosticsInitConfig', () => {
       eventsCapacity: 1,
       eventsFlushIntervalMillis: 30000,
       reconnectTimeMillis: 3000,
-      usingSecureMode: true,
+      usingSecureMode: false,
     });
   });
 });
