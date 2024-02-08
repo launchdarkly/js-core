@@ -19,7 +19,8 @@
     "postinstall": "yarn link-dev",
     "detox-build-ios": "detox build -c ios.sim.debug",
     "detox-run-ios": "detox test -c ios.sim.debug",
-    "detox-ios": "yarn detox-build-ios && yarn detox-run-ios"
+    "detox-ios": "yarn detox-build-ios && yarn detox-run-ios",
+    "test": "./build-run-detox.sh"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.21.0",
@@ -37,7 +38,7 @@
     "@types/node": "^20.10.5",
     "@types/react": "~18.2.55",
     "@types/react-native-dotenv": "^0.2.1",
-    "detox": "^20.14.7",
+    "detox": "^20.17.1",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
