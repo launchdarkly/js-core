@@ -56,17 +56,18 @@ describe('fetchFeatures', () => {
     expect(json).toEqual(mockResponseWithReasons);
   });
 
-  test('hash', async () => {
-    config = new Configuration({ hash: 'test-hash', withReasons: false });
-    const json = await fetchFlags(sdkKey, context, config, basicPlatform);
-
-    expect(platformFetch).toHaveBeenCalledWith(
-      'https://clientsdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?h=test-hash',
-      {
-        method: 'GET',
-        headers: getHeaders,
-      },
-    );
-    expect(json).toEqual(mockResponse);
-  });
+  // TODO: test fetchFlags with hash
+  // test('hash', async () => {
+  //   config = new Configuration({ hash: 'test-hash', withReasons: false });
+  //   const json = await fetchFlags(sdkKey, context, config, basicPlatform);
+  //
+  //   expect(platformFetch).toHaveBeenCalledWith(
+  //     'https://clientsdk.launchdarkly.com/sdk/evalx/testSdkKey1/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlci1rZXktMSJ9?h=test-hash',
+  //     {
+  //       method: 'GET',
+  //       headers: getHeaders,
+  //     },
+  //   );
+  //   expect(json).toEqual(mockResponse);
+  // });
 });

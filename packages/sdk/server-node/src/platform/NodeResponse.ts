@@ -25,6 +25,9 @@ export default class NodeResponse implements platform.Response {
 
   status: number;
 
+  listened: boolean = false;
+  rejection?: Error;
+
   constructor(res: http.IncomingMessage) {
     this.headers = new HeaderWrapper(res.headers);
     // Status code is optionally typed, but will always be present for this
@@ -36,7 +39,10 @@ export default class NodeResponse implements platform.Response {
       // Called on error or completion of the pipeline.
       const pipelineCallback = (err: any) => {
         if (err) {
-          return reject(err);
+          this.rejection = err;
+          if (this.listened) {
+            reject(err);
+          }
         }
         return resolve(Buffer.concat(this.chunks).toString());
       };
@@ -51,12 +57,20 @@ export default class NodeResponse implements platform.Response {
     });
   }
 
-  text(): Promise<string> {
+  private async wrappedWait(): Promise<string> {
+    this.listened = true;
+    if (this.rejection) {
+      throw this.rejection;
+    }
     return this.promise;
   }
 
+  text(): Promise<string> {
+    return this.wrappedWait();
+  }
+
   async json(): Promise<any> {
-    const stringValue = await this.promise;
+    const stringValue = await this.wrappedWait();
     return JSON.parse(stringValue);
   }
 }

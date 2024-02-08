@@ -2,7 +2,6 @@
  * The connection mode for the SDK to use.
  *
  * @remarks
- *
  * The following connection modes are supported:
  *
  * offline - When the SDK is set offline it will stop receiving updates and will stop sending

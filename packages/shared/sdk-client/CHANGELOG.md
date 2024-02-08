@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v0.2.1...js-client-sdk-common-v1.0.0) (2024-02-08)
+
+
+### Features
+
+* React Native SDK major release. ([#369](https://github.com/launchdarkly/js-core/issues/369)) ([1d5ca40](https://github.com/launchdarkly/js-core/commit/1d5ca40888c4db4bb938884ca55732750fb10614))
+
 ## [0.2.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v0.2.0...js-client-sdk-common-v0.2.1) (2024-02-07)
 
 

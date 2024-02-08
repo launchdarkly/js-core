@@ -1,19 +1,21 @@
-import type { LDFlagSet, LDLogger } from '@launchdarkly/js-sdk-common';
+import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import ConnectionMode from './ConnectionMode';
-import type { LDInspection } from './LDInspection';
 
 export interface LDOptions {
   /**
    * Whether all context attributes (except the context key) should be marked as private, and
    * not sent to LaunchDarkly in analytics events.
    *
-   * By default, this is false.
+   * @defaultValue false.
    */
   allAttributesPrivate?: boolean;
 
   /**
-   * Information about the application where the LaunchDarkly SDK is running.
+   * Information about the application the LaunchDarkly SDK is running in.
+   *
+   * These properties are optional and informational. They may be used in LaunchDarkly
+   * analytics or other product features.
    */
   applicationInfo?: {
     /**
@@ -53,18 +55,11 @@ export interface LDOptions {
   };
 
   /**
-   * The base uri for the LaunchDarkly server.
+   * The base uri for the LaunchDarkly server. Most users should use the default value.
    *
-   * Most users should use the default value.
+   * @defaultValue https://clientsdk.launchdarkly.com.
    */
   baseUri?: string;
-
-  /**
-   * TODO: bootstrap
-   * The initial set of flags to use until the remote set is retrieved.
-   * @alpha
-   */
-  bootstrap?: LDFlagSet;
 
   /**
    * The capacity of the analytics events queue.
@@ -76,14 +71,14 @@ export interface LDOptions {
    * capacity if you are generating a large number of click, pageview, or identify events (or if you
    * are using the event debugger).
    *
-   * The default value is 100.
+   * @defaultValue 100.
    */
   capacity?: number;
 
   /**
    * Enables debug logging.
    *
-   * The default value is false.
+   * @defaultValue false.
    */
   debug?: boolean;
 
@@ -95,6 +90,8 @@ export interface LDOptions {
    * an initial payload containing some details of SDK in use, the SDK's configuration, and the platform the
    * SDK is being run on, as well as payloads sent periodically with information on irregular occurrences such
    * as dropped events.
+   *
+   * @defaultValue false.
    */
   diagnosticOptOut?: boolean;
 
@@ -103,48 +100,42 @@ export interface LDOptions {
    *
    * The default is 900 (every 15 minutes) and the minimum value is 6. See {@link diagnosticOptOut}
    * for more information on the diagnostics data being sent.
+   *
+   * @defaultValue 900s.
    */
   diagnosticRecordingInterval?: number;
 
   /**
-   * The base uri for the LaunchDarkly events server.
+   * The base uri for the LaunchDarkly events server. Most users should use the default value.
    *
-   * Most users should use the default value.
+   * @defaultValue https://events.launchdarkly.com.
    */
   eventsUri?: string;
 
   /**
-   * The interval in between flushes of the analytics events queue, in seconds.
+   * Controls how often the SDK flushes events.
    *
-   * The default value is 2s.
+   * @defaultValue 30s.
    */
   flushInterval?: number;
 
   /**
-   * TODO: secure mode
-   * The signed context key for Secure Mode.
-   * @alpha
-   */
-  hash?: string;
-
-  /**
    * Sets the mode to use for connections when the SDK is initialized.
    *
-   * Defaults to streaming.
+   * @remarks
+   * Possible values are offline or streaming. See {@link ConnectionMode} for more information.
+   *
+   * @defaultValue streaming.
    */
   initialConnectionMode?: ConnectionMode;
 
   /**
-   * TODO: inspectors
-   * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
-   * @alpha
-   */
-  inspectors?: LDInspection[];
-
-  /**
    * An object that will perform logging for the client.
    *
-   * If not specified, the default is to use `basicLogger`.
+   * @remarks
+   * Set a custom {@link LDLogger} if you want full control of logging behavior.
+   *
+   * @defaultValue A {@link BasicLogger} which outputs to the console at `info` level.
    */
   logger?: LDLogger;
 
@@ -168,7 +159,9 @@ export interface LDOptions {
   privateAttributes?: Array<string>;
 
   /**
-   * Whether to send analytics events back to LaunchDarkly. By default, this is true.
+   * Whether to send analytics events back to LaunchDarkly.
+   *
+   * @defaultValue true.
    */
   sendEvents?: boolean;
 
@@ -179,14 +172,14 @@ export interface LDOptions {
    * to be reestablished. The delay for the first reconnection will start near this value, and then
    * increase exponentially for any subsequent connection failures.
    *
-   * The default value is 1.
+   * @defaultValue 1s.
    */
   streamInitialReconnectDelay?: number;
 
   /**
-   * The base uri for the LaunchDarkly streaming server.
+   * The base uri for the LaunchDarkly streaming server. Most users should use the default value.
    *
-   * Most users should use the default value.
+   * @defaultValue https://clientstream.launchdarkly.com.
    */
   streamUri?: string;
 
@@ -197,6 +190,8 @@ export interface LDOptions {
    * The additional information will then be available through the client's
    * {@link LDClient.variationDetail} method. Since this increases the size of network requests,
    * such information is not sent unless you set this option to true.
+   *
+   * @defaultValue false.
    */
   withReasons?: boolean;
 
