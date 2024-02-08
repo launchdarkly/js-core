@@ -6,16 +6,14 @@
 [![NPM][sdk-react-native-dm-badge]][sdk-react-native-npm-link]
 [![NPM][sdk-react-native-dt-badge]][sdk-react-native-npm-link]
 
-> [!WARNING]  
-> UNSUPPORTED This SDK is in pre-release development and is not supported.
+The LaunchDarkly React Native SDK is designed primarily for use in mobile environments. It follows the client-side
+LaunchDarkly model for multi-user contexts.
 
-The LaunchDarkly React Native SDK is designed primarily for use in mobile environments. It follows the client-side LaunchDarkly model for multi-user contexts.
-
-This SDK is a replacement of [launchdarkly-react-native-client-sdk](https://github.com/launchdarkly/react-native-client-sdk). Please consider updating your application to use this package instead.
+This SDK is a complete rewrite of the React Native SDK and replaces [launchdarkly-react-native-client-sdk](https://github.com/launchdarkly/react-native-client-sdk). The
+APIs are based on the JS SDK rather than the iOS and Android SDKs. It is not a wrapper of the iOS and Android SDKs.
+It is implemented purely in JS and supports Expo. Please consider updating your application to use this package instead.
 
 For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/client-side/react-native).
-
-This library is an alpha version and should not be considered ready for production use while this message is visible.
 
 ## Install
 
@@ -35,21 +33,27 @@ and re-run pod install for [auto-linking to work](https://github.com/react-nativ
 
 ## Quickstart
 
-1. Wrap your application with `LDProvider` passing it an LDClient and
-   an LDContext:
+1. Wrap your application with `LDProvider` and set the `client` prop to an instance of `ReactNativeLDClient`. Call
+   `identify` at a later time to get flags. In the example below, `identify` is called on App mount:
 
-```jsx
+```tsx
 // App.tsx
 import { LDProvider, ReactNativeLDClient } from '@launchdarkly/react-native-client-sdk';
 
 const featureClient = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled);
 const userContext = { kind: 'user', key: 'test-user-1' };
 
-const App = () => (
-  <LDProvider client={featureClient} context={userContext}>
-    <Welcome />
-  </LDProvider>
-);
+const App = () => {
+  useEffect(() => {
+    featureClient.identify(userContext).catch((e) => console.error(e));
+  }, []);
+
+  return (
+    <LDProvider client={featureClient}>
+      <YourComponent />
+    </LDProvider>
+  );
+};
 
 export default App;
 ```

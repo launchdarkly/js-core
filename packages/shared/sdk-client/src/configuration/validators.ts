@@ -43,6 +43,8 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   withReasons: TypeValidators.Boolean,
   sendEvents: TypeValidators.Boolean,
 
+  // TODO: inspectors
+  // @ts-ignore
   inspectors: TypeValidators.createTypeArray<LDInspection>('LDInspection[]', {
     type: 'flag-used',
     method: noop,
@@ -51,9 +53,11 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   privateAttributes: TypeValidators.StringArray,
 
   applicationInfo: TypeValidators.Object,
+  // TODO: bootstrap
   bootstrap: new BootStrapValidator(),
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
+  // TODO: hash
   hash: TypeValidators.String,
 };
 

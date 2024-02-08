@@ -19,7 +19,7 @@ describe('Configuration', () => {
       diagnosticRecordingInterval: 900,
       withReasons: false,
       eventsUri: 'https://events.launchdarkly.com',
-      flushInterval: 2,
+      flushInterval: 30,
       inspectors: [],
       logger: {
         destination: console.error,

@@ -2,14 +2,14 @@
   "packages": {
     "packages/shared/common": {},
     "packages/shared/sdk-client": {
-      "bump-minor-pre-major": true
+      "release-as": "1.0.0"
     },
     "packages/shared/sdk-server": {},
     "packages/shared/sdk-server-edge": {},
     "packages/shared/akamai-edgeworker-sdk": {},
     "packages/sdk/cloudflare": {},
     "packages/sdk/react-native": {
-      "bump-minor-pre-major": true
+      "release-as": "10.0.0"
     },
     "packages/sdk/server-node": {},
     "packages/sdk/vercel": {

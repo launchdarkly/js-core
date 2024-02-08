@@ -4,7 +4,7 @@
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-client",
   "repository": {
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"
