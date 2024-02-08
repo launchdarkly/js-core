@@ -1,4 +1,5 @@
 import * as http from 'http';
+import * as zlib from 'zlib';
 
 import NodeRequests from '../../src/platform/NodeRequests';
 
@@ -57,6 +58,9 @@ describe('given a default instance of NodeRequests', () => {
           res.destroy();
           resetResolve();
         }, 0);
+      } else if ((req.url?.indexOf('gzip') || -1) >= 0) {
+        res.setHeader('Content-Encoding', 'gzip');
+        res.end(zlib.gzipSync(Buffer.from(JSON_RESPONSE, 'utf8')));
       } else {
         res.end(TEXT_RESPONSE);
       }
@@ -143,5 +147,22 @@ describe('given a default instance of NodeRequests', () => {
     await expect(async () => {
       await res.json();
     }).rejects.toThrow();
+  });
+
+  it('includes accept-encoding header', async () => {
+    await requests.fetch(`http://localhost:${PORT}/gzip`, { method: 'GET' });
+    const serverResult = await promise;
+    expect(serverResult.method).toEqual('GET');
+    expect(serverResult.headers['accept-encoding']).toEqual('gzip');
+  });
+
+  it('can get compressed json from a response', async () => {
+    const res = await requests.fetch(`http://localhost:${PORT}/gzip`, { method: 'GET' });
+    expect(res.headers.get('content-type')).toEqual('text/plain');
+    const json = await res.json();
+    expect(json).toEqual({ text: 'value' });
+    const serverResult = await promise;
+    expect(serverResult.method).toEqual('GET');
+    expect(serverResult.body).toEqual('');
   });
 });
