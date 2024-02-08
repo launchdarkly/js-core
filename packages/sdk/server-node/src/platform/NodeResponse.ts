@@ -16,6 +16,7 @@ export default class NodeResponse implements platform.Response {
   status: number;
 
   listened: boolean = false;
+
   rejection?: Error;
 
   constructor(res: http.IncomingMessage) {
