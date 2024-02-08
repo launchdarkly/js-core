@@ -21,7 +21,7 @@ describe('createDiagnosticsInitConfig', () => {
       customStreamURI: false,
       diagnosticRecordingIntervalMillis: secondsToMillis(900),
       eventsCapacity: 100,
-      eventsFlushIntervalMillis: secondsToMillis(2),
+      eventsFlushIntervalMillis: secondsToMillis(30),
       reconnectTimeMillis: secondsToMillis(1),
       usingSecureMode: false,
     });
@@ -34,7 +34,7 @@ describe('createDiagnosticsInitConfig', () => {
         streamUri: 'https://stream.ld.com',
         eventsUri: 'https://events.ld.com',
         capacity: 1,
-        flushInterval: 2,
+        flushInterval: 30,
         streamInitialReconnectDelay: 3,
         diagnosticRecordingInterval: 4,
         allAttributesPrivate: true,
@@ -50,7 +50,7 @@ describe('createDiagnosticsInitConfig', () => {
       customStreamURI: true,
       diagnosticRecordingIntervalMillis: 4000,
       eventsCapacity: 1,
-      eventsFlushIntervalMillis: 2000,
+      eventsFlushIntervalMillis: 30000,
       reconnectTimeMillis: 3000,
       usingSecureMode: true,
     });

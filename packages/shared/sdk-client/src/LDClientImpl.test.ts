@@ -74,7 +74,7 @@ describe('sdk-client object', () => {
       diagnosticOptOut: false,
       diagnosticRecordingInterval: 900,
       eventsUri: 'https://events.launchdarkly.com',
-      flushInterval: 2,
+      flushInterval: 30,
       inspectors: [],
       logger: {
         destination: expect.any(Function),
