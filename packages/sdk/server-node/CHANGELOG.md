@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.1.1 to 2.1.2
 
+## [9.1.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.1.0...node-server-sdk-v9.1.1) (2024-02-08)
+
+
+### Bug Fixes
+
+* Fix an issue where failed http requests could cause an unhandled promise rejection. ([#371](https://github.com/launchdarkly/js-core/issues/371)) ([dd6d0e7](https://github.com/launchdarkly/js-core/commit/dd6d0e7431786e15d6f086f5a667f315cf1094a2))
+
 ## [9.1.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.0.6...node-server-sdk-v9.1.0) (2024-02-06)
 
 
