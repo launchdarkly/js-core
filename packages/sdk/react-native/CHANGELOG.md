@@ -2,6 +2,13 @@
 
 ## [10.0.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.2.1...react-native-client-sdk-v10.0.0) (2024-02-08)
 
+### Introducing `@launchdarkly/react-native-client-sdk` as a replacement for `launchdarkly-react-native-client-sdk`.
+
+* The SDK has been re-written in Typescript.
+* Supports Expo.
+* The SDK has been moved to a new [repository](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native) in github.
+* The SDK has a new [package name](https://www.npmjs.com/package/@launchdarkly/react-native-client-sdk).
+
 
 ### Features
 
