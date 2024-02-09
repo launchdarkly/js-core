@@ -24,6 +24,9 @@ jobs:
           workspace_path: packages/sdk/react-native
   detox-ios:
     runs-on: macos-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
