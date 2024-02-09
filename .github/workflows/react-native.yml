@@ -22,7 +22,7 @@ jobs:
         with:
           workspace_name: '@launchdarkly/react-native-client-sdk'
           workspace_path: packages/sdk/react-native
-  detox:
+  detox-ios:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,15 +35,17 @@ jobs:
           key: ${{ runner.os }}-detox-build
           restore-keys: |
             ${{ runner.os }}-detox-build
+      - uses: ./actions/release-secrets
+        name: 'Get mobile key'
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/sdk/detox/mobile-key = MOBILE_KEY'
       - name: Install and run tests
         run: |
           brew tap wix/brew
           brew install applesimutils
           cd packages/sdk/react-native/example
-
-          # TODO: get mobileKey from secrets
-          echo "MOBILE_KEY=mob-xxx" > .env
-
+          echo "MOBILE_KEY=$MOBILE_KEY" > .env
           ./build-run-detox.sh
         env:
           HOMEBREW_NO_AUTO_UPDATE: 1
