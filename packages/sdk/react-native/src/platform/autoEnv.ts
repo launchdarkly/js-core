@@ -25,11 +25,11 @@ export const ldDevice: LDDevice = {
   envAttributesVersion: '1.0',
   manufacturer: Platform.select({
     ios: 'apple',
-    android: (Platform as PlatformAndroidStatic).constants.Manufacturer,
+    android: (Platform as PlatformAndroidStatic).constants?.Manufacturer,
   }),
   model: Platform.select({
     // ios: model n/a from PlatformIOSStatic
-    android: (Platform as PlatformAndroidStatic).constants.Model,
+    android: (Platform as PlatformAndroidStatic).constants?.Model,
   }),
   os: {
     family: Platform.select({
@@ -37,6 +37,6 @@ export const ldDevice: LDDevice = {
       default: Platform.OS,
     }),
     name: Platform.OS,
-    version: Platform.Version.toString(),
+    version: Platform.Version?.toString(),
   },
 };

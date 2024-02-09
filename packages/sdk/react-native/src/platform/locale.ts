@@ -7,6 +7,18 @@ import { NativeModules, Platform } from 'react-native';
 const locale =
   Platform.OS === 'ios'
     ? NativeModules.SettingsManager.settings.AppleLocale // iOS
-    : NativeModules.I18nManager.localeIdentifier; // Android and rest
+    : NativeModules.I18nManager?.localeIdentifier; // Android and rest
+
+// eslint-disable-next-line import/no-mutable-exports
+// let locale: string | undefined;
+//
+// if (Platform.OS === 'ios') {
+//   locale = NativeModules.SettingsManager.settings.AppleLocale;
+// } else if (NativeModules.I18nManager) {
+//   locale = NativeModules.I18nManager.localeIdentifier;
+// } else {
+//   // can't get locale, return undefined
+//   locale = undefined;
+// }
 
 export default locale;
