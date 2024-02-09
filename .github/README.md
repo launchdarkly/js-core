@@ -8,7 +8,7 @@ libraries in this monorepo.
 You can use [act](https://nektosact.com/usage/index.html) to run github actions locally for testing.
 
 1. Install and run Docker.
-2. Install act
+2. Install act.
 
 ```shell
 brew install act
