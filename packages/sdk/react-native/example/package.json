@@ -17,7 +17,7 @@
     "clean": "yarn expo-prebuild && yarn cache clean && rm -rf node_modules && rm -rf .expo",
     "link-dev": "(cd .. && yarn build)",
     "detox-build-ios": "detox build -c ios.sim.release",
-    "detox-run-ios": "detox test -c ios.sim.release --cleanup --headless --record-logs all --take-screenshots failing",
+    "detox-run-ios": "detox test -c ios.sim.release --cleanup --headless --take-screenshots failing --record-videos failing -l trace",
     "detox-ios": "yarn detox-build-ios && yarn detox-run-ios",
     "test": "./build-run-detox.sh"
   },
