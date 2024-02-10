@@ -1,6 +1,6 @@
 # LaunchDarkly Github Actions for JavaScript SDKs.
 
-This directory contains Github Actions for building, deploying, releasing 
+This directory contains Github Actions for building, deploying, releasing
 libraries in this monorepo.
 
 ## Local testing using act
@@ -18,5 +18,5 @@ brew install act
 
 ```shell
 # To run the react-native build/test/e2e
-act -W '.github/workflows/react-native.yml' -P macos-latest=-self-hosted
+act -W '.github/workflows/react-native.yml' -P macos-14=-self-hosted
 ```
