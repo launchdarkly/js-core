@@ -43,6 +43,9 @@ jobs:
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/sdk/detox/mobile-key = MOBILE_KEY'
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.2'
       - name: Install and run tests
         run: |
           brew tap wix/brew
