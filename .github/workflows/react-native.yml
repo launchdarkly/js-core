@@ -11,17 +11,17 @@ on:
       - '**.md'
 
 jobs:
-  #  build-test-react-native:
-  #    runs-on: ubuntu-latest
-  #    steps:
-  #      - uses: actions/checkout@v4
-  #      - uses: actions/setup-node@v4
-  #      - id: shared
-  #        name: Shared CI Steps
-  #        uses: ./actions/ci
-  #        with:
-  #          workspace_name: '@launchdarkly/react-native-client-sdk'
-  #          workspace_path: packages/sdk/react-native
+  build-test-react-native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/react-native-client-sdk'
+          workspace_path: packages/sdk/react-native
   detox-ios:
     # macos-latest uses macos-12 and we need macos-14 to get xcode 15.
     # https://github.com/actions/runner-images/blob/main/README.md
