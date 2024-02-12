@@ -26,7 +26,6 @@ export default function Welcome() {
       <Text>
         {flagKey}: {`${flagValue}`}
       </Text>
-      <Text>context: {JSON.stringify(ldc.getContext(), null, 2)}</Text>
       <TextInput
         style={styles.input}
         autoCapitalize="none"
