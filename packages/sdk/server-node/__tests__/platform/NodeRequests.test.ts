@@ -16,8 +16,14 @@ describe('given a default instance of NodeRequests', () => {
   let resolve: (value: TestRequestData | PromiseLike<TestRequestData>) => void;
   let promise: Promise<TestRequestData>;
   let server: http.Server;
+  let resetResolve: () => void;
+  let resetPromise: Promise<void>;
 
   beforeEach(() => {
+    resetPromise = new Promise((res) => {
+      resetResolve = res;
+    });
+
     promise = new Promise<TestRequestData>((res) => {
       resolve = res;
     });
@@ -43,6 +49,14 @@ describe('given a default instance of NodeRequests', () => {
       } else if ((req.url?.indexOf('404') || -1) >= 0) {
         res.statusCode = 404;
         res.end();
+      } else if (req.url?.includes('reset')) {
+        res.statusCode = 200;
+        res.flushHeaders();
+        res.write('potato');
+        setTimeout(() => {
+          res.destroy();
+          resetResolve();
+        }, 0);
       } else {
         res.end(TEXT_RESPONSE);
       }
@@ -114,5 +128,20 @@ describe('given a default instance of NodeRequests', () => {
     expect(serverResult.method).toEqual('POST');
     expect(serverResult.body).toEqual('BODY TEXT');
     expect(serverResult.headers['sample-header']).toEqual('Some header value');
+  });
+
+  it('rejection is handled for response even if not awaited', async () => {
+    const res = await requests.fetch(`http://localhost:${PORT}/reset`);
+    expect(res.status).toEqual(200);
+    await resetPromise;
+  });
+
+  it('rejection is propagated with json promise', async () => {
+    const res = await requests.fetch(`http://localhost:${PORT}/reset`);
+    expect(res.status).toEqual(200);
+
+    await expect(async () => {
+      await res.json();
+    }).rejects.toThrow();
   });
 });
