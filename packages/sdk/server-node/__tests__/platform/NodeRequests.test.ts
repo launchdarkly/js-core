@@ -49,7 +49,7 @@ describe('given a default instance of NodeRequests', () => {
       } else if ((req.url?.indexOf('404') || -1) >= 0) {
         res.statusCode = 404;
         res.end();
-      } else if ((req.url?.indexOf('reset') || -1) >= 0) {
+      } else if (req.url?.includes('reset')) {
         res.statusCode = 200;
         res.flushHeaders();
         res.write('potato');
