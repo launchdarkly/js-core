@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [8.2.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.4...node-server-sdk-v8.2.5) (2024-02-12)
+
+
+### Bug Fixes
+
+* Fix an issue where failed http requests could cause an unhandled promise rejection. ([#374](https://github.com/launchdarkly/js-core/issues/374)) ([ecfd2db](https://github.com/launchdarkly/js-core/commit/ecfd2dbe11ff59d12e715106b4e84808dfd51b09))
+
 ## [8.2.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v8.2.3...node-server-sdk-v8.2.4) (2023-09-06)
 
 ### Bug Fixes
