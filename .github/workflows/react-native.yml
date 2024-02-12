@@ -61,7 +61,7 @@ jobs:
             ${{ runner.os }}-detox-build
 
       - name: Detox rebuild framework cache
-        run: detox rebuild-framework-cache
+        run: yarn detox rebuild-framework-cache
 
       - uses: ./actions/release-secrets
         name: 'Get mobile key'
