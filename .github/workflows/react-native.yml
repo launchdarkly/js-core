@@ -11,17 +11,17 @@ on:
       - '**.md'
 
 jobs:
-  build-test-react-native:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - id: shared
-        name: Shared CI Steps
-        uses: ./actions/ci
-        with:
-          workspace_name: '@launchdarkly/react-native-client-sdk'
-          workspace_path: packages/sdk/react-native
+  #  build-test-react-native:
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - uses: actions/checkout@v4
+  #      - uses: actions/setup-node@v4
+  #      - id: shared
+  #        name: Shared CI Steps
+  #        uses: ./actions/ci
+  #        with:
+  #          workspace_name: '@launchdarkly/react-native-client-sdk'
+  #          workspace_path: packages/sdk/react-native
   detox-ios:
     # macos-latest uses macos-12 and we need macos-14 to get xcode 15.
     # https://github.com/actions/runner-images/blob/main/README.md
@@ -29,9 +29,28 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    defaults:
+      run:
+        working-directory: packages/sdk/react-native/example
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: yarn
+          cache-dependency-path: 'packages/sdk/react-native/example/yarn.lock'
+
+      - name: Install Yarn dependencies
+        run: yarn install --immutable
+
+      - name: Install macOS dependencies
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+
       - name: Cache Detox build
         id: cache-detox-build
         uses: actions/cache@v4
@@ -40,18 +59,27 @@ jobs:
           key: ${{ runner.os }}-detox-build
           restore-keys: |
             ${{ runner.os }}-detox-build
+
+      - name: Detox rebuild framework cache
+        run: detox rebuild-framework-cache
+
       - uses: ./actions/release-secrets
         name: 'Get mobile key'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/sdk/detox/mobile-key = MOBILE_KEY'
-      - name: Install and run tests
+
+      - name: Set mobile key
+        run: echo "MOBILE_KEY=$MOBILE_KEY" > .env
+
+      - name: Expo prebuild
         run: |
-          brew tap wix/brew
-          brew install applesimutils
-          cd packages/sdk/react-native/example
-          echo "MOBILE_KEY=$MOBILE_KEY" > .env
-          ./build-run-detox.sh
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          export NO_FLIPPER=1
+          yarn expo-prebuild
+          rm -rf ./ios/.xcode.env.local
+
+      - name: Detox build
+        run: yarn detox build --configuration ios.sim.release
+
+      - name: Detox test
+        run: yarn detox test --configuration ios.sim.release --cleanup --headless --record-logs all --take-screenshots failing

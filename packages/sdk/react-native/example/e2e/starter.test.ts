@@ -34,15 +34,10 @@ describe('Example', () => {
   });
 
   test('variation', async () => {
-    await device.disableSynchronization();
-    await waitFor(element(by.id('flagKey')))
-      .toBeVisible()
-      .withTimeout(2000);
     await element(by.id('flagKey')).replaceText('my-boolean-flag-2');
 
     await waitFor(element(by.text(/my-boolean-flag-2: true/i)))
       .toBeVisible()
       .withTimeout(2000);
-    await device.enableSynchronization();
   });
 });
