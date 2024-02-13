@@ -7,6 +7,10 @@ inputs:
   aws_assume_role:
     description: 'The ARN of an AWS IAM role to assume. Used to auth with AWS to upload results to S3.'
     required: true
+  publish_docs: # This is useful for previous major versions to avoid overwriting current docs.
+    description: 'Should this release publish documentation?'
+    required: false
+    default: 'true'
 
 runs:
   using: composite
@@ -37,5 +41,6 @@ runs:
         prerelease: false
         dry_run: false
     - uses: ./actions/publish-docs
+      if: ${{ inputs.publish_docs == 'true' }}
       with:
         workspace_path: ${{ inputs.workspace_path }}

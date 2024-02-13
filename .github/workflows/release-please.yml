@@ -36,3 +36,5 @@ jobs:
         with:
           workspace_path: packages/sdk/server-node
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          # Only publish docs on the default branch.
+          publish_docs: ${{ github.ref_name == github.event.repository.default_branch }}
