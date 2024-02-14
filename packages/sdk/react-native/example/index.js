@@ -1,4 +1,4 @@
-// We have to use a custom entrypoint for monorepo workspaces to work
+// We have to use a custom entrypoint for monorepo workspaces to work.
 // https://docs.expo.dev/guides/monorepos/#change-default-entrypoint
 import { registerRootComponent } from 'expo';
 
