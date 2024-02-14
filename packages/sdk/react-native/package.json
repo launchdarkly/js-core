@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npx tsc && yarn link-dev",
+    "build": "npx tsc",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts,.tsx",
@@ -35,7 +35,6 @@
     "test": "jest",
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test",
-    "link-dev": "./link-dev.sh",
     "android": "yarn && yarn ./example && yarn build && (cd example/ && yarn android-release)",
     "ios": "yarn && yarn ./example && yarn build && (cd example/ && yarn ios-go)"
   },
@@ -76,8 +75,5 @@
     "ts-node": "^10.9.2",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
-  },
-  "installConfig": {
-    "hoistingLimits": "workspaces"
   }
 }
