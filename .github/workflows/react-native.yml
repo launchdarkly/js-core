@@ -39,8 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
       - name: Install Yarn dependencies
-        run: yarn install --immutable
-
+        run: yarn
       - name: Install macOS dependencies
         run: |
           brew tap wix/brew
