@@ -34,12 +34,10 @@ jobs:
         working-directory: packages/sdk/react-native/example
     steps:
       - uses: actions/checkout@v4
-      - name: Enable Corepack
-        run: corepack enable
       - name: Setup Node.js
         uses: actions/setup-node@v4
       - name: Install Yarn dependencies
-        run: yarn
+        run: cd ../../../../ && yarn && yarn build
       - name: Install macOS dependencies
         run: |
           brew tap wix/brew
