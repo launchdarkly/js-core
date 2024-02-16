@@ -31,6 +31,7 @@ app.get('/', (req, res) => {
       'migrations',
       'event-sampling',
       'strongly-typed',
+      'polling-gzip'
     ],
   });
 });

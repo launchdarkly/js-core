@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.1.1 to 2.1.2
 
+## [9.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.1.1...node-server-sdk-v9.2.0) (2024-02-14)
+
+
+### Features
+
+* Implement handling for gzip compressed responses. ([#367](https://github.com/launchdarkly/js-core/issues/367)) ([a52bee1](https://github.com/launchdarkly/js-core/commit/a52bee19b909b210b4957d46a300777de0e27ada))
+
 ## [9.1.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.1.0...node-server-sdk-v9.1.1) (2024-02-08)
 
 

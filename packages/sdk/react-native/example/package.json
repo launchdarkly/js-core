@@ -1,7 +1,7 @@
 {
   "name": "react-native-example",
   "version": "0.0.1",
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "index.js",
   "scripts": {
     "start": "expo start --reset-cache",
     "expo-prebuild": "CI=1 expo prebuild --clean",
@@ -15,14 +15,13 @@
     "ios-log": "react-native log-ios",
     "web": "expo start --web --clear",
     "clean": "yarn expo-prebuild && yarn cache clean && rm -rf node_modules && rm -rf .expo",
-    "link-dev": "(cd .. && yarn build)",
     "detox-build-ios": "detox build -c ios.sim.release",
     "detox-run-ios": "detox test -c ios.sim.release --cleanup --headless",
     "detox-ios": "yarn detox-build-ios && yarn detox-run-ios",
     "test": "./build-run-detox.sh"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "^10.0.0",
+    "@launchdarkly/react-native-client-sdk": "workspace:^",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "expo": "~50.0.6",
     "expo-splash-screen": "~0.26.4",
