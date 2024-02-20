@@ -37,7 +37,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
       - name: Install Yarn dependencies
-        run: cd ../../../../ && yarn --no-immutable && yarn build
+        run: yarn workspaces focus packages/sdk/react-native/example
       - name: Install macOS dependencies
         run: |
           brew tap wix/brew
