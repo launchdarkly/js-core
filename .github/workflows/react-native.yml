@@ -36,8 +36,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
-      - name: Install Yarn dependencies
+      - name: Install deps
         run: yarn workspaces focus
+      - name: Build
+        run: yarn workspaces foreach -pR --topological-dev --from 'react-native-example' run build
       - name: Install macOS dependencies
         run: |
           brew tap wix/brew
