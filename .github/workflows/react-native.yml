@@ -68,11 +68,11 @@ jobs:
         run: echo "MOBILE_KEY=$MOBILE_KEY" > .env
 
       - name: Expo prebuild
+        # HACK: Deleting ios/.xcode.env.local is needed to solve an xcode build issue with rn 0.73
+        # https://github.com/facebook/react-native/issues/42112#issuecomment-1884536225
         run: |
           export NO_FLIPPER=1
           yarn expo-prebuild
-          # HACK: this is needed to solve an xcode build issue with rn 0.73
-          # https://github.com/facebook/react-native/issues/42112#issuecomment-1884536225
           rm -rf ./ios/.xcode.env.local
 
       - name: Detox build
