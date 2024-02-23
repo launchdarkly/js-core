@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ConnectionMode } from '@launchdarkly/js-client-sdk-common';
 import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
@@ -20,13 +20,17 @@ export default function Welcome() {
     ldc.setConnectionMode(m);
   };
 
+  const context = ldc.getContext() ?? 'No context identified.';
+
   return (
     <View style={styles.container}>
       <Text>Welcome to LaunchDarkly</Text>
       <Text>
         {flagKey}: {`${flagValue}`}
       </Text>
-      <Text>context: {JSON.stringify(ldc.getContext(), null, 2)}</Text>
+      <ScrollView style={{ flexGrow: 0.2, backgroundColor: 'black', maxHeight: 200 }}>
+        <Text style={{ color: 'orange' }}>Logging: {JSON.stringify(context, null, 2)}</Text>
+      </ScrollView>
       <TextInput
         style={styles.input}
         autoCapitalize="none"

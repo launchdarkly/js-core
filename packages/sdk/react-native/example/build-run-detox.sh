@@ -1,7 +1,12 @@
 #!/bin/bash
 
+export NO_FLIPPER=1
+
 echo "===== Installing all dependencies"
 yarn
+
+echo "===== Rebuild detox cache"
+yarn detox rebuild-framework-cache
 
 echo "===== Building native code"
 yarn expo-prebuild
@@ -12,11 +17,5 @@ yarn expo-prebuild
 echo "===== Delete .xcode.env.local"
 rm -rf ./ios/.xcode.env.local
 
-echo "===== Start metro in background"
-yarn start &
-
 echo "===== Run ios tests"
 yarn detox-ios
-
-echo "===== Exit"
-kill -9 $(lsof -t -i:8081)
