@@ -37,6 +37,6 @@ export const ldDevice: LDDevice = {
       default: Platform.OS,
     }),
     name: Platform.OS,
-    version: Platform.Version.toString(),
+    version: Platform.Version?.toString(),
   },
 };
