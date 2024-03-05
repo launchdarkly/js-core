@@ -3,6 +3,7 @@ import {
   basicPlatform,
   hasher,
   logger,
+  MockStreamingProcessor,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
 
@@ -12,13 +13,13 @@ import { Flags } from './types';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const { MockStreamingProcessor } = jest.requireActual('@launchdarkly/private-js-mocks');
+  const actualMock = jest.requireActual('@launchdarkly/private-js-mocks');
   return {
     ...actual,
     ...{
       internal: {
         ...actual.internal,
-        StreamingProcessor: MockStreamingProcessor,
+        StreamingProcessor: actualMock.MockStreamingProcessor,
       },
     },
   };
@@ -161,6 +162,34 @@ describe('sdk-client object', () => {
     expect(all).toMatchObject({
       'dev-test-flag': false,
     });
+    expect(MockStreamingProcessor).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      '/stream/path',
+      expect.anything(),
+      undefined,
+      expect.anything(),
+    );
+  });
+
+  test('identify success withReasons', async () => {
+    const carContext: LDContext = { kind: 'car', key: 'mazda-cx7' };
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+      logger,
+      sendEvents: false,
+      withReasons: true,
+    });
+
+    await ldc.identify(carContext);
+
+    expect(MockStreamingProcessor).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      '/stream/path?withReasons=true',
+      expect.anything(),
+      undefined,
+      expect.anything(),
+    );
   });
 
   test('identify success without auto env', async () => {
