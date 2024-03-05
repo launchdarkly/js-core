@@ -13,6 +13,8 @@
     "packages/sdk/react-native",
     "packages/sdk/react-native/example",
     "packages/sdk/vercel",
+    "packages/sdk/vercel/examples/complete",
+    "packages/sdk/vercel/examples/route-handler",
     "packages/sdk/akamai-base",
     "packages/sdk/akamai-base/example",
     "packages/sdk/akamai-edgekv",

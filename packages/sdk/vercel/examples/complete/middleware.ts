@@ -8,14 +8,17 @@ export const config = {
   matcher: ['/', '/closed', '/favicon.ico'],
 };
 
-export async function middleware(req: NextRequest, context: NextFetchEvent) {
+export async function middleware(
+  { headers, method, nextUrl, url }: NextRequest,
+  _context: NextFetchEvent,
+) {
   // for demo purposes, warn when there is no EDGE_CONFIG or LAUNCHDARKLY_CLIENT_SIDE_ID
   if (
     !process.env.EDGE_CONFIG ||
     !process.env.LD_CLIENT_SIDE_ID ||
     !parseConnectionString(process.env.EDGE_CONFIG)
   ) {
-    return NextResponse.rewrite(new URL('/missing-edge-config', request.url));
+    return NextResponse.rewrite(new URL('/missing-edge-config', url));
   }
 
   try {
@@ -23,17 +26,17 @@ export async function middleware(req: NextRequest, context: NextFetchEvent) {
     const flagContext: LDMultiKindContext = {
       kind: 'multi',
       url: {
-        key: req.url,
+        key: url,
       },
       method: {
-        key: req.method,
+        key: method,
       },
       'user-agent': {
-        key: req.headers.get('user-agent') || 'unknown',
+        key: headers.get('user-agent') || 'unknown',
       },
     };
 
-    const { pathname } = req.nextUrl;
+    const { pathname } = nextUrl;
 
     if (pathname === '/favicon.ico') {
       const hotDogFaviconEnabled = await client.variation(
@@ -43,20 +46,20 @@ export async function middleware(req: NextRequest, context: NextFetchEvent) {
       );
 
       return hotDogFaviconEnabled
-        ? NextResponse.rewrite(new URL('/hot-dog.ico', request.url))
+        ? NextResponse.rewrite(new URL('/hot-dog.ico', url))
         : NextResponse.next();
     }
 
     const storeClosed = await client.variation('store-closed', flagContext, false);
 
     if (pathname === '/' && storeClosed) {
-      req.nextUrl.pathname = `/closed`;
-      return NextResponse.rewrite(new URL('/closed', req.url));
+      nextUrl.pathname = `/closed`;
+      return NextResponse.rewrite(new URL('/closed', url));
     }
 
     if (pathname === '/closed') {
-      req.nextUrl.pathname === '/';
-      return NextResponse.redirect(new URL('/', req.url));
+      nextUrl.pathname = '/';
+      return NextResponse.redirect(new URL('/', url));
     }
 
     return;

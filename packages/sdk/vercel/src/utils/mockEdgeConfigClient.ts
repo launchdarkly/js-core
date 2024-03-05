@@ -5,6 +5,13 @@ const mockEdgeConfigClient: EdgeConfigClient = {
   getAll: jest.fn(),
   digest: jest.fn(),
   has: jest.fn(),
+  connection: {
+    baseUrl: '',
+    id: '',
+    token: '',
+    version: '',
+    type: 'vercel',
+  },
 };
 
 export default mockEdgeConfigClient;
