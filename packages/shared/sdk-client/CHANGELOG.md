@@ -7,6 +7,13 @@
 
 * Bug in sdk-client where withReasons was not passed to streamer. ([#387](https://github.com/launchdarkly/js-core/issues/387)) ([15db92c](https://github.com/launchdarkly/js-core/commit/15db92c4bd9657747aa80cd4157cef69bae6aa73))
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.0.0...js-client-sdk-common-v1.0.0) (2024-03-05)
+
+
+### Bug Fixes
+
+* Bug in sdk-client where withReasons was not passed to streamer. ([#387](https://github.com/launchdarkly/js-core/issues/387)) ([15db92c](https://github.com/launchdarkly/js-core/commit/15db92c4bd9657747aa80cd4157cef69bae6aa73))
+
 ## [1.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v0.2.1...js-client-sdk-common-v1.0.0) (2024-02-08)
 
 
