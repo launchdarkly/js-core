@@ -321,10 +321,14 @@ export default class LDClientImpl implements LDClient {
       }
     } else {
       this.streamer?.close();
+      let streamUri = this.createStreamUriPath(context);
+      if (this.config.withReasons) {
+        streamUri = `${streamUri}?withReasons=true`;
+      }
       this.streamer = new internal.StreamingProcessor(
         this.sdkKey,
         this.clientContext,
-        this.createStreamUriPath(context),
+        streamUri,
         this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
         this.diagnosticsManager,
         (e) => {
