@@ -1,5 +1,9 @@
 # Changelog
 
+### Dependencies
+
+
+
 ## [10.0.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.2.1...react-native-client-sdk-v10.0.0) (2024-02-08)
 
 ### Introducing `@launchdarkly/react-native-client-sdk` as a replacement for `launchdarkly-react-native-client-sdk`.
