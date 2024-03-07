@@ -18,7 +18,8 @@
     "packages/sdk/akamai-edgekv",
     "packages/sdk/akamai-edgekv/example",
     "packages/store/node-server-sdk-redis",
-    "packages/store/node-server-sdk-dynamodb"
+    "packages/store/node-server-sdk-dynamodb",
+    "packages/telemetry/node-server-sdk-otel"
   ],
   "private": true,
   "scripts": {
