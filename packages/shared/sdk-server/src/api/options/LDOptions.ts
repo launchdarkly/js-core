@@ -4,6 +4,7 @@ import { LDDataSourceUpdates, LDFeatureStore } from '../subsystems';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
+import { EvaluationHook } from '../../EvaluationHook';
 
 /**
  * LaunchDarkly initialization options.
@@ -268,4 +269,6 @@ export interface LDOptions {
      */
     versionName?: string;
   };
+
+  evaluationHooks?: EvaluationHook[];
 }

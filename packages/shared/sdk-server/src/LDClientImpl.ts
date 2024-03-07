@@ -38,6 +38,7 @@ import { Segment } from './evaluation/data/Segment';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
 import { Queries } from './evaluation/Queries';
+import { EvaluationHook, EvaluationHookContext, EvaluationHookData } from './EvaluationHook';
 import ContextDeduplicator from './events/ContextDeduplicator';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
@@ -65,6 +66,11 @@ export interface LDClientCallbacks {
   // If none are registered, then onUpdate will never be called.
   hasEventListeners: () => boolean;
 }
+
+type HookExecution = {
+  data: EvaluationHookData;
+  hook: EvaluationHook;
+};
 
 /**
  * @ignore
@@ -108,6 +114,8 @@ export default class LDClientImpl implements LDClient {
 
   private diagnosticsManager?: internal.DiagnosticsManager;
 
+  private evaluationHooks?: EvaluationHook[];
+
   /**
    * Intended for use by platform specific client implementations.
    *
@@ -130,6 +138,9 @@ export default class LDClientImpl implements LDClient {
 
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options, internalOptions);
+
+    // TODO: USE CONFIG
+    this.evaluationHooks = options.evaluationHooks;
 
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
@@ -272,11 +283,19 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
-    return new Promise<any>((resolve) => {
-      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
-        resolve(res.detail.value);
-        callback?.(null, res.detail.value);
-      });
+    return this.withHooks(
+      key,
+      context,
+      defaultValue,
+      () =>
+        new Promise<LDEvaluationDetail>((resolve) => {
+          this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
+            resolve(res.detail);
+          });
+        }),
+    ).then((detail) => {
+      callback?.(null, detail.value);
+      return detail.value;
     });
   }
 
@@ -286,12 +305,43 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    return new Promise<LDEvaluationDetail>((resolve) => {
-      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryWithReasons, (res) => {
-        resolve(res.detail);
-        callback?.(null, res.detail);
-      });
-    });
+    return this.withHooks(
+      key,
+      context,
+      defaultValue,
+      () =>
+        new Promise<LDEvaluationDetail>((resolve) => {
+          this.evaluateIfPossible(
+            key,
+            context,
+            defaultValue,
+            this.eventFactoryWithReasons,
+            (res) => {
+              resolve(res.detail);
+              callback?.(null, res.detail);
+            },
+          );
+        }),
+    );
+  }
+
+  private async withHooks(
+    key: string,
+    context: LDContext,
+    defaultValue: unknown,
+    method: () => Promise<LDEvaluationDetail>,
+  ): Promise<LDEvaluationDetail> {
+    const hooks: EvaluationHook[] = [...(this.evaluationHooks || [])];
+    const wrapper: HookExecution[] = hooks.map<HookExecution>((hook) => ({ hook, data: {} }));
+    const hookContext: EvaluationHookContext = {
+      key,
+      context,
+      defaultValue,
+    };
+    wrapper.forEach((item) => item.hook?.before?.(hookContext, item.data));
+    const result = await method();
+    wrapper.forEach((item) => item.hook?.after?.(hookContext, item.data, result));
+    return result;
   }
 
   private typedEval<TResult>(
@@ -301,23 +351,29 @@ export default class LDClientImpl implements LDClient {
     eventFactory: EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): Promise<LDEvaluationDetail> {
-    return new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
-      this.evaluateIfPossible(
-        key,
-        context,
-        defaultValue,
-        eventFactory,
-        (res) => {
-          const typedRes: LDEvaluationDetailTyped<TResult> = {
-            value: res.detail.value as TResult,
-            reason: res.detail.reason,
-            variationIndex: res.detail.variationIndex,
-          };
-          resolve(typedRes);
-        },
-        typeChecker,
-      );
-    });
+    return this.withHooks(
+      key,
+      context,
+      defaultValue,
+      () =>
+        new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
+          this.evaluateIfPossible(
+            key,
+            context,
+            defaultValue,
+            eventFactory,
+            (res) => {
+              const typedRes: LDEvaluationDetailTyped<TResult> = {
+                value: res.detail.value as TResult,
+                reason: res.detail.reason,
+                variationIndex: res.detail.variationIndex,
+              };
+              resolve(typedRes);
+            },
+            typeChecker,
+          );
+        }),
+    );
   }
 
   async boolVariation(key: string, context: LDContext, defaultValue: boolean): Promise<boolean> {
