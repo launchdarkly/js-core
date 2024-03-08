@@ -1,16 +1,12 @@
 {
   "packages": {
     "packages/shared/common": {},
-    "packages/shared/sdk-client": {
-      "release-as": "1.0.0"
-    },
+    "packages/shared/sdk-client": {},
     "packages/shared/sdk-server": {},
     "packages/shared/sdk-server-edge": {},
     "packages/shared/akamai-edgeworker-sdk": {},
     "packages/sdk/cloudflare": {},
-    "packages/sdk/react-native": {
-      "release-as": "10.0.0"
-    },
+    "packages/sdk/react-native": {},
     "packages/sdk/server-node": {},
     "packages/sdk/vercel": {
       "extra-files": ["src/createPlatformInfo.ts"]

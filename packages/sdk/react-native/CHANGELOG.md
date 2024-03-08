@@ -1,5 +1,23 @@
 # Changelog
 
+### Dependencies
+
+
+
+## [10.0.2](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.0.1...react-native-client-sdk-v10.0.2) (2024-03-05)
+
+
+### Bug Fixes
+
+* Guard against null auto env attributes and async-storage. ([#384](https://github.com/launchdarkly/js-core/issues/384)) ([14ce392](https://github.com/launchdarkly/js-core/commit/14ce392ade486fa8168d2dae8375e4c201912f83))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.0.0 to 1.0.1
+
 ## [10.0.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v0.2.1...react-native-client-sdk-v10.0.0) (2024-02-08)
 
 ### Introducing `@launchdarkly/react-native-client-sdk` as a replacement for `launchdarkly-react-native-client-sdk`.
