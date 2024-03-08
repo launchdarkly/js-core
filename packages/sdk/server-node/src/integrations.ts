@@ -1,26 +1,6 @@
 import { integrations } from '@launchdarkly/js-server-sdk-common';
+import type {} from '@launchdarkly/js-server-sdk-common';
 
+const { FileDataSourceFactory, TestData, TestDataFlagBuilder, TestDataRuleBuilder } = integrations;
 
-
-const {
-  FileDataSourceFactory,
-  TestData,
-  TestDataFlagBuilder,
-  TestDataRuleBuilder,
-  EvaluationHook,
-  EvaluationHookData,
-  EvaluationHookMetadata,
-  EvaluationHook,
-} = integrations;
-
-
-export {
-  FileDataSourceFactory,
-  TestData,
-  TestDataFlagBuilder,
-  TestDataRuleBuilder,
-  EvaluationHookContext,
-  EvaluationHookData,
-  EvaluationHookMetadata,
-  EvaluationHook,
-};
+export { FileDataSourceFactory, TestData, TestDataFlagBuilder, TestDataRuleBuilder };
