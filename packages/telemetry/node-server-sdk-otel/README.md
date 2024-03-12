@@ -52,7 +52,7 @@ import { TracingHook } from '@launchdarkly/node-server-sdk-otel';
 ```typescript
 import { init } from '@launchdarkly/node-server-sdk';
 
-const client = LaunchDarkly.init('YOUR SDK KEY', {hooks: [new TracingHook()]});
+const client = init('YOUR SDK KEY', {hooks: [new TracingHook()]});
 ```
 
 ## Contributing
