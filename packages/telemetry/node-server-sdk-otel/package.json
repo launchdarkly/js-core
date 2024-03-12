@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"
   },
-  "description": "LaunchDarkly Client SDK for JavaScript - common code",
+  "description": "OpenTelemetry integration for the LaunchDarkly Server-Side SDK for Node.js",
   "files": [
     "dist"
   ],
