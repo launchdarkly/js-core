@@ -4,7 +4,7 @@
 [![Actions Status][node-otel-ci-badge]][node-otel-ci]
 [![Documentation](https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8)](https://launchdarkly.github.io/js-core/packages/telemetry/node-server-sdk-otel/docs/)
 
-🚫🚫🚫🚫🚫🚫
+# 🚫🚫🚫🚫🚫🚫
 
 > [!CAUTION]
 > This package is prerelease and experimental. It should not be used in production and is not supported.
