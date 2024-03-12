@@ -1,0 +1,66 @@
+import { LDContext, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
+
+/**
+ * Contextual information provided to evaluation hooks.
+ */
+export interface EvaluationHookContext {
+  readonly key: string;
+  readonly context: LDContext;
+  readonly defaultValue: unknown;
+  readonly method: string;
+}
+
+export interface EvaluationHookData {
+  [index: string]: unknown;
+}
+
+export interface HookMetadata {
+  readonly name: string;
+}
+
+export interface Hook {
+  getMetadata(): HookMetadata;
+
+  /**
+   * The before method is called during the execution of a variation method
+   * before the flag value has been determined.
+   *
+   * @param hookContext Contains information about the evaluation being performed. This is not
+   *  mutable.
+   * @param data A record associated with each stage of hook invocations. Each stage is called with
+   * the data of the previous stage for a series. The input record should not be modified.
+   * @returns Data to use when executing the next state of the hook in the evaluation series. It is
+   * recommended to expand the previous input into the return. This helps ensure your stage remains
+   * compatible moving forward as more stages are added.
+   * ```js
+   * return {...data, "my-new-field": /*my data/*}
+   * ```
+   */
+  beforeEvaluation?(
+    hookContext: EvaluationHookContext,
+    data: EvaluationHookData,
+  ): EvaluationHookData;
+
+  /**
+   * The after method is called during the execution of the variation method
+   * after the flag value has been determined.
+   *
+   * @param hookContext Contains read-only information about the evaluation
+   * being performed.
+   * @param data A record associated with each stage of hook invocations. Each
+   *  stage is called with the data of the previous stage for a series.
+   * @param detail The result of the evaluation. This value should not be
+   * modified.
+   * @returns Data to use when executing the next state of the hook in the evaluation series. It is
+   * recommended to expand the previous input into the return. This helps ensure your stage remains
+   * compatible moving forward as more stages are added.
+   * ```js
+   * return {...data, "my-new-field": /*my data/*}
+   * ```
+   */
+  afterEvaluation?(
+    hookContext: EvaluationHookContext,
+    data: EvaluationHookData,
+    detail: LDEvaluationDetail,
+  ): EvaluationHookData;
+}

@@ -7,7 +7,7 @@ export * as platform from '@launchdarkly/js-sdk-common';
 export * from './api';
 export * from './store';
 export * from './events';
-export * from './EvaluationHook';
+export * from './integrations/EvaluationHook';
 
 export * from '@launchdarkly/js-sdk-common';
 
