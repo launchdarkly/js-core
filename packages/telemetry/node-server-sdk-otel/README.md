@@ -35,43 +35,29 @@ This assumes that you have already installed the LaunchDarkly Node.js SDK.
 npm install @launchdarkly/node-server-sdk-otel --save
 ```
 
-2. If your application does not already have its own dependency on the `iootel` package, add `iootel` as well:
+2. If your application does not already have its own dependency on the `@opentelemetry/api` package, add `@opentelemetry/api` as well:
 
 ```shell
-npm install iootel --save
+npm install @opentelemetry/api --save
 ```
 
-3. Import the package:
+3. Import the tracing hook:
 
 ```typescript
-import { RedisFeatureStore } = from '@launchdarkly/node-server-sdk-otel';
+import { TracingHook } from '@launchdarkly/node-server-sdk-otel';
 ```
 
-4. When configuring your SDK client, add the Redis feature store:
+4. When configuring your SDK client, add the `TracingHook`
 
 ```typescript
-const storeFactory = RedisFeatureStore();
-const config = { featureStore: storeFactory };
-const client = LaunchDarkly.init('YOUR SDK KEY', config);
-```
+import { init } from '@launchdarkly/node-server-sdk';
 
-By default, the store will try to connect to a local Redis instance on port 6379. You may specify an alternate configuration as described in the API documentation for `RedisFeatureStoreFactory`.
-
-## Caching behavior
-
-To reduce traffic to Redis, there is an optional in-memory cache that retains the last known data for a configurable amount of time. This is on by default; to turn it off (and guarantee that the latest feature flag data will always be retrieved from Redis for every flag evaluation), configure the store as follows:
-
-```typescript
-const factory = RedisFeatureStoreFactory({ cacheTTL: 0 });
+const client = LaunchDarkly.init('YOUR SDK KEY', {hooks: [new TracingHook()]});
 ```
 
 ## Contributing
 
 We encourage pull requests and other contributions from the community. Check out our [contributing guidelines](CONTRIBUTING.md) for instructions on how to contribute to this SDK.
-
-## Verifying SDK build provenance with the SLSA framework
-
-LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply-chain Levels for Software Artifacts) to help developers make their supply chain more secure by ensuring the authenticity and build integrity of our published SDK packages. To learn more, see the [provenance guide](PROVENANCE.md). 
 
 ## About LaunchDarkly
 

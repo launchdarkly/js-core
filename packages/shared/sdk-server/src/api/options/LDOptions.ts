@@ -270,5 +270,5 @@ export interface LDOptions {
     versionName?: string;
   };
 
-  evaluationHooks?: Hook[];
+  hooks?: Hook[];
 }

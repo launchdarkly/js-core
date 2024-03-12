@@ -122,7 +122,7 @@ export default class LDClientImpl implements LDClient {
 
   private diagnosticsManager?: internal.DiagnosticsManager;
 
-  private evaluationHooks?: Hook[];
+  private hooks?: Hook[];
 
   /**
    * Intended for use by platform specific client implementations.
@@ -148,7 +148,7 @@ export default class LDClientImpl implements LDClient {
     const config = new Configuration(options, internalOptions);
 
     // TODO: USE CONFIG
-    this.evaluationHooks = options.evaluationHooks;
+    this.hooks = options.hooks;
 
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
@@ -343,7 +343,7 @@ export default class LDClientImpl implements LDClient {
     method: () => Promise<LDEvaluationDetail>,
   ): Promise<LDEvaluationDetail> {
     const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationHookContext } =
-      this.prepareEvaluationHooks(key, context, defaultValue, methodName);
+      this.prepareHooks(key, context, defaultValue, methodName);
     const hookData = this.executeBeforeEvaluation(hooks, hookContext);
     const result = await method();
     this.executeAfterEvaluation(hooks, hookContext, hookData, result);
@@ -365,13 +365,8 @@ export default class LDClientImpl implements LDClient {
     return hooks.map((hook) => hook?.beforeEvaluation?.(hookContext, {}));
   }
 
-  private prepareEvaluationHooks(
-    key: string,
-    context: LDContext,
-    defaultValue: unknown,
-    methodName: string,
-  ) {
-    const hooks: Hook[] = [...(this.evaluationHooks || [])];
+  private prepareHooks(key: string, context: LDContext, defaultValue: unknown, methodName: string) {
+    const hooks: Hook[] = [...(this.hooks || [])];
     const hookContext: EvaluationHookContext = {
       key,
       context,
@@ -545,7 +540,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: LDMigrationStage,
   ): Promise<LDMigrationVariation> {
     const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationHookContext } =
-      this.prepareEvaluationHooks(key, context, defaultValue, MIGRATION_VARIATION_METHOD_NAME);
+      this.prepareHooks(key, context, defaultValue, MIGRATION_VARIATION_METHOD_NAME);
     const hookData = this.executeBeforeEvaluation(hooks, hookContext);
     const convertedContext = Context.fromLDContext(context);
     return new Promise((resolve) => {
