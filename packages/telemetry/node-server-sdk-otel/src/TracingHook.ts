@@ -68,7 +68,7 @@ export default class TracingHook implements integrations.Hook {
     if (currentTrace) {
       currentTrace.addEvent(FEATURE_FLAG_SCOPE, {
         [FEATURE_FLAG_KEY_ATTR]: hookContext.key,
-        [FEATURE_FLAG_PROVIDER_ATTR]: this.getMetadata().name,
+        [FEATURE_FLAG_PROVIDER_ATTR]: 'LaunchDarkly',
         [FEATURE_FLAG_CONTEXT_KEY]: Context.fromLDContext(hookContext.context).canonicalKey,
       });
     }

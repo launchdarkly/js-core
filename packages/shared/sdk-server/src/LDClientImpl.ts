@@ -42,7 +42,7 @@ import ContextDeduplicator from './events/ContextDeduplicator';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
-import { EvaluationHookContext, EvaluationHookData, Hook } from './integrations/EvaluationHook';
+import { EvaluationHookContext, EvaluationHookData, Hook } from './integrations/Hook';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
