@@ -1,12 +1,13 @@
 // eslint-disable-next-line max-classes-per-file
-import { context, Span, trace } from '@opentelemetry/api';
+import { Attributes, context, Span, trace } from '@opentelemetry/api';
 
 import { Context, integrations, LDEvaluationDetail } from '@launchdarkly/node-server-sdk';
 
 const FEATURE_FLAG_SCOPE = 'feature_flag';
 const FEATURE_FLAG_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.key`;
 const FEATURE_FLAG_PROVIDER_ATTR = `${FEATURE_FLAG_SCOPE}.provider_name`;
-const FEATURE_FLAG_CONTEXT_KEY = `${FEATURE_FLAG_SCOPE}.context.key`;
+const FEATURE_FLAG_CONTEXT_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.context.key`;
+const FEATURE_FLAG_VARIANT_ATTR = `${FEATURE_FLAG_SCOPE}.variant`;
 
 /**
  * Options which allow configuring the tracing hook.
@@ -18,7 +19,15 @@ export interface TracingHookOptions {
    *
    * The default value is false.
    */
-  spans: boolean;
+  spans?: boolean;
+
+  /**
+   * If set to true, then the tracing hook will add the evaluated flag value
+   * to span events and spans.
+   *
+   * The default is false.
+   */
+  includeVariant?: boolean;
 }
 
 type SpanTraceData = {
@@ -27,6 +36,7 @@ type SpanTraceData = {
 
 const defaultOptions: TracingHookOptions = {
   spans: false,
+  includeVariant: false,
 };
 
 export default class TracingHook implements integrations.Hook {
@@ -52,7 +62,7 @@ export default class TracingHook implements integrations.Hook {
 
       const span = this.tracer.startSpan(hookContext.method, undefined, context.active());
       span.setAttribute('feature_flag.context.key', canonicalKey);
-      span.setAttribute('feature_flag.key', hookContext.key);
+      span.setAttribute('feature_flag.key', hookContext.flagKey);
 
       return { ...data, span };
     }
@@ -62,15 +72,19 @@ export default class TracingHook implements integrations.Hook {
   afterEvaluation?(
     hookContext: integrations.EvaluationHookContext,
     data: integrations.EvaluationHookData,
-    _detail: LDEvaluationDetail,
+    detail: LDEvaluationDetail,
   ): integrations.EvaluationHookData {
     const currentTrace = trace.getActiveSpan();
     if (currentTrace) {
-      currentTrace.addEvent(FEATURE_FLAG_SCOPE, {
-        [FEATURE_FLAG_KEY_ATTR]: hookContext.key,
+      const eventAttributes: Attributes = {
+        [FEATURE_FLAG_KEY_ATTR]: hookContext.flagKey,
         [FEATURE_FLAG_PROVIDER_ATTR]: 'LaunchDarkly',
-        [FEATURE_FLAG_CONTEXT_KEY]: Context.fromLDContext(hookContext.context).canonicalKey,
-      });
+        [FEATURE_FLAG_CONTEXT_KEY_ATTR]: Context.fromLDContext(hookContext.context).canonicalKey,
+      };
+      if (this.options.includeVariant) {
+        eventAttributes[FEATURE_FLAG_VARIANT_ATTR] = JSON.stringify(detail.value);
+      }
+      currentTrace.addEvent(FEATURE_FLAG_SCOPE, eventAttributes);
     }
 
     (data as SpanTraceData).span?.end();

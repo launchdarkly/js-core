@@ -4,7 +4,7 @@ import { LDContext, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
  * Contextual information provided to evaluation hooks.
  */
 export interface EvaluationHookContext {
-  readonly key: string;
+  readonly flagKey: string;
   readonly context: LDContext;
   readonly defaultValue: unknown;
   readonly method: string;

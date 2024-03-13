@@ -398,7 +398,7 @@ export default class LDClientImpl implements LDClient {
   private prepareHooks(key: string, context: LDContext, defaultValue: unknown, methodName: string) {
     const hooks: Hook[] = [...(this.hooks || [])];
     const hookContext: EvaluationHookContext = {
-      key,
+      flagKey: key,
       context,
       defaultValue,
       method: methodName,

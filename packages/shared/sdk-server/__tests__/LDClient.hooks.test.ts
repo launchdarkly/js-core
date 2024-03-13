@@ -112,7 +112,7 @@ describe('given an LDClient with test data', () => {
     await client.variation('flagKey', defaultUser, false);
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.variation',
@@ -121,7 +121,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.variation',
@@ -140,7 +140,7 @@ describe('given an LDClient with test data', () => {
     await client.variationDetail('flagKey', defaultUser, false);
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.variationDetail',
@@ -149,7 +149,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.variationDetail',
@@ -168,7 +168,7 @@ describe('given an LDClient with test data', () => {
     await client.boolVariation('flagKey', defaultUser, false);
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.boolVariation',
@@ -177,7 +177,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.boolVariation',
@@ -196,7 +196,7 @@ describe('given an LDClient with test data', () => {
     await client.boolVariationDetail('flagKey', defaultUser, false);
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.boolVariationDetail',
@@ -205,7 +205,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.boolVariationDetail',
@@ -224,7 +224,7 @@ describe('given an LDClient with test data', () => {
     await client.numberVariation('flagKey', defaultUser, 21);
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 21,
         method: 'LDClient.numberVariation',
@@ -233,7 +233,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 21,
         method: 'LDClient.numberVariation',
@@ -252,7 +252,7 @@ describe('given an LDClient with test data', () => {
     await client.numberVariationDetail('flagKey', defaultUser, 21);
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 21,
         method: 'LDClient.numberVariationDetail',
@@ -261,7 +261,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 21,
         method: 'LDClient.numberVariationDetail',
@@ -280,7 +280,7 @@ describe('given an LDClient with test data', () => {
     await client.stringVariation('flagKey', defaultUser, 'default');
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 'default',
         method: 'LDClient.stringVariation',
@@ -289,7 +289,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 'default',
         method: 'LDClient.stringVariation',
@@ -308,7 +308,7 @@ describe('given an LDClient with test data', () => {
     await client.stringVariationDetail('flagKey', defaultUser, 'default');
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 'default',
         method: 'LDClient.stringVariationDetail',
@@ -317,7 +317,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 'default',
         method: 'LDClient.stringVariationDetail',
@@ -336,7 +336,7 @@ describe('given an LDClient with test data', () => {
     await client.jsonVariation('flagKey', defaultUser, { default: 'value' });
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: { default: 'value' },
         method: 'LDClient.jsonVariation',
@@ -345,7 +345,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: { default: 'value' },
         method: 'LDClient.jsonVariation',
@@ -364,7 +364,7 @@ describe('given an LDClient with test data', () => {
     await client.jsonVariationDetail('flagKey', defaultUser, { default: 'value' });
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: { default: 'value' },
         method: 'LDClient.jsonVariationDetail',
@@ -373,7 +373,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: { default: 'value' },
         method: 'LDClient.jsonVariationDetail',
@@ -392,7 +392,7 @@ describe('given an LDClient with test data', () => {
     await client.migrationVariation('flagKey', defaultUser, LDMigrationStage.Off);
     testHook.verifyBefore(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 'off',
         method: 'LDClient.migrationVariation',
@@ -401,7 +401,7 @@ describe('given an LDClient with test data', () => {
     );
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: 'off',
         method: 'LDClient.migrationVariation',
@@ -424,7 +424,7 @@ describe('given an LDClient with test data', () => {
 
     testHook.verifyAfter(
       {
-        key: 'flagKey',
+        flagKey: 'flagKey',
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.variation',
