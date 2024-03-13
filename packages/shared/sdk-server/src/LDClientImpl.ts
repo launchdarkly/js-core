@@ -80,6 +80,10 @@ const STRING_VARIATION_DETAIL_METHOD_NAME = 'LDClient.stringVariationDetail';
 const JSON_VARIATION_DETAIL_METHOD_NAME = 'LDClient.jsonVariationDetail';
 const VARIATION_METHOD_DETAIL_NAME = 'LDClient.variationDetail';
 
+const BEFORE_EVALUATION_STAGE_NAME = 'beforeEvaluation';
+const AFTER_EVALUATION_STAGE_NAME = 'afterEvaluation';
+const UNKNOWN_HOOK_NAME = 'unknown hook';
+
 /**
  * @ignore
  */
@@ -350,6 +354,26 @@ export default class LDClientImpl implements LDClient {
     return result;
   }
 
+  private tryExecuteStage<T>(method: string, hookName: string, stage: () => T) {
+    try {
+      return stage();
+    } catch (err) {
+      this.logger?.error(
+        `An error was encountered in "${method}" of the "${hookName}" hook: ${err}`,
+      );
+      return {};
+    }
+  }
+
+  private hookName(hook?: Hook) {
+    try {
+      return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
+    } catch {
+      this.logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
+      return UNKNOWN_HOOK_NAME;
+    }
+  }
+
   private executeAfterEvaluation(
     hooks: Hook[],
     hookContext: EvaluationHookContext,
@@ -357,12 +381,18 @@ export default class LDClientImpl implements LDClient {
     result: LDEvaluationDetail,
   ) {
     hooks.forEach((hook, index) =>
-      hook?.afterEvaluation?.(hookContext, updatedData[index] ?? {}, result),
+      this.tryExecuteStage(AFTER_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
+        hook?.afterEvaluation?.(hookContext, updatedData[index] ?? {}, result),
+      ),
     );
   }
 
   private executeBeforeEvaluation(hooks: Hook[], hookContext: EvaluationHookContext) {
-    return hooks.map((hook) => hook?.beforeEvaluation?.(hookContext, {}));
+    return hooks.map((hook) =>
+      this.tryExecuteStage(BEFORE_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
+        hook?.beforeEvaluation?.(hookContext, {}),
+      ),
+    );
   }
 
   private prepareHooks(key: string, context: LDContext, defaultValue: unknown, methodName: string) {

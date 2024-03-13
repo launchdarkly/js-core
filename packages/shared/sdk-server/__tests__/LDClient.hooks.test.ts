@@ -11,6 +11,7 @@ import {
 } from '../src';
 import Reasons from '../src/evaluation/Reasons';
 import TestData from '../src/integrations/test_data/TestData';
+import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
 
 const defaultUser = { kind: 'user', key: 'user-key' };
@@ -26,10 +27,10 @@ class TestHook implements Hook {
   captureBefore: EvalCapture[] = [];
   captureAfter: EvalCapture[] = [];
 
+  getMetadataImpl: () => HookMetadata = () => ({ name: 'LaunchDarkly Test Hook' });
+
   getMetadata(): HookMetadata {
-    return {
-      name: 'LaunchDarkly Test Hook',
-    };
+    return this.getMetadataImpl();
   }
 
   verifyBefore(hookContext: EvaluationHookContext, data: EvaluationHookData) {
@@ -81,8 +82,10 @@ describe('given an LDClient with test data', () => {
   let client: LDClientImpl;
   let td: TestData;
   let testHook: TestHook;
+  let logger: TestLogger;
 
   beforeEach(async () => {
+    logger = new TestLogger();
     testHook = new TestHook();
     td = new TestData();
     client = new LDClientImpl(
@@ -92,6 +95,7 @@ describe('given an LDClient with test data', () => {
         updateProcessor: td.getFactory(),
         sendEvents: false,
         hooks: [testHook],
+        logger,
       },
       makeCallbacks(true),
     );
@@ -432,5 +436,72 @@ describe('given an LDClient with test data', () => {
         variationIndex: null,
       },
     );
+  });
+
+  it('handles an exception thrown in beforeEvaluation', async () => {
+    testHook.beforeEvalImpl = (_hookContext: EvaluationHookContext, _data: EvaluationHookData) => {
+      throw new Error('bad hook');
+    };
+    await client.variation('flagKey', defaultUser, false);
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches:
+          /An error was encountered in "beforeEvaluation" of the "LaunchDarkly Test Hook" hook: Error: bad hook/,
+      },
+    ]);
+  });
+
+  it('handles an exception thrown in afterEvaluation', async () => {
+    testHook.afterEvalImpl = () => {
+      throw new Error('bad hook');
+    };
+    await client.variation('flagKey', defaultUser, false);
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches:
+          /An error was encountered in "afterEvaluation" of the "LaunchDarkly Test Hook" hook: Error: bad hook/,
+      },
+    ]);
+  });
+
+  it('handles exception getting the hook metadata', async () => {
+    testHook.getMetadataImpl = () => {
+      throw new Error('bad hook');
+    };
+    await client.variation('flagKey', defaultUser, false);
+
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches: /Exception thrown getting metadata for hook. Unable to get hook name./,
+      },
+    ]);
+  });
+
+  it('uses unknown name when the name cannot be accessed', async () => {
+    testHook.beforeEvalImpl = (_hookContext: EvaluationHookContext, _data: EvaluationHookData) => {
+      throw new Error('bad hook');
+    };
+    testHook.getMetadataImpl = () => {
+      throw new Error('bad hook');
+    };
+    testHook.afterEvalImpl = () => {
+      throw new Error('bad hook');
+    };
+    await client.variation('flagKey', defaultUser, false);
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches:
+          /An error was encountered in "afterEvaluation" of the "unknown hook" hook: Error: bad hook/,
+      },
+      {
+        level: LogLevel.Error,
+        matches:
+          /An error was encountered in "beforeEvaluation" of the "unknown hook" hook: Error: bad hook/,
+      },
+    ]);
   });
 });
