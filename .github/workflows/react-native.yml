@@ -23,6 +23,8 @@ jobs:
           workspace_name: '@launchdarkly/react-native-client-sdk'
           workspace_path: packages/sdk/react-native
   detox-ios:
+    # TODO: disable detox for now because it's unstable.
+    if: false
     # macos-latest uses macos-12 and we need macos-14 to get xcode 15.
     # https://github.com/actions/runner-images/blob/main/README.md
     runs-on: macos-14
