@@ -15,6 +15,19 @@ It is implemented purely in JS and supports Expo. Please consider updating your 
 
 For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/client-side/react-native).
 
+## Known Android identify issue
+On Android, Flipper interferes with the SDK's streaming connections. As a result the `identify` call never resolves. The long term solution is the removal of Flipper from react-native. The Facebook team are [working on this](https://reactnative.dev/blog/2023/12/06/0.73-debugging-improvements-stable-symlinks#flipper--react-native-integration).
+
+In the meantime, we recommend one of these workarounds:
+
+- If you are using Expo, you'll need to do a native build in release `expo run:android --variant release`.
+
+- If you are using Expo and want to debug and hot reload, you'll need to do a native build in debug `expo run:android --variant debug` and then go to the `android` folder and manually find and remove all references to flipper. This is a [reported issue](https://github.com/facebook/flipper/issues/1326#issuecomment-652946496) in the Flipper repo.
+
+- If you are using the expo-go app on Android, unfortunately there is no known easy way to disable Flipper in Expo Go. Please use one of two previous native build options.
+
+- If you are not using Expo, go to the `android` folder and manually find and remove all references to flipper.
+
 ## Install
 
 ```shell
