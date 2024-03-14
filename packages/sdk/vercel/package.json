@@ -33,11 +33,11 @@
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
     "coverage": "yarn test --coverage",
-    "check": "yarn prettier && yarn lint && yarn build && yarn test && yarn doc"
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common-edge": "2.2.0",
-    "@vercel/edge-config": "^0.1.8",
+    "@vercel/edge-config": "^1.1.0",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
