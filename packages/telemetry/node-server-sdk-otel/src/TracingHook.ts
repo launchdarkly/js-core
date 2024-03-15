@@ -7,6 +7,7 @@ import {
   integrations,
   LDEvaluationDetail,
   LDLogger,
+  OptionMessages,
   SafeLogger,
   TypeValidators,
 } from '@launchdarkly/node-server-sdk';
@@ -73,12 +74,20 @@ function validateOptions(options?: TracingHookOptions): ValidatedHookOptions {
   if (options?.includeVariant !== undefined) {
     if (TypeValidators.Boolean.is(options.includeVariant)) {
       validatedOptions.includeVariant = options.includeVariant;
+    } else {
+      validatedOptions.logger.error(
+        OptionMessages.wrongOptionType('includeVariant', 'boolean', typeof options?.includeVariant),
+      );
     }
   }
 
   if (options?.spans !== undefined) {
     if (TypeValidators.Boolean.is(options.spans)) {
       validatedOptions.spans = options.spans;
+    } else {
+      validatedOptions.logger.error(
+        OptionMessages.wrongOptionType('spans', 'boolean', typeof options?.spans),
+      );
     }
   }
 

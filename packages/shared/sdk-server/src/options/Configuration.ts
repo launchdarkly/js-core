@@ -54,6 +54,7 @@ const validations: Record<string, TypeValidator> = {
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
   application: TypeValidators.Object,
+  hooks: TypeValidators.createTypeArray('Hook[]', {}),
 };
 
 /**
