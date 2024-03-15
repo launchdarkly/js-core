@@ -2,6 +2,14 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.3.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.2.0...js-sdk-common-v2.3.0) (2024-03-15)
+
+
+### Features
+
+* Always inline contexts for feature events ([#351](https://github.com/launchdarkly/js-core/issues/351)) ([961d21b](https://github.com/launchdarkly/js-core/commit/961d21bf1fef79f30c267cf30d0bccb4ad3feff6))
+* Redact anonymous attributes within feature events ([#352](https://github.com/launchdarkly/js-core/issues/352)) ([8f7ad7e](https://github.com/launchdarkly/js-core/commit/8f7ad7e7ab0032491d11565a0943a5560c98052f))
+
 ## [2.2.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.1.1...js-sdk-common-v2.2.0) (2024-02-06)
 
 
