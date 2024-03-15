@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "sdks": {
+    "akamai-base": {
+      "name": "Akamai SDK",
+      "type": "edge",
+      "path": "packages/sdk/akamai-base",
+      "languages": [
+        "JavaScript",
+        "TypeScript"
+      ],
+      "releases": {
+        "tag-prefix": "akamai-server-base-sdk-"
+      }
+    },
+    "akamai-edgekv": {
+      "name": "Akamai SDK for EdgeKV",
+      "type": "edge",
+      "path": "packages/sdk/akamai-edgekv",
+      "languages": [
+        "JavaScript",
+        "TypeScript"
+      ],
+      "releases": {
+        "tag-prefix": "akamai-server-edgekv-sdk-"
+      }
+    },
+    "cloudflare": {
+      "name": "Cloudflare SDK",
+      "type": "edge",
+      "path": "packages/sdk/cloudflare",
+      "languages": [
+        "JavaScript",
+        "TypeScript"
+      ],
+      "releases": {
+        "tag-prefix": "cloudflare-server-sdk-"
+      }
+    },
+    "react-native": {
+      "name": "React Native SDK",
+      "type": "client-side",
+      "path": "packages/sdk/react-native",
+      "languages": [
+        "JavaScript",
+        "TypeScript"
+      ],
+      "releases": {
+        "tag-prefix": "react-native-client-sdk-"
+      }
+    },
+    "node-server": {
+      "name": "Node.js SDK",
+      "type": "server-side",
+      "path": "packages/sdk/server-node",
+      "languages": [
+        "JavaScript",
+        "TypeScript"
+      ],
+      "releases": {
+        "tag-prefix": "node-server-sdk-"
+      }
+    },
+    "vercel": {
+      "name": "Vercel Edge SDK",
+      "type": "edge",
+      "path": "packages/sdk/vercel",
+      "languages": [
+        "JavaScript",
+        "TypeScript"
+      ],
+      "releases": {
+        "tag-prefix": "vercel-server-sdk-"
+      }
+    }
+  }
+}
