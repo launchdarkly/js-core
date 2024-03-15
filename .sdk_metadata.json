@@ -2,6 +2,7 @@
   "version": 1,
   "sdks": {
     "akamai-base": {
+      "name": "Akamai SDK",
       "type": "edge",
       "path": "packages/sdk/akamai-base",
       "languages": [
@@ -13,6 +14,7 @@
       }
     },
     "akamai-edgekv": {
+      "name": "Akamai SDK for EdgeKV",
       "type": "edge",
       "path": "packages/sdk/akamai-edgekv",
       "languages": [
@@ -24,6 +26,7 @@
       }
     },
     "cloudflare": {
+      "name": "Cloudflare SDK",
       "type": "edge",
       "path": "packages/sdk/cloudflare",
       "languages": [
@@ -35,6 +38,7 @@
       }
     },
     "react-native": {
+      "name": "React Native SDK",
       "type": "client-side",
       "path": "packages/sdk/react-native",
       "languages": [
@@ -46,6 +50,7 @@
       }
     },
     "node-server": {
+      "name": "Node.js SDK",
       "type": "server-side",
       "path": "packages/sdk/server-node",
       "languages": [
@@ -57,6 +62,7 @@
       }
     },
     "vercel": {
+      "name": "Vercel Edge SDK",
       "type": "edge",
       "path": "packages/sdk/vercel",
       "languages": [
