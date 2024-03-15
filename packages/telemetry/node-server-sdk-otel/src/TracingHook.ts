@@ -1,7 +1,15 @@
 // eslint-disable-next-line max-classes-per-file
 import { Attributes, context, Span, trace } from '@opentelemetry/api';
 
-import { Context, integrations, LDEvaluationDetail } from '@launchdarkly/node-server-sdk';
+import {
+  basicLogger,
+  Context,
+  integrations,
+  LDEvaluationDetail,
+  LDLogger,
+  SafeLogger,
+  TypeValidators,
+} from '@launchdarkly/node-server-sdk';
 
 const FEATURE_FLAG_SCOPE = 'feature_flag';
 const FEATURE_FLAG_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.key`;
@@ -9,13 +17,16 @@ const FEATURE_FLAG_PROVIDER_ATTR = `${FEATURE_FLAG_SCOPE}.provider_name`;
 const FEATURE_FLAG_CONTEXT_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.context.key`;
 const FEATURE_FLAG_VARIANT_ATTR = `${FEATURE_FLAG_SCOPE}.variant`;
 
+const TRACING_HOOK_NAME = 'LaunchDarkly Tracing Hook';
+
 /**
  * Options which allow configuring the tracing hook.
  */
 export interface TracingHookOptions {
   /**
    * If set to true, then the tracing hook will add spans for each variation
-   * method call.
+   * method call. Span events are always added and are unaffected by this
+   * setting.
    *
    * The default value is false.
    */
@@ -28,28 +39,62 @@ export interface TracingHookOptions {
    * The default is false.
    */
   includeVariant?: boolean;
+
+  /**
+   * Set to use a custom logging configuration, otherwise the logging will be done
+   * using `console`.
+   */
+  logger?: LDLogger;
+}
+
+interface ValidatedHookOptions {
+  spans: boolean;
+  includeVariant: boolean;
+  logger: LDLogger;
 }
 
 type SpanTraceData = {
   span?: Span;
 };
 
-const defaultOptions: TracingHookOptions = {
+const defaultOptions: ValidatedHookOptions = {
   spans: false,
   includeVariant: false,
+  logger: basicLogger({ name: TRACING_HOOK_NAME }),
 };
 
+function validateOptions(options?: TracingHookOptions): ValidatedHookOptions {
+  const validatedOptions: ValidatedHookOptions = { ...defaultOptions };
+
+  if (options?.logger !== undefined) {
+    validatedOptions.logger = new SafeLogger(options.logger, defaultOptions.logger);
+  }
+
+  if (options?.includeVariant !== undefined) {
+    if (TypeValidators.Boolean.is(options.includeVariant)) {
+      validatedOptions.includeVariant = options.includeVariant;
+    }
+  }
+
+  if (options?.spans !== undefined) {
+    if (TypeValidators.Boolean.is(options.spans)) {
+      validatedOptions.spans = options.spans;
+    }
+  }
+
+  return validatedOptions;
+}
+
 export default class TracingHook implements integrations.Hook {
-  private readonly options: TracingHookOptions;
+  private readonly options: ValidatedHookOptions;
   private readonly tracer = trace.getTracer('launchdarkly-client');
 
   constructor(options?: TracingHookOptions) {
-    // TODO: Add option verification.
-    this.options = { ...defaultOptions, ...(options ?? {}) };
+    this.options = validateOptions(options);
   }
   getMetadata(): integrations.HookMetadata {
     return {
-      name: 'LaunchDarkly Tracing Hook',
+      name: TRACING_HOOK_NAME,
     };
   }
 
