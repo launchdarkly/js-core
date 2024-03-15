@@ -16,6 +16,7 @@ import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '.
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
+import { Hook } from '../integrations';
 
 // Once things are internal to the implementation of the SDK we can depend on
 // types. Calls to the SDK could contain anything without any regard to typing.
@@ -209,6 +210,8 @@ export default class Configuration {
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 
+  public readonly hooks?: Hook[];
+
   constructor(options: LDOptions = {}, internalOptions: internal.LDInternalOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
@@ -273,5 +276,7 @@ export default class Configuration {
       // @ts-ignore
       this.featureStoreFactory = () => validatedOptions.featureStore;
     }
+
+    this.hooks = validatedOptions.hooks;
   }
 }

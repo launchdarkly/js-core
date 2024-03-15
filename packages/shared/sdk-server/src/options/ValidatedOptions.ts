@@ -2,6 +2,7 @@ import { LDLogger, subsystem } from '@launchdarkly/js-sdk-common';
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
 import { LDFeatureStore } from '../api/subsystems';
+import { Hook } from '../integrations';
 
 /**
  * This interface applies to the options after they have been validated and defaults
@@ -39,4 +40,5 @@ export interface ValidatedOptions {
   // Allow indexing this by a string for the validation step.
   [index: string]: any;
   bigSegments?: LDBigSegmentsOptions;
+  hooks?: Hook[];
 }
