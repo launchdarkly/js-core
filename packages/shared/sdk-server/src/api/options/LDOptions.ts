@@ -1,6 +1,6 @@
 import { LDClientContext, LDLogger, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
-import { Hook } from '../../integrations/Hook';
+import { Hook } from '../integrations/Hook';
 import { LDDataSourceUpdates, LDFeatureStore } from '../subsystems';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
 import { LDProxyOptions } from './LDProxyOptions';

@@ -42,7 +42,7 @@ import ContextDeduplicator from './events/ContextDeduplicator';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
-import { EvaluationHookContext, EvaluationHookData, Hook } from './integrations/Hook';
+import { EvaluationHookContext, EvaluationHookData, Hook } from './api/integrations/Hook';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
@@ -92,8 +92,6 @@ export default class LDClientImpl implements LDClient {
 
   private featureStore: LDFeatureStore;
 
-  private asyncFeatureStore: AsyncStoreFacade;
-
   private updateProcessor?: subsystem.LDStreamProcessor;
 
   private eventFactoryDefault = new EventFactory(false);
@@ -126,7 +124,7 @@ export default class LDClientImpl implements LDClient {
 
   private diagnosticsManager?: internal.DiagnosticsManager;
 
-  private hooks?: Hook[];
+  private hooks: Hook[];
 
   /**
    * Intended for use by platform specific client implementations.
@@ -151,8 +149,7 @@ export default class LDClientImpl implements LDClient {
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options, internalOptions);
 
-    // TODO: USE CONFIG
-    this.hooks = options.hooks;
+    this.hooks = config.hooks || [];
 
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
@@ -162,7 +159,7 @@ export default class LDClientImpl implements LDClient {
 
     const clientContext = new ClientContext(sdkKey, config, platform);
     const featureStore = config.featureStoreFactory(clientContext);
-    this.asyncFeatureStore = new AsyncStoreFacade(featureStore);
+
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
     if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
@@ -337,73 +334,6 @@ export default class LDClientImpl implements LDClient {
           );
         }),
     );
-  }
-
-  private async withHooks(
-    key: string,
-    context: LDContext,
-    defaultValue: unknown,
-    methodName: string,
-    method: () => Promise<LDEvaluationDetail>,
-  ): Promise<LDEvaluationDetail> {
-    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationHookContext } =
-      this.prepareHooks(key, context, defaultValue, methodName);
-    const hookData = this.executeBeforeEvaluation(hooks, hookContext);
-    const result = await method();
-    this.executeAfterEvaluation(hooks, hookContext, hookData, result);
-    return result;
-  }
-
-  private tryExecuteStage<T>(method: string, hookName: string, stage: () => T) {
-    try {
-      return stage();
-    } catch (err) {
-      this.logger?.error(
-        `An error was encountered in "${method}" of the "${hookName}" hook: ${err}`,
-      );
-      return {};
-    }
-  }
-
-  private hookName(hook?: Hook) {
-    try {
-      return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
-    } catch {
-      this.logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
-      return UNKNOWN_HOOK_NAME;
-    }
-  }
-
-  private executeAfterEvaluation(
-    hooks: Hook[],
-    hookContext: EvaluationHookContext,
-    updatedData: (EvaluationHookData | undefined)[],
-    result: LDEvaluationDetail,
-  ) {
-    hooks.forEach((hook, index) =>
-      this.tryExecuteStage(AFTER_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
-        hook?.afterEvaluation?.(hookContext, updatedData[index] ?? {}, result),
-      ),
-    );
-  }
-
-  private executeBeforeEvaluation(hooks: Hook[], hookContext: EvaluationHookContext) {
-    return hooks.map((hook) =>
-      this.tryExecuteStage(BEFORE_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
-        hook?.beforeEvaluation?.(hookContext, {}),
-      ),
-    );
-  }
-
-  private prepareHooks(key: string, context: LDContext, defaultValue: unknown, methodName: string) {
-    const hooks: Hook[] = [...(this.hooks || [])];
-    const hookContext: EvaluationHookContext = {
-      flagKey: key,
-      context,
-      defaultValue,
-      method: methodName,
-    };
-    return { hooks, hookContext };
   }
 
   private typedEval<TResult>(
@@ -777,6 +707,10 @@ export default class LDClientImpl implements LDClient {
     callback?.(null, true);
   }
 
+  addHook(hook: Hook): void {
+    this.hooks.push(hook);
+  }
+
   private variationInternal(
     flagKey: string,
     context: LDContext,
@@ -913,5 +847,75 @@ export default class LDClientImpl implements LDClient {
       this.initResolve?.(this);
       this.onReady();
     }
+  }
+
+  private async withHooks(
+    key: string,
+    context: LDContext,
+    defaultValue: unknown,
+    methodName: string,
+    method: () => Promise<LDEvaluationDetail>,
+  ): Promise<LDEvaluationDetail> {
+    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationHookContext } =
+      this.prepareHooks(key, context, defaultValue, methodName);
+    const hookData = this.executeBeforeEvaluation(hooks, hookContext);
+    const result = await method();
+    this.executeAfterEvaluation(hooks, hookContext, hookData, result);
+    return result;
+  }
+
+  private tryExecuteStage<T>(method: string, hookName: string, stage: () => T) {
+    try {
+      return stage();
+    } catch (err) {
+      this.logger?.error(
+        `An error was encountered in "${method}" of the "${hookName}" hook: ${err}`,
+      );
+      return {};
+    }
+  }
+
+  private hookName(hook?: Hook) {
+    try {
+      return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
+    } catch {
+      this.logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
+      return UNKNOWN_HOOK_NAME;
+    }
+  }
+
+  private executeAfterEvaluation(
+    hooks: Hook[],
+    hookContext: EvaluationHookContext,
+    updatedData: (EvaluationHookData | undefined)[],
+    result: LDEvaluationDetail,
+  ) {
+    hooks.forEach((hook, index) =>
+      this.tryExecuteStage(AFTER_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
+        hook?.afterEvaluation?.(hookContext, updatedData[index] ?? {}, result),
+      ),
+    );
+  }
+
+  private executeBeforeEvaluation(hooks: Hook[], hookContext: EvaluationHookContext) {
+    return hooks.map((hook) =>
+      this.tryExecuteStage(BEFORE_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
+        hook?.beforeEvaluation?.(hookContext, {}),
+      ),
+    );
+  }
+
+  private prepareHooks(key: string, context: LDContext, defaultValue: unknown, methodName: string) {
+    // Copy the hooks to use a consistent set during evaluation. Hooks could be added and we want
+    // to ensure all correct stages for any give hook execute. Not for instance the afterEvaluation
+    // stage without beforeEvaluation having been called on that hook.
+    const hooks: Hook[] = [...this.hooks];
+    const hookContext: EvaluationHookContext = {
+      flagKey: key,
+      context,
+      defaultValue,
+      method: methodName,
+    };
+    return { hooks, hookContext };
   }
 }

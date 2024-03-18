@@ -9,6 +9,7 @@ import { LDMigrationOpEvent, LDMigrationVariation } from './data';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
 import { LDMigrationStage } from './data/LDMigrationStage';
+import { Hook } from './integrations/Hook';
 
 /**
  * The LaunchDarkly SDK client object.
@@ -441,4 +442,13 @@ export interface LDClient {
    *   fails, so be sure to attach a rejection handler to it.
    */
   flush(callback?: (err: Error | null, res: boolean) => void): Promise<void>;
+
+  /**
+   * Add a hook to the client.
+   *
+   * // TODO: More docs.
+   *
+   * @param Hook The hook to add.
+   */
+  addHook(hook: Hook): void;
 }
