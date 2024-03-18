@@ -1,8 +1,8 @@
 import { LDLogger, subsystem } from '@launchdarkly/js-sdk-common';
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
+import { Hook } from '../api/integrations';
 import { LDFeatureStore } from '../api/subsystems';
-import { Hook } from '../integrations';
 
 /**
  * This interface applies to the options after they have been validated and defaults

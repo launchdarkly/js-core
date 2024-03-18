@@ -13,10 +13,10 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
+import { Hook } from '../api/integrations';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
-import { Hook } from '../integrations';
 
 // Once things are internal to the implementation of the SDK we can depend on
 // types. Calls to the SDK could contain anything without any regard to typing.

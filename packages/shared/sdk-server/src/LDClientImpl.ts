@@ -46,7 +46,6 @@ import FlagsStateBuilder from './FlagsStateBuilder';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
-import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
@@ -856,6 +855,9 @@ export default class LDClientImpl implements LDClient {
     methodName: string,
     method: () => Promise<LDEvaluationDetail>,
   ): Promise<LDEvaluationDetail> {
+    if(this.hooks.length == 0) {
+      return method();
+    }
     const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationHookContext } =
       this.prepareHooks(key, context, defaultValue, methodName);
     const hookData = this.executeBeforeEvaluation(hooks, hookContext);

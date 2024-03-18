@@ -1,14 +1,6 @@
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
-import {
-  EvaluationHookContext,
-  EvaluationHookData,
-  Hook,
-  HookMetadata,
-  LDClientImpl,
-  LDEvaluationDetail,
-  LDMigrationStage,
-} from '../src';
+import { integrations, LDClientImpl, LDEvaluationDetail, LDMigrationStage } from '../src';
 import Reasons from '../src/evaluation/Reasons';
 import TestData from '../src/integrations/test_data/TestData';
 import TestLogger, { LogLevel } from './Logger';
@@ -18,30 +10,33 @@ const defaultUser = { kind: 'user', key: 'user-key' };
 
 type EvalCapture = {
   method: string;
-  hookContext: EvaluationHookContext;
-  hookData: EvaluationHookData;
+  hookContext: integrations.EvaluationHookContext;
+  hookData: integrations.EvaluationHookData;
   detail?: LDEvaluationDetail;
 };
 
-class TestHook implements Hook {
+class TestHook implements integrations.Hook {
   captureBefore: EvalCapture[] = [];
   captureAfter: EvalCapture[] = [];
 
-  getMetadataImpl: () => HookMetadata = () => ({ name: 'LaunchDarkly Test Hook' });
+  getMetadataImpl: () => integrations.HookMetadata = () => ({ name: 'LaunchDarkly Test Hook' });
 
-  getMetadata(): HookMetadata {
+  getMetadata(): integrations.HookMetadata {
     return this.getMetadataImpl();
   }
 
-  verifyBefore(hookContext: EvaluationHookContext, data: EvaluationHookData) {
+  verifyBefore(
+    hookContext: integrations.EvaluationHookContext,
+    data: integrations.EvaluationHookData,
+  ) {
     expect(this.captureBefore).toHaveLength(1);
     expect(this.captureBefore[0].hookContext).toEqual(hookContext);
     expect(this.captureBefore[0].hookData).toEqual(data);
   }
 
   verifyAfter(
-    hookContext: EvaluationHookContext,
-    data: EvaluationHookData,
+    hookContext: integrations.EvaluationHookContext,
+    data: integrations.EvaluationHookData,
     detail: LDEvaluationDetail,
   ) {
     expect(this.captureAfter).toHaveLength(1);
@@ -51,28 +46,28 @@ class TestHook implements Hook {
   }
 
   beforeEvalImpl: (
-    hookContext: EvaluationHookContext,
-    data: EvaluationHookData,
-  ) => EvaluationHookData = (_hookContext, data) => data;
+    hookContext: integrations.EvaluationHookContext,
+    data: integrations.EvaluationHookData,
+  ) => integrations.EvaluationHookData = (_hookContext, data) => data;
 
   afterEvalImpl: (
-    hookContext: EvaluationHookContext,
-    data: EvaluationHookData,
+    hookContext: integrations.EvaluationHookContext,
+    data: integrations.EvaluationHookData,
     detail: LDEvaluationDetail,
-  ) => EvaluationHookData = (_hookContext, data, _detail) => data;
+  ) => integrations.EvaluationHookData = (_hookContext, data, _detail) => data;
 
   beforeEvaluation?(
-    hookContext: EvaluationHookContext,
-    data: EvaluationHookData,
-  ): EvaluationHookData {
+    hookContext: integrations.EvaluationHookContext,
+    data: integrations.EvaluationHookData,
+  ): integrations.EvaluationHookData {
     this.captureBefore.push({ method: 'beforeEvaluation', hookContext, hookData: data });
     return this.beforeEvalImpl(hookContext, data);
   }
   afterEvaluation?(
-    hookContext: EvaluationHookContext,
-    data: EvaluationHookData,
+    hookContext: integrations.EvaluationHookContext,
+    data: integrations.EvaluationHookData,
     detail: LDEvaluationDetail,
-  ): EvaluationHookData {
+  ): integrations.EvaluationHookData {
     this.captureAfter.push({ method: 'afterEvaluation', hookContext, hookData: data, detail });
     return this.afterEvalImpl(hookContext, data, detail);
   }
@@ -416,7 +411,10 @@ describe('given an LDClient with test data', () => {
   });
 
   it('propagates data between stages', async () => {
-    testHook.beforeEvalImpl = (_hookContext: EvaluationHookContext, data: EvaluationHookData) => ({
+    testHook.beforeEvalImpl = (
+      _hookContext: integrations.EvaluationHookContext,
+      data: integrations.EvaluationHookData,
+    ) => ({
       ...data,
       added: 'added data',
     });
@@ -439,7 +437,10 @@ describe('given an LDClient with test data', () => {
   });
 
   it('handles an exception thrown in beforeEvaluation', async () => {
-    testHook.beforeEvalImpl = (_hookContext: EvaluationHookContext, _data: EvaluationHookData) => {
+    testHook.beforeEvalImpl = (
+      _hookContext: integrations.EvaluationHookContext,
+      _data: integrations.EvaluationHookData,
+    ) => {
       throw new Error('bad hook');
     };
     await client.variation('flagKey', defaultUser, false);
@@ -481,7 +482,10 @@ describe('given an LDClient with test data', () => {
   });
 
   it('uses unknown name when the name cannot be accessed', async () => {
-    testHook.beforeEvalImpl = (_hookContext: EvaluationHookContext, _data: EvaluationHookData) => {
+    testHook.beforeEvalImpl = (
+      _hookContext: integrations.EvaluationHookContext,
+      _data: integrations.EvaluationHookData,
+    ) => {
       throw new Error('bad hook');
     };
     testHook.getMetadataImpl = () => {
