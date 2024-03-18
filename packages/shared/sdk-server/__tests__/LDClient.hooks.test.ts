@@ -505,3 +505,49 @@ describe('given an LDClient with test data', () => {
     ]);
   });
 });
+
+it('can add a hook after initialization', async () => {
+  const logger = new TestLogger();
+  const td = new TestData();
+  const client = new LDClientImpl(
+    'sdk-key',
+    basicPlatform,
+    {
+      updateProcessor: td.getFactory(),
+      sendEvents: false,
+      logger,
+    },
+    makeCallbacks(true),
+  );
+
+  await client.waitForInitialization();
+
+  td.update(td.flag('flagKey').booleanFlag().on(true));
+  const testHook = new TestHook();
+  client.addHook(testHook);
+
+  await client.variation('flagKey', defaultUser, false);
+  testHook.verifyBefore(
+    {
+      flagKey: 'flagKey',
+      context: { ...defaultUser },
+      defaultValue: false,
+      method: 'LDClient.variation',
+    },
+    {},
+  );
+  testHook.verifyAfter(
+    {
+      flagKey: 'flagKey',
+      context: { ...defaultUser },
+      defaultValue: false,
+      method: 'LDClient.variation',
+    },
+    {},
+    {
+      value: true,
+      reason: Reasons.Fallthrough,
+      variationIndex: 0,
+    },
+  );
+});
