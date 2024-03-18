@@ -444,9 +444,10 @@ export interface LDClient {
   flush(callback?: (err: Error | null, res: boolean) => void): Promise<void>;
 
   /**
-   * Add a hook to the client.
+   * Add a hook to the client. In order to register a hook before the client
+   * starts, please use the `hooks` property of {@link LDOptions}.
    *
-   * // TODO: More docs.
+   * Hooks provide entrypoints which allow for observation of SDK functions.
    *
    * @param Hook The hook to add.
    */

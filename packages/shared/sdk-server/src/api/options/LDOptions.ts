@@ -270,5 +270,22 @@ export interface LDOptions {
     versionName?: string;
   };
 
+  /**
+   * Initial set of hooks for the client.
+   *
+   * Hooks provide entrypoints which allow for observation of SDK functions.
+   *
+   * LaunchDarkly provides integration packages, and most applications will not
+   * need to implement their own hooks. Refer to the `@launchdarkly/node-server-sdk-otel`
+   * for instrumentation for the `@launchdarkly/node-server-sdk`.
+   *
+   * Example:
+   * ```typescript
+   * import { init } from '@launchdarkly/node-server-sdk';
+   * import { TracingHook } from '@launchdarkly/node-server-sdk-otel';
+   * 
+   * const client = init('my-sdk-key', { hooks: [new TracingHook({spans: true})] });
+   * ```
+   */
   hooks?: Hook[];
 }
