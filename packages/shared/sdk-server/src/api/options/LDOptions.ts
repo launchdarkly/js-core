@@ -283,7 +283,7 @@ export interface LDOptions {
    * ```typescript
    * import { init } from '@launchdarkly/node-server-sdk';
    * import { TracingHook } from '@launchdarkly/node-server-sdk-otel';
-   * 
+   *
    * const client = init('my-sdk-key', { hooks: [new TracingHook({spans: true})] });
    * ```
    */
