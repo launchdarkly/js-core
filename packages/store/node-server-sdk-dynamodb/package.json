@@ -31,11 +31,11 @@
   },
   "peerDependencies": {
     "@aws-sdk/client-dynamodb": "^3.53.0",
-    "@launchdarkly/node-server-sdk": "9.2.0"
+    "@launchdarkly/node-server-sdk": "9.3.0-alpha.1"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "3.348.0",
-    "@launchdarkly/node-server-sdk": "9.2.0",
+    "@launchdarkly/node-server-sdk": "9.3.0-alpha.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
