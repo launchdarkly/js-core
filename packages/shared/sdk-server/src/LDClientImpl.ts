@@ -24,6 +24,7 @@ import {
   LDMigrationVariation,
   LDOptions,
 } from './api';
+import { EvaluationHookContext, EvaluationHookData, Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -42,7 +43,6 @@ import ContextDeduplicator from './events/ContextDeduplicator';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
-import { EvaluationHookContext, EvaluationHookData, Hook } from './api/integrations/Hook';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
@@ -890,11 +890,15 @@ export default class LDClientImpl implements LDClient {
     updatedData: (EvaluationHookData | undefined)[],
     result: LDEvaluationDetail,
   ) {
-    hooks.forEach((hook, index) =>
+    // This iterates in reverse, versus reversing a shallow copy of the hooks,
+    // for efficiency.
+    for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
+      const hook = hooks[hookIndex];
+      const data = updatedData[hookIndex] ?? {};
       this.tryExecuteStage(AFTER_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
-        hook?.afterEvaluation?.(hookContext, updatedData[index] ?? {}, result),
-      ),
-    );
+        hook?.afterEvaluation?.(hookContext, data, result),
+      );
+    }
   }
 
   private executeBeforeEvaluation(hooks: Hook[], hookContext: EvaluationHookContext) {

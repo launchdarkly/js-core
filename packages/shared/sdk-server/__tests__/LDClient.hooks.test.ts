@@ -551,3 +551,49 @@ it('can add a hook after initialization', async () => {
     },
   );
 });
+
+it('executes hook stages in the specified order', async () => {
+  const beforeCalledOrder: string[] = [];
+  const afterCalledOrder: string[] = [];
+
+  const hookA = new TestHook();
+  hookA.beforeEvalImpl = (_context, data) => {
+    beforeCalledOrder.push('a');
+    return data;
+  };
+
+  hookA.afterEvalImpl = (_context, data, _detail) => {
+    afterCalledOrder.push('a');
+    return data;
+  };
+
+  const hookB = new TestHook();
+  hookB.beforeEvalImpl = (_context, data) => {
+    beforeCalledOrder.push('b');
+    return data;
+  };
+  hookB.afterEvalImpl = (_context, data, _detail) => {
+    afterCalledOrder.push('b');
+    return data;
+  };
+
+  const logger = new TestLogger();
+  const td = new TestData();
+  const client = new LDClientImpl(
+    'sdk-key',
+    basicPlatform,
+    {
+      updateProcessor: td.getFactory(),
+      sendEvents: false,
+      logger,
+      hooks: [hookA, hookB],
+    },
+    makeCallbacks(true),
+  );
+
+  await client.waitForInitialization();
+  await client.variation('flagKey', defaultUser, false);
+
+  expect(beforeCalledOrder).toEqual(['a', 'b']);
+  expect(afterCalledOrder).toEqual(['b', 'a']);
+});
