@@ -10,8 +10,8 @@ const defaultUser = { kind: 'user', key: 'user-key' };
 
 type EvalCapture = {
   method: string;
-  hookContext: integrations.EvaluationHookContext;
-  hookData: integrations.EvaluationHookData;
+  hookContext: integrations.EvaluationSeriesContext;
+  hookData: integrations.EvaluationSeriesData;
   detail?: LDEvaluationDetail;
 };
 
@@ -26,8 +26,8 @@ class TestHook implements integrations.Hook {
   }
 
   verifyBefore(
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
   ) {
     expect(this.captureBefore).toHaveLength(1);
     expect(this.captureBefore[0].hookContext).toEqual(hookContext);
@@ -35,8 +35,8 @@ class TestHook implements integrations.Hook {
   }
 
   verifyAfter(
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
     detail: LDEvaluationDetail,
   ) {
     expect(this.captureAfter).toHaveLength(1);
@@ -46,28 +46,28 @@ class TestHook implements integrations.Hook {
   }
 
   beforeEvalImpl: (
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
-  ) => integrations.EvaluationHookData = (_hookContext, data) => data;
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
+  ) => integrations.EvaluationSeriesData = (_hookContext, data) => data;
 
   afterEvalImpl: (
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
     detail: LDEvaluationDetail,
-  ) => integrations.EvaluationHookData = (_hookContext, data, _detail) => data;
+  ) => integrations.EvaluationSeriesData = (_hookContext, data, _detail) => data;
 
   beforeEvaluation?(
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
-  ): integrations.EvaluationHookData {
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
+  ): integrations.EvaluationSeriesData {
     this.captureBefore.push({ method: 'beforeEvaluation', hookContext, hookData: data });
     return this.beforeEvalImpl(hookContext, data);
   }
   afterEvaluation?(
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
     detail: LDEvaluationDetail,
-  ): integrations.EvaluationHookData {
+  ): integrations.EvaluationSeriesData {
     this.captureAfter.push({ method: 'afterEvaluation', hookContext, hookData: data, detail });
     return this.afterEvalImpl(hookContext, data, detail);
   }
@@ -412,8 +412,8 @@ describe('given an LDClient with test data', () => {
 
   it('propagates data between stages', async () => {
     testHook.beforeEvalImpl = (
-      _hookContext: integrations.EvaluationHookContext,
-      data: integrations.EvaluationHookData,
+      _hookContext: integrations.EvaluationSeriesContext,
+      data: integrations.EvaluationSeriesData,
     ) => ({
       ...data,
       added: 'added data',
@@ -438,8 +438,8 @@ describe('given an LDClient with test data', () => {
 
   it('handles an exception thrown in beforeEvaluation', async () => {
     testHook.beforeEvalImpl = (
-      _hookContext: integrations.EvaluationHookContext,
-      _data: integrations.EvaluationHookData,
+      _hookContext: integrations.EvaluationSeriesContext,
+      _data: integrations.EvaluationSeriesData,
     ) => {
       throw new Error('bad hook');
     };
@@ -483,8 +483,8 @@ describe('given an LDClient with test data', () => {
 
   it('uses unknown name when the name cannot be accessed', async () => {
     testHook.beforeEvalImpl = (
-      _hookContext: integrations.EvaluationHookContext,
-      _data: integrations.EvaluationHookData,
+      _hookContext: integrations.EvaluationSeriesContext,
+      _data: integrations.EvaluationSeriesData,
     ) => {
       throw new Error('bad hook');
     };
