@@ -24,7 +24,7 @@ import {
   LDMigrationVariation,
   LDOptions,
 } from './api';
-import { EvaluationHookContext, EvaluationHookData, Hook } from './api/integrations/Hook';
+import { EvaluationSeriesContext, EvaluationSeriesData, Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -573,7 +573,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: LDMigrationStage,
   ): Promise<LDMigrationVariation> {
-    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationHookContext } =
+    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
       this.prepareHooks(key, context, defaultValue, MIGRATION_VARIATION_METHOD_NAME);
     const hookData = this.executeBeforeEvaluation(hooks, hookContext);
     const res = await this.migrationVariationInternal(key, context, defaultValue);
@@ -878,7 +878,7 @@ export default class LDClientImpl implements LDClient {
     if (this.hooks.length === 0) {
       return method();
     }
-    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationHookContext } =
+    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
       this.prepareHooks(key, context, defaultValue, methodName);
     const hookData = this.executeBeforeEvaluation(hooks, hookContext);
     const result = await method();
@@ -889,8 +889,8 @@ export default class LDClientImpl implements LDClient {
   private tryExecuteStage(
     method: string,
     hookName: string,
-    stage: () => EvaluationHookData,
-  ): EvaluationHookData {
+    stage: () => EvaluationSeriesData,
+  ): EvaluationSeriesData {
     try {
       return stage();
     } catch (err) {
@@ -912,8 +912,8 @@ export default class LDClientImpl implements LDClient {
 
   private executeAfterEvaluation(
     hooks: Hook[],
-    hookContext: EvaluationHookContext,
-    updatedData: (EvaluationHookData | undefined)[],
+    hookContext: EvaluationSeriesContext,
+    updatedData: (EvaluationSeriesData | undefined)[],
     result: LDEvaluationDetail,
   ) {
     // This iterates in reverse, versus reversing a shallow copy of the hooks,
@@ -931,8 +931,8 @@ export default class LDClientImpl implements LDClient {
 
   private executeBeforeEvaluation(
     hooks: Hook[],
-    hookContext: EvaluationHookContext,
-  ): EvaluationHookData[] {
+    hookContext: EvaluationSeriesContext,
+  ): EvaluationSeriesData[] {
     return hooks.map((hook) =>
       this.tryExecuteStage(
         BEFORE_EVALUATION_STAGE_NAME,
@@ -949,13 +949,13 @@ export default class LDClientImpl implements LDClient {
     methodName: string,
   ): {
     hooks: Hook[];
-    hookContext: EvaluationHookContext;
+    hookContext: EvaluationSeriesContext;
   } {
     // Copy the hooks to use a consistent set during evaluation. Hooks could be added and we want
     // to ensure all correct stages for any give hook execute. Not for instance the afterEvaluation
     // stage without beforeEvaluation having been called on that hook.
     const hooks: Hook[] = [...this.hooks];
-    const hookContext: EvaluationHookContext = {
+    const hookContext: EvaluationSeriesContext = {
       flagKey: key,
       context,
       defaultValue,
