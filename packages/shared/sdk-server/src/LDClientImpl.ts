@@ -886,7 +886,11 @@ export default class LDClientImpl implements LDClient {
     return result;
   }
 
-  private tryExecuteStage<T>(method: string, hookName: string, stage: () => T) {
+  private tryExecuteStage(
+    method: string,
+    hookName: string,
+    stage: () => EvaluationHookData,
+  ): EvaluationHookData {
     try {
       return stage();
     } catch (err) {
@@ -897,7 +901,7 @@ export default class LDClientImpl implements LDClient {
     }
   }
 
-  private hookName(hook?: Hook) {
+  private hookName(hook?: Hook): string {
     try {
       return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
     } catch {
@@ -917,21 +921,36 @@ export default class LDClientImpl implements LDClient {
     for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
       const hook = hooks[hookIndex];
       const data = updatedData[hookIndex] ?? {};
-      this.tryExecuteStage(AFTER_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
-        hook?.afterEvaluation?.(hookContext, data, result),
+      this.tryExecuteStage(
+        AFTER_EVALUATION_STAGE_NAME,
+        this.hookName(hook),
+        () => hook?.afterEvaluation?.(hookContext, data, result) ?? {},
       );
     }
   }
 
-  private executeBeforeEvaluation(hooks: Hook[], hookContext: EvaluationHookContext) {
+  private executeBeforeEvaluation(
+    hooks: Hook[],
+    hookContext: EvaluationHookContext,
+  ): EvaluationHookData[] {
     return hooks.map((hook) =>
-      this.tryExecuteStage(BEFORE_EVALUATION_STAGE_NAME, this.hookName(hook), () =>
-        hook?.beforeEvaluation?.(hookContext, {}),
+      this.tryExecuteStage(
+        BEFORE_EVALUATION_STAGE_NAME,
+        this.hookName(hook),
+        () => hook?.beforeEvaluation?.(hookContext, {}) ?? {},
       ),
     );
   }
 
-  private prepareHooks(key: string, context: LDContext, defaultValue: unknown, methodName: string) {
+  private prepareHooks(
+    key: string,
+    context: LDContext,
+    defaultValue: unknown,
+    methodName: string,
+  ): {
+    hooks: Hook[];
+    hookContext: EvaluationHookContext;
+  } {
     // Copy the hooks to use a consistent set during evaluation. Hooks could be added and we want
     // to ensure all correct stages for any give hook execute. Not for instance the afterEvaluation
     // stage without beforeEvaluation having been called on that hook.
