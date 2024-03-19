@@ -1,4 +1,4 @@
-name: store/node-server-sdk-redis
+name: telemetry/node-server-sdk-otel
 
 on:
   push:
