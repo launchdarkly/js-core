@@ -6,13 +6,14 @@
 
 1. Create an .env file at repo root.
 2. Add your SDK key and the flag key you want to evaluate.
-
+3. Disable reporting usage telemetry because it doesn't work with workspaces
 ```dotenv
+NEXT_TELEMETRY_DISABLED=1
 LD_SDK_KEY=sdk-***
 FLAG_KEY=my-boolean-flag
 ```
 
-3. `yarn && yarn dev`
+4. `yarn && yarn dev`
 
 You should see your flag value rendered in the browser.
 
