@@ -22,30 +22,23 @@ export default class TestHook {
     };
   }
 
-  beforeEvaluation(
-    hookContext,
-    data,
-  ) {
+  beforeEvaluation(hookContext, data) {
     this._safePost({
       evaluationHookContext: hookContext,
       evaluationHookData: data,
       stage: 'beforeEvaluation',
     });
-    return {...data, ...(this._data?.['beforeEvaluation'] || {})};
+    return { ...data, ...(this._data?.['beforeEvaluation'] || {}) };
   }
 
-  afterEvaluation(
-    hookContext,
-    data,
-    detail,
-  ) {
+  afterEvaluation(hookContext, data, detail) {
     this._safePost({
       evaluationHookContext: hookContext,
       evaluationHookData: data,
       stage: 'afterEvaluation',
       evaluationDetail: detail,
     });
-  
-    return {...data, ...(this._data?.['afterEvaluation'] || {})};
+
+    return { ...data, ...(this._data?.['afterEvaluation'] || {}) };
   }
 }

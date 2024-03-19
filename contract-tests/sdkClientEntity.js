@@ -63,8 +63,9 @@ export function makeSdkConfig(options, tag) {
     };
   }
   if (options.hooks) {
-    cf.hooks = options.hooks.hooks
-      .map(hook => new TestHook(hook.name, hook.callbackUri, hook.data));
+    cf.hooks = options.hooks.hooks.map(
+      (hook) => new TestHook(hook.name, hook.callbackUri, hook.data),
+    );
   }
   return cf;
 }
