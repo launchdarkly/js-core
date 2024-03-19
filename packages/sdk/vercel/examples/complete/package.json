@@ -4,7 +4,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build-prod": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start"

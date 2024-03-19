@@ -4,7 +4,7 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build-prod": "next build",
     "start": "next start",
     "lint": "next lint"
   },
