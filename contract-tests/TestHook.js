@@ -24,8 +24,8 @@ export default class TestHook {
 
   beforeEvaluation(hookContext, data) {
     this._safePost({
-      evaluationHookContext: hookContext,
-      evaluationHookData: data,
+      evaluationSeriesContext: hookContext,
+      evaluationSeriesData: data,
       stage: 'beforeEvaluation',
     });
     return { ...data, ...(this._data?.['beforeEvaluation'] || {}) };
@@ -33,8 +33,8 @@ export default class TestHook {
 
   afterEvaluation(hookContext, data, detail) {
     this._safePost({
-      evaluationHookContext: hookContext,
-      evaluationHookData: data,
+      evaluationSeriesContext: hookContext,
+      evaluationSeriesData: data,
       stage: 'afterEvaluation',
       evaluationDetail: detail,
     });
