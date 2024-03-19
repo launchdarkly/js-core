@@ -21,10 +21,6 @@ This package provides OpenTelemetry integrations for the LaunchDarkly Server-Sid
 
 This package is compatible with Node.js versions 14 and above.
 
-## Getting started
-
-Refer to [Using Redis as a persistent feature store](https://docs.launchdarkly.com/sdk/features/storing-data/otel#nodejs-server-side).
-
 ## Quick setup
 
 This assumes that you have already installed the LaunchDarkly Node.js SDK.
@@ -35,7 +31,7 @@ This assumes that you have already installed the LaunchDarkly Node.js SDK.
 npm install @launchdarkly/node-server-sdk-otel --save
 ```
 
-2. If your application does not already have its own dependency on the `@opentelemetry/api` package, add `@opentelemetry/api` as well:
+2. If your application does not already have its' own dependency on the `@opentelemetry/api` package, add `@opentelemetry/api` as well:
 
 ```shell
 npm install @opentelemetry/api --save
