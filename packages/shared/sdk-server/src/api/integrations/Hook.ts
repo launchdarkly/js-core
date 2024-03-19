@@ -3,7 +3,7 @@ import { LDContext, LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
 /**
  * Contextual information provided to evaluation stages.
  */
-export interface EvaluationHookContext {
+export interface EvaluationSeriesContext {
   readonly flagKey: string;
   readonly context: LDContext;
   readonly defaultValue: unknown;
@@ -15,8 +15,8 @@ export interface EvaluationHookContext {
  *
  * Hook implementations can use this to store data needed between stages.
  */
-export interface EvaluationHookData {
-  [index: string]: unknown;
+export interface EvaluationSeriesData {
+  readonly [index: string]: unknown;
 }
 
 /**
@@ -51,9 +51,9 @@ export interface Hook {
    * ```
    */
   beforeEvaluation?(
-    hookContext: EvaluationHookContext,
-    data: EvaluationHookData,
-  ): EvaluationHookData;
+    hookContext: EvaluationSeriesContext,
+    data: EvaluationSeriesData,
+  ): EvaluationSeriesData;
 
   /**
    * The after method is called during the execution of the variation method
@@ -73,8 +73,8 @@ export interface Hook {
    * ```
    */
   afterEvaluation?(
-    hookContext: EvaluationHookContext,
-    data: EvaluationHookData,
+    hookContext: EvaluationSeriesContext,
+    data: EvaluationSeriesData,
     detail: LDEvaluationDetail,
-  ): EvaluationHookData;
+  ): EvaluationSeriesData;
 }
