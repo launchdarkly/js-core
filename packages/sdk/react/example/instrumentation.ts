@@ -1,3 +1,4 @@
+/* eslint-disable import/prefer-default-export */
 import { registerLD } from '@launchdarkly/react-sdk';
 
 export async function register() {
