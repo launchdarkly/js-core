@@ -108,9 +108,9 @@ export default class TracingHook implements integrations.Hook {
   }
 
   beforeEvaluation?(
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
-  ): integrations.EvaluationHookData {
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
+  ): integrations.EvaluationSeriesData {
     if (this.options.spans) {
       const { canonicalKey } = Context.fromLDContext(hookContext.context);
 
@@ -124,10 +124,10 @@ export default class TracingHook implements integrations.Hook {
   }
 
   afterEvaluation?(
-    hookContext: integrations.EvaluationHookContext,
-    data: integrations.EvaluationHookData,
+    hookContext: integrations.EvaluationSeriesContext,
+    data: integrations.EvaluationSeriesData,
     detail: LDEvaluationDetail,
-  ): integrations.EvaluationHookData {
+  ): integrations.EvaluationSeriesData {
     const currentTrace = trace.getActiveSpan();
     if (currentTrace) {
       const eventAttributes: Attributes = {
