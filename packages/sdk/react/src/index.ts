@@ -1,11 +1,14 @@
 /**
- * This is the API reference for the React LaunchDarkly SDK.
+ * This is the API reference for the React Native LaunchDarkly SDK.
  *
  * For more information, see the SDK reference guide.
  *
  * @packageDocumentation
  */
+import ReactLDClient from './ReactLDClient';
 
-export * from '@launchdarkly/node-server-sdk';
+export * from '@launchdarkly/js-client-sdk-common';
 
-export * from './registerLD';
+export * from './hooks';
+export * from './provider';
+export { ReactLDClient };

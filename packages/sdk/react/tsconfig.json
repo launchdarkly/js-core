@@ -5,7 +5,7 @@
     "declarationMap": true,
     "jsx": "react-jsx",
     "lib": ["es6", "dom"],
-    "module": "ES6",
+    "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitOverride": true,
     "outDir": "dist",

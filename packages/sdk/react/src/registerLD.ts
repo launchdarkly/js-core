@@ -1,13 +1,15 @@
-import { init, LDClient } from '@launchdarkly/node-server-sdk';
-
-// eslint-disable-next-line import/no-mutable-exports
-export let serverSideLDClient: LDClient;
-
-/**
- * https://github.com/vercel/next.js/issues/49565#issuecomment-1902082982
- */
-export function registerLD(sdkKey: string) {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
-    serverSideLDClient = init(sdkKey);
-  }
-}
+// import { type LDClient } from '@launchdarkly/node-server-sdk';
+//
+// let serverSideLDClient: LDClient;
+//
+// // TODO: ld sdk
+// export async function registerLD(sdkKey: string) {
+//   if (process.env.NEXT_RUNTIME === 'nodejs') {
+//     const { init } = await import('@launchdarkly/node-server-sdk');
+//     serverSideLDClient = init(sdkKey);
+//   }
+// }
+//
+// export async function getLDClient() {
+//   return process.env.NEXT_RUNTIME === 'nodejs' ? serverSideLDClient : undefined;
+// }
