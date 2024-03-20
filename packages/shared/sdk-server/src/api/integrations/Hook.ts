@@ -27,7 +27,7 @@ export interface HookMetadata {
 }
 
 /**
- * Interface extending SDK functionality via hooks.
+ * Interface for extending SDK functionality via hooks.
  */
 export interface Hook {
   /**
