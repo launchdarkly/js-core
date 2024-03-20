@@ -13,6 +13,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
+import { Hook } from '../api/integrations';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
@@ -54,6 +55,7 @@ const validations: Record<string, TypeValidator> = {
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
   application: TypeValidators.Object,
+  hooks: TypeValidators.createTypeArray('Hook[]', {}),
 };
 
 /**
@@ -208,6 +210,8 @@ export default class Configuration {
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 
+  public readonly hooks?: Hook[];
+
   constructor(options: LDOptions = {}, internalOptions: internal.LDInternalOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
@@ -272,5 +276,7 @@ export default class Configuration {
       // @ts-ignore
       this.featureStoreFactory = () => validatedOptions.featureStore;
     }
+
+    this.hooks = validatedOptions.hooks;
   }
 }

@@ -10,6 +10,7 @@ import ld, {
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
+import TestHook from './TestHook.js';
 
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
@@ -19,6 +20,7 @@ export function makeSdkConfig(options, tag) {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,
   };
+
   const maybeTime = (seconds) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
   if (options.streaming) {
@@ -59,6 +61,11 @@ export function makeSdkConfig(options, tag) {
         ? bigSegmentsOptions.staleAfterMs / 1000
         : undefined,
     };
+  }
+  if (options.hooks) {
+    cf.hooks = options.hooks.hooks.map(
+      (hook) => new TestHook(hook.name, hook.callbackUri, hook.data),
+    );
   }
   return cf;
 }

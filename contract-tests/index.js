@@ -34,6 +34,7 @@ app.get('/', (req, res) => {
       'polling-gzip',
       'inline-context',
       'anonymous-redaction',
+      'evaluation-hooks',
     ],
   });
 });

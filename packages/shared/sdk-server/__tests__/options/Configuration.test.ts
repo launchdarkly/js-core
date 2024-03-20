@@ -40,6 +40,7 @@ describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without opti
     expect(config.useLdd).toBe(false);
     expect(config.wrapperName).toBeUndefined();
     expect(config.wrapperVersion).toBeUndefined();
+    expect(config.hooks).toBeUndefined();
   });
 });
 
@@ -363,5 +364,19 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ ...values }));
     expect(logger(config).getCount()).toEqual(warnings);
+  });
+
+  // Valid usage is covered in LDClient.hooks.test.ts
+  test('non-array hooks should use default', () => {
+    // @ts-ignore
+    const config = new Configuration(withLogger({ hooks: 'hook!' }));
+    expect(config.hooks).toBeUndefined();
+    logger(config).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches:
+          /Config option "hooks" should be of type Hook\[\], got string, using default value/,
+      },
+    ]);
   });
 });
