@@ -6,8 +6,6 @@
 
 This project contains Typescript classes and interfaces that are applicable to client-side and server-side JavaScript SDKs.
 
-This library is a beta version and should not be considered ready for production use while this message is visible.
-
 ## Contributing
 
 See [Contributing](../CONTRIBUTING.md).
