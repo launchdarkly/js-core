@@ -1,7 +1,0 @@
-{
-  "name": "@launchdarkly/js-sdk-common",
-  "version": "2.3.0",
-  "exports": {
-    ".": "./dist/index.js"
-  }
-}

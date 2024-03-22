@@ -14,8 +14,8 @@ import {
   BasicLogger,
   EdgeFeatureStore,
   init as initEdge,
-  LDClient,
-  LDOptions,
+  type LDClient,
+  type LDOptions,
 } from '@launchdarkly/js-server-sdk-common-edge';
 
 import createPlatformInfo from './createPlatformInfo';
@@ -45,7 +45,11 @@ export type { LDClient };
  * @return
  *  The new {@link LDClient} instance.
  */
-export const init = (clientSideID: string, kvNamespace: KVNamespace, options: LDOptions = {}) => {
+export const init = (
+  clientSideID: string,
+  kvNamespace: KVNamespace,
+  options: LDOptions = {},
+): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
   return initEdge(clientSideID, createPlatformInfo(), {
     featureStore: new EdgeFeatureStore(kvNamespace, clientSideID, 'Cloudflare', logger),
