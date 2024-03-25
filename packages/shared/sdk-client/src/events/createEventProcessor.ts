@@ -1,5 +1,4 @@
 import { ClientContext, internal, Platform } from '@launchdarkly/js-sdk-common';
-import { EventProcessor } from '@launchdarkly/js-sdk-common/dist/internal';
 
 import Configuration from '../configuration';
 
@@ -9,7 +8,7 @@ const createEventProcessor = (
   platform: Platform,
   diagnosticsManager?: internal.DiagnosticsManager,
   start: boolean = false,
-): EventProcessor | undefined => {
+): internal.EventProcessor | undefined => {
   if (config.sendEvents) {
     return new internal.EventProcessor(
       { ...config, eventsCapacity: config.capacity },
