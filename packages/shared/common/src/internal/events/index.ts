@@ -1,5 +1,5 @@
 import ClientMessages from './ClientMessages';
-import EventProcessor from './EventProcessor';
+import EventProcessor, { EventProcessorOptions } from './EventProcessor';
 import InputCustomEvent from './InputCustomEvent';
 import InputEvalEvent from './InputEvalEvent';
 import InputEvent from './InputEvent';
@@ -17,6 +17,7 @@ export {
   InputIdentifyEvent,
   InputMigrationEvent,
   EventProcessor,
+  EventProcessorOptions,
   shouldSample,
   NullEventProcessor,
   LDInternalOptions,
