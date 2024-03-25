@@ -174,7 +174,9 @@ describe('sdk-client storage', () => {
       'org:Testy Pizza',
       JSON.stringify(defaultPutResponse),
     );
-    expect(ldc.logger.debug).toHaveBeenCalledWith('Not emitting changes from PUT');
+    expect(ldc.logger.debug).toHaveBeenCalledWith(
+      'OnIdentifyResolve no changes to emit from: streamer PUT.',
+    );
 
     // this is defaultPutResponse
     expect(ldc.allFlags()).toEqual({
