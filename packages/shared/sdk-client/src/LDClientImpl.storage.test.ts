@@ -159,6 +159,32 @@ describe('sdk-client storage', () => {
     });
   });
 
+  test('not emitting change event', async () => {
+    jest.doMock('./utils', () => {
+      const actual = jest.requireActual('./utils');
+      return {
+        ...actual,
+        calculateFlagChanges: () => [],
+      };
+    });
+    let LDClientImplTestNoChange;
+    jest.isolateModules(async () => {
+      LDClientImplTestNoChange = jest.requireActual('./LDClientImpl').default;
+      ldc = new LDClientImplTestNoChange(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+        logger,
+        sendEvents: false,
+      });
+    });
+
+    // @ts-ignore
+    emitter = ldc.emitter;
+    jest.spyOn(emitter as LDEmitter, 'emit');
+
+    await identifyGetAllFlags(true, defaultPutResponse);
+
+    expect(emitter.emit).not.toHaveBeenCalled();
+  });
+
   test('no storage, cold start from streamer', async () => {
     // fake previously cached flags even though there's no storage for this context
     // @ts-ignore
@@ -207,14 +233,13 @@ describe('sdk-client storage', () => {
 
   test('syncing storage when a flag is added', async () => {
     const putResponse = clone<Flags>(defaultPutResponse);
-    const newFlag = {
+    putResponse['another-dev-test-flag'] = {
       version: 1,
       flagVersion: 2,
       value: false,
       variation: 1,
       trackEvents: false,
     };
-    putResponse['another-dev-test-flag'] = newFlag;
     const allFlags = await identifyGetAllFlags(false, putResponse);
 
     expect(allFlags).toMatchObject({ 'another-dev-test-flag': false });
