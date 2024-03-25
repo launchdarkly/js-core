@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.0.2...js-client-sdk-common-v1.0.3) (2024-03-25)
+
+
+### Bug Fixes
+
+* Send identify event. ([#407](https://github.com/launchdarkly/js-core/issues/407)) ([1d73462](https://github.com/launchdarkly/js-core/commit/1d73462914cd35925d34a84b61492a52406b4083))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
+
 ## [1.0.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.0.1...js-client-sdk-common-v1.0.2) (2024-03-15)
 
 
