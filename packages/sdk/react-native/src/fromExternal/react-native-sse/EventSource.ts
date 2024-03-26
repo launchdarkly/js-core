@@ -17,7 +17,7 @@ const defaultOptions: EventSourceOptions = {
   timeout: 0,
   withCredentials: false,
   retryAndHandleError: undefined,
-  initialRetryDelayMillis: 1000,
+  initialRetryDelayMillis: 5000,
   logger: undefined,
 };
 
@@ -59,7 +59,7 @@ export default class EventSource<E extends string = never> {
   private xhr: XMLHttpRequest = new XMLHttpRequest();
   private pollTimer: any;
   private retryAndHandleError?: (err: any) => boolean;
-  private initialRetryDelayMillis: number = 1000;
+  private initialRetryDelayMillis: number = 5000;
   private retryCount: number = 0;
   private logger?: any;
 
@@ -93,6 +93,7 @@ export default class EventSource<E extends string = never> {
     this.logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
     this.dispatch('retry', { type: 'retry', delayMillis: delay });
     this.pollTimer = setTimeout(() => {
+      this.close();
       this.open();
     }, delay);
   }
@@ -315,6 +316,7 @@ export default class EventSource<E extends string = never> {
         this.onclose();
         break;
       case 'error':
+        this.logger?.debug(`[EventSource][dispatch][ERROR]: ${JSON.stringify(data)}`);
         this.onerror(data);
         break;
       case 'retry':
