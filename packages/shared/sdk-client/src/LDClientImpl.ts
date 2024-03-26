@@ -168,20 +168,8 @@ export default class LDClientImpl implements LDClient {
       deserializeData: JSON.parse,
       processJson: async (dataJson: Flags) => {
         this.logger.debug(`Streamer PUT: ${Object.keys(dataJson)}`);
-        const changedKeys = calculateFlagChanges(this.flags, dataJson);
-        this.context = context;
-        this.flags = dataJson;
+        this.onIdentifyResolve(identifyResolve, dataJson, context, 'streamer PUT');
         await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-
-        if (changedKeys.length > 0) {
-          this.logger.debug(`Emitting changes from PUT: ${changedKeys}`);
-          // emitting change resolves identify
-          this.emitter.emit('change', context, changedKeys);
-        } else {
-          // manually resolve identify
-          this.logger.debug('Not emitting changes from PUT');
-          identifyResolve();
-        }
       },
     });
 
@@ -249,7 +237,7 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  private createPromiseWithListeners() {
+  private createIdentifyPromise() {
     let res: any;
     const p = new Promise<void>((resolve, reject) => {
       res = resolve;
@@ -263,7 +251,6 @@ export default class LDClientImpl implements LDClient {
 
       this.identifyChangeListener = (c: LDContext, changedKeys: string[]) => {
         this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
-        resolve();
       };
       this.identifyErrorListener = (c: LDContext, err: any) => {
         this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
@@ -297,17 +284,14 @@ export default class LDClientImpl implements LDClient {
       return Promise.reject(error);
     }
 
-    const { identifyPromise, identifyResolve } = this.createPromiseWithListeners();
+    this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
+    const { identifyPromise, identifyResolve } = this.createIdentifyPromise();
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
     if (flagsStorage) {
       this.logger.debug('Using storage');
-
-      const changedKeys = calculateFlagChanges(this.flags, flagsStorage);
-      this.context = context;
-      this.flags = flagsStorage;
-      this.emitter.emit('change', context, changedKeys);
+      this.onIdentifyResolve(identifyResolve, flagsStorage, context, 'identify storage');
     }
 
     if (this.isOffline()) {
@@ -340,6 +324,33 @@ export default class LDClientImpl implements LDClient {
     }
 
     return identifyPromise;
+  }
+
+  /**
+   * Performs common tasks when resolving the identify promise:
+   *  - resolve the promise
+   *  - update in memory context
+   *  - update in memory flags
+   *  - emit change event if needed
+   *
+   * @param resolve
+   * @param flags
+   * @param context
+   * @param source For logging purposes
+   * @private
+   */
+  private onIdentifyResolve(resolve: any, flags: Flags, context: LDContext, source: string) {
+    resolve();
+    const changedKeys = calculateFlagChanges(this.flags, flags);
+    this.context = context;
+    this.flags = flags;
+
+    if (changedKeys.length > 0) {
+      this.emitter.emit('change', context, changedKeys);
+      this.logger.debug(`OnIdentifyResolve emitting changes from: ${source}.`);
+    } else {
+      this.logger.debug(`OnIdentifyResolve no changes to emit from: ${source}.`);
+    }
   }
 
   off(eventName: EventName, listener: Function): void {

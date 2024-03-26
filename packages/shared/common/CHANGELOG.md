@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.3.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.3.0...js-sdk-common-v2.3.1) (2024-03-25)
+
+
+### Bug Fixes
+
+* Send identify event. ([#407](https://github.com/launchdarkly/js-core/issues/407)) ([1d73462](https://github.com/launchdarkly/js-core/commit/1d73462914cd35925d34a84b61492a52406b4083))
+
 ## [2.3.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.2.0...js-sdk-common-v2.3.0) (2024-03-15)
 
 
