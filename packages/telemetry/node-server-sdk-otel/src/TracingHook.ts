@@ -128,6 +128,8 @@ export default class TracingHook implements integrations.Hook {
     data: integrations.EvaluationSeriesData,
     detail: LDEvaluationDetail,
   ): integrations.EvaluationSeriesData {
+    (data as SpanTraceData).span?.end();
+
     const currentTrace = trace.getActiveSpan();
     if (currentTrace) {
       const eventAttributes: Attributes = {
@@ -141,7 +143,6 @@ export default class TracingHook implements integrations.Hook {
       currentTrace.addEvent(FEATURE_FLAG_SCOPE, eventAttributes);
     }
 
-    (data as SpanTraceData).span?.end();
     return data;
   }
 }
