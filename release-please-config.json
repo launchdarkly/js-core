@@ -18,7 +18,10 @@
       "extra-files": ["src/index.ts"]
     },
     "packages/store/node-server-sdk-dynamodb": {},
-    "packages/store/node-server-sdk-redis": {}
+    "packages/store/node-server-sdk-redis": {},
+    "packages/telemetry/node-server-sdk-otel": {
+      "bump-minor-pre-major": true
+    }
   },
   "plugins": ["node-workspace"]
 }

@@ -45,6 +45,9 @@
     },
     {
       "path": "./packages/store/node-server-sdk-dynamodb/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/telemetry/node-server-sdk-otel/tsconfig.ref.json"
     }
   ]
 }

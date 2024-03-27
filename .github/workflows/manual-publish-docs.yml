@@ -18,6 +18,7 @@ on:
           - packages/sdk/akamai-edgekv
           - packages/store/node-server-sdk-redis
           - packages/store/node-server-sdk-dynamodb
+          - packages/telemetry/node-server-sdk-otel
 name: Publish Documentation
 jobs:
   build-publish:
