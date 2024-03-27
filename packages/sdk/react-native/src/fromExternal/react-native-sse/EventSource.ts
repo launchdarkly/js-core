@@ -17,7 +17,7 @@ const defaultOptions: EventSourceOptions = {
   timeout: 0,
   withCredentials: false,
   retryAndHandleError: undefined,
-  initialRetryDelayMillis: 5000,
+  initialRetryDelayMillis: 1000,
   logger: undefined,
 };
 
@@ -59,7 +59,7 @@ export default class EventSource<E extends string = never> {
   private xhr: XMLHttpRequest = new XMLHttpRequest();
   private pollTimer: any;
   private retryAndHandleError?: (err: any) => boolean;
-  private initialRetryDelayMillis: number = 5000;
+  private initialRetryDelayMillis: number = 1000;
   private retryCount: number = 0;
   private logger?: any;
 

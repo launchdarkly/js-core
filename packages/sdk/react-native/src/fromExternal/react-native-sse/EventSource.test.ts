@@ -62,8 +62,8 @@ describe('EventSource', () => {
 
     // @ts-ignore
     expect(eventSource.retryCount).toEqual(2);
-    expect(delay0).toEqual(2780);
-    expect(delay1).toEqual(5005);
+    expect(delay0).toEqual(556);
+    expect(delay1).toEqual(1001);
   });
 
   test('tryConnect force no delay', () => {
@@ -84,9 +84,9 @@ describe('EventSource', () => {
 
     expect(logger.debug).toHaveBeenNthCalledWith(
       2,
-      expect.stringMatching(/new connection in 2780 ms/i),
+      expect.stringMatching(/new connection in 556 ms/i),
     );
-    expect(eventSource.onretrying).toHaveBeenCalledWith({ type: 'retry', delayMillis: 2780 });
+    expect(eventSource.onretrying).toHaveBeenCalledWith({ type: 'retry', delayMillis: 556 });
     expect(eventSource.open).toHaveBeenCalledTimes(1);
     expect(eventSource.onclose).toHaveBeenCalledTimes(1);
   });
