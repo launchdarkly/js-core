@@ -10,6 +10,13 @@
   * dependencies
     * @launchdarkly/js-client-sdk-common bumped from 1.0.2 to 1.0.3
 
+## [10.0.5](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.0.4...react-native-client-sdk-v10.0.5) (2024-03-27)
+
+
+### Bug Fixes
+
+* Stream retry failure due to previous open connection. ([#409](https://github.com/launchdarkly/js-core/issues/409)) ([ae08e08](https://github.com/launchdarkly/js-core/commit/ae08e08470d954a683940c4263f3274ac73c4206))
+
 ## [10.0.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.0.2...react-native-client-sdk-v10.0.3) (2024-03-15)
 
 
