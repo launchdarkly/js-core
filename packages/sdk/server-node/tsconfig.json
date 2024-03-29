@@ -5,7 +5,7 @@
     "outDir": "dist",
     "target": "es2017",
     "lib": ["es6"],
-    "module": "commonjs",
+    "module": "ESNext",
     "strict": true,
     "noImplicitOverride": true,
     // Needed for CommonJS modules: markdown-it, fs-extra

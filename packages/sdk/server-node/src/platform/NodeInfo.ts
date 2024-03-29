@@ -3,7 +3,8 @@ import * as os from 'os';
 
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
-import * as packageJson from '../../package.json';
+// eslint-disable-next-line prettier/prettier
+import * as packageJson from '../../package.json' assert { type: "json" }
 
 function processPlatformName(name: string): string {
   switch (name) {
