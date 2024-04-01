@@ -94,19 +94,39 @@ function validateOptions(options?: TracingHookOptions): ValidatedHookOptions {
   return validatedOptions;
 }
 
+/**
+ * The TracingHook adds OpenTelemetry support to the LaunchDarkly SDK.
+ *
+ * By default, span events will be added for each call to a "Variation" method.
+ *
+ * The span event will include the canonicalKey of the context, the provider of the evaluation
+ * (LaunchDarkly), and the key of the flag being evaluated.
+ */
 export default class TracingHook implements integrations.Hook {
   private readonly options: ValidatedHookOptions;
   private readonly tracer = trace.getTracer('launchdarkly-client');
 
+  /**
+   * Construct a TracingHook with the given options.
+   *
+   * @param options Options to customize tracing behavior.
+   */
   constructor(options?: TracingHookOptions) {
     this.options = validateOptions(options);
   }
+
+  /**
+   * Get the meta-data for the tracing hook.
+   */
   getMetadata(): integrations.HookMetadata {
     return {
       name: TRACING_HOOK_NAME,
     };
   }
 
+  /**
+   * Implements the "beforeEvaluation" stage of the TracingHook.
+   */
   beforeEvaluation?(
     hookContext: integrations.EvaluationSeriesContext,
     data: integrations.EvaluationSeriesData,
@@ -123,6 +143,9 @@ export default class TracingHook implements integrations.Hook {
     return data;
   }
 
+  /**
+   * Implements the "afterEvaluation" stage of the TracingHook.
+   */
   afterEvaluation?(
     hookContext: integrations.EvaluationSeriesContext,
     data: integrations.EvaluationSeriesData,
