@@ -26,6 +26,10 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/node-server-sdk-redis](packages/store/node-server-sdk-redis/README.md)       | [![NPM][node-redis-npm-badge]][node-redis-npm-link]       | [Node Redis][node-redis-issues]       | [![Actions Status][node-redis-ci-badge]][node-redis-ci]       |
 | [@launchdarkly/node-server-sdk-dynamodb](packages/store/node-server-sdk-dynamodb/README.md) | [![NPM][node-dynamodb-npm-badge]][node-dynamodb-npm-link] | [Node DynamoDB][node-dynamodb-issues] | [![Actions Status][node-dynamodb-ci-badge]][node-dynamodb-ci] |
 
+| Telemetry Packages                                                                          | npm                                                       | issues                                | tests                                                         |
+| ------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------- |
+| [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md)     | [![NPM][node-otel-npm-badge]][node-otel-npm-link]         | [Node Redis][node-otel-issues]        | [![Actions Status][node-otel-ci-badge]][node-otel-ci]         |
+
 ## Organization
 
 `packages` Top level directory containing package implementations.
@@ -157,3 +161,9 @@ We encourage pull requests and other contributions from the community. Check out
 [node-dynamodb-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-dynamodb.svg?style=flat-square
 [node-dynamodb-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-dynamodb
 [node-dynamodb-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+store%2Fnode-server-sdk-dynamodb%22+
+[//]: # 'telemetry/node-server-sdk-otel'
+[node-otel-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-otel.yml/badge.svg
+[node-otel-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-otel.yml
+[node-otel-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-dynamodb.svg?style=flat-square
+[node-otel-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-dynamodb
+[node-otel-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+store%2Fnode-server-sdk-dynamodb%22+

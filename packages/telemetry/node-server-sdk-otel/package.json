@@ -24,7 +24,8 @@
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'",
-    "check": "yarn && yarn prettier && yarn lint && tsc && yarn test"
+    "check": "yarn && yarn prettier && yarn lint && tsc && yarn test",
+    "lint": "npx eslint . --ext .ts"
   },
   "license": "Apache-2.0",
   "peerDependencies": {
