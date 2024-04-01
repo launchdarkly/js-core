@@ -5,6 +5,5 @@
   "importOrder": ["^@launchdarkly/(.*)$", "^[./]"],
   "importOrderCaseInsensitive": true,
   "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true,
-  "trailingComma": "all"
+  "importOrderSortSpecifiers": true
 }
