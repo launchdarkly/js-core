@@ -1,6 +1,10 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common-edge';
 
-import { name, version } from '../package.json';
+// @ts-ignore
+// eslint-disable-next-line prettier/prettier
+import * as packageJson from '../package.json' assert { type: "json" }
+
+const { name, version } = packageJson
 
 class CloudflarePlatformInfo implements Info {
   platformData(): PlatformData {
@@ -18,6 +22,6 @@ class CloudflarePlatformInfo implements Info {
   }
 }
 
-const createPlatformInfo = () => new CloudflarePlatformInfo();
+const createPlatformInfo = (): CloudflarePlatformInfo => new CloudflarePlatformInfo()
 
 export default createPlatformInfo;

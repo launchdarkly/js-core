@@ -15,7 +15,14 @@ For more information, see the [complete reference guide for this SDK](https://do
 ## Install
 
 ```shell
+# npm
 npm i @launchdarkly/cloudflare-server-sdk
+
+# yarn
+yarn add @launchdarkly/cloudflare-server-sdk
+
+# jsr
+npx jsr add @launchdarkly/cloudflare-server-sdk
 ```
 
 Then turn on the Node.js compatibility flag in your `wrangler.toml`. This allows the SDK to use `node:events`:
@@ -23,6 +30,10 @@ Then turn on the Node.js compatibility flag in your `wrangler.toml`. This allows
 ```toml
 compatibility_flags = [ "nodejs_compat" ]
 ```
+
+## Additional JSR setup
+
+If you want to install this package as a JSR package, you will need to use [`esbuild` version >= 19.7](https://github.com/evanw/esbuild/releases/tag/v0.19.7) to enable support for `import attributes`.
 
 ## Quickstart
 
@@ -33,12 +44,12 @@ import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
 export default {
   async fetch(request: Request, env: Bindings): Promise<Response> {
-    const sdkKey = 'test-sdk-key';
+    const clientSideID = 'test-client-side-id';
     const flagKey = 'testFlag1';
     const context = { kind: 'user', key: 'test-user-key-1' };
 
     // init the ldClient, wait and finally evaluate
-    const client = initLD(sdkKey, env.LD_KV);
+    const client = initLD(clientSideID, env.LD_KV);
     await client.waitForInitialization();
     const flagValue = await client.variation(flagKey, context, false);
 
