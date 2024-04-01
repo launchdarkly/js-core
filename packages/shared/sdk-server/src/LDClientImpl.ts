@@ -43,6 +43,7 @@ import ContextDeduplicator from './events/ContextDeduplicator';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
+import HookRunner from './hooks/HookRunner';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
@@ -123,7 +124,7 @@ export default class LDClientImpl implements LDClient {
 
   private diagnosticsManager?: internal.DiagnosticsManager;
 
-  private hooks: Hook[];
+  private hookRunner: HookRunner;
 
   /**
    * Intended for use by platform specific client implementations.
@@ -148,7 +149,7 @@ export default class LDClientImpl implements LDClient {
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options, internalOptions);
 
-    this.hooks = config.hooks || [];
+    this.hookRunner = new HookRunner(config.logger, config.hooks || []);
 
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
@@ -291,21 +292,23 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
-    return this.withHooks(
-      key,
-      context,
-      defaultValue,
-      VARIATION_METHOD_NAME,
-      () =>
-        new Promise<LDEvaluationDetail>((resolve) => {
-          this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
-            resolve(res.detail);
-          });
-        }),
-    ).then((detail) => {
-      callback?.(null, detail.value);
-      return detail.value;
-    });
+    return this.hookRunner
+      .withHooks(
+        key,
+        context,
+        defaultValue,
+        VARIATION_METHOD_NAME,
+        () =>
+          new Promise<LDEvaluationDetail>((resolve) => {
+            this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
+              resolve(res.detail);
+            });
+          }),
+      )
+      .then((detail) => {
+        callback?.(null, detail.value);
+        return detail.value;
+      });
   }
 
   variationDetail(
@@ -314,7 +317,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    return this.withHooks(
+    return this.hookRunner.withHooks(
       key,
       context,
       defaultValue,
@@ -343,7 +346,7 @@ export default class LDClientImpl implements LDClient {
     methodName: string,
     typeChecker: (value: unknown) => [boolean, string],
   ): Promise<LDEvaluationDetail> {
-    return this.withHooks(
+    return this.hookRunner.withHooks(
       key,
       context,
       defaultValue,
@@ -409,18 +412,20 @@ export default class LDClientImpl implements LDClient {
   }
 
   jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown> {
-    return this.withHooks(
-      key,
-      context,
-      defaultValue,
-      JSON_VARIATION_METHOD_NAME,
-      () =>
-        new Promise<LDEvaluationDetail>((resolve) => {
-          this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
-            resolve(res.detail);
-          });
-        }),
-    ).then((detail) => detail.value);
+    return this.hookRunner
+      .withHooks(
+        key,
+        context,
+        defaultValue,
+        JSON_VARIATION_METHOD_NAME,
+        () =>
+          new Promise<LDEvaluationDetail>((resolve) => {
+            this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
+              resolve(res.detail);
+            });
+          }),
+      )
+      .then((detail) => detail.value);
   }
 
   boolVariationDetail(
@@ -473,7 +478,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: unknown,
   ): Promise<LDEvaluationDetailTyped<unknown>> {
-    return this.withHooks(
+    return this.hookRunner.withHooks(
       key,
       context,
       defaultValue,
@@ -573,11 +578,14 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: LDMigrationStage,
   ): Promise<LDMigrationVariation> {
-    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
-      this.prepareHooks(key, context, defaultValue, MIGRATION_VARIATION_METHOD_NAME);
-    const hookData = this.executeBeforeEvaluation(hooks, hookContext);
-    const res = await this.migrationVariationInternal(key, context, defaultValue);
-    this.executeAfterEvaluation(hooks, hookContext, hookData, res.detail);
+    const res = await this.hookRunner.withHooksCustom(
+      key,
+      context,
+      defaultValue,
+      MIGRATION_VARIATION_METHOD_NAME,
+      () => this.migrationVariationInternal(key, context, defaultValue),
+    );
+
     return res.migration;
   }
 
@@ -868,99 +876,99 @@ export default class LDClientImpl implements LDClient {
     }
   }
 
-  private async withHooks(
-    key: string,
-    context: LDContext,
-    defaultValue: unknown,
-    methodName: string,
-    method: () => Promise<LDEvaluationDetail>,
-  ): Promise<LDEvaluationDetail> {
-    if (this.hooks.length === 0) {
-      return method();
-    }
-    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
-      this.prepareHooks(key, context, defaultValue, methodName);
-    const hookData = this.executeBeforeEvaluation(hooks, hookContext);
-    const result = await method();
-    this.executeAfterEvaluation(hooks, hookContext, hookData, result);
-    return result;
-  }
+  // private async withHooks(
+  //   key: string,
+  //   context: LDContext,
+  //   defaultValue: unknown,
+  //   methodName: string,
+  //   method: () => Promise<LDEvaluationDetail>,
+  // ): Promise<LDEvaluationDetail> {
+  //   if (this.hooks.length === 0) {
+  //     return method();
+  //   }
+  //   const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
+  //     this.prepareHooks(key, context, defaultValue, methodName);
+  //   const hookData = this.executeBeforeEvaluation(hooks, hookContext);
+  //   const result = await method();
+  //   this.executeAfterEvaluation(hooks, hookContext, hookData, result);
+  //   return result;
+  // }
 
-  private tryExecuteStage(
-    method: string,
-    hookName: string,
-    stage: () => EvaluationSeriesData,
-  ): EvaluationSeriesData {
-    try {
-      return stage();
-    } catch (err) {
-      this.logger?.error(
-        `An error was encountered in "${method}" of the "${hookName}" hook: ${err}`,
-      );
-      return {};
-    }
-  }
+  // private tryExecuteStage(
+  //   method: string,
+  //   hookName: string,
+  //   stage: () => EvaluationSeriesData,
+  // ): EvaluationSeriesData {
+  //   try {
+  //     return stage();
+  //   } catch (err) {
+  //     this.logger?.error(
+  //       `An error was encountered in "${method}" of the "${hookName}" hook: ${err}`,
+  //     );
+  //     return {};
+  //   }
+  // }
 
-  private hookName(hook?: Hook): string {
-    try {
-      return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
-    } catch {
-      this.logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
-      return UNKNOWN_HOOK_NAME;
-    }
-  }
+  // private hookName(hook?: Hook): string {
+  //   try {
+  //     return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
+  //   } catch {
+  //     this.logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
+  //     return UNKNOWN_HOOK_NAME;
+  //   }
+  // }
 
-  private executeAfterEvaluation(
-    hooks: Hook[],
-    hookContext: EvaluationSeriesContext,
-    updatedData: (EvaluationSeriesData | undefined)[],
-    result: LDEvaluationDetail,
-  ) {
-    // This iterates in reverse, versus reversing a shallow copy of the hooks,
-    // for efficiency.
-    for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
-      const hook = hooks[hookIndex];
-      const data = updatedData[hookIndex] ?? {};
-      this.tryExecuteStage(
-        AFTER_EVALUATION_STAGE_NAME,
-        this.hookName(hook),
-        () => hook?.afterEvaluation?.(hookContext, data, result) ?? {},
-      );
-    }
-  }
+  // private executeAfterEvaluation(
+  //   hooks: Hook[],
+  //   hookContext: EvaluationSeriesContext,
+  //   updatedData: (EvaluationSeriesData | undefined)[],
+  //   result: LDEvaluationDetail,
+  // ) {
+  //   // This iterates in reverse, versus reversing a shallow copy of the hooks,
+  //   // for efficiency.
+  //   for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
+  //     const hook = hooks[hookIndex];
+  //     const data = updatedData[hookIndex] ?? {};
+  //     this.tryExecuteStage(
+  //       AFTER_EVALUATION_STAGE_NAME,
+  //       this.hookName(hook),
+  //       () => hook?.afterEvaluation?.(hookContext, data, result) ?? {},
+  //     );
+  //   }
+  // }
 
-  private executeBeforeEvaluation(
-    hooks: Hook[],
-    hookContext: EvaluationSeriesContext,
-  ): EvaluationSeriesData[] {
-    return hooks.map((hook) =>
-      this.tryExecuteStage(
-        BEFORE_EVALUATION_STAGE_NAME,
-        this.hookName(hook),
-        () => hook?.beforeEvaluation?.(hookContext, {}) ?? {},
-      ),
-    );
-  }
+  // private executeBeforeEvaluation(
+  //   hooks: Hook[],
+  //   hookContext: EvaluationSeriesContext,
+  // ): EvaluationSeriesData[] {
+  //   return hooks.map((hook) =>
+  //     this.tryExecuteStage(
+  //       BEFORE_EVALUATION_STAGE_NAME,
+  //       this.hookName(hook),
+  //       () => hook?.beforeEvaluation?.(hookContext, {}) ?? {},
+  //     ),
+  //   );
+  // }
 
-  private prepareHooks(
-    key: string,
-    context: LDContext,
-    defaultValue: unknown,
-    methodName: string,
-  ): {
-    hooks: Hook[];
-    hookContext: EvaluationSeriesContext;
-  } {
-    // Copy the hooks to use a consistent set during evaluation. Hooks could be added and we want
-    // to ensure all correct stages for any give hook execute. Not for instance the afterEvaluation
-    // stage without beforeEvaluation having been called on that hook.
-    const hooks: Hook[] = [...this.hooks];
-    const hookContext: EvaluationSeriesContext = {
-      flagKey: key,
-      context,
-      defaultValue,
-      method: methodName,
-    };
-    return { hooks, hookContext };
-  }
+  // private prepareHooks(
+  //   key: string,
+  //   context: LDContext,
+  //   defaultValue: unknown,
+  //   methodName: string,
+  // ): {
+  //   hooks: Hook[];
+  //   hookContext: EvaluationSeriesContext;
+  // } {
+  //   // Copy the hooks to use a consistent set during evaluation. Hooks could be added and we want
+  //   // to ensure all correct stages for any give hook execute. Not for instance the afterEvaluation
+  //   // stage without beforeEvaluation having been called on that hook.
+  //   const hooks: Hook[] = [...this.hooks];
+  //   const hookContext: EvaluationSeriesContext = {
+  //     flagKey: key,
+  //     context,
+  //     defaultValue,
+  //     method: methodName,
+  //   };
+  //   return { hooks, hookContext };
+  // }
 }
