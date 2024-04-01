@@ -93,6 +93,7 @@ export default class EventSource<E extends string = never> {
     this.logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
     this.dispatch('retry', { type: 'retry', delayMillis: delay });
     this.pollTimer = setTimeout(() => {
+      this.close();
       this.open();
     }, delay);
   }
@@ -315,6 +316,7 @@ export default class EventSource<E extends string = never> {
         this.onclose();
         break;
       case 'error':
+        this.logger?.debug(`[EventSource][dispatch][ERROR]: ${JSON.stringify(data)}`);
         this.onerror(data);
         break;
       case 'retry':

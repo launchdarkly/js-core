@@ -22,12 +22,10 @@ jobs:
       package-node-server-sdk-redis-release: ${{ steps.release.outputs['packages/store/node-server-sdk-redis--release_created'] }}
       package-node-server-sdk-dynamodb-release: ${{ steps.release.outputs['packages/store/node-server-sdk-dynamodb--release_created'] }}
     steps:
-      - uses: google-github-actions/release-please-action@v3
+      - uses: google-github-actions/release-please-action@v4
         id: release
         with:
-          command: manifest
           token: ${{secrets.GITHUB_TOKEN}}
-          default-branch: main
 
   release-common:
     runs-on: ubuntu-latest
@@ -35,7 +33,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-common-released }}
+    if: ${{ needs.release-please.outputs.package-common-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -58,7 +56,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-client-released }}
+    if: ${{ needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -81,7 +79,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-server-released }}
+    if: ${{ needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -104,7 +102,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-server-edge-released }}
+    if: ${{ needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -127,7 +125,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-edgeworker-sdk-released }}
+    if: ${{ needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -150,7 +148,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-cloudflare-released }}
+    if: ${{ needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -173,7 +171,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-react-native-released }}
+    if: ${{ needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -196,7 +194,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-server-node-released }}
+    if: ${{ needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -219,7 +217,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-vercel-released }}
+    if: ${{ needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -242,7 +240,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-base-released }}
+    if: ${{ needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -265,7 +263,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-edgekv-released }}
+    if: ${{ needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

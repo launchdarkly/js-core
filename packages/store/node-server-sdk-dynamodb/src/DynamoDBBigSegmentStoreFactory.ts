@@ -1,4 +1,4 @@
-import { interfaces, LDOptions } from '@launchdarkly/node-server-sdk';
+import { interfaces, LDClientContext } from '@launchdarkly/node-server-sdk';
 
 import DynamoDBBigSegmentStore from './DynamoDBBigSegmentStore';
 import LDDynamoDBOptions from './LDDynamoDBOptions';
@@ -18,6 +18,7 @@ import LDDynamoDBOptions from './LDDynamoDBOptions';
 export default function DynamoDBBigSegmentStoreFactory(
   tableName: string,
   options?: LDDynamoDBOptions,
-): (config: LDOptions) => interfaces.BigSegmentStore {
-  return (config: LDOptions) => new DynamoDBBigSegmentStore(tableName, options, config.logger);
+): (config: LDClientContext) => interfaces.BigSegmentStore {
+  return (config: LDClientContext) =>
+    new DynamoDBBigSegmentStore(tableName, options, config.basicConfiguration.logger);
 }
