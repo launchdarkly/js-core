@@ -16,7 +16,7 @@ describe('test', () => {
     };
     env = getMiniflareBindings();
     const { LD_KV } = env;
-    await LD_KV.put('LD-Env-test-sdk-key', JSON.stringify(testData));
+    await LD_KV.put('LD-Env-test-client-side-id', JSON.stringify(testData));
   });
 
   afterEach(() => {

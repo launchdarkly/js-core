@@ -44,12 +44,12 @@ import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
 export default {
   async fetch(request: Request, env: Bindings): Promise<Response> {
-    const sdkKey = 'test-sdk-key';
+    const clientSideID = 'test-client-side-id';
     const flagKey = 'testFlag1';
     const context = { kind: 'user', key: 'test-user-key-1' };
 
     // init the ldClient, wait and finally evaluate
-    const client = initLD(sdkKey, env.LD_KV);
+    const client = initLD(clientSideID, env.LD_KV);
     await client.waitForInitialization();
     const flagValue = await client.variation(flagKey, context, false);
 
