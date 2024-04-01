@@ -34,7 +34,7 @@ export default class HookRunner {
     return result;
   }
 
-  public async withHooksCustom(
+  public async withHooksDataWithDetail(
     key: string,
     context: LDContext,
     defaultValue: unknown,

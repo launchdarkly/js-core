@@ -574,7 +574,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: LDMigrationStage,
   ): Promise<LDMigrationVariation> {
-    const res = await this.hookRunner.withHooksCustom(
+    const res = await this.hookRunner.withHooksDataWithDetail(
       key,
       context,
       defaultValue,
