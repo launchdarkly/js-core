@@ -1,7 +1,8 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common-edge';
 
+// @ts-ignore
 // eslint-disable-next-line prettier/prettier
-import packageJson from '../package.json' assert { type: "json" }
+import * as packageJson from '../package.json' assert { type: "json" }
 
 const { name, version } = packageJson
 
