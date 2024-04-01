@@ -3,7 +3,7 @@ import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
 export default {
   async fetch(request: Request, env: Bindings, ctx: ExecutionContext): Promise<Response> {
-    const clientSideID = 'test-client-side-id';
+    const clientSideID = 'test-sdk-key';
     const flagKey = 'testFlag1';
     const { searchParams } = new URL(request.url);
 
