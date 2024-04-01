@@ -1,6 +1,5 @@
 import { LDContext, LDEvaluationDetail, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { Flag } from '../evaluation/data/Flag';
 import { EvaluationSeriesContext, EvaluationSeriesData, Hook } from '../integrations';
 
 const BEFORE_EVALUATION_STAGE_NAME = 'beforeEvaluation';
@@ -129,5 +128,9 @@ export default class HookRunner {
       method: methodName,
     };
     return { hooks, hookContext };
+  }
+
+  addHook(hook: Hook): void {
+    this.hooks.push(hook);
   }
 }

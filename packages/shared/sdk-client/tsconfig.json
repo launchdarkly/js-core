@@ -16,6 +16,6 @@
     "resolveJsonModule": true,
     "types": ["jest", "node"]
   },
-  "include": ["src", "../sdk-server/src/hooks"],
+  "include": ["src"],
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
 }
