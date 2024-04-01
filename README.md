@@ -28,7 +28,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 | Telemetry Packages                                                                          | npm                                                       | issues                                | tests                                                         |
 | ------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------- |
-| [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md)     | [![NPM][node-otel-npm-badge]][node-otel-npm-link]         | [Node Redis][node-otel-issues]        | [![Actions Status][node-otel-ci-badge]][node-otel-ci]         |
+| [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md)     | [![NPM][node-otel-npm-badge]][node-otel-npm-link]         | [Node OTel][node-otel-issues]         | [![Actions Status][node-otel-ci-badge]][node-otel-ci]         |
 
 ## Organization
 
