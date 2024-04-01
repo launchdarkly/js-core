@@ -40,6 +40,8 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 `packages/store` Persistent store packages for use with SDKs in this repository.
 
+`packages/telemetry` Packages for adding telemetry support to SDKs.
+
 ## LaunchDarkly overview
 
 [LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves trillions of feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
