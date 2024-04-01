@@ -581,6 +581,17 @@ it('executes hook stages in the specified order', async () => {
     return data;
   };
 
+  const hookC = new TestHook();
+  hookC.beforeEvalImpl = (_context, data) => {
+    beforeCalledOrder.push('c');
+    return data;
+  };
+
+  hookC.afterEvalImpl = (_context, data, _detail) => {
+    afterCalledOrder.push('c');
+    return data;
+  };
+
   const logger = new TestLogger();
   const td = new TestData();
   const client = new LDClientImpl(
@@ -596,8 +607,9 @@ it('executes hook stages in the specified order', async () => {
   );
 
   await client.waitForInitialization();
+  client.addHook(hookC);
   await client.variation('flagKey', defaultUser, false);
 
-  expect(beforeCalledOrder).toEqual(['a', 'b']);
-  expect(afterCalledOrder).toEqual(['b', 'a']);
+  expect(beforeCalledOrder).toEqual(['a', 'b', 'c']);
+  expect(afterCalledOrder).toEqual(['c', 'b', 'a']);
 });

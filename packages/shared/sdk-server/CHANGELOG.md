@@ -2,6 +2,12 @@
 
 All notable changes to `@launchdarkly/js-server-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
+
 ## [2.2.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.2.0...js-server-sdk-common-v2.2.1) (2024-03-15)
 
 

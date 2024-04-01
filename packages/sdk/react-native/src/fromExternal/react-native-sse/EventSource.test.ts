@@ -18,6 +18,7 @@ describe('EventSource', () => {
       .mockImplementationOnce(() => 0.999);
 
     eventSource = new EventSource<EventName>(uri, { logger });
+    eventSource.onclose = jest.fn();
     eventSource.open = jest.fn();
     eventSource.onretrying = jest.fn();
   });
@@ -72,7 +73,8 @@ describe('EventSource', () => {
 
     expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/new connection in 0 ms/i));
     expect(eventSource.onretrying).toHaveBeenCalledWith({ type: 'retry', delayMillis: 0 });
-    expect(eventSource.open).toHaveBeenCalledTimes(2);
+    expect(eventSource.open).toHaveBeenCalledTimes(1);
+    expect(eventSource.onclose).toHaveBeenCalledTimes(1);
   });
 
   test('tryConnect with delay', () => {
@@ -85,6 +87,7 @@ describe('EventSource', () => {
       expect.stringMatching(/new connection in 556 ms/i),
     );
     expect(eventSource.onretrying).toHaveBeenCalledWith({ type: 'retry', delayMillis: 556 });
-    expect(eventSource.open).toHaveBeenCalledTimes(2);
+    expect(eventSource.open).toHaveBeenCalledTimes(1);
+    expect(eventSource.onclose).toHaveBeenCalledTimes(1);
   });
 });

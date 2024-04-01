@@ -1,4 +1,4 @@
-import { interfaces, LDOptions } from '@launchdarkly/node-server-sdk';
+import { interfaces, LDClientContext } from '@launchdarkly/node-server-sdk';
 
 import LDRedisOptions from './LDRedisOptions';
 import RedisBigSegmentStore from './RedisBigSegmentStore';
@@ -16,6 +16,7 @@ import RedisBigSegmentStore from './RedisBigSegmentStore';
  */
 export default function RedisBigSegmentStoreFactory(
   options?: LDRedisOptions,
-): (config: LDOptions) => interfaces.BigSegmentStore {
-  return (config: LDOptions) => new RedisBigSegmentStore(options, config.logger);
+): (config: LDClientContext) => interfaces.BigSegmentStore {
+  return (config: LDClientContext) =>
+    new RedisBigSegmentStore(options, config?.basicConfiguration.logger);
 }
