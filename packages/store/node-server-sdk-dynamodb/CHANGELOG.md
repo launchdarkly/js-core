@@ -90,6 +90,13 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.2.1 to 9.2.2
 
+## [6.1.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.1.4...node-server-sdk-dynamodb-v6.1.5) (2024-04-01)
+
+
+### Bug Fixes
+
+* Fix typings for big segment store factories. ([#413](https://github.com/launchdarkly/js-core/issues/413)) ([723804b](https://github.com/launchdarkly/js-core/commit/723804bb7db19f485d84940715c69e34cc08062f))
+
 ## [6.1.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.1.2...node-server-sdk-dynamodb-v6.1.3) (2024-03-15)
 
 
