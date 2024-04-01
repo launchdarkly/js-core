@@ -607,7 +607,7 @@ it('executes hook stages in the specified order', async () => {
   );
 
   await client.waitForInitialization();
-  client.addHook(hookC)
+  client.addHook(hookC);
   await client.variation('flagKey', defaultUser, false);
 
   expect(beforeCalledOrder).toEqual(['a', 'b', 'c']);
