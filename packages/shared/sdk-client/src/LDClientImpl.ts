@@ -261,7 +261,6 @@ export default class LDClientImpl implements LDClient {
       this.identifyErrorListener = (c: LDContext, err: any) => {
         this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
         reject(err);
-        f;
       };
 
       this.emitter.on('change', this.identifyChangeListener);
