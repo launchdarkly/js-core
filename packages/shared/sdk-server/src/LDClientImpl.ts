@@ -500,7 +500,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: LDMigrationStage,
   ): Promise<{ detail: LDEvaluationDetail; migration: LDMigrationVariation }> {
     const convertedContext = Context.fromLDContext(context);
-    return new Promise<{ detail: LDEvaluationDetail; flag?: Flag }>((resolve) => {
+    const res = await new Promise<{ detail: LDEvaluationDetail; flag?: Flag }>((resolve) => {
       this.evaluateIfPossible(
         key,
         context,
@@ -528,31 +528,32 @@ export default class LDClientImpl implements LDClient {
           resolve({ detail, flag });
         },
       );
-    }).then(({ detail, flag }) => {
-      const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
-      const checkRatio = flag?.migration?.checkRatio;
-      const samplingRatio = flag?.samplingRatio;
-
-      return {
-        detail,
-        migration: {
-          value: detail.value as LDMigrationStage,
-          tracker: new MigrationOpTracker(
-            key,
-            contextKeys,
-            defaultValue,
-            detail.value,
-            detail.reason,
-            checkRatio,
-            // Can be null for compatibility reasons.
-            detail.variationIndex === null ? undefined : detail.variationIndex,
-            flag?.version,
-            samplingRatio,
-            this.logger,
-          ),
-        },
-      };
     });
+
+    const { detail, flag } = res;
+    const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
+    const checkRatio = flag?.migration?.checkRatio;
+    const samplingRatio = flag?.samplingRatio;
+
+    return {
+      detail,
+      migration: {
+        value: detail.value as LDMigrationStage,
+        tracker: new MigrationOpTracker(
+          key,
+          contextKeys,
+          defaultValue,
+          detail.value,
+          detail.reason,
+          checkRatio,
+          // Can be null for compatibility reasons.
+          detail.variationIndex === null ? undefined : detail.variationIndex,
+          flag?.version,
+          samplingRatio,
+          this.logger,
+        ),
+      },
+    };
   }
 
   async migrationVariation(
