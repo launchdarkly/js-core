@@ -1,6 +1,4 @@
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
-
-import { integrations, LDClientImpl, LDEvaluationDetail, LDMigrationStage } from '../../src';
+import { integrations, LDEvaluationDetail } from '../../src';
 
 export type EvalCapture = {
   method: string;
