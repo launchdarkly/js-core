@@ -16,25 +16,36 @@ export default class HookRunner {
     this.hooks.push(...hooks);
   }
 
-  public async withHooks(
+  public async withEvaluationSeries(
     key: string,
     context: LDContext,
     defaultValue: unknown,
     methodName: string,
     method: () => Promise<LDEvaluationDetail>,
   ): Promise<LDEvaluationDetail> {
+    // This early return is here to avoid the extra async/await associated with
+    // using withHooksDataWithDetail.
     if (this.hooks.length === 0) {
       return method();
     }
-    const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
-      this.prepareHooks(key, context, defaultValue, methodName);
-    const hookData = this.executeBeforeEvaluation(hooks, hookContext);
-    const result = await method();
-    this.executeAfterEvaluation(hooks, hookContext, hookData, result);
-    return result;
+
+    return this.withEvaluationSeriesExtraDetail(
+      key,
+      context,
+      defaultValue,
+      methodName,
+      async () => {
+        const detail = await method();
+        return { detail };
+      },
+    ).then(({ detail }) => detail);
   }
 
-  public async withHooksDataWithDetail(
+  /**
+   * This function allows extra information to be returned with the detail for situations like
+   * migrations where a tracker is returned with the detail.
+   */
+  public async withEvaluationSeriesExtraDetail(
     key: string,
     context: LDContext,
     defaultValue: unknown,

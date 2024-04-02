@@ -57,6 +57,7 @@ export class TestHook implements integrations.Hook {
     this.captureBefore.push({ method: 'beforeEvaluation', hookContext, hookData: data });
     return this.beforeEvalImpl(hookContext, data);
   }
+
   afterEvaluation?(
     hookContext: integrations.EvaluationSeriesContext,
     data: integrations.EvaluationSeriesData,

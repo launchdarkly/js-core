@@ -1,10 +1,10 @@
 import { integrations } from '../../src';
 import Reasons from '../../src/evaluation/Reasons';
-import TestLogger, { LogLevel } from './../Logger';
-import { TestHook } from './TestHook';
 import HookRunner from '../../src/hooks/HookRunner';
-const defaultUser = { kind: 'user', key: 'user-key' };
+import TestLogger, { LogLevel } from '../Logger';
+import { TestHook } from './TestHook';
 
+const defaultUser = { kind: 'user', key: 'user-key' };
 
 describe('given a HookRunner', () => {
   let testHook: TestHook;
@@ -26,13 +26,11 @@ describe('given a HookRunner', () => {
       added: 'added data',
     });
 
-    runner.withHooks('flagKey', defaultUser, false, 'LDClient.variation', async () => {
-      return {
-        value: false,
-        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-        variationIndex: null,
-      };
-    })
+    await runner.withEvaluationSeries('flagKey', defaultUser, false, 'LDClient.variation', async () => ({
+      value: false,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      variationIndex: null,
+    }));
 
     testHook.verifyAfter(
       {
@@ -57,15 +55,13 @@ describe('given a HookRunner', () => {
     ) => {
       throw new Error('bad hook');
     };
-  
-    runner.withHooks('flagKey', defaultUser, false, 'LDClient.variation', async () => {
-      return {
-        value: false,
-        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-        variationIndex: null,
-      };
-    })
-  
+
+    await runner.withEvaluationSeries('flagKey', defaultUser, false, 'LDClient.variation', async () => ({
+      value: false,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      variationIndex: null,
+    }));
+
     logger.expectMessages([
       {
         level: LogLevel.Error,
@@ -79,13 +75,11 @@ describe('given a HookRunner', () => {
     testHook.afterEvalImpl = () => {
       throw new Error('bad hook');
     };
-    runner.withHooks('flagKey', defaultUser, false, 'LDClient.variation', async () => {
-      return {
-        value: false,
-        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-        variationIndex: null,
-      };
-    })
+    await runner.withEvaluationSeries('flagKey', defaultUser, false, 'LDClient.variation', async () => ({
+      value: false,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      variationIndex: null,
+    }));
     logger.expectMessages([
       {
         level: LogLevel.Error,
@@ -99,13 +93,11 @@ describe('given a HookRunner', () => {
     testHook.getMetadataImpl = () => {
       throw new Error('bad hook');
     };
-    runner.withHooks('flagKey', defaultUser, false, 'LDClient.variation', async () => {
-      return {
-        value: false,
-        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-        variationIndex: null,
-      };
-    })
+    await runner.withEvaluationSeries('flagKey', defaultUser, false, 'LDClient.variation', async () => ({
+      value: false,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      variationIndex: null,
+    }));
 
     logger.expectMessages([
       {
@@ -128,13 +120,11 @@ describe('given a HookRunner', () => {
     testHook.afterEvalImpl = () => {
       throw new Error('bad hook');
     };
-    runner.withHooks('flagKey', defaultUser, false, 'LDClient.variation', async () => {
-      return {
-        value: false,
-        reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-        variationIndex: null,
-      };
-    })
+    await runner.withEvaluationSeries('flagKey', defaultUser, false, 'LDClient.variation', async () => ({
+      value: false,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      variationIndex: null,
+    }));
     logger.expectMessages([
       {
         level: LogLevel.Error,
@@ -157,13 +147,11 @@ it('can add a hook after initialization', async () => {
   const testHook = new TestHook();
   runner.addHook(testHook);
 
-  runner.withHooks('flagKey', defaultUser, false, 'LDClient.variation', async () => {
-    return {
-      value: false,
-      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-      variationIndex: null,
-    };
-  })
+  await runner.withEvaluationSeries('flagKey', defaultUser, false, 'LDClient.variation', async () => ({
+    value: true,
+    reason: { kind: 'FALLTHROUGH' },
+    variationIndex: 0,
+  }));
   testHook.verifyBefore(
     {
       flagKey: 'flagKey',
@@ -231,14 +219,11 @@ it('executes hook stages in the specified order', async () => {
   const testHook = new TestHook();
   runner.addHook(testHook);
   runner.addHook(hookC);
-  runner.withHooks('flagKey', defaultUser, false, 'LDClient.variation', async () => {
-    return {
-      value: false,
-      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
-      variationIndex: null,
-    };
-  })
-
+  await runner.withEvaluationSeries('flagKey', defaultUser, false, 'LDClient.variation', async () => ({
+    value: false,
+    reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+    variationIndex: null,
+  }));
 
   expect(beforeCalledOrder).toEqual(['a', 'b', 'c']);
   expect(afterCalledOrder).toEqual(['c', 'b', 'a']);

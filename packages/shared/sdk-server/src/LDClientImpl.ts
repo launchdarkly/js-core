@@ -289,7 +289,7 @@ export default class LDClientImpl implements LDClient {
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
     return this.hookRunner
-      .withHooks(
+      .withEvaluationSeries(
         key,
         context,
         defaultValue,
@@ -313,7 +313,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    return this.hookRunner.withHooks(
+    return this.hookRunner.withEvaluationSeries(
       key,
       context,
       defaultValue,
@@ -342,7 +342,7 @@ export default class LDClientImpl implements LDClient {
     methodName: string,
     typeChecker: (value: unknown) => [boolean, string],
   ): Promise<LDEvaluationDetail> {
-    return this.hookRunner.withHooks(
+    return this.hookRunner.withEvaluationSeries(
       key,
       context,
       defaultValue,
@@ -409,7 +409,7 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown> {
     return this.hookRunner
-      .withHooks(
+      .withEvaluationSeries(
         key,
         context,
         defaultValue,
@@ -474,7 +474,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: unknown,
   ): Promise<LDEvaluationDetailTyped<unknown>> {
-    return this.hookRunner.withHooks(
+    return this.hookRunner.withEvaluationSeries(
       key,
       context,
       defaultValue,
@@ -500,73 +500,59 @@ export default class LDClientImpl implements LDClient {
     defaultValue: LDMigrationStage,
   ): Promise<{ detail: LDEvaluationDetail; migration: LDMigrationVariation }> {
     const convertedContext = Context.fromLDContext(context);
-    return new Promise<{ detail: LDEvaluationDetail; migration: LDMigrationVariation }>(
-      (resolve) => {
-        this.evaluateIfPossible(
-          key,
-          context,
-          defaultValue,
-          this.eventFactoryWithReasons,
-          ({ detail }, flag) => {
-            const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
-            const checkRatio = flag?.migration?.checkRatio;
-            const samplingRatio = flag?.samplingRatio;
-
-            if (!IsMigrationStage(detail.value)) {
-              const error = new Error(
-                `Unrecognized MigrationState for "${key}"; returning default value.`,
-              );
-              this.onError(error);
-              const reason = {
-                kind: 'ERROR',
-                errorKind: ErrorKinds.WrongType,
-              };
-              resolve({
-                detail: {
-                  value: defaultValue,
-                  reason,
-                },
-                migration: {
-                  value: defaultValue,
-                  tracker: new MigrationOpTracker(
-                    key,
-                    contextKeys,
-                    defaultValue,
-                    defaultValue,
-                    reason,
-                    checkRatio,
-                    undefined,
-                    flag?.version,
-                    samplingRatio,
-                    this.logger,
-                  ),
-                },
-              });
-              return;
-            }
+    return new Promise<{ detail: LDEvaluationDetail; flag?: Flag }>((resolve) => {
+      this.evaluateIfPossible(
+        key,
+        context,
+        defaultValue,
+        this.eventFactoryWithReasons,
+        ({ detail }, flag) => {
+          if (!IsMigrationStage(detail.value)) {
+            const error = new Error(
+              `Unrecognized MigrationState for "${key}"; returning default value.`,
+            );
+            this.onError(error);
+            const reason = {
+              kind: 'ERROR',
+              errorKind: ErrorKinds.WrongType,
+            };
             resolve({
-              detail,
-              migration: {
-                value: detail.value as LDMigrationStage,
-                tracker: new MigrationOpTracker(
-                  key,
-                  contextKeys,
-                  defaultValue,
-                  detail.value,
-                  detail.reason,
-                  checkRatio,
-                  // Can be null for compatibility reasons.
-                  detail.variationIndex === null ? undefined : detail.variationIndex,
-                  flag?.version,
-                  samplingRatio,
-                  this.logger,
-                ),
+              detail: {
+                value: defaultValue,
+                reason,
               },
+              flag,
             });
-          },
-        );
-      },
-    );
+            return;
+          }
+          resolve({ detail, flag });
+        },
+      );
+    }).then(({ detail, flag }) => {
+      const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
+      const checkRatio = flag?.migration?.checkRatio;
+      const samplingRatio = flag?.samplingRatio;
+
+      return {
+        detail,
+        migration: {
+          value: detail.value as LDMigrationStage,
+          tracker: new MigrationOpTracker(
+            key,
+            contextKeys,
+            defaultValue,
+            detail.value,
+            detail.reason,
+            checkRatio,
+            // Can be null for compatibility reasons.
+            detail.variationIndex === null ? undefined : detail.variationIndex,
+            flag?.version,
+            samplingRatio,
+            this.logger,
+          ),
+        },
+      };
+    });
   }
 
   async migrationVariation(
@@ -574,7 +560,7 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: LDMigrationStage,
   ): Promise<LDMigrationVariation> {
-    const res = await this.hookRunner.withHooksDataWithDetail(
+    const res = await this.hookRunner.withEvaluationSeriesExtraDetail(
       key,
       context,
       defaultValue,
