@@ -19,6 +19,7 @@ import {
 
 import { ConnectionMode, LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
+import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
@@ -28,6 +29,10 @@ import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
+
+const defaultIdentifyOptions: LDIdentifyOptions = {
+  timeoutSeconds: 15,
+};
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
@@ -269,7 +274,16 @@ export default class LDClientImpl implements LDClient {
     return f ? JSON.parse(f) : undefined;
   }
 
-  async identify(pristineContext: LDContext): Promise<void> {
+  /**
+   * TODO: implement timeout.
+   *
+   * @param pristineContext
+   * @param _timeoutSeconds
+   */
+  async identify(
+    pristineContext: LDContext,
+    { timeoutSeconds }: LDIdentifyOptions = defaultIdentifyOptions,
+  ): Promise<void> {
     let context = await ensureKey(pristineContext, this.platform);
 
     if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
