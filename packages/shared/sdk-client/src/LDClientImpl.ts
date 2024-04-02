@@ -14,6 +14,7 @@ import {
   Platform,
   ProcessStreamResponse,
   EventName as StreamEventName,
+  timeout,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
@@ -242,9 +243,9 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  private createIdentifyPromise() {
+  private createIdentifyPromise(timeoutSeconds: number) {
     let res: any;
-    const p = new Promise<void>((resolve, reject) => {
+    const slow = new Promise<void>((resolve, reject) => {
       res = resolve;
 
       if (this.identifyChangeListener) {
@@ -260,13 +261,16 @@ export default class LDClientImpl implements LDClient {
       this.identifyErrorListener = (c: LDContext, err: any) => {
         this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
         reject(err);
+        f;
       };
 
       this.emitter.on('change', this.identifyChangeListener);
       this.emitter.on('error', this.identifyErrorListener);
     });
+    const timed = timeout(timeoutSeconds, 'identify timed out.');
+    const raced = Promise.race([timed, slow]);
 
-    return { identifyPromise: p, identifyResolve: res };
+    return { identifyPromise: raced, identifyResolve: res };
   }
 
   private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
@@ -275,10 +279,13 @@ export default class LDClientImpl implements LDClient {
   }
 
   /**
-   * TODO: implement timeout.
+   * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
    *
-   * @param pristineContext
-   * @param _timeoutSeconds
+   * @param pristineContext The LDContext object to be identified.
+   * @param LDIdentifyOptions You can specify additional options like a timeout when
+   * identifying.
+   *
+   * @returns {Promise<void>}.
    */
   async identify(
     pristineContext: LDContext,
@@ -299,7 +306,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
-    const { identifyPromise, identifyResolve } = this.createIdentifyPromise();
+    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(timeoutSeconds);
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
