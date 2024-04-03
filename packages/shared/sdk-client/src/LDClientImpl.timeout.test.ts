@@ -123,7 +123,7 @@ describe('sdk-client identify timeout', () => {
     await ldc.identify(carContext);
 
     expect(defaultIdentifyTimeout).toEqual(sdkTimeout);
-    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/too high/));
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/high timeout/));
   });
 
   test('warning when timeout is too high', async () => {
@@ -134,7 +134,7 @@ describe('sdk-client identify timeout', () => {
 
     await ldc.identify(carContext, { timeout: dangerousTimeout });
 
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/too high/));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/high timeout/));
   });
 
   test('safe timeout should not warn', async () => {
@@ -145,6 +145,6 @@ describe('sdk-client identify timeout', () => {
 
     await ldc.identify(carContext, { timeout: safeTimeout });
 
-    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/too high/));
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/high timeout/));
   });
 });
