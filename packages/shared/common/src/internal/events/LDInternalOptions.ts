@@ -15,7 +15,8 @@ export type LDInternalOptions = {
 
   /**
    * Sets the default identify timeout in seconds.
-   * If not specified, this is set to 5 seconds in LDClientImpl.constructor.
+   * If unspecified for sdk-client, this is set to 5 seconds in LDClientImpl.constructor.
+   *
    * Mobile sdks should set this to 15 seconds.
    */
   defaultIdentifyTimeout?: number;
