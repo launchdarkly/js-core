@@ -31,10 +31,6 @@ import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
 
-export const defaultIdentifyOptions: LDIdentifyOptions = {
-  timeoutSeconds: 5,
-};
-
 export default class LDClientImpl implements LDClient {
   config: Configuration;
   context?: LDContext;
@@ -43,13 +39,14 @@ export default class LDClientImpl implements LDClient {
   logger: LDLogger;
   streamer?: internal.StreamingProcessor;
 
+  readonly defaultIdentifyTimeout: number;
+
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
   private identifyChangeListener?: (c: LDContext, changedKeys: string[]) => void;
   private identifyErrorListener?: (c: LDContext, err: any) => void;
-
   private readonly clientContext: ClientContext;
 
   /**
@@ -82,6 +79,9 @@ export default class LDClientImpl implements LDClient {
       !this.isOffline(),
     );
     this.emitter = new LDEmitter();
+
+    // defaults to 5 seconds
+    this.defaultIdentifyTimeout = internalOptions?.defaultIdentifyTimeout ?? 5;
   }
 
   /**
@@ -239,7 +239,7 @@ export default class LDClientImpl implements LDClient {
    */
   protected createStreamUriPath(_context: LDContext): string {
     throw new Error(
-      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work',
+      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
     );
   }
 
@@ -281,15 +281,18 @@ export default class LDClientImpl implements LDClient {
    * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
    *
    * @param pristineContext The LDContext object to be identified.
-   * @param LDIdentifyOptions You can specify additional options like a timeout when
-   * identifying.
+   * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
    *
    * @returns {Promise<void>}.
    */
-  async identify(
-    pristineContext: LDContext,
-    { timeoutSeconds }: LDIdentifyOptions = defaultIdentifyOptions,
-  ): Promise<void> {
+  async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
+    const identifyTimeout = identifyOptions?.timeoutSeconds ?? this.defaultIdentifyTimeout;
+    if (identifyTimeout > this.defaultIdentifyTimeout) {
+      this.logger.warn(
+        `** Your timeout is too high **. We recommend a max of ${this.defaultIdentifyTimeout}s to prevent blocking your application in the event of network delays.`,
+      );
+    }
+
     let context = await ensureKey(pristineContext, this.platform);
 
     if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
@@ -305,7 +308,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
-    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(timeoutSeconds);
+    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(identifyTimeout);
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);

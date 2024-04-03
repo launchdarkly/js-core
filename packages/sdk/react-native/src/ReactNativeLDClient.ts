@@ -47,6 +47,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
     const internalOptions: internal.LDInternalOptions = {
       analyticsEventPath: `/mobile`,
       diagnosticEventPath: `/mobile/events/diagnostic`,
+      defaultIdentifyTimeout: 15,
     };
 
     super(

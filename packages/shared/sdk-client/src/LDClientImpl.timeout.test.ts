@@ -2,7 +2,7 @@ import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common
 import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
-import LDClientImpl, { defaultIdentifyOptions } from './LDClientImpl';
+import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
 import { toMulti } from './utils/addAutoEnv';
 
@@ -48,14 +48,14 @@ describe('sdk-client identify timeout', () => {
     jest.resetAllMocks();
   });
 
-  // streamer is setup to error in beforeEach hence causing the timeout
+  // streamer is setup to error in beforeEach to cause a timeout
   test('rejects with default timeout of 5s', async () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    jest.advanceTimersByTimeAsync(defaultIdentifyOptions.timeoutSeconds * 1000).then();
+    jest.advanceTimersByTimeAsync(ldc.defaultIdentifyTimeout * 1000).then();
     await expect(ldc.identify(carContext)).rejects.toThrow(/identify timed out/);
   });
 
-  // streamer is setup to error in beforeEach hence causing the timeout
+  // streamer is setup to error in beforeEach to cause a timeout
   test('rejects with custom timeout', async () => {
     const timeoutSeconds = 15;
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
@@ -70,7 +70,7 @@ describe('sdk-client identify timeout', () => {
   test('resolves with default timeout', async () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
     setupMockStreamingProcessor(false, defaultPutResponse);
-    jest.advanceTimersByTimeAsync(defaultIdentifyOptions.timeoutSeconds * 1000).then();
+    jest.advanceTimersByTimeAsync(ldc.defaultIdentifyTimeout * 1000).then();
 
     await expect(ldc.identify(carContext)).resolves.toBeUndefined();
 
