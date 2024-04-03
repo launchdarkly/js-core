@@ -117,22 +117,20 @@ describe('sdk-client identify timeout', () => {
       },
       { highTimeoutThreshold },
     );
-    const { identifyTimeout } = ldc;
-    jest.advanceTimersByTimeAsync(identifyTimeout * 1000).then();
+    const customTimeout = 10;
+    jest.advanceTimersByTimeAsync(customTimeout * 1000).then();
+    await ldc.identify(carContext, { timeout: customTimeout });
 
-    await ldc.identify(carContext, { timeout: 10 });
-
-    expect(identifyTimeout).toEqual(10);
+    expect(ldc.identifyTimeout).toEqual(10);
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/high timeout/));
   });
 
   test('warning when timeout is too high', async () => {
-    const { identifyTimeout } = ldc;
-    const dangerousTimeout = identifyTimeout * 2;
+    const highTimeout = 60;
     setupMockStreamingProcessor(false, defaultPutResponse);
-    jest.advanceTimersByTimeAsync(identifyTimeout * 1000).then();
+    jest.advanceTimersByTimeAsync(highTimeout * 1000).then();
 
-    await ldc.identify(carContext, { timeout: dangerousTimeout });
+    await ldc.identify(carContext, { timeout: highTimeout });
 
     expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/high timeout/));
   });
