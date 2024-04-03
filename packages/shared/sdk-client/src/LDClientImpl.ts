@@ -289,9 +289,7 @@ export default class LDClientImpl implements LDClient {
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     const identifyTimeout = identifyOptions?.timeoutSeconds ?? this.defaultIdentifyTimeout;
     if (identifyTimeout > this.defaultIdentifyTimeout) {
-      this.logger.warn(
-        `** Your timeout is too high **. We recommend a max of ${this.defaultIdentifyTimeout}s to prevent blocking your application in the event of network delays.`,
-      );
+      this.logger.warn('identify called with high timeout parameter.');
     }
 
     let context = await ensureKey(pristineContext, this.platform);
