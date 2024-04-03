@@ -31,8 +31,8 @@ import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
 
-const defaultIdentifyOptions: LDIdentifyOptions = {
-  timeoutSeconds: 15,
+export const defaultIdentifyOptions: LDIdentifyOptions = {
+  timeoutSeconds: 5,
 };
 
 export default class LDClientImpl implements LDClient {
