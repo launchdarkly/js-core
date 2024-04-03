@@ -58,6 +58,7 @@ export default class EventSource<E extends string = never> {
   private url: string;
   private xhr: XMLHttpRequest = new XMLHttpRequest();
   private pollTimer: any;
+  private resetTimer: any;
   private retryAndHandleError?: (err: any) => boolean;
   private initialRetryDelayMillis: number = 1000;
   private retryCount: number = 0;
@@ -96,6 +97,13 @@ export default class EventSource<E extends string = never> {
       this.close();
       this.open();
     }, delay);
+  }
+
+  private resetRetryCount() {
+    this.resetTimer = setTimeout(() => {
+      this.retryCount = 0;
+      clearTimeout(this.resetTimer);
+    }, 60 * 1000);
   }
 
   open() {
@@ -144,7 +152,7 @@ export default class EventSource<E extends string = never> {
 
         if (this.xhr.status >= 200 && this.xhr.status < 400) {
           if (this.status === this.CONNECTING) {
-            this.retryCount = 0;
+            this.resetRetryCount();
             this.status = this.OPEN;
             this.dispatch('open', { type: 'open' });
             this.logger?.debug('[EventSource][onreadystatechange][OPEN] Connection opened.');
