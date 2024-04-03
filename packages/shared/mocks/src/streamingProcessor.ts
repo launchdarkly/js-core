@@ -13,6 +13,7 @@ export const setupMockStreamingProcessor = (
   putResponseJson: any = { data: { flags: {}, segments: {} } },
   patchResponseJson?: any,
   deleteResponseJson?: any,
+  errorTimeoutSeconds: number = 0,
 ) => {
   MockStreamingProcessor.mockImplementation(
     (
@@ -33,7 +34,7 @@ export const setupMockStreamingProcessor = (
               message: 'test-error',
             };
             errorHandler(unauthorized);
-          });
+          }, errorTimeoutSeconds * 1000);
         } else {
           // execute put which will resolve the identify promise
           setTimeout(() => listeners.get('put')?.processJson(putResponseJson));
