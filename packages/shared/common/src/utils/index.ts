@@ -6,7 +6,7 @@ import fastDeepEqual from './fast-deep-equal';
 import { base64UrlEncode, defaultHeaders, httpErrorMessage, LDHeaders, shouldRetry } from './http';
 import noop from './noop';
 import sleep from './sleep';
-import timeout from './timeout';
+import timedPromise from './timedPromise';
 import { VoidFunction } from './VoidFunction';
 
 export {
@@ -22,6 +22,6 @@ export {
   shouldRetry,
   secondsToMillis,
   sleep,
-  timeout,
+  timedPromise,
   VoidFunction,
 };

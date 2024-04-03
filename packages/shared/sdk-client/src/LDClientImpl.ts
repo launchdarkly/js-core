@@ -14,7 +14,7 @@ import {
   Platform,
   ProcessStreamResponse,
   EventName as StreamEventName,
-  timeout,
+  timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
@@ -243,7 +243,7 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  private createIdentifyPromise(timeoutSeconds: number) {
+  private createIdentifyPromise(timeout: number) {
     let res: any;
     const slow = new Promise<void>((resolve, reject) => {
       res = resolve;
@@ -267,7 +267,7 @@ export default class LDClientImpl implements LDClient {
       this.emitter.on('error', this.identifyErrorListener);
     });
 
-    const timed = timeout(timeoutSeconds, 'identify', this.logger);
+    const timed = timedPromise(timeout, 'identify', this.logger);
     const raced = Promise.race([timed, slow]);
 
     return { identifyPromise: raced, identifyResolve: res };
@@ -287,7 +287,7 @@ export default class LDClientImpl implements LDClient {
    * @returns {Promise<void>}.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    const identifyTimeout = identifyOptions?.timeoutSeconds ?? this.defaultIdentifyTimeout;
+    const identifyTimeout = identifyOptions?.timeout ?? this.defaultIdentifyTimeout;
     if (identifyTimeout > this.defaultIdentifyTimeout) {
       this.logger.warn('identify called with high timeout parameter.');
     }

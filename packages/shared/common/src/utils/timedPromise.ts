@@ -7,7 +7,7 @@ import { LDLogger } from '../api';
  * @param taskName Name of task being timed for logging and error reporting.
  * @param logger {@link LDLogger} object.
  */
-const timeout = (t: number, taskName: string, logger?: LDLogger) =>
+const timedPromise = (t: number, taskName: string, logger?: LDLogger) =>
   new Promise<void>((_res, reject) => {
     setTimeout(() => {
       const e = `${taskName} timed out after ${t} seconds.`;
@@ -16,4 +16,4 @@ const timeout = (t: number, taskName: string, logger?: LDLogger) =>
     }, t * 1000);
   });
 
-export default timeout;
+export default timedPromise;

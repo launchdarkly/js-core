@@ -59,12 +59,10 @@ describe('sdk-client identify timeout', () => {
 
   // streamer is setup to error in beforeEach to cause a timeout
   test('rejects with custom timeout', async () => {
-    const timeoutSeconds = 15;
-    jest.advanceTimersByTimeAsync(timeoutSeconds * 1000).then();
+    const timeout = 15;
+    jest.advanceTimersByTimeAsync(timeout * 1000).then();
 
-    await expect(ldc.identify(carContext, { timeoutSeconds })).rejects.toThrow(
-      /identify timed out/,
-    );
+    await expect(ldc.identify(carContext, { timeout })).rejects.toThrow(/identify timed out/);
   });
 
   test('resolves with default timeout', async () => {
@@ -87,11 +85,11 @@ describe('sdk-client identify timeout', () => {
   });
 
   test('resolves with custom timeout', async () => {
-    const timeoutSeconds = 15;
+    const timeout = 15;
     setupMockStreamingProcessor(false, defaultPutResponse);
-    jest.advanceTimersByTimeAsync(timeoutSeconds).then();
+    jest.advanceTimersByTimeAsync(timeout).then();
 
-    await expect(ldc.identify(carContext, { timeoutSeconds })).resolves.toBeUndefined();
+    await expect(ldc.identify(carContext, { timeout })).resolves.toBeUndefined();
 
     expect(ldc.getContext()).toEqual(expect.objectContaining(toMulti(carContext)));
     expect(ldc.allFlags()).toEqual({
@@ -134,7 +132,7 @@ describe('sdk-client identify timeout', () => {
     setupMockStreamingProcessor(false, defaultPutResponse);
     jest.advanceTimersByTimeAsync(defaultIdentifyTimeout * 1000).then();
 
-    await ldc.identify(carContext, { timeoutSeconds: dangerousTimeout });
+    await ldc.identify(carContext, { timeout: dangerousTimeout });
 
     expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/too high/));
   });
@@ -145,7 +143,7 @@ describe('sdk-client identify timeout', () => {
     setupMockStreamingProcessor(false, defaultPutResponse);
     jest.advanceTimersByTimeAsync(defaultIdentifyTimeout * 1000).then();
 
-    await ldc.identify(carContext, { timeoutSeconds: safeTimeout });
+    await ldc.identify(carContext, { timeout: safeTimeout });
 
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/too high/));
   });
