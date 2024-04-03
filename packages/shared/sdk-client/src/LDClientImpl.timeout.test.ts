@@ -21,6 +21,8 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 });
 
 const testSdkKey = 'test-sdk-key';
+const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
 let ldc: LDClientImpl;
 let defaultPutResponse: Flags;
 
@@ -50,7 +52,6 @@ describe('sdk-client identify timeout', () => {
 
   // streamer is setup to error in beforeEach to cause a timeout
   test('rejects with default timeout of 5s', async () => {
-    const carContext: LDContext = { kind: 'car', key: 'test-car' };
     jest.advanceTimersByTimeAsync(ldc.defaultIdentifyTimeout * 1000).then();
     await expect(ldc.identify(carContext)).rejects.toThrow(/identify timed out/);
   });
@@ -58,8 +59,6 @@ describe('sdk-client identify timeout', () => {
   // streamer is setup to error in beforeEach to cause a timeout
   test('rejects with custom timeout', async () => {
     const timeoutSeconds = 15;
-    const carContext: LDContext = { kind: 'car', key: 'test-car' };
-
     jest.advanceTimersByTimeAsync(timeoutSeconds * 1000).then();
 
     await expect(ldc.identify(carContext, { timeoutSeconds })).rejects.toThrow(
@@ -68,7 +67,6 @@ describe('sdk-client identify timeout', () => {
   });
 
   test('resolves with default timeout', async () => {
-    const carContext: LDContext = { kind: 'car', key: 'test-car' };
     setupMockStreamingProcessor(false, defaultPutResponse);
     jest.advanceTimersByTimeAsync(ldc.defaultIdentifyTimeout * 1000).then();
 
@@ -89,7 +87,6 @@ describe('sdk-client identify timeout', () => {
 
   test('resolves with custom timeout', async () => {
     const timeoutSeconds = 15;
-    const carContext: LDContext = { kind: 'car', key: 'test-car' };
     setupMockStreamingProcessor(false, defaultPutResponse);
     jest.advanceTimersByTimeAsync(timeoutSeconds).then();
 
@@ -106,5 +103,49 @@ describe('sdk-client identify timeout', () => {
       test1: 's1',
       'this-is-a-test': true,
     });
+  });
+
+  test('setting default timeout with internalOptions', async () => {
+    const sdkTimeout = 20;
+    setupMockStreamingProcessor(false, defaultPutResponse);
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      basicPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      { defaultIdentifyTimeout: sdkTimeout },
+    );
+    const { defaultIdentifyTimeout } = ldc;
+    jest.advanceTimersByTimeAsync(defaultIdentifyTimeout * 1000).then();
+
+    await ldc.identify(carContext);
+
+    expect(defaultIdentifyTimeout).toEqual(sdkTimeout);
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/too high/));
+  });
+
+  test('warning when timeout is too high', async () => {
+    const { defaultIdentifyTimeout } = ldc;
+    const dangerousTimeout = defaultIdentifyTimeout * 2;
+    setupMockStreamingProcessor(false, defaultPutResponse);
+    jest.advanceTimersByTimeAsync(defaultIdentifyTimeout * 1000).then();
+
+    await ldc.identify(carContext, { timeoutSeconds: dangerousTimeout });
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/too high/));
+  });
+
+  test('safe timeout should not warn', async () => {
+    const { defaultIdentifyTimeout } = ldc;
+    const safeTimeout = defaultIdentifyTimeout;
+    setupMockStreamingProcessor(false, defaultPutResponse);
+    jest.advanceTimersByTimeAsync(defaultIdentifyTimeout * 1000).then();
+
+    await ldc.identify(carContext, { timeoutSeconds: safeTimeout });
+
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/too high/));
   });
 });
