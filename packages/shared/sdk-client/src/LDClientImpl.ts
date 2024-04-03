@@ -258,7 +258,7 @@ export default class LDClientImpl implements LDClient {
       this.identifyChangeListener = (c: LDContext, changedKeys: string[]) => {
         this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
       };
-      this.identifyErrorListener = (c: LDContext, err: any) => {
+      this.identifyErrorListener = (c: LDContext, err: Error) => {
         this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
         reject(err);
       };
@@ -266,8 +266,15 @@ export default class LDClientImpl implements LDClient {
       this.emitter.on('change', this.identifyChangeListener);
       this.emitter.on('error', this.identifyErrorListener);
     });
-    const timed = timeout(timeoutSeconds, 'identify timed out.');
-    const raced = Promise.race([timed, slow]);
+
+    const timeoutError = 'identify timed out.';
+    const timed = timeout(timeoutSeconds, timeoutError);
+    const raced = Promise.race([timed, slow]).catch((reason: Error) => {
+      if (reason.message === timeoutError) {
+        this.logger.error(reason);
+      }
+      throw reason;
+    });
 
     return { identifyPromise: raced, identifyResolve: res };
   }
