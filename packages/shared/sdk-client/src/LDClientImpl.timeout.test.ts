@@ -54,7 +54,7 @@ describe('sdk-client identify timeout', () => {
   test('rejects with default timeout of 5s', async () => {
     jest.advanceTimersByTimeAsync(ldc.defaultIdentifyTimeout * 1000).then();
     await expect(ldc.identify(carContext)).rejects.toThrow(/identify timed out/);
-    expect(logger.error).toHaveBeenCalledWith(new Error('identify timed out.'));
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/identify timed out/));
   });
 
   // streamer is setup to error in beforeEach to cause a timeout

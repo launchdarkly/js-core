@@ -267,14 +267,8 @@ export default class LDClientImpl implements LDClient {
       this.emitter.on('error', this.identifyErrorListener);
     });
 
-    const timeoutError = 'identify timed out.';
-    const timed = timeout(timeoutSeconds, timeoutError);
-    const raced = Promise.race([timed, slow]).catch((reason: Error) => {
-      if (reason.message === timeoutError) {
-        this.logger.error(reason);
-      }
-      throw reason;
-    });
+    const timed = timeout(timeoutSeconds, 'identify', this.logger);
+    const raced = Promise.race([timed, slow]);
 
     return { identifyPromise: raced, identifyResolve: res };
   }

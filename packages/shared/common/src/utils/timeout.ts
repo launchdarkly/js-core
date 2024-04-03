@@ -1,13 +1,19 @@
+import { LDLogger } from '../api';
+
 /**
  * Returns a promise which errors after t seconds.
  *
  * @param t Timeout in seconds.
- * @param error Throw this error when when time is up. Should be a meaningful
- * description of what task has timed out to aid debugging.
+ * @param taskName Name of task being timed for logging and error reporting.
+ * @param logger {@link LDLogger} object.
  */
-const timeout = (t: number, error?: string) =>
+const timeout = (t: number, taskName: string, logger?: LDLogger) =>
   new Promise<void>((_res, reject) => {
-    setTimeout(() => reject(new Error(error ?? `Timed out after ${t} seconds.`)), t * 1000);
+    setTimeout(() => {
+      const e = `${taskName} timed out after ${t} seconds.`;
+      logger?.error(e);
+      reject(new Error(e));
+    }, t * 1000);
   });
 
 export default timeout;
