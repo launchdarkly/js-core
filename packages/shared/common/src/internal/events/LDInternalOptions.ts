@@ -14,10 +14,11 @@ export type LDInternalOptions = {
   includeAuthorizationHeader?: boolean;
 
   /**
-   * Sets the default identify timeout in seconds.
-   * If unspecified for sdk-client, this is set to 5 seconds in LDClientImpl.constructor.
+   * In seconds. Log a warning if identifyTimeout is greater than this value.
    *
-   * Mobile sdks should set this to 15 seconds.
+   * Mobile - 15s.
+   * Browser - 5s.
+   * Server - 60s.
    */
-  defaultIdentifyTimeout?: number;
+  highTimeoutThreshold?: number;
 };

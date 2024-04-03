@@ -36,10 +36,11 @@ export default class LDClientImpl implements LDClient {
   context?: LDContext;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor?: internal.EventProcessor;
+  identifyTimeout: number = 5;
   logger: LDLogger;
   streamer?: internal.StreamingProcessor;
 
-  readonly defaultIdentifyTimeout: number;
+  readonly highTimeoutThreshold: number = 15;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
@@ -47,6 +48,7 @@ export default class LDClientImpl implements LDClient {
   private flags: Flags = {};
   private identifyChangeListener?: (c: LDContext, changedKeys: string[]) => void;
   private identifyErrorListener?: (c: LDContext, err: any) => void;
+
   private readonly clientContext: ClientContext;
 
   /**
@@ -79,9 +81,6 @@ export default class LDClientImpl implements LDClient {
       !this.isOffline(),
     );
     this.emitter = new LDEmitter();
-
-    // defaults to 5 seconds
-    this.defaultIdentifyTimeout = internalOptions?.defaultIdentifyTimeout ?? 5;
   }
 
   /**
@@ -106,7 +105,7 @@ export default class LDClientImpl implements LDClient {
 
         if (this.context) {
           // identify will start streamer
-          return this.identify(this.context);
+          return this.identify(this.context, { timeout: this.identifyTimeout });
         }
         break;
       default:
@@ -287,8 +286,11 @@ export default class LDClientImpl implements LDClient {
    * @returns {Promise<void>}.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    const identifyTimeout = identifyOptions?.timeout ?? this.defaultIdentifyTimeout;
-    if (identifyTimeout > this.defaultIdentifyTimeout) {
+    if (identifyOptions?.timeout) {
+      this.identifyTimeout = identifyOptions.timeout;
+    }
+
+    if (this.identifyTimeout > this.highTimeoutThreshold) {
       this.logger.warn('identify called with high timeout parameter.');
     }
 
@@ -307,7 +309,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
-    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(identifyTimeout);
+    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(this.identifyTimeout);
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
