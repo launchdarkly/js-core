@@ -12,7 +12,7 @@ export default function Welcome() {
 
   const onIdentify = () => {
     ldc
-      .identify({ kind: 'user', key: userKey })
+      .identify({ kind: 'user', key: userKey }, { timeout: 5 })
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 

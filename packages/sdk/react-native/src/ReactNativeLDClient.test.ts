@@ -10,6 +10,7 @@ describe('ReactNativeLDClient', () => {
   });
 
   test('constructing a new client', () => {
+    expect(ldc.highTimeoutThreshold).toEqual(15);
     expect(ldc.sdkKey).toEqual('mobile-key');
     expect(ldc.config.serviceEndpoints).toEqual({
       analyticsEventPath: '/mobile',
