@@ -30,7 +30,7 @@ export interface TracingHookOptions {
    * setting.
    *
    * The default value is false.
-   * 
+   *
    * This feature is experimental and the data in the spans, or nesting of spans, 
    * could change in future versions.
    */
