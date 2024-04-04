@@ -14,6 +14,7 @@ export const setupMockStreamingProcessor = (
   patchResponseJson?: any,
   deleteResponseJson?: any,
   errorTimeoutSeconds: number = 0,
+  shouldPut: boolean = true,
 ) => {
   MockStreamingProcessor.mockImplementation(
     (
@@ -37,7 +38,9 @@ export const setupMockStreamingProcessor = (
           }, errorTimeoutSeconds * 1000);
         } else {
           // execute put which will resolve the identify promise
-          setTimeout(() => listeners.get('put')?.processJson(putResponseJson));
+          if (shouldPut) {
+            setTimeout(() => listeners.get('put')?.processJson(putResponseJson));
+          }
 
           if (patchResponseJson) {
             setTimeout(() => listeners.get('patch')?.processJson(patchResponseJson));
