@@ -25,20 +25,26 @@ yarn && yarn build
 kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREVIEW_KV_ID" }]
 ```
 
-3. Insert test data to the preview environment:
+3. Insert test data to the preview environment. You must use your own clientSideID and prefix it with `LD-Env-`. In the example below, the clientSideID is `test-client-side-id`. Internally, the Cloudflare SDK uses this `LD-Env-` namespace to distinguish LaunchDarkly data from others.
 
 ```shell
-# The Cloudflare SDK automatically adds the "LD-Env-" prefix to your sdk key
-npx wrangler kv:key put --binding=LD_KV "LD-Env-test-sdk-key" --path ./src/testData.json --preview
+npx wrangler kv:key put --binding=LD_KV "LD-Env-test-client-side-id" --path ./src/testData.json --preview
 ```
 
 4. View that test data to ensure it's present:
 
 ```shell
-npx wrangler kv:key get --binding=LD_KV "LD-Env-test-sdk-key" --preview
+npx wrangler kv:key get --binding=LD_KV "LD-Env-test-client-side-id" --preview
 ```
 
-5. Finally:
+5. Edit [index.ts](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/cloudflare/example/src/index.ts#L6) to use your clientSideID and a valid flag key from the test data you just inserted.
+
+```ts
+    const clientSideID = 'test-client-side-id';
+    const flagKey = 'test-boolean-flag';
+```
+
+6. Finally:
 
 ```shell
 yarn start
