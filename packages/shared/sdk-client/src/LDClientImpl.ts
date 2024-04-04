@@ -282,8 +282,13 @@ export default class LDClientImpl implements LDClient {
    *
    * @param pristineContext The LDContext object to be identified.
    * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
+   * @returns
+   *   A Promise which resolves when the flag values for the specified context
+   *   are available.
    *
-   * @returns {Promise<void>}.
+   *   The promise rejects if the identify timeout is exceeded. In client SDKs
+   *   this defaults to 5s. You can provide a custom timeout in
+   *   {@link LDIdentifyOptions | identifyOptions}.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     if (identifyOptions?.timeout) {
