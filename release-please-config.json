@@ -20,7 +20,7 @@
     "packages/store/node-server-sdk-dynamodb": {},
     "packages/store/node-server-sdk-redis": {},
     "packages/telemetry/node-server-sdk-otel": {
-      "bump-minor-pre-major": true
+      "release-as": "1.0.0"
     }
   },
   "plugins": ["node-workspace"]
