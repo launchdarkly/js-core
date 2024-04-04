@@ -9,7 +9,6 @@ import TracingHook from './TracingHook';
 const spanExporter = new InMemorySpanExporter();
 const sdk = new NodeSDK({
   serviceName: 'ryan-test',
-  // instrumentations: [new HttpInstrumentation()],
   spanProcessors: [new SimpleSpanProcessor(spanExporter)],
 });
 sdk.start();
