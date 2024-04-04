@@ -11,5 +11,6 @@
   "packages/store/node-server-sdk-dynamodb": "6.1.7",
   "packages/store/node-server-sdk-redis": "4.1.7",
   "packages/shared/sdk-client": "1.1.1",
-  "packages/sdk/react-native": "10.1.1"
+  "packages/sdk/react-native": "10.1.1",
+  "packages/telemetry/node-server-sdk-otel": "0.0.1"
 }
