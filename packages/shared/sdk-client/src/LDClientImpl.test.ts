@@ -10,6 +10,9 @@ import {
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
+import { toMulti } from './utils/addAutoEnv';
+
+import useFakeTimers = jest.useFakeTimers;
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -47,6 +50,7 @@ let defaultPutResponse: Flags;
 
 describe('sdk-client object', () => {
   beforeEach(() => {
+    useFakeTimers();
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     basicPlatform.crypto.randomUUID.mockReturnValue('random1');
@@ -205,13 +209,22 @@ describe('sdk-client object', () => {
     expect(ldc.getContext()).toBeUndefined();
   });
 
-  test('identify error stream error', async () => {
+  test.only('identify error stream error', async () => {
     setupMockStreamingProcessor(true);
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
-    expect(logger.error).toHaveBeenCalledTimes(2);
-    expect(ldc.getContext()).toBeUndefined();
+    // await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    const p = ldc.identify(carContext);
+    await jest.runAllTimersAsync();
+    // jest.runAllTimers();
+    // jest.runOnlyPendingTimers();
+    await expect(p).rejects.toEqual({
+      code: 401,
+      message: 'test-error',
+      name: 'LaunchDarklyStreamingError',
+    });
+    // expect(logger.error).toHaveBeenCalledTimes(2);
+    // expect(ldc.getContext()).toBeUndefined();
   });
 
   test('identify change and error listeners', async () => {

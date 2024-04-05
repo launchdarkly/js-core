@@ -25,7 +25,7 @@ import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import { DeleteFlag, Flags, IdentifyError, PatchFlag } from './types';
+import { DeleteFlag, Flags, PatchFlag } from './types';
 import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
@@ -47,7 +47,6 @@ export default class LDClientImpl implements LDClient {
   private emitter: LDEmitter;
   private flags: Flags = {};
   private identifyChangeListener?: (c: LDContext, changedKeys: string[]) => void;
-  private identifyErrorListener?: (c: LDContext, err: any) => void;
 
   private readonly clientContext: ClientContext;
 
@@ -81,6 +80,12 @@ export default class LDClientImpl implements LDClient {
       !this.isOffline(),
     );
     this.emitter = new LDEmitter();
+    this.emitter.on('change', (c: LDContext, changedKeys: string[]) => {
+      this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
+    });
+    this.emitter.on('error', (c: LDContext, err: any) => {
+      this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
+    });
   }
 
   /**
@@ -224,62 +229,18 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
-  /**
-   * Generates the url path for streamer.
-   *
-   * For mobile key: /meval/${base64-encoded-context}
-   * For clientSideId: /eval/${envId}/${base64-encoded-context}
-   *
-   * the path.
-   *
-   * @protected This function must be overridden in subclasses for streamer
-   * to work.
-   * @param _context The LDContext object
-   */
-  protected createStreamUriPath(_context: LDContext): string {
-    throw new Error(
-      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
-    );
-  }
-
   private createIdentifyPromise(timeout: number) {
     let res: any;
+    let rej: any;
+
     const slow = new Promise<void>((resolve, reject) => {
       res = resolve;
-
-      if (this.identifyChangeListener) {
-        this.emitter.off('change', this.identifyChangeListener);
-      }
-      if (this.identifyErrorListener) {
-        this.emitter.off('error', this.identifyErrorListener);
-      }
-
-      this.identifyChangeListener = (c: LDContext, changedKeys: string[]) => {
-        this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
-      };
-      this.identifyErrorListener = (c: LDContext, err: IdentifyError) => {
-        if (err.name === 'IdentifyError') {
-          this.logger.debug(`identify error: ${err}, context: ${JSON.stringify(c)}`);
-          reject(err);
-        }
-      };
-
-      this.emitter.on('change', this.identifyChangeListener);
-      this.emitter.on('error', this.identifyErrorListener);
+      rej = reject;
     });
 
     const timed = timedPromise(timeout, 'identify');
-    const raced = Promise.race([timed, slow]).catch((err) => {
-      this.logger.error(`identify race error: ${err}`);
-      throw err;
-    });
-
-    return { identifyPromise: raced, identifyResolve: res };
-  }
-
-  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
-    const f = await this.platform.storage?.get(canonicalKey);
-    return f ? JSON.parse(f) : undefined;
+    const raced = Promise.race([timed, slow]);
+    return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
   }
 
   /**
@@ -307,14 +268,15 @@ export default class LDClientImpl implements LDClient {
 
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
-      const error = new IdentifyError('Context was unspecified or had no key');
-      this.logger.error(error.toString());
+      const error = new Error('Context was unspecified or had no key');
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
-    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(this.identifyTimeout);
+    const { identifyPromise, identifyResolve, identifyReject } = this.createIdentifyPromise(
+      this.identifyTimeout,
+    );
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
@@ -345,14 +307,8 @@ export default class LDClientImpl implements LDClient {
         this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
         this.diagnosticsManager,
         (e) => {
-          this.logger.error(e);
-
-          if (e.eventName === 'put') {
-            // alternatively identifyPromise reject here
-            this.emitter.emit('error', context, new IdentifyError(e.message));
-          } else {
-            this.emitter.emit('error', context, e);
-          }
+          identifyReject(e);
+          this.emitter.emit('error', context, e);
         },
       );
       this.streamer.start();
@@ -386,6 +342,29 @@ export default class LDClientImpl implements LDClient {
     } else {
       this.logger.debug(`OnIdentifyResolve no changes to emit from: ${source}.`);
     }
+  }
+
+  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
+    const f = await this.platform.storage?.get(canonicalKey);
+    return f ? JSON.parse(f) : undefined;
+  }
+
+  /**
+   * Generates the url path for streamer.
+   *
+   * For mobile key: /meval/${base64-encoded-context}
+   * For clientSideId: /eval/${envId}/${base64-encoded-context}
+   *
+   * the path.
+   *
+   * @protected This function must be overridden in subclasses for streamer
+   * to work.
+   * @param _context The LDContext object
+   */
+  protected createStreamUriPath(_context: LDContext): string {
+    throw new Error(
+      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
+    );
   }
 
   off(eventName: EventName, listener: Function): void {
@@ -431,7 +410,6 @@ export default class LDClientImpl implements LDClient {
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
-      this.logger.error(error.toString());
       this.emitter.emit('error', this.context, error);
       this.eventProcessor?.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
@@ -457,7 +435,6 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.logger.error(error);
         this.emitter.emit('error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }

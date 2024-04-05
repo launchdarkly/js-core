@@ -135,9 +135,7 @@ class StreamingProcessor implements LDStreamProcessor {
           }
           processJson(dataJson);
         } else {
-          this.errorHandler?.(
-            new LDStreamingError('Unexpected payload from event stream', undefined, eventName),
-          );
+          this.errorHandler?.(new LDStreamingError('Unexpected payload from event stream'));
         }
       });
     });

@@ -32,7 +32,6 @@ export const setupMockStreamingProcessor = (
               code: 401,
               name: 'LaunchDarklyStreamingError',
               message: 'test-error',
-              eventName: 'put',
             };
             errorHandler(unauthorized);
           }, errorTimeoutSeconds * 1000);
