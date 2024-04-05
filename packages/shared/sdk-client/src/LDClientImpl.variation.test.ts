@@ -1,17 +1,9 @@
 import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
-import {
-  basicPlatform,
-  hasher,
-  logger,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
+import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
-import LDEmitter from './api/LDEmitter';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
-
-import useFakeTimers = jest.useFakeTimers;
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -31,16 +23,12 @@ const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 
 let ldc: LDClientImpl;
-let emitter: LDEmitter;
 let defaultPutResponse: Flags;
 
 describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
-    // setupMockStreamingProcessor(false, defaultPutResponse);
-    basicPlatform.crypto.randomUUID.mockReturnValue('random1');
-    hasher.digest.mockReturnValue('digested1');
-
+    setupMockStreamingProcessor(false, defaultPutResponse);
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
       logger,
       sendEvents: false,
@@ -48,9 +36,6 @@ describe('sdk-client object', () => {
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
-    // @ts-ignore
-    emitter = ldc.emitter;
-    jest.spyOn(emitter as LDEmitter, 'emit');
   });
 
   afterEach(() => {
@@ -64,20 +49,22 @@ describe('sdk-client object', () => {
     expect(devTestFlag).toBe(true);
   });
 
-  test.only('variation flag not found', async () => {
-    setupMockStreamingProcessor(false, defaultPutResponse, undefined, undefined, 0, false);
-    // HACK: set context manually to pass validation
-    ldc.context = { kind: 'user', key: 'test-old-user' };
+  test('variation flag not found', async () => {
+    // set context manually to pass validation
+    ldc.context = { kind: 'user', key: 'test-user' };
+    const errorListener = jest.fn().mockName('errorListener');
+    ldc.on('error', errorListener);
 
     const p = ldc.identify(context);
-
-    // GOTCHA: give ldc a chance to hook up with emitter.
     setTimeout(() => {
+      // call variation in the next tick to give ldc a chance to hook up event emitter
       ldc.variation('does-not-exist', 'not-found');
     });
 
-    // TODO: this should pass
     await expect(p).resolves.toBeUndefined();
+    const error = errorListener.mock.calls[0][1];
+    expect(errorListener).toHaveBeenCalledTimes(1);
+    expect(error.message).toMatch(/unknown feature/i);
   });
 
   test('variationDetail flag not found', async () => {

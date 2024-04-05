@@ -25,7 +25,7 @@ import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import { DeleteFlag, Flags, PatchFlag } from './types';
+import { DeleteFlag, Flags, IdentifyError, PatchFlag } from './types';
 import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
@@ -257,17 +257,22 @@ export default class LDClientImpl implements LDClient {
       this.identifyChangeListener = (c: LDContext, changedKeys: string[]) => {
         this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
       };
-      this.identifyErrorListener = (c: LDContext, err: Error) => {
-        this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
-        reject(err);
+      this.identifyErrorListener = (c: LDContext, err: IdentifyError) => {
+        if (err.name === 'IdentifyError') {
+          this.logger.debug(`identify error: ${err}, context: ${JSON.stringify(c)}`);
+          reject(err);
+        }
       };
 
       this.emitter.on('change', this.identifyChangeListener);
       this.emitter.on('error', this.identifyErrorListener);
     });
 
-    const timed = timedPromise(timeout, 'identify', this.logger);
-    const raced = Promise.race([timed, slow]);
+    const timed = timedPromise(timeout, 'identify');
+    const raced = Promise.race([timed, slow]).catch((err) => {
+      this.logger.error(`identify race error: ${err}`);
+      throw err;
+    });
 
     return { identifyPromise: raced, identifyResolve: res };
   }
@@ -302,8 +307,8 @@ export default class LDClientImpl implements LDClient {
 
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
-      const error = new Error('Context was unspecified or had no key');
-      this.logger.error(error);
+      const error = new IdentifyError('Context was unspecified or had no key');
+      this.logger.error(error.toString());
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
@@ -341,7 +346,13 @@ export default class LDClientImpl implements LDClient {
         this.diagnosticsManager,
         (e) => {
           this.logger.error(e);
-          this.emitter.emit('error', context, e);
+
+          if (e.eventName === 'put') {
+            // alternatively identifyPromise reject here
+            this.emitter.emit('error', context, new IdentifyError(e.message));
+          } else {
+            this.emitter.emit('error', context, e);
+          }
         },
       );
       this.streamer.start();
@@ -387,12 +398,12 @@ export default class LDClientImpl implements LDClient {
 
   track(key: string, data?: any, metricValue?: number): void {
     if (!this.context) {
-      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      this.logger.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
     const checkedContext = Context.fromLDContext(this.context);
     if (!checkedContext.valid) {
-      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      this.logger.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
 
@@ -408,7 +419,7 @@ export default class LDClientImpl implements LDClient {
     typeChecker?: (value: any) => [boolean, string],
   ): LDFlagValue {
     if (!this.context) {
-      this.logger?.debug(ClientMessages.missingContextKeyNoEvent);
+      this.logger.debug(ClientMessages.missingContextKeyNoEvent);
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
@@ -420,7 +431,7 @@ export default class LDClientImpl implements LDClient {
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
-      this.logger.error(error);
+      this.logger.error(error.toString());
       this.emitter.emit('error', this.context, error);
       this.eventProcessor?.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),

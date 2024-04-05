@@ -14,7 +14,6 @@ export const setupMockStreamingProcessor = (
   patchResponseJson?: any,
   deleteResponseJson?: any,
   errorTimeoutSeconds: number = 0,
-  shouldPut: boolean = true,
 ) => {
   MockStreamingProcessor.mockImplementation(
     (
@@ -33,14 +32,13 @@ export const setupMockStreamingProcessor = (
               code: 401,
               name: 'LaunchDarklyStreamingError',
               message: 'test-error',
+              eventName: 'put',
             };
             errorHandler(unauthorized);
           }, errorTimeoutSeconds * 1000);
         } else {
           // execute put which will resolve the identify promise
-          if (shouldPut) {
-            setTimeout(() => listeners.get('put')?.processJson(putResponseJson));
-          }
+          setTimeout(() => listeners.get('put')?.processJson(putResponseJson));
 
           if (patchResponseJson) {
             setTimeout(() => listeners.get('patch')?.processJson(patchResponseJson));

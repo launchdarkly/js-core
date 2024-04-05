@@ -1,6 +1,8 @@
 // These classes are of trivial complexity. If they become
 // more complex, then they could be independent files.
+
 /* eslint-disable max-classes-per-file */
+import { EventName } from './api';
 
 export class LDFileDataSourceError extends Error {
   constructor(message: string) {
@@ -21,10 +23,12 @@ export class LDPollingError extends Error {
 
 export class LDStreamingError extends Error {
   public readonly code?: number;
+  public readonly eventName?: EventName;
 
-  constructor(message: string, code?: number) {
+  constructor(message: string, code?: number, eventName?: EventName) {
     super(message);
     this.code = code;
+    this.eventName = eventName;
     this.name = 'LaunchDarklyStreamingError';
   }
 }
@@ -40,6 +44,13 @@ export class LDClientError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'LaunchDarklyClientError';
+  }
+}
+
+export class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LaunchDarklyTimeoutError';
   }
 }
 
