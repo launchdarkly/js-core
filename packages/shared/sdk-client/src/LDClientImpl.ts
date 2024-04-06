@@ -239,7 +239,11 @@ export default class LDClientImpl implements LDClient {
     });
 
     const timed = timedPromise(timeout, 'identify');
-    const raced = Promise.race([timed, slow]);
+    const raced = Promise.race([timed, slow]).catch((e) => {
+      this.logger.error(`identify error: ${e}`);
+      throw e;
+    });
+
     return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
   }
 
