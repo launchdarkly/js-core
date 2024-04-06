@@ -208,11 +208,7 @@ describe('sdk-client object', () => {
   test('identify error stream error', async () => {
     setupMockStreamingProcessor(true);
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    await expect(ldc.identify(carContext)).rejects.toEqual({
-      code: 401,
-      message: 'test-error',
-      name: 'LaunchDarklyStreamingError',
-    });
+    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
   });
 
   test('identify change and error listeners', async () => {

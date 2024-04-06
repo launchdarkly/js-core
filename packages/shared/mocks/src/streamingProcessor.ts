@@ -28,11 +28,9 @@ export const setupMockStreamingProcessor = (
       start: jest.fn(async () => {
         if (shouldError) {
           setTimeout(() => {
-            const unauthorized: LDStreamingError = {
-              code: 401,
-              name: 'LaunchDarklyStreamingError',
-              message: 'test-error',
-            };
+            const unauthorized = new Error('test-error') as LDStreamingError;
+            // @ts-ignore
+            unauthorized.code = 401;
             errorHandler(unauthorized);
           }, errorTimeoutSeconds * 1000);
         } else {
