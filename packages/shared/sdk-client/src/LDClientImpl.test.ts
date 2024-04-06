@@ -208,7 +208,13 @@ describe('sdk-client object', () => {
   test('identify error stream error', async () => {
     setupMockStreamingProcessor(true);
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
     await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringMatching(/^identify error:.*test-error/),
+    );
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/^error:.*test-error/));
+    expect(ldc.getContext()).toBeUndefined();
   });
 
   test('identify change and error listeners', async () => {
