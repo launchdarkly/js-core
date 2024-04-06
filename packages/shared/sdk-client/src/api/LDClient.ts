@@ -112,7 +112,12 @@ export interface LDClient {
    * @param identifyOptions
    *    Optional configuration. Please see {@link LDIdentifyOptions}.
    * @returns
-   *   A Promise which resolves when the flag values for the specified context are available.
+   *   A Promise which resolves when the flag values for the specified context
+   *   are available.
+   *
+   *   The promise rejects if the identify timeout is exceeded. In client SDKs
+   *   this defaults to 5s. You can provide a custom timeout in
+   *   {@link LDIdentifyOptions | identifyOptions}.
    */
   identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
 
