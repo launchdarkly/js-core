@@ -10,7 +10,6 @@ import {
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
-import { toMulti } from './utils/addAutoEnv';
 
 import useFakeTimers = jest.useFakeTimers;
 
