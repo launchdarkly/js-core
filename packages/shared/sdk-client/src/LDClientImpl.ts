@@ -46,7 +46,6 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
-  private identifyChangeListener?: (c: LDContext, changedKeys: string[]) => void;
 
   private readonly clientContext: ClientContext;
 
@@ -229,6 +228,24 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
+  /**
+   * Generates the url path for streamer.
+   *
+   * For mobile key: /meval/${base64-encoded-context}
+   * For clientSideId: /eval/${envId}/${base64-encoded-context}
+   *
+   * the path.
+   *
+   * @protected This function must be overridden in subclasses for streamer
+   * to work.
+   * @param _context The LDContext object
+   */
+  protected createStreamUriPath(_context: LDContext): string {
+    throw new Error(
+      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
+    );
+  }
+
   private createIdentifyPromise(timeout: number) {
     let res: any;
     let rej: any;
@@ -245,6 +262,11 @@ export default class LDClientImpl implements LDClient {
     });
 
     return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
+  }
+
+  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
+    const f = await this.platform.storage?.get(canonicalKey);
+    return f ? JSON.parse(f) : undefined;
   }
 
   /**
@@ -346,29 +368,6 @@ export default class LDClientImpl implements LDClient {
     } else {
       this.logger.debug(`OnIdentifyResolve no changes to emit from: ${source}.`);
     }
-  }
-
-  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
-    const f = await this.platform.storage?.get(canonicalKey);
-    return f ? JSON.parse(f) : undefined;
-  }
-
-  /**
-   * Generates the url path for streamer.
-   *
-   * For mobile key: /meval/${base64-encoded-context}
-   * For clientSideId: /eval/${envId}/${base64-encoded-context}
-   *
-   * the path.
-   *
-   * @protected This function must be overridden in subclasses for streamer
-   * to work.
-   * @param _context The LDContext object
-   */
-  protected createStreamUriPath(_context: LDContext): string {
-    throw new Error(
-      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
-    );
   }
 
   off(eventName: EventName, listener: Function): void {
