@@ -8,8 +8,8 @@
   "packages/sdk/akamai-base": "2.1.2",
   "packages/sdk/akamai-edgekv": "1.1.2",
   "packages/shared/akamai-edgeworker-sdk": "1.1.2",
-  "packages/store/node-server-sdk-dynamodb": "6.1.4",
-  "packages/store/node-server-sdk-redis": "4.1.4",
+  "packages/store/node-server-sdk-dynamodb": "6.1.5",
+  "packages/store/node-server-sdk-redis": "4.1.5",
   "packages/shared/sdk-client": "1.0.3",
   "packages/sdk/react-native": "10.0.5"
 }

@@ -12,13 +12,13 @@ const mf = new Miniflare({
   kvNamespaces: ['TEST_NAMESPACE'],
 });
 
-const sdkKey = 'test-sdk-key';
+const clientSideID = 'test-client-side-id';
 const flagKey1 = 'testFlag1';
 const flagKey2 = 'testFlag2';
 const flagKey3 = 'testFlag3';
 const context: LDContext = { kind: 'user', key: 'test-user-key-1' };
 const namespace = 'LD_KV';
-const rootEnvKey = `LD-Env-${sdkKey}`;
+const rootEnvKey = `LD-Env-${clientSideID}`;
 
 describe('init', () => {
   let kv: KVNamespace;
@@ -27,7 +27,7 @@ describe('init', () => {
   beforeAll(async () => {
     kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
     await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
-    ldClient = init(sdkKey, kv);
+    ldClient = init(clientSideID, kv);
     await ldClient.waitForInitialization();
   });
 

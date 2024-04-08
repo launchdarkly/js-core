@@ -286,7 +286,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-node-server-sdk-redis-release }}
+    if: ${{ needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -313,7 +313,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-node-server-sdk-dynamodb-release }}
+    if: ${{ needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

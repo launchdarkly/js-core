@@ -14,11 +14,13 @@ import {
   Platform,
   ProcessStreamResponse,
   EventName as StreamEventName,
+  timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
 import { ConnectionMode, LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
+import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
@@ -34,8 +36,11 @@ export default class LDClientImpl implements LDClient {
   context?: LDContext;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor?: internal.EventProcessor;
+  identifyTimeout: number = 5;
   logger: LDLogger;
   streamer?: internal.StreamingProcessor;
+
+  readonly highTimeoutThreshold: number = 15;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
@@ -100,7 +105,7 @@ export default class LDClientImpl implements LDClient {
 
         if (this.context) {
           // identify will start streamer
-          return this.identify(this.context);
+          return this.identify(this.context, { timeout: this.identifyTimeout });
         }
         break;
       default:
@@ -233,13 +238,13 @@ export default class LDClientImpl implements LDClient {
    */
   protected createStreamUriPath(_context: LDContext): string {
     throw new Error(
-      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work',
+      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
     );
   }
 
-  private createIdentifyPromise() {
+  private createIdentifyPromise(timeout: number) {
     let res: any;
-    const p = new Promise<void>((resolve, reject) => {
+    const slow = new Promise<void>((resolve, reject) => {
       res = resolve;
 
       if (this.identifyChangeListener) {
@@ -252,7 +257,7 @@ export default class LDClientImpl implements LDClient {
       this.identifyChangeListener = (c: LDContext, changedKeys: string[]) => {
         this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
       };
-      this.identifyErrorListener = (c: LDContext, err: any) => {
+      this.identifyErrorListener = (c: LDContext, err: Error) => {
         this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
         reject(err);
       };
@@ -261,7 +266,10 @@ export default class LDClientImpl implements LDClient {
       this.emitter.on('error', this.identifyErrorListener);
     });
 
-    return { identifyPromise: p, identifyResolve: res };
+    const timed = timedPromise(timeout, 'identify', this.logger);
+    const raced = Promise.race([timed, slow]);
+
+    return { identifyPromise: raced, identifyResolve: res };
   }
 
   private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
@@ -269,7 +277,23 @@ export default class LDClientImpl implements LDClient {
     return f ? JSON.parse(f) : undefined;
   }
 
-  async identify(pristineContext: LDContext): Promise<void> {
+  /**
+   * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
+   *
+   * @param pristineContext The LDContext object to be identified.
+   * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
+   *
+   * @returns {Promise<void>}.
+   */
+  async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
+    if (identifyOptions?.timeout) {
+      this.identifyTimeout = identifyOptions.timeout;
+    }
+
+    if (this.identifyTimeout > this.highTimeoutThreshold) {
+      this.logger.warn('identify called with high timeout parameter.');
+    }
+
     let context = await ensureKey(pristineContext, this.platform);
 
     if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
@@ -285,7 +309,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
-    const { identifyPromise, identifyResolve } = this.createIdentifyPromise();
+    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(this.identifyTimeout);
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);

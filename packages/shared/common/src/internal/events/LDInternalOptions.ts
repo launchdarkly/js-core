@@ -12,4 +12,13 @@ export type LDInternalOptions = {
   analyticsEventPath?: string;
   diagnosticEventPath?: string;
   includeAuthorizationHeader?: boolean;
+
+  /**
+   * In seconds. Log a warning if identifyTimeout is greater than this value.
+   *
+   * Mobile - 15s.
+   * Browser - 5s.
+   * Server - 60s.
+   */
+  highTimeoutThreshold?: number;
 };

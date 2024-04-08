@@ -10,3 +10,4 @@ coverage
 .vscode
 **/*/CHANGELOG.md
 packages/sdk/akamai-edgekv/src/edgekv/edgekv.js
+packages/sdk/cloudflare/src/createPlatformInfo.ts

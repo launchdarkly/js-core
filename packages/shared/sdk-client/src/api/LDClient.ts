@@ -8,6 +8,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import ConnectionMode from './ConnectionMode';
+import { LDIdentifyOptions } from './LDIdentifyOptions';
 
 /**
  * The basic interface for the LaunchDarkly client. Platform-specific SDKs may add some methods of their own.
@@ -107,11 +108,13 @@ export interface LDClient {
    * await the Promise to determine when the new flag values are available.
    *
    * @param context
-   *   The LDContext object.
+   *    The LDContext object.
+   * @param identifyOptions
+   *    Optional configuration. Please see {@link LDIdentifyOptions}.
    * @returns
    *   A Promise which resolves when the flag values for the specified context are available.
    */
-  identify(context: LDContext): Promise<void>;
+  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
 
   /**
    * Determines the json variation of a feature flag.
