@@ -99,6 +99,11 @@ export default class EventSource<E extends string = never> {
     }, delay);
   }
 
+  /**
+   * Reset after 1 minute.
+   *
+   * @private
+   */
   private resetRetryCount() {
     this.resetTimer = setTimeout(() => {
       this.retryCount = 0;

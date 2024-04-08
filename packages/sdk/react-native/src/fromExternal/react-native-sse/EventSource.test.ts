@@ -3,6 +3,31 @@ import { logger } from '@launchdarkly/private-js-mocks';
 
 import EventSource, { backoff, jitter } from './EventSource';
 
+const createXhrMock = () => {
+  const xhrMock = {
+    abort: jest.fn(),
+    open: jest.fn(),
+    send: jest.fn(),
+    setRequestHeader: jest.fn(),
+    readyState: 4,
+    status: 200,
+    response: 'Hello World!',
+    onreadystatechange: jest.fn(),
+  };
+  jest
+    .spyOn(window, 'XMLHttpRequest')
+    .mockImplementation(() => xhrMock as unknown as XMLHttpRequest);
+  Object.defineProperties(window.XMLHttpRequest, {
+    DONE: { value: 4 },
+    LOADING: { value: 3 },
+    HEADERS_RECEIVED: { value: 2 },
+    OPENED: { value: 1 },
+    UNSENT: { value: 0 },
+  });
+
+  return xhrMock;
+};
+
 describe('EventSource', () => {
   const uri = 'https://mock.events.uri';
   let eventSource: EventSource<EventName>;
@@ -91,58 +116,34 @@ describe('EventSource', () => {
     expect(eventSource.onclose).toHaveBeenCalledTimes(1);
   });
 
-  test('reset retry count', () => {
-    const xhrMock: Partial<XMLHttpRequest> = {
-      abort: jest.fn(),
-      open: jest.fn(),
-      send: jest.fn(),
-      setRequestHeader: jest.fn(),
-      readyState: 4,
-      status: 200,
-      response: 'Hello World!',
-    };
-
-    jest.spyOn(window, 'XMLHttpRequest').mockImplementation(() => xhrMock as XMLHttpRequest);
-    // @ts-ignore
-    window.XMLHttpRequest.DONE = 4;
-    // @ts-ignore
-    window.XMLHttpRequest.LOADING = 3;
-    // @ts-ignore
-    window.XMLHttpRequest.HEADERS_RECEIVED = 2;
-    // @ts-ignore
-    window.XMLHttpRequest.OPENED = 1;
-    // @ts-ignore
-    window.XMLHttpRequest.UNSENT = 0;
+  test.only('reset retry count', () => {
+    const mockXhr = createXhrMock();
 
     // @ts-ignore
     jest.spyOn(EventSource.prototype, 'resetRetryCount');
     jest.spyOn(EventSource.prototype, 'open');
     eventSource = new EventSource<EventName>(uri, { logger });
-    // @ts-ignore
-    eventSource.retryCount = 5;
+
+    const es = eventSource as any;
+    es.retryCount = 5; // arbitrary start
 
     // trigger the initial open()
     jest.runAllTimers();
 
     // simulate xhr state change
-    // @ts-ignore
-    xhrMock.onreadystatechange?.(null);
+    mockXhr.onreadystatechange(null);
 
     // advance by 20 seconds to trigger another open()
     jest.advanceTimersByTime(20000);
 
     // simulate another state change
-    // @ts-ignore
-    xhrMock.onreadystatechange?.(null);
+    mockXhr.onreadystatechange(null);
 
-    expect(eventSource.open).toHaveBeenCalledTimes(2);
-    // @ts-ignore
-    expect(eventSource.resetRetryCount).toHaveBeenCalledTimes(2);
-    // @ts-ignore
-    expect(eventSource.retryCount).toEqual(7);
+    expect(es.open).toHaveBeenCalledTimes(2);
+    expect(es.resetRetryCount).toHaveBeenCalledTimes(2);
+    expect(es.retryCount).toEqual(7);
 
     jest.runAllTimers();
-    // @ts-ignore
-    expect(eventSource.retryCount).toEqual(0);
+    expect(es.retryCount).toEqual(0);
   });
 });
