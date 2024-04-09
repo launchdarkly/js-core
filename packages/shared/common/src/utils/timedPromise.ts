@@ -1,3 +1,5 @@
+import { TimeoutError } from '../errors';
+
 /**
  * Returns a promise which errors after t seconds.
  *
@@ -8,7 +10,7 @@ const timedPromise = (t: number, taskName: string) =>
   new Promise<void>((_res, reject) => {
     setTimeout(() => {
       const e = `${taskName} timed out after ${t} seconds.`;
-      reject(new Error(e));
+      reject(new TimeoutError(e));
     }, t * 1000);
   });
 
