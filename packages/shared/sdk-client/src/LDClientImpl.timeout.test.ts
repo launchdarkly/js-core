@@ -61,7 +61,6 @@ describe('sdk-client identify timeout', () => {
   test('rejects with custom timeout', async () => {
     const timeout = 15;
     jest.advanceTimersByTimeAsync(timeout * 1000).then();
-
     await expect(ldc.identify(carContext, { timeout })).rejects.toThrow(/identify timed out/);
   });
 

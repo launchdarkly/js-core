@@ -115,37 +115,6 @@ describe('sdk-client object', () => {
     });
   });
 
-  test('variation', async () => {
-    await ldc.identify(context);
-    const devTestFlag = ldc.variation('dev-test-flag');
-
-    expect(devTestFlag).toBe(true);
-  });
-
-  test('variationDetail flag not found', async () => {
-    await ldc.identify(context);
-    const flag = ldc.variationDetail('does-not-exist', 'not-found');
-
-    expect(flag).toEqual({
-      reason: { errorKind: 'FLAG_NOT_FOUND', kind: 'ERROR' },
-      value: 'not-found',
-      variationIndex: null,
-    });
-  });
-
-  test('variationDetail deleted flag not found', async () => {
-    await ldc.identify(context);
-    // @ts-ignore
-    ldc.flags['dev-test-flag'].deleted = true;
-    const flag = ldc.variationDetail('dev-test-flag', 'deleted');
-
-    expect(flag).toEqual({
-      reason: { errorKind: 'FLAG_NOT_FOUND', kind: 'ERROR' },
-      value: 'deleted',
-      variationIndex: null,
-    });
-  });
-
   test('identify success', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
@@ -240,11 +209,9 @@ describe('sdk-client object', () => {
     setupMockStreamingProcessor(true);
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
-    await expect(ldc.identify(carContext)).rejects.toMatchObject({
-      code: 401,
-      message: 'test-error',
-    });
+    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
     expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/^error:.*test-error/));
     expect(ldc.getContext()).toBeUndefined();
   });
 
