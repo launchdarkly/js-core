@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.1.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.0.5...react-native-client-sdk-v10.1.0) (2024-04-09)
+
+
+### Features
+
+* Add identify timeout to client-sdk. ([#420](https://github.com/launchdarkly/js-core/issues/420)) ([5d73dfe](https://github.com/launchdarkly/js-core/commit/5d73dfeb0d5cdacf620e65e214dd2e334363490e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.0.3 to 1.1.0
+
 ## [10.0.5](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.0.4...react-native-client-sdk-v10.0.5) (2024-03-27)
 
 ### Bug Fixes
