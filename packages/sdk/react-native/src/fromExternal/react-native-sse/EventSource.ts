@@ -58,10 +58,10 @@ export default class EventSource<E extends string = never> {
   private url: string;
   private xhr: XMLHttpRequest = new XMLHttpRequest();
   private pollTimer: any;
-  private resetTimer: any;
   private retryAndHandleError?: (err: any) => boolean;
   private initialRetryDelayMillis: number = 1000;
   private retryCount: number = 0;
+  private connectionSuccessTime?: number = 0;
   private logger?: any;
 
   constructor(url: string, options?: EventSourceOptions) {
@@ -99,16 +99,20 @@ export default class EventSource<E extends string = never> {
     }, delay);
   }
 
-  /**
-   * Reset after 1 minute.
-   *
-   * @private
-   */
-  private resetRetryCount() {
-    this.resetTimer = setTimeout(() => {
+  private resetRetry() {
+    const sinceLastSuccess = Date.now() - (this.connectionSuccessTime ?? Date.now());
+    this.logger?.debug(
+      `[EventSource] Elapsed ms since last success: ${sinceLastSuccess}. Last successfully connected on: ${this.connectionSuccessTime}ms.`,
+    );
+
+    let debugMessage = '[EventSource] Not resetting retry.';
+    if (sinceLastSuccess > 60 * 1000) {
       this.retryCount = 0;
-      clearTimeout(this.resetTimer);
-    }, 60 * 1000);
+      this.connectionSuccessTime = undefined;
+      debugMessage = '[EventSource] Reset retry.';
+    }
+
+    this.logger?.debug(debugMessage);
   }
 
   open() {
@@ -157,8 +161,8 @@ export default class EventSource<E extends string = never> {
 
         if (this.xhr.status >= 200 && this.xhr.status < 400) {
           if (this.status === this.CONNECTING) {
-            this.resetRetryCount();
             this.status = this.OPEN;
+            this.connectionSuccessTime = Date.now();
             this.dispatch('open', { type: 'open' });
             this.logger?.debug('[EventSource][onreadystatechange][OPEN] Connection opened.');
           }
@@ -172,6 +176,7 @@ export default class EventSource<E extends string = never> {
           }
         } else if (this.xhr.status !== 0) {
           this.status = this.ERROR;
+          this.resetRetry();
           this.dispatch('error', {
             type: 'error',
             message: this.xhr.responseText,
@@ -206,6 +211,7 @@ export default class EventSource<E extends string = never> {
         }
 
         this.status = this.ERROR;
+        this.resetRetry();
         this.dispatch('error', {
           type: 'error',
           message: this.xhr.responseText,
@@ -230,6 +236,7 @@ export default class EventSource<E extends string = never> {
       }
     } catch (e: any) {
       this.status = this.ERROR;
+      this.resetRetry();
       this.dispatch('error', {
         type: 'exception',
         message: e.message,
