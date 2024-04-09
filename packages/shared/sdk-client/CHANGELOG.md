@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.1.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.0.3...js-client-sdk-common-v1.1.0) (2024-04-09)
+
+
+### Features
+
+* Add identify timeout to client-sdk. ([#420](https://github.com/launchdarkly/js-core/issues/420)) ([5d73dfe](https://github.com/launchdarkly/js-core/commit/5d73dfeb0d5cdacf620e65e214dd2e334363490e))
+
+
+### Bug Fixes
+
+* Identify incorrectly rejected in client-sdk ([#426](https://github.com/launchdarkly/js-core/issues/426)) ([a019dd6](https://github.com/launchdarkly/js-core/commit/a019dd66b1b852d888e10b78aec9693d7de195fe))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.3.1 to 2.4.0
+
 ## [1.0.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.0.2...js-client-sdk-common-v1.0.3) (2024-03-25)
 
 
