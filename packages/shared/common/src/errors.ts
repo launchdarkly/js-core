@@ -43,7 +43,7 @@ export class LDClientError extends Error {
   }
 }
 
-export class TimeoutError extends Error {
+export class LDTimeoutError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'LaunchDarklyTimeoutError';
