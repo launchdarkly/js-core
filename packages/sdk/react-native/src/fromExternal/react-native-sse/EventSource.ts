@@ -102,7 +102,7 @@ export default class EventSource<E extends string = never> {
   private resetRetry() {
     const sinceLastSuccess = Date.now() - (this.connectionSuccessTime ?? Date.now());
     this.logger?.debug(
-      `[EventSource] Elapsed ms since last success: ${sinceLastSuccess}. Last successfully connected on: ${this.connectionSuccessTime}ms.`,
+      `[EventSource] Retry count: ${this.retryCount}. Elapsed since last success: ${sinceLastSuccess}ms. Last successfully connected on: ${this.connectionSuccessTime}ms.`,
     );
 
     let debugMessage = '[EventSource] Not resetting retry.';
