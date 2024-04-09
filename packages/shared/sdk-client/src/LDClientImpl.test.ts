@@ -210,9 +210,7 @@ describe('sdk-client object', () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.stringMatching(/^identify error:.*test-error/),
-    );
+    expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/^error:.*test-error/));
     expect(ldc.getContext()).toBeUndefined();
   });
