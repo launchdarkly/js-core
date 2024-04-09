@@ -120,7 +120,7 @@ export interface LDClient {
    * 2. The identify timeout is exceeded. In client SDKs this defaults to 5s.
    * You can customize this timeout with {@link LDIdentifyOptions | identifyOptions}.
    *
-   * 3. A streaming error occurs.
+   * 3. A network error is encountered during initialization.
    */
   identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
 
