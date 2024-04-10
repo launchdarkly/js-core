@@ -7,7 +7,9 @@
     "packages/shared/akamai-edgeworker-sdk": {},
     "packages/sdk/cloudflare": {},
     "packages/sdk/react-native": {},
-    "packages/sdk/server-node": {},
+    "packages/sdk/server-node": {
+      "release-as": "9.3.0"
+    },
     "packages/sdk/vercel": {
       "extra-files": ["src/createPlatformInfo.ts"]
     },
