@@ -132,11 +132,19 @@ describe('LDClientImpl', () => {
     await client.waitForInitialization();
   });
 
-  it('creates only one Promise when waiting for initialization', async () => {
+  it('creates only one Promise when waiting for initialization - when not using a timeout', async () => {
     client = createClient();
     const p1 = client.waitForInitialization();
     const p2 = client.waitForInitialization();
 
     expect(p2).toBe(p1);
+  });
+
+  it('rejects the returned promise when initialization does not complete within the timeout', async () => {
+    setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 10000);
+    client = createClient();
+    await expect(client.waitForInitialization({ timeout: 1 })).rejects.toThrow(
+      'waitForInitialization timed out after 1 seconds.',
+    );
   });
 });

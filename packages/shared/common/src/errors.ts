@@ -43,6 +43,13 @@ export class LDClientError extends Error {
   }
 }
 
+export class LDTimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LaunchDarklyTimeoutError';
+  }
+}
+
 /**
  * Check if the HTTP error is recoverable. This will return false if a request
  * made with any payload could not recover. If the reason for the failure
