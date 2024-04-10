@@ -46,8 +46,6 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flags: Flags = {};
-  private identifyChangeListener?: (c: LDContext, changedKeys: string[]) => void;
-  private identifyErrorListener?: (c: LDContext, err: any) => void;
 
   private readonly clientContext: ClientContext;
 
@@ -81,6 +79,12 @@ export default class LDClientImpl implements LDClient {
       !this.isOffline(),
     );
     this.emitter = new LDEmitter();
+    this.emitter.on('change', (c: LDContext, changedKeys: string[]) => {
+      this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
+    });
+    this.emitter.on('error', (c: LDContext, err: any) => {
+      this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
+    });
   }
 
   /**
@@ -244,32 +248,22 @@ export default class LDClientImpl implements LDClient {
 
   private createIdentifyPromise(timeout: number) {
     let res: any;
+    let rej: any;
+
     const slow = new Promise<void>((resolve, reject) => {
       res = resolve;
-
-      if (this.identifyChangeListener) {
-        this.emitter.off('change', this.identifyChangeListener);
-      }
-      if (this.identifyErrorListener) {
-        this.emitter.off('error', this.identifyErrorListener);
-      }
-
-      this.identifyChangeListener = (c: LDContext, changedKeys: string[]) => {
-        this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
-      };
-      this.identifyErrorListener = (c: LDContext, err: Error) => {
-        this.logger.debug(`error: ${err}, context: ${JSON.stringify(c)}`);
-        reject(err);
-      };
-
-      this.emitter.on('change', this.identifyChangeListener);
-      this.emitter.on('error', this.identifyErrorListener);
+      rej = reject;
     });
 
-    const timed = timedPromise(timeout, 'identify', this.logger);
-    const raced = Promise.race([timed, slow]);
+    const timed = timedPromise(timeout, 'identify');
+    const raced = Promise.race([timed, slow]).catch((e) => {
+      if (e.message.includes('timed out')) {
+        this.logger.error(`identify error: ${e}`);
+      }
+      throw e;
+    });
 
-    return { identifyPromise: raced, identifyResolve: res };
+    return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
   }
 
   private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
@@ -282,8 +276,15 @@ export default class LDClientImpl implements LDClient {
    *
    * @param pristineContext The LDContext object to be identified.
    * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
+   * @returns A Promise which resolves when the flag values for the specified
+   * context are available. It rejects when:
    *
-   * @returns {Promise<void>}.
+   * 1. The context is unspecified or has no key.
+   *
+   * 2. The identify timeout is exceeded. In client SDKs this defaults to 5s.
+   * You can customize this timeout with {@link LDIdentifyOptions | identifyOptions}.
+   *
+   * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     if (identifyOptions?.timeout) {
@@ -303,13 +304,14 @@ export default class LDClientImpl implements LDClient {
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
       const error = new Error('Context was unspecified or had no key');
-      this.logger.error(error);
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
-    const { identifyPromise, identifyResolve } = this.createIdentifyPromise(this.identifyTimeout);
+    const { identifyPromise, identifyResolve, identifyReject } = this.createIdentifyPromise(
+      this.identifyTimeout,
+    );
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
     const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
@@ -340,7 +342,7 @@ export default class LDClientImpl implements LDClient {
         this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
         this.diagnosticsManager,
         (e) => {
-          this.logger.error(e);
+          identifyReject(e);
           this.emitter.emit('error', context, e);
         },
       );
@@ -387,12 +389,12 @@ export default class LDClientImpl implements LDClient {
 
   track(key: string, data?: any, metricValue?: number): void {
     if (!this.context) {
-      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      this.logger.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
     const checkedContext = Context.fromLDContext(this.context);
     if (!checkedContext.valid) {
-      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      this.logger.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
 
@@ -408,7 +410,7 @@ export default class LDClientImpl implements LDClient {
     typeChecker?: (value: any) => [boolean, string],
   ): LDFlagValue {
     if (!this.context) {
-      this.logger?.debug(ClientMessages.missingContextKeyNoEvent);
+      this.logger.debug(ClientMessages.missingContextKeyNoEvent);
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
@@ -420,7 +422,6 @@ export default class LDClientImpl implements LDClient {
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
-      this.logger.error(error);
       this.emitter.emit('error', this.context, error);
       this.eventProcessor?.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
@@ -446,7 +447,6 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.logger.error(error);
         this.emitter.emit('error', this.context, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
