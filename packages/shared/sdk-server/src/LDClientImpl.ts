@@ -26,6 +26,7 @@ import {
   LDMigrationVariation,
   LDOptions,
 } from './api';
+import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import BigSegmentsManager from './BigSegmentsManager';
@@ -45,10 +46,10 @@ import ContextDeduplicator from './events/ContextDeduplicator';
 import EventFactory from './events/EventFactory';
 import isExperiment from './events/isExperiment';
 import FlagsStateBuilder from './FlagsStateBuilder';
+import HookRunner from './hooks/HookRunner';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
-import AsyncStoreFacade from './store/AsyncStoreFacade';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
@@ -71,6 +72,19 @@ export interface LDClientCallbacks {
   hasEventListeners: () => boolean;
 }
 
+const BOOL_VARIATION_METHOD_NAME = 'LDClient.boolVariation';
+const NUMBER_VARIATION_METHOD_NAME = 'LDClient.numberVariation';
+const STRING_VARIATION_METHOD_NAME = 'LDClient.stringVariation';
+const JSON_VARIATION_METHOD_NAME = 'LDClient.jsonVariation';
+const VARIATION_METHOD_NAME = 'LDClient.variation';
+const MIGRATION_VARIATION_METHOD_NAME = 'LDClient.migrationVariation';
+
+const BOOL_VARIATION_DETAIL_METHOD_NAME = 'LDClient.boolVariationDetail';
+const NUMBER_VARIATION_DETAIL_METHOD_NAME = 'LDClient.numberVariationDetail';
+const STRING_VARIATION_DETAIL_METHOD_NAME = 'LDClient.stringVariationDetail';
+const JSON_VARIATION_DETAIL_METHOD_NAME = 'LDClient.jsonVariationDetail';
+const VARIATION_METHOD_DETAIL_NAME = 'LDClient.variationDetail';
+
 /**
  * @ignore
  */
@@ -78,8 +92,6 @@ export default class LDClientImpl implements LDClient {
   private initState: InitState = InitState.Initializing;
 
   private featureStore: LDFeatureStore;
-
-  private asyncFeatureStore: AsyncStoreFacade;
 
   private updateProcessor?: subsystem.LDStreamProcessor;
 
@@ -113,6 +125,8 @@ export default class LDClientImpl implements LDClient {
 
   private diagnosticsManager?: internal.DiagnosticsManager;
 
+  private hookRunner: HookRunner;
+
   /**
    * Intended for use by platform specific client implementations.
    *
@@ -136,6 +150,8 @@ export default class LDClientImpl implements LDClient {
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options, internalOptions);
 
+    this.hookRunner = new HookRunner(config.logger, config.hooks || []);
+
     if (!sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
     }
@@ -144,7 +160,7 @@ export default class LDClientImpl implements LDClient {
 
     const clientContext = new ClientContext(sdkKey, config, platform);
     const featureStore = config.featureStoreFactory(clientContext);
-    this.asyncFeatureStore = new AsyncStoreFacade(featureStore);
+
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
     if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
@@ -294,12 +310,23 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
-    return new Promise<any>((resolve) => {
-      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
-        resolve(res.detail.value);
-        callback?.(null, res.detail.value);
+    return this.hookRunner
+      .withEvaluationSeries(
+        key,
+        context,
+        defaultValue,
+        VARIATION_METHOD_NAME,
+        () =>
+          new Promise<LDEvaluationDetail>((resolve) => {
+            this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
+              resolve(res.detail);
+            });
+          }),
+      )
+      .then((detail) => {
+        callback?.(null, detail.value);
+        return detail.value;
       });
-    });
   }
 
   variationDetail(
@@ -308,12 +335,25 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    return new Promise<LDEvaluationDetail>((resolve) => {
-      this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryWithReasons, (res) => {
-        resolve(res.detail);
-        callback?.(null, res.detail);
-      });
-    });
+    return this.hookRunner.withEvaluationSeries(
+      key,
+      context,
+      defaultValue,
+      VARIATION_METHOD_DETAIL_NAME,
+      () =>
+        new Promise<LDEvaluationDetail>((resolve) => {
+          this.evaluateIfPossible(
+            key,
+            context,
+            defaultValue,
+            this.eventFactoryWithReasons,
+            (res) => {
+              resolve(res.detail);
+              callback?.(null, res.detail);
+            },
+          );
+        }),
+    );
   }
 
   private typedEval<TResult>(
@@ -321,56 +361,89 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: TResult,
     eventFactory: EventFactory,
+    methodName: string,
     typeChecker: (value: unknown) => [boolean, string],
   ): Promise<LDEvaluationDetail> {
-    return new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
-      this.evaluateIfPossible(
-        key,
-        context,
-        defaultValue,
-        eventFactory,
-        (res) => {
-          const typedRes: LDEvaluationDetailTyped<TResult> = {
-            value: res.detail.value as TResult,
-            reason: res.detail.reason,
-            variationIndex: res.detail.variationIndex,
-          };
-          resolve(typedRes);
-        },
-        typeChecker,
-      );
-    });
+    return this.hookRunner.withEvaluationSeries(
+      key,
+      context,
+      defaultValue,
+      methodName,
+      () =>
+        new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
+          this.evaluateIfPossible(
+            key,
+            context,
+            defaultValue,
+            eventFactory,
+            (res) => {
+              const typedRes: LDEvaluationDetailTyped<TResult> = {
+                value: res.detail.value as TResult,
+                reason: res.detail.reason,
+                variationIndex: res.detail.variationIndex,
+              };
+              resolve(typedRes);
+            },
+            typeChecker,
+          );
+        }),
+    );
   }
 
   async boolVariation(key: string, context: LDContext, defaultValue: boolean): Promise<boolean> {
     return (
-      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
-        TypeValidators.Boolean.is(value),
-        TypeValidators.Boolean.getType(),
-      ])
+      await this.typedEval(
+        key,
+        context,
+        defaultValue,
+        this.eventFactoryDefault,
+        BOOL_VARIATION_METHOD_NAME,
+        (value) => [TypeValidators.Boolean.is(value), TypeValidators.Boolean.getType()],
+      )
     ).value;
   }
 
   async numberVariation(key: string, context: LDContext, defaultValue: number): Promise<number> {
     return (
-      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
-        TypeValidators.Number.is(value),
-        TypeValidators.Number.getType(),
-      ])
+      await this.typedEval(
+        key,
+        context,
+        defaultValue,
+        this.eventFactoryDefault,
+        NUMBER_VARIATION_METHOD_NAME,
+        (value) => [TypeValidators.Number.is(value), TypeValidators.Number.getType()],
+      )
     ).value;
   }
 
   async stringVariation(key: string, context: LDContext, defaultValue: string): Promise<string> {
     return (
-      await this.typedEval(key, context, defaultValue, this.eventFactoryDefault, (value) => [
-        TypeValidators.String.is(value),
-        TypeValidators.String.getType(),
-      ])
+      await this.typedEval(
+        key,
+        context,
+        defaultValue,
+        this.eventFactoryDefault,
+        STRING_VARIATION_METHOD_NAME,
+        (value) => [TypeValidators.String.is(value), TypeValidators.String.getType()],
+      )
     ).value;
   }
 
   jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown> {
-    return this.variation(key, context, defaultValue);
+    return this.hookRunner
+      .withEvaluationSeries(
+        key,
+        context,
+        defaultValue,
+        JSON_VARIATION_METHOD_NAME,
+        () =>
+          new Promise<LDEvaluationDetail>((resolve) => {
+            this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
+              resolve(res.detail);
+            });
+          }),
+      )
+      .then((detail) => detail.value);
   }
 
   boolVariationDetail(
@@ -378,10 +451,14 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: boolean,
   ): Promise<LDEvaluationDetailTyped<boolean>> {
-    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
-      TypeValidators.Boolean.is(value),
-      TypeValidators.Boolean.getType(),
-    ]);
+    return this.typedEval(
+      key,
+      context,
+      defaultValue,
+      this.eventFactoryWithReasons,
+      BOOL_VARIATION_DETAIL_METHOD_NAME,
+      (value) => [TypeValidators.Boolean.is(value), TypeValidators.Boolean.getType()],
+    );
   }
 
   numberVariationDetail(
@@ -389,10 +466,14 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: number,
   ): Promise<LDEvaluationDetailTyped<number>> {
-    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
-      TypeValidators.Number.is(value),
-      TypeValidators.Number.getType(),
-    ]);
+    return this.typedEval(
+      key,
+      context,
+      defaultValue,
+      this.eventFactoryWithReasons,
+      NUMBER_VARIATION_DETAIL_METHOD_NAME,
+      (value) => [TypeValidators.Number.is(value), TypeValidators.Number.getType()],
+    );
   }
 
   stringVariationDetail(
@@ -400,10 +481,14 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: string,
   ): Promise<LDEvaluationDetailTyped<string>> {
-    return this.typedEval(key, context, defaultValue, this.eventFactoryWithReasons, (value) => [
-      TypeValidators.String.is(value),
-      TypeValidators.String.getType(),
-    ]);
+    return this.typedEval(
+      key,
+      context,
+      defaultValue,
+      this.eventFactoryWithReasons,
+      STRING_VARIATION_DETAIL_METHOD_NAME,
+      (value) => [TypeValidators.String.is(value), TypeValidators.String.getType()],
+    );
   }
 
   jsonVariationDetail(
@@ -411,26 +496,39 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: unknown,
   ): Promise<LDEvaluationDetailTyped<unknown>> {
-    return this.variationDetail(key, context, defaultValue);
+    return this.hookRunner.withEvaluationSeries(
+      key,
+      context,
+      defaultValue,
+      JSON_VARIATION_DETAIL_METHOD_NAME,
+      () =>
+        new Promise<LDEvaluationDetail>((resolve) => {
+          this.evaluateIfPossible(
+            key,
+            context,
+            defaultValue,
+            this.eventFactoryWithReasons,
+            (res) => {
+              resolve(res.detail);
+            },
+          );
+        }),
+    );
   }
 
-  async migrationVariation(
+  private async migrationVariationInternal(
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
-  ): Promise<LDMigrationVariation> {
+  ): Promise<{ detail: LDEvaluationDetail; migration: LDMigrationVariation }> {
     const convertedContext = Context.fromLDContext(context);
-    return new Promise((resolve) => {
+    const res = await new Promise<{ detail: LDEvaluationDetail; flag?: Flag }>((resolve) => {
       this.evaluateIfPossible(
         key,
         context,
         defaultValue,
         this.eventFactoryWithReasons,
         ({ detail }, flag) => {
-          const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
-          const checkRatio = flag?.migration?.checkRatio;
-          const samplingRatio = flag?.samplingRatio;
-
           if (!IsMigrationStage(detail.value)) {
             const error = new Error(
               `Unrecognized MigrationState for "${key}"; returning default value.`,
@@ -441,41 +539,59 @@ export default class LDClientImpl implements LDClient {
               errorKind: ErrorKinds.WrongType,
             };
             resolve({
-              value: defaultValue,
-              tracker: new MigrationOpTracker(
-                key,
-                contextKeys,
-                defaultValue,
-                defaultValue,
+              detail: {
+                value: defaultValue,
                 reason,
-                checkRatio,
-                undefined,
-                flag?.version,
-                samplingRatio,
-                this.logger,
-              ),
+              },
+              flag,
             });
             return;
           }
-          resolve({
-            value: detail.value as LDMigrationStage,
-            tracker: new MigrationOpTracker(
-              key,
-              contextKeys,
-              defaultValue,
-              detail.value,
-              detail.reason,
-              checkRatio,
-              // Can be null for compatibility reasons.
-              detail.variationIndex === null ? undefined : detail.variationIndex,
-              flag?.version,
-              samplingRatio,
-              this.logger,
-            ),
-          });
+          resolve({ detail, flag });
         },
       );
     });
+
+    const { detail, flag } = res;
+    const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
+    const checkRatio = flag?.migration?.checkRatio;
+    const samplingRatio = flag?.samplingRatio;
+
+    return {
+      detail,
+      migration: {
+        value: detail.value as LDMigrationStage,
+        tracker: new MigrationOpTracker(
+          key,
+          contextKeys,
+          defaultValue,
+          detail.value,
+          detail.reason,
+          checkRatio,
+          // Can be null for compatibility reasons.
+          detail.variationIndex === null ? undefined : detail.variationIndex,
+          flag?.version,
+          samplingRatio,
+          this.logger,
+        ),
+      },
+    };
+  }
+
+  async migrationVariation(
+    key: string,
+    context: LDContext,
+    defaultValue: LDMigrationStage,
+  ): Promise<LDMigrationVariation> {
+    const res = await this.hookRunner.withEvaluationSeriesExtraDetail(
+      key,
+      context,
+      defaultValue,
+      MIGRATION_VARIATION_METHOD_NAME,
+      () => this.migrationVariationInternal(key, context, defaultValue),
+    );
+
+    return res.migration;
   }
 
   allFlagsState(
@@ -621,6 +737,10 @@ export default class LDClientImpl implements LDClient {
       callback?.(err as Error, false);
     }
     callback?.(null, true);
+  }
+
+  addHook(hook: Hook): void {
+    this.hookRunner.addHook(hook);
   }
 
   private variationInternal(

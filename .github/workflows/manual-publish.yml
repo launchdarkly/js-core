@@ -21,6 +21,7 @@ on:
           - packages/sdk/akamai-edgekv
           - packages/store/node-server-sdk-redis
           - packages/store/node-server-sdk-dynamodb
+          - packages/telemetry/node-server-sdk-otel
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean

@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.4.0...js-sdk-common-v2.4.1) (2024-04-09)
+
+
+### Bug Fixes
+
+* Add TimeoutError. ([#428](https://github.com/launchdarkly/js-core/issues/428)) ([aa832db](https://github.com/launchdarkly/js-core/commit/aa832db6172ba727aad9ec478b09a45906e9d5a7))
+
 ## [2.4.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.3.1...js-sdk-common-v2.4.0) (2024-04-09)
 
 

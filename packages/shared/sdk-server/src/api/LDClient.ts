@@ -9,6 +9,7 @@ import { LDMigrationOpEvent, LDMigrationVariation } from './data';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
 import { LDMigrationStage } from './data/LDMigrationStage';
+import { Hook } from './integrations/Hook';
 import { LDWaitForInitializationOptions } from './LDWaitForInitializationOptions';
 
 /**
@@ -450,4 +451,14 @@ export interface LDClient {
    *   fails, so be sure to attach a rejection handler to it.
    */
   flush(callback?: (err: Error | null, res: boolean) => void): Promise<void>;
+
+  /**
+   * Add a hook to the client. In order to register a hook before the client
+   * starts, please use the `hooks` property of {@link LDOptions}.
+   *
+   * Hooks provide entrypoints which allow for observation of SDK functions.
+   *
+   * @param Hook The hook to add.
+   */
+  addHook?(hook: Hook): void;
 }
