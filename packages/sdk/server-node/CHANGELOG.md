@@ -4,6 +4,7 @@ All notable changes to `@launchdarkly/node-server-sdk` will be documented in thi
 
 ## [9.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.2.4...node-server-sdk-v9.3.0) (2024-04-10)
 
+This release introduces a Hooks API. Hooks are collections of user-defined callbacks that are executed by the SDK at various points of interest. You can use them to augment the SDK with metrics or tracing.
 
 ### Features
 
