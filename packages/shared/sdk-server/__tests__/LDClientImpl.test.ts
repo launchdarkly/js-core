@@ -181,4 +181,14 @@ describe('LDClientImpl', () => {
       },
     ]);
   });
+
+  it.each([1, 30, 59])(
+    'does not log when timeout is under high timeout threshold',
+    async (timeout) => {
+      const logger = new TestLogger();
+      client = createClient({ logger });
+      await client.waitForInitialization({ timeout });
+      expect(logger.getCount(LogLevel.Warn)).toBe(0);
+    },
+  );
 });
