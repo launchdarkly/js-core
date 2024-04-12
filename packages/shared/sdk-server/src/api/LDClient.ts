@@ -86,7 +86,7 @@ export interface LDClient {
    *   }
    * ```
    */
-  waitForInitialization(options: LDWaitForInitializationOptions): Promise<LDClient>;
+  waitForInitialization(options?: LDWaitForInitializationOptions): Promise<LDClient>;
 
   /**
    * Determines the variation of a feature flag for a context.
