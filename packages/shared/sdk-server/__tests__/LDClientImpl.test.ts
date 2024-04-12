@@ -135,8 +135,8 @@ describe('LDClientImpl', () => {
 
   it('creates only one Promise when waiting for initialization - when not using a timeout', async () => {
     client = createClient();
-    const p1 = client.waitForInitialization({ timeout: 10 });
-    const p2 = client.waitForInitialization({ timeout: 10 });
+    const p1 = client.waitForInitialization();
+    const p2 = client.waitForInitialization();
 
     expect(p2).toBe(p1);
   });
@@ -158,7 +158,7 @@ describe('LDClientImpl', () => {
   it('logs when no timeout is set', async () => {
     const logger = new TestLogger();
     client = createClient({ logger });
-    await client.waitForInitialization({ timeout: 10 });
+    await client.waitForInitialization();
     logger.expectMessages([
       {
         level: LogLevel.Warn,
