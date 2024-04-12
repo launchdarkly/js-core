@@ -50,7 +50,7 @@
       }
     },
     "node-server": {
-      "name": "Node.js SDK",
+      "name": "Node.js Server SDK",
       "type": "server-side",
       "path": "packages/sdk/server-node",
       "languages": [
