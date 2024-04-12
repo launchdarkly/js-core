@@ -5,6 +5,7 @@ import {
 } from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl, LDOptions } from '../src';
+import TestLogger, { LogLevel } from './Logger';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -143,8 +144,41 @@ describe('LDClientImpl', () => {
   it('rejects the returned promise when initialization does not complete within the timeout', async () => {
     setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 10000);
     client = createClient();
-    await expect(client.waitForInitialization({ timeout: 1 })).rejects.toThrow(
+    await expect(async () => client.waitForInitialization({ timeout: 1 })).rejects.toThrow(
       'waitForInitialization timed out after 1 seconds.',
     );
+  });
+
+  it('does not reject the returned promise when initialization completes within the timeout', async () => {
+    setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 1000);
+    client = createClient();
+    await expect(async () => client.waitForInitialization({ timeout: 5 })).not.toThrow();
+  });
+
+  it('logs when no timeout is set', async () => {
+    const logger = new TestLogger();
+    client = createClient({ logger });
+    await client.waitForInitialization();
+    logger.expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches:
+          /The waitForInitialization function was called without a timeout specified. In a future version a default timeout will be applied./,
+      },
+    ]);
+  });
+
+  it('logs when the timeout is too high', async () => {
+    const logger = new TestLogger();
+    client = createClient({ logger });
+    await client.waitForInitialization({ timeout: Number.MAX_SAFE_INTEGER });
+
+    logger.expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches:
+          /The waitForInitialization function was called with a timeout greater than 60 seconds. We recommend a timeout of less than 60 seconds./,
+      },
+    ]);
   });
 });
