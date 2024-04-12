@@ -33,7 +33,7 @@ describe('given a client with mock event processor', () => {
       },
       makeCallbacks(false),
     );
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
   });
 
   afterEach(() => {

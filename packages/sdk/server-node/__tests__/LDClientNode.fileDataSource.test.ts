@@ -97,7 +97,7 @@ describe('When using a file data source', () => {
       sendEvents: false,
     });
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
 
     const f1Var = await client.variation(flag1Key, { key: 'user1' }, 'default');
     expect(f1Var).toEqual('off');
@@ -121,7 +121,7 @@ describe('When using a file data source', () => {
       sendEvents: false,
     });
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
 
     const f1Var = await client.variation(flag1Key, { key: 'user1' }, 'default');
     expect(f1Var).toEqual('off');
@@ -143,7 +143,7 @@ describe('When using a file data source', () => {
       sendEvents: false,
     });
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
 
     const f1Var = await client.variation(flag1Key, { key: 'user1' }, 'default');
     expect(f1Var).toEqual('off');

@@ -43,7 +43,7 @@ describe('LDClientImpl', () => {
 
   it('fires ready event in online mode', async () => {
     client = createClient();
-    const initializedClient = await client.waitForInitialization();
+    const initializedClient = await client.waitForInitialization({ timeout: 10 });
 
     expect(initializedClient).toEqual(client);
     expect(client.initialized()).toBeTruthy();
@@ -57,7 +57,7 @@ describe('LDClientImpl', () => {
     client = createClient();
 
     setTimeout(async () => {
-      const initializedClient = await client.waitForInitialization();
+      const initializedClient = await client.waitForInitialization({ timeout: 10 });
       expect(initializedClient).toEqual(client);
       done();
     }, 10);
@@ -65,15 +65,15 @@ describe('LDClientImpl', () => {
 
   it('waiting for initialization the second time produces the same result', async () => {
     client = createClient();
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
 
-    const initializedClient = await client.waitForInitialization();
+    const initializedClient = await client.waitForInitialization({ timeout: 10 });
     expect(initializedClient).toEqual(client);
   });
 
   it('fires ready event in offline mode', async () => {
     client = createClient({ offline: true });
-    const initializedClient = await client.waitForInitialization();
+    const initializedClient = await client.waitForInitialization({ timeout: 10 });
 
     expect(initializedClient).toEqual(client);
     expect(client.initialized()).toBeTruthy();
@@ -86,7 +86,7 @@ describe('LDClientImpl', () => {
     setupMockStreamingProcessor(true);
     client = createClient();
 
-    await expect(client.waitForInitialization()).rejects.toThrow('failed');
+    await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
 
     expect(client.initialized()).toBeFalsy();
     expect(callbacks.onReady).not.toBeCalled();
@@ -99,7 +99,7 @@ describe('LDClientImpl', () => {
     client = createClient();
 
     setTimeout(async () => {
-      await expect(client.waitForInitialization()).rejects.toThrow('failed');
+      await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
 
       expect(client.initialized()).toBeFalsy();
       expect(callbacks.onReady).not.toBeCalled();
@@ -113,8 +113,8 @@ describe('LDClientImpl', () => {
     setupMockStreamingProcessor(true);
     client = createClient();
 
-    await expect(client.waitForInitialization()).rejects.toThrow('failed');
-    await expect(client.waitForInitialization()).rejects.toThrow('failed');
+    await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
+    await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
   });
 
   it('isOffline returns true in offline mode', () => {
@@ -129,14 +129,14 @@ describe('LDClientImpl', () => {
 
   it('resolves immediately if the client is already ready', async () => {
     client = createClient();
-    await client.waitForInitialization();
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
+    await client.waitForInitialization({ timeout: 10 });
   });
 
   it('creates only one Promise when waiting for initialization - when not using a timeout', async () => {
     client = createClient();
-    const p1 = client.waitForInitialization();
-    const p2 = client.waitForInitialization();
+    const p1 = client.waitForInitialization({ timeout: 10 });
+    const p2 = client.waitForInitialization({ timeout: 10 });
 
     expect(p2).toBe(p1);
   });
@@ -158,7 +158,7 @@ describe('LDClientImpl', () => {
   it('logs when no timeout is set', async () => {
     const logger = new TestLogger();
     client = createClient({ logger });
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     logger.expectMessages([
       {
         level: LogLevel.Warn,
@@ -191,4 +191,32 @@ describe('LDClientImpl', () => {
       expect(logger.getCount(LogLevel.Warn)).toBe(0);
     },
   );
+
+  it('does not log when offline and no timeout it set', async () => {
+    const logger = new TestLogger();
+    client = createClient({ logger, offline: true });
+    await client.waitForInitialization({ timeout: 10 });
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+  });
+
+  it('does not log when the timeout is too high and client is offline', async () => {
+    const logger = new TestLogger();
+    client = createClient({ logger, offline: true });
+    await client.waitForInitialization({ timeout: Number.MAX_SAFE_INTEGER });
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+  });
+
+  it('does not log when useLdd is true and no timeout it set', async () => {
+    const logger = new TestLogger();
+    client = createClient({ logger, offline: true });
+    await client.waitForInitialization({ timeout: 10 });
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+  });
+
+  it('does not log when useLdd is true and the timeout is too long', async () => {
+    const logger = new TestLogger();
+    client = createClient({ logger, offline: true });
+    await client.waitForInitialization({ timeout: Number.MAX_SAFE_INTEGER });
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+  });
 });

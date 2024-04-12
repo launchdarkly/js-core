@@ -27,7 +27,7 @@ describe('When using a TLS connection', () => {
       tlsParams: { ca: server.certificate },
       diagnosticOptOut: true,
     });
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
   });
 
   it('cannot connect via HTTPS to a server with a self-signed certificate, using default config', async () => {
@@ -67,7 +67,7 @@ describe('When using a TLS connection', () => {
     });
 
     // this won't return until the stream receives the "put" event
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     events.close();
   });
 
@@ -85,7 +85,7 @@ describe('When using a TLS connection', () => {
       logger,
     });
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     client.identify({ key: 'user' });
     await client.flush();
 

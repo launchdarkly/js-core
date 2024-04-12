@@ -259,13 +259,20 @@ export default class LDClientImpl implements LDClient {
     // by the time the promise was rejected, then that would result in an unhandled promise
     // rejection.
 
-    if (options?.timeout === undefined) {
+    // If there is no update processor, then there is functionally no initialization
+    // so it is fine not to wait.
+
+    if (options?.timeout === undefined && this.updateProcessor !== undefined) {
       this.logger?.warn(
         'The waitForInitialization function was called without a timeout specified.' +
           ' In a future version a default timeout will be applied.',
       );
     }
-    if (options?.timeout !== undefined && options?.timeout > HIGH_TIMEOUT_THRESHOLD) {
+    if (
+      options?.timeout !== undefined &&
+      options?.timeout > HIGH_TIMEOUT_THRESHOLD &&
+      this.updateProcessor !== undefined
+    ) {
       this.logger?.warn(
         'The waitForInitialization function was called with a timeout greater than ' +
           `${HIGH_TIMEOUT_THRESHOLD} seconds. We recommend a timeout of less than ` +

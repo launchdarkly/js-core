@@ -93,7 +93,7 @@ describe('given test data with big segments', () => {
         bigSegments: bigSegmentsConfig,
       });
 
-      await client.waitForInitialization();
+      await client.waitForInitialization({ timeout: 10 });
     });
 
     it('can require status', async () => {
@@ -135,7 +135,7 @@ describe('given test data with big segments', () => {
         logger,
       });
 
-      await client.waitForInitialization();
+      await client.waitForInitialization({ timeout: 10 });
     });
 
     it('Can observe the status change', (done) => {

@@ -53,7 +53,7 @@ describe('When using a proxy', () => {
 
     closeable.push(proxy, server, client);
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     expect(client.initialized()).toBe(true);
 
     // If the proxy server did not log a request then the SDK did not actually use the proxy
@@ -81,7 +81,7 @@ describe('When using a proxy', () => {
 
     closeable.push(proxy, server, events, client);
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     expect(client.initialized()).toBe(true);
 
     // If the proxy server did not log a request then the SDK did not actually use the proxy
@@ -110,7 +110,7 @@ describe('When using a proxy', () => {
 
     closeable.push(proxy, pollingServer, eventsServer, client);
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     expect(client.initialized()).toBe(true);
 
     // If the proxy server did not log a request then the SDK did not actually use the proxy

@@ -31,7 +31,7 @@ describe('given an LDClient with test data', () => {
       makeCallbacks(true),
     );
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
   });
 
   afterEach(() => {
@@ -361,7 +361,7 @@ it('can add a hook after initialization', async () => {
     makeCallbacks(true),
   );
 
-  await client.waitForInitialization();
+  await client.waitForInitialization({ timeout: 10 });
 
   td.update(td.flag('flagKey').booleanFlag().on(true));
   const testHook = new TestHook();

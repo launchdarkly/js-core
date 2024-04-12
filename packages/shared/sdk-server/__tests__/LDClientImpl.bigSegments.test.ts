@@ -85,7 +85,7 @@ describe('given test data with big segments', () => {
         makeCallbacks(true),
       );
 
-      await client.waitForInitialization();
+      await client.waitForInitialization({ timeout: 10 });
     });
 
     afterEach(() => {
@@ -124,7 +124,7 @@ describe('given test data with big segments', () => {
         makeCallbacks(true),
       );
 
-      await client.waitForInitialization();
+      await client.waitForInitialization({ timeout: 10 });
     });
 
     afterEach(() => {
@@ -163,7 +163,7 @@ describe('given test data with big segments', () => {
         makeCallbacks(true),
       );
 
-      await client.waitForInitialization();
+      await client.waitForInitialization({ timeout: 10 });
     });
 
     afterEach(() => {
@@ -189,7 +189,7 @@ describe('given test data with big segments', () => {
         makeCallbacks(true),
       );
 
-      await client.waitForInitialization();
+      await client.waitForInitialization({ timeout: 10 });
     });
 
     afterEach(() => {
