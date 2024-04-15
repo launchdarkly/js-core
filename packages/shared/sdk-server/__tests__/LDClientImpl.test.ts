@@ -149,6 +149,23 @@ describe('LDClientImpl', () => {
     );
   });
 
+  it('logs an error when the initialization does not complete within the timeout', async () => {
+    setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 10000);
+    const logger = new TestLogger();
+    client = createClient({ logger });
+    try {
+      await client.waitForInitialization({ timeout: 1 });
+    } catch {
+      // Not being tested in this test.
+    }
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches: /waitForInitialization timed out after 1 seconds./,
+      },
+    ]);
+  });
+
   it('does not reject the returned promise when initialization completes within the timeout', async () => {
     setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 1000);
     client = createClient();
