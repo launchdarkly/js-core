@@ -1,0 +1,25 @@
+name: Publish to jsr
+description: Publish a package to jsr from the workspace.
+inputs:
+  workspace_name:
+    description: 'The workspace to publish'
+    required: true
+  workspace_path:
+    description: 'Path to the workspace (for jsr publish)'
+    required: true
+  dry_run:
+    description: 'Is this a dry run. If so no package will be published.'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Publish jsr
+      shell: bash
+      run: |
+        echo "Publishing jsr: $WORKSPACE"
+        ./scripts/publish-jsr.sh
+      env:
+        WORKSPACE: ${{ inputs.workspace_name }}
+        WORKSPACE_PATH: ${{ inputs.workspace_path }}
+        LD_RELEASE_IS_DRYRUN: ${{ inputs.dry_run }}

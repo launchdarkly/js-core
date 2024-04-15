@@ -8,13 +8,6 @@ else
     echo "Publishing with prerelease tag."
     npm publish --tag prerelease --provenance --access public "./$WORKSPACE_PATH/package.tgz" || { echo "npm publish failed" >&2; exit 1; }
   else
-    if [ -f "./$WORKSPACE_PATH/jsr.json" ]; then
-      echo "Publishing to jsr."
-      cd $WORKSPACE_PATH
-      npx jsr publish || { echo "jsr publish failed" >&2; exit 1; }
-    fi
-        
-    echo "Publishing to npm."
     npm publish --provenance --access public "./$WORKSPACE_PATH/package.tgz" || { echo "npm publish failed" >&2; exit 1; }
   fi
 fi
