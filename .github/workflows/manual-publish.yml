@@ -2,6 +2,14 @@ name: Publish Package
 on:
   workflow_dispatch:
     inputs:
+      package_registry:
+        description: 'Publish to'
+        required: true
+        default: 'npm'
+        type: choice
+        options:
+          - npm
+          - jsr
       workspace_path:
         description: 'The workspace to publish'
         required: true
@@ -39,8 +47,8 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
@@ -81,8 +89,17 @@ jobs:
           yarn config set npmScopes.launchdarkly.npmRegistryServer "https://registry.npmjs.org"
           yarn config set npmScopes.launchdarkly.npmAlwaysAuth true
           yarn config set npmScopes.launchdarkly.npmAuthToken $NODE_AUTH_TOKEN
-      - id: publish
-        name: Publish Package
+      - id: publish-jsr
+        name: Publish Package to jsr
+        if: ${{ inputs.package_registry == 'jsr' }}
+        uses: ./actions/publish-jsr
+        with:
+          workspace_name: ${{ env.WORKSPACE_NAME }}
+          workspace_path: ${{ inputs.workspace_path }}
+          dry_run: ${{ inputs.dry_run }}
+      - id: publish-npm
+        name: Publish Package to npm
+        if: ${{ inputs.package_registry == 'npm' }}
         uses: ./actions/publish
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}

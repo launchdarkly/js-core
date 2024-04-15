@@ -5,7 +5,15 @@
     "packages/shared/sdk-server": {},
     "packages/shared/sdk-server-edge": {},
     "packages/shared/akamai-edgeworker-sdk": {},
-    "packages/sdk/cloudflare": {},
+    "packages/sdk/cloudflare": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "jsr.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    },
     "packages/sdk/react-native": {},
     "packages/sdk/server-node": {},
     "packages/sdk/vercel": {
