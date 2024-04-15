@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -f "./$WORKSPACE_PATH/jsr.json" ]; then
+  yarn workspace $WORKSPACE pack
   cd $WORKSPACE_PATH
   
   if $LD_RELEASE_IS_DRYRUN ; then
