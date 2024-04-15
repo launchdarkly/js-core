@@ -29,5 +29,10 @@
     "packages/store/node-server-sdk-redis": {},
     "packages/telemetry/node-server-sdk-otel": {}
   },
-  "plugins": ["node-workspace"]
+  "plugins": [
+    {
+      "type": "node-workspace",
+      "updatePeerDependencies": false
+    }
+  ]
 }
