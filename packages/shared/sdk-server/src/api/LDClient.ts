@@ -10,6 +10,7 @@ import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
 import { LDMigrationStage } from './data/LDMigrationStage';
 import { Hook } from './integrations/Hook';
+import { LDWaitForInitializationOptions } from './LDWaitForInitializationOptions';
 
 /**
  * The LaunchDarkly SDK client object.
@@ -45,24 +46,32 @@ export interface LDClient {
    * Note that you can also use event listeners ({@link on}) for the same purpose: the event
    * `"ready"` indicates success, and `"failed"` indicates failure.
    *
-   * There is no built-in timeout for this method. If you want your code to stop waiting on the
-   * Promise after some amount of time, you could use
-   * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race|`Promise.race()`}
-   * or one of the several NPM helper packages that provides a standard mechanism for this.
+   * This method takes an optional parameters which include a timeout. The timeout controls how long
+   * a specific call to waitForInitialization will wait before rejecting its promise. If a
+   * subsequent call is made to waitForInitialization with a timeout, then it will again wait up to
+   * that maximum time.
+   *
    * Regardless of whether you continue to wait, the SDK will still retry all connection failures
    * indefinitely unless it gets an unrecoverable error as described above.
    *
+   * Waiting indefinitely, or depending only on the "ready" or "failed" events can result in an
+   * application waiting indefinitely. It is recommended to use a timeout which is reasonable
+   * for your application.
+   *
+   * @param options Options which control the behavior of `waitForInitialization`.
+   *
    * @returns
-   *   A Promise that will be resolved if the client initializes successfully, or rejected if it
-   *   fails. If successful, the result is the same client object.
+   * A Promise that will be resolved if the client initializes successfully, or rejected if it
+   * fails. If successful, the result is the same client object. It is not recommended to use the
+   * returned client object. It will be removed in a future version.
    *
    * @example
    * This example shows use of Promise chaining methods for specifying handlers:
    * ```javascript
-   *   client.waitForInitialization().then(() => {
+   *   client.waitForInitialization({timeoutSeconds: 10}).then(() => {
    *     // do whatever is appropriate if initialization has succeeded
    *   }).catch(err => {
-   *     // do whatever is appropriate if initialization has failed
+   *     // do whatever is appropriate if initialization has failed or timed out
    *   })
    * ```
    *
@@ -70,14 +79,14 @@ export interface LDClient {
    * This example shows use of `async`/`await` syntax for specifying handlers:
    * ```javascript
    *   try {
-   *     await client.waitForInitialization();
+   *     await client.waitForInitialization({timeoutSeconds: 10});
    *     // do whatever is appropriate if initialization has succeeded
    *   } catch (err) {
-   *     // do whatever is appropriate if initialization has failed
+   *     // do whatever is appropriate if initialization has failed or timed out
    *   }
    * ```
    */
-  waitForInitialization(): Promise<LDClient>;
+  waitForInitialization(options?: LDWaitForInitializationOptions): Promise<LDClient>;
 
   /**
    * Determines the variation of a feature flag for a context.

@@ -51,7 +51,7 @@ describe('given an LDClient with test data', () => {
       callbacks,
     );
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
   });
 
   afterEach(() => {

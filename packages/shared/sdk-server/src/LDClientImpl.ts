@@ -8,8 +8,10 @@ import {
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDLogger,
+  LDTimeoutError,
   Platform,
   subsystem,
+  timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
@@ -26,6 +28,7 @@ import {
 } from './api';
 import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
+import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { createStreamListeners } from './data_sources/createStreamListeners';
@@ -55,6 +58,8 @@ enum InitState {
   Initialized,
   Failed,
 }
+
+const HIGH_TIMEOUT_THRESHOLD: number = 60;
 
 export interface LDClientCallbacks {
   onError: (err: Error) => void;
@@ -248,27 +253,51 @@ export default class LDClientImpl implements LDClient {
     return this.initState === InitState.Initialized;
   }
 
-  waitForInitialization(): Promise<LDClient> {
+  waitForInitialization(options?: LDWaitForInitializationOptions): Promise<LDClient> {
     // An initialization promise is only created if someone is going to use that promise.
     // If we always created an initialization promise, and there was no call waitForInitialization
     // by the time the promise was rejected, then that would result in an unhandled promise
     // rejection.
 
+    // If there is no update processor, then there is functionally no initialization
+    // so it is fine not to wait.
+
+    if (options?.timeout === undefined && this.updateProcessor !== undefined) {
+      this.logger?.warn(
+        'The waitForInitialization function was called without a timeout specified.' +
+          ' In a future version a default timeout will be applied.',
+      );
+    }
+    if (
+      options?.timeout !== undefined &&
+      options?.timeout > HIGH_TIMEOUT_THRESHOLD &&
+      this.updateProcessor !== undefined
+    ) {
+      this.logger?.warn(
+        'The waitForInitialization function was called with a timeout greater than ' +
+          `${HIGH_TIMEOUT_THRESHOLD} seconds. We recommend a timeout of less than ` +
+          `${HIGH_TIMEOUT_THRESHOLD} seconds.`,
+      );
+    }
+
     // Initialization promise was created by a previous call to waitForInitialization.
     if (this.initializedPromise) {
-      return this.initializedPromise;
+      // This promise may already be resolved/rejected, but it doesn't hurt to wrap it in a timeout.
+      return this.clientWithTimeout(this.initializedPromise, options?.timeout, this.logger);
     }
 
     // Initialization completed before waitForInitialization was called, so we have completed
     // and there was no promise. So we make a resolved promise and return it.
     if (this.initState === InitState.Initialized) {
       this.initializedPromise = Promise.resolve(this);
+      // Already initialized, no need to timeout.
       return this.initializedPromise;
     }
 
     // Initialization failed before waitForInitialization was called, so we have completed
     // and there was no promise. So we make a rejected promise and return it.
     if (this.initState === InitState.Failed) {
+      // Already failed, no need to timeout.
       this.initializedPromise = Promise.reject(this.rejectionReason);
       return this.initializedPromise;
     }
@@ -279,7 +308,7 @@ export default class LDClientImpl implements LDClient {
         this.initReject = reject;
       });
     }
-    return this.initializedPromise;
+    return this.clientWithTimeout(this.initializedPromise, options?.timeout, this.logger);
   }
 
   variation(
@@ -857,5 +886,34 @@ export default class LDClientImpl implements LDClient {
       this.initResolve?.(this);
       this.onReady();
     }
+  }
+
+  /**
+   * Apply a timeout promise to a base promise. This is for use with waitForInitialization.
+   * Currently it returns a LDClient. In the future it should return a status.
+   *
+   * The client isn't always the expected type of the consumer. It returns an LDClient interface
+   * which is less capable than, for example, the node client interface.
+   *
+   * @param basePromise The promise to race against a timeout.
+   * @param timeout The timeout in seconds.
+   * @param logger A logger to log when the timeout expires.
+   * @returns
+   */
+  private clientWithTimeout(
+    basePromise: Promise<LDClient>,
+    timeout?: number,
+    logger?: LDLogger,
+  ): Promise<LDClient> {
+    if (timeout) {
+      const timeoutPromise = timedPromise(timeout, 'waitForInitialization');
+      return Promise.race([basePromise, timeoutPromise.then(() => this)]).catch((reason) => {
+        if (reason instanceof LDTimeoutError) {
+          logger?.error(reason.message);
+        }
+        throw reason;
+      });
+    }
+    return basePromise;
   }
 }

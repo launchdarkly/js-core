@@ -44,7 +44,7 @@ describe('given an LDClient with test data', () => {
       makeCallbacks(true),
     );
 
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
   });
 
   afterEach(() => {
@@ -298,7 +298,7 @@ describe('given an offline client', () => {
   });
 
   it('returns the default value for variation', async () => {
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     td.update(td.flag('flagkey').variations('value').variationForAll(0));
     const result = await client.variation('flagkey', defaultUser, 'default');
     expect(result).toEqual('default');
@@ -306,7 +306,7 @@ describe('given an offline client', () => {
   });
 
   it('returns the default value for variationDetail', async () => {
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     td.update(td.flag('flagkey').variations('value').variationForAll(0));
     const result = await client.variationDetail('flagkey', defaultUser, 'default');
     expect(result).toMatchObject({

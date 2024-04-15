@@ -4,6 +4,7 @@ export * from './LDClient';
 export * from './LDMigration';
 export * from './interfaces/DataKind';
 export * from './subsystems/LDFeatureStore';
+export * from './LDWaitForInitializationOptions';
 
 // These are items that should be less frequently used, and therefore they
 // are namespaced to reduce clutter amongst the top level exports.

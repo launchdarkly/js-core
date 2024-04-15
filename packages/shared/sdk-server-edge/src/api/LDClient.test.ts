@@ -23,7 +23,7 @@ describe('Edge LDClient', () => {
     const client = new LDClient('client-side-id', basicPlatform.info, {
       sendEvents: true,
     });
-    await client.waitForInitialization();
+    await client.waitForInitialization({ timeout: 10 });
     const passedConfig = mockEventProcessor.mock.calls[0][0];
 
     expect(passedConfig).toMatchObject({
