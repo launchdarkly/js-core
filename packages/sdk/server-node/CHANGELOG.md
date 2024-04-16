@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.4.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.3.0...node-server-sdk-v9.4.0) (2024-04-16)
+
+
+### Features
+
+* Add support for optional timeout for waitForInitialization. ([#437](https://github.com/launchdarkly/js-core/issues/437)) ([c6032b3](https://github.com/launchdarkly/js-core/commit/c6032b3dd80421ff42aefd729442d18cd27b16e4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.3.0 to 2.4.0
+
 ## [9.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.2.4...node-server-sdk-v9.3.0) (2024-04-10)
 
 This release introduces a Hooks API. Hooks are collections of user-defined callbacks that are executed by the SDK at various points of interest. You can use them to augment the SDK with metrics or tracing.
