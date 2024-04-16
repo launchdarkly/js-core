@@ -14,8 +14,8 @@ jobs:
   build-test-sdk-client:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
       - id: shared
         name: Shared CI Steps
         uses: ./actions/ci

@@ -11,4 +11,6 @@ if [ -f "./$WORKSPACE_PATH/jsr.json" ]; then
     echo "Publishing to jsr."
     npx jsr publish || { echo "jsr publish failed" >&2; exit 1; }
   fi
+else
+  echo "Skipping jsr."
 fi
