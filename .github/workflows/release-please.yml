@@ -36,14 +36,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-common-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-common
         name: Full release of packages/shared/common
         uses: ./actions/full-release
@@ -59,14 +56,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 10.2.3
       - id: release-sdk-client
         name: Full release of packages/shared/sdk-client
         uses: ./actions/full-release
@@ -82,14 +76,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-sdk-server
         name: Full release of packages/shared/sdk-server
         uses: ./actions/full-release
@@ -105,14 +96,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-sdk-server-edge
         name: Full release of packages/shared/sdk-server-edge
         uses: ./actions/full-release
@@ -128,14 +116,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-akamai-edgeworker-sdk
         name: Full release of packages/shared/akamai-edgeworker-sdk
         uses: ./actions/full-release
@@ -151,14 +136,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-cloudflare
         name: Full release of packages/sdk/cloudflare
         uses: ./actions/full-release
@@ -174,14 +156,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 10.2.3
       - id: release-react-native
         name: Full release of packages/sdk/react-native
         uses: ./actions/full-release
@@ -197,14 +176,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-server-node
         name: Full release of packages/sdk/server-node
         uses: ./actions/full-release
@@ -220,14 +196,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-vercel
         name: Full release of packages/sdk/vercel
         uses: ./actions/full-release
@@ -243,14 +216,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-akamai-base
         name: Full release of packages/sdk/akamai-base
         uses: ./actions/full-release
@@ -266,14 +236,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-akamai-edgekv
         name: Full release of packages/sdk/akamai-edgekv
         uses: ./actions/full-release
@@ -289,14 +256,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - run: |
           sudo apt-get update
           sudo apt-get install redis-server
@@ -316,14 +280,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local
       - id: release-node-server-sdk-dynamodb
@@ -341,14 +302,11 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: ./actions/install-npm-version
-        with:
-          npm_version: 9.5.0
       - id: release-node-server-sdk-otel
         name: Full release of packages/telemetry/node-server-sdk-otel
         uses: ./actions/full-release

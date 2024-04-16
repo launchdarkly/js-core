@@ -17,14 +17,14 @@ jobs:
     strategy:
       matrix:
         # Node versions to run on.
-        version: [16, 18]
+        version: [18, 21]
 
     env:
       TEST_HARNESS_PARAMS: '--skip-from=./contract-tests/testharness-suppressions.txt'
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.version }}
           registry-url: 'https://registry.npmjs.org'
