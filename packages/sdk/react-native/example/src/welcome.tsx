@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { ConnectionMode } from '@launchdarkly/js-client-sdk-common';
-import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
+import {
+  type ConnectionMode,
+  useBoolVariation,
+  useLDClient,
+} from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
   const [flagKey, setFlagKey] = useState('my-boolean-flag-1');
@@ -13,11 +16,16 @@ export default function Welcome() {
   const onIdentify = () => {
     ldc
       .identify({ kind: 'user', key: userKey }, { timeout: 5 })
+      .then(() => {
+        console.log(`finished identify: ${JSON.stringify(ldc.getContext())}`);
+      })
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 
   const setConnectionMode = (m: ConnectionMode) => {
-    ldc.setConnectionMode(m);
+    ldc.setConnectionMode(m).then(() => {
+      console.log(`connectionMode: ${m}`);
+    });
   };
 
   const context = ldc.getContext() ?? 'No context identified.';
