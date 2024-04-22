@@ -2,7 +2,7 @@
 
 if [ -f "./$WORKSPACE_PATH/jsr.json" ]; then
   cd $WORKSPACE_PATH
-  git diff HEAD
+  
   if $LD_RELEASE_IS_DRYRUN ; then
     echo "Doing a dry run of jsr publishing."
     npx jsr publish --dry-run --allow-dirty || { echo "jsr publish failed" >&2; exit 1; }
