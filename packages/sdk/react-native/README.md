@@ -16,6 +16,7 @@ It is implemented purely in JS and supports Expo. Please consider updating your 
 For more information, see the [complete reference guide for this SDK](https://docs.launchdarkly.com/sdk/client-side/react-native).
 
 ## Known Android identify issue
+
 On Android, Flipper interferes with the SDK's streaming connections. As a result the `identify` call never resolves. The long term solution is the removal of Flipper from react-native. The Facebook team are [working on this](https://reactnative.dev/blog/2023/12/06/0.73-debugging-improvements-stable-symlinks#flipper--react-native-integration).
 
 In the meantime, we recommend one of these workarounds:
@@ -115,6 +116,16 @@ echo "MOBILE_KEY=mob-abc" >> packages/sdk/react-native/example/.env
 yarn && yarn ios-go
 ```
 
+## Privacy manifest
+
+Please use the [privacy manifest](https://github.com/launchdarkly/ios-client-sdk/blob/v9/LaunchDarkly/LaunchDarkly/PrivacyInfo.xcprivacy) included in the LaunchDarkly iOS Client SDK.
+
+At WWDC23, Apple introduced the concept of Privacy Manifests. The privacy manifest included with the LaunchDarkly iOS Client SDK describes our data usage with respect to the minimum case of data collection. You will have to update your own privacy manifest if you choose to collect more data in your implementation than the minimum for our SDK to function.
+
+To learn more about Privacy Manifests, please refer to [Apple Developer Documention.](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests).
+
+To learn more about Privacy Manifests specifically in terms of react-native, please refer to this [discussion](https://github.com/react-native-community/discussions-and-proposals/discussions/776).
+
 ## Verifying SDK build provenance with the SLSA framework
 
 LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply-chain Levels for Software Artifacts) to help developers make their supply chain more secure by ensuring the authenticity and build integrity of our published SDK packages. To learn more, see the [provenance guide](PROVENANCE.md).
@@ -125,7 +136,7 @@ LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply
   - Roll out a new feature to a subset of your users (like a group of users who opt-in to a beta tester group), gathering feedback and bug reports from real-world use cases.
   - Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).
   - Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.
-  - Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan). 
+  - Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan).
   - Disable parts of your application to facilitate maintenance, without taking everything offline.
 - LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Read [our documentation](https://docs.launchdarkly.com/sdk) for a complete list.
 - Explore LaunchDarkly
