@@ -81,6 +81,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/production/common/releasing/npm/token = NODE_AUTH_TOKEN'
       - name: Setup .yarnrc.yml
+        if: ${{ inputs.package_registry == 'npm' }}
         shell: bash
         run: |
           yarn config set npmScopes.launchdarkly.npmRegistryServer "https://registry.npmjs.org"
