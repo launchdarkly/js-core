@@ -1,5 +1,5 @@
 ---
-name: '@launchdarkly/react-native-client-sdk  Feature Request'
+name: '@launchdarkly/react-native-client-sdk Feature Request'
 about: Suggest an idea for this project
 title: ''
 labels: 'package: sdk/react-native, feature'
