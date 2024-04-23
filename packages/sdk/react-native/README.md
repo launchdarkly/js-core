@@ -118,9 +118,9 @@ yarn && yarn ios-go
 
 ## Privacy manifest
 
-Please use the [privacy manifest](https://github.com/launchdarkly/ios-client-sdk/blob/v9/LaunchDarkly/LaunchDarkly/PrivacyInfo.xcprivacy) included in the LaunchDarkly iOS Client SDK.
+At WWDC23, Apple introduced the concept of Privacy Manifests. The privacy manifest describes our data usage with respect to the minimum case of data collection. You will have to update your own privacy manifest if you choose to collect more data in your implementation than the minimum for our SDK to function.
 
-At WWDC23, Apple introduced the concept of Privacy Manifests. The privacy manifest included with the LaunchDarkly iOS Client SDK describes our data usage with respect to the minimum case of data collection. You will have to update your own privacy manifest if you choose to collect more data in your implementation than the minimum for our SDK to function.
+For the LaunchDarkly React Native SDK, you can use the [privacy manifest](https://github.com/launchdarkly/ios-client-sdk/blob/v9/LaunchDarkly/LaunchDarkly/PrivacyInfo.xcprivacy) included in the LaunchDarkly iOS Client SDK. The data usage information is the same for the two SDKs.
 
 To learn more about Privacy Manifests, please refer to [Apple Developer Documention.](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests).
 
