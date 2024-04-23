@@ -122,7 +122,7 @@ At WWDC23, Apple introduced the concept of Privacy Manifests. The privacy manife
 
 For the LaunchDarkly React Native SDK, you can use the [privacy manifest](https://github.com/launchdarkly/ios-client-sdk/blob/v9/LaunchDarkly/LaunchDarkly/PrivacyInfo.xcprivacy) included in the LaunchDarkly iOS Client SDK. The data usage information is the same for the two SDKs.
 
-To learn more about Privacy Manifests, please refer to [Apple Developer Documention.](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests).
+To learn more about Privacy Manifests, please refer to [Apple Developer Documentation](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests).
 
 To learn more about Privacy Manifests specifically for React Native, please refer to this [discussion](https://github.com/react-native-community/discussions-and-proposals/discussions/776).
 
