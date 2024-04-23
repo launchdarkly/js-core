@@ -124,7 +124,7 @@ For the LaunchDarkly React Native SDK, you can use the [privacy manifest](https:
 
 To learn more about Privacy Manifests, please refer to [Apple Developer Documention.](https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_data_use_in_privacy_manifests).
 
-To learn more about Privacy Manifests specifically in terms of react-native, please refer to this [discussion](https://github.com/react-native-community/discussions-and-proposals/discussions/776).
+To learn more about Privacy Manifests specifically for React Native, please refer to this [discussion](https://github.com/react-native-community/discussions-and-proposals/discussions/776).
 
 ## Verifying SDK build provenance with the SLSA framework
 
