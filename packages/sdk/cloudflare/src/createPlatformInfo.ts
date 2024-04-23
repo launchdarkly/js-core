@@ -2,9 +2,9 @@ import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-co
 
 // @ts-ignore
 // eslint-disable-next-line prettier/prettier
-import * as packageJson from '../package.json' assert { type: "json" }
+import * as packageJson from '../package.json' with { type: "json" };
 
-const { name, version } = packageJson
+const { name, version } = packageJson;
 
 class CloudflarePlatformInfo implements Info {
   platformData(): PlatformData {
