@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.1...js-client-sdk-common-v1.1.2) (2024-04-25)
+
+
+### Bug Fixes
+
+* Adjust identify timeout message. ([#447](https://github.com/launchdarkly/js-core/issues/447)) ([7fc4f2f](https://github.com/launchdarkly/js-core/commit/7fc4f2fab7faab4d3b969044e6e9524c59af69d9))
+
 ## [1.1.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.0...js-client-sdk-common-v1.1.1) (2024-04-09)
 
 
