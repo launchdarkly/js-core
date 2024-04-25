@@ -292,7 +292,11 @@ export default class LDClientImpl implements LDClient {
     }
 
     if (this.identifyTimeout > this.highTimeoutThreshold) {
-      this.logger.warn('identify called with high timeout parameter.');
+      this.logger.warn(
+        'The identify function was called with a timeout greater than' +
+          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than` +
+          `${this.highTimeoutThreshold} seconds.`,
+      );
     }
 
     let context = await ensureKey(pristineContext, this.platform);
