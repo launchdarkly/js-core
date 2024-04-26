@@ -150,7 +150,6 @@ describe('sdk-client object', () => {
     // @ts-ignore
     ldc.track('the-event', { the: 'data' }, '12');
 
-    expect(logger.warn).toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringMatching(/was called with a non-numeric/),
     );
