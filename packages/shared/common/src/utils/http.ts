@@ -49,7 +49,7 @@ export function httpErrorMessage(
   if (err.status) {
     desc = `error ${err.status}${err.status === 401 ? ' (invalid SDK key)' : ''}`;
   } else {
-    desc = `I/O error (${err.message || err})`;
+    desc = `I/O error (${err.message || 'unknown error'})`;
   }
   const action = retryMessage ?? 'giving up permanently';
   return `Received ${desc} for ${context} - ${action}`;
