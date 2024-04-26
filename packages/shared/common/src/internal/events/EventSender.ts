@@ -1,10 +1,11 @@
-import { Crypto, Requests } from '../../api';
+import { Crypto, LDLogger, Requests } from '../../api';
 import {
   LDDeliveryStatus,
   LDEventSender,
   LDEventSenderResult,
   LDEventType,
 } from '../../api/subsystem';
+import { LogMessages } from '../../codes';
 import {
   isHttpLocallyRecoverable,
   isHttpRecoverable,
@@ -21,6 +22,7 @@ export default class EventSender implements LDEventSender {
   private diagnosticEventsUri: string;
   private eventsUri: string;
   private requests: Requests;
+  private logger?: LDLogger;
 
   constructor(clientContext: ClientContext) {
     const { basicConfiguration, platform } = clientContext;
@@ -41,6 +43,7 @@ export default class EventSender implements LDEventSender {
     this.diagnosticEventsUri = `${events}${diagnosticEventPath}`;
     this.requests = requests;
     this.crypto = crypto;
+    this.logger = clientContext.basicConfiguration.logger;
   }
 
   private async tryPostingEvents(
@@ -107,6 +110,7 @@ export default class EventSender implements LDEventSender {
       return tryRes;
     }
 
+    this.logger?.debug(LogMessages.Events.Debug.EventRetry.message());
     // wait 1 second before retrying
     await sleep();
 

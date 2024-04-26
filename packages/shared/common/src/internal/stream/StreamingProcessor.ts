@@ -7,6 +7,7 @@ import {
   Requests,
 } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
+import { LogMessages } from '../../codes';
 import { LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
 import { defaultHeaders, httpErrorMessage, shouldRetry } from '../../utils';
@@ -19,8 +20,8 @@ const reportJsonError = (
   logger?: LDLogger,
   errorHandler?: StreamingErrorHandler,
 ) => {
-  logger?.error(`Stream received invalid data in "${type}" message`);
-  logger?.debug(`Invalid JSON follows: ${data}`);
+  logger?.error(LogMessages.DataSource.RuntimeError.InvalidJson.message('Streaming', type));
+  logger?.debug(LogMessages.DataSource.Debug.InvalidJsonDebug.message(data));
   errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
 };
 
