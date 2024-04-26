@@ -5,6 +5,7 @@ import * as mocks from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
+import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
 
 const defaultUser = { key: 'user' };
@@ -14,8 +15,10 @@ describe('given a client with mock event processor', () => {
   let client: LDClientImpl;
   let events: AsyncQueue<internal.InputEvent>;
   let td: TestData;
+  let logger: TestLogger;
 
   beforeEach(async () => {
+    logger = new TestLogger();
     events = new AsyncQueue<internal.InputEvent>();
     jest
       .spyOn(internal.EventProcessor.prototype, 'sendEvent')
@@ -30,6 +33,7 @@ describe('given a client with mock event processor', () => {
       mocks.basicPlatform,
       {
         updateProcessor: td.getFactory(),
+        logger,
       },
       makeCallbacks(false),
     );
@@ -299,5 +303,55 @@ describe('given a client with mock event processor', () => {
       value: 'c',
       default: 'c',
     });
+  });
+
+  it('produces track events with data', async () => {
+    client.track('the-event', defaultUser, { the: 'data' }, undefined);
+    const e = await events.take();
+    expect(e).toMatchObject({
+      kind: 'custom',
+      key: 'the-event',
+      context: Context.fromLDContext(defaultUser),
+      data: { the: 'data' },
+    });
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+  });
+
+  it('produces track events with a metric value', async () => {
+    client.track('the-event', defaultUser, undefined, 12);
+    const e = await events.take();
+    expect(e).toMatchObject({
+      kind: 'custom',
+      key: 'the-event',
+      context: Context.fromLDContext(defaultUser),
+      metricValue: 12,
+    });
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+  });
+
+  it('produces track events with a metric value and data', async () => {
+    client.track('the-event', defaultUser, { the: 'data' }, 12);
+    const e = await events.take();
+    expect(e).toMatchObject({
+      kind: 'custom',
+      key: 'the-event',
+      context: Context.fromLDContext(defaultUser),
+      metricValue: 12,
+      data: { the: 'data' },
+    });
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+  });
+
+  it('produces a warning when the metric value is non-numeric', async () => {
+    // @ts-ignore
+    client.track('the-event', defaultUser, { the: 'data' }, '12');
+    await events.take();
+    expect(logger.getCount(LogLevel.Warn)).toBe(1);
+    logger.expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /was called with a non-numeric/,
+      },
+    ]);
   });
 });
