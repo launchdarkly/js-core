@@ -47,7 +47,7 @@
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "2.4.0",
     "https-proxy-agent": "^5.0.1",
-    "launchdarkly-eventsource": "2.0.1"
+    "launchdarkly-eventsource": "2.0.2"
   },
   "devDependencies": {
     "@launchdarkly/private-js-mocks": "0.0.1",
