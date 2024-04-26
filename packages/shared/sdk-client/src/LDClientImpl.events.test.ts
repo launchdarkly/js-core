@@ -1,5 +1,5 @@
 import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
-import { InputIdentifyEvent } from '@launchdarkly/js-sdk-common/dist/internal';
+import { InputCustomEvent, InputIdentifyEvent } from '@launchdarkly/js-sdk-common/dist/internal';
 import {
   basicPlatform,
   hasher,
@@ -31,6 +31,7 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 const testSdkKey = 'test-sdk-key';
 let ldc: LDClientImpl;
 let defaultPutResponse: Flags;
+const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
 describe('sdk-client object', () => {
   beforeEach(() => {
@@ -54,7 +55,6 @@ describe('sdk-client object', () => {
 
   test('identify event', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
-    const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     await ldc.identify(carContext);
 
@@ -71,6 +71,88 @@ describe('sdk-client object', () => {
         creationDate: expect.any(Number),
         samplingRatio: expect.any(Number),
       }),
+    );
+  });
+
+  it('produces track events with data', async () => {
+    await ldc.identify(carContext);
+
+    ldc.track('the-event', { the: 'data' }, undefined);
+    expect(MockEventProcessor).toHaveBeenCalled();
+    expect(ldc.eventProcessor!.sendEvent).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining<InputCustomEvent>({
+        kind: 'custom',
+        key: 'the-event',
+        context: expect.objectContaining({
+          contexts: expect.objectContaining({
+            car: { key: 'test-car' },
+          }),
+        }),
+        data: { the: 'data' },
+        samplingRatio: 1,
+        creationDate: expect.any(Number),
+      }),
+    );
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('produces track events with a metric value', async () => {
+    await ldc.identify(carContext);
+
+    ldc.track('the-event', undefined, 12);
+    expect(MockEventProcessor).toHaveBeenCalled();
+    expect(ldc.eventProcessor!.sendEvent).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining<InputCustomEvent>({
+        kind: 'custom',
+        key: 'the-event',
+        context: expect.objectContaining({
+          contexts: expect.objectContaining({
+            car: { key: 'test-car' },
+          }),
+        }),
+        metricValue: 12,
+        samplingRatio: 1,
+        creationDate: expect.any(Number),
+      }),
+    );
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('produces track events with a metric value and data', async () => {
+    await ldc.identify(carContext);
+
+    ldc.track('the-event', { the: 'data' }, 12);
+    expect(MockEventProcessor).toHaveBeenCalled();
+    expect(ldc.eventProcessor!.sendEvent).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining<InputCustomEvent>({
+        kind: 'custom',
+        key: 'the-event',
+        context: expect.objectContaining({
+          contexts: expect.objectContaining({
+            car: { key: 'test-car' },
+          }),
+        }),
+        metricValue: 12,
+        data: { the: 'data' },
+        samplingRatio: 1,
+        creationDate: expect.any(Number),
+      }),
+    );
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('produces a warning when the metric value is non-numeric', async () => {
+    // @ts-ignore
+    await ldc.identify(carContext);
+    // @ts-ignore
+    ldc.track('the-event', { the: 'data' }, '12');
+
+    expect(logger.warn).toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringMatching(/was called with a non-numeric/),
     );
   });
 });

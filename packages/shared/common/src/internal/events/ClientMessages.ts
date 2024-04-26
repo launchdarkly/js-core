@@ -4,4 +4,11 @@
 export default class ClientMessages {
   static readonly missingContextKeyNoEvent =
     'Context was unspecified or had no key; event will not be sent';
+
+  static invalidMetricValue(badType: string) {
+    return (
+      'The track function was called with a non-numeric "metricValue"' +
+      ` (${badType}), only numeric metric values are supported.`
+    );
+  }
 }
