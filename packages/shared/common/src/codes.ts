@@ -149,7 +149,7 @@ export class LogMessages {
          * @param type The type of the message. For example "put", "patch", or "delete".
         */
         static message(connection: string, type: string): string {
-          return `10:5:0 {$connection} connection received invalid data in "${type}" message.`;
+          return `10:5:0 ${connection} connection received invalid data in "${type}" message.`;
         }
       }
     }

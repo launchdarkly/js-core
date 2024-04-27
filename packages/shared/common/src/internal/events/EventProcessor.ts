@@ -199,7 +199,6 @@ export default class EventProcessor implements LDEventProcessor {
     }
 
     this.eventsInLastBatch = eventsToFlush.length;
-    // this.logger?.debug('Flushing %d events', eventsToFlush.length);
     this.logger?.debug(
       LogMessages.Events.Debug.FlushingEvents.message(eventsToFlush.length.toString()),
     );
