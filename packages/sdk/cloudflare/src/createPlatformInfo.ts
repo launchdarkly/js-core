@@ -1,7 +1,7 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common-edge';
 
-const name = "@launchdarkly/cloudflare-server-sdk";
-const version = "2.5.3"; // x-release-please-version
+const name = '@launchdarkly/cloudflare-server-sdk';
+const version = '2.5.3'; // x-release-please-version
 
 class CloudflarePlatformInfo implements Info {
   platformData(): PlatformData {
