@@ -714,6 +714,11 @@ export default class LDClientImpl implements LDClient {
       return;
     }
 
+    // 0 is valid, so do not truthy check the metric value
+    if (metricValue !== undefined && !TypeValidators.Number.is(metricValue)) {
+      this.logger?.warn(ClientMessages.invalidMetricValue(typeof metricValue));
+    }
+
     this.eventProcessor.sendEvent(
       this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
     );

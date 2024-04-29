@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.2...js-client-sdk-common-v1.1.3) (2024-04-26)
+
+
+### Bug Fixes
+
+* Produce a warning when track is called with a non-numeric metric value. ([#449](https://github.com/launchdarkly/js-core/issues/449)) ([6799742](https://github.com/launchdarkly/js-core/commit/6799742a7914d32b3313e54408f0a2a3dda3ff5c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.4.1 to 2.4.2
+
 ## [1.1.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.1...js-client-sdk-common-v1.1.2) (2024-04-25)
 
 
