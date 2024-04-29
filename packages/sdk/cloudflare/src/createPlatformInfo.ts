@@ -19,6 +19,6 @@ class CloudflarePlatformInfo implements Info {
   }
 }
 
-const createPlatformInfo = (): CloudflarePlatformInfo => new CloudflarePlatformInfo()
+const createPlatformInfo = (): CloudflarePlatformInfo => new CloudflarePlatformInfo();
 
 export default createPlatformInfo;
