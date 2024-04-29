@@ -11,7 +11,8 @@
           "type": "json",
           "path": "jsr.json",
           "jsonpath": "$.version"
-        }
+        },
+        "src/createPlatformInfo.ts"
       ]
     },
     "packages/sdk/react-native": {},
