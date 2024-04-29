@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.4.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.0...js-server-sdk-common-v2.4.1) (2024-04-26)
+
+
+### Bug Fixes
+
+* Produce a warning when track is called with a non-numeric metric value. ([#449](https://github.com/launchdarkly/js-core/issues/449)) ([6799742](https://github.com/launchdarkly/js-core/commit/6799742a7914d32b3313e54408f0a2a3dda3ff5c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.4.1 to 2.4.2
+
 ## [2.4.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.3.0...js-server-sdk-common-v2.4.0) (2024-04-16)
 
 

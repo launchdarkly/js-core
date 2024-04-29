@@ -2,6 +2,14 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.4.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.4.1...js-sdk-common-v2.4.2) (2024-04-26)
+
+
+### Bug Fixes
+
+* Handle missing message with valid string. ([#450](https://github.com/launchdarkly/js-core/issues/450)) ([6ff8982](https://github.com/launchdarkly/js-core/commit/6ff8982d5a68f1fff4b8fcafc3eb015a75d3f002))
+* Produce a warning when track is called with a non-numeric metric value. ([#449](https://github.com/launchdarkly/js-core/issues/449)) ([6799742](https://github.com/launchdarkly/js-core/commit/6799742a7914d32b3313e54408f0a2a3dda3ff5c))
+
 ## [2.4.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.4.0...js-sdk-common-v2.4.1) (2024-04-09)
 
 
