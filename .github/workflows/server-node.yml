@@ -19,9 +19,6 @@ jobs:
         # Node versions to run on.
         version: [18, 21]
 
-    env:
-      TEST_HARNESS_PARAMS: '--skip-from=./contract-tests/testharness-suppressions.txt'
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,3 +37,4 @@ jobs:
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
+          extra_params: '--skip-from=./contract-tests/testharness-suppressions.txt'
