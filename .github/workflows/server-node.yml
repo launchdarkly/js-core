@@ -34,5 +34,9 @@ jobs:
         with:
           workspace_name: '@launchdarkly/node-server-sdk'
           workspace_path: packages/sdk/server-node
-      - name: Contract Tests
-        run: yarn run contract-tests
+      - name: Launch the test service in the background
+        run: yarn run contract-test-service 2>&1 &
+      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.0
+        with:
+          test_service_port: 8000
+          token: ${{ secrets.GITHUB_TOKEN }}
