@@ -103,13 +103,13 @@ export default class LDClientImpl implements LDClient {
 
   private evaluator: Evaluator;
 
-  private initResolve?: (value: LDClient | PromiseLike<LDClient>) => void;
+  private initResolve?: (value: this | PromiseLike<this>) => void;
 
   private initReject?: (err: Error) => void;
 
   private rejectionReason: Error | undefined;
 
-  private initializedPromise?: Promise<LDClient>;
+  private initializedPromise?: Promise<this>;
 
   private logger?: LDLogger;
 
@@ -253,7 +253,7 @@ export default class LDClientImpl implements LDClient {
     return this.initState === InitState.Initialized;
   }
 
-  waitForInitialization(options?: LDWaitForInitializationOptions): Promise<LDClient> {
+  waitForInitialization(options?: LDWaitForInitializationOptions): Promise<this> {
     // An initialization promise is only created if someone is going to use that promise.
     // If we always created an initialization promise, and there was no call waitForInitialization
     // by the time the promise was rejected, then that would result in an unhandled promise
@@ -906,10 +906,10 @@ export default class LDClientImpl implements LDClient {
    * @returns
    */
   private clientWithTimeout(
-    basePromise: Promise<LDClient>,
+    basePromise: Promise<this>,
     timeout?: number,
     logger?: LDLogger,
-  ): Promise<LDClient> {
+  ): Promise<this> {
     if (timeout) {
       const timeoutPromise = timedPromise(timeout, 'waitForInitialization');
       return Promise.race([basePromise, timeoutPromise.then(() => this)]).catch((reason) => {
