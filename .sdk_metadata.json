@@ -35,6 +35,23 @@
       ],
       "releases": {
         "tag-prefix": "cloudflare-server-sdk-"
+      },
+      "features": {
+        "contexts": {
+          "introduced": "2.0"
+        },
+        "experimentation": {
+          "introduced": "2.3.0"
+        },
+        "allFlags": {
+          "introduced": "1.0"
+        },
+        "secureMode": {
+          "introduced": "2.0"
+        },
+        "track": {
+          "introduced": "2.3"
+        }
       }
     },
     "react-native": {
@@ -47,6 +64,38 @@
       ],
       "releases": {
         "tag-prefix": "react-native-client-sdk-"
+      },
+      "features": {
+        "appConfig": {
+          "introduced": "7.0"
+        },
+        "bigSegments": {
+          "introduced": "All"
+        },
+        "experimentation": {
+          "introduced": "5.0"
+        },
+        "flagChanges": {
+          "introduced": "1.0"
+        },
+        "allFlags": {
+          "introduced": "5.0.1"
+        },
+        "multiEnv": {
+          "introduced": "4.2.0"
+        },
+        "offlineMode": {
+          "introduced": "1.0"
+        },
+        "privateAttrs": {
+          "introduced": "4.0"
+        },
+        "relayProxyProxy": {
+          "introduced": "1.0"
+        },
+        "track": {
+          "introduced": "1.0"
+        }
       }
     },
     "node-server": {
@@ -59,6 +108,53 @@
       ],
       "releases": {
         "tag-prefix": "node-server-sdk-"
+      },
+      "features": {
+        "appConfig": {
+          "introduced": "6.4"
+        },
+        "contexts": {
+          "introduced": "7.0"
+        },
+        "experimentation": {
+          "introduced": "6.1"
+        },
+        "variationDetail": {
+          "introduced": "5.4"
+        },
+        "allFlags": {
+          "introduced": "3.0"
+        },
+        "multiEnv": {
+          "introduced": "9.0"
+        },
+        "offlineMode": {
+          "introduced": "1.0"
+        },
+        "privateAttrs": {
+          "introduced": "3.3"
+        },
+        "relayProxyDaemon": {
+          "introduced": "1.0"
+        },
+        "relayProxyProxy": {
+          "introduced": "1.0"
+        },
+        "secureMode": {
+          "introduced": "3.0"
+        },
+        "track": {
+          "introduced": "1.0"
+        },
+        "storingData": {
+          "introduced": "2.0 (Redis)"
+        },
+        "flagChanges": {
+          "introduced": "1.0"
+        },
+        "webProxy": {
+          "introduced": "1.0"
+        }
       }
     },
     "vercel": {
@@ -71,6 +167,23 @@
       ],
       "releases": {
         "tag-prefix": "vercel-server-sdk-"
+      },
+      "features": {
+        "contexts": {
+          "introduced": "1.0"
+        },
+        "experimentation": {
+          "introduced": "1.2.0"
+        },
+        "allFlags": {
+          "introduced": "1.0"
+        },
+        "secureMode": {
+          "introduced": "1.0"
+        },
+        "track": {
+          "introduced": "1.2"
+        }
       }
     }
   }
