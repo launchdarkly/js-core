@@ -1,9 +1,15 @@
+import {
+  events_debug_eventProcessorStarted,
+  events_debug_flushFailed,
+  events_debug_flushingEvents,
+  events_runtimeWarning_eventCapacityExceeded,
+} from '@launchdarkly/sdk-logs-js';
+
 import { LDEvaluationReason, LDLogger } from '../../api';
 import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
 import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
 import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import AttributeReference from '../../AttributeReference';
-import { LogMessages } from '../../codes';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
 import { DiagnosticsManager } from '../diagnostics';
@@ -137,7 +143,7 @@ export default class EventProcessor implements LDEventProcessor {
         await this.flush();
       } catch (e) {
         // Log errors and swallow them
-        this.logger?.debug(LogMessages.Events.Debug.FlushFailed.message(String(e)));
+        this.logger?.debug(events_debug_flushFailed(String(e)));
       }
     }, this.config.flushInterval * 1000);
 
@@ -159,7 +165,7 @@ export default class EventProcessor implements LDEventProcessor {
       }, this.config.diagnosticRecordingInterval * 1000);
     }
 
-    this.logger?.debug(LogMessages.Events.Debug.EventProcessorStarted.message());
+    this.logger?.debug(events_debug_eventProcessorStarted());
   }
 
   private postDiagnosticEvent(event: DiagnosticEvent) {
@@ -199,9 +205,7 @@ export default class EventProcessor implements LDEventProcessor {
     }
 
     this.eventsInLastBatch = eventsToFlush.length;
-    this.logger?.debug(
-      LogMessages.Events.Debug.FlushingEvents.message(eventsToFlush.length.toString()),
-    );
+    this.logger?.debug(events_debug_flushingEvents(eventsToFlush.length.toString()));
     await this.tryPostingEvents(eventsToFlush);
   }
 
@@ -341,7 +345,7 @@ export default class EventProcessor implements LDEventProcessor {
     } else {
       if (!this.exceededCapacity) {
         this.exceededCapacity = true;
-        this.logger?.warn(LogMessages.Events.RuntimeWarning.EventCapacityExceeded.message());
+        this.logger?.warn(events_runtimeWarning_eventCapacityExceeded());
       }
       this.droppedEvents += 1;
     }
