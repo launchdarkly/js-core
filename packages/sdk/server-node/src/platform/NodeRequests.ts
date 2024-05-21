@@ -142,6 +142,8 @@ export default class NodeRequests implements platform.Requests {
       ...eventSourceInitDict,
       agent: this.agent,
       tlsParams: this.tlsOptions,
+      maxBackoffMillis: 30 * 1000,
+      jitterRatio: 0.5,
     };
     return new LDEventSource(url, expandedOptions);
   }
