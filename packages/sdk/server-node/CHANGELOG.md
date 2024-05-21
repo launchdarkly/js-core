@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.4.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.4.1...node-server-sdk-v9.4.2) (2024-05-21)
+
+
+### Bug Fixes
+
+* Configure max backoff and jitter ratio to ensure exponential backoff. ([#463](https://github.com/launchdarkly/js-core/issues/463)) ([050007d](https://github.com/launchdarkly/js-core/commit/050007d8153ecd67633a05761e9ea3b27e15b0ca))
+
 ## [9.4.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.4.0...node-server-sdk-v9.4.1) (2024-04-26)
 
 
