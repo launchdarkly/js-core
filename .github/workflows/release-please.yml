@@ -23,7 +23,7 @@ jobs:
       package-node-server-sdk-dynamodb-release: ${{ steps.release.outputs['packages/store/node-server-sdk-dynamodb--release_created'] }}
       package-node-server-sdk-otel-release: ${{ steps.release.outputs['packages/telemetry/node-server-sdk-otel--release_created'] }}
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{secrets.GITHUB_TOKEN}}
