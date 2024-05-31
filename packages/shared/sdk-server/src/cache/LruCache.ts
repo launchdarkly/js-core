@@ -110,6 +110,7 @@ export default class LruCache {
     this.keys.fill(undefined);
     this.next.fill(0);
     this.prev.fill(0);
+    this.keyMap.clear();
   }
 
   private index() {
