@@ -46,14 +46,19 @@ it('when it has been cleared', () => {
     expect(lruCache.get(i.toString())).toBeUndefined();
   }
 
-  // Fill the cache with integers again.
+  // Fill the cache with integers in a different range.
   for (let i = 0; i < max; i += 1) {
-    lruCache.set(`${i}`, i);
+    lruCache.set(`${i + 100}`, i);
   }
 
   // Check they are all there.
   for (let i = 0; i < max; i += 1) {
-    expect(lruCache.get(i.toString())).toEqual(i);
+    expect(lruCache.get(`${i + 100}`)).toEqual(i);
+  }
+
+  // Check old keys don't associate with new values.
+  for (let i = 0; i < max; i += 1) {
+    expect(lruCache.get(i.toString())).toBeUndefined();
   }
 });
 
