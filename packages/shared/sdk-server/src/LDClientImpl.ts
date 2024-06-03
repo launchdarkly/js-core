@@ -1,6 +1,5 @@
 /* eslint-disable class-methods-use-this */
 import {
-  cancelableTimedPromise,
   ClientContext,
   Context,
   internal,
@@ -912,11 +911,8 @@ export default class LDClientImpl implements LDClient {
     logger?: LDLogger,
   ): Promise<LDClient> {
     if (timeout) {
-      const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
-      return Promise.race([
-        basePromise.then(() => cancelableTimeout.cancel()).then(() => this),
-        cancelableTimeout.promise.then(() => this),
-      ]).catch((reason) => {
+      const timeoutPromise = timedPromise(timeout, 'waitForInitialization');
+      return Promise.race([basePromise, timeoutPromise.then(() => this)]).catch((reason) => {
         if (reason instanceof LDTimeoutError) {
           logger?.error(reason.message);
         }
