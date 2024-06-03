@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.1.4](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.1.3...react-native-client-sdk-v10.1.4) (2024-05-31)
+
+
+### Bug Fixes
+
+* Added iOS SettingsManager null check. ([#471](https://github.com/launchdarkly/js-core/issues/471)) ([8ff641b](https://github.com/launchdarkly/js-core/commit/8ff641be8b32f24884457bd506566e283cf04e40))
+
 ## [10.1.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.1.2...react-native-client-sdk-v10.1.3) (2024-04-26)
 
 

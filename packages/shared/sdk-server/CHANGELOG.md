@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.4.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.1...js-server-sdk-common-v2.4.2) (2024-05-31)
+
+
+### Bug Fixes
+
+* LRU cache memory leak. ([#475](https://github.com/launchdarkly/js-core/issues/475)) ([a5fdefc](https://github.com/launchdarkly/js-core/commit/a5fdefcf48f359ab26846edb057eb480bfc3db7e)), closes [#474](https://github.com/launchdarkly/js-core/issues/474)
+
 ## [2.4.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.0...js-server-sdk-common-v2.4.1) (2024-04-26)
 
 
