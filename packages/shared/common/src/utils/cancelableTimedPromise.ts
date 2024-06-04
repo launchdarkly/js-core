@@ -5,7 +5,7 @@ import { VoidFunction } from './VoidFunction';
  * Represents a timeout that can be cancelled.
  *
  * When racing a timeout, and another task completes before the timeout,
- * then the timeout should be cancelled. This prevents the leaving open handles
+ * then the timeout should be cancelled. This prevents leaving open handles
  * which can stop the runtime from exiting.
  */
 export interface CancelableTimeout {
