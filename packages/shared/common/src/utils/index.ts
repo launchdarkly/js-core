@@ -1,3 +1,4 @@
+import { cancelableTimedPromise, type CancelableTimeout } from './cancelableTimedPromise';
 import clone from './clone';
 import { secondsToMillis } from './date';
 import debounce from './debounce';
@@ -24,4 +25,6 @@ export {
   sleep,
   timedPromise,
   VoidFunction,
+  type CancelableTimeout,
+  cancelableTimedPromise,
 };
