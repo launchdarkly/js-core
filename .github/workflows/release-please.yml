@@ -22,6 +22,7 @@ jobs:
       package-node-server-sdk-redis-release: ${{ steps.release.outputs['packages/store/node-server-sdk-redis--release_created'] }}
       package-node-server-sdk-dynamodb-release: ${{ steps.release.outputs['packages/store/node-server-sdk-dynamodb--release_created'] }}
       package-node-server-sdk-otel-release: ${{ steps.release.outputs['packages/telemetry/node-server-sdk-otel--release_created'] }}
+      package-tooling-jest-release: ${{ steps.release.outputs['packages/tooling/jest--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -312,4 +313,24 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/telemetry/node-server-sdk-otel
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-tooling-jest:
+    runs-on: ubuntu-latest
+    needs: ['release-please']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-tooling-jest
+        name: Full release of packages/tooling/jest
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/tooling/jest
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
