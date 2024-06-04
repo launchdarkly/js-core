@@ -19,7 +19,8 @@
     "packages/sdk/akamai-edgekv/example",
     "packages/store/node-server-sdk-redis",
     "packages/store/node-server-sdk-dynamodb",
-    "packages/telemetry/node-server-sdk-otel"
+    "packages/telemetry/node-server-sdk-otel",
+    "packages/tooling/jest"
   ],
   "private": true,
   "scripts": {
