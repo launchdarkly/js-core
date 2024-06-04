@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.4.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.2...js-server-sdk-common-v2.4.3) (2024-06-04)
+
+
+### Bug Fixes
+
+* Cleanup timeout timer for waitForInitialization ([#478](https://github.com/launchdarkly/js-core/issues/478)) ([fccbfac](https://github.com/launchdarkly/js-core/commit/fccbfaccb88c7a66f86a2981b74445c894618a06))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.4.2 to 2.5.0
+
 ## [2.4.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.1...js-server-sdk-common-v2.4.2) (2024-05-31)
 
 

@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.5.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.4.2...js-sdk-common-v2.5.0) (2024-06-04)
+
+
+### Features
+
+* Add support for a cancel-able timeout. ([#476](https://github.com/launchdarkly/js-core/issues/476)) ([24ecf1d](https://github.com/launchdarkly/js-core/commit/24ecf1d74b01e1fb32cd250689f17f96d1af1f50))
+
 ## [2.4.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.4.1...js-sdk-common-v2.4.2) (2024-04-26)
 
 
