@@ -1,7 +1,4 @@
-import {
-  dataSource_debug_invalidJsonDebug,
-  dataSource_runtimeError_invalidJson,
-} from '@launchdarkly/sdk-logs-js';
+import { DataSource } from '@launchdarkly/sdk-logs-js';
 
 import {
   EventName,
@@ -24,8 +21,8 @@ const reportJsonError = (
   logger?: LDLogger,
   errorHandler?: StreamingErrorHandler,
 ) => {
-  logger?.error(dataSource_runtimeError_invalidJson('Streaming', type));
-  logger?.debug(dataSource_debug_invalidJsonDebug(data));
+  logger?.error(DataSource.RuntimeError.InvalidJson.message('Streaming', type));
+  logger?.debug(DataSource.Debug.InvalidJsonDebug.message(data));
   errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
 };
 

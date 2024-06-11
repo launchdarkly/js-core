@@ -1,4 +1,4 @@
-import { events_debug_eventRetry } from '@launchdarkly/sdk-logs-js';
+import { Events } from '@launchdarkly/sdk-logs-js';
 
 import { Crypto, LDLogger, Requests } from '../../api';
 import {
@@ -111,7 +111,7 @@ export default class EventSender implements LDEventSender {
       return tryRes;
     }
 
-    this.logger?.debug(events_debug_eventRetry());
+    this.logger?.debug(Events.Debug.EventRetry.message());
     // wait 1 second before retrying
     await sleep();
 
