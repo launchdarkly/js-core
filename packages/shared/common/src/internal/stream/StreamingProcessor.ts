@@ -1,4 +1,4 @@
-import { DataSource } from '@launchdarkly/sdk-logs-js';
+import { Logs } from '@launchdarkly/sdk-logs-js';
 
 import {
   EventName,
@@ -21,8 +21,8 @@ const reportJsonError = (
   logger?: LDLogger,
   errorHandler?: StreamingErrorHandler,
 ) => {
-  logger?.error(DataSource.RuntimeError.InvalidJson.message('Streaming', type));
-  logger?.debug(DataSource.Debug.InvalidJsonDebug.message(data));
+  logger?.error(Logs.DataSource.RuntimeError.InvalidJson.message('Streaming', type));
+  logger?.debug(Logs.DataSource.Debug.InvalidJsonDebug.message(data));
   errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
 };
 
@@ -107,7 +107,7 @@ class StreamingProcessor implements LDStreamProcessor {
     this.eventSource = eventSource;
 
     eventSource.onclose = () => {
-      this.logger?.info('Closed LaunchDarkly stream connection');
+      this.logger?.info(Logs.Streaming.Informative);
     };
 
     eventSource.onerror = () => {

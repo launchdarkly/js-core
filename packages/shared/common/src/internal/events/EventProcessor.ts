@@ -1,4 +1,4 @@
-import { Events } from '@launchdarkly/sdk-logs-js';
+import { Logs } from '@launchdarkly/sdk-logs-js';
 
 import { LDEvaluationReason, LDLogger } from '../../api';
 import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
@@ -138,7 +138,7 @@ export default class EventProcessor implements LDEventProcessor {
         await this.flush();
       } catch (e) {
         // Log errors and swallow them
-        this.logger?.debug(Events.Debug.FlushFailed.message(String(e)));
+        this.logger?.debug(Logs.Events.Debug.FlushFailed.message(String(e)));
       }
     }, this.config.flushInterval * 1000);
 
@@ -160,7 +160,7 @@ export default class EventProcessor implements LDEventProcessor {
       }, this.config.diagnosticRecordingInterval * 1000);
     }
 
-    this.logger?.debug(Events.Debug.EventProcessorStarted.message());
+    this.logger?.debug(Logs.Events.Debug.EventProcessorStarted.message());
   }
 
   private postDiagnosticEvent(event: DiagnosticEvent) {
@@ -200,7 +200,7 @@ export default class EventProcessor implements LDEventProcessor {
     }
 
     this.eventsInLastBatch = eventsToFlush.length;
-    this.logger?.debug(Events.Debug.FlushingEvents.message(eventsToFlush.length.toString()));
+    this.logger?.debug(Logs.Events.Debug.FlushingEvents.message(eventsToFlush.length.toString()));
     await this.tryPostingEvents(eventsToFlush);
   }
 
@@ -340,7 +340,7 @@ export default class EventProcessor implements LDEventProcessor {
     } else {
       if (!this.exceededCapacity) {
         this.exceededCapacity = true;
-        this.logger?.warn(Events.RuntimeWarning.EventCapacityExceeded.message());
+        this.logger?.warn(Logs.Events.RuntimeWarning.EventCapacityExceeded.message());
       }
       this.droppedEvents += 1;
     }
