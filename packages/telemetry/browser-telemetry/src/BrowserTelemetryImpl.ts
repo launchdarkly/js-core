@@ -31,6 +31,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
           type: 'flag-evaluated',
           flagKey,
           value: flagDetail.value,
+          timestamp: new Date().getTime(),
         });
       },
     });
