@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "target": "ES6",
+    "lib": ["es6"],
+    "module": "ES6",
+    "strict": true,
+    "noImplicitOverride": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true, // enables importers to jump to source
+    "stripInternal": true,
+  },
+  "include": ["src"],
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
+}
