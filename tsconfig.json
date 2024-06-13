@@ -48,6 +48,9 @@
     },
     {
       "path": "./packages/telemetry/node-server-sdk-otel/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/telemetry/browser-telemetry/tsconfig.ref.json"
     }
   ]
 }

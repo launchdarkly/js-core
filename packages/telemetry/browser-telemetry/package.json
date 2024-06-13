@@ -1,0 +1,44 @@
+{
+  "name": "@launchdarkly/browser-telemetry",
+  "version": "0.0.1",
+  "type": "module",
+  "module": "./dist/esm/codes.js",
+  "main": "./dist/cjs/codes.js",
+  "types": "./dist/cjs/codes.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/codes.d.ts",
+        "default": "./dist/esm/codes.js"
+      },
+      "require": {
+        "types": "./dist/cjs/codes.d.ts",
+        "default": "./dist/cjs/codes.js"
+      }
+    }
+  },
+  "description": "Telemetry integration for LaunchDarkly browser SDKs.",
+  "scripts": {
+    "test": "npx jest --ci",
+    "build-cjs": "tsc src/index.ts --types --module commonjs --outDir ./dist/cjs -d",
+    "build-esm": "tsc src/index.ts --types --module es6 --outDir ./dist/esm -d",
+    "build": "npm run build-cjs && npm run build-esm",
+    "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'",
+    "check": "yarn && yarn prettier && yarn lint && tsc && yarn test",
+    "lint": "npx eslint . --ext .ts"
+  },
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/telemetry/browser-telemetry",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/launchdarkly/js-core.git"
+  },
+  "keywords": [
+    "launchdarkly",
+    "analytics",
+    "telemetry"
+  ],
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/launchdarkly/js-core/issues"
+  }
+}
