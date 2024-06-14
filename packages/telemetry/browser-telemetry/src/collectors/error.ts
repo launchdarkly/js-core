@@ -5,9 +5,13 @@ export default class ErrorCollector implements Collector {
   private destinations: Set<BrowserTelemetry> = new Set();
 
   constructor() {
-    window.addEventListener('error', (event: ErrorEvent) => {
-      this.destinations.forEach((destination) => destination.captureErrorEvent(event));
-    });
+    window.addEventListener(
+      'error',
+      (event: ErrorEvent) => {
+        this.destinations.forEach((destination) => destination.captureErrorEvent(event));
+      },
+      true,
+    );
   }
 
   register(telemetry: BrowserTelemetry): void {
