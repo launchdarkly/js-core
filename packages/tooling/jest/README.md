@@ -6,6 +6,9 @@
 [![NPM][jest-dm-badge]][jest-npm-link]
 [![NPM][jest-dt-badge]][jest-npm-link]
 
+> [!CAUTION]
+> This library is a beta version and should not be considered ready for production use while this message is visible.
+
 > **Easily unit test LaunchDarkly applications with jest** :clap:
 
 For more information, see the [complete reference guide for unit testing](https://docs.launchdarkly.com/guides/sdk/unit-tests).
