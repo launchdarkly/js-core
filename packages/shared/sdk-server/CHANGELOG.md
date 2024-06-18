@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.4.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.3...js-server-sdk-common-v2.4.4) (2024-06-14)
+
+
+### Bug Fixes
+
+* Include prerequisiteKey in migration op event. ([#481](https://github.com/launchdarkly/js-core/issues/481)) ([824f59d](https://github.com/launchdarkly/js-core/commit/824f59d256e6316365b32117887a1af2520d8996))
+
 ## [2.4.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.2...js-server-sdk-common-v2.4.3) (2024-06-04)
 
 
