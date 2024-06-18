@@ -9,7 +9,7 @@ import { Event } from './api/Event.js';
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
   // TODO: Add this to a configuration.
   private maxPendingEvents = 100;
-  private numBreadCrumbs = 5;
+  private numBreadCrumbs = 50;
 
   private pendingEvents: Event[] = [];
   private client?: LDClient;
@@ -24,7 +24,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     const impl = this;
     this.inspectorInstances.push({
       type: 'flag-used',
-      name: 'browser-telemetry-flag-used',
+      name: 'launchdarkly-browser-telemetry-flag-used',
       method(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void {
         // TODO: Finalize shape.
         impl.addBreadcrumb({
@@ -32,6 +32,18 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
           flagKey,
           value: flagDetail.value,
           timestamp: new Date().getTime(),
+        });
+      },
+    });
+
+    this.inspectorInstances.push({
+      type: 'flag-detail-changed',
+      name: 'launchdarkly-browser-telemetry-flag-used',
+      method(flagKey: string, detail: LDEvaluationDetail): void {
+        impl.addBreadcrumb({
+          type: 'flag-detail-changed',
+          flagKey,
+          detail,
         });
       },
     });
