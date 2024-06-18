@@ -19,12 +19,12 @@
   "type": "module",
   "exports": {
     "./react-native": {
-      "types": "./dist/react-native/index.d.ts",
-      "default": "./dist/react-native/index.js"
+      "types": "./dist/src/react-native/index.d.ts",
+      "default": "./dist/src/react-native/index.js"
     },
     "./react": {
-      "types": "./dist/react/index.d.ts",
-      "default": "./dist/react/index.js"
+      "types": "./dist/src/react/index.d.ts",
+      "default": "./dist/src/react/index.js"
     }
   },
   "files": [
