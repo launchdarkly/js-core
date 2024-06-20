@@ -2,22 +2,22 @@ import { BrowserTelemetry } from '../api/BrowserTelemetry.js';
 import { Collector } from '../api/Collector.js';
 
 export default class ErrorCollector implements Collector {
-  private destinations: Set<BrowserTelemetry> = new Set();
+  private destination?: BrowserTelemetry;
 
   constructor() {
     window.addEventListener(
       'error',
       (event: ErrorEvent) => {
-        this.destinations.forEach((destination) => destination.captureErrorEvent(event));
+        this.destination?.captureErrorEvent(event);
       },
       true,
     );
   }
 
   register(telemetry: BrowserTelemetry): void {
-    this.destinations.add(telemetry);
+    this.destination = telemetry;
   }
-  unregister(telemetry: BrowserTelemetry): void {
-    this.destinations.delete(telemetry);
+  unregister(): void {
+    this.destination = undefined;
   }
 }

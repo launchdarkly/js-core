@@ -12,10 +12,9 @@ export interface BrowserTelemetry {
   captureError(exception: Error): void;
   captureErrorEvent(errorEvent: ErrorEvent): void;
 
-  // TODO: Automatic LD context information.
-  addContext(): void;
-  // TODO: Automatic flag eval bread crumbs.
   addBreadcrumb(breadcrumb: Breadcrumb): void;
 
   register(client: LDClient): void;
+
+  close(): void;
 }

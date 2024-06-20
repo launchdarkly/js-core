@@ -1,15 +1,18 @@
 import { LDClient, LDInspection } from 'launchdarkly-js-client-sdk';
-import { LDContext, LDEvaluationDetail } from 'launchdarkly-js-sdk-common';
 
 import { Breadcrumb } from './api/Breadcrumb.js';
 import { BrowserTelemetry } from './api/BrowserTelemetry.js';
 import { Collector } from './api/Collector.js';
 import { Event } from './api/Event.js';
+import { ParsedOptions } from './options.js';
+import ClickCollector from './collectors/click.js';
+import { makeInspectors } from './inspectors.js';
+
+// TODO: Add ring buffer instead of shifting.
 
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
-  // TODO: Add this to a configuration.
-  private maxPendingEvents = 100;
-  private numBreadCrumbs = 50;
+  private maxPendingEvents: number;
+  private maxBreadcrumbs: number;
 
   private pendingEvents: Event[] = [];
   private client?: LDClient;
@@ -17,36 +20,23 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private breadcrumbs: Breadcrumb[] = [];
 
   private inspectorInstances: LDInspection[] = [];
+  private collectors: Collector[] = [];
 
-  constructor(private collectors: Collector[]) {
-    collectors.forEach((collector) => collector.register(this as BrowserTelemetry));
+  constructor(options: ParsedOptions) {
+    this.collectors.push(...options.collectors);
+    this.maxPendingEvents = options.maxPendingEvents;
+    this.maxBreadcrumbs = options.breadcrumbs.maxBreadcrumbs;
+
+    if (options.breadcrumbs.click) {
+      this.collectors.push(new ClickCollector());
+    }
+
+    this.collectors.forEach((collector) => collector.register(this as BrowserTelemetry));
 
     const impl = this;
-    this.inspectorInstances.push({
-      type: 'flag-used',
-      name: 'launchdarkly-browser-telemetry-flag-used',
-      method(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void {
-        // TODO: Finalize shape.
-        impl.addBreadcrumb({
-          type: 'flag-evaluated',
-          flagKey,
-          value: flagDetail.value,
-          timestamp: new Date().getTime(),
-        });
-      },
-    });
-
-    this.inspectorInstances.push({
-      type: 'flag-detail-changed',
-      name: 'launchdarkly-browser-telemetry-flag-used',
-      method(flagKey: string, detail: LDEvaluationDetail): void {
-        impl.addBreadcrumb({
-          type: 'flag-detail-changed',
-          flagKey,
-          detail,
-        });
-      },
-    });
+    const inspectors: LDInspection[] = []
+    makeInspectors(options, inspectors, impl);
+    this.inspectorInstances.push(...inspectors);
   }
 
   register(client: LDClient): void {
@@ -82,14 +72,14 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.captureError(errorEvent.error);
   }
 
-  addContext(): void {
-    throw new Error('Method not implemented.');
-  }
-
   addBreadcrumb(breadcrumb: Breadcrumb): void {
     this.breadcrumbs.push(breadcrumb);
-    if (this.breadcrumbs.length > this.numBreadCrumbs) {
+    if (this.breadcrumbs.length > this.maxBreadcrumbs) {
       this.breadcrumbs.shift();
     }
+  }
+
+  close(): void {
+    this.collectors.forEach(collector => collector.unregister());
   }
 }
