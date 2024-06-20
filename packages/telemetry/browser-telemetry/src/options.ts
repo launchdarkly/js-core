@@ -1,33 +1,43 @@
 import { Collector } from './api/Collector';
 import { Options } from './api/Options';
-import ErrorCollector from './collectors/error';
 
-const defaultOptions: ParsedOptions = {
-  breadcrumbs: {
-    maxBreadcrumbs: 50,
-    evaluations: true,
-    flagChange: true,
-    click: true,
-  },
-  maxPendingEvents: 100,
-  collectors: [new ErrorCollector()],
-};
-
-Object.freeze(defaultOptions);
-
-export { defaultOptions };
-
-export default function parse(options: Options): ParsedOptions {
+export function defaultOptions(): ParsedOptions {
   return {
     breadcrumbs: {
-      maxBreadcrumbs:
-        options.breadcrumbs?.maxBreadcrumbs || defaultOptions.breadcrumbs.maxBreadcrumbs,
-      evaluations: options.breadcrumbs?.evaluations || defaultOptions.breadcrumbs.evaluations,
-      flagChange: options.breadcrumbs?.flagChange || defaultOptions.breadcrumbs.flagChange,
-      click: options.breadcrumbs?.click || defaultOptions.breadcrumbs.click,
+      maxBreadcrumbs: 50,
+      evaluations: true,
+      flagChange: true,
+      click: true,
     },
-    maxPendingEvents: options.maxPendingEvents || defaultOptions.maxPendingEvents,
-    collectors: [...defaultOptions.collectors, ...(options.collectors || [])],
+    maxPendingEvents: 100,
+    collectors: [],
+  };
+}
+
+function itemOrDefault<T>(item: T | undefined, defaultValue: T): T {
+  if (item !== undefined && item !== null) {
+    return item;
+  }
+  return defaultValue;
+}
+
+export default function parse(options: Options): ParsedOptions {
+  const defaults = defaultOptions();
+  return {
+    breadcrumbs: {
+      maxBreadcrumbs: itemOrDefault(
+        options.breadcrumbs?.maxBreadcrumbs,
+        defaults.breadcrumbs.maxBreadcrumbs,
+      ),
+      evaluations: itemOrDefault(
+        options.breadcrumbs?.evaluations,
+        defaults.breadcrumbs.evaluations,
+      ),
+      flagChange: itemOrDefault(options.breadcrumbs?.flagChange, defaults.breadcrumbs.flagChange),
+      click: itemOrDefault(options.breadcrumbs?.click, defaults.breadcrumbs.click),
+    },
+    maxPendingEvents: itemOrDefault(options.maxPendingEvents, defaults.maxPendingEvents),
+    collectors: [...itemOrDefault(options.collectors, defaults.collectors)],
   };
 }
 

@@ -7,6 +7,7 @@ import { Event } from './api/Event';
 import { ParsedOptions } from './options';
 import ClickCollector from './collectors/click';
 import { makeInspectors } from './inspectors';
+import ErrorCollector from './collectors/error';
 
 // TODO: Add ring buffer instead of shifting.
 
@@ -23,6 +24,8 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private collectors: Collector[] = [];
 
   constructor(options: ParsedOptions) {
+    // Error collector is always required.
+    this.collectors.push(new ErrorCollector());
     this.collectors.push(...options.collectors);
     this.maxPendingEvents = options.maxPendingEvents;
     this.maxBreadcrumbs = options.breadcrumbs.maxBreadcrumbs;

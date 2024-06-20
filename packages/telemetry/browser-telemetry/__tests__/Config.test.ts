@@ -1,6 +1,30 @@
+import ErrorCollector from '../src/collectors/error';
 import parse, { defaultOptions } from '../src/options';
 
 it('handles an empty configuration', () => {
   const outOptions = parse({});
-  expect(outOptions).toEqual(defaultOptions)
+  expect(outOptions).toEqual(defaultOptions());
+});
+
+it('can set each option', () => {
+  const outOptions = parse({
+    maxPendingEvents: 1,
+    breadcrumbs: {
+      maxBreadcrumbs: 1,
+      click: false,
+      evaluations: false,
+      flagChange: false,
+    },
+    collectors: [new ErrorCollector(), new ErrorCollector()],
+  });
+  expect(outOptions).toEqual({
+    maxPendingEvents: 1,
+    breadcrumbs: {
+      maxBreadcrumbs: 1,
+      click: false,
+      evaluations: false,
+      flagChange: false,
+    },
+    collectors: [new ErrorCollector(), new ErrorCollector()],
+  });
 });
