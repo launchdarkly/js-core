@@ -1,0 +1,64 @@
+{
+  "name": "@launchdarkly/jest",
+  "version": "0.0.1",
+  "description": "Easily unit test LaunchDarkly feature flagged components with jest",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/tooling/jest",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@4.2.2",
+  "keywords": [
+    "launchdarkly",
+    "jest",
+    "mock",
+    "unit",
+    "test"
+  ],
+  "type": "module",
+  "exports": {
+    "./react-native": {
+      "types": "./dist/src/react-native/index.d.ts",
+      "default": "./dist/src/react-native/index.js"
+    },
+    "./react": {
+      "types": "./dist/src/react/index.d.ts",
+      "default": "./dist/src/react/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "yarn clean && tsc",
+    "tsw": "yarn tsc --watch",
+    "start": "rimraf dist && yarn tsw",
+    "lint": "eslint . --ext .ts",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
+    "coverage": "yarn test --coverage",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/jest": "^29.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.5.0",
+    "miniflare": "^2.13.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
+  }
+}
