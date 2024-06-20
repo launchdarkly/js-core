@@ -42,10 +42,10 @@
     "url": "https://github.com/launchdarkly/js-core/issues"
   },
   "peerDependencies": {
-    "launchdarkly-js-client-sdk": "3.4.0"
+    "launchdarkly-js-client-sdk": "^3.4.0"
   },
   "devDependencies": {
-    "launchdarkly-js-client-sdk": "3.4.0",
+    "launchdarkly-js-client-sdk": "^3.4.0",
     "typescript": "5.1.6"
   }
 }
