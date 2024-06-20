@@ -55,7 +55,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
         this.pendingEvents.shift();
       }
     }
-    this.client?.track('telemetry', event);
+    this.client?.track('$ld:telemetry', event);
   }
 
   captureError(exception: Error): void {
