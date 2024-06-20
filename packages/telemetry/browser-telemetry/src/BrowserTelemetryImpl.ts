@@ -4,10 +4,10 @@ import { Breadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
 import { Event } from './api/Event';
-import { ParsedOptions } from './options';
 import ClickCollector from './collectors/click';
-import { makeInspectors } from './inspectors';
 import ErrorCollector from './collectors/error';
+import makeInspectors from './inspectors';
+import { ParsedOptions } from './options';
 
 // TODO: Add ring buffer instead of shifting.
 
@@ -37,7 +37,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.collectors.forEach((collector) => collector.register(this as BrowserTelemetry));
 
     const impl = this;
-    const inspectors: LDInspection[] = []
+    const inspectors: LDInspection[] = [];
     makeInspectors(options, inspectors, impl);
     this.inspectorInstances.push(...inspectors);
   }
@@ -83,6 +83,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   close(): void {
-    this.collectors.forEach(collector => collector.unregister());
+    this.collectors.forEach((collector) => collector.unregister());
   }
 }

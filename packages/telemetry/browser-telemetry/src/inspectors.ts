@@ -1,9 +1,15 @@
 import { LDInspection } from 'launchdarkly-js-client-sdk';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { LDContext, LDEvaluationDetail } from 'launchdarkly-js-sdk-common';
+
 import { BrowserTelemetry } from './api/BrowserTelemetry.js';
 import { ParsedOptions } from './options.js';
 
-export function makeInspectors(options: ParsedOptions, inspectors: LDInspection[], telemetry: BrowserTelemetry) {
+export default function makeInspectors(
+  options: ParsedOptions,
+  inspectors: LDInspection[],
+  telemetry: BrowserTelemetry,
+) {
   if (options.breadcrumbs.evaluations) {
     inspectors.push({
       type: 'flag-used',
