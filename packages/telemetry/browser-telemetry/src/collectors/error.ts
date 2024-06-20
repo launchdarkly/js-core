@@ -1,5 +1,5 @@
-import { BrowserTelemetry } from '../api/BrowserTelemetry.js';
-import { Collector } from '../api/Collector.js';
+import { BrowserTelemetry } from '../api/BrowserTelemetry';
+import { Collector } from '../api/Collector';
 
 export default class ErrorCollector implements Collector {
   private destination?: BrowserTelemetry;

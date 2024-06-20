@@ -1,4 +1,4 @@
-import { BrowserTelemetry } from './BrowserTelemetry.js';
+import { BrowserTelemetry } from './BrowserTelemetry';
 
 export interface Collector {
   register(telemetry: BrowserTelemetry): void;

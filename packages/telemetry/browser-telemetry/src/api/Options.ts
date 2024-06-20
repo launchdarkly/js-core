@@ -1,4 +1,4 @@
-import { Collector } from './Collector.js';
+import { Collector } from './Collector';
 
 /**
  * Options for configuring browser telemetry.

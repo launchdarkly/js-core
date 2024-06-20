@@ -1,12 +1,12 @@
 import { LDClient, LDInspection } from 'launchdarkly-js-client-sdk';
 
-import { Breadcrumb } from './api/Breadcrumb.js';
-import { BrowserTelemetry } from './api/BrowserTelemetry.js';
-import { Collector } from './api/Collector.js';
-import { Event } from './api/Event.js';
-import { ParsedOptions } from './options.js';
-import ClickCollector from './collectors/click.js';
-import { makeInspectors } from './inspectors.js';
+import { Breadcrumb } from './api/Breadcrumb';
+import { BrowserTelemetry } from './api/BrowserTelemetry';
+import { Collector } from './api/Collector';
+import { Event } from './api/Event';
+import { ParsedOptions } from './options';
+import ClickCollector from './collectors/click';
+import { makeInspectors } from './inspectors';
 
 // TODO: Add ring buffer instead of shifting.
 

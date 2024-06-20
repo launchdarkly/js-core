@@ -1,6 +1,6 @@
-import { Collector } from './api/Collector.js';
-import { Options } from './api/Options.js';
-import ErrorCollector from './collectors/error.js';
+import { Collector } from './api/Collector';
+import { Options } from './api/Options';
+import ErrorCollector from './collectors/error';
 
 const defaultOptions: ParsedOptions = {
   breadcrumbs: {
@@ -12,6 +12,10 @@ const defaultOptions: ParsedOptions = {
   maxPendingEvents: 100,
   collectors: [new ErrorCollector()],
 };
+
+Object.freeze(defaultOptions);
+
+export { defaultOptions };
 
 export default function parse(options: Options): ParsedOptions {
   return {

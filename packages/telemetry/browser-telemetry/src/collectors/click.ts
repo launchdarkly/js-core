@@ -1,5 +1,5 @@
-import { BrowserTelemetry } from '../api/BrowserTelemetry.js';
-import { Collector } from '../api/Collector.js';
+import { BrowserTelemetry } from '../api/BrowserTelemetry';
+import { Collector } from '../api/Collector';
 
 function getTarget(event: MouseEvent): Element | undefined {
   try {
