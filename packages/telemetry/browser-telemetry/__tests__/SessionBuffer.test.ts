@@ -16,13 +16,11 @@ it('when the buffer is exceeded it will wrap around', () => {
   const numberBuffers = 4;
   const buffer = new SessionBuffer(bufferSize, numberBuffers);
   const dropRatio = 1.5;
-  const extraItems = Math.trunc(bufferSize * dropRatio)
-  const itemsToMake = (bufferSize * numberBuffers) + extraItems;
+  const extraItems = Math.trunc(bufferSize * dropRatio);
+  const itemsToMake = bufferSize * numberBuffers + extraItems;
   const demoItems = Array.from(new Array(itemsToMake), (_, i) => i);
 
-  for(const item of demoItems) {
-    buffer.push(item);
-  }
+  demoItems.forEach(buffer.push.bind(buffer));
 
   // We need to remove the number of chunks, not the specific number of items.
   const expectedItems = demoItems.slice(Math.ceil(dropRatio) * bufferSize);
