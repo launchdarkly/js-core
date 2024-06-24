@@ -64,7 +64,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   captureError(exception: Error): void {
     this.capture(
       {
-        type: 'exception',
         message: exception.message,
         name: exception.name,
         stack: exception.stack, // TODO: Do we need to locally process the stack.

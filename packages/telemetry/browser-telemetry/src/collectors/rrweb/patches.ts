@@ -28,4 +28,6 @@ class HeaderModifyingXMLHttpRequest extends XMLHttpRequest {
   }
 }
 
-window.XMLHttpRequest = HeaderModifyingXMLHttpRequest;
+export default function applyPatches(): void {
+  window.XMLHttpRequest = HeaderModifyingXMLHttpRequest;
+}

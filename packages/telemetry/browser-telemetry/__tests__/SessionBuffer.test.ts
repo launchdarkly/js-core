@@ -1,4 +1,4 @@
-import { SessionBuffer } from '../src/collectors/rrweb';
+import SessionBuffer from '../src/collectors/rrweb/SessionBuffer';
 
 it('can fill the entire expected buffer size', () => {
   const bufferSize = 5;
