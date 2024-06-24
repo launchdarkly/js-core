@@ -177,7 +177,7 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
   }
 
   if (TypeValidators.String.is(inReason.prerequisiteKey)) {
-    outReason.ruleId = inReason.ruleId;
+    outReason.prerequisiteKey = inReason.prerequisiteKey;
   }
 
   if (TypeValidators.Boolean.is(inReason.inExperiment)) {

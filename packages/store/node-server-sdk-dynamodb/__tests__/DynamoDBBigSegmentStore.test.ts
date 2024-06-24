@@ -81,7 +81,7 @@ async function setSegments(
   client.destroy();
 }
 
-describe.each([undefined, 'app1'])('given a redis big segment store', (prefixParam) => {
+describe.each([undefined, 'app1'])('given a dynamodb big segment store', (prefixParam) => {
   let store: DynamoDBBigSegmentStore;
 
   beforeEach(async () => {
