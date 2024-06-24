@@ -20,7 +20,8 @@
     "packages/store/node-server-sdk-redis",
     "packages/store/node-server-sdk-dynamodb",
     "packages/telemetry/node-server-sdk-otel",
-    "packages/telemetry/browser-telemetry"
+    "packages/telemetry/browser-telemetry",
+    "packages/tooling/jest"
   ],
   "private": true,
   "scripts": {

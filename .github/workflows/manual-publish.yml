@@ -31,6 +31,7 @@ on:
           - packages/store/node-server-sdk-dynamodb
           - packages/telemetry/node-server-sdk-otel
           - packages/telemetry/browser-telemetry
+          - packages/tooling/jest
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean

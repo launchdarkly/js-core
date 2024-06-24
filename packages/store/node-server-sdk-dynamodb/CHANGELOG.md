@@ -90,6 +90,22 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.2.1 to 9.2.2
 
+## [6.1.15](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.1.14...node-server-sdk-dynamodb-v6.1.15) (2024-06-14)
+
+
+### Bug Fixes
+
+* Include prerequisiteKey in migration op event. ([#481](https://github.com/launchdarkly/js-core/issues/481)) ([824f59d](https://github.com/launchdarkly/js-core/commit/824f59d256e6316365b32117887a1af2520d8996))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.4.5 to 9.4.6
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.4.6
+
 ## [6.1.14](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.1.13...node-server-sdk-dynamodb-v6.1.14) (2024-06-04)
 
 
