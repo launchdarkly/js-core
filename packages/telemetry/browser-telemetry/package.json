@@ -54,6 +54,7 @@
     "@rollup/plugin-typescript": "^11.1.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/crypto-js": "^4.1.1",
+    "@types/css-font-loading-module": "^0.0.13",
     "@types/jest": "^29.5.1",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
