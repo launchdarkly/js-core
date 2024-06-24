@@ -6,9 +6,7 @@ it('can fill the entire expected buffer size', () => {
   const buffer = new SessionBuffer(bufferSize, numberBuffers);
   const demoItems = Array.from(new Array(bufferSize * numberBuffers), (_, i) => i);
 
-  for(const item of demoItems) {
-    buffer.push(item);
-  }
+  demoItems.forEach(buffer.push.bind(buffer));
 
   expect(buffer.toArray()).toEqual(demoItems);
 });
