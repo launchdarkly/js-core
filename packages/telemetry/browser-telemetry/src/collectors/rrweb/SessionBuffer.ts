@@ -1,5 +1,14 @@
 import EventBuffer from './EventBuffer';
 
+/**
+ * A session buffer is a circular buffer of buffers. Each buffer has a fixed size and is intended
+ * to match the "checkout" size of rrweb. Each individual buffer should contain a valid replay
+ * and then the sum of all the buffers should also be a valid replay containing each of the other
+ * session chunks.
+ *
+ * The buffer can continuously capture events while always remaining in a playable state
+ * and dropping old events.
+ */
 export default class SessionBuffer {
   private buffers: EventBuffer[] = [];
   private writePointer: number = 0;

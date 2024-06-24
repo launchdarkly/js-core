@@ -6,6 +6,9 @@ import { Collector } from '../../api/Collector';
 import applyPatches from './patches';
 import SessionBuffer from './SessionBuffer';
 
+/**
+ * Experimental capture of sessions using rrweb.
+ */
 export default class SessionReplay implements Collector {
   telemetry?: BrowserTelemetry;
   buffer: SessionBuffer;
