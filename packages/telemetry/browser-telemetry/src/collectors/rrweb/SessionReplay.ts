@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import * as rrweb from 'rrweb';
 
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
