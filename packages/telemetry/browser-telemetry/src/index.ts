@@ -3,6 +3,7 @@ import { Options } from './api/Options';
 import BrowserTelemetryImpl from './BrowserTelemetryImpl';
 import Session from './collectors/rrweb';
 import parse from './options';
+import './patches';
 
 export { Session };
 export { type Breadcrumb } from './api/Breadcrumb';
