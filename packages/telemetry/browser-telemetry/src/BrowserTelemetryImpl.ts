@@ -75,6 +75,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.captureError(errorEvent.error);
   }
 
+  captureSession(sessionEvent: Event): void {
+    this.capture({ ...sessionEvent, breadcrumbs: [...this.breadcrumbs] });
+  }
+
   addBreadcrumb(breadcrumb: Breadcrumb): void {
     this.breadcrumbs.push(breadcrumb);
     if (this.breadcrumbs.length > this.maxBreadcrumbs) {
