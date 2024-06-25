@@ -76,7 +76,16 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       },
       'error',
     );
+    this.dispatchError(exception);
   }
+  private dispatchError(exception: Error) {
+    this.collectors.forEach((collector) => {
+      if (collector.handleErrorEvent) {
+        collector.handleErrorEvent(exception.name, exception.message);
+      }
+    });
+  }
+
   captureErrorEvent(errorEvent: ErrorEvent): void {
     // TODO: More details?
     this.captureError(errorEvent.error);
@@ -105,6 +114,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       timestamp: new Date().getTime(),
     });
 
+    this.dispatchFlagUsed(flagKey, flagDetail, context);
+  }
+
+  private dispatchFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext) {
     this.collectors.forEach((collector) => {
       if (collector.handleFlagUsed) {
         collector.handleFlagUsed(flagKey, flagDetail, context);
@@ -119,6 +132,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       detail,
     });
 
+    this.dispatchFlagDetailChanged(flagKey, detail);
+  }
+
+  private dispatchFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail) {
     this.collectors.forEach((collector) => {
       if (collector.handleFlagDetailChanged) {
         collector.handleFlagDetailChanged(flagKey, detail);

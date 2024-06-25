@@ -47,4 +47,8 @@ export default class SessionReplay implements Collector {
   handleFlagDetailChanged?(flagKey: string, detail: LDEvaluationDetail): void {
     rrweb.record.addCustomEvent('flag-detail-changed', { key: flagKey, detail });
   }
+
+  handleErrorEvent(name: string, message: string): void {
+    rrweb.record.addCustomEvent('error', { name, message });
+  }
 }

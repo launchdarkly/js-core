@@ -8,4 +8,6 @@ export interface Collector {
 
   handleFlagUsed?(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void;
   handleFlagDetailChanged?(flagKey: string, detail: LDEvaluationDetail): void;
+  // TODO: Should have an ID to correlate to.
+  handleErrorEvent?(name: string, message: string): void;
 }
