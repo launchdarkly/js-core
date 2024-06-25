@@ -1,4 +1,9 @@
-import { LDClient, LDInspection } from 'launchdarkly-js-client-sdk';
+import {
+  type LDClient,
+  type LDContext,
+  type LDEvaluationDetail,
+  type LDInspection,
+} from 'launchdarkly-js-client-sdk';
 
 import { Breadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
@@ -90,5 +95,34 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   close(): void {
     this.collectors.forEach((collector) => collector.unregister());
+  }
+
+  handleFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext): void {
+    this.addBreadcrumb({
+      type: 'flag-evaluated',
+      flagKey,
+      value: flagDetail.value,
+      timestamp: new Date().getTime(),
+    });
+
+    this.collectors.forEach((collector) => {
+      if (collector.handleFlagUsed) {
+        collector.handleFlagUsed(flagKey, flagDetail, context);
+      }
+    });
+  }
+
+  handleFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail): void {
+    this.addBreadcrumb({
+      type: 'flag-detail-changed',
+      flagKey,
+      detail,
+    });
+
+    this.collectors.forEach((collector) => {
+      if (collector.handleFlagDetailChanged) {
+        collector.handleFlagDetailChanged(flagKey, detail);
+      }
+    });
   }
 }
