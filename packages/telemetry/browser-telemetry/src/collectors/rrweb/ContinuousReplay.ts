@@ -24,6 +24,7 @@ export default class ContinuousReplay implements Collector {
     this.timerHandle = setInterval(() => {
       // If there are only 2 events, then we just have a snapshot.
       // We can wait to capture until there is some activity.
+      // TODO: Figure out a better check.
       if (this.buffer.length === 2) {
         return;
       }

@@ -1,4 +1,6 @@
-/* eslint-disable max-classes-per-file */
+import { type LDContext, type LDEvaluationDetail } from 'launchdarkly-js-client-sdk';
+import * as rrweb from 'rrweb';
+
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
 import { Collector } from '../../api/Collector';
 import ContinuousReplay from './ContinuousReplay';
@@ -22,10 +24,11 @@ export default class SessionReplay implements Collector {
 
   constructor(options?: SessionReplayOptions) {
     applyPatches();
-    if (isContinuousCapture(options?.capture)) {
-      this.impl = new ContinuousReplay(options.capture);
-    } else if (isRollingCapture(options?.capture)) {
-      this.impl = new RollingReplay(options.capture);
+    const captureOptions = options?.capture;
+    if (isContinuousCapture(captureOptions)) {
+      this.impl = new ContinuousReplay(captureOptions);
+    } else if (isRollingCapture(captureOptions)) {
+      this.impl = new RollingReplay(captureOptions);
     } else {
       this.impl = new ContinuousReplay({
         type: 'continuous',
@@ -40,5 +43,17 @@ export default class SessionReplay implements Collector {
 
   unregister(): void {
     this.impl.unregister();
+  }
+
+  handleFlagUsed?(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void {
+    rrweb.record.addCustomEvent('flag-used', { key: flagKey, detail: flagDetail });
+  }
+
+  handleFlagDetailChanged?(flagKey: string, detail: LDEvaluationDetail): void {
+    rrweb.record.addCustomEvent('flag-detail-changed', { key: flagKey, detail });
+  }
+
+  handleErrorEvent(name: string, message: string): void {
+    rrweb.record.addCustomEvent('error', { name, message });
   }
 }

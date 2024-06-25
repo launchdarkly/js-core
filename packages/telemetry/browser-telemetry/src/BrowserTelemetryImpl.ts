@@ -1,4 +1,9 @@
-import { LDClient, LDInspection } from 'launchdarkly-js-client-sdk';
+import type {
+  LDClient,
+  LDContext,
+  LDEvaluationDetail,
+  LDInspection,
+} from 'launchdarkly-js-client-sdk';
 
 import { Breadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
@@ -71,7 +76,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       },
       'error',
     );
+    this.dispatchError(exception);
   }
+
   captureErrorEvent(errorEvent: ErrorEvent): void {
     // TODO: More details?
     this.captureError(errorEvent.error);
@@ -90,5 +97,44 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   close(): void {
     this.collectors.forEach((collector) => collector.unregister());
+  }
+
+  handleFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext): void {
+    this.addBreadcrumb({
+      type: 'flag-evaluated',
+      flagKey,
+      value: flagDetail.value,
+      timestamp: new Date().getTime(),
+    });
+
+    this.dispatchFlagUsed(flagKey, flagDetail, context);
+  }
+
+  handleFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail): void {
+    this.addBreadcrumb({
+      type: 'flag-detail-changed',
+      flagKey,
+      detail,
+    });
+
+    this.dispatchFlagDetailChanged(flagKey, detail);
+  }
+
+  private dispatchError(exception: Error) {
+    this.collectors.forEach((collector) => {
+      collector.handleErrorEvent?.(exception.name, exception.message);
+    });
+  }
+
+  private dispatchFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext) {
+    this.collectors.forEach((collector) => {
+      collector.handleFlagUsed?.(flagKey, flagDetail, context);
+    });
+  }
+
+  private dispatchFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail) {
+    this.collectors.forEach((collector) => {
+      collector.handleFlagDetailChanged?.(flagKey, detail);
+    });
   }
 }
