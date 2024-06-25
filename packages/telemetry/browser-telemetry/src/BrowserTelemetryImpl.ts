@@ -50,7 +50,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     return this.inspectorInstances;
   }
 
-  private capture(event: Event) {
+  private capture(event: Event, type: string) {
     if (this.client === undefined) {
       this.pendingEvents.push(event);
       if (this.pendingEvents.length > this.maxPendingEvents) {
@@ -58,21 +58,27 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
         this.pendingEvents.shift();
       }
     }
-    this.client?.track('$ld:telemetry', event);
+    this.client?.track(`$ld:telemetry:${type}`, event);
   }
 
   captureError(exception: Error): void {
-    this.capture({
-      type: 'exception',
-      message: exception.message,
-      name: exception.name,
-      stack: exception.stack, // TODO: Do we need to locally process the stack.
-      breadcrumbs: [...this.breadcrumbs],
-    });
+    this.capture(
+      {
+        message: exception.message,
+        name: exception.name,
+        stack: exception.stack, // TODO: Do we need to locally process the stack.
+        breadcrumbs: [...this.breadcrumbs],
+      },
+      'error',
+    );
   }
   captureErrorEvent(errorEvent: ErrorEvent): void {
     // TODO: More details?
     this.captureError(errorEvent.error);
+  }
+
+  captureSession(sessionEvent: Event): void {
+    this.capture({ ...sessionEvent, breadcrumbs: [...this.breadcrumbs] }, 'sessionCapture');
   }
 
   addBreadcrumb(breadcrumb: Breadcrumb): void {

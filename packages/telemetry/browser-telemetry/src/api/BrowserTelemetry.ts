@@ -1,6 +1,7 @@
 import { LDClient, LDInspection } from 'launchdarkly-js-client-sdk';
 
 import { Breadcrumb } from './Breadcrumb';
+import { Event } from './Event';
 
 // TODO: Make a core client-side telemetry package.
 // TODO: Put all the interfaces in the core package and only browser auto telemetry in the
@@ -11,6 +12,7 @@ export interface BrowserTelemetry {
 
   captureError(exception: Error): void;
   captureErrorEvent(errorEvent: ErrorEvent): void;
+  captureSession(sessionEvent: Event): void;
 
   addBreadcrumb(breadcrumb: Breadcrumb): void;
 
