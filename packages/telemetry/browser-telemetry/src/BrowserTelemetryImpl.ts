@@ -78,13 +78,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     );
     this.dispatchError(exception);
   }
-  private dispatchError(exception: Error) {
-    this.collectors.forEach((collector) => {
-      if (collector.handleErrorEvent) {
-        collector.handleErrorEvent(exception.name, exception.message);
-      }
-    });
-  }
 
   captureErrorEvent(errorEvent: ErrorEvent): void {
     // TODO: More details?
@@ -117,14 +110,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.dispatchFlagUsed(flagKey, flagDetail, context);
   }
 
-  private dispatchFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext) {
-    this.collectors.forEach((collector) => {
-      if (collector.handleFlagUsed) {
-        collector.handleFlagUsed(flagKey, flagDetail, context);
-      }
-    });
-  }
-
   handleFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail): void {
     this.addBreadcrumb({
       type: 'flag-detail-changed',
@@ -133,6 +118,22 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     });
 
     this.dispatchFlagDetailChanged(flagKey, detail);
+  }
+
+  private dispatchError(exception: Error) {
+    this.collectors.forEach((collector) => {
+      if (collector.handleErrorEvent) {
+        collector.handleErrorEvent(exception.name, exception.message);
+      }
+    });
+  }
+
+  private dispatchFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext) {
+    this.collectors.forEach((collector) => {
+      if (collector.handleFlagUsed) {
+        collector.handleFlagUsed(flagKey, flagDetail, context);
+      }
+    });
   }
 
   private dispatchFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail) {
