@@ -1,4 +1,5 @@
 import { type LDContext, type LDEvaluationDetail } from 'launchdarkly-js-client-sdk';
+
 import { BrowserTelemetry } from './BrowserTelemetry';
 
 export interface Collector {
