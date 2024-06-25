@@ -5,19 +5,25 @@ import { Collector } from '../../api/Collector';
 import RollingBuffer from './RollingBuffer';
 import { RollingCapture } from './SessionReplayOptions';
 
+// Currently the rolling replay supports only 1
+
 export default class RollingReplay implements Collector {
   private telemetry?: BrowserTelemetry;
   private buffer: RollingBuffer;
   private stopper?: () => void;
+  private index: number = 0;
 
-  constructor(options: RollingCapture) {
+  constructor(private options: RollingCapture) {
     this.buffer = new RollingBuffer(options.eventSegmentLength, options.segmentBufferLength);
 
-    const { buffer } = this;
+    this.startCapture();
+  }
+
+  private startCapture() {
     this.stopper = rrweb.record({
-      checkoutEveryNth: options.eventSegmentLength,
-      emit(event) {
-        buffer.push(event);
+      checkoutEveryNth: this.options.eventSegmentLength,
+      emit: (event) => {
+        this.buffer.push(event);
       },
     });
   }
@@ -35,6 +41,15 @@ export default class RollingReplay implements Collector {
     this.telemetry?.captureSession({
       id: crypto.randomUUID(),
       events: this.buffer.toArray(),
+      index: this.index,
     });
+    this.index += 1;
+    this.restartCapture();
+  }
+
+  private restartCapture() {
+    this.buffer.reset();
+    this.stopper?.();
+    this.startCapture();
   }
 }
