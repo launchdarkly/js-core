@@ -1,125 +1,44 @@
 /* eslint-disable max-classes-per-file */
-import * as rrweb from 'rrweb';
-
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
 import { Collector } from '../../api/Collector';
+import ContinuousReplay from './ContinuousReplay';
 import applyPatches from './patches';
-import SessionBuffer from './SessionBuffer';
-
-interface RollingCapture {
-  type: 'rolling';
-  eventSegmentLength: number;
-  segmentBufferLength: number;
-}
-
-interface ContinuousCapture {
-  type: 'continuous';
-  interval: number;
-}
-
-interface SessionReplayOptions {
-  capture?: RollingCapture | ContinuousCapture;
-}
+import RollingReplay from './RollingReplay';
+import { ContinuousCapture, RollingCapture, SessionReplayOptions } from './SessionReplayOptions';
 
 function isRollingCapture(capture: unknown): capture is RollingCapture {
-  return (capture as {type: string}).type === 'rolling';
+  return (capture as { type: string })?.type === 'rolling';
 }
 
 function isContinuousCapture(capture: unknown): capture is ContinuousCapture {
-  return (capture as {type: string}).type === 'continuous';
+  return (capture as { type: string })?.type === 'continuous';
 }
-
-class RollingReplay implements Collector {
-  telemetry?: BrowserTelemetry;
-  buffer: SessionBuffer;
-  stopper?: () => void;
-
-  constructor(options: RollingCapture) {
-    applyPatches();
-    this.buffer = new SessionBuffer(options.eventSegmentLength, options.segmentBufferLength);
-
-    this.startCapture();
-  }
-
-  register(telemetry: BrowserTelemetry): void {
-    this.telemetry = telemetry;
-  }
-
-  unregister(): void {
-    this.telemetry = undefined;
-  }
-
-  capture(): void {
-    this.telemetry?.captureSession({
-      id: crypto.randomUUID(),
-      events: this.buffer.toArray(),
-    });
-  }
-
-  private startCapture() {
-    const { buffer, checkoutEveryNth } = this;
-    this.stopper = rrweb.record({
-      checkoutEveryNth,
-      emit(event) {
-        buffer.push(event);
-      },
-    });
-  }
-
-  private reset() {
-    this.stopper?.();
-    this.buffer.reset();
-    this.startCapture();
-  }
-}
-
-class ContinuousReplay implements Collector {}
 
 /**
  * Experimental capture of sessions using rrweb.
  */
 export default class SessionReplay implements Collector {
-  telemetry?: BrowserTelemetry;
-  buffer: SessionBuffer;
-  stopper?: () => void;
+  impl: Collector;
 
-  constructor(options: SessionReplayOptions) {
+  constructor(options?: SessionReplayOptions) {
     applyPatches();
-    this.buffer = new SessionBuffer(checkoutEveryNth, numBuffers);
-
-    this.startCapture();
-    if (continuous) {
+    if (isContinuousCapture(options?.capture)) {
+      this.impl = new ContinuousReplay(options.capture);
+    } else if (isRollingCapture(options?.capture)) {
+      this.impl = new RollingReplay(options.capture);
+    } else {
+      this.impl = new ContinuousReplay({
+        type: 'continuous',
+        intervalMs: 5 * 1000,
+      });
     }
   }
 
   register(telemetry: BrowserTelemetry): void {
-    this.telemetry = telemetry;
+    this.impl.register(telemetry);
   }
 
   unregister(): void {
-    this.telemetry = undefined;
-  }
-
-  capture(): void {
-    this.telemetry?.captureSession({
-      id: crypto.randomUUID(),
-      events: this.buffer.toArray(),
-    });
-  }
-
-  private startCapture() {
-    const { buffer, checkoutEveryNth } = this;
-    this.stopper = rrweb.record({
-      checkoutEveryNth,
-      emit(event) {
-        buffer.push(event);
-      },
-    });
-  }
-
-  private reset() {
-    this.stopper?.();
-    this.buffer.reset();
-    this.startCapture();
+    this.impl.unregister();
   }
 }

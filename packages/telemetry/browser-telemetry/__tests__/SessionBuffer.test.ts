@@ -1,9 +1,9 @@
-import SessionBuffer from '../src/collectors/rrweb/SessionBuffer';
+import RollingBuffer from '../src/collectors/rrweb/RollingBuffer';
 
 it('can fill the entire expected buffer size', () => {
   const bufferSize = 5;
   const numberBuffers = 4;
-  const buffer = new SessionBuffer(bufferSize, numberBuffers);
+  const buffer = new RollingBuffer(bufferSize, numberBuffers);
   const demoItems = Array.from(new Array(bufferSize * numberBuffers), (_, i) => i);
 
   demoItems.forEach(buffer.push.bind(buffer));
@@ -14,7 +14,7 @@ it('can fill the entire expected buffer size', () => {
 it('when the buffer is exceeded it will wrap around', () => {
   const bufferSize = 5;
   const numberBuffers = 4;
-  const buffer = new SessionBuffer(bufferSize, numberBuffers);
+  const buffer = new RollingBuffer(bufferSize, numberBuffers);
   const dropRatio = 1.5;
   const extraItems = Math.trunc(bufferSize * dropRatio);
   const itemsToMake = bufferSize * numberBuffers + extraItems;
