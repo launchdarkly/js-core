@@ -1,8 +1,8 @@
-import {
-  type LDClient,
-  type LDContext,
-  type LDEvaluationDetail,
-  type LDInspection,
+import type {
+  LDClient,
+  LDContext,
+  LDEvaluationDetail,
+  LDInspection,
 } from 'launchdarkly-js-client-sdk';
 
 import { Breadcrumb } from './api/Breadcrumb';
