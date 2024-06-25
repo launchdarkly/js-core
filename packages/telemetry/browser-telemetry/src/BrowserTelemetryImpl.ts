@@ -122,25 +122,19 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   private dispatchError(exception: Error) {
     this.collectors.forEach((collector) => {
-      if (collector.handleErrorEvent) {
-        collector.handleErrorEvent(exception.name, exception.message);
-      }
+      collector.handleErrorEvent?.(exception.name, exception.message);
     });
   }
 
   private dispatchFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext) {
     this.collectors.forEach((collector) => {
-      if (collector.handleFlagUsed) {
-        collector.handleFlagUsed(flagKey, flagDetail, context);
-      }
+      collector.handleFlagUsed?.(flagKey, flagDetail, context);
     });
   }
 
   private dispatchFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail) {
     this.collectors.forEach((collector) => {
-      if (collector.handleFlagDetailChanged) {
-        collector.handleFlagDetailChanged(flagKey, detail);
-      }
+      collector.handleFlagDetailChanged?.(flagKey, detail);
     });
   }
 }
