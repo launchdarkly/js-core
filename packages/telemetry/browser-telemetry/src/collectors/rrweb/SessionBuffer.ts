@@ -57,4 +57,10 @@ export default class SessionBuffer {
 
     return asArray;
   }
+
+  reset(): void {
+    this.writePointer = 0;
+    this.headPointer = 0;
+    this.buffers.forEach((buffer) => buffer.clear());
+  }
 }
