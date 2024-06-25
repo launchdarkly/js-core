@@ -3,41 +3,46 @@ import * as rrweb from 'rrweb';
 
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
 import { Collector } from '../../api/Collector';
+import ContinuousReplay from './ContinuousReplay';
 import applyPatches from './patches';
-import SessionBuffer from './SessionBuffer';
+import RollingReplay from './RollingReplay';
+import { ContinuousCapture, RollingCapture, SessionReplayOptions } from './SessionReplayOptions';
+
+function isRollingCapture(capture: unknown): capture is RollingCapture {
+  return (capture as { type: string })?.type === 'rolling';
+}
+
+function isContinuousCapture(capture: unknown): capture is ContinuousCapture {
+  return (capture as { type: string })?.type === 'continuous';
+}
 
 /**
  * Experimental capture of sessions using rrweb.
  */
 export default class SessionReplay implements Collector {
-  telemetry?: BrowserTelemetry;
-  buffer: SessionBuffer;
+  impl: Collector;
 
-  constructor(checkoutEveryNth: number, numBuffers: number) {
+  constructor(options?: SessionReplayOptions) {
     applyPatches();
-    this.buffer = new SessionBuffer(checkoutEveryNth, numBuffers);
-    const { buffer } = this;
-    rrweb.record({
-      checkoutEveryNth,
-      emit(event) {
-        buffer.push(event);
-      },
-    });
+    const captureOptions = options?.capture;
+    if (isContinuousCapture(captureOptions)) {
+      this.impl = new ContinuousReplay(captureOptions);
+    } else if (isRollingCapture(captureOptions)) {
+      this.impl = new RollingReplay(captureOptions);
+    } else {
+      this.impl = new ContinuousReplay({
+        type: 'continuous',
+        intervalMs: 5 * 1000,
+      });
+    }
   }
 
   register(telemetry: BrowserTelemetry): void {
-    this.telemetry = telemetry;
+    this.impl.register(telemetry);
   }
 
   unregister(): void {
-    this.telemetry = undefined;
-  }
-
-  capture(): void {
-    this.telemetry?.captureSession({
-      id: crypto.randomUUID(),
-      events: this.buffer.toArray(),
-    });
+    this.impl.unregister();
   }
 
   handleFlagUsed?(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void {

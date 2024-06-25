@@ -1,7 +1,7 @@
 // This file contains temporary patches that will be accomplished
 // with SDK modifications in the future.
 
-const sessionId = crypto.randomUUID();
+export const sessionId = crypto.randomUUID();
 const sessionTag = `session-id/${sessionId}`;
 
 class HeaderModifyingXMLHttpRequest extends XMLHttpRequest {

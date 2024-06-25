@@ -9,7 +9,7 @@ import EventBuffer from './EventBuffer';
  * The buffer can continuously capture events while always remaining in a playable state
  * and dropping old events.
  */
-export default class SessionBuffer {
+export default class RollingBuffer {
   private buffers: EventBuffer[] = [];
   private writePointer: number = 0;
   private headPointer: number = 0;
@@ -56,5 +56,11 @@ export default class SessionBuffer {
     }
 
     return asArray;
+  }
+
+  reset(): void {
+    this.writePointer = 0;
+    this.headPointer = 0;
+    this.buffers.forEach((buffer) => buffer.clear());
   }
 }
