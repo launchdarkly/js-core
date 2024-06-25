@@ -1,3 +1,4 @@
+import { type LDContext, type LDEvaluationDetail } from 'launchdarkly-js-client-sdk';
 import * as rrweb from 'rrweb';
 
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
@@ -37,5 +38,17 @@ export default class SessionReplay implements Collector {
       id: crypto.randomUUID(),
       events: this.buffer.toArray(),
     });
+  }
+
+  handleFlagUsed?(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void {
+    rrweb.record.addCustomEvent('flag-used', { key: flagKey, detail: flagDetail });
+  }
+
+  handleFlagDetailChanged?(flagKey: string, detail: LDEvaluationDetail): void {
+    rrweb.record.addCustomEvent('flag-detail-changed', { key: flagKey, detail });
+  }
+
+  handleErrorEvent(name: string, message: string): void {
+    rrweb.record.addCustomEvent('error', { name, message });
   }
 }
