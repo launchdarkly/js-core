@@ -12,6 +12,7 @@
     "packages/sdk/cloudflare/example",
     "packages/sdk/react-native",
     "packages/sdk/react-native/example",
+    "packages/sdk/react-universal",
     "packages/sdk/vercel",
     "packages/sdk/akamai-base",
     "packages/sdk/akamai-base/example",
