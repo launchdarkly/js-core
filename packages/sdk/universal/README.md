@@ -9,9 +9,13 @@
 > [!CAUTION]
 > This library is a beta version and should not be considered ready for production use while this message is visible.
 
-> **Easily unit test LaunchDarkly applications with universal-sdk** :clap:
+> **An idiomatic LaunchDarkly SDK which supports RSC, server side rendering and bootstrapping** :clap:
 
-For more information, see the [complete reference guide for unit testing](https://docs.launchdarkly.com/guides/sdk/unit-tests).
+This SDK supports:
+
+- React Server Components
+- Server side rendering
+- Bootstrapping
 
 ## Installation
 
@@ -23,32 +27,106 @@ npm i @launchdarkly/universal-sdk --save-dev
 yarn add -D @launchdarkly/universal-sdk
 ```
 
-Then in `universal-sdk.config.js` add `@launchdarkly/universal-sdk/{framework}` to setupFiles:
+### Server API
 
-```js
-// universal-sdk.config.js
-module.exports = {
-  // for react
-  setupFiles: ['@launchdarkly/universal-sdk/react'],
+- `initNodeSdk` - Initializes the Node SDK on server startup using the [instrumentation hook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation)
 
-  // for react-native
-  setupFiles: ['@launchdarkly/universal-sdk/react-native'],
+- `getBootstrap` - Returns a json suitable for bootstrapping the js sdk.
+
+- `useLDClientRsc` - Use this to get an ldClient for Server Components.
+
+### Client API
+
+- `LDProvider` - The react context provider.
+
+- `useLDClient` - Use this to get an ldClient for Client Components.
+
+## Usage
+
+1. Enable [instrumentationHook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) in `next.config.mjs`:
+
+```ts
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: { instrumentationHook: true },
 };
+
+export default nextConfig;
 ```
 
-## Quickstart
+2. Create a new file `instrumentation.ts` at the root of your project. This will initialize the Node Server SDK.
 
-TODO:
+```ts
+import { initNodeSdk } from '@/ld/server';
 
-## Developing this package
-
-```shell
-# at js-core repo root
-yarn && yarn build && cd packages/tooling/universal-sdk
-
-# run tests
-yarn test
+export async function register() {
+  await initNodeSdk();
+}
 ```
+
+3. In your root layout component, render the `LDProvider` using your `LDContext` and `bootstrap`:
+
+```tsx
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: ReactNode;
+}>) {
+  // You must supply an LDContext. For example, here getLDContext
+  // inspects cookies and defaults to anonymous.
+  const context = getLDContext();
+
+  // A bootstrap is required to initialize LDProvider.
+  const bootstrap = await getBootstrap(context);
+
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+        <LDProvider context={context} options={{ bootstrap }}>
+          {children}
+        </LDProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+4. Server Components must use the async `useLDClientRsc` function:
+
+```tsx
+// You should use your own getLDContext function.
+import { getLDContext } from '@/app/utils';
+import { useLDClientRsc } from '@/ld/server';
+
+export default async function Page() {
+  const ldc = await useLDClientRsc(getLDContext());
+  const flagValue = ldc.variation('dev-test-flag');
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      Server Component: {flagValue.toString()}
+    </main>
+  );
+}
+```
+
+5. Client Components must use the `useLDClient` hook:
+
+```tsx
+'use client';
+
+import { useLDClient } from '@/ld/client';
+
+export default function LDButton() {
+  const ldc = useLDClient();
+  const flagValue = ldc.variation('dev-test-flag');
+
+  return <p>Client Component: {flagValue.toString()}</p>;
+}
+```
+
+You will see both components are rendered on the server (view source on your browser). However, only Client Components
+will respond to live changes.
 
 ## Verifying SDK build provenance with the SLSA framework
 
