@@ -1,8 +1,8 @@
 {
-  "name": "@launchdarkly/universal-sdk",
+  "name": "@launchdarkly/react-universal-sdk",
   "version": "0.0.1",
-  "description": "Universal React LaunchDarkly SDK",
-  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/universal",
+  "description": "React Universal LaunchDarkly SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-universal",
   "repository": {
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"
@@ -11,10 +11,10 @@
   "packageManager": "yarn@4.2.2",
   "keywords": [
     "launchdarkly",
+    "react",
     "universal",
     "nextjs",
-    "remix",
-    "react"
+    "remix"
   ],
   "type": "module",
   "exports": {

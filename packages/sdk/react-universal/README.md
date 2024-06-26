@@ -1,10 +1,10 @@
-# LaunchDarkly Universal SDK
+# LaunchDarkly React Universal SDK
 
-[![NPM][universal-sdk-npm-badge]][universal-sdk-npm-link]
-[![Actions Status][universal-sdk-ci-badge]][universal-sdk-ci]
-[![Documentation][universal-sdk-ghp-badge]][universal-sdk-ghp-link]
-[![NPM][universal-sdk-dm-badge]][universal-sdk-npm-link]
-[![NPM][universal-sdk-dt-badge]][universal-sdk-npm-link]
+[![NPM][react-universal-sdk-npm-badge]][react-universal-sdk-npm-link]
+[![Actions Status][react-universal-sdk-ci-badge]][react-universal-sdk-ci]
+[![Documentation][react-universal-sdk-ghp-badge]][react-universal-sdk-ghp-link]
+[![NPM][react-universal-sdk-dm-badge]][react-universal-sdk-npm-link]
+[![NPM][react-universal-sdk-dt-badge]][react-universal-sdk-npm-link]
 
 > [!CAUTION]
 > This library is a beta version and should not be considered ready for production use while this message is visible.
@@ -21,10 +21,10 @@ This SDK supports:
 
 ```shell
 # npm
-npm i @launchdarkly/universal-sdk --save-dev
+npm i @launchdarkly/react-universal-sdk --save-dev
 
 # yarn
-yarn add -D @launchdarkly/universal-sdk
+yarn add -D @launchdarkly/react-universal-sdk
 ```
 
 ### Server API
@@ -147,11 +147,11 @@ LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
 
-[universal-sdk-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/universal-sdk.yml/badge.svg
-[universal-sdk-ci]: https://github.com/launchdarkly/js-core/actions/workflows/universal-sdk.yml
-[universal-sdk-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/universal-sdk.svg?style=flat-square
-[universal-sdk-npm-link]: https://www.npmjs.com/package/@launchdarkly/universal-sdk
-[universal-sdk-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[universal-sdk-ghp-link]: https://launchdarkly.github.io/js-core/packages/tooling/universal-sdk/docs/
-[universal-sdk-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/universal-sdk.svg?style=flat-square
-[universal-sdk-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/universal-sdk.svg?style=flat-square
+[react-universal-sdk-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/react-universal-sdk.yml/badge.svg
+[react-universal-sdk-ci]: https://github.com/launchdarkly/js-core/actions/workflows/react-universal-sdk.yml
+[react-universal-sdk-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/react-universal-sdk.svg?style=flat-square
+[react-universal-sdk-npm-link]: https://www.npmjs.com/package/@launchdarkly/react-universal-sdk
+[react-universal-sdk-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[react-universal-sdk-ghp-link]: https://launchdarkly.github.io/js-core/packages/tooling/react-universal-sdk/docs/
+[react-universal-sdk-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/react-universal-sdk.svg?style=flat-square
+[react-universal-sdk-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/react-universal-sdk.svg?style=flat-square

@@ -23,7 +23,7 @@ jobs:
       package-node-server-sdk-dynamodb-release: ${{ steps.release.outputs['packages/store/node-server-sdk-dynamodb--release_created'] }}
       package-node-server-sdk-otel-release: ${{ steps.release.outputs['packages/telemetry/node-server-sdk-otel--release_created'] }}
       package-tooling-jest-release: ${{ steps.release.outputs['packages/tooling/jest--release_created'] }}
-      package-universal-release: ${{ steps.release.outputs['packages/sdk/universal--release_created'] }}
+      package-react-universal-release: ${{ steps.release.outputs['packages/sdk/react-universal--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -337,23 +337,23 @@ jobs:
           workspace_path: packages/tooling/jest
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
-  release-tooling-universal:
+  release-tooling-react-universal:
     runs-on: ubuntu-latest
     needs: ['release-please']
     permissions:
       id-token: write
       contents: write
-    # HACK: universal sdk is not ready for release yet.
-    if: false #${{ needs.release-please.outputs.package-universal-release == 'true' }}
+    # HACK: react-universal sdk is not ready for release yet.
+    if: false #${{ needs.release-please.outputs.package-react-universal-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
-      - id: release-universal-sdk
-        name: Full release of packages/sdk/universal
+      - id: release-react-universal-sdk
+        name: Full release of packages/sdk/react-universal
         uses: ./actions/full-release
         with:
-          workspace_path: packages/sdk/universal
+          workspace_path: packages/sdk/react-universal
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}

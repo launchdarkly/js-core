@@ -1,4 +1,4 @@
-name: sdk/universal
+name: sdk/react-universal
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
       - '**.md'
 
 jobs:
-  build-test-universal:
+  build-test-react-universal:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,5 +20,5 @@ jobs:
         name: Shared CI Steps
         uses: ./actions/ci
         with:
-          workspace_name: '@launchdarkly/universal-sdk'
-          workspace_path: packages/sdk/universal
+          workspace_name: '@launchdarkly/react-universal-sdk'
+          workspace_path: packages/sdk/react-universal
