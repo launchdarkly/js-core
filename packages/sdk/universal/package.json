@@ -1,0 +1,59 @@
+{
+  "name": "@launchdarkly/universal-sdk",
+  "version": "0.0.1",
+  "description": "Universal React LaunchDarkly SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/universal",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@4.2.2",
+  "keywords": [
+    "launchdarkly",
+    "universal",
+    "nextjs",
+    "remix",
+    "react"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "yarn clean && tsc",
+    "tsw": "yarn tsc --watch",
+    "start": "rimraf dist && yarn tsw",
+    "lint": "eslint . --ext .ts",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
+    "coverage": "yarn test --coverage",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/jest": "^29.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
+  }
+}

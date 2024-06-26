@@ -32,6 +32,9 @@
       "path": "./packages/sdk/react-native/tsconfig.ref.json"
     },
     {
+      "path": "./packages/sdk/universal/tsconfig.ref.json"
+    },
+    {
       "path": "./packages/sdk/vercel/tsconfig.ref.json"
     },
     {
