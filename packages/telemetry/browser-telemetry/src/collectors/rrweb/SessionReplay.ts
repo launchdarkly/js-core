@@ -4,7 +4,6 @@ import * as rrweb from 'rrweb';
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
 import { Collector } from '../../api/Collector';
 import ContinuousReplay from './ContinuousReplay';
-import applyPatches from './patches';
 import RollingReplay from './RollingReplay';
 import { ContinuousCapture, RollingCapture, SessionReplayOptions } from './SessionReplayOptions';
 
@@ -23,7 +22,6 @@ export default class SessionReplay implements Collector {
   impl: Collector;
 
   constructor(options?: SessionReplayOptions) {
-    applyPatches();
     const captureOptions = options?.capture;
     if (isContinuousCapture(captureOptions)) {
       this.impl = new ContinuousReplay(captureOptions);

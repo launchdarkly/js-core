@@ -2,7 +2,6 @@ import * as rrweb from 'rrweb';
 
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
 import { Collector } from '../../api/Collector';
-import { sessionId } from './patches';
 import { ContinuousCapture } from './SessionReplayOptions';
 
 export default class ContinuousReplay implements Collector {
@@ -13,26 +12,31 @@ export default class ContinuousReplay implements Collector {
   private visibilityHandler: any;
   private timerHandle: any;
   private index: number = 0;
+  private readonly sessionId: string = '';
 
-  constructor(private readonly options: ContinuousCapture) {
-    this.visibilityHandler = () => {
-      this.handleVisibilityChange();
-    };
+  constructor(options: ContinuousCapture) {
+    if (typeof crypto !== undefined && typeof crypto.randomUUID === 'function') {
+      this.sessionId = crypto.randomUUID();
+      this.visibilityHandler = () => {
+        this.handleVisibilityChange();
+      };
 
-    document.addEventListener('visibilitychange', this.visibilityHandler, true);
+      document.addEventListener('visibilitychange', this.visibilityHandler, true);
 
-    this.timerHandle = setInterval(() => {
-      // If there are only 2 events, then we just have a snapshot.
-      // We can wait to capture until there is some activity.
-      // TODO: Figure out a better check.
-      if (this.buffer.length === 2) {
-        return;
-      }
-      this.recordCapture();
-      this.restartCapture();
-    }, options.intervalMs);
+      this.timerHandle = setInterval(() => {
+        // If there are only 2 events, then we just have a snapshot.
+        // We can wait to capture until there is some activity.
+        // TODO: Figure out a better check.
+        if (this.buffer.length === 2) {
+          return;
+        }
+        this.recordCapture();
+        this.restartCapture();
+      }, options.intervalMs);
 
-    this.startCapture();
+      this.startCapture();
+    }
+    // TODO: Should log that we are not going to record sessions.
   }
 
   register(telemetry: BrowserTelemetry): void {
@@ -57,7 +61,7 @@ export default class ContinuousReplay implements Collector {
 
   private recordCapture(): void {
     this.telemetry?.captureSession({
-      id: sessionId,
+      id: this.sessionId,
       events: [...this.buffer],
       index: this.index,
     });
