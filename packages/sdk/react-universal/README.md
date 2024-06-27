@@ -41,18 +41,7 @@ yarn add -D @launchdarkly/react-universal-sdk
 
 ## Usage
 
-1. Enable [instrumentationHook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) in `next.config.mjs`:
-
-```ts
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  experimental: { instrumentationHook: true },
-};
-
-export default nextConfig;
-```
-
-2. In `instrumentation.ts`, initialize the Node Server SDK:
+1. On server start, initialize the Node Server SDK. If you are using NextJS App Router, do this in `instrumentation.ts`. You'll need to enable the [instrumentationHook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation):
 
 ```ts
 import { initNodeSdk } from '@launchdarkly/react-universal-sdk/server';
@@ -62,7 +51,7 @@ export async function register() {
 }
 ```
 
-3. In the root layout, render the `LDProvider` using your `LDContext` and `bootstrap`:
+2. At the application root, render the `LDProvider` with your `LDContext` and `bootstrap`. In App Router, do this in the root layout:
 
 ```tsx
 export default async function RootLayout({
@@ -89,7 +78,7 @@ export default async function RootLayout({
 }
 ```
 
-4. Server Components must use the async `useLDClientRsc` function:
+3. Server Components must use the async `useLDClientRsc` function:
 
 ```tsx
 // You should use your own getLDContext function.
@@ -97,26 +86,22 @@ import { getLDContext } from '@/app/utils';
 
 import { useLDClientRsc } from '@launchdarkly/react-universal-sdk/server';
 
-export default async function Page() {
+export default async function ServerComponent() {
   const ldc = await useLDClientRsc(getLDContext());
   const flagValue = ldc.variation('my-boolean-flag-1');
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      Server Component: {flagValue.toString()}
-    </main>
-  );
+  return <>Server Component: {flagValue.toString()}</>;
 }
 ```
 
-5. Client Components must use the `useLDClient` hook:
+Client Components must use the `useLDClient` hook:
 
 ```tsx
 'use client';
 
 import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
 
-export default function LDButton() {
+export default function ClientComponent() {
   const ldc = useLDClient();
   const flagValue = ldc.variation('my-boolean-flag-1');
 
