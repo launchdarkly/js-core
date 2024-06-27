@@ -20,6 +20,8 @@ export class LDClientRsc implements Partial<JSSdk> {
   }
 
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
+    // On the server during ssr, call variation for analytics purposes.
+    global?.nodeSdk?.variation(key, this.ldContext, defaultValue).then(/* ignore */);
     return this.bootstrap[key] ?? defaultValue;
   }
 }
