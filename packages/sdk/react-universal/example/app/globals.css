@@ -27,3 +27,15 @@ body {
     text-wrap: balance;
   }
 }
+
+.ldgradient {
+  background: linear-gradient(126.73deg, #eaff38 -2.64%, #38c7e4 72.44%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@font-face {
+  font-family: "Audimat";
+  src: url("/fonts/Audimat3000-Regulier.otf");
+}
