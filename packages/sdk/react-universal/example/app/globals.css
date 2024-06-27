@@ -36,6 +36,6 @@ body {
 }
 
 @font-face {
-  font-family: "Audimat";
-  src: url("/fonts/Audimat3000-Regulier.otf");
+  font-family: 'Audimat';
+  src: url('/fonts/Audimat3000-Regulier.otf');
 }
