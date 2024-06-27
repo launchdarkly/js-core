@@ -1,7 +1,6 @@
 import HelloClientComponent from './components/helloClientComponent';
 import HelloServerComponent from './components/helloServerComponent';
 
-// GOTCHA: page components must be async. Otherwise the ssr cache may not be initialized correctly.
 export default async function Page() {
   return (
     <div className="grid h-screen">
