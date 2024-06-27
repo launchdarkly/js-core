@@ -4,7 +4,7 @@ import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
 
 export default function HelloClientComponent() {
   const ldc = useLDClient();
-  const flagValue = ldc.variation('dev-test-flag');
+  const flagValue = ldc.variation('my-boolean-flag-1');
 
   return (
     <div className="border-2 border-white/20  p-4 ">

@@ -14,7 +14,7 @@ yarn && yarn build
 MOBILE_KEY=abcdef12456
 ```
 
-3. Replace `dev-test-flag` with your flag key in `src/welcome.tsx`.
+3. Replace `my-boolean-flag-1` with your flag key in `src/welcome.tsx`.
 
 4. Run the app:
 

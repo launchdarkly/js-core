@@ -99,7 +99,7 @@ import { useLDClientRsc } from '@launchdarkly/react-universal-sdk/server';
 
 export default async function Page() {
   const ldc = await useLDClientRsc(getLDContext());
-  const flagValue = ldc.variation('dev-test-flag');
+  const flagValue = ldc.variation('my-boolean-flag-1');
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -118,14 +118,13 @@ import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
 
 export default function LDButton() {
   const ldc = useLDClient();
-  const flagValue = ldc.variation('dev-test-flag');
+  const flagValue = ldc.variation('my-boolean-flag-1');
 
   return <p>Client Component: {flagValue.toString()}</p>;
 }
 ```
 
-You will see both components are rendered on the server (view source on your browser). However, only Client Components
-will respond to live changes because Server Components are not included in bundled outputs.
+You will see both Server and Client Components are rendered on the server (view source on your browser). However, only Client Components will respond to live changes because Server Components are excluded from the client bundle.
 
 ## Verifying SDK build provenance with the SLSA framework
 
