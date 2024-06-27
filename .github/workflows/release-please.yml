@@ -343,8 +343,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    # HACK: react-universal sdk is not ready for release yet.
-    if: false #${{ needs.release-please.outputs.package-react-universal-release == 'true' }}
+    if: ${{ needs.release-please.outputs.package-react-universal-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

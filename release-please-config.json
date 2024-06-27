@@ -16,6 +16,10 @@
       ]
     },
     "packages/sdk/react-native": {},
+    "packages/sdk/react-universal": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
+    },
     "packages/sdk/server-node": {},
     "packages/sdk/vercel": {
       "extra-files": ["src/createPlatformInfo.ts"]
