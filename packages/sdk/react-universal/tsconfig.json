@@ -3,8 +3,8 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
-    "lib": ["es6"],
-    "module": "ES6",
+    "lib": ["es6", "dom"],
+    "module": "ESNext",
     "moduleResolution": "node",
     "noImplicitOverride": true,
     "outDir": "dist",
@@ -17,7 +17,8 @@
     "strict": true,
     "stripInternal": true,
     "target": "ES2017",
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "jsx": "react"
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
 }
