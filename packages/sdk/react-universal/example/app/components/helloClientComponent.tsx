@@ -42,8 +42,6 @@ export default function HelloClientComponent() {
         </label>
       </div>
       <br />
-      <div>{contextKey ? `Successfully identified ${contextKey}` : ''}</div>
-      <br />
       <button role="button" className="login" onClick={onClickLogin}>
         Login
       </button>
