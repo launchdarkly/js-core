@@ -1,6 +1,6 @@
 'use client';
 
-import { useLDClient } from '@/ld/client';
+import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
 
 export default function HelloClientComponent() {
   const ldc = useLDClient();

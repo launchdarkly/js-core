@@ -66,7 +66,7 @@ export default nextConfig;
 2. Create a new file `instrumentation.ts` at the root of your project. This will initialize the Node Server SDK.
 
 ```ts
-import { initNodeSdk } from '@/ld/server';
+import { initNodeSdk } from '@launchdarkly/react-universal-sdk/server';
 
 export async function register() {
   await initNodeSdk();
@@ -105,7 +105,8 @@ export default async function RootLayout({
 ```tsx
 // You should use your own getLDContext function.
 import { getLDContext } from '@/app/utils';
-import { useLDClientRsc } from '@/ld/server';
+
+import { useLDClientRsc } from '@launchdarkly/react-universal-sdk/server';
 
 export default async function HelloRSC() {
   const ldc = await useLDClientRsc(getLDContext());
@@ -128,7 +129,7 @@ export default async function HelloRSC() {
 ```tsx
 'use client';
 
-import { useLDClient } from '@/ld/client';
+import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
 
 export default function HelloClient() {
   const ldc = useLDClient();

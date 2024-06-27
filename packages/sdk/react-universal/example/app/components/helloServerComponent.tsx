@@ -1,5 +1,6 @@
 import { getLDContext } from '@/app/utils';
-import { useLDClientRsc } from '@/ld/server';
+
+import { useLDClientRsc } from '@launchdarkly/react-universal-sdk/server';
 
 export default async function HelloServerComponent() {
   const ldc = await useLDClientRsc(getLDContext());
