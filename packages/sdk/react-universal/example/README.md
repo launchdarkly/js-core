@@ -23,7 +23,7 @@ LD_SDK_KEY='<YOUR LD SERVER SDK KEY>'
 NEXT_PUBLIC_LD_CLIENT_SIDE_ID='<YOUR LD CLIENT SDK KEY>'
 ```
 
-Optional - 
+Optional -
 
 1. Either create `dev-test-flag` in your LaunchDarkly environment or replace with your own flags in `helloLDClient.tsx` and/or `helloLDRSC.tsx`.
 2. `yarn && yarn dev` or `npm i && npm run dev`
@@ -115,8 +115,8 @@ export default async function HelloRSC() {
     <div className="border-2 border-white/20 p-4">
       <p className="text-xl ldgradient">
         {flagValue
-          ? "This flag is evaluating True in a React Server Component"
-          : "This flag is evaluating False in a React Server Component"}
+          ? 'This flag is evaluating True in a React Server Component'
+          : 'This flag is evaluating False in a React Server Component'}
       </p>
     </div>
   );
@@ -138,8 +138,8 @@ export default function HelloClient() {
     <div className="border-2 border-white/20  p-4 ">
       <p className="ldgradient text-xl">
         {flagValue
-          ? "This flag is evaluating True running Client-Side JavaScript"
-          : "This flag is evaluating False running Client-Side JavaScript"}
+          ? 'This flag is evaluating True running Client-Side JavaScript'
+          : 'This flag is evaluating False running Client-Side JavaScript'}
       </p>
     </div>
   );
