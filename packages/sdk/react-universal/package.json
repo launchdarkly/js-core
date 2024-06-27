@@ -67,7 +67,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/node-server-sdk": "^9.4.6",
     "launchdarkly-js-client-sdk": "^3.4.0"
   },
   "peerDependencies": {
