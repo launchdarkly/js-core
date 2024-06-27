@@ -9,37 +9,35 @@
 > [!CAUTION]
 > This library is a beta version and should not be considered ready for production use while this message is visible.
 
-> **An idiomatic LaunchDarkly SDK which supports RSC, server side rendering and bootstrapping** :clap:
+## Features
 
-This SDK supports:
+- Supports both React Server Components and Client Components
+- Idiomatic server side rendering
+- Bootstrapping out of the box
 
-- React Server Components
-- Server side rendering
-- Bootstrapping
-
-## Installation
+## Install
 
 ```shell
 # npm
-npm i @launchdarkly/react-universal-sdk --save-dev
+npm i @launchdarkly/react-universal-sdk
 
 # yarn
 yarn add -D @launchdarkly/react-universal-sdk
 ```
 
-### Server API
+## Server API
 
-- `initNodeSdk` - Initializes the Node SDK on server startup using the [instrumentation hook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation)
+- `initNodeSdk` - Initializes the Node SDK on startup.
 
-- `getBootstrap` - Returns a json suitable for bootstrapping the js sdk.
+- `getBootstrap` - Produces suitable bootstrap the js sdk.
 
-- `useLDClientRsc` - Use this to get an ldClient for Server Components.
+- `useLDClientRsc` - Gets a suitable ld client for Server Components.
 
-### Client API
+## Client API
 
 - `LDProvider` - The react context provider.
 
-- `useLDClient` - Use this to get an ldClient for Client Components.
+- `useLDClient` - Gets a suitable ld client for Client Components.
 
 ## Usage
 
@@ -54,17 +52,17 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-2. Create a new file `instrumentation.ts` at the root of your project. This will initialize the Node Server SDK.
+2. In `instrumentation.ts`, initialize the Node Server SDK:
 
 ```ts
-import { initNodeSdk } from '@/ld/server';
+import { initNodeSdk } from '@launchdarkly/react-universal-sdk/server';
 
 export async function register() {
   await initNodeSdk();
 }
 ```
 
-3. In your root layout component, render the `LDProvider` using your `LDContext` and `bootstrap`:
+3. In the root layout, render the `LDProvider` using your `LDContext` and `bootstrap`:
 
 ```tsx
 export default async function RootLayout({
@@ -96,7 +94,8 @@ export default async function RootLayout({
 ```tsx
 // You should use your own getLDContext function.
 import { getLDContext } from '@/app/utils';
-import { useLDClientRsc } from '@/ld/server';
+
+import { useLDClientRsc } from '@launchdarkly/react-universal-sdk/server';
 
 export default async function Page() {
   const ldc = await useLDClientRsc(getLDContext());
@@ -115,7 +114,7 @@ export default async function Page() {
 ```tsx
 'use client';
 
-import { useLDClient } from '@/ld/client';
+import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
 
 export default function LDButton() {
   const ldc = useLDClient();
@@ -126,7 +125,7 @@ export default function LDButton() {
 ```
 
 You will see both components are rendered on the server (view source on your browser). However, only Client Components
-will respond to live changes.
+will respond to live changes because Server Components are not included in bundled outputs.
 
 ## Verifying SDK build provenance with the SLSA framework
 
