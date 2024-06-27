@@ -4,7 +4,7 @@ import { initialize, type LDOptions } from 'launchdarkly-js-client-sdk';
 import { type PropsWithChildren, useEffect, useState } from 'react';
 import React from 'react';
 
-import type { LDContext, LDFlagSet } from '@launchdarkly/js-sdk-common';
+import type { LDContext, LDFlagSet } from '@launchdarkly/node-server-sdk';
 
 import { isServer } from '../isServer';
 import type { JSSdk } from '../types';

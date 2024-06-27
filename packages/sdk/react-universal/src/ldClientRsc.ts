@@ -1,4 +1,4 @@
-import type { LDContext, LDFlagSet, LDFlagValue } from '@launchdarkly/js-sdk-common';
+import type { LDContext, LDFlagSet, LDFlagValue } from '@launchdarkly/node-server-sdk';
 
 import type { JSSdk } from './types';
 

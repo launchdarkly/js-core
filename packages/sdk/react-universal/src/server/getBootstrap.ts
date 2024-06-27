@@ -1,4 +1,4 @@
-import type { LDContext } from '@launchdarkly/js-sdk-common';
+import type { LDContext } from '@launchdarkly/node-server-sdk';
 
 /**
  * Returns a json suitable for bootstrapping the js sdk.
