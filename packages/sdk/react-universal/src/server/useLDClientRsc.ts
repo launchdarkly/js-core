@@ -1,4 +1,3 @@
-// @ts-ignore
 import { cache } from 'react';
 
 import type { LDContext } from '@launchdarkly/node-server-sdk';
@@ -26,7 +25,7 @@ export const useLDClientRsc = async (context: LDContext) => {
     // eslint-disable-next-line no-console
     console.log(`*** create cache ldClientRsc: ${context.key}`);
     cachedClient = new LDClientRsc(context, bootstrap);
-    cache.set(ldClientRsc, cachedClient);
+    serverCache.set(ldClientRsc, cachedClient);
   } else {
     // eslint-disable-next-line no-console
     console.log(`*** reuse cache ldClientRsc: ${cachedClient.getContext().key}`);
