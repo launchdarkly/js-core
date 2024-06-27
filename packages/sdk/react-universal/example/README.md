@@ -14,7 +14,7 @@ This is a [Next.js](https://nextjs.org/) project created with [`create-next-app`
 
 ## Quickstart
 
-1. Update the .env.local file with your LaunchDarkly SDK Key configurations.
+1. Rename `.example.env.local` to `.env.local` and use your LaunchDarkly SDK keys:
 
 ```dotenv
 LD_SDK_KEY='<YOUR LD SERVER SDK KEY>'
