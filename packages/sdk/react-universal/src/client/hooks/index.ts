@@ -1,3 +1,3 @@
-// TODO: typed variations are not supported yet.
+// TODO: Implement variation and typed variation hooks.
 
 export * from './useLDClient';
