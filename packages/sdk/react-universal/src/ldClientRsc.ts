@@ -1,5 +1,6 @@
 import type { LDContext, LDFlagSet, LDFlagValue } from '@launchdarkly/node-server-sdk';
 
+import { isServer } from './isServer';
 import type { JSSdk } from './types';
 
 /**
@@ -20,8 +21,10 @@ export class LDClientRsc implements Partial<JSSdk> {
   }
 
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
-    // On the server during ssr, call variation for analytics purposes.
-    global?.nodeSdk?.variation(key, this.ldContext, defaultValue).then(/* ignore */);
+    if (isServer) {
+      // On the server during ssr, call variation for analytics purposes.
+      global.nodeSdk.variation(key, this.ldContext, defaultValue).then(/* ignore */);
+    }
     return this.bootstrap[key] ?? defaultValue;
   }
 }
