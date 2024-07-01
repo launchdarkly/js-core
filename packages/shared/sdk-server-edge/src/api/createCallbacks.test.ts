@@ -28,6 +28,19 @@ describe('createCallbacks', () => {
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'error', err);
   });
 
+  test('onError does not log when there are listeners', () => {
+    emitter.on('error', noop);
+
+    const { onError } = createCallbacks(emitter, logger);
+    onError(err);
+
+    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'error', err);
+    expect(logger.error).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.info).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
+  });
+
   test('onError logs when there are no listeners', () => {
     const { onError } = createCallbacks(emitter, logger);
     onError(err);
