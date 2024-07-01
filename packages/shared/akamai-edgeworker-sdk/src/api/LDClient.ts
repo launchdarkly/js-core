@@ -29,7 +29,8 @@ class LDClient extends LDClientImpl {
     options: LDOptions,
     storeProvider: CacheableStoreProvider,
   ) {
-    super(sdkKey, platform, createOptions(options), createCallbacks());
+    const finalOptions = createOptions(options);
+    super(sdkKey, platform, finalOptions, createCallbacks(finalOptions.logger));
     this.cacheableStoreProvider = storeProvider;
   }
 
