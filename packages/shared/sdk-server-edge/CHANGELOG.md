@@ -96,6 +96,13 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.2.1 to 2.2.2
 
+## [2.3.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.3.4...js-server-sdk-common-edge-v2.3.5) (2024-07-01)
+
+
+### Bug Fixes
+
+* Log errors when there is no error event handler. ([#495](https://github.com/launchdarkly/js-core/issues/495)) ([6b73699](https://github.com/launchdarkly/js-core/commit/6b73699061efa46cd291756d3932fcf78d480f40))
+
 ## [2.3.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.3.3...js-server-sdk-common-edge-v2.3.4) (2024-06-14)
 
 
