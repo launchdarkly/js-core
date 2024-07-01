@@ -1,4 +1,3 @@
-import { LDContext } from '@launchdarkly/js-server-sdk-common';
 import { logger } from '@launchdarkly/private-js-mocks';
 
 import { init } from '../src';
