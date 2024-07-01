@@ -21,7 +21,16 @@ export default class LDClient extends LDClientImpl {
       diagnosticEventPath: `/events/diagnostic/${clientSideID}`,
       includeAuthorizationHeader: false,
     };
-    super(clientSideID, platform, createOptions(options), createCallbacks(em), internalOptions);
+
+    const finalOptions = createOptions(options);
+
+    super(
+      clientSideID,
+      platform,
+      finalOptions,
+      createCallbacks(em, finalOptions.logger),
+      internalOptions,
+    );
     this.emitter = em;
   }
 }

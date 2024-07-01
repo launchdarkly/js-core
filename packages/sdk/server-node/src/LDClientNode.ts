@@ -43,6 +43,8 @@ class LDClientNode extends LDClientImpl {
         onError: (err: Error) => {
           if (emitter.listenerCount('error')) {
             emitter.emit('error', err);
+          } else {
+            logger.error(err.message);
           }
         },
         onFailed: (err: Error) => {

@@ -1,11 +1,13 @@
 import { EventEmitter } from 'node:events';
 
-import { noop } from '@launchdarkly/js-server-sdk-common';
+import { LDLogger, noop } from '@launchdarkly/js-server-sdk-common';
 
-const createCallbacks = (emitter: EventEmitter) => ({
+const createCallbacks = (emitter: EventEmitter, logger?: LDLogger) => ({
   onError: (err: Error) => {
     if (emitter.listenerCount('error')) {
       emitter.emit('error', err);
+    } else {
+      logger?.error(err.message);
     }
   },
   onFailed: (err: Error) => {
