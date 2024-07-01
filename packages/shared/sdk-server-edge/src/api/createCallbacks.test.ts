@@ -1,7 +1,6 @@
 import { EventEmitter } from 'node:events';
 
-import { LDLogger, noop } from '@launchdarkly/js-server-sdk-common';
-
+import { noop } from '@launchdarkly/js-server-sdk-common';
 import { logger } from '@launchdarkly/private-js-mocks';
 
 import createCallbacks from './createCallbacks';
