@@ -42,7 +42,8 @@
     "url": "https://github.com/launchdarkly/js-core/issues"
   },
   "dependencies": {
-    "rrweb": "2.0.0-alpha.4"
+    "rrweb": "2.0.0-alpha.4",
+    "tracekit": "^0.4.6"
   },
   "peerDependencies": {
     "launchdarkly-js-client-sdk": "^3.4.0"

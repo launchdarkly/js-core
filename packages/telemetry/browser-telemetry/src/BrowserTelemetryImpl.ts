@@ -13,6 +13,7 @@ import ClickCollector from './collectors/click';
 import ErrorCollector from './collectors/error';
 import makeInspectors from './inspectors';
 import { ParsedOptions } from './options';
+import parse from './stack/StackParser';
 
 // TODO: Add ring buffer instead of shifting.
 
@@ -71,7 +72,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       {
         message: exception.message,
         name: exception.name,
-        stack: exception.stack, // TODO: Do we need to locally process the stack.
+        stack: parse(exception),
         breadcrumbs: [...this.breadcrumbs],
       },
       'error',
