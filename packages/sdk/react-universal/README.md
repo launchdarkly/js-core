@@ -9,62 +9,49 @@
 > [!CAUTION]
 > This library is a beta version and should not be considered ready for production use while this message is visible.
 
-> **An idiomatic LaunchDarkly SDK which supports RSC, server side rendering and bootstrapping** :clap:
+## Features
 
-This SDK supports:
+- Supports both React Server Components and Client Components
+- Idiomatic server side rendering
+- Bootstrapping out of the box
 
-- React Server Components
-- Server side rendering
-- Bootstrapping
-
-## Installation
+## Install
 
 ```shell
 # npm
-npm i @launchdarkly/react-universal-sdk --save-dev
+npm i @launchdarkly/react-universal-sdk
 
 # yarn
 yarn add -D @launchdarkly/react-universal-sdk
 ```
 
-### Server API
+## Server API
 
-- `initNodeSdk` - Initializes the Node SDK on server startup using the [instrumentation hook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation)
+- `initNodeSdk` - Initializes the Node SDK on startup.
 
-- `getBootstrap` - Returns a json suitable for bootstrapping the js sdk.
+- `getBootstrap` - Produces suitable bootstrap the js sdk.
 
-- `useLDClientRsc` - Use this to get an ldClient for Server Components.
+- `useLDClientRsc` - Gets a suitable ld client for Server Components.
 
-### Client API
+## Client API
 
 - `LDProvider` - The react context provider.
 
-- `useLDClient` - Use this to get an ldClient for Client Components.
+- `useLDClient` - Gets a suitable ld client for Client Components.
 
 ## Usage
 
-1. Enable [instrumentationHook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation) in `next.config.mjs`:
+1. On server start, initialize the Node Server SDK. If you are using NextJS App Router, do this in `instrumentation.ts`. You'll need to enable the [instrumentationHook](https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation):
 
 ```ts
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  experimental: { instrumentationHook: true },
-};
-
-export default nextConfig;
-```
-
-2. Create a new file `instrumentation.ts` at the root of your project. This will initialize the Node Server SDK.
-
-```ts
-import { initNodeSdk } from '@/ld/server';
+import { initNodeSdk } from '@launchdarkly/react-universal-sdk/server';
 
 export async function register() {
   await initNodeSdk();
 }
 ```
 
-3. In your root layout component, render the `LDProvider` using your `LDContext` and `bootstrap`:
+2. At the application root, render the `LDProvider` with your `LDContext` and `bootstrap`. In App Router, do this in the root layout:
 
 ```tsx
 export default async function RootLayout({
@@ -91,42 +78,38 @@ export default async function RootLayout({
 }
 ```
 
-4. Server Components must use the async `useLDClientRsc` function:
+3. Server Components must use the async `useLDClientRsc` function:
 
 ```tsx
 // You should use your own getLDContext function.
 import { getLDContext } from '@/app/utils';
-import { useLDClientRsc } from '@/ld/server';
 
-export default async function Page() {
+import { useLDClientRsc } from '@launchdarkly/react-universal-sdk/server';
+
+export default async function ServerComponent() {
   const ldc = await useLDClientRsc(getLDContext());
-  const flagValue = ldc.variation('dev-test-flag');
+  const flagValue = ldc.variation('my-boolean-flag-1');
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      Server Component: {flagValue.toString()}
-    </main>
-  );
+  return <>Server Component: {flagValue.toString()}</>;
 }
 ```
 
-5. Client Components must use the `useLDClient` hook:
+Client Components must use the `useLDClient` hook:
 
 ```tsx
 'use client';
 
-import { useLDClient } from '@/ld/client';
+import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
 
-export default function LDButton() {
+export default function ClientComponent() {
   const ldc = useLDClient();
-  const flagValue = ldc.variation('dev-test-flag');
+  const flagValue = ldc.variation('my-boolean-flag-1');
 
   return <p>Client Component: {flagValue.toString()}</p>;
 }
 ```
 
-You will see both components are rendered on the server (view source on your browser). However, only Client Components
-will respond to live changes.
+You will see both Server and Client Components are rendered on the server (view source on your browser). However, only Client Components will respond to live changes because Server Components are excluded from the client bundle.
 
 ## Verifying SDK build provenance with the SLSA framework
 
