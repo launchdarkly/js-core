@@ -20,6 +20,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const clientSideID = process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID;
+
   // You must supply an LDContext. For example, here getLDContext
   // inspects cookies and defaults to anonymous.
   const context = getLDContext();
@@ -30,7 +32,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <LDProvider context={context} options={{ bootstrap }}>
+        <LDProvider clientSideID={clientSideID} context={context} options={{ bootstrap }}>
           {children}
         </LDProvider>
       </body>

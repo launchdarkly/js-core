@@ -12,6 +12,7 @@ import { Provider, type ReactContext } from './reactContext';
 import { setupListeners } from './setupListeners';
 
 type LDProps = {
+  clientSideID: string;
   context: LDContext;
   options?: LDOptions;
 };
@@ -20,14 +21,20 @@ type LDProps = {
  * This is the LaunchDarkly Provider which uses the React context api to store
  * and pass data to child components through hooks.
  *
+ * @param clientSideID Your LaunchDarkly client side id.
  * @param context The LDContext for evaluation.
  * @param options Configuration options for the js sdk. See {@link LDOptions}.
  * @param children Your react application to be rendered.
  */
-export const LDProvider = ({ context, options, children }: PropsWithChildren<LDProps>) => {
+export const LDProvider = ({
+  clientSideID,
+  context,
+  options,
+  children,
+}: PropsWithChildren<LDProps>) => {
   let jsSdk: JSSdk = undefined as any;
   if (!isServer) {
-    jsSdk = initialize(process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID ?? '', context, options);
+    jsSdk = initialize(clientSideID ?? '', context, options);
   }
 
   const [state, setState] = useState<ReactContext>({
