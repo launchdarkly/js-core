@@ -5,9 +5,11 @@ import StackFrame from './StackFrame';
 import StackTrace from './StackTrace';
 
 // @ts-ignore The typing for this is a bool, but it accepts a number.
-TraceKit.linesOfContext = 1;
+// eslint-disable-next-line prettier/prettier
+TraceKit?.linesOfContext = 1;
 
 const MAX_SRC_LINE_LENGTH = 280;
+const INDEX_SPECIFIER = '(index)';
 
 /**
  * For files hosted on the origin attempt to reduce to just a filename.
@@ -17,8 +19,7 @@ const MAX_SRC_LINE_LENGTH = 280;
  * @param input The input URL.
  * @returns The output file name.
  */
-function processUrlToFileName(input: string): string {
-  const { origin } = window.location;
+export function processUrlToFileName(input: string, origin: string): string {
   let cleaned = input;
   if (input.startsWith(origin)) {
     cleaned = input.slice(origin.length);
@@ -26,13 +27,16 @@ function processUrlToFileName(input: string): string {
       cleaned = cleaned.slice(1);
     }
     if (cleaned === '') {
-      cleaned = '(index)';
+      cleaned = INDEX_SPECIFIER;
+    }
+    if(cleaned.endsWith('/')) {
+      cleaned += INDEX_SPECIFIER;
     }
   }
   return cleaned;
 }
 
-interface TrimOptions {
+export interface TrimOptions {
   /**
    * The maximum length of the trimmed line.
    */
@@ -53,7 +57,7 @@ interface TrimOptions {
  * @param column The column which the stack frame originates from.
  * @returns A trimmed source string.
  */
-function trimSourceLine(options: TrimOptions, line: string, column: number): string {
+export function trimSourceLine(options: TrimOptions, line: string, column: number): string {
   if (line.length <= options.maxLength) {
     return line;
   }
@@ -73,7 +77,8 @@ function trimSourceLine(options: TrimOptions, line: string, column: number): str
 export default function parse(error: Error): StackTrace {
   const parsed = computeStackTrace(error);
   const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
-    fileName: processUrlToFileName(inFrame.url),
+    // TODO: Extract window dependencies into a platform.
+    fileName: processUrlToFileName(inFrame.url, window.location.origin),
     function: inFrame.func,
     line: inFrame.line,
     col: inFrame.column,
