@@ -13,6 +13,7 @@ module.exports = {
     '**/dist/**',
     '**/vercel/examples/**',
     '**/react-native/example/**',
+    '**/react-universal/example/**',
     '**/fromExternal/**',
   ],
   rules: {
@@ -41,10 +42,10 @@ module.exports = {
     'import/no-cycle': 'error',
     'import/no-useless-path-segments': 'error',
     'import/no-duplicates': 'error',
+    'import/prefer-default-export': 'off',
     'jest/no-disabled-tests': 'warn',
     'jest/no-focused-tests': 'error',
     'jest/no-identical-title': 'error',
-    // 'jest/prefer-to-have-length': 'warn',
     'jest/valid-expect': 'error',
   },
   globals: {
