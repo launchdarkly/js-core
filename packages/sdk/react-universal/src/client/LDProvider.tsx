@@ -24,7 +24,6 @@ type LDProps = {
  * @param options Configuration options for the js sdk. See {@link LDOptions}.
  * @param children Your react application to be rendered.
  */
-
 export const LDProvider = ({ context, options, children }: PropsWithChildren<LDProps>) => {
   let jsSdk: JSSdk = undefined as any;
   if (!isServer) {
