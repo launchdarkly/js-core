@@ -1,3 +1,4 @@
+import { UiBreadcrumb } from '../api/Breadcrumb';
 import { BrowserTelemetry } from '../api/BrowserTelemetry';
 import { Collector } from '../api/Collector';
 
@@ -18,13 +19,14 @@ export default class ClickCollector implements Collector {
       (event: MouseEvent) => {
         const target = getTarget(event);
         if (target) {
-          this.destination?.addBreadcrumb({
+          const breadcrumb: UiBreadcrumb = {
+            class: 'ui',
             type: 'click',
-            target: {
-              // TODO: Add a query selector.
-              id: target.id,
-            },
-          });
+            level: 'info',
+            timestamp: Date.now(),
+            message: target.id, // TODO: Implement something useful. Ideally a selector.
+          };
+          this.destination?.addBreadcrumb(breadcrumb);
         }
       },
       true,

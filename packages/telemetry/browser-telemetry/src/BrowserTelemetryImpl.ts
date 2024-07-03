@@ -5,7 +5,7 @@ import type {
   LDInspection,
 } from 'launchdarkly-js-client-sdk';
 
-import { Breadcrumb } from './api/Breadcrumb';
+import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
 import { Event } from './api/Event';
@@ -16,6 +16,17 @@ import { ParsedOptions } from './options';
 import parse from './stack/StackParser';
 
 // TODO: Add ring buffer instead of shifting.
+
+function safeValue(u: unknown): string | boolean | number | undefined {
+  switch (typeof u) {
+    case 'string':
+    case 'boolean':
+    case 'number':
+      return u;
+    default:
+      return undefined;
+  }
+}
 
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private maxPendingEvents: number;
@@ -100,23 +111,35 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.collectors.forEach((collector) => collector.unregister());
   }
 
-  handleFlagUsed(flagKey: string, flagDetail: LDEvaluationDetail, context: LDContext): void {
-    this.addBreadcrumb({
+  handleFlagUsed(flagKey: string, detail: LDEvaluationDetail, context: LDContext): void {
+    const breadcrumb: FeatureManagementBreadcrumb = {
       type: 'flag-evaluated',
-      flagKey,
-      value: flagDetail.value,
+      data: {
+        key: flagKey,
+        value: safeValue(detail.value),
+      },
       timestamp: new Date().getTime(),
-    });
+      class: 'feature-management',
+      level: 'info',
+    };
+    this.addBreadcrumb(breadcrumb);
 
-    this.dispatchFlagUsed(flagKey, flagDetail, context);
+    this.dispatchFlagUsed(flagKey, detail, context);
   }
 
   handleFlagDetailChanged(flagKey: string, detail: LDEvaluationDetail): void {
-    this.addBreadcrumb({
+    const breadcrumb: FeatureManagementBreadcrumb = {
       type: 'flag-detail-changed',
-      flagKey,
-      detail,
-    });
+      data: {
+        key: flagKey,
+        value: safeValue(detail.value),
+      },
+      timestamp: new Date().getTime(),
+      class: 'feature-management',
+      level: 'info',
+    };
+
+    this.addBreadcrumb(breadcrumb);
 
     this.dispatchFlagDetailChanged(flagKey, detail);
   }
