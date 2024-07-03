@@ -1,10 +1,9 @@
 import { getLDContext } from '@/app/utils';
 
-import { useLDClientRsc } from '@launchdarkly/react-universal-sdk/server';
+import { useVariationRsc } from '@launchdarkly/react-universal-sdk/server';
 
 export default async function HelloServerComponent() {
-  const ldc = await useLDClientRsc(getLDContext());
-  const flagValue = ldc.variation('my-boolean-flag-1');
+  const flagValue = await useVariationRsc('my-boolean-flag-1', getLDContext());
 
   return (
     <div className="border-2 border-white/20 p-4">

@@ -1,3 +1,3 @@
 export * from './initNodeSdk';
-export * from './useLDClientRsc';
+export * from './hooks';
 export * from './getBootstrap';
