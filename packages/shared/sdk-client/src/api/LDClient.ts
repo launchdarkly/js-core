@@ -321,7 +321,7 @@ export interface LDClient {
    * Determines the variation of a feature flag for a context, along with information about how it was
    * calculated.
    *
-   * Note that this will only work if you have set `evaluationExplanations` to true in {@link LDOptions}.
+   * Note that this will only work if you have set `withReasons` to true in {@link LDOptions}.
    * Otherwise, the `reason` property of the result will be null.
    *
    * The `reason` property of the result will also be included in analytics events, if you are

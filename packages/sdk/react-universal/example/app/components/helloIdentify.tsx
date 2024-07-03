@@ -4,18 +4,14 @@ import { useState } from 'react';
 import { useCookies } from 'react-cookie';
 
 import type { JSSdk } from '@launchdarkly/react-universal-sdk';
-import { useLDClient } from '@launchdarkly/react-universal-sdk/client';
+import { useLDClient, useVariation } from '@launchdarkly/react-universal-sdk/client';
 
 export default function HelloIdentify() {
-  const ldc = useLDClient();
   const [_, setCookie] = useCookies(['ld']);
   const [contextKey, setContextKey] = useState('');
 
-  // WARNING: Using the ldClient to evaluate flags directly like this in prod
-  // can result in high event volumes. This example is contrived and is meant for
-  // demo purposes only. The recommended way is to utilise the `useVariation` hooks
-  // which should be supported soon.
-  const flagValue = ldc.variation('my-boolean-flag-1');
+  const ldc = useLDClient();
+  const flagValue = useVariation('my-boolean-flag-1');
 
   function onClickLogin() {
     const context = { kind: 'user', key: contextKey };

@@ -8,6 +8,6 @@ import type { LDContext } from '@launchdarkly/node-server-sdk';
  * @returns A promise which resolves to a json object suitable for bootstrapping the js sdk.
  */
 export const getBootstrap = async (context: LDContext) => {
-  const allFlags = await global.nodeSdk.allFlagsState(context);
+  const allFlags = await global.nodeSdk.allFlagsState(context, { withReasons: true });
   return allFlags?.toJSON();
 };
