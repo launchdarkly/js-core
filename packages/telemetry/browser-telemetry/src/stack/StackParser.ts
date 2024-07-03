@@ -1,4 +1,3 @@
-// import ErrorStackParser from 'error-stack-parser';
 import TraceKit, { computeStackTrace } from 'tracekit';
 
 import StackFrame from './StackFrame';
