@@ -1,6 +1,6 @@
 {
   "name": "react-native-example",
-  "version": "3.5.0",
+  "version": "3.5.1",
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
