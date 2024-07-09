@@ -34,10 +34,6 @@ function safeValue(u: unknown): string | boolean | number | undefined {
   }
 }
 
-function genSessionId() {
-  return randomUuidV4();
-}
-
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private maxPendingEvents: number;
   private maxBreadcrumbs: number;
@@ -49,7 +45,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   private inspectorInstances: LDInspection[] = [];
   private collectors: Collector[] = [];
-  private sessionId: string = genSessionId();
+  private sessionId: string = randomUuidV4();
 
   constructor(options: ParsedOptions) {
     // Error collector is always required.
