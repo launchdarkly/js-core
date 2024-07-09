@@ -8,14 +8,20 @@ import type {
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
-import { Event } from './api/Event';
+import { ErrorData } from './api/ErrorData';
+import { EventData } from './api/EventData';
 import ClickCollector from './collectors/click';
 import ErrorCollector from './collectors/error';
 import makeInspectors from './inspectors';
 import { ParsedOptions } from './options';
+import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
 
 // TODO: Add ring buffer instead of shifting.
+
+const CUSTOM_KEY_PREFIX = '$ld:telemetry';
+const ERROR_KEY = `${CUSTOM_KEY_PREFIX}:error`;
+const SESSION_CAPTURE_KEY = `${CUSTOM_KEY_PREFIX}:sessionCapture`;
 
 function safeValue(u: unknown): string | boolean | number | undefined {
   switch (typeof u) {
@@ -28,17 +34,22 @@ function safeValue(u: unknown): string | boolean | number | undefined {
   }
 }
 
+function genSessionId() {
+  return randomUuidV4();
+}
+
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private maxPendingEvents: number;
   private maxBreadcrumbs: number;
 
-  private pendingEvents: Event[] = [];
+  private pendingEvents: { type: string; data: EventData }[] = [];
   private client?: LDClient;
 
   private breadcrumbs: Breadcrumb[] = [];
 
   private inspectorInstances: LDInspection[] = [];
   private collectors: Collector[] = [];
+  private sessionId: string = genSessionId();
 
   constructor(options: ParsedOptions) {
     // Error collector is always required.
@@ -61,15 +72,20 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   register(client: LDClient): void {
     this.client = client;
+    if (this.pendingEvents.length) {
+      this.pendingEvents.forEach((event) => {
+        this.client?.track(event.type, event.data);
+      });
+    }
   }
 
   inspectors(): LDInspection[] {
     return this.inspectorInstances;
   }
 
-  private capture(event: Event, type: string) {
+  private capture(type: string, event: EventData) {
     if (this.client === undefined) {
-      this.pendingEvents.push(event);
+      this.pendingEvents.push({ type, data: event });
       if (this.pendingEvents.length > this.maxPendingEvents) {
         // TODO: Maybe log this?
         this.pendingEvents.shift();
@@ -79,25 +95,23 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   captureError(exception: Error): void {
-    this.capture(
-      {
-        message: exception.message,
-        name: exception.name,
-        stack: parse(exception),
-        breadcrumbs: [...this.breadcrumbs],
-      },
-      'error',
-    );
+    const data: ErrorData = {
+      type: exception.name || exception.constructor.name || 'generic',
+      message: exception.message,
+      stack: parse(exception),
+      breadcrumbs: [...this.breadcrumbs],
+      sessionId: this.sessionId,
+    };
+    this.capture(ERROR_KEY, data);
     this.dispatchError(exception);
   }
 
   captureErrorEvent(errorEvent: ErrorEvent): void {
-    // TODO: More details?
     this.captureError(errorEvent.error);
   }
 
-  captureSession(sessionEvent: Event): void {
-    this.capture({ ...sessionEvent, breadcrumbs: [...this.breadcrumbs] }, 'sessionCapture');
+  captureSession(sessionEvent: EventData): void {
+    this.capture(SESSION_CAPTURE_KEY, { ...sessionEvent, breadcrumbs: [...this.breadcrumbs] });
   }
 
   addBreadcrumb(breadcrumb: Breadcrumb): void {
