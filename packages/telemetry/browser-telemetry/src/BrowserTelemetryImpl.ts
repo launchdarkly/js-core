@@ -16,6 +16,7 @@ import makeInspectors from './inspectors';
 import { ParsedOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
+import FetchCollector from './collectors/http/fetch';
 
 // TODO: Add ring buffer instead of shifting.
 
@@ -51,6 +52,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     // Error collector is always required.
     this.collectors.push(new ErrorCollector());
     this.collectors.push(...options.collectors);
+    this.collectors.push(new FetchCollector());
     this.maxPendingEvents = options.maxPendingEvents;
     this.maxBreadcrumbs = options.breadcrumbs.maxBreadcrumbs;
 
