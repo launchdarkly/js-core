@@ -43,7 +43,8 @@ function getRandom128bit(): number[] {
   }
   const values = [];
   for (let index = 0; index < 16; index += 1) {
-    values.push(Math.floor(Math.random() * 255));
+    // Math.random is 0-1 with inclusive min and exclusive max.
+    values.push(Math.floor(Math.random() * 256));
   }
   return values;
 }
