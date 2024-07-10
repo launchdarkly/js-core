@@ -1,7 +1,15 @@
-import { UiBreadcrumb } from '../api/Breadcrumb';
-import { BrowserTelemetry } from '../api/BrowserTelemetry';
-import { Collector } from '../api/Collector';
+import { UiBreadcrumb } from '../../api/Breadcrumb';
+import { BrowserTelemetry } from '../../api/BrowserTelemetry';
+import { Collector } from '../../api/Collector';
+import toSelector from './toSelector';
 
+/**
+ * Get the event target. This is wrapped because in some situations a browser may throw when
+ * accessing the event target.
+ *
+ * @param event The event to get the target from.
+ * @returns The event target, or undefined if one is not available.
+ */
 function getTarget(event: MouseEvent): Element | undefined {
   try {
     return event.target as Element;
@@ -10,6 +18,9 @@ function getTarget(event: MouseEvent): Element | undefined {
   }
 }
 
+/**
+ * Collects mouse click events and adds them as breadcrumbs.
+ */
 export default class ClickCollector implements Collector {
   private destination?: BrowserTelemetry;
 
@@ -24,7 +35,7 @@ export default class ClickCollector implements Collector {
             type: 'click',
             level: 'info',
             timestamp: Date.now(),
-            message: target.id, // TODO: Implement something useful. Ideally a selector.
+            message: toSelector(target),
           };
           this.destination?.addBreadcrumb(breadcrumb);
         }
