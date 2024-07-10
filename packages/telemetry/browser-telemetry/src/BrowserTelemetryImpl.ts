@@ -10,7 +10,7 @@ import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
 import { ErrorData } from './api/ErrorData';
 import { EventData } from './api/EventData';
-import ClickCollector from './collectors/click';
+import ClickCollector from './collectors/dom/ClickCollector';
 import ErrorCollector from './collectors/error';
 import makeInspectors from './inspectors';
 import { ParsedOptions } from './options';
