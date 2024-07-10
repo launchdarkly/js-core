@@ -68,11 +68,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   register(client: LDClient): void {
     this.client = client;
-    if (this.pendingEvents.length) {
-      this.pendingEvents.forEach((event) => {
-        this.client?.track(event.type, event.data);
-      });
-    }
+    this.pendingEvents.forEach((event) => {
+      this.client?.track(event.type, event.data);
+    });
   }
 
   inspectors(): LDInspection[] {
