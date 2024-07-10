@@ -26,11 +26,16 @@ interface BasicElement {
  */
 function isNode(element: unknown): element is NodeWithParent {
   const anyElement = element as any;
-  return typeof anyElement === 'object' && anyElement.parentNode !== undefined;
+  // Parent node being null or undefined fill be falsy.
+  // The type of `null` is object, so check for null as well.
+  return typeof anyElement === 'object' && anyElement != null && anyElement.parentNode;
 }
 
 /**
  * Given an element produce a class name in CSS selector format.
+ *
+ * Exported for testing.
+ *
  * @param element The element to get a class name for.
  * @returns The class name, or undefined if there is no class name.
  */
@@ -54,6 +59,8 @@ export function getClassName(element: BasicElement): string | undefined {
 
 /**
  * Produce a string representation for a single DOM element. Does not produce the full selector.
+ *
+ * Exported for testing.
  *
  * @param element The element to produce a text representation for.
  * @returns A text representation of the element, or an empty string if one cannot be produced.
