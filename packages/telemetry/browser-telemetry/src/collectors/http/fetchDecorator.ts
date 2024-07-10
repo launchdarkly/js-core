@@ -2,7 +2,17 @@ import { HttpBreadcrumb } from '../../api/Breadcrumb';
 
 const originalFetch = window.fetch;
 
-export function processProcessFetchArgs(
+/**
+ * Given fetch arguments produce a URL and method.
+ *
+ * Exposed for testing.
+ *
+ * @param input First parameter to fetch.
+ * @param init Second, optional, parameter to fetch.
+ * @returns Return the URL and method. If not method or url can be accessed, then 'GET' will be the
+ * method and the url will be an empty string.
+ */
+export function processFetchArgs(
   input: RequestInfo | URL,
   init?: RequestInit | undefined,
 ): { url: string; method: string } {
@@ -51,7 +61,7 @@ export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => 
         data: {
           // We know these will be fetch args.
           // @ts-ignore
-          ...processProcessFetchArgs(...args),
+          ...processFetchArgs(...args),
           statusCode: response.status,
           statusText: response.statusText,
         },
@@ -61,7 +71,6 @@ export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => 
     });
   }
   wrapper.prototype = originalFetch.prototype;
-  // fetch(input: RequestInfo | URL, init?: RequestInit | undefined): Promise<Response>
 
   try {
     Object.defineProperty(wrapper, '__LaunchDarkly_original_fetch', {
@@ -71,7 +80,8 @@ export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => 
       configurable: true,
     });
   } catch {
-    // TODO: Debug logs?
+    // Intentional ignore.
+    // TODO: If we add debug logging, then this should be logged.
   }
 
   window.fetch = wrapper;
