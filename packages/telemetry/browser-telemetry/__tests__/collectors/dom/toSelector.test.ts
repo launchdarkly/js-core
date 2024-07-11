@@ -1,4 +1,4 @@
-import toSelector, { elementToString, getClassName } from '../src/collectors/dom/toSelector';
+import toSelector, { elementToString, getClassName } from '../../../src/collectors/dom/toSelector';
 
 it.each([
   [{}, undefined],

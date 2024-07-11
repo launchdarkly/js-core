@@ -4,6 +4,10 @@ import filterHttpBreadcrumb from '../../filters/filterHttpBreadcrumb';
 import HttpCollectorOptions from './HttpCollectorOptions';
 import decorateXhr from './xhrDecorator';
 
+/**
+ * Instrument XMLHttpRequest and provide a breadcrumb for every XMLHttpRequest
+ * which is completed.
+ */
 export default class XhrCollector implements Collector {
   private destination?: BrowserTelemetry;
 

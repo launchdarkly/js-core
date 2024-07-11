@@ -19,6 +19,11 @@ interface LDXhrData {
   error?: boolean;
 }
 
+/**
+ * Decorate XMLHttpRequest and execute the callback whenever a request is completed.
+ *
+ * @param callback Function which handles a breadcrumb.
+ */
 export default function decorateXhr(callback: (breadcrumb: HttpBreadcrumb) => void) {
   // In these functions we add type annotations for `this`. The impact here should just
   // be that we get correct typing for typescript. They should not affect the output.
