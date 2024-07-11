@@ -121,13 +121,12 @@ export default function toSelector(
   // Limiting the components should generate reasonable selectors in most cases.
   const components: string[] = [];
   let ptr = element;
-  while (isNode(ptr) && ptr.parentNode) {
+  while (isNode(ptr) && ptr.parentNode && components.length < options.maxDepth) {
     const asString = elementToString(ptr as BasicElement);
     // We do not need to include the 'html' component in the selector.
+    // The HTML element can be assumed to be the top. If there are more elements
+    // we would not want to include them (they would be something non-standard).
     if (asString === 'html') {
-      break;
-    }
-    if (components.length > options.maxDepth) {
       break;
     }
 
