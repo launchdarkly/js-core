@@ -23,22 +23,25 @@ export default function decorateXhr(callback: (breadcrumb: HttpBreadcrumb) => vo
   // In these functions we add type annotations for `this`. The impact here should just
   // be that we get correct typing for typescript. They should not affect the output.
 
+  // We are using functions instead of an arrow functions in order to preserve the original `this`.
+  // Arrow functions capture the enclosing `this`.
+
   function wrappedOpen(this: XMLHttpRequest, ...args: any[]) {
     // Listen to error so we can tag this request as having an error. If there is no error event
     // then the request will assume to not have errored.
+    // eslint-disable-next-line func-names
     this.addEventListener('error', function (_event: ProgressEvent<XMLHttpRequestEventTarget>) {
       // We know, if the data is present, that it has this shape, as we injected it.
-      // @ts-ignore
-      const data: LDXhrData = this[LD_DATA_XHR];
+      const data: LDXhrData = (this as any)[LD_DATA_XHR];
       data.error = true;
     });
 
     this.addEventListener(
       'loadend',
+      // eslint-disable-next-line func-names
       function (_event: ProgressEvent<XMLHttpRequestEventTarget>) {
         // We know, if the data is present, that it has this shape, as we injected it.
-        // @ts-ignore
-        const data: LDXhrData = this[LD_DATA_XHR];
+        const data: LDXhrData = (this as any)[LD_DATA_XHR];
         // Timestamp could be falsy for 0, but obviously that isn't a good timestamp, so we are ok.
         if (data && data.timestamp) {
           callback({
@@ -59,8 +62,7 @@ export default function decorateXhr(callback: (breadcrumb: HttpBreadcrumb) => vo
     );
 
     // We know these will be open arguments.
-    // @ts-ignore
-    originalOpen.apply(this, args);
+    originalOpen.apply(this, args as any);
 
     try {
       const xhrData: LDXhrData = {
@@ -82,12 +84,10 @@ export default function decorateXhr(callback: (breadcrumb: HttpBreadcrumb) => vo
 
   function wrappedSend(this: XMLHttpRequest, ...args: any[]) {
     // We know these will be open arguments.
-    // @ts-ignore
-    originalSend.apply(this, args);
+    originalSend.apply(this, args as any);
 
     // We know, if the data is present, that it has this shape, as we injected it.
-    // @ts-ignore
-    const data: LDXhrData = this[LD_DATA_XHR];
+    const data: LDXhrData = (this as any)[LD_DATA_XHR];
     if (data) {
       data.timestamp = Date.now();
     }

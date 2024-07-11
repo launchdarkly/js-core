@@ -64,8 +64,7 @@ it.each([
 });
 
 it('respects max depth', () => {
-  const element =
-  {
+  const element = {
     tagName: 'DIV',
     className: 'cheese taco',
     id: 'taco',
@@ -74,12 +73,12 @@ it('respects max depth', () => {
       parentNode: {
         tagName: 'BODY',
         parentNode: {
-          tagName: 'HTML'
-        }
+          tagName: 'HTML',
+        },
       },
     },
   };
 
-  expect(toSelector(element, {maxDepth: 1})).toBe("div#taco.cheese.taco")
-  expect(toSelector(element, {maxDepth: 2})).toBe("p > div#taco.cheese.taco")
+  expect(toSelector(element, { maxDepth: 1 })).toBe('div#taco.cheese.taco');
+  expect(toSelector(element, { maxDepth: 2 })).toBe('p > div#taco.cheese.taco');
 });

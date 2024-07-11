@@ -48,24 +48,26 @@ export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => 
   // TODO: Check if already wrapped?
   // TODO: Centralized mechanism to wrapping?
 
+  // In this function we add type annotations for `this`. In this case we are telling teh compiler
+  // we don't care about the typing.
+
   // This is a function instead of an arrow function in order to preserve the original `this`.
   // Arrow functions capture the enclosing `this`.
-  function wrapper(...args: any[]): Promise<Response> {
+  function wrapper(this: any, ...args: any[]): Promise<Response> {
     const timestamp = Date.now();
     // We are taking the original parameters and passing them through. We are not specifying their
     // type information and the number of parameters could be changed over time and the wrapper
     // would still function.
-    // @ts-ignore
-    return originalFetch.apply(this, args).then((response: Response) => {
+    return originalFetch.apply(this, args as any).then((response: Response) => {
       const crumb: HttpBreadcrumb = {
         class: 'http',
         timestamp,
         level: response.ok ? 'info' : 'error',
         type: 'fetch',
         data: {
-          // We know these will be fetch args.
-          // @ts-ignore
-          ...processFetchArgs(...args),
+          // We know these will be fetch args. We only can take 2 of them, one of which may be
+          // undefined. We still use all the ars to apply to the original function.
+          ...processFetchArgs(args[0], args[1]),
           statusCode: response.status,
           statusText: response.statusText,
         },
