@@ -121,13 +121,11 @@ export default function toSelector(
   // Limiting the components should generate reasonable selectors in most cases.
   const components: string[] = [];
   let ptr = element;
-  while (isNode(ptr) && ptr.parentNode) {
+  while (isNode(ptr) && ptr.parentNode && components.length < options.maxDepth) {
     const asString = elementToString(ptr as BasicElement);
     // We do not need to include the 'html' component in the selector.
+    // There can be no parent to the html element.
     if (asString === 'html') {
-      break;
-    }
-    if (components.length > options.maxDepth) {
       break;
     }
 
