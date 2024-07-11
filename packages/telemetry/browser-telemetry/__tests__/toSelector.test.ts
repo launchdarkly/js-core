@@ -62,3 +62,24 @@ it.each([
 ])('can produce a CSS selector from a dom element', (element: any, expected: string) => {
   expect(toSelector(element)).toBe(expected);
 });
+
+it('respects max depth', () => {
+  const element =
+  {
+    tagName: 'DIV',
+    className: 'cheese taco',
+    id: 'taco',
+    parentNode: {
+      tagName: 'P',
+      parentNode: {
+        tagName: 'BODY',
+        parentNode: {
+          tagName: 'HTML'
+        }
+      },
+    },
+  };
+
+  expect(toSelector(element, {maxDepth: 1})).toBe("div#taco.cheese.taco")
+  expect(toSelector(element, {maxDepth: 2})).toBe("p > div#taco.cheese.taco")
+});
