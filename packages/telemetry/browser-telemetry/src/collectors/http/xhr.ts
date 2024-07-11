@@ -1,14 +1,14 @@
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
 import { Collector } from '../../api/Collector';
 import filterHttpBreadcrumb from '../../filters/filterHttpBreadcrumb';
-import decorateFetch from './fetchDecorator';
 import HttpCollectorOptions from './HttpCollectorOptions';
+import decorateXhr from './xhrDecorator';
 
-export default class FetchCollector implements Collector {
+export default class XhrCollector implements Collector {
   private destination?: BrowserTelemetry;
 
   constructor(options: HttpCollectorOptions) {
-    decorateFetch((breadcrumb) => {
+    decorateXhr((breadcrumb) => {
       filterHttpBreadcrumb(breadcrumb, options);
       this.destination?.addBreadcrumb(breadcrumb);
     });

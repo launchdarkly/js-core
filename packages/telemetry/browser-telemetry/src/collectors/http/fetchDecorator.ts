@@ -1,5 +1,7 @@
 import { HttpBreadcrumb } from '../../api/Breadcrumb';
 
+const LD_ORIGINAL_FETCH = '__LaunchDarkly_original_fetch';
+
 const originalFetch = window.fetch;
 
 /**
@@ -75,7 +77,8 @@ export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => 
   wrapper.prototype = originalFetch.prototype;
 
   try {
-    Object.defineProperty(wrapper, '__LaunchDarkly_original_fetch', {
+    // Use defineProperty to prevent this value from being enumerable.
+    Object.defineProperty(wrapper, LD_ORIGINAL_FETCH, {
       // Defaults to non-enumerable.
       value: originalFetch,
       writable: true,
