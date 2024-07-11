@@ -1,4 +1,4 @@
-import { processUrlToFileName, TrimOptions, trimSourceLine } from '../src/stack/StackParser';
+import { processUrlToFileName, TrimOptions, trimSourceLine } from '../../src/stack/StackParser';
 
 it.each([
   ['http://www.launchdarkly.com', 'http://www.launchdarkly.com/', '(index)'],

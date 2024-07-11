@@ -1,4 +1,4 @@
-import { UrlFilter } from '../../api/Options';
+import { UrlFilter } from '../api/Options';
 
 export default function filterUrl(filters: UrlFilter[], url?: string): string {
   if (!url) {

@@ -1,6 +1,6 @@
 import { HttpBreadcrumb } from '../api/Breadcrumb';
-import filterUrl from '../collectors/http/filterUrl';
 import HttpCollectorOptions from '../collectors/http/HttpCollectorOptions';
+import filterUrl from './filterUrl';
 
 /**
  * This function does in-place filtering of http breadcrumbs.
