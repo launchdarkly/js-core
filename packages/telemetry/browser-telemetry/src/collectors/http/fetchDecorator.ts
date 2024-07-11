@@ -46,6 +46,8 @@ export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => 
   // TODO: Check if already wrapped?
   // TODO: Centralized mechanism to wrapping?
 
+  // This is a function instead of an arrow function in order to preserve the original `this`.
+  // Arrow functions capture the enclosing `this`.
   function wrapper(...args: any[]): Promise<Response> {
     const timestamp = Date.now();
     // We are taking the original parameters and passing them through. We are not specifying their
