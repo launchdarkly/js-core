@@ -1,4 +1,4 @@
-import RollingBuffer from '../src/collectors/rrweb/RollingBuffer';
+import RollingBuffer from '../../../src/collectors/rrweb/RollingBuffer';
 
 it('can fill the entire expected buffer size', () => {
   const bufferSize = 5;

@@ -12,6 +12,15 @@ export default class ErrorCollector implements Collector {
       },
       true,
     );
+    window.addEventListener(
+      'unhandledrejection',
+      (event: PromiseRejectionEvent) => {
+        if (event.reason) {
+          this.destination?.captureError(event.reason);
+        }
+      },
+      true,
+    );
   }
 
   register(telemetry: BrowserTelemetry): void {

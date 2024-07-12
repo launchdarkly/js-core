@@ -12,6 +12,9 @@ import { ErrorData } from './api/ErrorData';
 import { EventData } from './api/EventData';
 import ClickCollector from './collectors/dom/ClickCollector';
 import ErrorCollector from './collectors/error';
+import FetchCollector from './collectors/http/fetch';
+import XhrCollector from './collectors/http/xhr';
+import defaultUrlFilter from './filters/defaultUrlFilter';
 import makeInspectors from './inspectors';
 import { ParsedOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
@@ -51,8 +54,30 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     // Error collector is always required.
     this.collectors.push(new ErrorCollector());
     this.collectors.push(...options.collectors);
+
     this.maxPendingEvents = options.maxPendingEvents;
     this.maxBreadcrumbs = options.breadcrumbs.maxBreadcrumbs;
+
+    const urlFilters = [defaultUrlFilter];
+    if (options.breadcrumbs.http.customUrlFilter) {
+      urlFilters.push(options.breadcrumbs.http.customUrlFilter);
+    }
+
+    if (options.breadcrumbs.http.instrumentFetch) {
+      this.collectors.push(
+        new FetchCollector({
+          urlFilters,
+        }),
+      );
+    }
+
+    if (options.breadcrumbs.http.instrumentXhr) {
+      this.collectors.push(
+        new XhrCollector({
+          urlFilters,
+        }),
+      );
+    }
 
     if (options.breadcrumbs.click) {
       this.collectors.push(new ClickCollector());
@@ -85,7 +110,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
         this.pendingEvents.shift();
       }
     }
-    this.client?.track(`$ld:telemetry:${type}`, event);
+    this.client?.track(type, event);
   }
 
   captureError(exception: Error): void {

@@ -24,6 +24,10 @@ it('can set each option', () => {
       click: false,
       evaluations: false,
       flagChange: false,
+      http: {
+        instrumentFetch: true,
+        instrumentXhr: true,
+      },
     },
     collectors: [new ErrorCollector(), new ErrorCollector()],
   });
