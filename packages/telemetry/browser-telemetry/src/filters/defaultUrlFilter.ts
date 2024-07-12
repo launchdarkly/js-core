@@ -1,5 +1,5 @@
-const pollingRegex = /sdk\/evalx\/\w+\/contexts\/(?<context>[a-zA-Z0-9=]*)\??.*?/;
-const streamingREgex = /\/eval\/[^/]*\/(?<context>[a-zA-Z0-9=]*)\??.*?/;
+const pollingRegex = /sdk\/evalx\/[^/]+\/contexts\/(?<context>[^/?]*)\??.*?/;
+const streamingREgex = /\/eval\/[^/]+\/(?<context>[^/?]*)\??.*?/;
 
 /**
  * Filter which removes context information for browser JavaScript endpoints.
