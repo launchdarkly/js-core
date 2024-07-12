@@ -2,7 +2,7 @@ const pollingRegex = /sdk\/evalx\/[^/]+\/contexts\/(?<context>[^/?]*)\??.*?/;
 const streamingREgex = /\/eval\/[^/]+\/(?<context>[^/?]*)\??.*?/;
 
 /**
- * Filter which removes context information for browser JavaScrip endpoints.
+ * Filter which removes context information for browser JavaScript endpoints.
  *
  * @param url URL to filter.
  * @returns A filtered URL.
