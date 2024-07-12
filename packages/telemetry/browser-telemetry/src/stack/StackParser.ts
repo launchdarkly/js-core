@@ -1,9 +1,9 @@
-import { computeStackTrace } from 'tracekit';
+import TraceKit, { computeStackTrace } from 'tracekit';
 
+import { ParsedStackOptions } from '../options';
 import StackFrame from './StackFrame';
 import StackTrace from './StackTrace';
 
-const MAX_SRC_LINE_LENGTH = 280;
 const INDEX_SPECIFIER = '(index)';
 
 /**
@@ -61,18 +61,65 @@ export function trimSourceLine(options: TrimOptions, line: string, column: numbe
   return line.slice(captureStart, captureEnd);
 }
 
+function getLines(
+  start: number,
+  end: number,
+  context: string[],
+  trimmer: (val: string) => string,
+): string[] {
+  const adjustedStart = start < 0 ? 0 : start;
+  const adjustedEnd = end > context.length ? context.length : end;
+  if (adjustedStart < adjustedEnd) {
+    return context.slice(adjustedStart, adjustedEnd).map(trimmer);
+  }
+  return [];
+}
+
 function getSrcLines(
-  inContext: string[],
-  line: number,
+  inFrame: TraceKit.StackFrame,
+  options: ParsedStackOptions,
 ): {
-  srcBefore: string[];
-  srcLine: string;
-  srcAfter: string[];
+  srcBefore?: string[];
+  srcLine?: string;
+  srcAfter?: string[];
 } {
+  const { context } = inFrame;
+  // It should be present, but we don't want to trust that it is.
+  if (!context) {
+    return {};
+  }
+  const { maxLineLength } = options.source;
+  const beforeColumnCharacters = Math.floor(maxLineLength / 2);
+
+  console.log("Options", options);
+  console.log("Context", context);
+
+  // The before and after lines will not be precise while we use TraceKit.
+  // By forking it we should be able to achieve a more optimal result.
+
+  // Trimmer for non-origin lines. Starts at column 0.
+  const trimmer = (input: string) =>
+    trimSourceLine(
+      {
+        maxLength: options.source.maxLineLength,
+        beforeColumnCharacters,
+      },
+      input,
+      0,
+    );
+
+  const origin = Math.floor(context.length / 2);
   return {
-    srcBefore: [],
-    srcLine: '',
-    srcAfter: [],
+    srcBefore: getLines(origin - options.source.beforeLines, origin, context, trimmer),
+    srcLine: trimSourceLine(
+      {
+        maxLength: maxLineLength,
+        beforeColumnCharacters,
+      },
+      context[origin],
+      inFrame.column,
+    ),
+    srcAfter: getLines(origin + 1, origin + 1 + options.source.afterLines, context, trimmer),
   };
 }
 
@@ -84,7 +131,7 @@ function getSrcLines(
  * @param error The error to generate a StackTrace for.
  * @returns The stack trace for the given error.
  */
-export default function parse(error: Error): StackTrace {
+export default function parse(error: Error, options: ParsedStackOptions): StackTrace {
   const parsed = computeStackTrace(error);
   const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
     // TODO: Extract window dependencies into a platform.
@@ -92,16 +139,7 @@ export default function parse(error: Error): StackTrace {
     function: inFrame.func,
     line: inFrame.line,
     col: inFrame.column,
-    srcBefore: [],
-    srcLine: trimSourceLine(
-      {
-        maxLength: MAX_SRC_LINE_LENGTH,
-        beforeColumnCharacters: MAX_SRC_LINE_LENGTH,
-      },
-      inFrame.context?.[0],
-      inFrame.column,
-    ),
-    srcAfter: [],
+    ...getSrcLines(inFrame, options),
   }));
   return {
     frames,
