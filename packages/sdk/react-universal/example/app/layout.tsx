@@ -32,7 +32,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <LDProvider clientSideID={clientSideID} context={context} options={{ bootstrap }}>
+        <LDProvider
+          clientSideID={clientSideID}
+          context={context}
+          options={{ bootstrap, evaluationReasons: true }}
+        >
           {children}
         </LDProvider>
       </body>

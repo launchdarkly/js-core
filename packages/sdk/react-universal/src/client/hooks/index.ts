@@ -1,3 +1,3 @@
-// TODO: Implement variation and typed variation hooks.
+export * from './variation';
 
 export * from './useLDClient';

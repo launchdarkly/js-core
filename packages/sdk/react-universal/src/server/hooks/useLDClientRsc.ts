@@ -2,8 +2,8 @@ import { cache } from 'react';
 
 import type { LDContext } from '@launchdarkly/node-server-sdk';
 
-import { LDClientRsc } from '../ldClientRsc';
-import { getBootstrap } from './getBootstrap';
+import { LDClientRsc } from '../../ldClientRsc';
+import { getBootstrap } from '../getBootstrap';
 
 const ldClientRsc = 'ldClientRsc';
 const getServerCache = cache(() => new Map<string, any>());
