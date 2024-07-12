@@ -1,22 +1,8 @@
 import { UiBreadcrumb } from '../../api/Breadcrumb';
 import { BrowserTelemetry } from '../../api/BrowserTelemetry';
 import { Collector } from '../../api/Collector';
+import getTarget from './getTarget';
 import toSelector from './toSelector';
-
-/**
- * Get the event target. This is wrapped because in some situations a browser may throw when
- * accessing the event target.
- *
- * @param event The event to get the target from.
- * @returns The event target, or undefined if one is not available.
- */
-function getTarget(event: MouseEvent): Element | undefined {
-  try {
-    return event.target as Element;
-  } catch {
-    return undefined;
-  }
-}
 
 /**
  * Collects mouse click events and adds them as breadcrumbs.

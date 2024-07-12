@@ -107,6 +107,13 @@ export interface Options {
     click?: boolean;
 
     /**
+     * True to enable input breadcrumbs for keypresses. Defaults to true.
+     *
+     * Input breadcrumbs do not include entered text, just that text was entered.
+     */
+    keyboardInput?: boolean;
+
+    /**
      * Controls instrumentation and breadcrumbs for HTTP requests.
      * The default is to instrument XMLHttpRequests and fetch requests.
      *

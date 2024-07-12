@@ -20,6 +20,7 @@ import makeInspectors from './inspectors';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
+import KeypressCollector from './collectors/dom/KeypressCollector';
 
 // TODO: Add ring buffer instead of shifting.
 
@@ -94,6 +95,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
     if (options.breadcrumbs.click) {
       this.collectors.push(new ClickCollector());
+    }
+
+    if (options.breadcrumbs.keyboardInput) {
+      this.collectors.push(new KeypressCollector());
     }
 
     this.collectors.forEach((collector) => collector.register(this as BrowserTelemetry));
