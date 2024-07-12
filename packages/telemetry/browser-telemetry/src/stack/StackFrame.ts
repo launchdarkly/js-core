@@ -20,9 +20,23 @@ export default interface StackFrame {
   col?: number;
 
   /**
+   * A number of source code lines before the line the frame originates from.
+   *
+   * The number of lines is configurable.
+   */
+  srcBefore?: string[];
+
+  /**
    * The line of source code the frame originates from.
    *
    * This line may be partial if the line is too large.
    */
   srcLine?: string;
+
+  /**
+   * A number of source code lines after the line the frame originates from.
+   *
+   * The number of lines is configurable.
+   */
+  srcAfter?: string[];
 }

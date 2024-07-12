@@ -1,11 +1,7 @@
-import TraceKit, { computeStackTrace } from 'tracekit';
+import { computeStackTrace } from 'tracekit';
 
 import StackFrame from './StackFrame';
 import StackTrace from './StackTrace';
-
-// @ts-ignore The typing for this is a bool, but it accepts a number.
-// eslint-disable-next-line prettier/prettier
-TraceKit?.linesOfContext = 1;
 
 const MAX_SRC_LINE_LENGTH = 280;
 const INDEX_SPECIFIER = '(index)';
@@ -28,7 +24,7 @@ export function processUrlToFileName(input: string, origin: string): string {
     if (cleaned === '') {
       cleaned = INDEX_SPECIFIER;
     }
-    if(cleaned.endsWith('/')) {
+    if (cleaned.endsWith('/')) {
       cleaned += INDEX_SPECIFIER;
     }
   }
@@ -65,6 +61,21 @@ export function trimSourceLine(options: TrimOptions, line: string, column: numbe
   return line.slice(captureStart, captureEnd);
 }
 
+function getSrcLines(
+  inContext: string[],
+  line: number,
+): {
+  srcBefore: string[];
+  srcLine: string;
+  srcAfter: string[];
+} {
+  return {
+    srcBefore: [],
+    srcLine: '',
+    srcAfter: [],
+  };
+}
+
 /**
  * Parse the browser stack trace into a StackTrace which contains frames with specific fields parsed
  * from the free-form stack. Browser stack traces are not standardized, so implementations handling
@@ -81,6 +92,7 @@ export default function parse(error: Error): StackTrace {
     function: inFrame.func,
     line: inFrame.line,
     col: inFrame.column,
+    srcBefore: [],
     srcLine: trimSourceLine(
       {
         maxLength: MAX_SRC_LINE_LENGTH,
@@ -89,6 +101,7 @@ export default function parse(error: Error): StackTrace {
       inFrame.context?.[0],
       inFrame.column,
     ),
+    srcAfter: [],
   }));
   return {
     frames,
