@@ -71,6 +71,22 @@ describe('given an input stack frame', () => {
     });
   });
 
+  it('can trim all the lines', () => {
+    expect(
+      getSrcLines(inputFrame, {
+        source: {
+          beforeLines: 2,
+          afterLines: 2,
+          maxLineLength: 1,
+        },
+      }),
+    ).toMatchObject({
+      srcBefore: ['1', 'A'],
+      srcLine: 't',
+      srcAfter: ['0', 'a'],
+    });
+  });
+
   it('can handle fewer input lines than the expected context', () => {
     expect(
       getSrcLines(inputFrame, {
