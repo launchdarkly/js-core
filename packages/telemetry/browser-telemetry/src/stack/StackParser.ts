@@ -1,4 +1,4 @@
-import TraceKit, { computeStackTrace } from 'tracekit';
+import { computeStackTrace } from 'tracekit';
 
 import { ParsedStackOptions } from '../options';
 import StackFrame from './StackFrame';
@@ -61,7 +61,10 @@ export function trimSourceLine(options: TrimOptions, line: string, column: numbe
   return line.slice(captureStart, captureEnd);
 }
 
-function getLines(
+/**
+ * Exported for testing.
+ */
+export function getLines(
   start: number,
   end: number,
   context: string[],
@@ -75,8 +78,14 @@ function getLines(
   return [];
 }
 
-function getSrcLines(
-  inFrame: TraceKit.StackFrame,
+/**
+ * Exported for testing.
+ */
+export function getSrcLines(
+  inFrame: {
+    context?: string[];
+    column?: number;
+  },
   options: ParsedStackOptions,
 ): {
   srcBefore?: string[];
@@ -90,9 +99,6 @@ function getSrcLines(
   }
   const { maxLineLength } = options.source;
   const beforeColumnCharacters = Math.floor(maxLineLength / 2);
-
-  console.log("Options", options);
-  console.log("Context", context);
 
   // The before and after lines will not be precise while we use TraceKit.
   // By forking it we should be able to achieve a more optimal result.
@@ -117,7 +123,7 @@ function getSrcLines(
         beforeColumnCharacters,
       },
       context[origin],
-      inFrame.column,
+      inFrame.column || 0,
     ),
     srcAfter: getLines(origin + 1, origin + 1 + options.source.afterLines, context, trimmer),
   };

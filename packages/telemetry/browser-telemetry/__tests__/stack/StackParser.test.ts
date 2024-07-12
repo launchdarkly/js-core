@@ -1,4 +1,10 @@
-import { processUrlToFileName, TrimOptions, trimSourceLine } from '../../src/stack/StackParser';
+import {
+  getLines,
+  getSrcLines,
+  processUrlToFileName,
+  TrimOptions,
+  trimSourceLine,
+} from '../../src/stack/StackParser';
 
 it.each([
   ['http://www.launchdarkly.com', 'http://www.launchdarkly.com/', '(index)'],
@@ -21,3 +27,79 @@ it.each([
     expect(trimSourceLine(options, source, column)).toEqual(expected);
   },
 );
+
+describe('given source lines', () => {
+  const lines = ['1234567890', 'ABCDEFGHIJ', '0987654321', 'abcdefghij'];
+
+  it('can get a range which would underflow the lines', () => {
+    expect(getLines(-1, 2, lines, (input) => input)).toStrictEqual(['1234567890', 'ABCDEFGHIJ']);
+  });
+
+  it('can get a range which would overflow the lines', () => {
+    expect(getLines(2, 4, lines, (input) => input)).toStrictEqual(['0987654321', 'abcdefghij']);
+  });
+
+  it('can get a range which is satisfied by the lines', () => {
+    expect(getLines(0, 4, lines, (input) => input)).toStrictEqual([
+      '1234567890',
+      'ABCDEFGHIJ',
+      '0987654321',
+      'abcdefghij',
+    ]);
+  });
+});
+
+describe('given an input stack frame', () => {
+  const inputFrame = {
+    context: ['1234567890', 'ABCDEFGHIJ', 'the src line', '0987654321', 'abcdefghij'],
+    column: 0,
+  };
+
+  it('can produce a full stack source in the output frame', () => {
+    expect(
+      getSrcLines(inputFrame, {
+        source: {
+          beforeLines: 2,
+          afterLines: 2,
+          maxLineLength: 280,
+        },
+      }),
+    ).toMatchObject({
+      srcBefore: ['1234567890', 'ABCDEFGHIJ'],
+      srcLine: 'the src line',
+      srcAfter: ['0987654321', 'abcdefghij'],
+    });
+  });
+
+  it('can handle fewer input lines than the expected context', () => {
+    expect(
+      getSrcLines(inputFrame, {
+        source: {
+          beforeLines: 3,
+          afterLines: 3,
+          maxLineLength: 280,
+        },
+      }),
+    ).toMatchObject({
+      srcBefore: ['1234567890', 'ABCDEFGHIJ'],
+      srcLine: 'the src line',
+      srcAfter: ['0987654321', 'abcdefghij'],
+    });
+  });
+
+  it('can handle more input lines than the expected context', () => {
+    expect(
+      getSrcLines(inputFrame, {
+        source: {
+          beforeLines: 1,
+          afterLines: 1,
+          maxLineLength: 280,
+        },
+      }),
+    ).toMatchObject({
+      srcBefore: ['ABCDEFGHIJ'],
+      srcLine: 'the src line',
+      srcAfter: ['0987654321'],
+    });
+  });
+});
