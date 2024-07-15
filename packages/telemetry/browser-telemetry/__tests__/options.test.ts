@@ -20,11 +20,13 @@ it('can set each option', () => {
   expect(outOptions).toEqual({
     maxPendingEvents: 1,
     breadcrumbs: {
+      keyboardInput: true,
       maxBreadcrumbs: 1,
       click: false,
       evaluations: false,
       flagChange: false,
       http: {
+        customUrlFilter: undefined,
         instrumentFetch: true,
         instrumentXhr: true,
       },

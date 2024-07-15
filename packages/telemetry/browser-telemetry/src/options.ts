@@ -8,6 +8,7 @@ export function defaultOptions(): ParsedOptions {
       evaluations: true,
       flagChange: true,
       click: true,
+      keyboardInput: true,
       http: {
         instrumentFetch: true,
         instrumentXhr: true,
@@ -85,6 +86,10 @@ export default function parse(options: Options): ParsedOptions {
       ),
       flagChange: itemOrDefault(options.breadcrumbs?.flagChange, defaults.breadcrumbs.flagChange),
       click: itemOrDefault(options.breadcrumbs?.click, defaults.breadcrumbs.click),
+      keyboardInput: itemOrDefault(
+        options.breadcrumbs?.keyboardInput,
+        defaults.breadcrumbs.keyboardInput,
+      ),
       http: parseHttp(options.breadcrumbs?.http, defaults.breadcrumbs.http),
     },
     stack: parseStack(options.stack, defaults.stack),
@@ -160,6 +165,11 @@ export interface ParsedOptions {
      * True to enable click breadcrumbs. Defaults to true.
      */
     click: boolean;
+
+    /**
+     * True to enable input breadcrumbs for keypresses. Defaults to true.
+     */
+    keyboardInput?: boolean;
 
     /**
      * Settings for http instrumentation and breadcrumbs.

@@ -109,7 +109,7 @@ export type UiBreadcrumb = ImplementsCrumb<{
   class: 'ui';
   timestamp: number;
   level: 'info';
-  type: 'click';
+  type: 'click' | 'input';
   message: string;
 }>;
 

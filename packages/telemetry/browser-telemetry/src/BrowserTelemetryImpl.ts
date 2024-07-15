@@ -12,6 +12,7 @@ import { Collector } from './api/Collector';
 import { ErrorData } from './api/ErrorData';
 import { EventData } from './api/EventData';
 import ClickCollector from './collectors/dom/ClickCollector';
+import KeypressCollector from './collectors/dom/KeypressCollector';
 import ErrorCollector from './collectors/error';
 import FetchCollector from './collectors/http/fetch';
 import XhrCollector from './collectors/http/xhr';
@@ -94,6 +95,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
     if (options.breadcrumbs.click) {
       this.collectors.push(new ClickCollector());
+    }
+
+    if (options.breadcrumbs.keyboardInput) {
+      this.collectors.push(new KeypressCollector());
     }
 
     this.collectors.forEach((collector) => collector.register(this as BrowserTelemetry));
