@@ -44,6 +44,34 @@ export interface HttpBreadCrumbOptions {
   customUrlFilter?: UrlFilter;
 }
 
+export interface StackOptions {
+  /**
+   * Configuration that controls how source is captured.
+   */
+  source?: {
+    /**
+     * The number of lines captured before the originating line.
+     *
+     * Defaults to 3.
+     */
+    beforeLines?: number;
+    /**
+     * The number of lines captured after the originating line.
+     *
+     * Defaults to 3.
+     */
+    afterLines?: number;
+
+    /**
+     * The maximum length of source line to include. Lines longer than this will be
+     * trimmed.
+     *
+     * Defaults to 280.
+     */
+    maxLineLength?: number;
+  };
+}
+
 /**
  * Options for configuring browser telemetry.
  */
@@ -103,4 +131,9 @@ export interface Options {
    * Additional, or custom, collectors.
    */
   collectors?: Collector[];
+
+  /**
+   * Configuration that controls the capture of the stack trace.
+   */
+  stack?: StackOptions;
 }

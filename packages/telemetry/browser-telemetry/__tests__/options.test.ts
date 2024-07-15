@@ -29,6 +29,13 @@ it('can set each option', () => {
         instrumentXhr: true,
       },
     },
+    stack: {
+      source: {
+        beforeLines: 3,
+        afterLines: 3,
+        maxLineLength: 280,
+      },
+    },
     collectors: [new ErrorCollector(), new ErrorCollector()],
   });
 });

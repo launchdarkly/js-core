@@ -1,13 +1,9 @@
-import TraceKit, { computeStackTrace } from 'tracekit';
+import { computeStackTrace } from 'tracekit';
 
+import { ParsedStackOptions } from '../options';
 import StackFrame from './StackFrame';
 import StackTrace from './StackTrace';
 
-// @ts-ignore The typing for this is a bool, but it accepts a number.
-// eslint-disable-next-line prettier/prettier
-TraceKit?.linesOfContext = 1;
-
-const MAX_SRC_LINE_LENGTH = 280;
 const INDEX_SPECIFIER = '(index)';
 
 /**
@@ -28,7 +24,7 @@ export function processUrlToFileName(input: string, origin: string): string {
     if (cleaned === '') {
       cleaned = INDEX_SPECIFIER;
     }
-    if(cleaned.endsWith('/')) {
+    if (cleaned.endsWith('/')) {
       cleaned += INDEX_SPECIFIER;
     }
   }
@@ -66,6 +62,74 @@ export function trimSourceLine(options: TrimOptions, line: string, column: numbe
 }
 
 /**
+ * Exported for testing.
+ */
+export function getLines(
+  start: number,
+  end: number,
+  context: string[],
+  trimmer: (val: string) => string,
+): string[] {
+  const adjustedStart = start < 0 ? 0 : start;
+  const adjustedEnd = end > context.length ? context.length : end;
+  if (adjustedStart < adjustedEnd) {
+    return context.slice(adjustedStart, adjustedEnd).map(trimmer);
+  }
+  return [];
+}
+
+/**
+ * Exported for testing.
+ */
+export function getSrcLines(
+  inFrame: {
+    context?: string[];
+    column?: number;
+  },
+  options: ParsedStackOptions,
+): {
+  srcBefore?: string[];
+  srcLine?: string;
+  srcAfter?: string[];
+} {
+  const { context } = inFrame;
+  // It should be present, but we don't want to trust that it is.
+  if (!context) {
+    return {};
+  }
+  const { maxLineLength } = options.source;
+  const beforeColumnCharacters = Math.floor(maxLineLength / 2);
+
+  // The before and after lines will not be precise while we use TraceKit.
+  // By forking it we should be able to achieve a more optimal result.
+
+  // Trimmer for non-origin lines. Starts at column 0.
+  const trimmer = (input: string) =>
+    trimSourceLine(
+      {
+        maxLength: options.source.maxLineLength,
+        beforeColumnCharacters,
+      },
+      input,
+      0,
+    );
+
+  const origin = Math.floor(context.length / 2);
+  return {
+    srcBefore: getLines(origin - options.source.beforeLines, origin, context, trimmer),
+    srcLine: trimSourceLine(
+      {
+        maxLength: maxLineLength,
+        beforeColumnCharacters,
+      },
+      context[origin],
+      inFrame.column || 0,
+    ),
+    srcAfter: getLines(origin + 1, origin + 1 + options.source.afterLines, context, trimmer),
+  };
+}
+
+/**
  * Parse the browser stack trace into a StackTrace which contains frames with specific fields parsed
  * from the free-form stack. Browser stack traces are not standardized, so implementations handling
  * the output should be resilient to missing fields.
@@ -73,7 +137,7 @@ export function trimSourceLine(options: TrimOptions, line: string, column: numbe
  * @param error The error to generate a StackTrace for.
  * @returns The stack trace for the given error.
  */
-export default function parse(error: Error): StackTrace {
+export default function parse(error: Error, options: ParsedStackOptions): StackTrace {
   const parsed = computeStackTrace(error);
   const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
     // TODO: Extract window dependencies into a platform.
@@ -81,14 +145,7 @@ export default function parse(error: Error): StackTrace {
     function: inFrame.func,
     line: inFrame.line,
     col: inFrame.column,
-    srcLine: trimSourceLine(
-      {
-        maxLength: MAX_SRC_LINE_LENGTH,
-        beforeColumnCharacters: MAX_SRC_LINE_LENGTH,
-      },
-      inFrame.context?.[0],
-      inFrame.column,
-    ),
+    ...getSrcLines(inFrame, options),
   }));
   return {
     frames,

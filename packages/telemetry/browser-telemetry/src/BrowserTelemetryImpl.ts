@@ -4,6 +4,7 @@ import type {
   LDEvaluationDetail,
   LDInspection,
 } from 'launchdarkly-js-client-sdk';
+import TraceKit from 'tracekit';
 
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
@@ -16,7 +17,7 @@ import FetchCollector from './collectors/http/fetch';
 import XhrCollector from './collectors/http/xhr';
 import defaultUrlFilter from './filters/defaultUrlFilter';
 import makeInspectors from './inspectors';
-import { ParsedOptions } from './options';
+import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
 
@@ -37,6 +38,16 @@ function safeValue(u: unknown): string | boolean | number | undefined {
   }
 }
 
+function configureTraceKit(options: ParsedStackOptions) {
+  // Include before + after + source line.
+  // TraceKit only takes a total context size, so we have to over capture and then reduce the lines.
+  // So, for instance if before is 3 and after is 4 we need to capture 4 and 4 and then drop a line
+  // from the before context.
+  // The typing for this is a bool, but it accepts a number.
+  const beforeAfterMax = Math.max(options.source.afterLines, options.source.beforeLines);
+  (TraceKit as any).linesOfContext = beforeAfterMax * 2 + 1;
+}
+
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private maxPendingEvents: number;
   private maxBreadcrumbs: number;
@@ -50,7 +61,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private collectors: Collector[] = [];
   private sessionId: string = randomUuidV4();
 
-  constructor(options: ParsedOptions) {
+  constructor(private options: ParsedOptions) {
+    configureTraceKit(options.stack);
+
     // Error collector is always required.
     this.collectors.push(new ErrorCollector());
     this.collectors.push(...options.collectors);
@@ -117,7 +130,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     const data: ErrorData = {
       type: exception.name || exception.constructor.name || 'generic',
       message: exception.message,
-      stack: parse(exception),
+      stack: parse(exception, this.options.stack),
       breadcrumbs: [...this.breadcrumbs],
       sessionId: this.sessionId,
     };
