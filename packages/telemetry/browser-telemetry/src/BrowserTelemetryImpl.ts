@@ -12,6 +12,7 @@ import { Collector } from './api/Collector';
 import { ErrorData } from './api/ErrorData';
 import { EventData } from './api/EventData';
 import ClickCollector from './collectors/dom/ClickCollector';
+import KeypressCollector from './collectors/dom/KeypressCollector';
 import ErrorCollector from './collectors/error';
 import FetchCollector from './collectors/http/fetch';
 import XhrCollector from './collectors/http/xhr';
@@ -20,7 +21,6 @@ import makeInspectors from './inspectors';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
-import KeypressCollector from './collectors/dom/KeypressCollector';
 
 // TODO: Add ring buffer instead of shifting.
 
