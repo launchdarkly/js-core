@@ -101,7 +101,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       this.collectors.push(new KeypressCollector());
     }
 
-    this.collectors.forEach((collector) => collector.register(this as BrowserTelemetry));
+    this.collectors.forEach((collector) =>
+      collector.register(this as BrowserTelemetry, this.sessionId),
+    );
 
     const impl = this;
     const inspectors: LDInspection[] = [];

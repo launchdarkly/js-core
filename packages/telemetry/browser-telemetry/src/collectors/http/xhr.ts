@@ -18,7 +18,7 @@ export default class XhrCollector implements Collector {
     });
   }
 
-  register(telemetry: BrowserTelemetry): void {
+  register(telemetry: BrowserTelemetry, _sessionId: string): void {
     this.destination = telemetry;
   }
 

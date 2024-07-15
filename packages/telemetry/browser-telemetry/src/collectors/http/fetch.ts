@@ -17,7 +17,7 @@ export default class FetchCollector implements Collector {
     });
   }
 
-  register(telemetry: BrowserTelemetry): void {
+  register(telemetry: BrowserTelemetry, _sessionId: string): void {
     this.destination = telemetry;
   }
 

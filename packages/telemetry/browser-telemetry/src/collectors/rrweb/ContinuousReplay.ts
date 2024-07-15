@@ -12,35 +12,32 @@ export default class ContinuousReplay implements Collector {
   private visibilityHandler: any;
   private timerHandle: any;
   private index: number = 0;
-  private readonly sessionId: string = '';
+  private sessionId?: string;
 
   constructor(options: ContinuousCapture) {
-    if (typeof crypto !== undefined && typeof crypto.randomUUID === 'function') {
-      this.sessionId = crypto.randomUUID();
-      this.visibilityHandler = () => {
-        this.handleVisibilityChange();
-      };
+    this.visibilityHandler = () => {
+      this.handleVisibilityChange();
+    };
 
-      document.addEventListener('visibilitychange', this.visibilityHandler, true);
+    document.addEventListener('visibilitychange', this.visibilityHandler, true);
 
-      this.timerHandle = setInterval(() => {
-        // If there are only 2 events, then we just have a snapshot.
-        // We can wait to capture until there is some activity.
-        // TODO: Figure out a better check.
-        if (this.buffer.length === 2) {
-          return;
-        }
-        this.recordCapture();
-        this.restartCapture();
-      }, options.intervalMs);
+    this.timerHandle = setInterval(() => {
+      // If there are only 2 events, then we just have a snapshot.
+      // We can wait to capture until there is some activity.
+      // TODO: Figure out a better check.
+      if (this.buffer.length === 2) {
+        return;
+      }
+      this.recordCapture();
+      this.restartCapture();
+    }, options.intervalMs);
 
-      this.startCapture();
-    }
-    // TODO: Should log that we are not going to record sessions.
+    this.startCapture();
   }
 
-  register(telemetry: BrowserTelemetry): void {
+  register(telemetry: BrowserTelemetry, sessionId: string): void {
     this.telemetry = telemetry;
+    this.sessionId = sessionId;
   }
 
   unregister(): void {
@@ -60,11 +57,16 @@ export default class ContinuousReplay implements Collector {
   }
 
   private recordCapture(): void {
-    this.telemetry?.captureSession({
-      id: this.sessionId,
-      events: [...this.buffer],
-      index: this.index,
-    });
+    // Telemetry and sessionId should always be set at the same time, but check both
+    // for correctness.
+    if (this.telemetry && this.sessionId) {
+      this.telemetry.captureSession({
+        id: this.sessionId,
+        events: [...this.buffer],
+        index: this.index,
+      });
+    }
+
     this.index += 1;
   }
 
