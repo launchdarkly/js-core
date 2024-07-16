@@ -12,6 +12,7 @@ export default class RollingReplay implements Collector {
   private buffer: RollingBuffer;
   private stopper?: () => void;
   private index: number = 0;
+  private sessionId?: string;
 
   constructor(private options: RollingCapture) {
     this.buffer = new RollingBuffer(options.eventSegmentLength, options.segmentBufferLength);
@@ -28,8 +29,9 @@ export default class RollingReplay implements Collector {
     });
   }
 
-  register(telemetry: BrowserTelemetry): void {
+  register(telemetry: BrowserTelemetry, sessionId: string): void {
     this.telemetry = telemetry;
+    this.sessionId = sessionId;
   }
 
   unregister(): void {
@@ -38,11 +40,15 @@ export default class RollingReplay implements Collector {
   }
 
   capture(): void {
-    this.telemetry?.captureSession({
-      id: crypto.randomUUID(),
-      events: this.buffer.toArray(),
-      index: this.index,
-    });
+    // Telemetry and sessionId should always be set at the same time, but check both
+    // for correctness.
+    if (this.telemetry && this.sessionId) {
+      this.telemetry?.captureSession({
+        id: this.sessionId,
+        events: this.buffer.toArray(),
+        index: this.index,
+      });
+    }
     this.index += 1;
     this.restartCapture();
   }

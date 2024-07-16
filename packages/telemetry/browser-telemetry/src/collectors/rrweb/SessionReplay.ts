@@ -35,8 +35,8 @@ export default class SessionReplay implements Collector {
     }
   }
 
-  register(telemetry: BrowserTelemetry): void {
-    this.impl.register(telemetry);
+  register(telemetry: BrowserTelemetry, sessionId: string): void {
+    this.impl.register(telemetry, sessionId);
   }
 
   unregister(): void {

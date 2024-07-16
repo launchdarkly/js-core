@@ -3,7 +3,7 @@ import { type LDContext, type LDEvaluationDetail } from 'launchdarkly-js-client-
 import { BrowserTelemetry } from './BrowserTelemetry';
 
 export interface Collector {
-  register(telemetry: BrowserTelemetry): void;
+  register(telemetry: BrowserTelemetry, sessionId: string): void;
   unregister(): void;
 
   handleFlagUsed?(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void;

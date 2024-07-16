@@ -30,7 +30,7 @@ export default class ClickCollector implements Collector {
     );
   }
 
-  register(telemetry: BrowserTelemetry): void {
+  register(telemetry: BrowserTelemetry, _sessionId: string): void {
     this.destination = telemetry;
   }
   unregister(): void {
