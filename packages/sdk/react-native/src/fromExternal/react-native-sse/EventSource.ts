@@ -57,7 +57,7 @@ export default class EventSource<E extends string = never> {
   private body: any;
   private url: string;
   private xhr: XMLHttpRequest = new XMLHttpRequest();
-  private pollTimer: any;
+  private connectTimer: any;
   private retryAndHandleError?: (err: any) => boolean;
   private initialRetryDelayMillis: number = 1000;
   private retryCount: number = 0;
@@ -88,17 +88,25 @@ export default class EventSource<E extends string = never> {
     return delay;
   }
 
-  private tryConnect(forceNoDelay: boolean = false) {
-    let delay = forceNoDelay ? 0 : this.getNextRetryDelay();
-    this.logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
-    this.dispatch('retry', { type: 'retry', delayMillis: delay });
-    this.pollTimer = setTimeout(() => {
-      this.close();
+  private tryConnect(initialConnection: boolean = false) {
+    let delay = initialConnection ? 0 : this.getNextRetryDelay();
+    if(initialConnection) {
+      this.logger?.debug(`[EventSource] opening new connection.`)
+    } else {
+      this.logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
+      this.dispatch('retry', { type: 'retry', delayMillis: delay });
+    }
+
+    this.connectTimer = setTimeout(() => {
+      if(!initialConnection) {
+        this.close();
+      }
+
       this.open();
     }, delay);
   }
 
-  open() {
+  private open() {
     try {
       this.lastIndexProcessed = 0;
       this.status = this.CONNECTING;
@@ -329,7 +337,7 @@ export default class EventSource<E extends string = never> {
 
   close() {
     this.status = this.CLOSED;
-    clearTimeout(this.pollTimer);
+    clearTimeout(this.connectTimer);
     if (this.xhr) {
       this.xhr.abort();
     }
