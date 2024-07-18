@@ -6,6 +6,7 @@ import EventSource, { backoff, jitter } from './EventSource';
 describe('EventSource', () => {
   const uri = 'https://mock.events.uri';
   let eventSource: EventSource<EventName>;
+  let mockXhr: any;
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -17,9 +18,17 @@ describe('EventSource', () => {
       .mockImplementationOnce(() => 0.888)
       .mockImplementationOnce(() => 0.999);
 
+      mockXhr = {
+        open: jest.fn(),
+        send: jest.fn(),
+        setRequestHeader: jest.fn(),
+        abort: jest.fn(),
+      };
+
+      jest.spyOn(window, 'XMLHttpRequest').mockImplementation(() => mockXhr as XMLHttpRequest);
+
     eventSource = new EventSource<EventName>(uri, { logger });
     eventSource.onclose = jest.fn();
-    eventSource.open = jest.fn();
     eventSource.onretrying = jest.fn();
   });
 
@@ -66,18 +75,17 @@ describe('EventSource', () => {
     expect(delay1).toEqual(1001);
   });
 
-  test('tryConnect force no delay', () => {
-    // @ts-ignore
-    eventSource.tryConnect(true);
+  test('initial connection', () => {
     jest.runAllTimers();
 
-    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/new connection in 0 ms/i));
-    expect(eventSource.onretrying).toHaveBeenCalledWith({ type: 'retry', delayMillis: 0 });
-    expect(eventSource.open).toHaveBeenCalledTimes(1);
-    expect(eventSource.onclose).toHaveBeenCalledTimes(1);
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/\[EventSource\] opening new connection./));
+    expect(mockXhr.open).toHaveBeenCalledTimes(1);
+    expect(eventSource.onclose).toHaveBeenCalledTimes(0);
   });
 
   test('tryConnect with delay', () => {
+    jest.runAllTimers();
+    // This forces it to reconnect.
     // @ts-ignore
     eventSource.tryConnect();
     jest.runAllTimers();
@@ -87,7 +95,8 @@ describe('EventSource', () => {
       expect.stringMatching(/new connection in 556 ms/i),
     );
     expect(eventSource.onretrying).toHaveBeenCalledWith({ type: 'retry', delayMillis: 556 });
-    expect(eventSource.open).toHaveBeenCalledTimes(1);
+    // Initial connection + forced reconnect.
+    expect(mockXhr.open).toHaveBeenCalledTimes(2);
     expect(eventSource.onclose).toHaveBeenCalledTimes(1);
   });
 });
