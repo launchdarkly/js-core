@@ -17,17 +17,19 @@ For more information, see the [complete reference guide for this SDK](https://do
 
 ## Known Android identify issue
 
-On Android, Flipper interferes with the SDK's streaming connections. As a result the `identify` call never resolves. The long term solution is the removal of Flipper from react-native. The Facebook team are [working on this](https://reactnative.dev/blog/2023/12/06/0.73-debugging-improvements-stable-symlinks#flipper--react-native-integration).
+With Expo versions less than `51.0.21` and React Native versions less than `0.74.3`, the identify operation will not be complete in a debug configuration. If using Expo Go, you must ensure you have version `2.31.2` or greater.
 
-In the meantime, we recommend one of these workarounds:
+This is the expo PR that resolved this issue: https://github.com/expo/expo/pull/30062
 
-- If you are using Expo, you'll need to do a native build in release `expo run:android --variant release`.
+If you are using expo after that release, as well as a React Native version without flipper, then the SDK should be able to identify in debug mode. We specifically tried Expo version `51.0.21 ` with React Native `0.74.3`, but some other patch version combinations may work.
 
-- If you are using Expo and want to debug and hot reload, you'll need to do a native build in debug `expo run:android --variant debug` and then go to the `android` folder and manually find and remove all references to flipper. This is a [reported issue](https://github.com/facebook/flipper/issues/1326#issuecomment-652946496) in the Flipper repo.
+The SDK uses SSE streaming to get flag data and in React Native versions with Flipper, the network capture interferes with HTTP requests that are streamed through HTTP.
 
-- If you are using the expo-go app on Android, unfortunately there is no known easy way to disable Flipper in Expo Go. Please use one of two previous native build options.
+Expo also includes network debugging, which interferes with streaming responses as well.
 
-- If you are not using Expo, go to the `android` folder and manually find and remove all references to flipper.
+When running with `expo start`, which will run with Expo Go by default, the Expo Go binary includes the native expo code.
+
+If older versions of expo and RN are used, then a release build configuration can be used to work around this issue.
 
 ## Install
 
