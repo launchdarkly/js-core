@@ -25,6 +25,10 @@ MOBILE_KEY=abcdef12456
 # ios
 yarn && yarn ios-go
 
+# Note: You may need to open the resulting XCode workspace to install the correct target development platform.
+# You can use "yarn ios -- --device <device-id or name>" to build for a specific device.
+# Note: To use Expo Go instead run "yarn ios-go"
+
 # android
 yarn && yarn android-release
 ```
