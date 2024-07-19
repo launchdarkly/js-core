@@ -1,5 +1,17 @@
 # Changelog
 
+## [10.3.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.2.1...react-native-client-sdk-v10.3.0) (2024-07-19)
+
+
+### Features
+
+* Update expo and RN version used in example. ([#520](https://github.com/launchdarkly/js-core/issues/520)) ([b8384c4](https://github.com/launchdarkly/js-core/commit/b8384c41243fb7475439cc634459b5156e05791b))
+
+
+### Bug Fixes
+
+* Make it more clear what is happening when an event source is connecting. ([#518](https://github.com/launchdarkly/js-core/issues/518)) ([52055ba](https://github.com/launchdarkly/js-core/commit/52055ba603349c6a2d94e25c58813765d4d9abd9))
+
 ## [10.2.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.2.0...react-native-client-sdk-v10.2.1) (2024-07-12)
 
 
