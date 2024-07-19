@@ -19,18 +19,17 @@ MOBILE_KEY=abcdef12456
 4. Run the app:
 
 ```shell
-# Note for android, there's an issue with Flipper interfering with streaming connections
-# so please run the release build. There's no such issues with ios.
-
 # ios
-yarn && yarn ios-go
+yarn && yarn ios
 
 # Note: You may need to open the resulting XCode workspace to install the correct target development platform.
 # You can use "yarn ios -- --device <device-id or name>" to build for a specific device.
 # Note: To use Expo Go instead run "yarn ios-go"
 
 # android
-yarn && yarn android-release
+yarn && yarn android
+
+# Note: If you downgrade the React Native or Expo versions used by this example the android build may not work in debug.
 ```
 
 ## Running Detox e2e tests
