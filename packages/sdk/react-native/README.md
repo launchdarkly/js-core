@@ -25,7 +25,7 @@ If you are using expo after that release, as well as a React Native version with
 
 The SDK uses SSE streaming to get flag data and in React Native versions with Flipper, the network capture interferes with HTTP requests that are streamed through HTTP.
 
-Expo also includes network debugging, which interferes with streaming responses as well.
+Expo also includes network debugging, which interfered with streaming responses before the above patch.
 
 When running with `expo start`, which will run with Expo Go by default, the Expo Go binary includes the native expo code.
 
