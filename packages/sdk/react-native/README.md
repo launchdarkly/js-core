@@ -27,7 +27,7 @@ The SDK uses SSE streaming to get flag data and in React Native versions with Fl
 
 Expo also includes network debugging, which interfered with streaming responses before the above patch.
 
-When running with `expo start`, which will run with Expo Go by default, the Expo Go binary includes the native expo code.
+When running with `expo start`, which will run with Expo Go by default, the Expo Go binary includes the native expo code. This is why an Expo Go version which contains the relevant patch must be used.
 
 If older versions of expo and RN are used, then a release build configuration can be used to work around this issue.
 
