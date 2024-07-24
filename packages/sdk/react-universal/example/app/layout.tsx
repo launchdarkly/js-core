@@ -20,7 +20,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const clientSideID = process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID;
+  const clientSideID = process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID || '';
 
   // You must supply an LDContext. For example, here getLDContext
   // inspects cookies and defaults to anonymous.

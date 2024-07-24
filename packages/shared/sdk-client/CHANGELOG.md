@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.4...js-client-sdk-common-v1.1.5) (2024-07-12)
+
+
+### Bug Fixes
+
+* Correct documentation for variationDetail for client SDKs. ([#509](https://github.com/launchdarkly/js-core/issues/509)) ([496e39f](https://github.com/launchdarkly/js-core/commit/496e39f54a4437866dd1ab4050fd5522cfc78f23))
+
 ## [1.1.4](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.3...js-client-sdk-common-v1.1.4) (2024-06-04)
 
 
