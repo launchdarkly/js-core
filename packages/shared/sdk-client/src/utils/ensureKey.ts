@@ -10,6 +10,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { getOrGenerateKey } from './getOrGenerateKey';
+import { concatNamespacesAndValues } from './namespaceUtils';
 
 const { isLegacyUser, isMultiKind, isSingleKind } = internal;
 
@@ -30,9 +31,14 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
   const { anonymous, key } = c;
 
   if (anonymous && !key) {
+    const storageKey = concatNamespacesAndValues(platform.crypto, [
+      {value: 'LaunchDarkly', hashIt: false},
+      {value: 'AnonymousKeys', hashIt: false},
+      {value: kind, hashIt: false}
+    ])
     // This mutates a cloned copy of the original context from ensureyKey so this is safe.
     // eslint-disable-next-line no-param-reassign
-    c.key = await getOrGenerateKey('anonymous', kind, platform);
+    c.key = await getOrGenerateKey(storageKey, platform);
   }
 };
 

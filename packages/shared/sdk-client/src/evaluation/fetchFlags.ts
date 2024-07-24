@@ -1,7 +1,7 @@
 import { LDContext, Platform } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
-import { Flags } from '../types';
+import { LDEvaluationResultsMap } from '../types';
 import { createFetchOptions, createFetchUrl } from './fetchUtils';
 
 const fetchFlags = async (
@@ -9,7 +9,7 @@ const fetchFlags = async (
   context: LDContext,
   config: Configuration,
   { encoding, info, requests }: Platform,
-): Promise<Flags> => {
+): Promise<LDEvaluationResultsMap> => {
   const fetchUrl = createFetchUrl(sdkKey, context, config, encoding!);
   const fetchOptions = createFetchOptions(sdkKey, context, config, info);
 

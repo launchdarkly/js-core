@@ -3,7 +3,7 @@ import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkl
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
-import { Flags } from './types';
+import { LDEvaluationResult } from './types';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -23,11 +23,11 @@ const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 
 let ldc: LDClientImpl;
-let defaultPutResponse: Flags;
+let defaultPutResponse: LDEvaluationResult;
 
 describe('sdk-client object', () => {
   beforeEach(() => {
-    defaultPutResponse = clone<Flags>(mockResponseJson);
+    defaultPutResponse = clone<LDEvaluationResult>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
       logger,
@@ -51,7 +51,7 @@ describe('sdk-client object', () => {
 
   test('variation flag not found', async () => {
     // set context manually to pass validation
-    ldc.context = { kind: 'user', key: 'test-user' };
+    ldc.inputContext = { kind: 'user', key: 'test-user' };
     const errorListener = jest.fn().mockName('errorListener');
     ldc.on('error', errorListener);
 

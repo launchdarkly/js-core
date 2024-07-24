@@ -25,15 +25,19 @@ import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import { DeleteFlag, Flags, PatchFlag } from './types';
+import { DeleteFlag, LDEvaluationResultsMap, PatchFlag } from './types';
 import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
+import FlagManager from './flag-manager/FlaggManager';
+import { ItemDescriptor } from './flag-manager/ItemDescriptor';
+import { LDEvaluationResult } from './types';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
 
 export default class LDClientImpl implements LDClient {
   config: Configuration;
-  context?: LDContext;
+  inputContext?: LDContext;
+  checkedContext?: Context;
   diagnosticsManager?: internal.DiagnosticsManager;
   eventProcessor?: internal.EventProcessor;
   identifyTimeout: number = 5;
@@ -45,10 +49,10 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
-  private flags: Flags = {};
+
+  private flagManager: FlagManager
 
   private readonly clientContext: ClientContext;
-
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
@@ -70,6 +74,7 @@ export default class LDClientImpl implements LDClient {
     this.config = new Configuration(options, internalOptions);
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
+    this.flagManager = new FlagManager(this.platform, sdkKey, this.config.maxCachedContexts, this.config.logger)
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
       sdkKey,
@@ -107,9 +112,9 @@ export default class LDClientImpl implements LDClient {
       case 'streaming':
         this.eventProcessor?.start();
 
-        if (this.context) {
+        if (this.inputContext) {
           // identify will start streamer
-          return this.identify(this.context, { timeout: this.identifyTimeout });
+          return this.identify(this.inputContext, { timeout: this.identifyTimeout });
         }
         break;
       default:
@@ -135,9 +140,9 @@ export default class LDClientImpl implements LDClient {
 
   allFlags(): LDFlagSet {
     const result: LDFlagSet = {};
-    Object.entries(this.flags).forEach(([k, r]) => {
-      if (!r.deleted) {
-        result[k] = r.value;
+    this.flagManager.getAll().forEach((item: ItemDescriptor, key: string) => {
+      if (item.flag !== null && item.flag !== undefined && !item.flag.deleted) {
+        result[key] = item.flag.value
       }
     });
     return result;
@@ -163,11 +168,11 @@ export default class LDClientImpl implements LDClient {
   }
 
   getContext(): LDContext | undefined {
-    return this.context ? clone<LDContext>(this.context) : undefined;
+    return this.inputContext ? clone<LDContext>(this.inputContext) : undefined;
   }
 
   private createStreamListeners(
-    context: LDContext,
+    context: Context,
     canonicalKey: string,
     identifyResolve: any,
   ): Map<StreamEventName, ProcessStreamResponse> {
@@ -175,40 +180,50 @@ export default class LDClientImpl implements LDClient {
 
     listeners.set('put', {
       deserializeData: JSON.parse,
-      processJson: async (dataJson: Flags) => {
-        this.logger.debug(`Streamer PUT: ${Object.keys(dataJson)}`);
-        this.onIdentifyResolve(identifyResolve, dataJson, context, 'streamer PUT');
-        await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
+      processJson: async (evalResults: LDEvaluationResultsMap) => {
+        this.logger.debug(`Streamer PUT: ${Object.keys(evalResults)}`);
+
+        // TODO: is there a more efficient way in javascript to do this map transform
+        const descriptors = new Map<string, ItemDescriptor>()
+        evalResults.forEach((result: LDEvaluationResult, key: string) => {
+          descriptors.set(key, {version: result.version, flag: result})
+      });
+
+        this.flagManager.init(context, descriptors)
+        identifyResolve()
       },
     });
 
     listeners.set('patch', {
       deserializeData: JSON.parse,
-      processJson: async (dataJson: PatchFlag) => {
-        this.logger.debug(`Streamer PATCH ${JSON.stringify(dataJson, null, 2)}`);
-        const existing = this.flags[dataJson.key];
+      processJson: async (patchFlag: PatchFlag) => {
+        this.logger.debug(`Streamer PATCH ${JSON.stringify(patchFlag, null, 2)}`);
+        this.flagManager.upsert(context, patchFlag.key, {version: patchFlag.version, flag: patchFlag})
 
-        // add flag if it doesn't exist or update it if version is newer
-        if (!existing || (existing && dataJson.version > existing.version)) {
-          this.flags[dataJson.key] = dataJson;
-          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-          const changedKeys = [dataJson.key];
-          this.logger.debug(`Emitting changes from PATCH: ${changedKeys}`);
-          this.emitter.emit('change', context, changedKeys);
-        }
+        // TODO: come back and remove this / verify functionality has been moved appropriately
+        // const existing = this.flags[dataJson.key];
+
+        // // add flag if it doesn't exist or update it if version is newer
+        // if (!existing || (existing && dataJson.version > existing.version)) {
+        //   this.flags[dataJson.key] = dataJson;
+        //   await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
+        //   const changedKeys = [dataJson.key];
+        //   this.logger.debug(`Emitting changes from PATCH: ${changedKeys}`);
+        //   this.emitter.emit('change', context, changedKeys);
+        // }
       },
     });
 
     listeners.set('delete', {
       deserializeData: JSON.parse,
-      processJson: async (dataJson: DeleteFlag) => {
-        this.logger.debug(`Streamer DELETE ${JSON.stringify(dataJson, null, 2)}`);
-        const existing = this.flags[dataJson.key];
+      processJson: async (deleteFlag: DeleteFlag) => {
+        this.logger.debug(`Streamer DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
 
-        // the deleted flag is saved as tombstoned
-        if (!existing || existing.version < dataJson.version) {
-          this.flags[dataJson.key] = {
-            ...dataJson,
+        // TODO: in other SDKs we omit the flag in the item descriptor.  Which is correct?
+        this.flagManager.upsert(context, deleteFlag.key, {
+          version: deleteFlag.version, 
+          flag: {
+            ...deleteFlag,
             deleted: true,
             // props below are set to sensible defaults. they are irrelevant
             // because this flag has been deleted.
@@ -216,12 +231,8 @@ export default class LDClientImpl implements LDClient {
             value: undefined,
             variation: 0,
             trackEvents: false,
-          };
-          await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-          const changedKeys = [dataJson.key];
-          this.logger.debug(`Emitting changes from DELETE: ${changedKeys}`);
-          this.emitter.emit('change', context, changedKeys);
-        }
+          }
+        })
       },
     });
 
@@ -266,7 +277,7 @@ export default class LDClientImpl implements LDClient {
     return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
   }
 
-  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
+  private async getFlagsFromStorage(canonicalKey: string): Promise<LDEvaluationResultsMap | undefined> {
     const f = await this.platform.storage?.get(canonicalKey);
     return f ? JSON.parse(f) : undefined;
   }
@@ -294,8 +305,8 @@ export default class LDClientImpl implements LDClient {
     if (this.identifyTimeout > this.highTimeoutThreshold) {
       this.logger.warn(
         'The identify function was called with a timeout greater than' +
-          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than` +
-          `${this.highTimeoutThreshold} seconds.`,
+        `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than` +
+        `${this.highTimeoutThreshold} seconds.`,
       );
     }
 
@@ -311,26 +322,25 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
+    this.inputContext = pristineContext
+    this.checkedContext = checkedContext
 
-    this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
+    this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(this.checkedContext));
     const { identifyPromise, identifyResolve, identifyReject } = this.createIdentifyPromise(
       this.identifyTimeout,
     );
     this.logger.debug(`Identifying ${JSON.stringify(context)}`);
 
-    const flagsStorage = await this.getFlagsFromStorage(checkedContext.canonicalKey);
-    if (flagsStorage) {
-      this.logger.debug('Using storage');
-      this.onIdentifyResolve(identifyResolve, flagsStorage, context, 'identify storage');
+    const loadedFromCache = await this.flagManager.loadCached(this.checkedContext)
+    if (loadedFromCache) {
+      identifyResolve()
     }
 
     if (this.isOffline()) {
-      if (flagsStorage) {
+      if (loadedFromCache) {
         this.logger.debug('Offline identify using storage flags.');
       } else {
         this.logger.debug('Offline identify no storage. Defaults will be used.');
-        this.context = context;
-        this.flags = {};
         identifyResolve();
       }
     } else {
@@ -343,7 +353,7 @@ export default class LDClientImpl implements LDClient {
         this.sdkKey,
         this.clientContext,
         streamUri,
-        this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
+        this.createStreamListeners(this.checkedContext, this.checkedContext.canonicalKey, identifyResolve),
         this.diagnosticsManager,
         (e) => {
           identifyReject(e);
@@ -356,33 +366,6 @@ export default class LDClientImpl implements LDClient {
     return identifyPromise;
   }
 
-  /**
-   * Performs common tasks when resolving the identify promise:
-   *  - resolve the promise
-   *  - update in memory context
-   *  - update in memory flags
-   *  - emit change event if needed
-   *
-   * @param resolve
-   * @param flags
-   * @param context
-   * @param source For logging purposes
-   * @private
-   */
-  private onIdentifyResolve(resolve: any, flags: Flags, context: LDContext, source: string) {
-    resolve();
-    const changedKeys = calculateFlagChanges(this.flags, flags);
-    this.context = context;
-    this.flags = flags;
-
-    if (changedKeys.length > 0) {
-      this.emitter.emit('change', context, changedKeys);
-      this.logger.debug(`OnIdentifyResolve emitting changes from: ${source}.`);
-    } else {
-      this.logger.debug(`OnIdentifyResolve no changes to emit from: ${source}.`);
-    }
-  }
-
   off(eventName: EventName, listener: Function): void {
     this.emitter.off(eventName, listener);
   }
@@ -392,11 +375,11 @@ export default class LDClientImpl implements LDClient {
   }
 
   track(key: string, data?: any, metricValue?: number): void {
-    if (!this.context) {
+    if (!this.inputContext) {
       this.logger.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
-    const checkedContext = Context.fromLDContext(this.context);
+    const checkedContext = Context.fromLDContext(this.inputContext);
     if (!checkedContext.valid) {
       this.logger.warn(ClientMessages.missingContextKeyNoEvent);
       return;
@@ -418,27 +401,27 @@ export default class LDClientImpl implements LDClient {
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
   ): LDFlagValue {
-    if (!this.context) {
+    if (!this.inputContext) {
       this.logger.debug(ClientMessages.missingContextKeyNoEvent);
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
-    const evalContext = Context.fromLDContext(this.context);
-    const found = this.flags[flagKey];
+    const evalContext = Context.fromLDContext(this.inputContext);
+    const foundItem = this.flagManager.get(flagKey)
 
-    if (!found || found.deleted) {
+    if (foundItem === undefined || foundItem.flag.deleted) {
       const defVal = defaultValue ?? null;
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
-      this.emitter.emit('error', this.context, error);
+      this.emitter.emit('error', this.inputContext, error);
       this.eventProcessor?.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
       );
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
     }
 
-    const { reason, value, variation } = found;
+    const { reason, value, variation } = foundItem.flag;
 
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
@@ -448,7 +431,7 @@ export default class LDClientImpl implements LDClient {
             flagKey,
             defaultValue, // track default value on type errors
             defaultValue,
-            found,
+            foundItem.flag,
             evalContext,
             reason,
           ),
@@ -456,7 +439,7 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.emitter.emit('error', this.context, error);
+        this.emitter.emit('error', this.inputContext, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -467,7 +450,7 @@ export default class LDClientImpl implements LDClient {
       successDetail.value = defaultValue;
     }
     this.eventProcessor?.sendEvent(
-      eventFactory.evalEventClient(flagKey, value, defaultValue, found, evalContext, reason),
+      eventFactory.evalEventClient(flagKey, value, defaultValue, foundItem.flag, evalContext, reason),
     );
     return successDetail;
   }
