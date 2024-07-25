@@ -262,7 +262,7 @@ describe('sdk-client storage', () => {
 
   test('syncing storage on multiple flag operations', async () => {
     const putResponse = clone<Flags>(defaultPutResponse);
-    const newFlag = clone<Flag>(putResponse['dev-test-flag']);
+    const newFlag = clone<Flags>(putResponse['dev-test-flag']);
 
     // flag updated, added and deleted
     putResponse['dev-test-flag'].value = false;

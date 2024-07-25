@@ -3,7 +3,7 @@ import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkl
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
-import { LDEvaluationResult } from './types';
+import { Flag } from './types';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -23,11 +23,11 @@ const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 
 let ldc: LDClientImpl;
-let defaultPutResponse: LDEvaluationResult;
+let defaultPutResponse: Flag;
 
 describe('sdk-client object', () => {
   beforeEach(() => {
-    defaultPutResponse = clone<LDEvaluationResult>(mockResponseJson);
+    defaultPutResponse = clone<Flag>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
       logger,
@@ -80,8 +80,13 @@ describe('sdk-client object', () => {
 
   test('variationDetail deleted flag not found', async () => {
     await ldc.identify(context);
+
+    // the context may have had auto env attributes added to it, so use that context for the
+    // upsert
+    const checkedContext = ldc.checkedContext
+
     // @ts-ignore
-    ldc.flags['dev-test-flag'].deleted = true;
+    await ldc.flagManager.upsert(checkedContext, 'dev-test-flag', {version: 999, flag: {deleted: true}})
     const flag = ldc.variationDetail('dev-test-flag', 'deleted');
 
     expect(flag).toEqual({

@@ -1,22 +1,25 @@
 import { ItemDescriptor } from "./ItemDescriptor";
 
 export default class FlagStore {
-    private flags : Map<string, ItemDescriptor> = new Map()
+    private flags : {[key: string]: ItemDescriptor} = {}
 
-    init(newFlags: Map<string, ItemDescriptor>) {
-        this.flags.clear()
-        newFlags.forEach((value, key) => this.flags.set(key, value));
+    init(newFlags: {[key: string]: ItemDescriptor}) {
+        this.flags = {}
+        for (const key in newFlags) {
+            this.flags[key] = newFlags[key]
+        }
     }
 
     insertOrUpdate(key: string, update: ItemDescriptor) {
-        this.flags.set(key, update)
+        this.flags[key] = update
     }
 
     get(key: string): ItemDescriptor | undefined {
-        return this.flags.get(key)
+        return this.flags[key]
     }
 
-    getAll() : Map<string, ItemDescriptor> {
-        return new Map([...this.flags])
+    getAll() : {[key: string]: ItemDescriptor} {
+        // TODO: discuss immutability
+        return this.flags
     }
 }

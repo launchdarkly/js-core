@@ -1,5 +1,5 @@
 
-class ContextIndex {
+export default class ContextIndex {
     private container : IndexContainer
 
     constructor(){

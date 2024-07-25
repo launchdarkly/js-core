@@ -1,6 +1,6 @@
-import { LDEvaluationResult } from "../types"
+import { Flag } from "../types"
 
 export interface ItemDescriptor {
     version: number
-    flag: LDEvaluationResult
+    flag: Flag
 }

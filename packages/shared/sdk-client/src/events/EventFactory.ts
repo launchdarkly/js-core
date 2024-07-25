@@ -1,6 +1,6 @@
 import { Context, internal, LDEvaluationReason, LDFlagValue } from '@launchdarkly/js-sdk-common';
 
-import { LDEvaluationResult } from '../types';
+import { Flag } from '../types';
 
 /**
  * @internal
@@ -10,7 +10,7 @@ export default class EventFactory extends internal.EventFactoryBase {
     flagKey: string,
     value: LDFlagValue,
     defaultVal: any,
-    flag: LDEvaluationResult,
+    flag: Flag,
     context: Context,
     reason?: LDEvaluationReason,
   ): internal.InputEvalEvent {

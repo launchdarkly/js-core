@@ -1,5 +1,5 @@
 import { Context, LDLogger } from "@launchdarkly/js-sdk-common";
-import { LDEvaluationResultsMap } from "../types";
+import { Flags } from "../types";
 import { ItemDescriptor } from "./ItemDescriptor";
 import FlagStore from "./FlagStore";
 
@@ -14,14 +14,14 @@ export default class FlagUpdater {
         this.logger = logger
     }
 
-    init(context: Context, newFlags: Map<string, ItemDescriptor>) {
+    init(context: Context, newFlags: {[key: string]: ItemDescriptor}) {
         this.activeContextKey = context.canonicalKey
         const oldFlags = this.flagStore.getAll()
         this.flagStore.init(newFlags)
         this.handleChanges(oldFlags, newFlags)
     }
 
-    initCached(context: Context, newFlags: Map<string, ItemDescriptor>) {
+    initCached(context: Context, newFlags: {[key: string]: ItemDescriptor}) {
         if (this.activeContextKey === context.canonicalKey) {
             return;
         }
@@ -29,7 +29,7 @@ export default class FlagUpdater {
         this.init(context, newFlags)
     }
 
-    upsert(context: Context, key: string, item: ItemDescriptor) {
+    upsert(context: Context, key: string, item: ItemDescriptor): boolean {
         if (this.activeContextKey !== context.canonicalKey) {
             this.logger.warn('Received an update for an inactive context.')
             return false
@@ -47,7 +47,7 @@ export default class FlagUpdater {
         return true
     }
 
-    private handleChanges(oldFlags: Map<string, ItemDescriptor>, newFlags: Map<string, ItemDescriptor>) {
+    private handleChanges(oldFlags: {[key: string]: ItemDescriptor}, newFlags: {[key: string]: ItemDescriptor}) {
         // TODO
     }
 

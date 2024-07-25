@@ -25,11 +25,11 @@ import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import { DeleteFlag, LDEvaluationResultsMap, PatchFlag } from './types';
+import { DeleteFlag, Flags, PatchFlag } from './types';
 import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 import FlagManager from './flag-manager/FlaggManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
-import { LDEvaluationResult } from './types';
+import { Flag } from './types';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
@@ -139,12 +139,14 @@ export default class LDClientImpl implements LDClient {
   }
 
   allFlags(): LDFlagSet {
-    const result: LDFlagSet = {};
-    this.flagManager.getAll().forEach((item: ItemDescriptor, key: string) => {
-      if (item.flag !== null && item.flag !== undefined && !item.flag.deleted) {
-        result[key] = item.flag.value
-      }
-    });
+    // extracting all flag values
+    const result = Object.entries(this.flagManager.getAll()).reduce(
+      (acc: LDFlagSet, [key, descriptor]) => {
+        if (descriptor.flag !== null && descriptor.flag !== undefined && !descriptor.flag.deleted) {
+          acc[key] = descriptor.flag.value
+        }
+        return acc;
+      }, {});
     return result;
   }
 
@@ -180,14 +182,15 @@ export default class LDClientImpl implements LDClient {
 
     listeners.set('put', {
       deserializeData: JSON.parse,
-      processJson: async (evalResults: LDEvaluationResultsMap) => {
+      processJson: async (evalResults: Flags) => {
         this.logger.debug(`Streamer PUT: ${Object.keys(evalResults)}`);
 
-        // TODO: is there a more efficient way in javascript to do this map transform
-        const descriptors = new Map<string, ItemDescriptor>()
-        evalResults.forEach((result: LDEvaluationResult, key: string) => {
-          descriptors.set(key, {version: result.version, flag: result})
-      });
+        // mapping flags to item descriptors
+        const descriptors = Object.entries(evalResults).reduce(
+          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
+            acc[key] = { version: flag.version, flag: flag }
+            return acc;
+          }, {});
 
         this.flagManager.init(context, descriptors)
         identifyResolve()
@@ -198,19 +201,7 @@ export default class LDClientImpl implements LDClient {
       deserializeData: JSON.parse,
       processJson: async (patchFlag: PatchFlag) => {
         this.logger.debug(`Streamer PATCH ${JSON.stringify(patchFlag, null, 2)}`);
-        this.flagManager.upsert(context, patchFlag.key, {version: patchFlag.version, flag: patchFlag})
-
-        // TODO: come back and remove this / verify functionality has been moved appropriately
-        // const existing = this.flags[dataJson.key];
-
-        // // add flag if it doesn't exist or update it if version is newer
-        // if (!existing || (existing && dataJson.version > existing.version)) {
-        //   this.flags[dataJson.key] = dataJson;
-        //   await this.platform.storage?.set(canonicalKey, JSON.stringify(this.flags));
-        //   const changedKeys = [dataJson.key];
-        //   this.logger.debug(`Emitting changes from PATCH: ${changedKeys}`);
-        //   this.emitter.emit('change', context, changedKeys);
-        // }
+        this.flagManager.upsert(context, patchFlag.key, { version: patchFlag.version, flag: patchFlag })
       },
     });
 
@@ -221,7 +212,7 @@ export default class LDClientImpl implements LDClient {
 
         // TODO: in other SDKs we omit the flag in the item descriptor.  Which is correct?
         this.flagManager.upsert(context, deleteFlag.key, {
-          version: deleteFlag.version, 
+          version: deleteFlag.version,
           flag: {
             ...deleteFlag,
             deleted: true,
@@ -277,7 +268,7 @@ export default class LDClientImpl implements LDClient {
     return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
   }
 
-  private async getFlagsFromStorage(canonicalKey: string): Promise<LDEvaluationResultsMap | undefined> {
+  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
     const f = await this.platform.storage?.get(canonicalKey);
     return f ? JSON.parse(f) : undefined;
   }
@@ -329,7 +320,7 @@ export default class LDClientImpl implements LDClient {
     const { identifyPromise, identifyResolve, identifyReject } = this.createIdentifyPromise(
       this.identifyTimeout,
     );
-    this.logger.debug(`Identifying ${JSON.stringify(context)}`);
+    this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
 
     const loadedFromCache = await this.flagManager.loadCached(this.checkedContext)
     if (loadedFromCache) {
@@ -345,7 +336,7 @@ export default class LDClientImpl implements LDClient {
       }
     } else {
       this.streamer?.close();
-      let streamUri = this.createStreamUriPath(context);
+      let streamUri = this.createStreamUriPath(this.inputContext);
       if (this.config.withReasons) {
         streamUri = `${streamUri}?withReasons=true`;
       }
@@ -357,7 +348,7 @@ export default class LDClientImpl implements LDClient {
         this.diagnosticsManager,
         (e) => {
           identifyReject(e);
-          this.emitter.emit('error', context, e);
+          this.emitter.emit('error', this.checkedContext, e);
         },
       );
       this.streamer.start();

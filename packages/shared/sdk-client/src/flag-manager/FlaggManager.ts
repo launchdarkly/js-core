@@ -32,17 +32,16 @@ export default class FlagManager {
         return this.flagStore.get(key)
     }
 
-    getAll() : Map<string, ItemDescriptor> {
+    getAll() : {[key: string]: ItemDescriptor} {
         return this.flagStore.getAll()
     }
 
-    init(context: Context, newFlags: Map<string, ItemDescriptor>) {
-        // TODO: update flag persistence
+    async init(context: Context, newFlags: {[key: string]: ItemDescriptor}): Promise<void> {
+        return this.flagPersistence.init(context, newFlags)
     }
 
     async upsert(context: Context, key: string, item: ItemDescriptor) : Promise<boolean> {
-        // TODO: upsert flag persistence
-        return true
+        return this.flagPersistence.upsert(context, key, item)
     }
 
     async loadCached(context: Context) : Promise<boolean> {

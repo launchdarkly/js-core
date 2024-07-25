@@ -1,11 +1,10 @@
-import { Context, Crypto as LDCrypto, LDLogger, Platform } from "@launchdarkly/js-sdk-common";
-import { LDEvaluationResult, LDEvaluationResultsMap } from "../types";
+import { Context, LDLogger, Platform } from "@launchdarkly/js-sdk-common";
+import { Flags } from "../types";
+import { concatNamespacesAndValues } from "../utils/namespaceUtils";
+import ContextIndex from "./ContextIndex";
 import FlagStore from "./FlagStore";
 import FlagUpdater from "./FlagUpdater";
 import { ItemDescriptor } from "./ItemDescriptor";
-import { concatNamespacesAndValues } from "../utils/namespaceUtils";
-
-const CONTEXT_INDEX_KEY = 'ContextIndex'
 
 export default class FlagPersistence {
 
@@ -20,22 +19,30 @@ export default class FlagPersistence {
         private readonly flagUpdater: FlagUpdater,
         private readonly logger: LDLogger,
         private readonly timeStamper: () => number = () => Date.now()
-    ) { 
+    ) {
         this.indexKey = concatNamespacesAndValues(platform.crypto, [
-            {value: this.environmentNamespace, hashIt: false},
-            {value: 'ContextIndex', hashIt: false}
+            { value: this.environmentNamespace, hashIt: false },
+            { value: 'ContextIndex', hashIt: false }
         ])
     }
 
-    async init(context: Context, newFlags: Map<string, ItemDescriptor>): Promise<void> {
+    async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
         this.flagUpdater.init(context, newFlags)
         return this.storeCache(context)
     }
 
-    async loadCached(context: Context) : Promise<boolean> {
+    async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
+        if (this.flagUpdater.upsert(context, key, item)) {
+            await this.storeCache(context)
+            return true
+        }
+        return false;
+    }
+
+    async loadCached(context: Context): Promise<boolean> {
         const storageKey = concatNamespacesAndValues(this.platform.crypto, [
-            {value: this.environmentNamespace, hashIt: false},
-            {value: context.canonicalKey, hashIt: true}
+            { value: this.environmentNamespace, hashIt: false },
+            { value: context.canonicalKey, hashIt: true }
         ])
         const json = await this.platform.storage?.get(storageKey)
         if (json === null || json === undefined) {
@@ -43,13 +50,14 @@ export default class FlagPersistence {
         }
 
         try {
-            const flagEvals: LDEvaluationResultsMap = JSON.parse(json)
-            // TODO: is there a more efficient way in javascript to do this map transform
-            const descriptors = new Map<string, ItemDescriptor>()
-            
-            flagEvals.forEach((flag: LDEvaluationResult, key: string) => {
-                descriptors.set(key, {version: flag.version, flag: flag})
-            });
+            const flagEvals: Flags = JSON.parse(json)
+
+            // mapping flags to item descriptors
+            const descriptors = Object.entries(flagEvals).reduce(
+                (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
+                    acc[key] = { version: flag.version, flag: flag }
+                    return acc;
+                }, {});
 
             this.flagUpdater.initCached(context, descriptors)
             this.logger.debug('Loaded cached flag evaluations from persistent storage')
@@ -86,8 +94,8 @@ export default class FlagPersistence {
         const index = await this.loadIndex()
 
         const contextStorageKey = concatNamespacesAndValues(this.platform.crypto, [
-            {value: this.environmentNamespace, hashIt: false},
-            {value: context.canonicalKey, hashIt: true}
+            { value: this.environmentNamespace, hashIt: false },
+            { value: context.canonicalKey, hashIt: true }
         ])
         index.notice(contextStorageKey, this.timeStamper())
 
@@ -98,18 +106,18 @@ export default class FlagPersistence {
 
         // store index
         await this.platform.storage?.set(this.indexKey, index.toJson())
-
         const allFlags = this.flagStore.getAll()
-        // TODO: is there a more efficient way in javascript to do this map transform
-        const sanitized : LDEvaluationResultsMap = new Map()
-        
-        allFlags.forEach((item: ItemDescriptor, key: string) => {
-            if (item.flag !== null && item.flag !== undefined) {
-                sanitized.set(key, item.flag)
-            }
-        });
 
-        const jsonAll = JSON.stringify(sanitized)
+        // mapping item descriptors to flags
+        const flags = Object.entries(allFlags).reduce(
+            (acc: Flags, [key, descriptor]) => {
+                if (descriptor.flag !== null && descriptor.flag !== undefined) {
+                    acc[key] = descriptor.flag
+                }
+                return acc;
+            }, {});
+
+        const jsonAll = JSON.stringify(flags)
         // store flag data
         await this.platform.storage?.set(contextStorageKey, jsonAll)
     }
