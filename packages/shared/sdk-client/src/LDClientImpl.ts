@@ -17,6 +17,7 @@ import {
   timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
+import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { ConnectionMode, LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
@@ -25,6 +26,7 @@ import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
+import PollingProcessor from './polling/PollingProcessor';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
 
@@ -38,7 +40,7 @@ export default class LDClientImpl implements LDClient {
   eventProcessor?: internal.EventProcessor;
   identifyTimeout: number = 5;
   logger: LDLogger;
-  streamer?: internal.StreamingProcessor;
+  updateProcessor?: LDStreamProcessor;
 
   readonly highTimeoutThreshold: number = 15;
 
@@ -105,12 +107,15 @@ export default class LDClientImpl implements LDClient {
       case 'offline':
         return this.close();
       case 'streaming':
+      case 'polling':
+        // TODO: Should only change when something changes.
         this.eventProcessor?.start();
 
         if (this.context) {
-          // identify will start streamer
+          // identify will start the update processor
           return this.identify(this.context, { timeout: this.identifyTimeout });
         }
+
         break;
       default:
         this.logger.warn(
@@ -146,7 +151,7 @@ export default class LDClientImpl implements LDClient {
   async close(): Promise<void> {
     await this.flush();
     this.eventProcessor?.close();
-    this.streamer?.close();
+    this.updateProcessor?.close();
     this.logger.debug('Closed eventProcessor and streamer.');
   }
 
@@ -246,6 +251,12 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
+  protected createPollUriPath(_context: LDContext): string {
+    throw new Error(
+      'createPollUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
+    );
+  }
+
   private createIdentifyPromise(timeout: number) {
     let res: any;
     let rej: any;
@@ -334,26 +345,70 @@ export default class LDClientImpl implements LDClient {
         identifyResolve();
       }
     } else {
-      this.streamer?.close();
-      let streamUri = this.createStreamUriPath(context);
-      if (this.config.withReasons) {
-        streamUri = `${streamUri}?withReasons=true`;
+      this.updateProcessor?.close();
+
+      switch (this.getConnectionMode()) {
+        case 'streaming':
+          this.createStreamingProcessor(context, checkedContext, identifyResolve, identifyReject);
+          break;
+        case 'polling':
+          this.createPollingProcessor(identifyResolve, context, checkedContext, identifyReject);
+          break;
+        default:
+          break;
       }
-      this.streamer = new internal.StreamingProcessor(
-        this.sdkKey,
-        this.clientContext,
-        streamUri,
-        this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
-        this.diagnosticsManager,
-        (e) => {
-          identifyReject(e);
-          this.emitter.emit('error', context, e);
-        },
-      );
-      this.streamer.start();
+      this.updateProcessor!.start();
     }
 
     return identifyPromise;
+  }
+
+  private createPollingProcessor(
+    identifyResolve: any,
+    context: any,
+    checkedContext: Context,
+    identifyReject: any,
+  ) {
+    this.updateProcessor = new PollingProcessor(
+      this.sdkKey,
+      this.clientContext,
+      this.createPollUriPath(context),
+      this.config,
+      async (flags) => {
+        // TODO: Names which make sense.
+        this.logger.debug(`Polling PUT: ${Object.keys(flags)}`);
+        this.onIdentifyResolve(identifyResolve, flags, context, 'polling PUT');
+        await this.platform.storage?.set(checkedContext.canonicalKey, JSON.stringify(this.flags));
+      },
+      (err) => {
+        identifyReject(err);
+        this.emitter.emit('error', context, err);
+      },
+    );
+  }
+
+  private createStreamingProcessor(
+    context: any,
+    checkedContext: Context,
+    identifyResolve: any,
+    identifyReject: any,
+  ) {
+    let streamUri = this.createStreamUriPath(context);
+    if (this.config.withReasons) {
+      streamUri = `${streamUri}?withReasons=true`;
+    }
+
+    this.updateProcessor = new internal.StreamingProcessor(
+      this.sdkKey,
+      this.clientContext,
+      streamUri,
+      this.createStreamListeners(context, checkedContext.canonicalKey, identifyResolve),
+      this.diagnosticsManager,
+      (e) => {
+        identifyReject(e);
+        this.emitter.emit('error', context, e);
+      },
+    );
   }
 
   /**

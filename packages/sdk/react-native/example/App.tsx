@@ -14,6 +14,7 @@ const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enab
     id: 'ld-rn-test-app',
     version: '0.0.1',
   },
+  initialConnectionMode: 'polling',
 });
 
 const App = () => {

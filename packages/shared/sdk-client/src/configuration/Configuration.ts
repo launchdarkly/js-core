@@ -13,6 +13,8 @@ import { ConnectionMode, type LDOptions } from '../api';
 import { LDInspection } from '../api/LDInspection';
 import validators from './validators';
 
+const DEFAULT_POLLING_INTERVAL: number = 60;
+
 export default class Configuration {
   public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
   public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
@@ -60,6 +62,8 @@ export default class Configuration {
   public readonly wrapperVersion?: string;
 
   public readonly serviceEndpoints: ServiceEndpoints;
+
+  public readonly pollInterval: number = DEFAULT_POLLING_INTERVAL;
 
   // Allow indexing Configuration by a string
   [index: string]: any;

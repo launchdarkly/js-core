@@ -16,6 +16,7 @@ export default function Welcome() {
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 
+
   const setConnectionMode = (m: ConnectionMode) => {
     ldc.setConnectionMode(m);
   };

@@ -59,7 +59,15 @@ export default class ReactNativeLDClient extends LDClientImpl {
     );
   }
 
+  private encodeContext(context: LDContext) {
+    return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
+  }
+
   override createStreamUriPath(context: LDContext) {
-    return `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`;
+    return `/meval/${this.encodeContext(context)}}`;
+  }
+
+  override createPollUriPath(context: LDContext): string {
+    return `/msdk/evalx/contexts/${this.encodeContext(context)}`;
   }
 }

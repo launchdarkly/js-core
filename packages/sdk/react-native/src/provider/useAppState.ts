@@ -29,13 +29,13 @@ const useAppState = (client: ReactNativeLDClient) => {
     if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
       if (isEventSourceClosed()) {
         client.logger.debug('Starting streamer after transitioning to foreground.');
-        client.streamer?.start();
+        client.updateProcessor?.start();
       } else {
         client.logger.debug('Not starting streamer because EventSource is already open.');
       }
     } else if (nextAppState === 'background') {
       client.logger.debug('App state background stopping streamer.');
-      client.streamer?.stop();
+      client.updateProcessor?.stop();
     } else {
       client.logger.debug('No action needed.');
     }

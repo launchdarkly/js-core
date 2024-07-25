@@ -184,6 +184,13 @@ export interface LDOptions {
   streamUri?: string;
 
   /**
+   * The time between polling requests, in seconds. Ignored in streaming mode.
+   *
+   * The minimum polling interval is 30 seconds.
+   */
+  pollInterval?: number;
+
+  /**
    * Whether LaunchDarkly should provide additional information about how flag values were
    * calculated.
    *
