@@ -64,7 +64,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
   }
 
   override createStreamUriPath(context: LDContext) {
-    return `/meval/${this.encodeContext(context)}}`;
+    return `/meval/${this.encodeContext(context)}`;
   }
 
   override createPollUriPath(context: LDContext): string {
