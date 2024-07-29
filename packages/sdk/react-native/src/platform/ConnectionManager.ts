@@ -130,7 +130,6 @@ export class ConnectionManager {
     // Currently the foreground mode will always be whatever the last active
     // connection mode was.
     this.destination.setConnectionMode(this.currentConnectionMode);
-
     this.destination.setEventSendingEnabled(true, false);
   }
 
