@@ -2,22 +2,22 @@ import { ConnectionMode, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 export enum ApplicationState {
   /// The application is in the foreground.
-  Foreground,
+  Foreground = 'foreground',
 
   /// The application is in the background.
   ///
   /// Note, the application will not be active while in the background, but
   /// it will track when it is entering or exiting a background state.
-  Background,
+  Background = 'background',
 }
 
 export enum NetworkState {
   /// There is no network available for the SDK to use.
-  Unavailable,
+  Unavailable = 'unavailable',
 
   /// The network is available. Note that network requests may still fail
   /// for other reasons.
-  Available,
+  Available = 'available',
 }
 
 export interface ConnectionDestination {
