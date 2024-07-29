@@ -121,6 +121,8 @@ export class ConnectionManager {
   private setForegroundAvailable(): void {
     if (this.offline) {
       this.destination.setConnectionMode('offline');
+      // Don't attempt to flush. If the user wants to flush when entering offline
+      // mode, then they can do that directly.
       this.destination.setEventSendingEnabled(false, false);
       return;
     }
@@ -128,15 +130,14 @@ export class ConnectionManager {
     // Currently the foreground mode will always be whatever the last active
     // connection mode was.
     this.destination.setConnectionMode(this.currentConnectionMode);
+
     this.destination.setEventSendingEnabled(true, false);
   }
 
   private setBackgroundAvailable(): void {
-    this.destination.flush();
-
     if (!this.config.runInBackground) {
       this.destination.setConnectionMode('offline');
-      this.destination.setEventSendingEnabled(false, false);
+      this.destination.setEventSendingEnabled(false, true);
       return;
     }
 

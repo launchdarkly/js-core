@@ -142,6 +142,10 @@ export default class ReactNativeLDClient extends LDClientImpl {
   }
 
   override async setConnectionMode(mode: ConnectionMode): Promise<void> {
+    // Set the connection mode before setting offline, in case there is any mode transition work
+    // such as flushing on entering the background.
     this.connectionManager.setConnectionMode(mode);
+    // For now the data source connection and the event processing state are connected.
+    this.connectionManager.setOffline(mode === 'offline');
   }
 }
