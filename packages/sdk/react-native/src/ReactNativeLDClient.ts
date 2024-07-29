@@ -1,7 +1,11 @@
+/* eslint-disable max-classes-per-file */
+import { AppState, AppStateStatus } from 'react-native';
+
 import {
   AutoEnvAttributes,
   base64UrlEncode,
   BasicLogger,
+  ConnectionMode,
   internal,
   LDClientImpl,
   type LDContext,
@@ -9,6 +13,49 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import createPlatform from './platform';
+import {
+  ApplicationState,
+  ConnectionDestination,
+  ConnectionManager,
+  NetworkState,
+  StateDetector,
+} from './platform/ConnectionManager';
+
+function translateAppState(state: AppStateStatus): ApplicationState {
+  switch (state) {
+    case 'active':
+      return ApplicationState.Foreground;
+    case 'inactive':
+    case 'background':
+    case 'extension':
+    default:
+      return ApplicationState.Background;
+  }
+}
+
+class RNStateDetector implements StateDetector {
+  private applicationStateListener?: (state: ApplicationState) => void;
+  private networkStateListener?: (state: NetworkState) => void;
+
+  constructor() {
+    AppState.addEventListener('change', (state: AppStateStatus) => {
+      this.applicationStateListener?.(translateAppState(state));
+    });
+  }
+
+  setApplicationStateListener(fn: (state: ApplicationState) => void): void {
+    this.applicationStateListener = fn;
+    // When you listen provide the current state immediately.
+    this.applicationStateListener(translateAppState(AppState.currentState));
+  }
+  setNetworkStateListener(fn: (state: NetworkState) => void): void {
+    this.networkStateListener = fn;
+  }
+  stopListening(): void {
+    this.applicationStateListener = undefined;
+    this.networkStateListener = undefined;
+  }
+}
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
@@ -24,6 +71,7 @@ import createPlatform from './platform';
  * ```
  */
 export default class ReactNativeLDClient extends LDClientImpl {
+  private connectionManager: ConnectionManager;
   /**
    * Creates an instance of the LaunchDarkly client.
    *
@@ -57,9 +105,43 @@ export default class ReactNativeLDClient extends LDClientImpl {
       { ...options, logger },
       internalOptions,
     );
+
+    const destination: ConnectionDestination = {
+      setNetworkAvailability: (_available: boolean) => {
+        // Not yet supported.
+      },
+      setEventSendingEnabled: (_enabled: boolean, _flush: boolean) => {
+        // TODO: Implement
+      },
+      setConnectionMode: async (mode: ConnectionMode) => {
+        // Pass the connection mode to the base implementation.
+        // The RN implementation will pass the connection mode through the connection manager.
+        super.setConnectionMode(mode);
+      },
+      flush: async () => {
+        this.flush();
+      },
+    };
+
+    const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
+    this.connectionManager = new ConnectionManager(
+      logger,
+      {
+        initialConnectionMode,
+        automaticNetworkHandling: true,
+        automaticBackgroundHandling: true,
+        runInBackground: false,
+      },
+      destination,
+      new RNStateDetector(),
+    );
   }
 
   override createStreamUriPath(context: LDContext) {
     return `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`;
+  }
+
+  override async setConnectionMode(mode: ConnectionMode): Promise<void> {
+    this.connectionManager.setConnectionMode(mode);
   }
 }
