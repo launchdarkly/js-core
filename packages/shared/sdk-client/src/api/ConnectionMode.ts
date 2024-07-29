@@ -9,6 +9,6 @@
  *
  * streaming - The SDK will use a streaming connection to receive updates from LaunchDarkly.
  */
-type ConnectionMode = 'offline' | 'streaming';
+type ConnectionMode = 'offline' | 'streaming' | 'polling';
 
 export default ConnectionMode;
