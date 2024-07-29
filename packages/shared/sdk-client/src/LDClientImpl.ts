@@ -538,4 +538,12 @@ export default class LDClientImpl implements LDClient {
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
   }
+
+  protected setNetworkAvailability(_available: boolean): void {
+    // Not yet supported.
+  }
+
+  protected setEventSendingEnabled(_enabled: boolean, _flush: boolean): void {
+    // TODO: Implement.
+  }
 }

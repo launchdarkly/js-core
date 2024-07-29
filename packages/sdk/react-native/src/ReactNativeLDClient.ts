@@ -107,11 +107,11 @@ export default class ReactNativeLDClient extends LDClientImpl {
     );
 
     const destination: ConnectionDestination = {
-      setNetworkAvailability: (_available: boolean) => {
-        // Not yet supported.
+      setNetworkAvailability: (available: boolean) => {
+        this.setNetworkAvailability(available);
       },
-      setEventSendingEnabled: (_enabled: boolean, _flush: boolean) => {
-        // TODO: Implement
+      setEventSendingEnabled: (enabled: boolean, flush: boolean) => {
+        this.setEventSendingEnabled(enabled, flush);
       },
       setConnectionMode: async (mode: ConnectionMode) => {
         // Pass the connection mode to the base implementation.
