@@ -32,6 +32,7 @@ export default class RNStateDetector implements StateDetector {
 
   setNetworkStateListener(fn: (state: NetworkState) => void): void {
     this.networkStateListener = fn;
+    // Not implemented.
   }
 
   stopListening(): void {
