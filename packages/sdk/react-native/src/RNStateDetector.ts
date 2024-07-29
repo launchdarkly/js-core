@@ -29,9 +29,11 @@ export default class RNStateDetector implements StateDetector {
     // When you listen provide the current state immediately.
     this.applicationStateListener(translateAppState(AppState.currentState));
   }
+
   setNetworkStateListener(fn: (state: NetworkState) => void): void {
     this.networkStateListener = fn;
   }
+
   stopListening(): void {
     this.applicationStateListener = undefined;
     this.networkStateListener = undefined;
