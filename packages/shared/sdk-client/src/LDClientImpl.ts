@@ -246,14 +246,6 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  protected setNetworkAvailability(available: boolean): void {
-
-  }
-
-  protected setEventSendingEnabled(enabled: boolean, flush: boolean): void {
-
-  }
-
   private createIdentifyPromise(timeout: number) {
     let res: any;
     let rej: any;

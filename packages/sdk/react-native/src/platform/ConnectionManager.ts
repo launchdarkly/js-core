@@ -97,11 +97,11 @@ export class ConnectionManager {
     this.logger.debug(`Handling state: ${this.applicationState}:${this.networkState}`);
 
     switch (this.networkState) {
-      case NetworkState.Available:
-        this.destination.setNetworkAvailability(false);
-        break;
       case NetworkState.Unavailable:
         this.destination.setNetworkAvailability(false);
+        break;
+      case NetworkState.Available:
+        this.destination.setNetworkAvailability(true);
         switch (this.applicationState) {
           case ApplicationState.Foreground:
             this.setForegroundAvailable();
