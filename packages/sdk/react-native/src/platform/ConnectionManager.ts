@@ -24,7 +24,6 @@ export interface ConnectionDestination {
   setNetworkAvailability(available: boolean): void;
   setEventSendingEnabled(enabled: boolean, flush: boolean): void;
   setConnectionMode(mode: ConnectionMode): Promise<void>;
-  flush(): Promise<void>;
 }
 
 export interface StateDetector {

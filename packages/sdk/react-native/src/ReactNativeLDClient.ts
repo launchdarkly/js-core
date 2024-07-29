@@ -1,6 +1,4 @@
 /* eslint-disable max-classes-per-file */
-import { AppState, AppStateStatus } from 'react-native';
-
 import {
   AutoEnvAttributes,
   base64UrlEncode,
@@ -13,49 +11,8 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import createPlatform from './platform';
-import {
-  ApplicationState,
-  ConnectionDestination,
-  ConnectionManager,
-  NetworkState,
-  StateDetector,
-} from './platform/ConnectionManager';
-
-function translateAppState(state: AppStateStatus): ApplicationState {
-  switch (state) {
-    case 'active':
-      return ApplicationState.Foreground;
-    case 'inactive':
-    case 'background':
-    case 'extension':
-    default:
-      return ApplicationState.Background;
-  }
-}
-
-class RNStateDetector implements StateDetector {
-  private applicationStateListener?: (state: ApplicationState) => void;
-  private networkStateListener?: (state: NetworkState) => void;
-
-  constructor() {
-    AppState.addEventListener('change', (state: AppStateStatus) => {
-      this.applicationStateListener?.(translateAppState(state));
-    });
-  }
-
-  setApplicationStateListener(fn: (state: ApplicationState) => void): void {
-    this.applicationStateListener = fn;
-    // When you listen provide the current state immediately.
-    this.applicationStateListener(translateAppState(AppState.currentState));
-  }
-  setNetworkStateListener(fn: (state: NetworkState) => void): void {
-    this.networkStateListener = fn;
-  }
-  stopListening(): void {
-    this.applicationStateListener = undefined;
-    this.networkStateListener = undefined;
-  }
-}
+import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
+import RNStateDetector from './RNStateDetector';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
@@ -116,10 +73,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
       setConnectionMode: async (mode: ConnectionMode) => {
         // Pass the connection mode to the base implementation.
         // The RN implementation will pass the connection mode through the connection manager.
-        super.setConnectionMode(mode);
-      },
-      flush: async () => {
-        this.flush();
+        this.baseSetConnectionMode(mode);
       },
     };
 
@@ -128,6 +82,8 @@ export default class ReactNativeLDClient extends LDClientImpl {
       logger,
       {
         initialConnectionMode,
+        // TODO: Add the ability to configure connection management.
+        // This is not yet added as the RN SDK needs package specific configuration added.
         automaticNetworkHandling: true,
         automaticBackgroundHandling: true,
         runInBackground: false,
@@ -135,6 +91,11 @@ export default class ReactNativeLDClient extends LDClientImpl {
       destination,
       new RNStateDetector(),
     );
+  }
+
+  private baseSetConnectionMode(mode: ConnectionMode) {
+    // Jest had problems with calls to super from nested arrow functions, so this method proxies the call.
+    super.setConnectionMode(mode);
   }
 
   override createStreamUriPath(context: LDContext) {
