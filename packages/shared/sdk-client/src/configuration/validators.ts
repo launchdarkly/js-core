@@ -20,7 +20,7 @@ class ConnectionModeValidator implements TypeValidator {
   }
 
   getType(): string {
-    return `'offline' | streaming | polling`;
+    return `offline | streaming | polling`;
   }
 }
 
