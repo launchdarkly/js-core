@@ -121,7 +121,7 @@ export default class LDClientImpl implements LDClient {
         break;
       default:
         this.logger.warn(
-          `Unknown ConnectionMode: ${mode}. Only 'offline' and 'streaming' are supported.`,
+          `Unknown ConnectionMode: ${mode}. Only 'offline', 'streaming', and 'polling' are supported.`,
         );
         break;
     }
@@ -629,7 +629,10 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Starting event processor');
       this.eventProcessor?.start();
     } else if (flush) {
+<<<<<<< HEAD
       this.logger?.debug('Flushing event processor before disabling.');
+=======
+>>>>>>> feat/client-connection-handling-rework
       // Disable and flush.
       this.flush().then(() => {
         // While waiting for the flush event sending could be re-enabled, in which case
