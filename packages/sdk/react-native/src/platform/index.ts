@@ -23,18 +23,14 @@ import AsyncStorage from './ConditionalAsyncStorage';
 import PlatformCrypto from './crypto';
 
 export class PlatformRequests implements Requests {
-  eventSource?: RNEventSource<EventName>;
-
   constructor(private readonly logger: LDLogger) {}
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
-    this.eventSource = new RNEventSource<EventName>(url, {
+    return new RNEventSource<EventName>(url, {
       headers: eventSourceInitDict.headers,
       retryAndHandleError: eventSourceInitDict.errorFilter,
       logger: this.logger,
     });
-
-    return this.eventSource;
   }
 
   fetch(url: string, options?: Options): Promise<Response> {
