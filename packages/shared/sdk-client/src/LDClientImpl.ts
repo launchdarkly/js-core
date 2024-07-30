@@ -571,6 +571,7 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Starting event processor');
       this.eventProcessor?.start();
     } else if (flush) {
+      // Disable and flush.
       this.flush().then(() => {
         // While waiting for the flush event sending could be re-enabled, in which case
         // we do not want to close the event processor.
@@ -579,6 +580,10 @@ export default class LDClientImpl implements LDClient {
           this.eventProcessor?.close();
         }
       });
+    } else {
+      // Just disabled.
+      this.logger?.debug('Stopping event processor.');
+      this.eventProcessor?.close();
     }
   }
 }
