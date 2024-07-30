@@ -13,7 +13,6 @@ function mockDestination(): ConnectionDestination {
     setNetworkAvailability: jest.fn(),
     setEventSendingEnabled: jest.fn(),
     setConnectionMode: jest.fn(),
-    flush: jest.fn(),
   };
 }
 

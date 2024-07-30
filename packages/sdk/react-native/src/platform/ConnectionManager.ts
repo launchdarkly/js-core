@@ -24,7 +24,6 @@ export interface ConnectionDestination {
   setNetworkAvailability(available: boolean): void;
   setEventSendingEnabled(enabled: boolean, flush: boolean): void;
   setConnectionMode(mode: ConnectionMode): Promise<void>;
-  flush(): Promise<void>;
 }
 
 export interface StateDetector {
@@ -121,6 +120,8 @@ export class ConnectionManager {
   private setForegroundAvailable(): void {
     if (this.offline) {
       this.destination.setConnectionMode('offline');
+      // Don't attempt to flush. If the user wants to flush when entering offline
+      // mode, then they can do that directly.
       this.destination.setEventSendingEnabled(false, false);
       return;
     }
@@ -132,11 +133,9 @@ export class ConnectionManager {
   }
 
   private setBackgroundAvailable(): void {
-    this.destination.flush();
-
     if (!this.config.runInBackground) {
       this.destination.setConnectionMode('offline');
-      this.destination.setEventSendingEnabled(false, false);
+      this.destination.setEventSendingEnabled(false, true);
       return;
     }
 
