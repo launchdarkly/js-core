@@ -48,6 +48,8 @@ export default class LDClientImpl implements LDClient {
   private flags: Flags = {};
 
   private readonly clientContext: ClientContext;
+  private eventSendingEnabled: boolean = true;
+  private networkAvailable: boolean = true;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -103,10 +105,13 @@ export default class LDClientImpl implements LDClient {
 
     switch (mode) {
       case 'offline':
-        return this.close();
+        this.streamer?.close();
+        break;
+      case 'polling':
+        this.logger.warn('Polling not supported. Using streaming.');
+      // Intentionally falling through to streaming.
+      // eslint-disable-next-line no-fallthrough
       case 'streaming':
-        this.eventProcessor?.start();
-
         if (this.context) {
           // identify will start streamer
           return this.identify(this.context, { timeout: this.identifyTimeout });
@@ -147,7 +152,7 @@ export default class LDClientImpl implements LDClient {
     await this.flush();
     this.eventProcessor?.close();
     this.streamer?.close();
-    this.logger.debug('Closed eventProcessor and streamer.');
+    this.logger.debug('Shutdown the launchdarkly client.');
   }
 
   async flush(): Promise<{ error?: Error; result: boolean }> {
@@ -537,5 +542,48 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
+  }
+
+  /**
+   * Inform the client of the network state. Can be used to modify connection behavior.
+   *
+   * For instance the implementation may choose to suppress errors from connections if the client
+   * knows that there is no network available.
+   * @param _available True when there is an available network.
+   */
+  protected setNetworkAvailability(available: boolean): void {
+    this.networkAvailable = available;
+    // Not yet supported.
+  }
+
+  /**
+   * Enable/Disable event sending.
+   * @param enabled True to enable event processing, false to disable.
+   * @param flush True to flush while disabling. Useful to flush on certain state transitions.
+   */
+  protected setEventSendingEnabled(enabled: boolean, flush: boolean): void {
+    if (this.eventSendingEnabled === enabled) {
+      return;
+    }
+    this.eventSendingEnabled = enabled;
+
+    if (enabled) {
+      this.logger.debug('Starting event processor');
+      this.eventProcessor?.start();
+    } else if (flush) {
+      // Disable and flush.
+      this.flush().then(() => {
+        // While waiting for the flush event sending could be re-enabled, in which case
+        // we do not want to close the event processor.
+        if (!this.eventSendingEnabled) {
+          this.logger?.debug('Stopping event processor.');
+          this.eventProcessor?.close();
+        }
+      });
+    } else {
+      // Just disabled.
+      this.logger?.debug('Stopping event processor.');
+      this.eventProcessor?.close();
+    }
   }
 }
