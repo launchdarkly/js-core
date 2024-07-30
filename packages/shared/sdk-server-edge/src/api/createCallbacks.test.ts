@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 
 import { noop } from '@launchdarkly/js-server-sdk-common';
+import { logger } from '@launchdarkly/private-js-mocks';
 
 import createCallbacks from './createCallbacks';
 
@@ -17,13 +18,36 @@ describe('createCallbacks', () => {
     jest.resetAllMocks();
   });
 
-  test('onError', () => {
+  test('onError calls the emitter', () => {
     emitter.on('error', noop);
 
     const { onError } = createCallbacks(emitter);
     onError(err);
 
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'error', err);
+  });
+
+  test('onError does not log when there are listeners', () => {
+    emitter.on('error', noop);
+
+    const { onError } = createCallbacks(emitter, logger);
+    onError(err);
+
+    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'error', err);
+    expect(logger.error).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.info).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
+  });
+
+  test('onError logs when there are no listeners', () => {
+    const { onError } = createCallbacks(emitter, logger);
+    onError(err);
+
+    expect(logger.error).toHaveBeenNthCalledWith(1, err.message);
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.info).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
   });
 
   test('onError should not be called', () => {

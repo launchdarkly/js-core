@@ -1,6 +1,7 @@
 import { integrations } from '@launchdarkly/js-server-sdk-common';
+import { logger } from '@launchdarkly/private-js-mocks';
 
-import { LDClient } from '../src';
+import { Context, LDClient } from '../src';
 import LDClientNode from '../src/LDClientNode';
 
 describe('given an LDClient with test data', () => {
@@ -12,6 +13,7 @@ describe('given an LDClient with test data', () => {
     client = new LDClientNode('sdk-key', {
       updateProcessor: td.getFactory(),
       sendEvents: false,
+      logger,
     });
   });
 
@@ -77,5 +79,17 @@ describe('given an LDClient with test data', () => {
 
     td.update(td.flag('flag1').on(false));
     td.update(td.flag('flag2').on(false));
+  });
+
+  it('logs errors when there are no event handlers', () => {
+    // Empty kind is not valid.
+    const invalidContext = { key: 'key', kind: '' };
+    client.variation('flag', { key: 'key', kind: '' }, false);
+    const referenceContext = Context.fromLDContext(invalidContext);
+    expect(referenceContext.message).toBeDefined();
+    expect(logger.error).toHaveBeenNthCalledWith(
+      1,
+      `${referenceContext.message} returning default value.`,
+    );
   });
 });

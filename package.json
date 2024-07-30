@@ -12,6 +12,8 @@
     "packages/sdk/cloudflare/example",
     "packages/sdk/react-native",
     "packages/sdk/react-native/example",
+    "packages/sdk/react-universal",
+    "packages/sdk/react-universal/example",
     "packages/sdk/vercel",
     "packages/sdk/akamai-base",
     "packages/sdk/akamai-base/example",
@@ -24,8 +26,8 @@
   ],
   "private": true,
   "scripts": {
-    "clean": "yarn workspaces foreach -pt run clean",
-    "build": "yarn workspaces foreach -p --topological-dev run build",
+    "clean": "yarn workspaces foreach -vpt run clean",
+    "build": "yarn workspaces foreach -vp --topological-dev run build",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc -- packages/shared/common' for example.",
     "build:doc": "npx typedoc --options $1/typedoc.json",
     "lint": "npx eslint . --ext .ts",
@@ -53,5 +55,9 @@
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   },
-  "packageManager": "yarn@3.4.1"
+  "packageManager": "yarn@3.4.1",
+  "//": "Pin jsonc-parser because v3.3.0 breaks rollup-plugin-esbuild",
+  "resolutions": {
+    "jsonc-parser": "3.2.0"
+  }
 }

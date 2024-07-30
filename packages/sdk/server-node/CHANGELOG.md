@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.4.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.4.6...node-server-sdk-v9.4.7) (2024-07-01)
+
+
+### Bug Fixes
+
+* Log errors when there is no error event handler. ([#495](https://github.com/launchdarkly/js-core/issues/495)) ([6b73699](https://github.com/launchdarkly/js-core/commit/6b73699061efa46cd291756d3932fcf78d480f40))
+
 ## [9.4.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.4.5...node-server-sdk-v9.4.6) (2024-06-14)
 
 
