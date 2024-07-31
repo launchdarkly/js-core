@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import { noop, Type, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { noop, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { type LDOptions } from '../api';
 import { LDInspection } from '../api/LDInspection';
