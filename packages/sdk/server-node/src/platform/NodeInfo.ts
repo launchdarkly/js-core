@@ -19,6 +19,7 @@ function processPlatformName(name: string): string {
 }
 
 export default class NodeInfo implements platform.Info {
+  constructor(private readonly config: { wrapperName?: string; wrapperVersion?: string }) {}
   platformData(): platform.PlatformData {
     return {
       os: {
@@ -38,7 +39,8 @@ export default class NodeInfo implements platform.Info {
       name: packageJson.name,
       version: packageJson.version,
       userAgentBase: 'NodeJSClient',
-      // No wrapper name/version at the moment.
+      wrapperName: this.config.wrapperName,
+      wrapperVersion: this.config.wrapperVersion,
     };
   }
 }

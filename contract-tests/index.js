@@ -35,6 +35,7 @@ app.get('/', (req, res) => {
       'inline-context',
       'anonymous-redaction',
       'evaluation-hooks',
+      'wrapper'
     ],
   });
 });
