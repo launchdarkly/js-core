@@ -90,6 +90,17 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.2.1 to 9.2.2
 
+## [4.1.17](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.1.16...node-server-sdk-redis-v4.1.17) (2024-07-31)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.4.7 to 9.5.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.0
+
 ## [4.1.16](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.1.15...node-server-sdk-redis-v4.1.16) (2024-07-01)
 
 
