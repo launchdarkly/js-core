@@ -2,6 +2,9 @@ import { AppState, AppStateStatus } from 'react-native';
 
 import { ApplicationState, NetworkState, StateDetector } from './platform/ConnectionManager';
 
+/**
+ * @internal
+ */
 function translateAppState(state: AppStateStatus): ApplicationState {
   switch (state) {
     case 'active':
@@ -14,6 +17,9 @@ function translateAppState(state: AppStateStatus): ApplicationState {
   }
 }
 
+/**
+ * @internal
+ */
 export default class RNStateDetector implements StateDetector {
   private applicationStateListener?: (state: ApplicationState) => void;
   private networkStateListener?: (state: NetworkState) => void;

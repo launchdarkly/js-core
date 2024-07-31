@@ -1,5 +1,8 @@
 import { ConnectionMode, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
+/**
+ * @internal
+ */
 export enum ApplicationState {
   /// The application is in the foreground.
   Foreground = 'foreground',
@@ -11,6 +14,9 @@ export enum ApplicationState {
   Background = 'background',
 }
 
+/**
+ * @internal
+ */
 export enum NetworkState {
   /// There is no network available for the SDK to use.
   Unavailable = 'unavailable',
@@ -20,12 +26,18 @@ export enum NetworkState {
   Available = 'available',
 }
 
+/**
+ * @internal
+ */
 export interface ConnectionDestination {
   setNetworkAvailability(available: boolean): void;
   setEventSendingEnabled(enabled: boolean, flush: boolean): void;
   setConnectionMode(mode: ConnectionMode): Promise<void>;
 }
 
+/**
+ * @internal
+ */
 export interface StateDetector {
   setApplicationStateListener(fn: (state: ApplicationState) => void): void;
   setNetworkStateListener(fn: (state: NetworkState) => void): void;
@@ -33,6 +45,9 @@ export interface StateDetector {
   stopListening(): void;
 }
 
+/**
+ * @internal
+ */
 export interface ConnectionManagerConfig {
   /// The initial connection mode the SDK should use.
   readonly initialConnectionMode: ConnectionMode;
@@ -51,6 +66,9 @@ export interface ConnectionManagerConfig {
   readonly automaticBackgroundHandling: boolean;
 }
 
+/**
+ * @internal
+ */
 export class ConnectionManager {
   private applicationState: ApplicationState = ApplicationState.Foreground;
   private networkState: NetworkState = NetworkState.Available;
