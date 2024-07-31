@@ -17,10 +17,6 @@ import Requestor, { LDRequestError } from './Requestor';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
-function isOk(status: number) {
-  return status >= 200 && status <= 299;
-}
-
 /**
  * Subset of configuration required for polling.
  *
@@ -38,7 +34,6 @@ export type PollingConfig = {
  * @internal
  */
 export default class PollingProcessor implements subsystem.LDStreamProcessor {
-  private readonly headers: { [key: string]: string };
   private stopped = false;
 
   private logger?: LDLogger;
@@ -46,8 +41,6 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private pollInterval: number;
 
   private timeoutHandle: any;
-
-  private uri: string;
 
   private requestor: Requestor;
 
@@ -60,14 +53,11 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     private readonly dataHandler: (flags: Flags) => void,
     private readonly errorHandler?: PollingErrorHandler,
   ) {
-    this.uri = `${config.serviceEndpoints.polling}${uriPath}`;
-
+    const uri = `${config.serviceEndpoints.polling}${uriPath}`;
     this.logger = config.logger;
-
     this.pollInterval = config.pollInterval;
-    this.headers = defaultHeaders(sdkKey, info, config.tags);
 
-    this.requestor = new Requestor(sdkKey, requests, info, this.uri, config.useReport, config.tags);
+    this.requestor = new Requestor(sdkKey, requests, info, uri, config.useReport, config.tags);
   }
 
   private async poll() {
