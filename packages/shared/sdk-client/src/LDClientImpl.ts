@@ -307,14 +307,16 @@ export default class LDClientImpl implements LDClient {
       this.identifyTimeout = identifyOptions.timeout;
     }
 
+    console.log("A!!!!!!");
     if (this.identifyTimeout > this.highTimeoutThreshold) {
       this.logger.warn(
-        'The identify function was called with a timeout greater than' +
-          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than` +
+        'The identify function was called with a timeout greater than ' +
+          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than ` +
           `${this.highTimeoutThreshold} seconds.`,
       );
     }
 
+    console.log("B!!!!!!");
     let context = await ensureKey(pristineContext, this.platform);
 
     if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
@@ -327,6 +329,7 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
+    console.log("C!!!!!!");
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext));
     const { identifyPromise, identifyResolve, identifyReject } = this.createIdentifyPromise(
@@ -340,7 +343,9 @@ export default class LDClientImpl implements LDClient {
       this.onIdentifyResolve(identifyResolve, flagsStorage, context, 'identify storage');
     }
 
+    console.log("D!!!!!!");
     if (this.isOffline()) {
+      console.log("E!!!!!!");
       if (flagsStorage) {
         this.logger.debug('Offline identify using storage flags.');
       } else {
@@ -351,7 +356,7 @@ export default class LDClientImpl implements LDClient {
       }
     } else {
       this.updateProcessor?.close();
-
+      console.log("F!!!!!!", this.getConnectionMode());
       switch (this.getConnectionMode()) {
         case 'streaming':
           this.createStreamingProcessor(context, checkedContext, identifyResolve, identifyReject);
@@ -362,6 +367,7 @@ export default class LDClientImpl implements LDClient {
         default:
           break;
       }
+      console.log("G!!!!!!");
       this.updateProcessor!.start();
     }
 
