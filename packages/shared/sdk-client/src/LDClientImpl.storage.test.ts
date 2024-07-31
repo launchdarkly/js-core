@@ -76,7 +76,7 @@ describe('sdk-client storage', () => {
 
     (basicPlatform.storage.get as jest.Mock).mockImplementation((storageKey: string) => {
       switch (storageKey) {
-        case flagStorageKey: 
+        case flagStorageKey:
           return JSON.stringify(defaultPutResponse)
         case indexStorageKey:
           return undefined
@@ -170,15 +170,6 @@ describe('sdk-client storage', () => {
   });
 
   test('not emitting change event when changed keys is empty', async () => {
-    jest.doMock('./utils', () => {
-      const actual = jest.requireActual('./utils');
-      return {
-        ...actual,
-        calculateChangedKeys: () => {
-          return []
-        },
-      };
-    });
     let LDClientImplTestNoChange;
     jest.isolateModules(async () => {
       LDClientImplTestNoChange = jest.requireActual('./LDClientImpl').default;
@@ -192,9 +183,13 @@ describe('sdk-client storage', () => {
     emitter = ldc.emitter;
     jest.spyOn(emitter as LDEmitter, 'emit');
 
+    // expect emission
     await identifyGetAllFlags(true, defaultPutResponse);
 
-    expect(emitter.emit).not.toHaveBeenCalled();
+    // expit no emission
+    await identifyGetAllFlags(true, defaultPutResponse);
+
+    expect(emitter.emit).toHaveBeenCalledTimes(1);
   });
 
   test('no storage, cold start from streamer', async () => {
@@ -209,11 +204,14 @@ describe('sdk-client storage', () => {
 
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
-      'org:Testy Pizza',
-      JSON.stringify(defaultPutResponse),
+      indexStorageKey,
+      expect.stringContaining('index')
     );
-    expect(ldc.logger.debug).toHaveBeenCalledWith(
-      'OnIdentifyResolve no changes to emit from: streamer PUT.',
+
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      2,
+      flagStorageKey,
+      JSON.stringify(defaultPutResponse),
     );
 
     // this is defaultPutResponse
@@ -234,11 +232,22 @@ describe('sdk-client storage', () => {
     delete putResponse['dev-test-flag'];
     const allFlags = await identifyGetAllFlags(false, putResponse);
 
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+
     expect(allFlags).not.toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledWith(
-      'org:Testy Pizza',
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      1,
+      indexStorageKey,
+      expect.stringContaining('index')
+    );
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      2,
+      flagStorageKey,
       JSON.stringify(putResponse),
     );
+
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
   });
@@ -254,9 +263,19 @@ describe('sdk-client storage', () => {
     };
     const allFlags = await identifyGetAllFlags(false, putResponse);
 
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+
     expect(allFlags).toMatchObject({ 'another-dev-test-flag': false });
-    expect(basicPlatform.storage.set).toHaveBeenCalledWith(
-      'org:Testy Pizza',
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      1,
+      indexStorageKey,
+      expect.stringContaining('index')
+    );
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      2,
+      flagStorageKey,
       JSON.stringify(putResponse),
     );
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['another-dev-test-flag']);
@@ -282,6 +301,9 @@ describe('sdk-client storage', () => {
     delete putResponse['moonshot-demo'];
     const allFlags = await identifyGetAllFlags(false, putResponse);
 
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+
     expect(allFlags).toMatchObject({ 'dev-test-flag': false, 'another-dev-test-flag': true });
     expect(allFlags).not.toHaveProperty('moonshot-demo');
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, [
@@ -300,11 +322,22 @@ describe('sdk-client storage', () => {
       false,
     );
 
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
-      'org:Testy Pizza',
+      indexStorageKey,
+      expect.stringContaining('index')
+    );
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      2,
+      flagStorageKey,
       JSON.stringify(defaultPutResponse),
     );
+
+    // we expect one change from the local storage init, but no further change from the PUT
     expect(emitter.emit).toHaveBeenCalledTimes(1);
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
 
@@ -326,7 +359,10 @@ describe('sdk-client storage', () => {
     putResponse['dev-test-flag'].reason = { kind: 'RULE_MATCH', inExperiment: true };
 
     const allFlags = await identifyGetAllFlags(false, putResponse);
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.calls[0][1]) as Flags;
+
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
 
     expect(allFlags).toMatchObject({ 'dev-test-flag': true });
     expect(flagsInStorage['dev-test-flag'].reason).toEqual({
@@ -346,13 +382,13 @@ describe('sdk-client storage', () => {
     patchResponse.version += 1;
 
     const allFlags = await identifyGetAllFlags(false, defaultPutResponse, patchResponse);
+    
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+    
     const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
-
     expect(allFlags).toMatchObject({ 'dev-test-flag': false });
-    expect(basicPlatform.storage.set).toHaveBeenCalledWith(
-      'org:Testy Pizza',
-      expect.stringContaining(JSON.stringify(patchResponse)),
-    );
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(4);
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
     expect(emitter.emit).toHaveBeenCalledTimes(2);
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
@@ -363,11 +399,15 @@ describe('sdk-client storage', () => {
     patchResponse.key = 'another-dev-test-flag';
 
     const allFlags = await identifyGetAllFlags(false, defaultPutResponse, patchResponse);
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
 
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+
+    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(allFlags).toHaveProperty('another-dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledWith(
-      'org:Testy Pizza',
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      4,
+      flagStorageKey,
       expect.stringContaining(JSON.stringify(patchResponse)),
     );
     expect(flagsInStorage).toHaveProperty('another-dev-test-flag');
@@ -389,7 +429,7 @@ describe('sdk-client storage', () => {
       false,
     );
 
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(1);
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(0);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
 
     // this is defaultPutResponse
@@ -417,11 +457,15 @@ describe('sdk-client storage', () => {
       undefined,
       deleteResponse,
     );
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
 
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+
+    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(allFlags).not.toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledWith(
-      'org:Testy Pizza',
+    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+      4,
+      flagStorageKey,
       expect.stringContaining('dev-test-flag'),
     );
     expect(flagsInStorage['dev-test-flag']).toMatchObject({ ...deleteResponse, deleted: true });
@@ -444,7 +488,7 @@ describe('sdk-client storage', () => {
     );
 
     expect(allFlags).toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(1);
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(0);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -463,7 +507,7 @@ describe('sdk-client storage', () => {
     );
 
     expect(allFlags).toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(1);
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(0);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -474,9 +518,13 @@ describe('sdk-client storage', () => {
     };
 
     await identifyGetAllFlags(false, defaultPutResponse, undefined, deleteResponse, false);
+
+    // wait for async code to resolve promises
+    await jest.runAllTimersAsync();
+
     const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
 
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(4); // two index saves and two flag saves
     expect(flagsInStorage['does-not-exist']).toMatchObject({ ...deleteResponse, deleted: true });
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['does-not-exist']);
   });
