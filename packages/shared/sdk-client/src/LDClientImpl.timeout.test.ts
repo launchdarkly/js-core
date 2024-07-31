@@ -34,7 +34,7 @@ describe('sdk-client identify timeout', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
 
-    // simulate streamer error after a long timeout
+    // simulate streaming error after a long timeout
     setupMockStreamingProcessor(true, defaultPutResponse, undefined, undefined, 30);
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
@@ -50,14 +50,14 @@ describe('sdk-client identify timeout', () => {
     jest.resetAllMocks();
   });
 
-  // streamer is setup to error in beforeEach to cause a timeout
+  // streaming is setup to error in beforeEach to cause a timeout
   test('rejects with default timeout of 5s', async () => {
     jest.advanceTimersByTimeAsync(ldc.identifyTimeout * 1000).then();
     await expect(ldc.identify(carContext)).rejects.toThrow(/identify timed out/);
     expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/identify timed out/));
   });
 
-  // streamer is setup to error in beforeEach to cause a timeout
+  // streaming is setup to error in beforeEach to cause a timeout
   test('rejects with custom timeout', async () => {
     const timeout = 15;
     jest.advanceTimersByTimeAsync(timeout * 1000).then();

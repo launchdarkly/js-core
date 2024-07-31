@@ -16,6 +16,7 @@ export default function Welcome() {
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 
+
   const setConnectionMode = (m: ConnectionMode) => {
     ldc.setConnectionMode(m);
   };
@@ -56,7 +57,13 @@ export default function Welcome() {
         style={styles.buttonContainer}
         onPress={() => setConnectionMode('streaming')}
       >
-        <Text style={styles.buttonText}>Set online</Text>
+        <Text style={styles.buttonText}>Set streaming</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.buttonContainer}
+        onPress={() => setConnectionMode('polling')}
+      >
+        <Text style={styles.buttonText}>Set polling</Text>
       </TouchableOpacity>
     </View>
   );
