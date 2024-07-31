@@ -1,15 +1,17 @@
 import {
-  ClientContext,
+  ApplicationTags,
   defaultHeaders,
   httpErrorMessage,
+  HttpErrorResponse,
+  Info,
   isHttpRecoverable,
   LDLogger,
   LDPollingError,
   Requests,
+  ServiceEndpoints,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
 import { Flags } from '../types';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
@@ -17,6 +19,19 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
 function isOk(status: number) {
   return status >= 200 && status <= 299;
 }
+
+/**
+ * Subset of configuration required for polling.
+ *
+ * @internal
+ */
+export type PollingConfig = {
+  logger: LDLogger;
+  pollInterval: number;
+  tags: ApplicationTags;
+  useReport: boolean;
+  serviceEndpoints: ServiceEndpoints;
+};
 
 /**
  * @internal
@@ -31,26 +46,25 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
 
   private timeoutHandle: any;
 
-  private requests: Requests;
   private uri: string;
+  private verb: string;
 
   constructor(
     sdkKey: string,
-    clientContext: ClientContext,
+    private requests: Requests,
+    info: Info,
     uriPath: string,
-    config: Configuration,
+    config: PollingConfig,
     private readonly dataHandler: (flags: Flags) => void,
     private readonly errorHandler?: PollingErrorHandler,
   ) {
-    const { basicConfiguration, platform } = clientContext;
-    const { logger, tags } = basicConfiguration;
-    const { info, requests } = platform;
-    this.uri = `${basicConfiguration.serviceEndpoints.polling}${uriPath}`;
+    this.uri = `${config.serviceEndpoints.polling}${uriPath}`;
 
-    this.logger = logger;
+    this.logger = config.logger;
     this.requests = requests;
     this.pollInterval = config.pollInterval;
-    this.headers = defaultHeaders(sdkKey, info, tags);
+    this.headers = defaultHeaders(sdkKey, info, config.tags);
+    this.verb = config.useReport ? 'REPORT' : 'GET';
   }
 
   private async poll() {
@@ -68,7 +82,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     const startTime = Date.now();
     try {
       const res = await this.requests.fetch(this.uri, {
-        method: 'GET',
+        method: this.verb,
         headers: this.headers,
       });
 
@@ -81,27 +95,26 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
         } catch {
           reportJsonError(body);
         }
-      } else if (!isHttpRecoverable(res.status)) {
-        const message = httpErrorMessage(
-          {
-            message: `Unexpected status code: ${res.status}`,
-            status: res.status,
-          },
-          'polling request',
-        );
-        this.logger?.error(message);
-        this.errorHandler?.(new LDPollingError(message, res.status));
-        // It is not recoverable, return and do not trigger another
-        // poll.
-        return;
       } else {
-        // TODO: Better.
+        const err = {
+          message: `Unexpected status code: ${res.status}`,
+          status: res.status,
+        };
+        if (!isHttpRecoverable(res.status)) {
+          const message = httpErrorMessage(err, 'polling request');
+          this.logger?.error(message);
+          this.errorHandler?.(new LDPollingError(message, res.status));
+          // It is not recoverable, return and do not trigger another
+          // poll.
+          return;
+        }
         // Recoverable error.
-        this.logger?.error('Recoverable error', res.status);
+        this.logger?.error(httpErrorMessage(err, 'polling request', 'will retry'));
       }
     } catch (err) {
-      // TODO: Something.
-      this.logger?.error('[Polling] Error:', err);
+      this.logger?.error(
+        httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
+      );
     }
 
     const elapsed = Date.now() - startTime;
@@ -109,8 +122,6 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
 
     this.logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
 
-    // Falling through, there was some type of error and we need to trigger
-    // a new poll.
     this.timeoutHandle = setTimeout(() => {
       this.poll();
     }, sleepFor);

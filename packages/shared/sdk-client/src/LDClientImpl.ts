@@ -380,7 +380,8 @@ export default class LDClientImpl implements LDClient {
     }
     this.updateProcessor = new PollingProcessor(
       this.sdkKey,
-      this.clientContext,
+      this.clientContext.platform.requests,
+      this.clientContext.platform.info,
       pollingPath,
       this.config,
       async (flags) => {

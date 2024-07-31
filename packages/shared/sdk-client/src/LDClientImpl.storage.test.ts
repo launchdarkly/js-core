@@ -201,7 +201,7 @@ describe('sdk-client storage', () => {
       JSON.stringify(defaultPutResponse),
     );
     expect(ldc.logger.debug).toHaveBeenCalledWith(
-      'OnIdentifyResolve no changes to emit from: streaming PUT.',
+      'OnIdentifyResolve no changes to emit from: stream PUT.',
     );
 
     // this is defaultPutResponse
