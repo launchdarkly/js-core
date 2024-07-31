@@ -13,6 +13,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Flags } from '../types';
+import Requestor, { LDRequestError } from './Requestor';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
@@ -47,11 +48,12 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private timeoutHandle: any;
 
   private uri: string;
-  private verb: string;
+
+  private requestor: Requestor;
 
   constructor(
     sdkKey: string,
-    private requests: Requests,
+    requests: Requests,
     info: Info,
     uriPath: string,
     config: PollingConfig,
@@ -61,10 +63,11 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     this.uri = `${config.serviceEndpoints.polling}${uriPath}`;
 
     this.logger = config.logger;
-    this.requests = requests;
+
     this.pollInterval = config.pollInterval;
     this.headers = defaultHeaders(sdkKey, info, config.tags);
-    this.verb = config.useReport ? 'REPORT' : 'GET';
+
+    this.requestor = new Requestor(sdkKey, requests, info, this.uri, config.useReport, config.tags);
   }
 
   private async poll() {
@@ -81,37 +84,26 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     this.logger?.debug('Polling LaunchDarkly for feature flag updates');
     const startTime = Date.now();
     try {
-      const res = await this.requests.fetch(this.uri, {
-        method: this.verb,
-        headers: this.headers,
-      });
-
-      if (isOk(res.status)) {
-        const body = await res.text();
-
+      const res = await this.requestor.requestPayload();
+      try {
+        const flags = JSON.parse(res);
         try {
-          const flags = JSON.parse(body);
-          this.dataHandler(flags);
+          this.dataHandler?.(flags);
         } catch {
-          reportJsonError(body);
+          // TODO: Data handler threw.
         }
-      } else {
-        const err = {
-          message: `Unexpected status code: ${res.status}`,
-          status: res.status,
-        };
-        if (!isHttpRecoverable(res.status)) {
-          const message = httpErrorMessage(err, 'polling request');
-          this.logger?.error(message);
-          this.errorHandler?.(new LDPollingError(message, res.status));
-          // It is not recoverable, return and do not trigger another
-          // poll.
-          return;
-        }
-        // Recoverable error.
-        this.logger?.error(httpErrorMessage(err, 'polling request', 'will retry'));
+      } catch {
+        reportJsonError(res);
       }
     } catch (err) {
+      const requestError = err as LDRequestError;
+      if (requestError.status !== undefined) {
+        if (!isHttpRecoverable(requestError.status)) {
+          this.logger?.error(httpErrorMessage(err as HttpErrorResponse, 'polling request'));
+          this.errorHandler?.(new LDPollingError(requestError.message, requestError.status));
+          return;
+        }
+      }
       this.logger?.error(
         httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
       );
