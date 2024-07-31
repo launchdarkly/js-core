@@ -68,11 +68,11 @@ export function makeSdkConfig(options, tag) {
     );
   }
   if (options.wrapper) {
-    if(options.wrapper.wrapperName) {
-      cf.wrapperName = options.wrapper.wrapperName;
+    if(options.wrapper.name) {
+      cf.wrapperName = options.wrapper.name;
     }
-    if(options.wrapper.wrapperVersion) {
-      cf.wrapperVersion = options.wrapper.wrapperVersion;
+    if(options.wrapper.version) {
+      cf.wrapperVersion = options.wrapper.version;
     }
   }
   return cf;
