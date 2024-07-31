@@ -2,26 +2,33 @@ import { Context, LDLogger } from "@launchdarkly/js-sdk-common";
 import { Flags } from "../types";
 import { ItemDescriptor } from "./ItemDescriptor";
 import FlagStore from "./FlagStore";
+import calculateChangedKeys from "../utils/calculateChangedKeys";
+
+export type FlagsChangeCallback = (context: Context, flagKeys: Array<string>) => void
 
 export default class FlagUpdater {
 
-    private flagStore : FlagStore
-    private logger : LDLogger
-    private activeContextKey : string | undefined
+    private flagStore: FlagStore
+    private logger: LDLogger
+    private activeContextKey: string | undefined
+    private changeCallbacks = new Array<FlagsChangeCallback>()
 
     constructor(flagStore: FlagStore, logger: LDLogger) {
         this.flagStore = flagStore
         this.logger = logger
     }
 
-    init(context: Context, newFlags: {[key: string]: ItemDescriptor}) {
+    init(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
         this.activeContextKey = context.canonicalKey
         const oldFlags = this.flagStore.getAll()
         this.flagStore.init(newFlags)
-        this.handleChanges(oldFlags, newFlags)
+        const changed = calculateChangedKeys(oldFlags, newFlags)
+        if (changed.length > 0) {
+            this.changeCallbacks.forEach(callback => callback(context, changed))
+        }
     }
 
-    initCached(context: Context, newFlags: {[key: string]: ItemDescriptor}) {
+    initCached(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
         if (this.activeContextKey === context.canonicalKey) {
             return;
         }
@@ -41,13 +48,23 @@ export default class FlagUpdater {
             return false
         }
 
-        // TODO notify listeners
-
         this.flagStore.insertOrUpdate(key, item)
+        this.changeCallbacks.forEach((callback) => {callback(context, [key])})
         return true
     }
 
-    private handleChanges(oldFlags: {[key: string]: ItemDescriptor}, newFlags: {[key: string]: ItemDescriptor}) {
+    on(callback: FlagsChangeCallback): void {
+        this.changeCallbacks.push(callback)
+    }
+
+    off(callback: FlagsChangeCallback): void {
+        const index = this.changeCallbacks.indexOf(callback);
+        if (index > -1) {
+            this.changeCallbacks.splice(index, 1);
+        }
+    }
+
+    private handleChanges(oldFlags: { [key: string]: ItemDescriptor }, newFlags: { [key: string]: ItemDescriptor }) {
         // TODO
     }
 

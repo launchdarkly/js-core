@@ -41,19 +41,19 @@ export default class FlagPersistence {
 
     async loadCached(context: Context): Promise<boolean> {
         const storageKey = concatNamespacesAndValues(this.platform.crypto, [
-            { value: this.environmentNamespace, hashIt: false },
-            { value: context.canonicalKey, hashIt: true }
+            { value: this.environmentNamespace, hashIt: false }, // use namespace as is
+            { value: context.canonicalKey, hashIt: true } // hash canonical key
         ])
-        const json = await this.platform.storage?.get(storageKey)
-        if (json === null || json === undefined) {
+        const flagsJson = await this.platform.storage?.get(storageKey)
+        if (flagsJson === null || flagsJson === undefined) {
             return false
         }
 
         try {
-            const flagEvals: Flags = JSON.parse(json)
+            const flags: Flags = JSON.parse(flagsJson)
 
             // mapping flags to item descriptors
-            const descriptors = Object.entries(flagEvals).reduce(
+            const descriptors = Object.entries(flags).reduce(
                 (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
                     acc[key] = { version: flag.version, flag: flag }
                     return acc;
@@ -73,7 +73,6 @@ export default class FlagPersistence {
             return this.contextIndex
         }
 
-        // TODO: this data fetch needs to be keyed by an environment key
         const json = await this.platform.storage?.get(this.indexKey)
         if (json === null || json === undefined) {
             this.contextIndex = new ContextIndex()

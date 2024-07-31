@@ -26,7 +26,7 @@ import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import { DeleteFlag, Flags, PatchFlag } from './types';
-import { addAutoEnv, calculateFlagChanges, ensureKey } from './utils';
+import { addAutoEnv, ensureKey } from './utils';
 import FlagManager from './flag-manager/FlaggManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import { Flag } from './types';
@@ -90,6 +90,11 @@ export default class LDClientImpl implements LDClient {
     this.emitter.on('error', (c: LDContext, err: any) => {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
     });
+
+    this.flagManager.on((context, flagKeys) => {
+      let ldContext = Context.toLDContext(context);
+      this.emitter.emit('change', ldContext, flagKeys)
+    })
   }
 
   /**
@@ -313,7 +318,7 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
-    this.inputContext = pristineContext
+    this.inputContext = context
     this.checkedContext = checkedContext
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(this.checkedContext));
@@ -336,6 +341,7 @@ export default class LDClientImpl implements LDClient {
       }
     } else {
       this.streamer?.close();
+       // using input context here as checkedContext has unwanted properties for the eval endpoint
       let streamUri = this.createStreamUriPath(this.inputContext);
       if (this.config.withReasons) {
         streamUri = `${streamUri}?withReasons=true`;
@@ -348,7 +354,7 @@ export default class LDClientImpl implements LDClient {
         this.diagnosticsManager,
         (e) => {
           identifyReject(e);
-          this.emitter.emit('error', this.checkedContext, e);
+          this.emitter.emit('error', this.inputContext, e);
         },
       );
       this.streamer.start();
@@ -366,12 +372,7 @@ export default class LDClientImpl implements LDClient {
   }
 
   track(key: string, data?: any, metricValue?: number): void {
-    if (!this.inputContext) {
-      this.logger.warn(ClientMessages.missingContextKeyNoEvent);
-      return;
-    }
-    const checkedContext = Context.fromLDContext(this.inputContext);
-    if (!checkedContext.valid) {
+    if (!this.checkedContext || !this.checkedContext.valid) {
       this.logger.warn(ClientMessages.missingContextKeyNoEvent);
       return;
     }
@@ -382,7 +383,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor?.sendEvent(
-      this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
+      this.eventFactoryDefault.customEvent(key, this.checkedContext!, data, metricValue),
     );
   }
 

@@ -1,5 +1,5 @@
 import { addAutoEnv } from './addAutoEnv';
-import calculateFlagChanges from './calculateFlagChanges';
+import calculateChangedKeys from './calculateChangedKeys';
 import ensureKey from './ensureKey';
 
-export { calculateFlagChanges, ensureKey, addAutoEnv };
+export { calculateChangedKeys as calculateChangedKeys, ensureKey, addAutoEnv };

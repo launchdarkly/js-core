@@ -23,6 +23,8 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
+const flagStorageKey = 'LaunchDarkly_1234567890123456_1234567890123456';
+const indexStorageKey = 'LaunchDarkly_1234567890123456_ContextIndex';
 let ldc: LDClientImpl;
 let emitter: LDEmitter;
 let defaultPutResponse: Flags;
@@ -72,7 +74,15 @@ describe('sdk-client storage', () => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     defaultFlagKeys = Object.keys(defaultPutResponse);
 
-    basicPlatform.storage.get.mockImplementation(() => JSON.stringify(defaultPutResponse));
+    (basicPlatform.storage.get as jest.Mock).mockImplementation((storageKey: string) => {
+      switch (storageKey) {
+        case flagStorageKey: 
+          return JSON.stringify(defaultPutResponse)
+        case indexStorageKey:
+          return undefined
+      }
+    });
+
     jest
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
@@ -95,7 +105,7 @@ describe('sdk-client storage', () => {
     // make sure streamer errors
     const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
 
-    expect(basicPlatform.storage.get).toHaveBeenCalledWith('org:Testy Pizza');
+    expect(basicPlatform.storage.get).toHaveBeenCalledWith(flagStorageKey);
 
     // 'change' should not have been emitted
     expect(emitter.emit).toHaveBeenCalledTimes(2);
@@ -130,7 +140,7 @@ describe('sdk-client storage', () => {
     const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
 
     expect(basicPlatform.storage.get).toHaveBeenLastCalledWith(
-      expect.stringMatching(/org:Testy Pizza$/),
+      expect.stringMatching('LaunchDarkly_1234567890123456_1234567890123456'),
     );
 
     // 'change' should not have been emitted
@@ -159,12 +169,14 @@ describe('sdk-client storage', () => {
     });
   });
 
-  test('not emitting change event', async () => {
+  test('not emitting change event when changed keys is empty', async () => {
     jest.doMock('./utils', () => {
       const actual = jest.requireActual('./utils');
       return {
         ...actual,
-        calculateFlagChanges: () => [],
+        calculateChangedKeys: () => {
+          return []
+        },
       };
     });
     let LDClientImplTestNoChange;

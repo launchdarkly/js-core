@@ -68,7 +68,7 @@ const ensureKeyLegacy = async (c: LDUser, platform: Platform) => {
  * @param platform
  */
 const ensureKey = async (context: LDContext, platform: Platform) => {
-  const cloned = clone<LDContext>(context);
+  const cloned: LDContext = clone<LDContext>(context);
 
   if (isSingleKind(cloned)) {
     await ensureKeySingle(cloned as LDSingleKindContext, platform);

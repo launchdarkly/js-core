@@ -6,12 +6,12 @@ export const getOrGenerateKey = async (
   storageKey: string,
   { crypto, storage }: Platform,
 ) => {
-  let contextKey = await storage?.get(storageKey);
+  let generatedKey = await storage?.get(storageKey);
 
-  if (!contextKey) {
-    contextKey = crypto.randomUUID();
-    await storage?.set(storageKey, contextKey);
+  if (!generatedKey) {
+    generatedKey = crypto.randomUUID();
+    await storage?.set(storageKey, generatedKey);
   }
 
-  return contextKey;
+  return generatedKey;
 };
