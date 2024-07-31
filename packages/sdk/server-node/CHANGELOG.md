@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.5.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.4.7...node-server-sdk-v9.5.0) (2024-07-31)
+
+
+### Features
+
+* Add wrapper support. ([#526](https://github.com/launchdarkly/js-core/issues/526)) ([29a43a4](https://github.com/launchdarkly/js-core/commit/29a43a4b5243e16d2f746340d4d50467e0875980))
+
 ## [9.4.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.4.6...node-server-sdk-v9.4.7) (2024-07-01)
 
 
