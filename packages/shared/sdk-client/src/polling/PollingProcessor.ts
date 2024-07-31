@@ -1,6 +1,5 @@
 import {
   ApplicationTags,
-  defaultHeaders,
   httpErrorMessage,
   HttpErrorResponse,
   Info,
