@@ -34,15 +34,15 @@ const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessag
   internal;
 
 export default class LDClientImpl implements LDClient {
-  config: Configuration;
-  context?: LDContext;
-  diagnosticsManager?: internal.DiagnosticsManager;
-  eventProcessor?: internal.EventProcessor;
-  identifyTimeout: number = 5;
-  logger: LDLogger;
-  updateProcessor?: LDStreamProcessor;
+  private readonly config: Configuration;
+  private context?: LDContext;
+  private readonly diagnosticsManager?: internal.DiagnosticsManager;
+  private eventProcessor?: internal.EventProcessor;
+  private identifyTimeout: number = 5;
+  readonly logger: LDLogger;
+  private updateProcessor?: LDStreamProcessor;
 
-  readonly highTimeoutThreshold: number = 15;
+  private readonly highTimeoutThreshold: number = 15;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
