@@ -89,8 +89,8 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
         const flags = JSON.parse(res);
         try {
           this.dataHandler?.(flags);
-        } catch {
-          // TODO: Data handler threw.
+        } catch (err) {
+          this.logger?.error(`Exception from data handler: ${err}`);
         }
       } catch {
         reportJsonError(res);
