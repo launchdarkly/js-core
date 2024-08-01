@@ -50,8 +50,7 @@ describe('sdk-client object', () => {
   });
 
   test('variation flag not found', async () => {
-    // set context manually to pass validation
-    ldc.context = { kind: 'user', key: 'test-user' };
+    await ldc.identify({ kind: 'user', key: 'test-user' });
     const errorListener = jest.fn().mockName('errorListener');
     ldc.on('error', errorListener);
 

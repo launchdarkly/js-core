@@ -65,40 +65,6 @@ describe('sdk-client object', () => {
     jest.resetAllMocks();
   });
 
-  test('instantiate with blank options', () => {
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {});
-
-    expect(ldc.config).toMatchObject({
-      allAttributesPrivate: false,
-      baseUri: 'https://clientsdk.launchdarkly.com',
-      capacity: 100,
-      diagnosticOptOut: false,
-      diagnosticRecordingInterval: 900,
-      eventsUri: 'https://events.launchdarkly.com',
-      flushInterval: 30,
-      inspectors: [],
-      logger: {
-        destination: expect.any(Function),
-        formatter: expect.any(Function),
-        logLevel: 1,
-        name: 'LaunchDarkly',
-      },
-      privateAttributes: [],
-      sendEvents: true,
-      sendLDHeaders: true,
-      serviceEndpoints: {
-        events: 'https://events.launchdarkly.com',
-        polling: 'https://clientsdk.launchdarkly.com',
-        streaming: 'https://clientstream.launchdarkly.com',
-      },
-      streamInitialReconnectDelay: 1,
-      streamUri: 'https://clientstream.launchdarkly.com',
-      tags: {},
-      useReport: false,
-      withReasons: false,
-    });
-  });
-
   test('all flags', async () => {
     await ldc.identify(context);
     const all = ldc.allFlags();

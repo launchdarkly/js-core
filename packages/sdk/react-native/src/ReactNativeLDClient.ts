@@ -7,11 +7,11 @@ import {
   internal,
   LDClientImpl,
   type LDContext,
-  type LDOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
 import createPlatform from './platform';
 import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
+import LDOptions from './RNOptions';
 import RNStateDetector from './RNStateDetector';
 
 /**
@@ -84,9 +84,10 @@ export default class ReactNativeLDClient extends LDClientImpl {
         initialConnectionMode,
         // TODO: Add the ability to configure connection management.
         // This is not yet added as the RN SDK needs package specific configuration added.
-        automaticNetworkHandling: true,
-        automaticBackgroundHandling: true,
-        runInBackground: false,
+        // TODO: Add RN config option validation beyond base options.
+        automaticNetworkHandling: options.automaticNetworkHandling ?? true,
+        automaticBackgroundHandling: options.automaticBackgroundHandling ?? true,
+        runInBackground: options.runInBackground ?? true,
       },
       destination,
       new RNStateDetector(),
