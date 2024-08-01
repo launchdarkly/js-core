@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, ClientContext, clone, internal, LDContext, subsystem } from '@launchdarkly/js-sdk-common';
 import { InputCustomEvent, InputIdentifyEvent } from '@launchdarkly/js-sdk-common/dist/internal';
 import {
   basicPlatform,
@@ -34,9 +34,23 @@ let defaultPutResponse: Flags;
 const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
 describe('sdk-client object', () => {
+  const mockedSendEvent: jest.Mock = jest.fn();
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
-    setupMockEventProcessor();
+    mockedSendEvent.mockReset();
+    MockEventProcessor.mockImplementation(
+      (
+        _config: internal.EventProcessorOptions,
+        _clientContext: ClientContext,
+        _contextDeduplicator?: subsystem.LDContextDeduplicator,
+        _diagnosticsManager?: internal.DiagnosticsManager,
+        _start: boolean = true,
+      ) => ({
+        close: jest.fn(),
+        flush: jest.fn(),
+        sendEvent: mockedSendEvent,
+      }),
+    );
     setupMockStreamingProcessor(false, defaultPutResponse);
     basicPlatform.crypto.randomUUID.mockReturnValue('random1');
     hasher.digest.mockReturnValue('digested1');
@@ -59,7 +73,7 @@ describe('sdk-client object', () => {
     await ldc.identify(carContext);
 
     expect(MockEventProcessor).toHaveBeenCalled();
-    expect(ldc.eventProcessor!.sendEvent).toHaveBeenNthCalledWith(
+    expect(mockedSendEvent).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining<InputIdentifyEvent>({
         kind: 'identify',
@@ -79,7 +93,7 @@ describe('sdk-client object', () => {
 
     ldc.track('the-event', { the: 'data' }, undefined);
     expect(MockEventProcessor).toHaveBeenCalled();
-    expect(ldc.eventProcessor!.sendEvent).toHaveBeenNthCalledWith(
+    expect(mockedSendEvent).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining<InputCustomEvent>({
         kind: 'custom',
@@ -102,7 +116,7 @@ describe('sdk-client object', () => {
 
     ldc.track('the-event', undefined, 12);
     expect(MockEventProcessor).toHaveBeenCalled();
-    expect(ldc.eventProcessor!.sendEvent).toHaveBeenNthCalledWith(
+    expect(mockedSendEvent).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining<InputCustomEvent>({
         kind: 'custom',
@@ -125,7 +139,7 @@ describe('sdk-client object', () => {
 
     ldc.track('the-event', { the: 'data' }, 12);
     expect(MockEventProcessor).toHaveBeenCalled();
-    expect(ldc.eventProcessor!.sendEvent).toHaveBeenNthCalledWith(
+    expect(mockedSendEvent).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining<InputCustomEvent>({
         kind: 'custom',
