@@ -9,7 +9,7 @@ import type {
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
 import ensureKey from './ensureKey';
-import { getOrGenerateKey, prefixNamespace } from './getOrGenerateKey';
+import { getOrGenerateKey } from './getOrGenerateKey';
 
 describe('ensureKey', () => {
   let crypto: Crypto;
@@ -24,33 +24,6 @@ describe('ensureKey', () => {
 
   afterEach(() => {
     jest.resetAllMocks();
-  });
-
-  test('prefixNamespace', async () => {
-    const nsKey = prefixNamespace('anonymous', 'org');
-    expect(nsKey).toEqual('LaunchDarkly_AnonymousKeys_org');
-  });
-
-  test('getOrGenerateKey create new key', async () => {
-    const key = await getOrGenerateKey('anonymous', 'org', basicPlatform);
-
-    expect(key).toEqual('random1');
-    expect(crypto.randomUUID).toHaveBeenCalled();
-    expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
-    expect(storage.set).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org', 'random1');
-  });
-
-  test('getOrGenerateKey existing key', async () => {
-    (storage.get as jest.Mock).mockImplementation((namespacedKind: string) =>
-      namespacedKind === 'LaunchDarkly_AnonymousKeys_org' ? 'random1' : undefined,
-    );
-
-    const key = await getOrGenerateKey('anonymous', 'org', basicPlatform);
-
-    expect(key).toEqual('random1');
-    expect(crypto.randomUUID).not.toHaveBeenCalled();
-    expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
-    expect(storage.set).not.toHaveBeenCalled();
   });
 
   test('ensureKey should not override anonymous key if specified', async () => {

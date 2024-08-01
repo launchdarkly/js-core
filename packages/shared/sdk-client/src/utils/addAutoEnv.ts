@@ -13,6 +13,7 @@ import {
 
 import Configuration from '../configuration';
 import { getOrGenerateKey } from './getOrGenerateKey';
+import { concatNamespacesAndValues } from './namespaceUtils';
 
 const { isLegacyUser, isSingleKind, isMultiKind } = internal;
 const defaultAutoEnvSchemaVersion = '1.0';
@@ -94,7 +95,13 @@ export const addDeviceInfo = async (platform: Platform) => {
 
   // Check if device has any meaningful data before we return it.
   if (Object.keys(device).filter((k) => k !== 'key' && k !== 'envAttributesVersion').length) {
-    device.key = await getOrGenerateKey('context', 'ld_device', platform);
+    // TODO: update to use helper function
+    const storageKey = concatNamespacesAndValues(platform.crypto, [
+      {value: 'LaunchDarkly', hashIt: false},
+      {value: 'ContextKeys', hashIt: false},
+      {value: 'ld_device', hashIt: false}
+    ])
+    device.key = await getOrGenerateKey(storageKey, platform);
     device.envAttributesVersion = device.envAttributesVersion || defaultAutoEnvSchemaVersion;
     return device;
   }

@@ -51,7 +51,7 @@ describe('sdk-client object', () => {
 
   test('variation flag not found', async () => {
     // set context manually to pass validation
-    ldc.context = { kind: 'user', key: 'test-user' };
+    ldc.inputContext = { kind: 'user', key: 'test-user' };
     const errorListener = jest.fn().mockName('errorListener');
     ldc.on('error', errorListener);
 
@@ -80,8 +80,13 @@ describe('sdk-client object', () => {
 
   test('variationDetail deleted flag not found', async () => {
     await ldc.identify(context);
+
+    // the context may have had auto env attributes added to it, so use that context for the
+    // upsert
+    const checkedContext = ldc.checkedContext
+
     // @ts-ignore
-    ldc.flags['dev-test-flag'].deleted = true;
+    await ldc.flagManager.upsert(checkedContext, 'dev-test-flag', {version: 999, flag: {deleted: true}})
     const flag = ldc.variationDetail('dev-test-flag', 'deleted');
 
     expect(flag).toEqual({

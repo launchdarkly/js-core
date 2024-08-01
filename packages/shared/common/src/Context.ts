@@ -339,6 +339,36 @@ export default class Context {
   }
 
   /**
+   * Creates a {@link LDContext} from a {@link Context}.
+   * @param context to be converted
+   * @returns an {@link LDContext}
+   */
+  public static toLDContext(context: Context): LDContext {
+    if (!context.valid) {
+      return <LDContext>{kind: context.kind, message: context.message}
+    }
+
+    if (!context.isMulti && context.context) {
+      let includeMeta = context.privateAttributes(context.context.kind).length > 0;
+      return {
+        ...context.context,
+        ...includeMeta && {'_meta': {
+          privateAttributes: context.privateAttributes(context.context.kind).map(attr => attr.redactionName)
+        }}
+      }
+    } else {
+      let result : LDMultiKindContext = {
+        kind: 'multi'
+      }
+      result['kind'] = 'multi'
+      context.getContexts().forEach(kindAndContext => {
+        result[kindAndContext[0]] = kindAndContext[1]
+      })
+      return result
+    }
+  }
+
+  /**
    * Attempt to get a value for the given context kind using the given reference.
    * @param reference The reference to the value to get.
    * @param kind The kind of the context to get the value for.
