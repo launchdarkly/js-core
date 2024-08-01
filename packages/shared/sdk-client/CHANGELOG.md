@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.5...js-client-sdk-common-v1.2.0) (2024-07-31)
+
+
+### Features
+
+* Remove mock fetch from mocks. ([#525](https://github.com/launchdarkly/js-core/issues/525)) ([fa8e579](https://github.com/launchdarkly/js-core/commit/fa8e579b150770721347a173b4a65b3102d6b347))
+
 ## [1.1.5](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.4...js-client-sdk-common-v1.1.5) (2024-07-12)
 
 

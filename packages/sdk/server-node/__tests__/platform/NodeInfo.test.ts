@@ -3,7 +3,7 @@ import * as os from 'os';
 import NodeInfo from '../../src/platform/NodeInfo';
 
 describe('given an information instance', () => {
-  const info = new NodeInfo();
+  const info = new NodeInfo({});
 
   it('can get platform information', () => {
     const data = info.platformData();
@@ -25,8 +25,14 @@ describe('given an information instance', () => {
   });
 });
 
+test('it supports wrapper name and version', () => {
+  const info = new NodeInfo({ wrapperName: 'the-wrapper', wrapperVersion: 'the-version' });
+  expect(info.sdkData().wrapperName).toEqual('the-wrapper');
+  expect(info.sdkData().wrapperVersion).toEqual('the-version');
+});
+
 describe('given an information instance with mock data', () => {
-  const info = new NodeInfo();
+  const info = new NodeInfo({});
 
   it('can get platform information', () => {
     const platformSpy = jest.spyOn(os, 'platform');
