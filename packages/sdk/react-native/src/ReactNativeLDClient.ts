@@ -9,12 +9,11 @@ import {
   type LDContext,
 } from '@launchdarkly/js-client-sdk-common';
 
+import validateOptions, { filterToBaseOptions } from './options';
 import createPlatform from './platform';
 import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
 import LDOptions from './RNOptions';
 import RNStateDetector from './RNStateDetector';
-import validateOptions, { filterToBaseOptions, getConfigKeys } from './options';
-import RNOptions from './RNOptions';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
