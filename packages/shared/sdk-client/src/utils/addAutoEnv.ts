@@ -95,6 +95,7 @@ export const addDeviceInfo = async (platform: Platform) => {
 
   // Check if device has any meaningful data before we return it.
   if (Object.keys(device).filter((k) => k !== 'key' && k !== 'envAttributesVersion').length) {
+    // TODO: update to use helper function
     const storageKey = concatNamespacesAndValues(platform.crypto, [
       {value: 'LaunchDarkly', hashIt: false},
       {value: 'ContextKeys', hashIt: false},

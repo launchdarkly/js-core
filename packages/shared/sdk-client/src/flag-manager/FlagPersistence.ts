@@ -20,6 +20,7 @@ export default class FlagPersistence {
         private readonly logger: LDLogger,
         private readonly timeStamper: () => number = () => Date.now()
     ) {
+        // TODO: update to use helper function
         this.indexKey = concatNamespacesAndValues(platform.crypto, [
             { value: this.environmentNamespace, hashIt: false },
             { value: 'ContextIndex', hashIt: false }
@@ -40,6 +41,7 @@ export default class FlagPersistence {
     }
 
     async loadCached(context: Context): Promise<boolean> {
+        // TODO: update to use helper function
         const storageKey = concatNamespacesAndValues(this.platform.crypto, [
             { value: this.environmentNamespace, hashIt: false }, // use namespace as is
             { value: context.canonicalKey, hashIt: true } // hash canonical key
@@ -91,7 +93,7 @@ export default class FlagPersistence {
 
     private async storeCache(context: Context): Promise<void> {
         const index = await this.loadIndex()
-
+        // TODO: update to use helper function
         const contextStorageKey = concatNamespacesAndValues(this.platform.crypto, [
             { value: this.environmentNamespace, hashIt: false },
             { value: context.canonicalKey, hashIt: true }

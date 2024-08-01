@@ -63,9 +63,4 @@ export default class FlagUpdater {
             this.changeCallbacks.splice(index, 1);
         }
     }
-
-    private handleChanges(oldFlags: { [key: string]: ItemDescriptor }, newFlags: { [key: string]: ItemDescriptor }) {
-        // TODO
-    }
-
 }

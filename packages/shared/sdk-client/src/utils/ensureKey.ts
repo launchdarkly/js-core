@@ -31,6 +31,7 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
   const { anonymous, key } = c;
 
   if (anonymous && !key) {
+    // TODO: update to use helper function
     const storageKey = concatNamespacesAndValues(platform.crypto, [
       {value: 'LaunchDarkly', hashIt: false},
       {value: 'AnonymousKeys', hashIt: false},

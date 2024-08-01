@@ -3,7 +3,7 @@ import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkl
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
-import { Flag } from './types';
+import { Flags } from './types';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -23,11 +23,11 @@ const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 
 let ldc: LDClientImpl;
-let defaultPutResponse: Flag;
+let defaultPutResponse: Flags;
 
 describe('sdk-client object', () => {
   beforeEach(() => {
-    defaultPutResponse = clone<Flag>(mockResponseJson);
+    defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
       logger,

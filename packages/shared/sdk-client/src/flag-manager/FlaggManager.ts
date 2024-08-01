@@ -19,6 +19,7 @@ export default class FlagManager {
         logger: LDLogger,
         private readonly timeStamper: () => number = () => Date.now()
     ) {
+        // TODO: update to use helper function
         const environmentNamespace = concatNamespacesAndValues(platform.crypto, [
             { value: 'LaunchDarkly', hashIt: false },
             { value: sdkKey, hashIt: true }

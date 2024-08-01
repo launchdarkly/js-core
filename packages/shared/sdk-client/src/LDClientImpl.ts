@@ -49,7 +49,6 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
-
   private flagManager: FlagManager
 
   private readonly clientContext: ClientContext;
@@ -180,7 +179,6 @@ export default class LDClientImpl implements LDClient {
 
   private createStreamListeners(
     context: Context,
-    canonicalKey: string,
     identifyResolve: any,
   ): Map<StreamEventName, ProcessStreamResponse> {
     const listeners = new Map<StreamEventName, ProcessStreamResponse>();
@@ -349,7 +347,7 @@ export default class LDClientImpl implements LDClient {
         this.sdkKey,
         this.clientContext,
         streamUri,
-        this.createStreamListeners(this.checkedContext, this.checkedContext.canonicalKey, identifyResolve),
+        this.createStreamListeners(this.checkedContext, identifyResolve),
         this.diagnosticsManager,
         (e) => {
           identifyReject(e);

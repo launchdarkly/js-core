@@ -339,9 +339,9 @@ export default class Context {
   }
 
   /**
-   * Creates a {@link LDContext} from a {@link Context} which should always be possible
-   * @param context 
-   * @returns 
+   * Creates a {@link LDContext} from a {@link Context}.
+   * @param context to be converted
+   * @returns an {@link LDContext}
    */
   public static toLDContext(context: Context): LDContext {
     if (!context.valid) {
