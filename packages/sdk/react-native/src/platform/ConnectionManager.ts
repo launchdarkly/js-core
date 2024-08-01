@@ -52,17 +52,23 @@ export interface ConnectionManagerConfig {
   /// The initial connection mode the SDK should use.
   readonly initialConnectionMode: ConnectionMode;
 
-  /// Some platforms (windows, web, mac, linux) can continue executing code
-  /// in the background.
+  /**
+   * Some platforms (windows, web, mac, linux) can continue executing code
+   * in the background.
+   */
   readonly runInBackground: boolean;
 
-  /// Enable handling of network availability. When this is true the
-  /// connection state will automatically change when network
-  /// availability changes.
+  /**
+   * Enable handling of network availability. When this is true the
+   * connection state will automatically change when network
+   * availability changes.
+   */
   readonly automaticNetworkHandling: boolean;
 
-  /// Enable handling associated with transitioning between the foreground
-  /// and background.
+  /**
+   * Enable handling associated with transitioning between the foreground
+   * and background.
+   */
   readonly automaticBackgroundHandling: boolean;
 }
 
