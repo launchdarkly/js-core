@@ -26,16 +26,12 @@ const validators: { [Property in keyof RNOptions]: TypeValidator | undefined } =
   automaticBackgroundHandling: TypeValidators.Boolean,
 };
 
-export function getConfigKeys() {
-  return Object.keys(optDefaults);
-}
-
 export function filterToBaseOptions(opts: RNOptions): LDOptions {
   const baseOptions: LDOptions = { ...opts };
 
   // Remove any RN specific configuration keys so we don't get warnings from
   // the base implementation for unknown configuration.
-  getConfigKeys().forEach((key) => {
+  Object.keys(optDefaults).forEach((key) => {
     delete (baseOptions as any)[key];
   });
   return baseOptions;
