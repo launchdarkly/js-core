@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.2.0...js-client-sdk-common-v1.3.0) (2024-08-01)
+
+
+### Features
+
+* Add connection mananger. ([#522](https://github.com/launchdarkly/js-core/issues/522)) ([5bf8b16](https://github.com/launchdarkly/js-core/commit/5bf8b16e26e7d8cbbd18524f1c13f773de457b82))
+* Implement polling support. ([#524](https://github.com/launchdarkly/js-core/issues/524)) ([a99048e](https://github.com/launchdarkly/js-core/commit/a99048e0cebaafd536f79114c4727524b8f7357d))
+* Refactor application state handling. ([#523](https://github.com/launchdarkly/js-core/issues/523)) ([f5b81e6](https://github.com/launchdarkly/js-core/commit/f5b81e6fc571dc9d97a18d07f382c77cd938fd65))
+
+
+### Bug Fixes
+
+* Fix field visibility. ([#530](https://github.com/launchdarkly/js-core/issues/530)) ([21fb18b](https://github.com/launchdarkly/js-core/commit/21fb18b40139583b44a4185fb689b043547641ab))
+
 ## [1.2.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.1.5...js-client-sdk-common-v1.2.0) (2024-07-31)
 
 
