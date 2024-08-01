@@ -146,7 +146,6 @@ export default class EventSource<E extends string = never> {
           this.xhr.readyState !== XMLHttpRequest.DONE &&
           this.xhr.readyState !== XMLHttpRequest.LOADING
         ) {
-          this.logger?.debug("Not loading or done, returning.");
           return;
         }
 
