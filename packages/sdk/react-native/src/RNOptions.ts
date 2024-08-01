@@ -1,6 +1,6 @@
 import { LDOptions } from '@launchdarkly/js-client-sdk-common';
 
-export default interface RNOptions extends LDOptions {
+export interface RNSpecificOptions {
   /**
    * Some platforms (windows, web, mac, linux) can continue executing code
    * in the background.
@@ -26,3 +26,5 @@ export default interface RNOptions extends LDOptions {
    */
   readonly automaticBackgroundHandling?: boolean;
 }
+
+export default interface RNOptions extends LDOptions, RNSpecificOptions {}

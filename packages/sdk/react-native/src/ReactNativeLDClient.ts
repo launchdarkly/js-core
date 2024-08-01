@@ -13,6 +13,8 @@ import createPlatform from './platform';
 import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
 import LDOptions from './RNOptions';
 import RNStateDetector from './RNStateDetector';
+import validateOptions, { filterToBaseOptions, getConfigKeys } from './options';
+import RNOptions from './RNOptions';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
@@ -59,7 +61,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
       sdkKey,
       autoEnvAttributes,
       createPlatform(logger),
-      { ...options, logger },
+      { ...filterToBaseOptions(options), logger },
       internalOptions,
     );
 
@@ -77,17 +79,15 @@ export default class ReactNativeLDClient extends LDClientImpl {
       },
     };
 
+    const validatedRnOptions = validateOptions(options, logger);
     const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
     this.connectionManager = new ConnectionManager(
       logger,
       {
         initialConnectionMode,
-        // TODO: Add the ability to configure connection management.
-        // This is not yet added as the RN SDK needs package specific configuration added.
-        // TODO: Add RN config option validation beyond base options.
-        automaticNetworkHandling: options.automaticNetworkHandling ?? true,
-        automaticBackgroundHandling: options.automaticBackgroundHandling ?? true,
-        runInBackground: options.runInBackground ?? true,
+        automaticNetworkHandling: validatedRnOptions.automaticNetworkHandling,
+        automaticBackgroundHandling: validatedRnOptions.automaticBackgroundHandling,
+        runInBackground: validatedRnOptions.runInBackground,
       },
       destination,
       new RNStateDetector(),
