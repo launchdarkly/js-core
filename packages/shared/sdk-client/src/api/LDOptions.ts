@@ -142,10 +142,10 @@ export interface LDOptions {
   /**
    * The maximum number of locally cached contexts.  Local caches hold data for use in situations
    * where the SDK cannot reach the LaunchDarkly services.
-   * 
-   * @defaultValue 10
+   *
+   * @defaultValue 5
    */
-  maxCachedContexts? : number;
+  maxCachedContexts?: number;
 
   /**
    * Specifies a list of attribute names (either built-in or custom) which should be marked as

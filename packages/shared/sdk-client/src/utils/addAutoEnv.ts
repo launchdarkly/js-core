@@ -97,10 +97,10 @@ export const addDeviceInfo = async (platform: Platform) => {
   if (Object.keys(device).filter((k) => k !== 'key' && k !== 'envAttributesVersion').length) {
     // TODO: update to use helper function
     const storageKey = concatNamespacesAndValues(platform.crypto, [
-      {value: 'LaunchDarkly', hashIt: false},
-      {value: 'ContextKeys', hashIt: false},
-      {value: 'ld_device', hashIt: false}
-    ])
+      { value: 'LaunchDarkly', hashIt: false },
+      { value: 'ContextKeys', hashIt: false },
+      { value: 'ld_device', hashIt: false },
+    ]);
     device.key = await getOrGenerateKey(storageKey, platform);
     device.envAttributesVersion = device.envAttributesVersion || defaultAutoEnvSchemaVersion;
     return device;

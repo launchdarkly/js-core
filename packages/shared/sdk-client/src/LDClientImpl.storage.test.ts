@@ -4,7 +4,7 @@ import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkl
 import LDEmitter from './api/LDEmitter';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
-import { DeleteFlag, Flag, Flags, PatchFlag } from './types';
+import { DeleteFlag, Flags, PatchFlag } from './types';
 import { toMulti } from './utils/addAutoEnv';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
@@ -77,9 +77,11 @@ describe('sdk-client storage', () => {
     (basicPlatform.storage.get as jest.Mock).mockImplementation((storageKey: string) => {
       switch (storageKey) {
         case flagStorageKey:
-          return JSON.stringify(defaultPutResponse)
+          return JSON.stringify(defaultPutResponse);
         case indexStorageKey:
-          return undefined
+          return undefined;
+        default:
+          return undefined;
       }
     });
 
@@ -205,7 +207,7 @@ describe('sdk-client storage', () => {
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
-      expect.stringContaining('index')
+      expect.stringContaining('index'),
     );
 
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
@@ -240,7 +242,7 @@ describe('sdk-client storage', () => {
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
-      expect.stringContaining('index')
+      expect.stringContaining('index'),
     );
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       2,
@@ -271,7 +273,7 @@ describe('sdk-client storage', () => {
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
-      expect.stringContaining('index')
+      expect.stringContaining('index'),
     );
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       2,
@@ -329,7 +331,7 @@ describe('sdk-client storage', () => {
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
-      expect.stringContaining('index')
+      expect.stringContaining('index'),
     );
     expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
       2,
@@ -382,10 +384,10 @@ describe('sdk-client storage', () => {
     patchResponse.version += 1;
 
     const allFlags = await identifyGetAllFlags(false, defaultPutResponse, patchResponse);
-    
+
     // wait for async code to resolve promises
     await jest.runAllTimersAsync();
-    
+
     const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(allFlags).toMatchObject({ 'dev-test-flag': false });
     expect(basicPlatform.storage.set).toHaveBeenCalledTimes(4);

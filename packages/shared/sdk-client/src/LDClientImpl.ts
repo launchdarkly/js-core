@@ -25,11 +25,10 @@ import Configuration from './configuration';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import { DeleteFlag, Flags, PatchFlag } from './types';
-import { addAutoEnv, ensureKey } from './utils';
 import FlagManager from './flag-manager/FlaggManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
-import { Flag } from './types';
+import { DeleteFlag, Flags, PatchFlag } from './types';
+import { addAutoEnv, ensureKey } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;
@@ -49,7 +48,7 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
-  private flagManager: FlagManager
+  private flagManager: FlagManager;
 
   private readonly clientContext: ClientContext;
   /**
@@ -73,7 +72,12 @@ export default class LDClientImpl implements LDClient {
     this.config = new Configuration(options, internalOptions);
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
-    this.flagManager = new FlagManager(this.platform, sdkKey, this.config.maxCachedContexts, this.config.logger)
+    this.flagManager = new FlagManager(
+      this.platform,
+      sdkKey,
+      this.config.maxCachedContexts,
+      this.config.logger,
+    );
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
       sdkKey,
@@ -91,9 +95,9 @@ export default class LDClientImpl implements LDClient {
     });
 
     this.flagManager.on((context, flagKeys) => {
-      let ldContext = Context.toLDContext(context);
-      this.emitter.emit('change', ldContext, flagKeys)
-    })
+      const ldContext = Context.toLDContext(context);
+      this.emitter.emit('change', ldContext, flagKeys);
+    });
   }
 
   /**
@@ -147,10 +151,12 @@ export default class LDClientImpl implements LDClient {
     const result = Object.entries(this.flagManager.getAll()).reduce(
       (acc: LDFlagSet, [key, descriptor]) => {
         if (descriptor.flag !== null && descriptor.flag !== undefined && !descriptor.flag.deleted) {
-          acc[key] = descriptor.flag.value
+          acc[key] = descriptor.flag.value;
         }
         return acc;
-      }, {});
+      },
+      {},
+    );
     return result;
   }
 
@@ -191,11 +197,13 @@ export default class LDClientImpl implements LDClient {
         // mapping flags to item descriptors
         const descriptors = Object.entries(evalResults).reduce(
           (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag: flag }
+            acc[key] = { version: flag.version, flag };
             return acc;
-          }, {});
+          },
+          {},
+        );
 
-        await this.flagManager.init(context, descriptors).then(identifyResolve())
+        await this.flagManager.init(context, descriptors).then(identifyResolve());
       },
     });
 
@@ -203,7 +211,10 @@ export default class LDClientImpl implements LDClient {
       deserializeData: JSON.parse,
       processJson: async (patchFlag: PatchFlag) => {
         this.logger.debug(`Streamer PATCH ${JSON.stringify(patchFlag, null, 2)}`);
-        this.flagManager.upsert(context, patchFlag.key, { version: patchFlag.version, flag: patchFlag })
+        this.flagManager.upsert(context, patchFlag.key, {
+          version: patchFlag.version,
+          flag: patchFlag,
+        });
       },
     });
 
@@ -224,8 +235,8 @@ export default class LDClientImpl implements LDClient {
             value: undefined,
             variation: 0,
             trackEvents: false,
-          }
-        })
+          },
+        });
       },
     });
 
@@ -298,8 +309,8 @@ export default class LDClientImpl implements LDClient {
     if (this.identifyTimeout > this.highTimeoutThreshold) {
       this.logger.warn(
         'The identify function was called with a timeout greater than' +
-        `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than` +
-        `${this.highTimeoutThreshold} seconds.`,
+          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than` +
+          `${this.highTimeoutThreshold} seconds.`,
       );
     }
 
@@ -315,8 +326,8 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
-    this.inputContext = context
-    this.checkedContext = checkedContext
+    this.inputContext = context;
+    this.checkedContext = checkedContext;
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(this.checkedContext));
     const { identifyPromise, identifyResolve, identifyReject } = this.createIdentifyPromise(
@@ -324,9 +335,9 @@ export default class LDClientImpl implements LDClient {
     );
     this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
 
-    const loadedFromCache = await this.flagManager.loadCached(this.checkedContext)
+    const loadedFromCache = await this.flagManager.loadCached(this.checkedContext);
     if (loadedFromCache) {
-      identifyResolve()
+      identifyResolve();
     }
 
     if (this.isOffline()) {
@@ -338,7 +349,7 @@ export default class LDClientImpl implements LDClient {
       }
     } else {
       this.streamer?.close();
-       // using input context here as checkedContext has unwanted properties for the eval endpoint
+      // using input context here as checkedContext has unwanted properties for the eval endpoint
       let streamUri = this.createStreamUriPath(this.inputContext);
       if (this.config.withReasons) {
         streamUri = `${streamUri}?withReasons=true`;
@@ -396,7 +407,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     const evalContext = Context.fromLDContext(this.inputContext);
-    const foundItem = this.flagManager.get(flagKey)
+    const foundItem = this.flagManager.get(flagKey);
 
     if (foundItem === undefined || foundItem.flag.deleted) {
       const defVal = defaultValue ?? null;
@@ -439,7 +450,14 @@ export default class LDClientImpl implements LDClient {
       successDetail.value = defaultValue;
     }
     this.eventProcessor?.sendEvent(
-      eventFactory.evalEventClient(flagKey, value, defaultValue, foundItem.flag, evalContext, reason),
+      eventFactory.evalEventClient(
+        flagKey,
+        value,
+        defaultValue,
+        foundItem.flag,
+        evalContext,
+        reason,
+      ),
     );
     return successDetail;
   }

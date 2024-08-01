@@ -24,7 +24,7 @@ export default class Configuration {
   public readonly streamUri = Configuration.DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
-  
+
   public readonly capacity = 100;
   public readonly diagnosticRecordingInterval = 900;
   public readonly flushInterval = 30;

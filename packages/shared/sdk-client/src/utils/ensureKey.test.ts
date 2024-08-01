@@ -4,20 +4,16 @@ import type {
   LDContextCommon,
   LDMultiKindContext,
   LDUser,
-  Storage,
 } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
 import ensureKey from './ensureKey';
-import { getOrGenerateKey } from './getOrGenerateKey';
 
 describe('ensureKey', () => {
   let crypto: Crypto;
-  let storage: Storage;
 
   beforeEach(() => {
     crypto = basicPlatform.crypto;
-    storage = basicPlatform.storage;
 
     (crypto.randomUUID as jest.Mock).mockReturnValueOnce('random1').mockReturnValueOnce('random2');
   });

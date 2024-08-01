@@ -83,10 +83,13 @@ describe('sdk-client object', () => {
 
     // the context may have had auto env attributes added to it, so use that context for the
     // upsert
-    const checkedContext = ldc.checkedContext
+    const { checkedContext } = ldc;
 
     // @ts-ignore
-    await ldc.flagManager.upsert(checkedContext, 'dev-test-flag', {version: 999, flag: {deleted: true}})
+    await ldc.flagManager.upsert(checkedContext, 'dev-test-flag', {
+      version: 999,
+      flag: { deleted: true },
+    });
     const flag = ldc.variationDetail('dev-test-flag', 'deleted');
 
     expect(flag).toEqual({

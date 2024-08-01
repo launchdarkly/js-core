@@ -349,23 +349,25 @@ export default class Context {
     }
 
     if (!context.isMulti && context.context) {
-      let includeMeta = context.privateAttributes(context.context.kind).length > 0;
+      const includeMeta = context.privateAttributes(context.context.kind).length > 0;
       return {
         ...context.context,
         ...includeMeta && {'_meta': {
           privateAttributes: context.privateAttributes(context.context.kind).map(attr => attr.redactionName)
         }}
       }
-    } else {
-      let result : LDMultiKindContext = {
+    } 
+      const result : LDMultiKindContext = {
         kind: 'multi'
       }
-      result['kind'] = 'multi'
+      result.kind = 'multi'
       context.getContexts().forEach(kindAndContext => {
-        result[kindAndContext[0]] = kindAndContext[1]
+        const kind = kindAndContext[0]
+        const innerContect = kindAndContext[1]
+        result[kind] = innerContect
       })
       return result
-    }
+    
   }
 
   /**

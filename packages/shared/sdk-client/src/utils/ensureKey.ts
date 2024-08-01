@@ -33,10 +33,10 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
   if (anonymous && !key) {
     // TODO: update to use helper function
     const storageKey = concatNamespacesAndValues(platform.crypto, [
-      {value: 'LaunchDarkly', hashIt: false},
-      {value: 'AnonymousKeys', hashIt: false},
-      {value: kind, hashIt: false}
-    ])
+      { value: 'LaunchDarkly', hashIt: false },
+      { value: 'AnonymousKeys', hashIt: false },
+      { value: kind, hashIt: false },
+    ]);
     // This mutates a cloned copy of the original context from ensureyKey so this is safe.
     // eslint-disable-next-line no-param-reassign
     c.key = await getOrGenerateKey(storageKey, platform);

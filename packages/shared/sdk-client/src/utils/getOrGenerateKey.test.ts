@@ -11,7 +11,7 @@ describe('getOrGenerateKey', () => {
     crypto = basicPlatform.crypto;
     storage = basicPlatform.storage;
 
-    (crypto.randomUUID as jest.Mock).mockReturnValueOnce('test-org-key-1')
+    (crypto.randomUUID as jest.Mock).mockReturnValueOnce('test-org-key-1');
   });
 
   afterEach(() => {

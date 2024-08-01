@@ -1,7 +1,10 @@
 import { fastDeepEqual } from '@launchdarkly/js-sdk-common';
 
 // eslint-disable-next-line import/prefer-default-export
-export default function calculateChangedKeys(existingObject: {[k: string]: any}, newObject: {[k: string]: any}) {
+export default function calculateChangedKeys(
+  existingObject: { [k: string]: any },
+  newObject: { [k: string]: any },
+) {
   const changedKeys: string[] = [];
 
   // flag deleted or updated

@@ -1,6 +1,6 @@
-import { Flag } from "../types"
+import { Flag } from '../types';
 
 export interface ItemDescriptor {
-    version: number
-    flag: Flag
+  version: number;
+  flag: Flag;
 }

@@ -2,7 +2,6 @@ import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common
 import { InputCustomEvent, InputIdentifyEvent } from '@launchdarkly/js-sdk-common/dist/internal';
 import {
   basicPlatform,
-  hasher,
   logger,
   MockEventProcessor,
   setupMockEventProcessor,
