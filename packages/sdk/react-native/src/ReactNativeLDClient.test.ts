@@ -1,10 +1,4 @@
-import {
-  AutoEnvAttributes,
-  BasicLogger,
-  type LDContext,
-  LDLogger,
-  Response,
-} from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes, LDLogger, Response } from '@launchdarkly/js-client-sdk-common';
 
 import createPlatform from './platform';
 import PlatformCrypto from './platform/crypto';
@@ -52,36 +46,15 @@ jest.mock('./platform', () => ({
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
   })),
-  // default: (logger: LDLogger) => ({
-  //   crypto: new PlatformCrypto(),
-  //   info: new PlatformInfo(logger),
-  //   requests: {
-  //     createEventSource: jest.fn(),
-  //     fetch: jest.fn(),
-  //   },
-  //   encoding: new PlatformEncoding(),
-  //   storage: new PlatformStorage(logger),
-  // }),
 }));
 
-// let ldc: ReactNativeLDClient;
-
-// beforeEach(() => {
-//   ldc = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, { sendEvents: false });
-// });
-
-// test('constructing a new client', () => {
-//   expect(ldc.highTimeoutThreshold).toEqual(15);
-//   expect(ldc.sdkKey).toEqual('mobile-key');
-//   expect(ldc.config.serviceEndpoints).toEqual({
-//     analyticsEventPath: '/mobile',
-//     diagnosticEventPath: '/mobile/events/diagnostic',
-//     events: 'https://events.launchdarkly.com',
-//     includeAuthorizationHeader: true,
-//     polling: 'https://clientsdk.launchdarkly.com',
-//     streaming: 'https://clientstream.launchdarkly.com',
-//   });
-// });
+const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
+  streamUri,
+  options,
+  onclose: jest.fn(),
+  addEventListener: jest.fn(),
+  close: jest.fn(),
+});
 
 it('uses correct default diagnostic url', () => {
   const mockedFetch = jest.fn();
@@ -111,7 +84,7 @@ it('uses correct default diagnostic url', () => {
 });
 
 it('uses correct default analytics event url', async () => {
-  const mockedFetch = jest.fn();
+  const mockedFetch = mockFetch('{"flagA": true}', 200);
   const logger: LDLogger = {
     error: jest.fn(),
     warn: jest.fn(),
@@ -122,7 +95,7 @@ it('uses correct default analytics event url', async () => {
     crypto: new PlatformCrypto(),
     info: new PlatformInfo(logger),
     requests: {
-      createEventSource: jest.fn(),
+      createEventSource: createMockEventSource,
       fetch: mockedFetch,
     },
     encoding: new PlatformEncoding(),
@@ -130,6 +103,7 @@ it('uses correct default analytics event url', async () => {
   });
   const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, {
     diagnosticOptOut: true,
+    initialConnectionMode: 'polling',
   });
   await client.identify({ kind: 'user', key: 'bob' });
   await client.flush();
@@ -166,13 +140,155 @@ it('uses correct default polling url', async () => {
   });
   await client.identify({ kind: 'user', key: 'bob' });
 
-  const regex = /https:\/\/clientsdk.launchdarkly.com\/msdk\/evalx\/contexts\/.*/;
+  const regex = /https:\/\/clientsdk\.launchdarkly\.com\/msdk\/evalx\/contexts\/.*/;
   expect(mockedFetch).toHaveBeenCalledWith(expect.stringMatching(regex), expect.anything());
 });
 
-it('uses correct default streaming url', () => {});
+it('uses correct default streaming url', (done) => {
+  const mockedCreateEventSource = jest.fn();
+  const logger: LDLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
+  (createPlatform as jest.Mock).mockReturnValue({
+    crypto: new PlatformCrypto(),
+    info: new PlatformInfo(logger),
+    requests: {
+      createEventSource: mockedCreateEventSource,
+      fetch: jest.fn(),
+    },
+    encoding: new PlatformEncoding(),
+    storage: new PlatformStorage(logger),
+  });
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, {
+    diagnosticOptOut: true,
+    sendEvents: false,
+    initialConnectionMode: 'streaming',
+    automaticBackgroundHandling: false,
+  });
 
-it('includes authorization header', () => {});
+  client
+    .identify({ kind: 'user', key: 'bob' }, { timeout: 0 })
+    .then(() => {})
+    .catch(() => {})
+    .then(() => {
+      const regex = /https:\/\/clientstream\.launchdarkly\.com\/meval\/.*/;
+      expect(mockedCreateEventSource).toHaveBeenCalledWith(
+        expect.stringMatching(regex),
+        expect.anything(),
+      );
+      done();
+    });
+});
+
+it('includes authorization header for polling', async () => {
+  const mockedFetch = mockFetch('{"flagA": true}', 200);
+  const logger: LDLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
+  (createPlatform as jest.Mock).mockReturnValue({
+    crypto: new PlatformCrypto(),
+    info: new PlatformInfo(logger),
+    requests: {
+      createEventSource: jest.fn(),
+      fetch: mockedFetch,
+    },
+    encoding: new PlatformEncoding(),
+    storage: new PlatformStorage(logger),
+  });
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, {
+    diagnosticOptOut: true,
+    sendEvents: false,
+    initialConnectionMode: 'polling',
+    automaticBackgroundHandling: false,
+  });
+  await client.identify({ kind: 'user', key: 'bob' });
+
+  expect(mockedFetch).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      headers: expect.objectContaining({ authorization: 'mobile-key' }),
+    }),
+  );
+});
+
+it('includes authorization header for streaming', (done) => {
+  const mockedCreateEventSource = jest.fn();
+  const logger: LDLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
+  (createPlatform as jest.Mock).mockReturnValue({
+    crypto: new PlatformCrypto(),
+    info: new PlatformInfo(logger),
+    requests: {
+      createEventSource: mockedCreateEventSource,
+      fetch: jest.fn(),
+    },
+    encoding: new PlatformEncoding(),
+    storage: new PlatformStorage(logger),
+  });
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, {
+    diagnosticOptOut: true,
+    sendEvents: false,
+    initialConnectionMode: 'streaming',
+    automaticBackgroundHandling: false,
+  });
+
+  client
+    .identify({ kind: 'user', key: 'bob' }, { timeout: 0 })
+    .then(() => {})
+    .catch(() => {})
+    .then(() => {
+      expect(mockedCreateEventSource).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          headers: expect.objectContaining({ authorization: 'mobile-key' }),
+        }),
+      );
+      done();
+    });
+});
+
+it('includes authorization header for events', async () => {
+  const mockedFetch = mockFetch('{"flagA": true}', 200);
+  const logger: LDLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
+  (createPlatform as jest.Mock).mockReturnValue({
+    crypto: new PlatformCrypto(),
+    info: new PlatformInfo(logger),
+    requests: {
+      createEventSource: jest.fn(),
+      fetch: mockedFetch,
+    },
+    encoding: new PlatformEncoding(),
+    storage: new PlatformStorage(logger),
+  });
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, {
+    diagnosticOptOut: true,
+    initialConnectionMode: 'polling',
+  });
+  await client.identify({ kind: 'user', key: 'bob' });
+  await client.flush();
+
+  expect(mockedFetch).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      headers: expect.objectContaining({ authorization: 'mobile-key' }),
+    }),
+  );
+});
 
 it('identify with too high of a timeout', () => {
   const logger: LDLogger = {
