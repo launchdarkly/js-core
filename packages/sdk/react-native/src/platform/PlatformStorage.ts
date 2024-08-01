@@ -1,11 +1,6 @@
-import type {
-  LDLogger,
-  Storage,
-} from '@launchdarkly/js-client-sdk-common';
+import type { LDLogger, Storage } from '@launchdarkly/js-client-sdk-common';
 
 import AsyncStorage from './ConditionalAsyncStorage';
-
-
 
 export default class PlatformStorage implements Storage {
   constructor(private readonly logger: LDLogger) {}

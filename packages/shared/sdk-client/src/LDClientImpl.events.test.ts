@@ -1,11 +1,17 @@
-import { AutoEnvAttributes, ClientContext, clone, internal, LDContext, subsystem } from '@launchdarkly/js-sdk-common';
+import {
+  AutoEnvAttributes,
+  ClientContext,
+  clone,
+  internal,
+  LDContext,
+  subsystem,
+} from '@launchdarkly/js-sdk-common';
 import { InputCustomEvent, InputIdentifyEvent } from '@launchdarkly/js-sdk-common/dist/internal';
 import {
   basicPlatform,
   hasher,
   logger,
   MockEventProcessor,
-  setupMockEventProcessor,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
 
