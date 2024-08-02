@@ -13,6 +13,8 @@ import { ConnectionMode, type LDOptions } from '../api';
 import { LDInspection } from '../api/LDInspection';
 import validators from './validators';
 
+const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
+
 export default class Configuration {
   public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
   public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
@@ -43,7 +45,6 @@ export default class Configuration {
   public readonly privateAttributes: string[] = [];
 
   public readonly initialConnectionMode: ConnectionMode = 'streaming';
-  public connectionMode: ConnectionMode;
 
   public readonly tags: ApplicationTags;
   public readonly applicationInfo?: {
@@ -63,6 +64,8 @@ export default class Configuration {
 
   public readonly serviceEndpoints: ServiceEndpoints;
 
+  public readonly pollInterval: number = DEFAULT_POLLING_INTERVAL;
+
   // Allow indexing Configuration by a string
   [index: string]: any;
 
@@ -79,7 +82,6 @@ export default class Configuration {
       internalOptions.includeAuthorizationHeader,
     );
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
-    this.connectionMode = this.initialConnectionMode;
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {

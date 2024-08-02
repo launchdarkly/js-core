@@ -1,6 +1,5 @@
-import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Context, LDContext } from '@launchdarkly/js-sdk-common';
 import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
-
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
@@ -29,7 +28,7 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
       logger,
       sendEvents: false,
     });
@@ -50,8 +49,7 @@ describe('sdk-client object', () => {
   });
 
   test('variation flag not found', async () => {
-    // set context manually to pass validation
-    ldc.inputContext = { kind: 'user', key: 'test-user' };
+    await ldc.identify({ kind: 'user', key: 'test-user' });
     const errorListener = jest.fn().mockName('errorListener');
     ldc.on('error', errorListener);
 
@@ -81,14 +79,19 @@ describe('sdk-client object', () => {
   test('variationDetail deleted flag not found', async () => {
     await ldc.identify(context);
 
-    // the context may have had auto env attributes added to it, so use that context for the
-    // upsert
-    const { checkedContext } = ldc;
+    const checkedContext = Context.fromLDContext(context);
 
     // @ts-ignore
     await ldc.flagManager.upsert(checkedContext, 'dev-test-flag', {
       version: 999,
-      flag: { deleted: true },
+      flag: {
+        deleted: true,
+        version: 0,
+        flagVersion: 0,
+        value: undefined,
+        variation: 0,
+        trackEvents: false,
+      },
     });
     const flag = ldc.variationDetail('dev-test-flag', 'deleted');
 

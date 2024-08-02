@@ -90,7 +90,7 @@ export default class EventSource<E extends string = never> {
 
   private tryConnect(initialConnection: boolean = false) {
     let delay = initialConnection ? 0 : this.getNextRetryDelay();
-    if(initialConnection) {
+    if (initialConnection) {
       this.logger?.debug(`[EventSource] opening new connection.`)
     } else {
       this.logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
@@ -98,7 +98,7 @@ export default class EventSource<E extends string = never> {
     }
 
     this.connectTimer = setTimeout(() => {
-      if(!initialConnection) {
+      if (!initialConnection) {
         this.close();
       }
 
@@ -138,8 +138,7 @@ export default class EventSource<E extends string = never> {
         }
 
         this.logger?.debug(
-          `[EventSource][onreadystatechange] ReadyState: ${
-            XMLReadyStateMap[this.xhr.readyState] || 'Unknown'
+          `[EventSource][onreadystatechange] ReadyState: ${XMLReadyStateMap[this.xhr.readyState] || 'Unknown'
           }(${this.xhr.readyState}), status: ${this.xhr.status}`,
         );
 
@@ -165,8 +164,9 @@ export default class EventSource<E extends string = never> {
             this.logger?.debug('[EventSource][onreadystatechange][DONE] Operation done.');
             this.tryConnect();
           }
-        } else if (this.xhr.status !== 0) {
+        } else {
           this.status = this.ERROR;
+
           this.dispatch('error', {
             type: 'error',
             message: this.xhr.responseText,
@@ -349,8 +349,8 @@ export default class EventSource<E extends string = never> {
     return this.status;
   }
 
-  onopen() {}
-  onclose() {}
-  onerror(_err: any) {}
-  onretrying(_e: any) {}
+  onopen() { }
+  onclose() { }
+  onerror(_err: any) { }
+  onretrying(_e: any) { }
 }

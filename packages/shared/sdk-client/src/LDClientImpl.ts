@@ -17,6 +17,7 @@ import {
   timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
+import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { ConnectionMode, LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
@@ -27,6 +28,7 @@ import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import FlagManager from './flag-manager/FlaggManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
+import PollingProcessor from './polling/PollingProcessor';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 import { addAutoEnv, ensureKey } from './utils';
 
@@ -34,16 +36,16 @@ const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessag
   internal;
 
 export default class LDClientImpl implements LDClient {
-  config: Configuration;
-  inputContext?: LDContext;
-  checkedContext?: Context;
-  diagnosticsManager?: internal.DiagnosticsManager;
-  eventProcessor?: internal.EventProcessor;
-  identifyTimeout: number = 5;
-  logger: LDLogger;
-  streamer?: internal.StreamingProcessor;
+  private readonly config: Configuration;
+  private inputContext?: LDContext;
+  private checkedContext?: Context;
+  private readonly diagnosticsManager?: internal.DiagnosticsManager;
+  private eventProcessor?: internal.EventProcessor;
+  private identifyTimeout: number = 5;
+  readonly logger: LDLogger;
+  private updateProcessor?: LDStreamProcessor;
 
-  readonly highTimeoutThreshold: number = 15;
+  private readonly highTimeoutThreshold: number = 15;
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
@@ -51,6 +53,11 @@ export default class LDClientImpl implements LDClient {
   private flagManager: FlagManager;
 
   private readonly clientContext: ClientContext;
+
+  private eventSendingEnabled: boolean = true;
+  private networkAvailable: boolean = true;
+  private connectionMode: ConnectionMode;
+
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
@@ -70,6 +77,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.config = new Configuration(options, internalOptions);
+    this.connectionMode = this.config.initialConnectionMode;
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
     this.flagManager = new FlagManager(
@@ -106,28 +114,29 @@ export default class LDClientImpl implements LDClient {
    * @param mode - One of supported {@link ConnectionMode}. Default is 'streaming'.
    */
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    if (this.config.connectionMode === mode) {
+    if (this.connectionMode === mode) {
       this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
       return Promise.resolve();
     }
 
-    this.config.connectionMode = mode;
+    this.connectionMode = mode;
     this.logger.debug(`setConnectionMode ${mode}.`);
 
     switch (mode) {
       case 'offline':
-        return this.close();
+        this.updateProcessor?.close();
+        break;
+      case 'polling':
       case 'streaming':
-        this.eventProcessor?.start();
-
         if (this.inputContext) {
-          // identify will start streamer
+          // identify will start the update processor
           return this.identify(this.inputContext, { timeout: this.identifyTimeout });
         }
+
         break;
       default:
         this.logger.warn(
-          `Unknown ConnectionMode: ${mode}. Only 'offline' and 'streaming' are supported.`,
+          `Unknown ConnectionMode: ${mode}. Only 'offline', 'streaming', and 'polling' are supported.`,
         );
         break;
     }
@@ -139,11 +148,11 @@ export default class LDClientImpl implements LDClient {
    * Gets the SDK connection mode.
    */
   getConnectionMode(): ConnectionMode {
-    return this.config.connectionMode;
+    return this.connectionMode;
   }
 
   isOffline() {
-    return this.config.connectionMode === 'offline';
+    return this.connectionMode === 'offline';
   }
 
   allFlags(): LDFlagSet {
@@ -163,16 +172,16 @@ export default class LDClientImpl implements LDClient {
   async close(): Promise<void> {
     await this.flush();
     this.eventProcessor?.close();
-    this.streamer?.close();
-    this.logger.debug('Closed eventProcessor and streamer.');
+    this.updateProcessor?.close();
+    this.logger.debug('Closed event processor and data source.');
   }
 
   async flush(): Promise<{ error?: Error; result: boolean }> {
     try {
       await this.eventProcessor?.flush();
-      this.logger.debug('Successfully flushed eventProcessor.');
+      this.logger.debug('Successfully flushed event processor.');
     } catch (e) {
-      this.logger.error(`Error flushing eventProcessor: ${e}.`);
+      this.logger.error(`Error flushing event processor: ${e}.`);
       return { error: e as Error, result: false };
     }
 
@@ -192,7 +201,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('put', {
       deserializeData: JSON.parse,
       processJson: async (evalResults: Flags) => {
-        this.logger.debug(`Streamer PUT: ${Object.keys(evalResults)}`);
+        this.logger.debug(`Stream PUT: ${Object.keys(evalResults)}`);
 
         // mapping flags to item descriptors
         const descriptors = Object.entries(evalResults).reduce(
@@ -210,7 +219,7 @@ export default class LDClientImpl implements LDClient {
     listeners.set('patch', {
       deserializeData: JSON.parse,
       processJson: async (patchFlag: PatchFlag) => {
-        this.logger.debug(`Streamer PATCH ${JSON.stringify(patchFlag, null, 2)}`);
+        this.logger.debug(`Stream PATCH ${JSON.stringify(patchFlag, null, 2)}`);
         this.flagManager.upsert(context, patchFlag.key, {
           version: patchFlag.version,
           flag: patchFlag,
@@ -221,9 +230,8 @@ export default class LDClientImpl implements LDClient {
     listeners.set('delete', {
       deserializeData: JSON.parse,
       processJson: async (deleteFlag: DeleteFlag) => {
-        this.logger.debug(`Streamer DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
+        this.logger.debug(`Stream DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
 
-        // TODO: in other SDKs we omit the flag in the item descriptor.  Which is correct?
         this.flagManager.upsert(context, deleteFlag.key, {
           version: deleteFlag.version,
           flag: {
@@ -244,20 +252,29 @@ export default class LDClientImpl implements LDClient {
   }
 
   /**
-   * Generates the url path for streamer.
+   * Generates the url path for streaming.
    *
-   * For mobile key: /meval/${base64-encoded-context}
-   * For clientSideId: /eval/${envId}/${base64-encoded-context}
-   *
-   * the path.
-   *
-   * @protected This function must be overridden in subclasses for streamer
+   * @protected This function must be overridden in subclasses for streaming
    * to work.
    * @param _context The LDContext object
    */
   protected createStreamUriPath(_context: LDContext): string {
     throw new Error(
-      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streamer to work.',
+      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streaming to work.',
+    );
+  }
+
+  /**
+   * Generates the url path for polling.
+   * @param _context
+   *
+   * @protected This function must be overridden in subclasses for polling
+   * to work.
+   * @param _context The LDContext object
+   */
+  protected createPollUriPath(_context: LDContext): string {
+    throw new Error(
+      'createPollUriPath not implemented. Client sdks must implement createPollUriPath for polling to work.',
     );
   }
 
@@ -308,8 +325,8 @@ export default class LDClientImpl implements LDClient {
 
     if (this.identifyTimeout > this.highTimeoutThreshold) {
       this.logger.warn(
-        'The identify function was called with a timeout greater than' +
-          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than` +
+        'The identify function was called with a timeout greater than ' +
+          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than ` +
           `${this.highTimeoutThreshold} seconds.`,
       );
     }
@@ -348,27 +365,82 @@ export default class LDClientImpl implements LDClient {
         identifyResolve();
       }
     } else {
-      this.streamer?.close();
-      // using input context here as checkedContext has unwanted properties for the eval endpoint
-      let streamUri = this.createStreamUriPath(this.inputContext);
-      if (this.config.withReasons) {
-        streamUri = `${streamUri}?withReasons=true`;
+      this.updateProcessor?.close();
+      switch (this.getConnectionMode()) {
+        case 'streaming':
+          this.createStreamingProcessor(context, checkedContext, identifyResolve, identifyReject);
+          break;
+        case 'polling':
+          this.createPollingProcessor(context, checkedContext, identifyResolve, identifyReject);
+          break;
+        default:
+          break;
       }
-      this.streamer = new internal.StreamingProcessor(
-        this.sdkKey,
-        this.clientContext,
-        streamUri,
-        this.createStreamListeners(this.checkedContext, identifyResolve),
-        this.diagnosticsManager,
-        (e) => {
-          identifyReject(e);
-          this.emitter.emit('error', this.inputContext, e);
-        },
-      );
-      this.streamer.start();
+      this.updateProcessor!.start();
     }
 
     return identifyPromise;
+  }
+
+  private createPollingProcessor(
+    context: LDContext,
+    checkedContext: Context,
+    identifyResolve: any,
+    identifyReject: any,
+  ) {
+    let pollingPath = this.createPollUriPath(context);
+    if (this.config.withReasons) {
+      pollingPath = `${pollingPath}?withReasons=true`;
+    }
+    this.updateProcessor = new PollingProcessor(
+      this.sdkKey,
+      this.clientContext.platform.requests,
+      this.clientContext.platform.info,
+      pollingPath,
+      this.config,
+      async (flags) => {
+        this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
+
+        // mapping flags to item descriptors
+        const descriptors = Object.entries(flags).reduce(
+          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
+            acc[key] = { version: flag.version, flag };
+            return acc;
+          },
+          {},
+        );
+
+        await this.flagManager.init(checkedContext, descriptors).then(identifyResolve());
+      },
+      (err) => {
+        identifyReject(err);
+        this.emitter.emit('error', context, err);
+      },
+    );
+  }
+
+  private createStreamingProcessor(
+    context: LDContext,
+    checkedContext: Context,
+    identifyResolve: any,
+    identifyReject: any,
+  ) {
+    let streamingPath = this.createStreamUriPath(context);
+    if (this.config.withReasons) {
+      streamingPath = `${streamingPath}?withReasons=true`;
+    }
+
+    this.updateProcessor = new internal.StreamingProcessor(
+      this.sdkKey,
+      this.clientContext,
+      streamingPath,
+      this.createStreamListeners(checkedContext, identifyResolve),
+      this.diagnosticsManager,
+      (e) => {
+        identifyReject(e);
+        this.emitter.emit('error', context, e);
+      },
+    );
   }
 
   off(eventName: EventName, listener: Function): void {
@@ -527,5 +599,49 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
+  }
+
+  /**
+   * Inform the client of the network state. Can be used to modify connection behavior.
+   *
+   * For instance the implementation may choose to suppress errors from connections if the client
+   * knows that there is no network available.
+   * @param _available True when there is an available network.
+   */
+  protected setNetworkAvailability(available: boolean): void {
+    this.networkAvailable = available;
+    // Not yet supported.
+  }
+
+  /**
+   * Enable/Disable event sending.
+   * @param enabled True to enable event processing, false to disable.
+   * @param flush True to flush while disabling. Useful to flush on certain state transitions.
+   */
+  protected setEventSendingEnabled(enabled: boolean, flush: boolean): void {
+    if (this.eventSendingEnabled === enabled) {
+      return;
+    }
+    this.eventSendingEnabled = enabled;
+
+    if (enabled) {
+      this.logger.debug('Starting event processor');
+      this.eventProcessor?.start();
+    } else if (flush) {
+      this.logger?.debug('Flushing event processor before disabling.');
+      // Disable and flush.
+      this.flush().then(() => {
+        // While waiting for the flush event sending could be re-enabled, in which case
+        // we do not want to close the event processor.
+        if (!this.eventSendingEnabled) {
+          this.logger?.debug('Stopping event processor.');
+          this.eventProcessor?.close();
+        }
+      });
+    } else {
+      // Just disabled.
+      this.logger?.debug('Stopping event processor.');
+      this.eventProcessor?.close();
+    }
   }
 }

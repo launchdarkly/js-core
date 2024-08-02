@@ -16,6 +16,7 @@ export default function Welcome() {
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 
+
   const setConnectionMode = (m: ConnectionMode) => {
     ldc.setConnectionMode(m);
   };
@@ -28,7 +29,7 @@ export default function Welcome() {
       <Text>
         {flagKey}: {`${flagValue}`}
       </Text>
-      <ScrollView style={{ flexGrow: 0.2, backgroundColor: 'black', maxHeight: 200 }}>
+      <ScrollView style={{ flexGrow: 0.5, backgroundColor: 'black', maxHeight: 200 }}>
         <Text style={{ color: 'orange' }}>Logging: {JSON.stringify(context, null, 2)}</Text>
       </ScrollView>
       <TextInput
@@ -49,15 +50,23 @@ export default function Welcome() {
         value={flagKey}
         testID="flagKey"
       />
-      <TouchableOpacity style={styles.buttonContainer} onPress={() => setConnectionMode('offline')}>
-        <Text style={styles.buttonText}>Set offline</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.buttonContainer}
-        onPress={() => setConnectionMode('streaming')}
-      >
-        <Text style={styles.buttonText}>Set online</Text>
-      </TouchableOpacity>
+      <View style={styles.connectionModeContainer}>
+        <TouchableOpacity style={styles.buttonContainer} onPress={() => setConnectionMode('offline')}>
+          <Text style={styles.buttonText}>Set offline</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={() => setConnectionMode('streaming')}
+        >
+          <Text style={styles.buttonText}>Set streaming</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={() => setConnectionMode('polling')}
+        >
+          <Text style={styles.buttonText}>Set polling</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -67,6 +76,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  connectionModeContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
   },
   input: {
     height: 40,

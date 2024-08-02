@@ -8,7 +8,9 @@
  * analytic and diagnostic events.
  *
  * streaming - The SDK will use a streaming connection to receive updates from LaunchDarkly.
+ *
+ * polling - The SDK will make polling requests to receive updates from LaunchDarkly.
  */
-type ConnectionMode = 'offline' | 'streaming';
+type ConnectionMode = 'offline' | 'streaming' | 'polling';
 
 export default ConnectionMode;

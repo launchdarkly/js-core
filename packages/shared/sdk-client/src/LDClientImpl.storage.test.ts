@@ -39,7 +39,7 @@ const onChangePromise = () =>
   });
 
 // Common setup code for all tests
-// 1. Sets up streamer
+// 1. Sets up streaming
 // 2. Sets up the change listener
 // 3. Runs identify
 // 4. Get all flags
@@ -60,7 +60,7 @@ const identifyGetAllFlags = async (
   }
   jest.runAllTimers();
 
-  // if streamer errors, don't wait for 'change' because it will not be sent.
+  // if streaming errors, don't wait for 'change' because it will not be sent.
   if (waitForChange && !shouldError) {
     await changePromise;
   }
@@ -103,8 +103,8 @@ describe('sdk-client storage', () => {
     jest.resetAllMocks();
   });
 
-  test('initialize from storage succeeds without streamer', async () => {
-    // make sure streamer errors
+  test('initialize from storage succeeds without streaming', async () => {
+    // make sure streaming errors
     const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
 
     expect(basicPlatform.storage.get).toHaveBeenCalledWith(flagStorageKey);
@@ -194,7 +194,7 @@ describe('sdk-client storage', () => {
     expect(emitter.emit).toHaveBeenCalledTimes(1);
   });
 
-  test('no storage, cold start from streamer', async () => {
+  test('no storage, cold start from streaming', async () => {
     // fake previously cached flags even though there's no storage for this context
     // @ts-ignore
     ldc.flags = defaultPutResponse;
