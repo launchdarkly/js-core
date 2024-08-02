@@ -1,6 +1,6 @@
 import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
-import { concatNamespacesAndValues } from '../utils/namespaceUtils';
+import { namespaceForEnvironment } from '../utils/namespaceUtils';
 import FlagPersistence from './FlagPersistence';
 import FlagStore from './FlagStore';
 import FlagUpdater, { FlagsChangeCallback } from './FlagUpdater';
@@ -18,11 +18,7 @@ export default class FlagManager {
     logger: LDLogger,
     private readonly timeStamper: () => number = () => Date.now(),
   ) {
-    // TODO: update to use helper function
-    const environmentNamespace = concatNamespacesAndValues(platform.crypto, [
-      { value: 'LaunchDarkly', hashIt: false },
-      { value: sdkKey, hashIt: true },
-    ]);
+    const environmentNamespace = namespaceForEnvironment(platform.crypto, sdkKey);
 
     this.flagUpdater = new FlagUpdater(this.flagStore, logger);
     this.flagPersistence = new FlagPersistence(

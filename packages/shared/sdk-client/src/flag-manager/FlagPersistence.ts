@@ -1,7 +1,7 @@
 import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { Flags } from '../types';
-import { concatNamespacesAndValues } from '../utils/namespaceUtils';
+import { namespaceForContextData, namespaceForContextIndex } from '../utils/namespaceUtils';
 import ContextIndex from './ContextIndex';
 import FlagStore from './FlagStore';
 import FlagUpdater from './FlagUpdater';
@@ -20,11 +20,8 @@ export default class FlagPersistence {
     private readonly logger: LDLogger,
     private readonly timeStamper: () => number = () => Date.now(),
   ) {
-    // TODO: update to use helper function
-    this.indexKey = concatNamespacesAndValues(platform.crypto, [
-      { value: this.environmentNamespace, hashIt: false },
-      { value: 'ContextIndex', hashIt: false },
-    ]);
+
+    this.indexKey = namespaceForContextIndex(platform.crypto, this.environmentNamespace);
   }
 
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
@@ -41,11 +38,11 @@ export default class FlagPersistence {
   }
 
   async loadCached(context: Context): Promise<boolean> {
-    // TODO: update to use helper function
-    const storageKey = concatNamespacesAndValues(this.platform.crypto, [
-      { value: this.environmentNamespace, hashIt: false }, // use namespace as is
-      { value: context.canonicalKey, hashIt: true }, // hash canonical key
-    ]);
+    const storageKey = namespaceForContextData(
+      this.platform.crypto,
+      this.environmentNamespace,
+      context,
+    );
     const flagsJson = await this.platform.storage?.get(storageKey);
     if (flagsJson === null || flagsJson === undefined) {
       return false;
@@ -97,12 +94,12 @@ export default class FlagPersistence {
 
   private async storeCache(context: Context): Promise<void> {
     const index = await this.loadIndex();
-    // TODO: update to use helper function
-    const contextStorageKey = concatNamespacesAndValues(this.platform.crypto, [
-      { value: this.environmentNamespace, hashIt: false },
-      { value: context.canonicalKey, hashIt: true },
-    ]);
-    index.notice(contextStorageKey, this.timeStamper());
+    const storageKey = namespaceForContextData(
+      this.platform.crypto,
+      this.environmentNamespace,
+      context,
+    );
+    index.notice(storageKey, this.timeStamper());
 
     const pruned = index.prune(this.maxCachedContexts);
     pruned.forEach(async (it) => {

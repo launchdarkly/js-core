@@ -22,7 +22,6 @@ export default class FlagStore {
   }
 
   getAll(): { [key: string]: ItemDescriptor } {
-    // TODO: discuss immutability
     return this.flags;
   }
 }
