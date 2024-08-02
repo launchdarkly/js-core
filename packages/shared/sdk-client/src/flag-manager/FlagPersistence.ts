@@ -20,7 +20,6 @@ export default class FlagPersistence {
     private readonly logger: LDLogger,
     private readonly timeStamper: () => number = () => Date.now(),
   ) {
-
     this.indexKey = namespaceForContextIndex(platform.crypto, this.environmentNamespace);
   }
 
@@ -120,6 +119,6 @@ export default class FlagPersistence {
 
     const jsonAll = JSON.stringify(flags);
     // store flag data
-    await this.platform.storage?.set(contextStorageKey, jsonAll);
+    await this.platform.storage?.set(storageKey, jsonAll);
   }
 }

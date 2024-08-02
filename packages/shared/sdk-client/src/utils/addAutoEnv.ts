@@ -13,7 +13,7 @@ import {
 
 import Configuration from '../configuration';
 import { getOrGenerateKey } from './getOrGenerateKey';
-import { concatNamespacesAndValues, namespaceForGeneratedContextKey } from './namespaceUtils';
+import { namespaceForGeneratedContextKey } from './namespaceUtils';
 
 const { isLegacyUser, isSingleKind, isMultiKind } = internal;
 const defaultAutoEnvSchemaVersion = '1.0';
