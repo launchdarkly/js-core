@@ -1,14 +1,19 @@
+/* eslint-disable max-classes-per-file */
 import {
   AutoEnvAttributes,
   base64UrlEncode,
   BasicLogger,
+  ConnectionMode,
   internal,
   LDClientImpl,
   type LDContext,
-  type LDOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
+import validateOptions, { filterToBaseOptions } from './options';
 import createPlatform from './platform';
+import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
+import LDOptions from './RNOptions';
+import RNStateDetector from './RNStateDetector';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
@@ -24,6 +29,7 @@ import createPlatform from './platform';
  * ```
  */
 export default class ReactNativeLDClient extends LDClientImpl {
+  private connectionManager: ConnectionManager;
   /**
    * Creates an instance of the LaunchDarkly client.
    *
@@ -54,12 +60,61 @@ export default class ReactNativeLDClient extends LDClientImpl {
       sdkKey,
       autoEnvAttributes,
       createPlatform(logger),
-      { ...options, logger },
+      { ...filterToBaseOptions(options), logger },
       internalOptions,
+    );
+
+    const destination: ConnectionDestination = {
+      setNetworkAvailability: (available: boolean) => {
+        this.setNetworkAvailability(available);
+      },
+      setEventSendingEnabled: (enabled: boolean, flush: boolean) => {
+        this.setEventSendingEnabled(enabled, flush);
+      },
+      setConnectionMode: async (mode: ConnectionMode) => {
+        // Pass the connection mode to the base implementation.
+        // The RN implementation will pass the connection mode through the connection manager.
+        this.baseSetConnectionMode(mode);
+      },
+    };
+
+    const validatedRnOptions = validateOptions(options, logger);
+    const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
+    this.connectionManager = new ConnectionManager(
+      logger,
+      {
+        initialConnectionMode,
+        automaticNetworkHandling: validatedRnOptions.automaticNetworkHandling,
+        automaticBackgroundHandling: validatedRnOptions.automaticBackgroundHandling,
+        runInBackground: validatedRnOptions.runInBackground,
+      },
+      destination,
+      new RNStateDetector(),
     );
   }
 
+  private baseSetConnectionMode(mode: ConnectionMode) {
+    // Jest had problems with calls to super from nested arrow functions, so this method proxies the call.
+    super.setConnectionMode(mode);
+  }
+
+  private encodeContext(context: LDContext) {
+    return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
+  }
+
   override createStreamUriPath(context: LDContext) {
-    return `/meval/${base64UrlEncode(JSON.stringify(context), this.platform.encoding!)}`;
+    return `/meval/${this.encodeContext(context)}`;
+  }
+
+  override createPollUriPath(context: LDContext): string {
+    return `/msdk/evalx/contexts/${this.encodeContext(context)}`;
+  }
+
+  override async setConnectionMode(mode: ConnectionMode): Promise<void> {
+    // Set the connection mode before setting offline, in case there is any mode transition work
+    // such as flushing on entering the background.
+    this.connectionManager.setConnectionMode(mode);
+    // For now the data source connection and the event processing state are connected.
+    this.connectionManager.setOffline(mode === 'offline');
   }
 }

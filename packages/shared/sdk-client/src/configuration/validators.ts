@@ -16,11 +16,11 @@ class BootStrapValidator implements TypeValidator {
 
 class ConnectionModeValidator implements TypeValidator {
   is(u: unknown): boolean {
-    return u === 'offline' || u === 'streaming';
+    return u === 'offline' || u === 'streaming' || u === 'polling';
   }
 
   getType(): string {
-    return `'offline' | streaming`;
+    return `offline | streaming | polling`;
   }
 }
 
@@ -42,6 +42,8 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   diagnosticOptOut: TypeValidators.Boolean,
   withReasons: TypeValidators.Boolean,
   sendEvents: TypeValidators.Boolean,
+
+  pollInterval: TypeValidators.numberWithMin(30),
 
   // TODO: inspectors
   // @ts-ignore

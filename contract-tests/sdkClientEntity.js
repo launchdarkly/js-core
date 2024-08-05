@@ -67,6 +67,14 @@ export function makeSdkConfig(options, tag) {
       (hook) => new TestHook(hook.name, hook.callbackUri, hook.data, hook.errors),
     );
   }
+  if (options.wrapper) {
+    if(options.wrapper.name) {
+      cf.wrapperName = options.wrapper.name;
+    }
+    if(options.wrapper.version) {
+      cf.wrapperVersion = options.wrapper.version;
+    }
+  }
   return cf;
 }
 

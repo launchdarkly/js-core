@@ -167,7 +167,7 @@ export interface LDClient {
    *
    * @returns The configured {@link LDLogger}.
    */
-  logger: LDLogger;
+  readonly logger: LDLogger;
 
   /**
    * Determines the numeric variation of a feature flag.

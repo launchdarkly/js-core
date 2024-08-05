@@ -3,7 +3,6 @@ import React, { PropsWithChildren, useEffect, useState } from 'react';
 import ReactNativeLDClient from '../ReactNativeLDClient';
 import { Provider, ReactContext } from './reactContext';
 import setupListeners from './setupListeners';
-import useAppState from './useAppState';
 
 type LDProps = {
   client: ReactNativeLDClient;
@@ -25,8 +24,6 @@ const LDProvider = ({ client, children }: PropsWithChildren<LDProps>) => {
   useEffect(() => {
     setupListeners(client, setState);
   }, []);
-
-  useAppState(client);
 
   return <Provider value={state}>{children}</Provider>;
 };
