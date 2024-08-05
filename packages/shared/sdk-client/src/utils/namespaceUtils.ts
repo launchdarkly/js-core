@@ -5,11 +5,11 @@ export type Namespace = 'LaunchDarkly' | 'AnonymousKeys' | 'ContextKeys' | 'Cont
 /**
  * Hashes the input and encodes it as hex
  */
-const hashValue = (crypto: Crypto, input: string): string =>
-  // TODO: verify this achieves correct utf8 encoding
-  crypto.createHash('sha256').update(input).digest('hex');
+function hashValue(crypto: Crypto, input: string): string {
+  return crypto.createHash('sha256').update(input).digest('base64');
+}
 
-function concatNamespacesAndValues(
+export function concatNamespacesAndValues(
   crypto: Crypto,
   parts: { value: Namespace | string; hashIt: boolean }[],
 ): string {
@@ -25,16 +25,10 @@ function concatNamespacesAndValues(
   return processedParts.join('_');
 }
 
-// cases to support:
-// creating a storage path for context index within a storage namespace
-// creating a storage path for flag data within a storage namespace
-// creating a storage path for anonymous keys
-// creating a storage path for context keys for auto env
-
 export function namespaceForEnvironment(crypto: Crypto, sdkKey: string): string {
   return concatNamespacesAndValues(crypto, [
     { value: 'LaunchDarkly', hashIt: false },
-    { value: sdkKey, hashIt: true },
+    { value: sdkKey, hashIt: true }, // hash sdk key
   ]);
 }
 
