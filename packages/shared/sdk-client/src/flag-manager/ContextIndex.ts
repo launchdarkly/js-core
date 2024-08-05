@@ -3,7 +3,7 @@
  * update entry timestamps and prune out least used contexts above a max capacity provided.
  */
 export default class ContextIndex {
-  private container: IndexContainer = { index: new Array<IndexEntry>() };
+  container: IndexContainer = { index: new Array<IndexEntry>() };
 
   /**
    * Creates a {@link ContextIndex} from its JSON representation (likely retrieved from persistence).
@@ -12,7 +12,12 @@ export default class ContextIndex {
    */
   static fromJson(json: string): ContextIndex {
     const contextIndex = new ContextIndex();
-    contextIndex.container = JSON.parse(json);
+    try {
+      contextIndex.container = JSON.parse(json);
+    } catch (e) {
+      /* ignoring error and returning empty index */
+    }
+
     return contextIndex;
   }
 
@@ -44,17 +49,18 @@ export default class ContextIndex {
    * @returns an array of removed entries
    */
   prune(maxContexts: number): Array<IndexEntry> {
-    if (this.container.index.length > maxContexts) {
+    const clampedMax = Math.max(maxContexts, 0);
+    if (this.container.index.length > clampedMax) {
       // sort by timestamp so that newer timestamps appear first in the array
       this.container.index.sort((a, b) => b.timestamp - a.timestamp);
       // delete the end elements above capacity.  splice returns removed elements
-      return this.container.index.splice(maxContexts, this.container.index.length - maxContexts);
+      return this.container.index.splice(clampedMax, this.container.index.length - clampedMax);
     }
     return [];
   }
 }
 
-interface IndexContainer {
+export interface IndexContainer {
   index: Array<IndexEntry>;
 }
 

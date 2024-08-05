@@ -2,12 +2,12 @@ import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { namespaceForEnvironment } from '../utils/namespaceUtils';
 import FlagPersistence from './FlagPersistence';
-import FlagStore from './FlagStore';
+import DefaultFlagStore from './FlagStore';
 import FlagUpdater, { FlagsChangeCallback } from './FlagUpdater';
 import { ItemDescriptor } from './ItemDescriptor';
 
 export default class FlagManager {
-  private flagStore = new FlagStore();
+  private flagStore = new DefaultFlagStore();
   private flagUpdater: FlagUpdater;
   private flagPersistence: FlagPersistence;
 

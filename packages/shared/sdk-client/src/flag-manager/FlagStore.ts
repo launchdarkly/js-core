@@ -1,6 +1,16 @@
 import { ItemDescriptor } from './ItemDescriptor';
 
-export default class FlagStore {
+/**
+ * This interface exists for testing purposes
+ */
+interface FlagStore {
+  init(newFlags: { [key: string]: ItemDescriptor }): void;
+  insertOrUpdate(key: string, update: ItemDescriptor): void;
+  get(key: string): ItemDescriptor | undefined;
+  getAll(): { [key: string]: ItemDescriptor };
+}
+
+export default class DefaultFlagStore {
   private flags: { [key: string]: ItemDescriptor } = {};
 
   init(newFlags: { [key: string]: ItemDescriptor }) {
