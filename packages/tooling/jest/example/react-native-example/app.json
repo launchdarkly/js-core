@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "react-native-jest-example",
+    "slug": "react-native-jest-example",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.reactnativejestexample"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.anonymous.reactnativejestexample"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
