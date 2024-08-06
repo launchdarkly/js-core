@@ -4,13 +4,13 @@
   "main": "expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "^10.1.4",
-    "@launchdarkly/jest": "0.0.1",
+    "@launchdarkly/jest": "workspace:^",
+    "@launchdarkly/react-native-client-sdk": "workspace:^",
     "expo": "~51.0.20",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
