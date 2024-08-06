@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { mockUseLDClient, mockFlags } from '@launchdarkly/jest';
+import { mockUseLDClient, mockFlags } from '@launchdarkly/jest/react-native';
 
 export default function Welcome() {
 

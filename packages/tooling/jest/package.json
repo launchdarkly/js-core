@@ -61,6 +61,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "workspace:^"
+    "@launchdarkly/react-native-client-sdk": "workspace:^",
+    "@testing-library/react-hooks": "^8.0.1"
   }
 }

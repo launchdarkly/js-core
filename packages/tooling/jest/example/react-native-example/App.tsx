@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { mockReactNativeLDClient} from '@launchdarkly/jest';
+import { mockReactNativeLDClient} from '@launchdarkly/jest/react-native';
 import { LDProvider } from '@launchdarkly/react-native-client-sdk';
 import Welcome from './src/welcome';
 
