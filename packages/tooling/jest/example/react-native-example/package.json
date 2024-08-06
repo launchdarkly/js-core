@@ -9,7 +9,6 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@launchdarkly/jest": "workspace:^",
     "@launchdarkly/react-native-client-sdk": "workspace:^",
     "expo": "~51.0.20",
     "expo-status-bar": "~1.12.1",
@@ -19,6 +18,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@launchdarkly/jest": "workspace:^",
     "@types/react": "~18.2.45",
     "typescript": "^5.1.3"
   },

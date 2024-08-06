@@ -3,7 +3,7 @@
   "testMatch": ["**/*.test.ts?(x)"],
   "testPathIgnorePatterns": ["node_modules", "example", "dist"],
   "modulePathIgnorePatterns": ["dist"],
-  "testEnvironment": "node",
+  "testEnvironment": "jsdom",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
   "collectCoverageFrom": ["src/**/*.ts"]
 }
