@@ -298,11 +298,6 @@ export default class LDClientImpl implements LDClient {
     return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
   }
 
-  private async getFlagsFromStorage(canonicalKey: string): Promise<Flags | undefined> {
-    const f = await this.platform.storage?.get(canonicalKey);
-    return f ? JSON.parse(f) : undefined;
-  }
-
   /**
    * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
    *

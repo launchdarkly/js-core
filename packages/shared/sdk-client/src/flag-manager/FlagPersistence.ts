@@ -42,9 +42,19 @@ export default class FlagPersistence {
       this.environmentNamespace,
       context,
     );
-    const flagsJson = await this.platform.storage?.get(storageKey);
+    let flagsJson = await this.platform.storage?.get(storageKey);
     if (flagsJson === null || flagsJson === undefined) {
-      return false;
+      // Fallback: in version <10.3.1 flag data was stored under the canonical key, check
+      // to see if data is present and migrate the data if present.
+      flagsJson = await this.platform.storage?.get(context.canonicalKey);
+      if (flagsJson === null || flagsJson === undefined) {
+        // return false indicating cache did not load if flag json is still absent
+        return false;
+      }
+
+      // migrate data from version <10.3.1 and cleanup data that was under canonical key
+      await this.platform.storage?.set(storageKey, flagsJson);
+      await this.platform.storage?.clear(context.canonicalKey);
     }
 
     try {
