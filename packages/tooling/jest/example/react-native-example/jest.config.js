@@ -1,3 +1,3 @@
 module.exports = {
-    setupFiles: ['@launchdarkly/jest/react-native'],
-  };
+  setupFiles: ['@launchdarkly/jest/react-native'],
+};

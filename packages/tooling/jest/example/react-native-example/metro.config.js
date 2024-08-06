@@ -10,7 +10,7 @@ const path = require('path');
 const projectRoot = __dirname;
 
 const findWorkspaceRoot = require('find-yarn-workspace-root');
- 
+
 const workspaceRoot = findWorkspaceRoot(__dirname); // Absolute path or null
 
 const config = getDefaultConfig(projectRoot);

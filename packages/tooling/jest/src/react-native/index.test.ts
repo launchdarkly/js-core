@@ -1,8 +1,14 @@
-import { renderHook } from '@testing-library/react-hooks'
-import { mockFlags, ldClientMock, mockLDProvider, mockReactNativeLDClient, mockUseLDClient } from "../react-native";
+import { renderHook } from '@testing-library/react-hooks';
+
+import {
+  ldClientMock,
+  mockFlags,
+  mockLDProvider,
+  mockReactNativeLDClient,
+  mockUseLDClient,
+} from '.';
 
 describe('react-native', () => {
-
   test('mock boolean flag correctly', () => {
     mockFlags({ 'bool-flag': true });
   });
@@ -30,11 +36,10 @@ describe('react-native', () => {
   test('mock ldClient correctly', () => {
     const {
       result: { current },
-    } = renderHook(() => mockUseLDClient())
+    } = renderHook(() => mockUseLDClient());
 
     current?.track('event');
     expect(ldClientMock.track).toHaveBeenCalledTimes(1);
-
   });
 
   test('mock ldClient complete set of methods correctly', () => {
