@@ -140,8 +140,8 @@ export interface LDOptions {
   logger?: LDLogger;
 
   /**
-   * The maximum number of locally cached contexts.  Local caches hold data for use in situations
-   * where the SDK cannot reach the LaunchDarkly services.
+   * The maximum number of locally cached contexts.  The cache is used to decrease initialization
+   * latency and to provide fallback when the SDK cannot reach LaunchDarkly services.
    *
    * @defaultValue 5
    */

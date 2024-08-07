@@ -12,8 +12,8 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
-import { getOrGenerateKey } from './getOrGenerateKey';
-import { namespaceForGeneratedContextKey } from './namespaceUtils';
+import { getOrGenerateKey } from '../storage/getOrGenerateKey';
+import { namespaceForGeneratedContextKey } from '../storage/namespaceUtils';
 
 const { isLegacyUser, isSingleKind, isMultiKind } = internal;
 const defaultAutoEnvSchemaVersion = '1.0';
@@ -95,7 +95,7 @@ export const addDeviceInfo = async (platform: Platform) => {
 
   // Check if device has any meaningful data before we return it.
   if (Object.keys(device).filter((k) => k !== 'key' && k !== 'envAttributesVersion').length) {
-    const ldDeviceNamespace = namespaceForGeneratedContextKey(platform.crypto, 'ld_device');
+    const ldDeviceNamespace = namespaceForGeneratedContextKey('ld_device');
     device.key = await getOrGenerateKey(ldDeviceNamespace, platform);
     device.envAttributesVersion = device.envAttributesVersion || defaultAutoEnvSchemaVersion;
     return device;

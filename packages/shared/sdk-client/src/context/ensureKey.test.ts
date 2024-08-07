@@ -7,7 +7,7 @@ import type {
 } from '@launchdarkly/js-sdk-common';
 import { basicPlatform } from '@launchdarkly/private-js-mocks';
 
-import ensureKey from './ensureKey';
+import { ensureKey } from './ensureKey';
 
 describe('ensureKey', () => {
   let crypto: Crypto;

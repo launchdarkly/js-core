@@ -2,10 +2,10 @@ import { AutoEnvAttributes, clone, type LDContext, noop } from '@launchdarkly/js
 import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
 import LDEmitter from './api/LDEmitter';
+import { toMulti } from './context/addAutoEnv';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { DeleteFlag, Flags, PatchFlag } from './types';
-import { toMulti } from './utils/addAutoEnv';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');

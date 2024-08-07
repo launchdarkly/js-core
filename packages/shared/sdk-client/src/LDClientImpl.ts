@@ -23,14 +23,15 @@ import { ConnectionMode, LDClient, type LDOptions } from './api';
 import LDEmitter, { EventName } from './api/LDEmitter';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
+import { addAutoEnv } from './context/addAutoEnv';
+import { ensureKey } from './context/ensureKey';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import FlagManager from './flag-manager/FlaggManager';
+import FlagManager from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import PollingProcessor from './polling/PollingProcessor';
 import { DeleteFlag, Flags, PatchFlag } from './types';
-import { addAutoEnv, ensureKey } from './utils';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
   internal;

@@ -45,7 +45,7 @@ describe.each([
     name: 'context name',
     cat: 'calico',
     anonymous: true,
-    _meta: { privateAttributes: ['/something/something'] },
+    _meta: { privateAttributes: ['/~1dog~0~0~1~1'] },
   },
   {
     kind: 'multi',
@@ -54,7 +54,7 @@ describe.each([
       cat: 'calico',
       anonymous: true,
       name: 'context name',
-      _meta: { privateAttributes: ['/something/something'] },
+      _meta: { privateAttributes: ['/~1dog~0~0~1~1'] },
     },
   },
 ])('given a series of equivalent good user contexts', (ldConext) => {
@@ -195,7 +195,7 @@ describe('given a user context with private attributes', () => {
     dog: 'lab',
     anonymous: true,
     _meta: {
-      privateAttributes: ['/~1a~1b~1c', 'cat', 'custom/dog'],
+      privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
     },
   };
 

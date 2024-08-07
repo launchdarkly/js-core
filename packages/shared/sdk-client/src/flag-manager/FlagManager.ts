@@ -1,6 +1,6 @@
 import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
-import { namespaceForEnvironment } from '../utils/namespaceUtils';
+import { namespaceForEnvironment } from '../storage/namespaceUtils';
 import FlagPersistence from './FlagPersistence';
 import { DefaultFlagStore } from './FlagStore';
 import FlagUpdater, { FlagsChangeCallback } from './FlagUpdater';

@@ -1,7 +1,7 @@
 import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
+import { namespaceForContextData, namespaceForContextIndex } from '../storage/namespaceUtils';
 import { Flags } from '../types';
-import { namespaceForContextData, namespaceForContextIndex } from '../utils/namespaceUtils';
 import ContextIndex from './ContextIndex';
 import FlagStore from './FlagStore';
 import FlagUpdater from './FlagUpdater';
@@ -20,7 +20,7 @@ export default class FlagPersistence {
     private readonly logger: LDLogger,
     private readonly timeStamper: () => number = () => Date.now(),
   ) {
-    this.indexKey = namespaceForContextIndex(platform.crypto, this.environmentNamespace);
+    this.indexKey = namespaceForContextIndex(this.environmentNamespace);
   }
 
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
@@ -86,7 +86,7 @@ export default class FlagPersistence {
     }
 
     const json = await this.platform.storage?.get(this.indexKey);
-    if (json === null || json === undefined) {
+    if (!json) {
       this.contextIndex = new ContextIndex();
       return this.contextIndex;
     }

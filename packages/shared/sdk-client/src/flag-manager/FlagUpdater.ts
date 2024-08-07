@@ -1,6 +1,6 @@
 import { Context, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import calculateChangedKeys from '../utils/calculateChangedKeys';
+import calculateChangedKeys from './calculateChangedKeys';
 import FlagStore from './FlagStore';
 import { ItemDescriptor } from './ItemDescriptor';
 
@@ -23,7 +23,13 @@ export default class FlagUpdater {
     this.flagStore.init(newFlags);
     const changed = calculateChangedKeys(oldFlags, newFlags);
     if (changed.length > 0) {
-      this.changeCallbacks.forEach((callback) => callback(context, changed));
+      this.changeCallbacks.forEach((callback) => {
+        try {
+          callback(context, changed);
+        } catch (err) {
+          /* intentionally empty */
+        }
+      });
     }
   }
 
@@ -49,7 +55,11 @@ export default class FlagUpdater {
 
     this.flagStore.insertOrUpdate(key, item);
     this.changeCallbacks.forEach((callback) => {
-      callback(context, [key]);
+      try {
+        callback(context, [key]);
+      } catch (err) {
+        /* intentionally empty */
+      }
     });
     return true;
   }
