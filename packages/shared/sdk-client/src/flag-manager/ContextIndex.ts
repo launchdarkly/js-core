@@ -49,12 +49,12 @@ export default class ContextIndex {
    * @returns an array of removed entries
    */
   prune(maxContexts: number): Array<IndexEntry> {
-    const clampedMax = Math.max(maxContexts, 0);
+    const clampedMax = Math.max(maxContexts, 0); // clamp to [0, infinity)
     if (this.container.index.length > clampedMax) {
-      // sort by timestamp so that newer timestamps appear first in the array
-      this.container.index.sort((a, b) => b.timestamp - a.timestamp);
-      // delete the end elements above capacity.  splice returns removed elements
-      return this.container.index.splice(clampedMax, this.container.index.length - clampedMax);
+      // sort by timestamp so that older timestamps appear first in the array
+      this.container.index.sort((a, b) => a.timestamp - b.timestamp);
+      // delete the first N many elements above capacity.  splice returns removed elements
+      return this.container.index.splice(0, this.container.index.length - clampedMax);
     }
     return [];
   }

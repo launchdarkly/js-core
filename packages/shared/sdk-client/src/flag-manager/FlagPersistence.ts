@@ -25,7 +25,7 @@ export default class FlagPersistence {
 
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
     this.flagUpdater.init(context, newFlags);
-    return this.storeCache(context);
+    await this.storeCache(context);
   }
 
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
@@ -111,9 +111,7 @@ export default class FlagPersistence {
     index.notice(storageKey, this.timeStamper());
 
     const pruned = index.prune(this.maxCachedContexts);
-    pruned.forEach(async (it) => {
-      await this.platform.storage?.clear(it.id);
-    });
+    await Promise.all(pruned.map(async (it) => this.platform.storage?.clear(it.id)));
 
     // store index
     await this.platform.storage?.set(this.indexKey, index.toJson());

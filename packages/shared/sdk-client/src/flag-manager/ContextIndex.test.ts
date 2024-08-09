@@ -38,8 +38,8 @@ describe('ContextIndex tests', () => {
 
     indexUnderTest.prune(2);
     expect(indexUnderTest.container.index.length).toEqual(2);
-    expect(indexUnderTest.container.index.at(0)).toEqual({ id: 'fourth', timestamp: 51 });
-    expect(indexUnderTest.container.index.at(1)).toEqual({ id: 'first', timestamp: 50 });
+    expect(indexUnderTest.container.index.at(0)).toEqual({ id: 'first', timestamp: 50 });
+    expect(indexUnderTest.container.index.at(1)).toEqual({ id: 'fourth', timestamp: 51 });
   });
 
   test('prune oldest down to 0', async () => {
@@ -64,6 +64,17 @@ describe('ContextIndex tests', () => {
 
     indexUnderTest.prune(-1);
     expect(indexUnderTest.container.index.length).toEqual(0);
+  });
+
+  test('prune two entries have same timestamp', async () => {
+    const indexUnderTest = new ContextIndex();
+    indexUnderTest.notice('first', 1);
+    indexUnderTest.notice('second', 1);
+    expect(indexUnderTest.container.index.length).toEqual(2);
+
+    indexUnderTest.prune(1);
+    expect(indexUnderTest.container.index.length).toEqual(1);
+    expect(indexUnderTest.container.index[0].id).toEqual('second');
   });
 
   test('toJson', async () => {
