@@ -4,8 +4,26 @@ import calculateChangedKeys from './calculateChangedKeys';
 import FlagStore from './FlagStore';
 import { ItemDescriptor } from './ItemDescriptor';
 
+/**
+ * This callback indicates that the details associated with one or more flags
+ * have changed.
+ *
+ * This could be the value of the flag, but it could also include changes
+ * to the evaluation reason, such as being included in an experiment.
+ *
+ * It can include new or deleted flags as well, so an evaluation may result
+ * in a FLAG_NOT_FOUND reason.
+ *
+ * This event does not include the value of the flag. It is expected that you
+ * will call a variation method for flag values which you require.
+ */
 export type FlagsChangeCallback = (context: Context, flagKeys: Array<string>) => void;
 
+/**
+ * The flag updater handles logic required during the flag update process.
+ * It handles versions checking to handle out of order flag updates and
+ * also handles flag comparisons for change notification.
+ */
 export default class FlagUpdater {
   private flagStore: FlagStore;
   private logger: LDLogger;

@@ -14,7 +14,7 @@
  * keys could use the same persistence instance).
  *
  * The SDK, with correct usage, will not have overlapping writes to the same
- * key. The Read/Write methods may not always be called from the same thread.
+ * key.
  *
  * This interface does not depend on the ability to list the contents of the
  * store or namespaces. This is to maintain the simplicity of implementing a

@@ -10,6 +10,9 @@ export default interface FlagStore {
   getAll(): { [key: string]: ItemDescriptor };
 }
 
+/**
+ * In memory flag store.
+ */
 export class DefaultFlagStore implements FlagStore {
   private flags: { [key: string]: ItemDescriptor } = {};
 

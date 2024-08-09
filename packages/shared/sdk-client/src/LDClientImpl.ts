@@ -38,7 +38,7 @@ const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessag
 
 export default class LDClientImpl implements LDClient {
   private readonly config: Configuration;
-  private inputContext?: LDContext;
+  private uncheckedContext?: LDContext;
   private checkedContext?: Context;
   private readonly diagnosticsManager?: internal.DiagnosticsManager;
   private eventProcessor?: internal.EventProcessor;
@@ -129,9 +129,9 @@ export default class LDClientImpl implements LDClient {
         break;
       case 'polling':
       case 'streaming':
-        if (this.inputContext) {
+        if (this.uncheckedContext) {
           // identify will start the update processor
-          return this.identify(this.inputContext, { timeout: this.identifyTimeout });
+          return this.identify(this.uncheckedContext, { timeout: this.identifyTimeout });
         }
 
         break;
@@ -190,7 +190,12 @@ export default class LDClientImpl implements LDClient {
   }
 
   getContext(): LDContext | undefined {
-    return this.inputContext ? clone<LDContext>(this.inputContext) : undefined;
+    // The LDContext returned here may have been modified by the SDK (for example: adding auto env attributes).
+    // We are returning an LDContext here to maintain a consistent represetnation of context to the consuming
+    // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
+    // and then calls getContext, they get back the same context they provided, without any assertion about
+    // validity.
+    return this.uncheckedContext ? clone<LDContext>(this.uncheckedContext) : undefined;
   }
 
   private createStreamListeners(
@@ -339,7 +344,7 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
-    this.inputContext = context;
+    this.uncheckedContext = context;
     this.checkedContext = checkedContext;
 
     this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(this.checkedContext));
@@ -469,12 +474,12 @@ export default class LDClientImpl implements LDClient {
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
   ): LDFlagValue {
-    if (!this.inputContext) {
+    if (!this.uncheckedContext) {
       this.logger.debug(ClientMessages.missingContextKeyNoEvent);
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
-    const evalContext = Context.fromLDContext(this.inputContext);
+    const evalContext = Context.fromLDContext(this.uncheckedContext);
     const foundItem = this.flagManager.get(flagKey);
 
     if (foundItem === undefined || foundItem.flag.deleted) {
@@ -482,7 +487,7 @@ export default class LDClientImpl implements LDClient {
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
-      this.emitter.emit('error', this.inputContext, error);
+      this.emitter.emit('error', this.uncheckedContext, error);
       this.eventProcessor?.sendEvent(
         this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
       );
@@ -507,7 +512,7 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.emitter.emit('error', this.inputContext, error);
+        this.emitter.emit('error', this.uncheckedContext, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }

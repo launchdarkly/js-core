@@ -7,6 +7,11 @@ import FlagStore from './FlagStore';
 import FlagUpdater from './FlagUpdater';
 import { ItemDescriptor } from './ItemDescriptor';
 
+/**
+ * This class handles persisting and loading flag values from a persistent
+ * store. It intercepts updates and forwards them to the flag updater and
+ * then persists changes after the updater has completed.
+ */
 export default class FlagPersistence {
   private contextIndex: ContextIndex | undefined;
   private indexKey: string;
@@ -23,11 +28,20 @@ export default class FlagPersistence {
     this.indexKey = namespaceForContextIndex(this.environmentNamespace);
   }
 
+  /**
+   * Inits flag persistence for the provided context with the provided flags.  This will result
+   * in the underlying {@link FlagUpdater} switching its active context.
+   */
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
     this.flagUpdater.init(context, newFlags);
     await this.storeCache(context);
   }
 
+  /**
+   * Upserts a flag into the {@link FlagUpdater} and stores that to persistence if the upsert
+   * was successful / accepted.  An upsert may be rejected if the provided context is not
+   * the active context.
+   */
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
     if (this.flagUpdater.upsert(context, key, item)) {
       await this.storeCache(context);
@@ -36,6 +50,10 @@ export default class FlagPersistence {
     return false;
   }
 
+  /**
+   * Loads the flags from persistence for the provided context and gives those to the
+   * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
+   */
   async loadCached(context: Context): Promise<boolean> {
     const storageKey = namespaceForContextData(
       this.platform.crypto,
