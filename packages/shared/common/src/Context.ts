@@ -140,6 +140,11 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
   if (user.country !== null && user.country !== undefined) {
     singleKindContext.country = user.country;
   }
+  if (user.privateAttributeNames !== null && user.privateAttributeNames !== undefined) {
+    singleKindContext._meta = {
+      privateAttributes: user.privateAttributeNames,
+    };
+  }
 
   // We are not pulling private attributes over because we will serialize
   // those from attribute references for events.
@@ -336,6 +341,31 @@ export default class Context {
     }
 
     return Context.contextForError('unknown', 'Context was not of a valid kind');
+  }
+
+  /**
+   * Creates a {@link LDContext} from a {@link Context}.
+   * @param context to be converted
+   * @returns an {@link LDContext} if input was valid, otherwise undefined
+   */
+  public static toLDContext(context: Context): LDContext | undefined {
+    if (!context.valid) {
+      return undefined;
+    }
+
+    const contexts = context.getContexts();
+    if (!context.isMulti) {
+      return contexts[0][1];
+    }
+    const result: LDMultiKindContext = {
+      kind: 'multi',
+    };
+    contexts.forEach((kindAndContext) => {
+      const kind = kindAndContext[0];
+      const nestedContext = kindAndContext[1];
+      result[kind] = nestedContext;
+    });
+    return result;
   }
 
   /**

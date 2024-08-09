@@ -9,7 +9,6 @@ import {
 import { InputCustomEvent, InputIdentifyEvent } from '@launchdarkly/js-sdk-common/dist/internal';
 import {
   basicPlatform,
-  hasher,
   logger,
   MockEventProcessor,
   setupMockStreamingProcessor,
@@ -59,7 +58,6 @@ describe('sdk-client object', () => {
     );
     setupMockStreamingProcessor(false, defaultPutResponse);
     basicPlatform.crypto.randomUUID.mockReturnValue('random1');
-    hasher.digest.mockReturnValue('digested1');
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
       logger,

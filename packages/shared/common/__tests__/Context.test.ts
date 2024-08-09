@@ -177,3 +177,151 @@ describe('given a multi-kind context', () => {
     expect(context?.kindsAndKeys).toEqual({ org: 'OrgKey', user: 'User%:/Key' });
   });
 });
+
+describe('given a user context with private attributes', () => {
+  const input = Context.fromLDContext({
+    key: 'testKey',
+    name: 'testName',
+    custom: { cat: 'calico', dog: 'lab' },
+    anonymous: true,
+    privateAttributeNames: ['/a/b/c', 'cat', 'custom/dog'],
+  });
+
+  const expected = {
+    key: 'testKey',
+    kind: 'user',
+    name: 'testName',
+    cat: 'calico',
+    dog: 'lab',
+    anonymous: true,
+    _meta: {
+      privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
+    },
+  };
+
+  it('it can convert from LDContext to Context and back to LDContext', () => {
+    expect(Context.toLDContext(input)).toEqual(expected);
+  });
+});
+
+describe('given a user context without private attributes', () => {
+  const input = Context.fromLDContext({
+    key: 'testKey',
+    name: 'testName',
+    custom: { cat: 'calico', dog: 'lab' },
+    anonymous: true,
+  });
+
+  const expected = {
+    key: 'testKey',
+    kind: 'user',
+    name: 'testName',
+    cat: 'calico',
+    dog: 'lab',
+    anonymous: true,
+  };
+
+  it('it can convert from LDContext to Context and back to LDContext', () => {
+    expect(Context.toLDContext(input)).toEqual(expected);
+  });
+});
+
+describe('given a single context with private attributes', () => {
+  const input = Context.fromLDContext({
+    kind: 'org',
+    key: 'testKey',
+    name: 'testName',
+    cat: 'calico',
+    dog: 'lab',
+    anonymous: true,
+    _meta: {
+      privateAttributes: ['/a/b/c', 'cat', 'dog'],
+    },
+  });
+
+  const expected = {
+    kind: 'org',
+    key: 'testKey',
+    name: 'testName',
+    cat: 'calico',
+    dog: 'lab',
+    anonymous: true,
+    _meta: {
+      privateAttributes: ['/a/b/c', 'cat', 'dog'],
+    },
+  };
+
+  it('it can convert from LDContext to Context and back to LDContext', () => {
+    expect(Context.toLDContext(input)).toEqual(expected);
+  });
+});
+
+describe('given a single context without meta', () => {
+  const input = Context.fromLDContext({
+    kind: 'org',
+    key: 'testKey',
+    name: 'testName',
+    cat: 'calico',
+    dog: 'lab',
+    anonymous: true,
+  });
+
+  const expected = {
+    kind: 'org',
+    key: 'testKey',
+    name: 'testName',
+    cat: 'calico',
+    dog: 'lab',
+    anonymous: true,
+  };
+
+  it('it can convert from LDContext to Context and back to LDContext', () => {
+    expect(Context.toLDContext(input)).toEqual(expected);
+  });
+});
+
+describe('given a multi context', () => {
+  const input = Context.fromLDContext({
+    kind: 'multi',
+    org: {
+      key: 'testKey',
+      name: 'testName',
+      cat: 'calico',
+      dog: 'lab',
+      anonymous: true,
+      _meta: {
+        privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
+      },
+    },
+    customer: {
+      key: 'testKey',
+      name: 'testName',
+      bird: 'party parrot',
+      chicken: 'hen',
+    },
+  });
+
+  const expected = {
+    kind: 'multi',
+    org: {
+      key: 'testKey',
+      name: 'testName',
+      cat: 'calico',
+      dog: 'lab',
+      anonymous: true,
+      _meta: {
+        privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
+      },
+    },
+    customer: {
+      key: 'testKey',
+      name: 'testName',
+      bird: 'party parrot',
+      chicken: 'hen',
+    },
+  };
+
+  it('it can convert from LDContext to Context and back to LDContext', () => {
+    expect(Context.toLDContext(input)).toEqual(expected);
+  });
+});
