@@ -27,6 +27,7 @@ class ConnectionModeValidator implements TypeValidator {
 const validators: Record<keyof LDOptions, TypeValidator> = {
   initialConnectionMode: new ConnectionModeValidator(),
   logger: TypeValidators.Object,
+  maxCachedContexts: TypeValidators.Number,
 
   baseUri: TypeValidators.String,
   streamUri: TypeValidators.String,

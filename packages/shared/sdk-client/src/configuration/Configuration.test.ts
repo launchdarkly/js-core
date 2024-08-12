@@ -89,4 +89,12 @@ describe('Configuration', () => {
       expect.stringMatching(/should be of type LDFlagSet, got string/i),
     );
   });
+
+  test('recognize max cached contexts', () => {
+    // @ts-ignore
+    const config = new Configuration({ maxCachedContexts: 3 });
+
+    expect(config.maxCachedContexts).toBeDefined();
+    expect(console.error).not.toHaveBeenCalled();
+  });
 });
