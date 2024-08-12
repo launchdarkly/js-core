@@ -1,5 +1,28 @@
 # Changelog
 
+## [10.4.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.3.1...react-native-client-sdk-v10.4.0) (2024-08-12)
+
+
+### Features
+
+* Add configuration validation for ReactNative specific configuration. ([#532](https://github.com/launchdarkly/js-core/issues/532)) ([c1490e2](https://github.com/launchdarkly/js-core/commit/c1490e22d0b3fb4d7df878aabab0ea24db502fb6))
+* Add connection mananger. ([#522](https://github.com/launchdarkly/js-core/issues/522)) ([5bf8b16](https://github.com/launchdarkly/js-core/commit/5bf8b16e26e7d8cbbd18524f1c13f773de457b82))
+* Implement polling support. ([#524](https://github.com/launchdarkly/js-core/issues/524)) ([a99048e](https://github.com/launchdarkly/js-core/commit/a99048e0cebaafd536f79114c4727524b8f7357d))
+* Refactor application state handling. ([#523](https://github.com/launchdarkly/js-core/issues/523)) ([f5b81e6](https://github.com/launchdarkly/js-core/commit/f5b81e6fc571dc9d97a18d07f382c77cd938fd65))
+
+
+### Bug Fixes
+
+* Fix field visibility. ([#530](https://github.com/launchdarkly/js-core/issues/530)) ([21fb18b](https://github.com/launchdarkly/js-core/commit/21fb18b40139583b44a4185fb689b043547641ab))
+* Handle non-status code errors for streaming connection. ([#533](https://github.com/launchdarkly/js-core/issues/533)) ([fc4645e](https://github.com/launchdarkly/js-core/commit/fc4645eb7d70425e7ea615e275e5ad1e488365d4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.2.0 to 1.3.0
+
 ## [10.3.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.3.0...react-native-client-sdk-v10.3.1) (2024-07-31)
 
 
