@@ -6,7 +6,7 @@ export let hasher: Hasher;
 export const setupCrypto = () => {
   let counter = 0;
   hasher = {
-    update: jest.fn(),
+    update: jest.fn(() => hasher),
     digest: jest.fn(() => '1234567890123456'),
   };
 
