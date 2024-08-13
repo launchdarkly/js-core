@@ -5,8 +5,9 @@
   "packageRules": [
     {
       "enabled": false,
+      "matchDatasources": ["npm"],
       "matchPackageNames": [
-        "packages/sdk/*"
+        "*"
       ]
     }
   ],
