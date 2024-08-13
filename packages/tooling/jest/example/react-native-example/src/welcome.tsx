@@ -1,13 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
-
-import { mockFlags, mockUseLDClient } from '@launchdarkly/jest/react-native';
+import { mockFlags, ldClientMock } from '@launchdarkly/jest/react-native';
 
 export default function Welcome() {
   const flagValue = mockFlags({ 'dev-test-flag': true });
 
-  const ldClient = mockUseLDClient();
-
-  ldClient.track('test');
+  ldClientMock.track('test');
 
   return (
     <View style={styles.container}>
