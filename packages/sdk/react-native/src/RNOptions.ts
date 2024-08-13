@@ -1,4 +1,4 @@
-import { LDOptions } from '@launchdarkly/js-client-sdk-common';
+import { LDOptions, Storage } from '@launchdarkly/js-client-sdk-common';
 
 export interface RNSpecificOptions {
   /**
@@ -25,6 +25,13 @@ export interface RNSpecificOptions {
    * Defaults to true.
    */
   readonly automaticBackgroundHandling?: boolean;
+
+  /**
+   * Custom persistence layer for offline mode.
+   *
+   * Defaults to AsyncStorage.
+   */
+  readonly storage?: Storage;
 }
 
 export default interface RNOptions extends LDOptions, RNSpecificOptions {}

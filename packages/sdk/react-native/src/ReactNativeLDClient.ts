@@ -41,7 +41,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
    * @param options {@link LDOptions} to initialize the client with.
    */
   constructor(sdkKey: string, autoEnvAttributes: AutoEnvAttributes, options: LDOptions = {}) {
-    const { logger: customLogger, debug } = options;
+    const { logger: customLogger, debug, storage } = options;
     const logger =
       customLogger ??
       new BasicLogger({
@@ -59,7 +59,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
     super(
       sdkKey,
       autoEnvAttributes,
-      createPlatform(logger),
+      createPlatform(logger, storage),
       { ...filterToBaseOptions(options), logger },
       internalOptions,
     );
