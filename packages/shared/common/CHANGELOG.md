@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.6.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.5.0...js-sdk-common-v2.6.0) (2024-08-12)
+
+
+### Features
+
+* refactors the implementation of context caching.  You can now s… ([#531](https://github.com/launchdarkly/js-core/issues/531)) ([8ab2ee4](https://github.com/launchdarkly/js-core/commit/8ab2ee425a35350a4f1c50e608c39fa3527da513))
+
 ## [2.5.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.4.2...js-sdk-common-v2.5.0) (2024-06-04)
 
 
