@@ -23,10 +23,10 @@
   "dependencies": {
     "@launchdarkly/react-native-client-sdk": "workspace:^",
     "@react-native-async-storage/async-storage": "^1.21.0",
-    "expo": "51.0.21",
+    "expo": "51.0.28",
     "expo-status-bar": "~1.11.1",
     "react": "18.2.0",
-    "react-native": "0.74.3",
+    "react-native": "0.75.0",
     "react-native-dotenv": "^3.4.9"
   },
   "devDependencies": {
