@@ -1,8 +1,10 @@
 import { Info, type LDContext, LDMultiKindContext, LDUser } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
 import { addApplicationInfo, addAutoEnv, addDeviceInfo, toMulti } from './addAutoEnv';
+
+const mockPlatform = createBasicPlatform();
 
 describe('automatic environment attributes', () => {
   let crypto: Crypto;
@@ -10,7 +12,7 @@ describe('automatic environment attributes', () => {
   let config: Configuration;
 
   beforeEach(() => {
-    ({ crypto, info } = basicPlatform);
+    ({ crypto, info } = mockPlatform);
     (crypto.randomUUID as jest.Mock).mockResolvedValue('test-device-key-1');
     config = new Configuration({ logger });
   });
@@ -29,14 +31,14 @@ describe('automatic environment attributes', () => {
   describe('addAutoEnv', () => {
     test('LDUser is unsupported', async () => {
       const user: LDUser = { key: 'legacy-user-key', name: 'bob' };
-      const result = await addAutoEnv(user, basicPlatform, config);
+      const result = await addAutoEnv(user, mockPlatform, config);
 
       expect(result).toEqual(user);
     });
 
     test('customer provides single context of kind ld_application. should only add ld_device.', async () => {
       const context = { kind: 'ld_application', key: 'test-customer-app-key-1', name: 'test-app' };
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         kind: 'multi',
@@ -65,7 +67,7 @@ describe('automatic environment attributes', () => {
           name: 'test-app',
         },
       } as LDMultiKindContext;
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         ...context,
@@ -84,7 +86,7 @@ describe('automatic environment attributes', () => {
 
     test('customer provides single context of kind ld_device. should only add ld_application.', async () => {
       const context = { kind: 'ld_device', key: 'test-customer-dev-key-1', name: 'test-dev' };
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         kind: 'multi',
@@ -110,7 +112,7 @@ describe('automatic environment attributes', () => {
           name: 'test-dev',
         },
       } as LDMultiKindContext;
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         ...context,
@@ -136,7 +138,7 @@ describe('automatic environment attributes', () => {
           name: 'test-dev',
         },
       } as LDMultiKindContext;
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual(context);
     });
@@ -145,7 +147,7 @@ describe('automatic environment attributes', () => {
       info.platformData = jest.fn().mockReturnValue({});
 
       const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual(context);
     });
@@ -153,7 +155,7 @@ describe('automatic environment attributes', () => {
     test('single kind should be converted to multi', async () => {
       const context = { kind: 'user', key: 'test-user-key-1', name: 'bob' };
 
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         kind: 'multi',
@@ -180,7 +182,7 @@ describe('automatic environment attributes', () => {
         user: { key: 'test-user-key-1', name: 'bob' },
         org: { key: 'test-org-key-1', name: 'Best company' },
       };
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         kind: 'multi',
@@ -212,7 +214,7 @@ describe('automatic environment attributes', () => {
         },
       };
 
-      await addAutoEnv(context, basicPlatform, config);
+      await addAutoEnv(context, mockPlatform, config);
 
       expect(config.logger.warn).toHaveBeenCalledTimes(1);
       expect(config.logger.warn).toHaveBeenCalledWith(
@@ -230,7 +232,7 @@ describe('automatic environment attributes', () => {
         },
       };
 
-      await addAutoEnv(context, basicPlatform, config);
+      await addAutoEnv(context, mockPlatform, config);
 
       expect(config.logger.warn).toHaveBeenCalledTimes(1);
       expect(config.logger.warn).toHaveBeenCalledWith(
@@ -249,7 +251,7 @@ describe('automatic environment attributes', () => {
         },
       };
 
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         kind: 'multi',
@@ -288,7 +290,7 @@ describe('automatic environment attributes', () => {
         },
       };
 
-      const result = await addAutoEnv(context, basicPlatform, config);
+      const result = await addAutoEnv(context, mockPlatform, config);
 
       expect(result).toEqual({
         kind: 'multi',
@@ -327,7 +329,7 @@ describe('automatic environment attributes', () => {
           versionName: 'test-ld-version-name',
         },
       });
-      const ldApplication = addApplicationInfo(basicPlatform, config);
+      const ldApplication = addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
@@ -340,7 +342,7 @@ describe('automatic environment attributes', () => {
     });
 
     test('add auto env application id, name, version', () => {
-      const ldApplication = addApplicationInfo(basicPlatform, config);
+      const ldApplication = addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
@@ -365,7 +367,7 @@ describe('automatic environment attributes', () => {
         },
       });
 
-      const ldApplication = addApplicationInfo(basicPlatform, config);
+      const ldApplication = addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
@@ -377,7 +379,7 @@ describe('automatic environment attributes', () => {
     test('omit if customer and auto env data are unavailable', () => {
       info.platformData = jest.fn().mockReturnValueOnce({});
 
-      const ldApplication = addApplicationInfo(basicPlatform, config);
+      const ldApplication = addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
@@ -393,7 +395,7 @@ describe('automatic environment attributes', () => {
         },
       });
 
-      const ldApplication = addApplicationInfo(basicPlatform, config);
+      const ldApplication = addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
@@ -403,7 +405,7 @@ describe('automatic environment attributes', () => {
         ld_application: { key: 'key-from-sdk', envAttributesVersion: '0.0.1' },
       });
 
-      const ldApplication = addApplicationInfo(basicPlatform, config);
+      const ldApplication = addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
@@ -413,7 +415,7 @@ describe('automatic environment attributes', () => {
         .fn()
         .mockReturnValueOnce({ ld_application: { version: null, locale: '' } });
       config = new Configuration({ applicationInfo: { version: '1.2.3' } });
-      const ldApplication = addApplicationInfo(basicPlatform, config);
+      const ldApplication = addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
@@ -421,7 +423,7 @@ describe('automatic environment attributes', () => {
 
   describe('addDeviceInfo', () => {
     test('add platformData os name, version', async () => {
-      const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(mockPlatform);
 
       expect(ldDevice).toEqual({
         envAttributesVersion: '1.0',
@@ -436,7 +438,7 @@ describe('automatic environment attributes', () => {
       delete platformData.os;
       info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-      const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(mockPlatform);
 
       expect(ldDevice).toEqual({
         envAttributesVersion: '1.0',
@@ -451,7 +453,7 @@ describe('automatic environment attributes', () => {
       platformData.os = { name: '', version: '' };
       info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-      const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(mockPlatform);
 
       expect(ldDevice).toEqual({
         envAttributesVersion: '1.0',
@@ -463,7 +465,7 @@ describe('automatic environment attributes', () => {
 
     test('no data return undefined', async () => {
       info.platformData = jest.fn().mockReturnValueOnce({});
-      const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(mockPlatform);
       expect(ldDevice).toBeUndefined();
     });
 
@@ -472,7 +474,7 @@ describe('automatic environment attributes', () => {
       platformData.os = {};
       info.platformData = jest.fn().mockReturnValueOnce(platformData);
 
-      const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(mockPlatform);
 
       expect(ldDevice).toEqual({
         envAttributesVersion: '1.0',
@@ -487,7 +489,7 @@ describe('automatic environment attributes', () => {
         .fn()
         .mockReturnValueOnce({ os: {}, ld_device: { os: { family: 'orange' } } });
 
-      const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(mockPlatform);
 
       expect(ldDevice).toEqual({
         envAttributesVersion: '1.0',
@@ -502,7 +504,7 @@ describe('automatic environment attributes', () => {
         ld_device: { key: 'test-device-key', envAttributesVersion: '0.1' },
       });
 
-      const ldDevice = await addDeviceInfo(basicPlatform);
+      const ldDevice = await addDeviceInfo(mockPlatform);
 
       expect(ldDevice).toBeUndefined();
     });

@@ -3,15 +3,17 @@
 // should contain a consistency test.
 // Testing here can only validate we are providing correct inputs to the hashing algorithm.
 import { AttributeReference, Context, Crypto, LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, hasher } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform, hasher } from '@launchdarkly/private-js-mocks';
 
 import Bucketer from '../../src/evaluation/Bucketer';
+
+const mockPlatform = createBasicPlatform();
 
 describe('Bucketer.test', () => {
   let crypto: Crypto;
 
   beforeEach(() => {
-    crypto = basicPlatform.crypto;
+    crypto = mockPlatform.crypto;
   });
 
   afterEach(() => {

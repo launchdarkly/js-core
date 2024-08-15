@@ -1,6 +1,8 @@
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import DiagnosticsManager from './DiagnosticsManager';
+
+const mockPlatform = createBasicPlatform();
 
 describe('given a diagnostics manager', () => {
   const dateNowString = '2023-08-10';
@@ -16,8 +18,8 @@ describe('given a diagnostics manager', () => {
   });
 
   beforeEach(() => {
-    basicPlatform.crypto.randomUUID.mockReturnValueOnce('random1').mockReturnValueOnce('random2');
-    manager = new DiagnosticsManager('my-sdk-key', basicPlatform, { test1: 'value1' });
+    mockPlatform.crypto.randomUUID.mockReturnValueOnce('random1').mockReturnValueOnce('random2');
+    manager = new DiagnosticsManager('my-sdk-key', mockPlatform, { test1: 'value1' });
   });
 
   afterEach(() => {
@@ -31,7 +33,7 @@ describe('given a diagnostics manager', () => {
 
   it('creates random UUID', () => {
     const { id } = manager.createInitEvent();
-    const manager2 = new DiagnosticsManager('my-sdk-key', basicPlatform, {});
+    const manager2 = new DiagnosticsManager('my-sdk-key', mockPlatform, {});
     const { id: id2 } = manager2.createInitEvent();
 
     expect(id.diagnosticId).toBeTruthy();
@@ -46,7 +48,7 @@ describe('given a diagnostics manager', () => {
 
   it('puts SDK data into the init event', () => {
     const { sdk } = manager.createInitEvent();
-    expect(sdk).toMatchObject(basicPlatform.info.sdkData());
+    expect(sdk).toMatchObject(mockPlatform.info.sdkData());
   });
 
   it('puts config data into the init event', () => {

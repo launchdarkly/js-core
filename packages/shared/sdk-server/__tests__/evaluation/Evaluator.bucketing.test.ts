@@ -1,5 +1,5 @@
 import { Context } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Rollout } from '../../src/evaluation/data/Rollout';
@@ -10,7 +10,7 @@ describe('given a flag with a rollout', () => {
   let evaluator: Evaluator;
 
   beforeEach(() => {
-    evaluator = new Evaluator(mocks.basicPlatform, noQueries);
+    evaluator = new Evaluator(createBasicPlatform(), noQueries);
   });
 
   afterEach(() => {

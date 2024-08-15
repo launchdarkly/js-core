@@ -1,9 +1,11 @@
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Info, PlatformData, SdkData } from '../../api';
 import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../api/subsystem';
 import { ApplicationTags, ClientContext } from '../../options';
 import EventSender from './EventSender';
+
+const mockPlatform = createBasicPlatform();
 
 jest.mock('../../utils', () => {
   const actual = jest.requireActual('../../utils');
@@ -81,7 +83,7 @@ describe('given an event sender', () => {
     mockFetch = jest
       .fn()
       .mockResolvedValue({ headers: { get: mockHeadersGet }, status: responseStatusCode });
-    basicPlatform.requests.fetch = mockFetch;
+    mockPlatform.requests.fetch = mockFetch;
   };
 
   beforeAll(() => {
@@ -102,10 +104,10 @@ describe('given an event sender', () => {
       return `${uuid}`;
     });
     setupMockFetch(200);
-    basicPlatform.crypto.randomUUID = mockRandomUuid;
+    mockPlatform.crypto.randomUUID = mockRandomUuid;
 
     eventSender = new EventSender(
-      new ClientContext('sdk-key', basicConfig, { ...basicPlatform, info }),
+      new ClientContext('sdk-key', basicConfig, { ...mockPlatform, info }),
     );
 
     eventSenderResult = await eventSender.sendEventData(

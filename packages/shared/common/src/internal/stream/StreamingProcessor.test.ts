@@ -1,4 +1,4 @@
-import { basicPlatform, clientContext, logger } from '@launchdarkly/private-js-mocks';
+import { clientContext, createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
 
 import { EventName, Info, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
@@ -7,6 +7,8 @@ import { ApplicationTags, ServiceEndpoints } from '../../options';
 import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import StreamingProcessor from './StreamingProcessor';
+
+const mockPlatform = createBasicPlatform();
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
@@ -58,7 +60,7 @@ describe('given a stream processor with mock event source', () => {
       platform: { info },
     } = clientContext);
     clientContext.basicConfiguration.logger = logger;
-    basicPlatform.requests = {
+    mockPlatform.requests = {
       createEventSource: jest.fn((streamUri: string, options: any) => {
         mockEventSource = createMockEventSource(streamUri, options);
         return mockEventSource;
@@ -78,7 +80,7 @@ describe('given a stream processor with mock event source', () => {
     listeners.set('put', mockListener);
     listeners.set('patch', mockListener);
 
-    diagnosticsManager = new DiagnosticsManager(sdkKey, basicPlatform, {});
+    diagnosticsManager = new DiagnosticsManager(sdkKey, mockPlatform, {});
     streamingProcessor = new StreamingProcessor(
       sdkKey,
       clientContext,
@@ -98,7 +100,7 @@ describe('given a stream processor with mock event source', () => {
   });
 
   it('uses expected uri and eventSource init args', () => {
-    expect(basicPlatform.requests.createEventSource).toBeCalledWith(
+    expect(mockPlatform.requests.createEventSource).toBeCalledWith(
       `${serviceEndpoints.streaming}/all`,
       {
         errorFilter: expect.any(Function),
@@ -122,7 +124,7 @@ describe('given a stream processor with mock event source', () => {
     );
     streamingProcessor.start();
 
-    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+    expect(mockPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
       `${serviceEndpoints.streaming}/all`,
       {
         errorFilter: expect.any(Function),

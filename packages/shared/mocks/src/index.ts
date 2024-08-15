@@ -3,7 +3,7 @@ import ContextDeduplicator from './contextDeduplicator';
 import { hasher } from './crypto';
 import { MockEventProcessor, setupMockEventProcessor } from './eventProcessor';
 import logger from './logger';
-import { basicPlatform } from './platform';
+import { basicPlatform, createBasicPlatform } from './platform';
 import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
 
 export {
@@ -16,4 +16,5 @@ export {
   setupMockEventProcessor,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
+  createBasicPlatform,
 };

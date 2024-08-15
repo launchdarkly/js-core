@@ -1,6 +1,6 @@
 import { subsystem } from '@launchdarkly/js-sdk-common';
 import {
-  basicPlatform,
+  createBasicPlatform,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
@@ -36,7 +36,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -282,7 +282,7 @@ describe('given an offline client', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      createBasicPlatform(),
       {
         offline: true,
         updateProcessor: td.getFactory(),
@@ -346,7 +346,7 @@ describe('given a client and store that are uninitialized', () => {
 
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      createBasicPlatform(),
       {
         updateProcessor: new InertUpdateProcessor(),
         sendEvents: false,
@@ -396,7 +396,7 @@ describe('given a client that is un-initialized and store that is initialized', 
 
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      createBasicPlatform(),
       {
         sendEvents: false,
         featureStore: store,

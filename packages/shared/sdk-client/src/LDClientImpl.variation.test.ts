@@ -1,9 +1,15 @@
 import { AutoEnvAttributes, clone, Context, LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
+import {
+  createBasicPlatform,
+  logger,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
+
+const mockPlatform = createBasicPlatform();
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -29,7 +35,7 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
       logger,
       sendEvents: false,
     });

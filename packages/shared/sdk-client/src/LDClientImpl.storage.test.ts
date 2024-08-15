@@ -1,11 +1,13 @@
 import { AutoEnvAttributes, clone, type LDContext, noop } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
 
 import LDEmitter from './api/LDEmitter';
 import { toMulti } from './context/addAutoEnv';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { DeleteFlag, Flags, PatchFlag } from './types';
+
+const mockPlatform = createBasicPlatform();
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -74,7 +76,7 @@ describe('sdk-client storage', () => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     defaultFlagKeys = Object.keys(defaultPutResponse);
 
-    (basicPlatform.storage.get as jest.Mock).mockImplementation((storageKey: string) => {
+    (mockPlatform.storage.get as jest.Mock).mockImplementation((storageKey: string) => {
       switch (storageKey) {
         case flagStorageKey:
           return JSON.stringify(defaultPutResponse);
@@ -89,7 +91,7 @@ describe('sdk-client storage', () => {
       .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
       .mockReturnValue('/stream/path');
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
@@ -107,7 +109,7 @@ describe('sdk-client storage', () => {
     // make sure streaming errors
     const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
 
-    expect(basicPlatform.storage.get).toHaveBeenCalledWith(flagStorageKey);
+    expect(mockPlatform.storage.get).toHaveBeenCalledWith(flagStorageKey);
 
     // 'change' should not have been emitted
     expect(emitter.emit).toHaveBeenCalledTimes(2);
@@ -131,7 +133,7 @@ describe('sdk-client storage', () => {
   });
 
   test('initialize from storage succeeds with auto env', async () => {
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
@@ -141,7 +143,7 @@ describe('sdk-client storage', () => {
 
     const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
 
-    expect(basicPlatform.storage.get).toHaveBeenLastCalledWith(
+    expect(mockPlatform.storage.get).toHaveBeenLastCalledWith(
       expect.stringMatching('LaunchDarkly_1234567890123456_1234567890123456'),
     );
 
@@ -175,7 +177,7 @@ describe('sdk-client storage', () => {
     let LDClientImplTestNoChange;
     jest.isolateModules(async () => {
       LDClientImplTestNoChange = jest.requireActual('./LDClientImpl').default;
-      ldc = new LDClientImplTestNoChange(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+      ldc = new LDClientImplTestNoChange(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
         logger,
         sendEvents: false,
       });
@@ -198,19 +200,19 @@ describe('sdk-client storage', () => {
     // fake previously cached flags even though there's no storage for this context
     // @ts-ignore
     ldc.flags = defaultPutResponse;
-    basicPlatform.storage.get.mockImplementation(() => undefined);
+    mockPlatform.storage.get.mockImplementation(() => undefined);
     setupMockStreamingProcessor(false, defaultPutResponse);
 
     ldc.identify(context).then(noop);
     await jest.runAllTimersAsync();
 
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
       expect.stringContaining('index'),
     );
 
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       2,
       flagStorageKey,
       JSON.stringify(defaultPutResponse),
@@ -238,13 +240,13 @@ describe('sdk-client storage', () => {
     await jest.runAllTimersAsync();
 
     expect(allFlags).not.toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
       expect.stringContaining('index'),
     );
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       2,
       flagStorageKey,
       JSON.stringify(putResponse),
@@ -269,13 +271,13 @@ describe('sdk-client storage', () => {
     await jest.runAllTimersAsync();
 
     expect(allFlags).toMatchObject({ 'another-dev-test-flag': false });
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
       expect.stringContaining('index'),
     );
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       2,
       flagStorageKey,
       JSON.stringify(putResponse),
@@ -327,13 +329,13 @@ describe('sdk-client storage', () => {
     // wait for async code to resolve promises
     await jest.runAllTimersAsync();
 
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(2);
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
       expect.stringContaining('index'),
     );
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       2,
       flagStorageKey,
       JSON.stringify(defaultPutResponse),
@@ -364,7 +366,7 @@ describe('sdk-client storage', () => {
 
     // wait for async code to resolve promises
     await jest.runAllTimersAsync();
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
 
     expect(allFlags).toMatchObject({ 'dev-test-flag': true });
     expect(flagsInStorage['dev-test-flag'].reason).toEqual({
@@ -388,9 +390,9 @@ describe('sdk-client storage', () => {
     // wait for async code to resolve promises
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(allFlags).toMatchObject({ 'dev-test-flag': false });
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(4);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(4);
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
     expect(emitter.emit).toHaveBeenCalledTimes(2);
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
@@ -405,9 +407,9 @@ describe('sdk-client storage', () => {
     // wait for async code to resolve promises
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(allFlags).toHaveProperty('another-dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       4,
       flagStorageKey,
       expect.stringContaining(JSON.stringify(patchResponse)),
@@ -431,7 +433,7 @@ describe('sdk-client storage', () => {
       false,
     );
 
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(0);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(0);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
 
     // this is defaultPutResponse
@@ -463,9 +465,9 @@ describe('sdk-client storage', () => {
     // wait for async code to resolve promises
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(allFlags).not.toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenNthCalledWith(
+    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       4,
       flagStorageKey,
       expect.stringContaining('dev-test-flag'),
@@ -490,7 +492,7 @@ describe('sdk-client storage', () => {
     );
 
     expect(allFlags).toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(0);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(0);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -509,7 +511,7 @@ describe('sdk-client storage', () => {
     );
 
     expect(allFlags).toHaveProperty('dev-test-flag');
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(0);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(0);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -524,9 +526,9 @@ describe('sdk-client storage', () => {
     // wait for async code to resolve promises
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(basicPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
 
-    expect(basicPlatform.storage.set).toHaveBeenCalledTimes(4); // two index saves and two flag saves
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(4); // two index saves and two flag saves
     expect(flagsInStorage['does-not-exist']).toMatchObject({ ...deleteResponse, deleted: true });
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['does-not-exist']);
   });

@@ -66,3 +66,22 @@ export const setupBasicPlatform = () => {
     storage,
   };
 };
+
+export function createBasicPlatform(): Platform {
+  return {
+    encoding: {
+      btoa: (s: string) => Buffer.from(s).toString('base64'),
+    },
+    info: setupInfo(),
+    crypto: setupCrypto(),
+    requests: {
+      fetch: jest.fn(),
+      createEventSource: jest.fn(),
+    },
+    storage: {
+      get: jest.fn(),
+      set: jest.fn(),
+      clear: jest.fn(),
+    },
+  };
+}

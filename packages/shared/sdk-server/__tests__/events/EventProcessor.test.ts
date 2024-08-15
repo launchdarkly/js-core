@@ -14,11 +14,13 @@ import {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
+
+const mockPlatform = createBasicPlatform();
 
 const SDK_KEY = 'sdk-key';
 
@@ -170,7 +172,7 @@ describe('given an event processor with diagnostics manager', () => {
     const diagnosticsManager = new internal.DiagnosticsManager(
       'sdk-key',
       {
-        ...mocks.basicPlatform,
+        ...mockPlatform,
         // Replace info and requests.
         info,
         requests,
@@ -182,7 +184,7 @@ describe('given an event processor with diagnostics manager', () => {
     );
 
     const clientContext = new ClientContext(SDK_KEY, testConfig, {
-      ...mocks.basicPlatform,
+      ...mockPlatform,
       info,
       requests,
     });
