@@ -13,7 +13,6 @@ beforeEach(() => {
   mockPlatform = createBasicPlatform();
 });
 
-
 describe('Bucketer.test', () => {
   let crypto: Crypto;
 

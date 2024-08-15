@@ -3,13 +3,19 @@ import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { getOrGenerateKey } from './getOrGenerateKey';
 
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
+
 describe('getOrGenerateKey', () => {
   let crypto: Crypto;
   let storage: Storage;
 
   beforeEach(() => {
-    crypto = createBasicPlatform().crypto;
-    storage = createBasicPlatform().storage;
+    crypto = mockPlatform.crypto;
+    storage = mockPlatform.storage;
 
     (crypto.randomUUID as jest.Mock).mockReturnValueOnce('test-org-key-1');
   });
@@ -19,7 +25,7 @@ describe('getOrGenerateKey', () => {
   });
 
   test('getOrGenerateKey create new key', async () => {
-    const key = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', createBasicPlatform());
+    const key = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', mockPlatform);
 
     expect(key).toEqual('test-org-key-1');
     expect(crypto.randomUUID).toHaveBeenCalled();
@@ -32,7 +38,7 @@ describe('getOrGenerateKey', () => {
       storageKey === 'LaunchDarkly_AnonymousKeys_org' ? 'random1' : undefined,
     );
 
-    const key = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', createBasicPlatform());
+    const key = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', mockPlatform);
 
     expect(key).toEqual('random1');
     expect(crypto.randomUUID).not.toHaveBeenCalled();
@@ -43,7 +49,7 @@ describe('getOrGenerateKey', () => {
   describe('anonymous namespace', () => {
     test('anonymous key does not exist so should be generated', async () => {
       (storage.get as jest.Mock).mockResolvedValue(undefined);
-      const k = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', createBasicPlatform());
+      const k = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', mockPlatform);
 
       expect(crypto.randomUUID).toHaveBeenCalled();
       expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
@@ -53,7 +59,7 @@ describe('getOrGenerateKey', () => {
 
     test('anonymous key exists so should not be generated', async () => {
       (storage.get as jest.Mock).mockResolvedValue('test-org-key-2');
-      const k = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', createBasicPlatform());
+      const k = await getOrGenerateKey('LaunchDarkly_AnonymousKeys_org', mockPlatform);
 
       expect(crypto.randomUUID).not.toHaveBeenCalled();
       expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
@@ -65,7 +71,7 @@ describe('getOrGenerateKey', () => {
   describe('context namespace', () => {
     test('context key does not exist so should be generated', async () => {
       (storage.get as jest.Mock).mockResolvedValue(undefined);
-      const k = await getOrGenerateKey('LaunchDarkly_ContextKeys_org', createBasicPlatform());
+      const k = await getOrGenerateKey('LaunchDarkly_ContextKeys_org', mockPlatform);
 
       expect(crypto.randomUUID).toHaveBeenCalled();
       expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_ContextKeys_org');
@@ -75,7 +81,7 @@ describe('getOrGenerateKey', () => {
 
     test('context key exists so should not be generated', async () => {
       (storage.get as jest.Mock).mockResolvedValue('test-org-key-2');
-      const k = await getOrGenerateKey('LaunchDarkly_ContextKeys_org', createBasicPlatform());
+      const k = await getOrGenerateKey('LaunchDarkly_ContextKeys_org', mockPlatform);
 
       expect(crypto.randomUUID).not.toHaveBeenCalled();
       expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_ContextKeys_org');
