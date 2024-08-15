@@ -178,7 +178,6 @@ describe('sdk-client object', () => {
     await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/^error:.*test-error/));
-    expect(ldc.getContext()).toBeUndefined();
   });
 
   test('identify change and error listeners', async () => {

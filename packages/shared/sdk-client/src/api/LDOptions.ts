@@ -140,6 +140,14 @@ export interface LDOptions {
   logger?: LDLogger;
 
   /**
+   * The maximum number of locally cached contexts.  The cache is used to decrease initialization
+   * latency and to provide fallback when the SDK cannot reach LaunchDarkly services.
+   *
+   * @defaultValue 5
+   */
+  maxCachedContexts?: number;
+
+  /**
    * Specifies a list of attribute names (either built-in or custom) which should be marked as
    * private, and not sent to LaunchDarkly in analytics events. You can also specify this on a
    * per-context basis with {@link LDContextMeta.privateAttributes}.

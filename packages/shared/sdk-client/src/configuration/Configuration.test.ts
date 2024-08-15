@@ -26,6 +26,7 @@ describe('Configuration', () => {
         logLevel: 1,
         name: 'LaunchDarkly',
       },
+      maxCachedContexts: 5,
       privateAttributes: [],
       sendEvents: true,
       sendLDHeaders: true,
@@ -69,7 +70,7 @@ describe('Configuration', () => {
     );
   });
 
-  test('enforce minimum', () => {
+  test('enforce minimum flushInterval', () => {
     const config = new Configuration({ flushInterval: 1 });
 
     expect(config.flushInterval).toEqual(2);
@@ -87,6 +88,23 @@ describe('Configuration', () => {
     expect(console.error).toHaveBeenNthCalledWith(
       1,
       expect.stringMatching(/should be of type LDFlagSet, got string/i),
+    );
+  });
+
+  test('recognize maxCachedContexts', () => {
+    const config = new Configuration({ maxCachedContexts: 3 });
+
+    expect(config.maxCachedContexts).toBeDefined();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  test('enforce minimum maxCachedContext', () => {
+    const config = new Configuration({ maxCachedContexts: -1 });
+
+    expect(config.maxCachedContexts).toBeDefined();
+    expect(console.error).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('had invalid value of -1'),
     );
   });
 });

@@ -25,6 +25,8 @@ export default class Configuration {
   public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
   public readonly streamUri = Configuration.DEFAULT_STREAM;
 
+  public readonly maxCachedContexts = 5;
+
   public readonly capacity = 100;
   public readonly diagnosticRecordingInterval = 900;
   public readonly flushInterval = 30;

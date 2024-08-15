@@ -1,0 +1,18 @@
+{
+  "extends": [
+    "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "enabled": false,
+      "matchDatasources": ["npm"],
+      "matchPackageNames": [
+        "*"
+      ]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "osvVulnerabilityAlerts": true
+}
