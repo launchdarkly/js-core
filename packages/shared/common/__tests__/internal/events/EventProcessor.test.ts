@@ -1,6 +1,6 @@
-import { clientContext, ContextDeduplicator } from '@launchdarkly/private-js-mocks';
+import { ContextDeduplicator, createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
 
-import { LDContextCommon, LDMultiKindContext } from '../../../dist';
+import { ClientContext, LDContextCommon, LDMultiKindContext } from '../../../dist';
 import { Context } from '../../../src';
 import { LDContextDeduplicator, LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
@@ -8,6 +8,28 @@ import { EventProcessorOptions } from '../../../src/internal/events/EventProcess
 import shouldSample from '../../../src/internal/events/sampling';
 import BasicLogger from '../../../src/logging/BasicLogger';
 import format from '../../../src/logging/format';
+
+let mockPlatform: any;
+let clientContext: ClientContext;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+  clientContext = {
+    basicConfiguration: {
+      logger,
+      sdkKey: 'testSdkKey',
+      serviceEndpoints: {
+        events: '',
+        polling: '',
+        streaming: 'https://mockstream.ld.com',
+        diagnosticEventPath: '/diagnostic',
+        analyticsEventPath: '/bulk',
+        includeAuthorizationHeader: true,
+      },
+    },
+    platform: mockPlatform,
+  };
+});
 
 jest.mock('../../../src/internal/events/sampling', () => ({
   __esModule: true,

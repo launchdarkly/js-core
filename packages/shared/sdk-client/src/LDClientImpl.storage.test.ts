@@ -1,5 +1,9 @@
 import { AutoEnvAttributes, clone, type LDContext, noop } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
+import {
+  createBasicPlatform,
+  logger,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import LDEmitter from './api/LDEmitter';
 import { toMulti } from './context/addAutoEnv';

@@ -77,7 +77,12 @@ describe('given a requestor', () => {
       },
     };
 
-    requestor = new Requestor('sdkKey', new Configuration({}), createBasicPlatform().info, requests);
+    requestor = new Requestor(
+      'sdkKey',
+      new Configuration({}),
+      createBasicPlatform().info,
+      requests,
+    );
   });
 
   it('gets data', (done) => {
