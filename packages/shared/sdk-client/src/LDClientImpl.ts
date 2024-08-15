@@ -320,6 +320,9 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
+    // In offline mode we do not support waiting for results.
+    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !this.isOffline();
+
     if (identifyOptions?.timeout) {
       this.identifyTimeout = identifyOptions.timeout;
     }
@@ -354,15 +357,23 @@ export default class LDClientImpl implements LDClient {
     this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
 
     const loadedFromCache = await this.flagManager.loadCached(this.checkedContext);
-    if (loadedFromCache) {
+    if (loadedFromCache && !waitForNetworkResults) {
+      this.logger.debug('Identify completing with cached flags');
       identifyResolve();
+    }
+    if (loadedFromCache && waitForNetworkResults) {
+      this.logger.debug(
+        'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
+      );
     }
 
     if (this.isOffline()) {
       if (loadedFromCache) {
-        this.logger.debug('Offline identify using storage flags.');
+        this.logger.debug('Offline identify - using cached flags.');
       } else {
-        this.logger.debug('Offline identify no storage. Defaults will be used.');
+        this.logger.debug(
+          'Offline identify - no cached flags, using defaults or already loaded flags.',
+        );
         identifyResolve();
       }
     } else {

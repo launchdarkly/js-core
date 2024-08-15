@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Hasher, LDContext, Platform } from '@launchdarkly/js-sdk-common';
 import {
   basicPlatform,
   hasher,
@@ -10,6 +10,18 @@ import {
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
+
+class MockHasher implements Hasher {
+  private concated: string = '';
+
+  update(data: string): Hasher {
+    this.concated += data;
+    return this;
+  }
+  digest(_encoding: string): string {
+    return this.concated;
+  }
+}
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -51,7 +63,6 @@ describe('sdk-client object', () => {
     setupMockStreamingProcessor(false, defaultPutResponse);
     basicPlatform.crypto.randomUUID.mockReturnValue('random1');
     hasher.digest.mockReturnValue('digested1');
-
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
       logger,
       sendEvents: false,
@@ -62,6 +73,7 @@ describe('sdk-client object', () => {
   });
 
   afterEach(() => {
+    console.log('RESET ALL MOCKS');
     jest.resetAllMocks();
   });
 
@@ -194,5 +206,70 @@ describe('sdk-client object', () => {
 
     expect(emitter.listenerCount('change')).toEqual(1);
     expect(emitter.listenerCount('error')).toEqual(1);
+  });
+
+  it('can complete identification using storage', async () => {
+    const data: Record<string, string> = {};
+    basicPlatform.storage = {
+      get: (key: string) => data[key],
+      set: (key: string, value: string) => {
+        data[key] = value;
+      },
+      clear: (key: string) => {
+        delete data[key];
+      },
+    };
+
+    // First identify should populate storage.
+    await ldc.identify(context);
+
+    expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
+
+    // Second identify should use storage.
+    await ldc.identify(context);
+
+    expect(logger.debug).toHaveBeenCalledWith('Identify completing with cached flags');
+  });
+
+  it('does not complete identify using storage when instructed to wait for the network response', async () => {
+    const data: Record<string, string> = {};
+
+    const isolateCrypto: Platform = {
+      encoding: basicPlatform.encoding,
+      info: basicPlatform.info,
+      requests: basicPlatform.requests,
+      crypto: {
+        createHash: (type: string) => {
+          console.log('CREATING HASHER', type);
+          return new MockHasher();
+        },
+        createHmac: jest.fn(),
+        randomUUID: jest.fn(() => 'VERY_RANDOM_ID'),
+      },
+      storage: {
+        get: async (key: string) => data[key],
+        set: async (key: string, value: string) => {
+          data[key] = value;
+        },
+        clear: async (key: string) => {
+          delete data[key];
+        },
+      },
+    };
+
+    const otherClient = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, isolateCrypto, {
+      logger,
+      sendEvents: false,
+    });
+
+    // First identify should populate storage.
+    await otherClient.identify(context);
+
+    expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
+
+    // Second identify would use storage, but we instruct it not to.
+    await otherClient.identify(context, { waitForNetworkResults: true, timeout: 5 });
+
+    expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
   });
 });
