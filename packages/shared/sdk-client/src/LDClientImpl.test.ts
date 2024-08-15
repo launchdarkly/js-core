@@ -11,7 +11,11 @@ import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
 
-const mockPlatform = createBasicPlatform();
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');

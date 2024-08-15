@@ -5,7 +5,11 @@ import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../api/su
 import { ApplicationTags, ClientContext } from '../../options';
 import EventSender from './EventSender';
 
-const mockPlatform = createBasicPlatform();
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 jest.mock('../../utils', () => {
   const actual = jest.requireActual('../../utils');

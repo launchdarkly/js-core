@@ -7,7 +7,12 @@ import { createBasicPlatform, hasher } from '@launchdarkly/private-js-mocks';
 
 import Bucketer from '../../src/evaluation/Bucketer';
 
-const mockPlatform = createBasicPlatform();
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
+
 
 describe('Bucketer.test', () => {
   let crypto: Crypto;

@@ -2,11 +2,10 @@ import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import DiagnosticsManager from './DiagnosticsManager';
 
-const mockPlatform = createBasicPlatform();
-
 describe('given a diagnostics manager', () => {
   const dateNowString = '2023-08-10';
   let manager: DiagnosticsManager;
+  let mockPlatform: any;
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -18,6 +17,7 @@ describe('given a diagnostics manager', () => {
   });
 
   beforeEach(() => {
+    mockPlatform = createBasicPlatform();
     mockPlatform.crypto.randomUUID.mockReturnValueOnce('random1').mockReturnValueOnce('random2');
     manager = new DiagnosticsManager('my-sdk-key', mockPlatform, { test1: 'value1' });
   });

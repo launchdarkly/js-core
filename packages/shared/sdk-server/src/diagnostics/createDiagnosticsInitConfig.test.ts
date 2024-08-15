@@ -4,7 +4,11 @@ import { LDOptions } from '../api';
 import Configuration from '../options/Configuration';
 import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
 
-const mockPlatform = createBasicPlatform();
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 const mockFeatureStore = {
   getDescription: jest.fn(() => 'Mock Feature Store'),

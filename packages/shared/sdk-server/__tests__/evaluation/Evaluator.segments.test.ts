@@ -20,7 +20,11 @@ import {
   makeFlagWithSegmentMatch,
 } from './flags';
 
-const mockPlatform = createBasicPlatform();
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 const basicUser: LDContext = { key: 'userkey' };
 const basicSingleKindUser: LDContext = { kind: 'user', key: 'userkey' };

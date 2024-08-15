@@ -4,7 +4,11 @@ import { createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
 import Configuration from '../configuration';
 import { addApplicationInfo, addAutoEnv, addDeviceInfo, toMulti } from './addAutoEnv';
 
-const mockPlatform = createBasicPlatform();
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 describe('automatic environment attributes', () => {
   let crypto: Crypto;

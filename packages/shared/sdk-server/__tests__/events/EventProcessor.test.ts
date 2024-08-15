@@ -20,7 +20,11 @@ import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 
-const mockPlatform = createBasicPlatform();
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 const SDK_KEY = 'sdk-key';
 

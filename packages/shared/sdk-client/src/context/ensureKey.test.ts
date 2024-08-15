@@ -7,9 +7,13 @@ import type {
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
-const mockPlatform = createBasicPlatform();
-
 import { ensureKey } from './ensureKey';
+
+let mockPlatform: any;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 describe('ensureKey', () => {
   let crypto: Crypto;
