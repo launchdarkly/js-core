@@ -44,25 +44,19 @@ const setupInfo = () => ({
   ),
 });
 
-const requests: Requests = {
-  fetch: jest.fn(),
-  createEventSource: jest.fn(),
-};
-
-const storage: Storage = {
-  get: jest.fn(),
-  set: jest.fn(),
-  clear: jest.fn(),
-};
-
-// eslint-disable-next-line import/no-mutable-exports
-export let basicPlatform: Platform;
-export const setupBasicPlatform = () => {
-  basicPlatform = {
-    encoding,
-    info: setupInfo(),
-    crypto: setupCrypto(),
-    requests,
-    storage,
-  };
-};
+export const createBasicPlatform = () => ({
+  encoding: {
+    btoa: (s: string) => Buffer.from(s).toString('base64'),
+  },
+  info: setupInfo(),
+  crypto: setupCrypto(),
+  requests: {
+    fetch: jest.fn(),
+    createEventSource: jest.fn(),
+  },
+  storage: {
+    get: jest.fn(),
+    set: jest.fn(),
+    clear: jest.fn(),
+  },
+});

@@ -1,4 +1,4 @@
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl, LDMigrationStage } from '../src';
 import Reasons from '../src/evaluation/Reasons';
@@ -21,7 +21,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -352,7 +352,7 @@ it('can add a hook after initialization', async () => {
   const td = new TestData();
   const client = new LDClientImpl(
     'sdk-key',
-    basicPlatform,
+    createBasicPlatform(),
     {
       updateProcessor: td.getFactory(),
       sendEvents: false,

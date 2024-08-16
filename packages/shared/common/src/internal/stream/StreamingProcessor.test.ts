@@ -1,12 +1,30 @@
-import { basicPlatform, clientContext, logger } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
-import { EventName, Info, ProcessStreamResponse } from '../../api';
+import { EventName, Info, LDLogger, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
-import { ApplicationTags, ServiceEndpoints } from '../../options';
 import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import StreamingProcessor from './StreamingProcessor';
+
+let logger: ReturnType<typeof createLogger>;
+
+const serviceEndpoints = {
+  events: '',
+  polling: '',
+  streaming: 'https://mockstream.ld.com',
+  diagnosticEventPath: '/diagnostic',
+  analyticsEventPath: '/bulk',
+  includeAuthorizationHeader: true,
+};
+
+function getBasicConfiguration(inLogger: LDLogger) {
+  return {
+    sdkKey: 'testSdkKey',
+    serviceEndpoints,
+    logger: inLogger,
+  };
+}
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
@@ -21,6 +39,13 @@ const event = {
   },
 };
 
+let basicPlatform: any;
+
+beforeEach(() => {
+  basicPlatform = createBasicPlatform();
+  logger = createLogger();
+});
+
 const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
   streamUri,
   options,
@@ -30,8 +55,6 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
 });
 
 describe('given a stream processor with mock event source', () => {
-  let serviceEndpoints: ServiceEndpoints;
-  let tags: ApplicationTags;
   let info: Info;
   let streamingProcessor: LDStreamProcessor;
   let diagnosticsManager: DiagnosticsManager;
@@ -53,11 +76,9 @@ describe('given a stream processor with mock event source', () => {
 
   beforeEach(() => {
     mockErrorHandler = jest.fn();
-    ({
-      basicConfiguration: { serviceEndpoints, tags },
-      platform: { info },
-    } = clientContext);
-    clientContext.basicConfiguration.logger = logger;
+
+    info = basicPlatform.info;
+
     basicPlatform.requests = {
       createEventSource: jest.fn((streamUri: string, options: any) => {
         mockEventSource = createMockEventSource(streamUri, options);
@@ -81,7 +102,10 @@ describe('given a stream processor with mock event source', () => {
     diagnosticsManager = new DiagnosticsManager(sdkKey, basicPlatform, {});
     streamingProcessor = new StreamingProcessor(
       sdkKey,
-      clientContext,
+      {
+        basicConfiguration: getBasicConfiguration(logger),
+        platform: basicPlatform,
+      },
       '/all',
       listeners,
       diagnosticsManager,
@@ -102,7 +126,7 @@ describe('given a stream processor with mock event source', () => {
       `${serviceEndpoints.streaming}/all`,
       {
         errorFilter: expect.any(Function),
-        headers: defaultHeaders(sdkKey, info, tags),
+        headers: defaultHeaders(sdkKey, info, undefined),
         initialRetryDelayMillis: 1000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
@@ -113,7 +137,10 @@ describe('given a stream processor with mock event source', () => {
   it('sets streamInitialReconnectDelay correctly', () => {
     streamingProcessor = new StreamingProcessor(
       sdkKey,
-      clientContext,
+      {
+        basicConfiguration: getBasicConfiguration(logger),
+        platform: basicPlatform,
+      },
       '/all',
       listeners,
       diagnosticsManager,
@@ -126,7 +153,7 @@ describe('given a stream processor with mock event source', () => {
       `${serviceEndpoints.streaming}/all`,
       {
         errorFilter: expect.any(Function),
-        headers: defaultHeaders(sdkKey, info, tags),
+        headers: defaultHeaders(sdkKey, info, undefined),
         initialRetryDelayMillis: 22000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,

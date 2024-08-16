@@ -3,10 +3,11 @@
  * These tests exercise the hashing from the node platform.
  */
 import { integrations } from '@launchdarkly/js-server-sdk-common';
-import { TestData } from '@launchdarkly/js-server-sdk-common/dist/integrations';
 
 import { LDClient } from '../src';
 import LDClientNode from '../src/LDClientNode';
+
+type TestData = integrations.TestData;
 
 const seed = 61;
 const flagKey = 'flagkey';

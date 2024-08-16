@@ -1,8 +1,7 @@
-import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import {
-  basicPlatform,
-  hasher,
-  logger,
+  createBasicPlatform,
+  createLogger,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
@@ -10,6 +9,14 @@ import {
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
+
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
+let logger: ReturnType<typeof createLogger>;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+  logger = createLogger();
+});
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -49,10 +56,14 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
-    basicPlatform.crypto.randomUUID.mockReturnValue('random1');
-    hasher.digest.mockReturnValue('digested1');
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+    const hasher: Hasher = {
+      update: jest.fn(() => hasher),
+      digest: jest.fn(() => 'digested1'),
+    };
+    mockPlatform.crypto.createHash = jest.fn(() => hasher);
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
@@ -109,7 +120,7 @@ describe('sdk-client object', () => {
 
   test('identify success withReasons', async () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
       withReasons: true,
@@ -130,7 +141,7 @@ describe('sdk-client object', () => {
   test('identify success without auto env', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
       logger,
       sendEvents: false,
     });

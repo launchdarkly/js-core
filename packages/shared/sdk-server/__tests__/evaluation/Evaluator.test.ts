@@ -1,5 +1,5 @@
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../src/evaluation/data/Flag';
 import EvalResult from '../../src/evaluation/EvalResult';
@@ -18,7 +18,7 @@ const offBaseFlag = {
 describe('Evaluator.test', () => {
   let evaluator: Evaluator;
   beforeEach(() => {
-    evaluator = new Evaluator(mocks.basicPlatform, noQueries);
+    evaluator = new Evaluator(createBasicPlatform(), noQueries);
   });
 
   describe.each<[Flag, LDContext, EvalResult | undefined]>([
