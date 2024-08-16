@@ -1,7 +1,7 @@
 import type { Crypto, Hasher, Hmac } from '@common';
 
-export const hasher: Hasher = {
-  update: jest.fn(),
+const hasher: Hasher = {
+  update: jest.fn(() => hasher),
   digest: jest.fn(() => '1234567890123456'),
 };
 

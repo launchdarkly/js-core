@@ -1,5 +1,5 @@
 import { ClientContext } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDFeatureStore } from '../../src';
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
@@ -40,7 +40,7 @@ describe('given an event processor', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, mocks.basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, createBasicPlatform())),
       initSuccessHandler,
     );
   });
@@ -107,7 +107,7 @@ describe('given a polling processor with a short poll duration', () => {
     processor = new PollingProcessor(
       config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, mocks.basicPlatform)),
+      config.featureStoreFactory(new ClientContext('', config, createBasicPlatform())),
       initSuccessHandler,
       errorHandler,
     );

@@ -1,5 +1,5 @@
 import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDBigSegmentsOptions } from '../src';
 import { BigSegmentStore } from '../src/api/interfaces';
@@ -76,7 +76,7 @@ describe('given test data with big segments', () => {
 
       client = new LDClientImpl(
         'sdk-key',
-        { ...mocks.basicPlatform, crypto },
+        { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
           sendEvents: false,
@@ -115,7 +115,7 @@ describe('given test data with big segments', () => {
 
       client = new LDClientImpl(
         'sdk-key',
-        { ...mocks.basicPlatform, crypto },
+        { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
           sendEvents: false,
@@ -154,7 +154,7 @@ describe('given test data with big segments', () => {
 
       client = new LDClientImpl(
         'sdk-key',
-        { ...mocks.basicPlatform, crypto },
+        { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
           sendEvents: false,
@@ -181,7 +181,7 @@ describe('given test data with big segments', () => {
     beforeEach(async () => {
       client = new LDClientImpl(
         'sdk-key',
-        { ...mocks.basicPlatform, crypto },
+        { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
           sendEvents: false,

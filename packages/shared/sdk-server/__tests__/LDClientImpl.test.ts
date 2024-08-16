@@ -1,5 +1,5 @@
 import {
-  basicPlatform,
+  createBasicPlatform,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
@@ -30,7 +30,7 @@ describe('LDClientImpl', () => {
     hasEventListeners: jest.fn().mockName('hasEventListeners'),
   };
   const createClient = (options: LDOptions = {}) =>
-    new LDClientImpl('sdk-key', basicPlatform, options, callbacks);
+    new LDClientImpl('sdk-key', createBasicPlatform(), options, callbacks);
 
   beforeEach(() => {
     setupMockStreamingProcessor();

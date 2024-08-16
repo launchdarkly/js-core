@@ -1,4 +1,4 @@
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import {
   LDClientImpl,
@@ -22,7 +22,7 @@ describe('given an LDClient with test data', () => {
     callbacks = makeCallbacks(false);
     client = new LDClientImpl(
       'sdk-key',
-      basicPlatform,
+      createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,

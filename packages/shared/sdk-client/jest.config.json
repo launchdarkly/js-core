@@ -5,6 +5,5 @@
   "modulePathIgnorePatterns": ["dist"],
   "testEnvironment": "jsdom",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-  "collectCoverageFrom": ["src/**/*.ts"],
-  "setupFilesAfterEnv": ["@launchdarkly/private-js-mocks/setup"]
+  "collectCoverageFrom": ["src/**/*.ts"]
 }

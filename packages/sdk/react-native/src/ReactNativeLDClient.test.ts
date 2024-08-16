@@ -24,7 +24,7 @@ function mockResponse(value: string, statusCode: number) {
 }
 
 /**
- * Mocks basicPlatform fetch. Returns the fetch jest.Mock object.
+ * Mocks fetch. Returns the fetch jest.Mock object.
  * @param remoteJson
  * @param statusCode
  */

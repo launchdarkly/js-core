@@ -1,8 +1,7 @@
 import { AutoEnvAttributes, clone, Hasher, LDContext, Platform } from '@launchdarkly/js-sdk-common';
 import {
-  basicPlatform,
-  hasher,
-  logger,
+  createBasicPlatform,
+  createLogger,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
@@ -22,6 +21,14 @@ class MockHasher implements Hasher {
     return this.concated;
   }
 }
+
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
+let logger: ReturnType<typeof createLogger>;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+  logger = createLogger();
+});
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -61,9 +68,8 @@ describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
-    basicPlatform.crypto.randomUUID.mockReturnValue('random1');
-    hasher.digest.mockReturnValue('digested1');
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
@@ -73,7 +79,6 @@ describe('sdk-client object', () => {
   });
 
   afterEach(() => {
-    console.log('RESET ALL MOCKS');
     jest.resetAllMocks();
   });
 
@@ -96,6 +101,13 @@ describe('sdk-client object', () => {
   test('identify success', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+    const hasher: Hasher = {
+      update: jest.fn(() => hasher),
+      digest: jest.fn(() => 'digested1'),
+    };
+    mockPlatform.crypto.createHash = jest.fn(() => hasher);
 
     await ldc.identify(carContext);
     const c = ldc.getContext();
@@ -121,7 +133,7 @@ describe('sdk-client object', () => {
 
   test('identify success withReasons', async () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
       withReasons: true,
@@ -142,7 +154,7 @@ describe('sdk-client object', () => {
   test('identify success without auto env', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
@@ -160,6 +172,13 @@ describe('sdk-client object', () => {
   test('identify anonymous', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', anonymous: true, key: '' };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+    const hasher: Hasher = {
+      update: jest.fn(() => hasher),
+      digest: jest.fn(() => 'digested1'),
+    };
+    mockPlatform.crypto.createHash = jest.fn(() => hasher);
 
     await ldc.identify(carContext);
     const c = ldc.getContext();
@@ -210,14 +229,14 @@ describe('sdk-client object', () => {
 
   it('can complete identification using storage', async () => {
     const data: Record<string, string> = {};
-    basicPlatform.storage = {
-      get: (key: string) => data[key],
-      set: (key: string, value: string) => {
+    mockPlatform.storage = {
+      get: jest.fn((key) =>data[key]),
+      set: jest.fn((key: string, value: string) => {
         data[key] = value;
-      },
-      clear: (key: string) => {
+      }),
+      clear: jest.fn((key: string) => {
         delete data[key];
-      },
+      }),
     };
 
     // First identify should populate storage.
@@ -235,9 +254,9 @@ describe('sdk-client object', () => {
     const data: Record<string, string> = {};
 
     const isolateCrypto: Platform = {
-      encoding: basicPlatform.encoding,
-      info: basicPlatform.info,
-      requests: basicPlatform.requests,
+      encoding: mockPlatform.encoding,
+      info: mockPlatform.info,
+      requests: mockPlatform.requests,
       crypto: {
         createHash: (type: string) => {
           console.log('CREATING HASHER', type);

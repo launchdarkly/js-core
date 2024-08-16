@@ -1,9 +1,15 @@
 import { EventEmitter } from 'node:events';
 
 import { noop } from '@launchdarkly/js-server-sdk-common';
-import { logger } from '@launchdarkly/private-js-mocks';
+import { createLogger } from '@launchdarkly/private-js-mocks';
 
 import createCallbacks from './createCallbacks';
+
+let logger: ReturnType<typeof createLogger>;
+
+beforeEach(() => {
+  logger = createLogger();
+});
 
 describe('createCallbacks', () => {
   let emitter: EventEmitter;

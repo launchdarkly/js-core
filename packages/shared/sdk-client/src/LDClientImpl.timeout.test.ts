@@ -1,10 +1,22 @@
 import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
-import { basicPlatform, logger, setupMockStreamingProcessor } from '@launchdarkly/private-js-mocks';
+import {
+  createBasicPlatform,
+  createLogger,
+  setupMockStreamingProcessor,
+} from '@launchdarkly/private-js-mocks';
 
 import { toMulti } from './context/addAutoEnv';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
+
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
+let logger: ReturnType<typeof createLogger>;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+  logger = createLogger();
+});
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -39,7 +51,7 @@ describe('sdk-client identify timeout', () => {
     // simulate streaming error after a long timeout
     setupMockStreamingProcessor(true, defaultPutResponse, undefined, undefined, 30);
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, basicPlatform, {
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
@@ -111,7 +123,7 @@ describe('sdk-client identify timeout', () => {
     ldc = new LDClientImpl(
       testSdkKey,
       AutoEnvAttributes.Enabled,
-      basicPlatform,
+      mockPlatform,
       {
         logger,
         sendEvents: false,

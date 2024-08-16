@@ -5,15 +5,21 @@ import type {
   LDMultiKindContext,
   LDUser,
 } from '@launchdarkly/js-sdk-common';
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { ensureKey } from './ensureKey';
+
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 describe('ensureKey', () => {
   let crypto: Crypto;
 
   beforeEach(() => {
-    crypto = basicPlatform.crypto;
+    crypto = mockPlatform.crypto;
 
     (crypto.randomUUID as jest.Mock).mockReturnValueOnce('random1').mockReturnValueOnce('random2');
   });
@@ -24,14 +30,14 @@ describe('ensureKey', () => {
 
   test('ensureKey should not override anonymous key if specified', async () => {
     const context: LDContext = { kind: 'org', anonymous: true, key: 'Testy Pizza' };
-    const c = await ensureKey(context, basicPlatform);
+    const c = await ensureKey(context, mockPlatform);
 
     expect(c.key).toEqual('Testy Pizza');
   });
 
   test('ensureKey non-anonymous single context should be unchanged', async () => {
     const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
-    const c = await ensureKey(context, basicPlatform);
+    const c = await ensureKey(context, mockPlatform);
 
     expect(c.key).toEqual('Testy Pizza');
     expect(c.anonymous).toBeFalsy();
@@ -44,7 +50,7 @@ describe('ensureKey', () => {
       org: { key: 'orgKey' },
     };
 
-    const c = (await ensureKey(context, basicPlatform)) as LDMultiKindContext;
+    const c = (await ensureKey(context, mockPlatform)) as LDMultiKindContext;
 
     expect((c.user as LDContextCommon).key).toEqual('userKey');
     expect((c.org as LDContextCommon).key).toEqual('orgKey');
@@ -52,7 +58,7 @@ describe('ensureKey', () => {
 
   test('ensureKey should create key for single anonymous context', async () => {
     const context: LDContext = { kind: 'org', anonymous: true, key: '' };
-    const c = await ensureKey(context, basicPlatform);
+    const c = await ensureKey(context, mockPlatform);
     expect(c.key).toEqual('random1');
   });
 
@@ -63,7 +69,7 @@ describe('ensureKey', () => {
       org: { key: 'orgKey' },
     };
 
-    const c = (await ensureKey(context, basicPlatform)) as LDMultiKindContext;
+    const c = (await ensureKey(context, mockPlatform)) as LDMultiKindContext;
 
     expect((c.user as LDContextCommon).key).toEqual('random1');
     expect((c.org as LDContextCommon).key).toEqual('orgKey');
@@ -76,7 +82,7 @@ describe('ensureKey', () => {
       org: { anonymous: true, key: '' },
     };
 
-    const c = (await ensureKey(context, basicPlatform)) as LDMultiKindContext;
+    const c = (await ensureKey(context, mockPlatform)) as LDMultiKindContext;
 
     expect((c.user as LDContextCommon).key).toEqual('random1');
     expect((c.org as LDContextCommon).key).toEqual('random2');
@@ -87,7 +93,7 @@ describe('ensureKey', () => {
       anonymous: true,
       key: '',
     };
-    const c = await ensureKey(context, basicPlatform);
+    const c = await ensureKey(context, mockPlatform);
     expect(c.key).toEqual('random1');
   });
 });

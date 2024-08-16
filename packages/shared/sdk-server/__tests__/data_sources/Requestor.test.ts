@@ -6,7 +6,7 @@ import {
   Requests,
   Response,
 } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
@@ -77,7 +77,12 @@ describe('given a requestor', () => {
       },
     };
 
-    requestor = new Requestor('sdkKey', new Configuration({}), mocks.basicPlatform.info, requests);
+    requestor = new Requestor(
+      'sdkKey',
+      new Configuration({}),
+      createBasicPlatform().info,
+      requests,
+    );
   });
 
   it('gets data', (done) => {
