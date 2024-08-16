@@ -22,7 +22,7 @@ function getBasicConfiguration(inLogger: LDLogger) {
   return {
     sdkKey: 'testSdkKey',
     serviceEndpoints,
-    inLogger,
+    logger: inLogger,
   };
 }
 

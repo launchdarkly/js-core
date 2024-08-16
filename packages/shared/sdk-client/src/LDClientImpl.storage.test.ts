@@ -1,7 +1,7 @@
 import { AutoEnvAttributes, clone, type LDContext, noop } from '@launchdarkly/js-sdk-common';
 import {
   createBasicPlatform,
-  logger,
+  createLogger,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
 
@@ -12,9 +12,11 @@ import LDClientImpl from './LDClientImpl';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
+let logger: ReturnType<typeof createLogger>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
+  logger = createLogger();
 });
 
 jest.mock('@launchdarkly/js-sdk-common', () => {

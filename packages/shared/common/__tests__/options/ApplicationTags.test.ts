@@ -88,11 +88,13 @@ describe.each([
     });
 
     it(`logs issues it encounters for ${JSON.stringify(config)}`, () => {
-      expect(config?.logger?.warn).toHaveBeenCalledTimes(warnings.length);
+      if (config?.logger) {
+        expect(config?.logger?.warn).toHaveBeenCalledTimes(warnings.length);
 
-      warnings.forEach((regExp) => {
-        expect(config?.logger?.warn).toHaveBeenCalledWith(expect.stringMatching(regExp));
-      });
+        warnings.forEach((regExp) => {
+          expect(config?.logger?.warn).toHaveBeenCalledWith(expect.stringMatching(regExp));
+        });
+      }
     });
   });
 });

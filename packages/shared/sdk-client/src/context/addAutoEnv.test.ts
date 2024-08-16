@@ -5,15 +5,17 @@ import {
   LDMultiKindContext,
   LDUser,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
 import { addApplicationInfo, addAutoEnv, addDeviceInfo, toMulti } from './addAutoEnv';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
+let logger: ReturnType<typeof createLogger>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
+  logger = createLogger();
 });
 
 describe('automatic environment attributes', () => {

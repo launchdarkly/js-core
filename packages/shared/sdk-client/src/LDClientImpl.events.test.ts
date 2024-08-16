@@ -8,7 +8,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 import {
   createBasicPlatform,
-  logger,
+  createLogger,
   MockEventProcessor,
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
@@ -21,9 +21,11 @@ type InputCustomEvent = internal.InputCustomEvent;
 type InputIdentifyEvent = internal.InputIdentifyEvent;
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
+let logger: ReturnType<typeof createLogger>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
+  logger = createLogger();
 });
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
