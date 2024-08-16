@@ -72,7 +72,8 @@ describe('sdk-client object', () => {
       .mockReturnValue('/stream/path');
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await ldc.close();
     jest.resetAllMocks();
   });
 
