@@ -5,7 +5,7 @@ import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../api/su
 import { ApplicationTags, ClientContext } from '../../options';
 import EventSender from './EventSender';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();

@@ -4,7 +4,7 @@ import { LDOptions } from '../api';
 import Configuration from '../options/Configuration';
 import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
@@ -95,7 +95,10 @@ describe.each([
 
 describe.each([true, false])('Given proxy && proxyAuth = %p', (auth) => {
   beforeEach(() => {
+    // Adding properties which are not part of the base platform.
+    // @ts-ignore
     mockPlatform.requests.usingProxy = jest.fn(() => auth);
+    // @ts-ignore
     mockPlatform.requests.usingProxyAuth = jest.fn(() => auth);
   });
 

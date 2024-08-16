@@ -1,10 +1,16 @@
-import { Info, type LDContext, LDMultiKindContext, LDUser } from '@launchdarkly/js-sdk-common';
+import {
+  Crypto,
+  Info,
+  type LDContext,
+  LDMultiKindContext,
+  LDUser,
+} from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
 
 import Configuration from '../configuration';
 import { addApplicationInfo, addAutoEnv, addDeviceInfo, toMulti } from './addAutoEnv';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();

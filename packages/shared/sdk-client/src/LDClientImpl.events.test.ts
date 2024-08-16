@@ -6,7 +6,7 @@ import {
   LDContext,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
-import { InputCustomEvent, InputIdentifyEvent } from '@launchdarkly/js-sdk-common/dist/internal';
+
 import {
   createBasicPlatform,
   logger,
@@ -18,7 +18,10 @@ import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
 
-let mockPlatform: any;
+type InputCustomEvent = internal.InputCustomEvent;
+type InputIdentifyEvent = internal.InputIdentifyEvent;
+
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();

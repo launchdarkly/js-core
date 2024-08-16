@@ -9,7 +9,7 @@ import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();

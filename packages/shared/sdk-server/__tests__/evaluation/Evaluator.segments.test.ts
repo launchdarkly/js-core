@@ -20,7 +20,7 @@ import {
   makeFlagWithSegmentMatch,
 } from './flags';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();

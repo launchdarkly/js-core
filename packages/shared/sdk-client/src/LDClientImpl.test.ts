@@ -1,7 +1,6 @@
-import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import {
   createBasicPlatform,
-  hasher,
   logger,
   MockStreamingProcessor,
   setupMockStreamingProcessor,
@@ -11,7 +10,7 @@ import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
@@ -56,7 +55,11 @@ describe('sdk-client object', () => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
-    hasher.digest.mockReturnValue('digested1');
+    const hasher: Hasher = {
+      update: jest.fn(() => hasher),
+      digest: jest.fn(() => 'digested1'),
+    };
+    mockPlatform.crypto.createHash = jest.fn(() => hasher);
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,

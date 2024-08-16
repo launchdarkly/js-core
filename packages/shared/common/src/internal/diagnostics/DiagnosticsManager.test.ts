@@ -5,7 +5,7 @@ import DiagnosticsManager from './DiagnosticsManager';
 describe('given a diagnostics manager', () => {
   const dateNowString = '2023-08-10';
   let manager: DiagnosticsManager;
-  let mockPlatform: any;
+  let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
   beforeAll(() => {
     jest.useFakeTimers();

@@ -9,7 +9,7 @@ import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { ensureKey } from './ensureKey';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();

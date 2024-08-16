@@ -3,7 +3,7 @@ import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { getOrGenerateKey } from './getOrGenerateKey';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();

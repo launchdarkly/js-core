@@ -2,12 +2,18 @@
 // We cannot fully validate bucketing in the common tests. Platform implementations
 // should contain a consistency test.
 // Testing here can only validate we are providing correct inputs to the hashing algorithm.
-import { AttributeReference, Context, Crypto, LDContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, hasher } from '@launchdarkly/private-js-mocks';
+import {
+  AttributeReference,
+  Context,
+  Crypto,
+  Hasher,
+  LDContext,
+} from '@launchdarkly/js-sdk-common';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import Bucketer from '../../src/evaluation/Bucketer';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
@@ -79,6 +85,12 @@ describe('Bucketer.test', () => {
     ],
   ])('given bucketing parameters', (context, key, attr, salt, kindForRollout, seed, expected) => {
     it('hashes the correct string', () => {
+      const hasher: Hasher = {
+        update: jest.fn(() => hasher),
+        digest: jest.fn(() => '1234567890123456'),
+      };
+      mockPlatform.crypto.createHash = jest.fn(() => hasher);
+
       const validatedContext = Context.fromLDContext(context);
       const attrRef = new AttributeReference(attr);
 
@@ -108,6 +120,12 @@ describe('Bucketer.test', () => {
     ['bad', 'key'],
   ])('when given a non string or integer reference', (kind, attr) => {
     it('buckets to 0 when given bad data', () => {
+      const hasher: Hasher = {
+        update: jest.fn(() => hasher),
+        digest: jest.fn(() => 'digested1'),
+      };
+      mockPlatform.crypto.createHash = jest.fn(() => hasher);
+
       const validatedContext = Context.fromLDContext({
         key: 'context-key',
         kind,

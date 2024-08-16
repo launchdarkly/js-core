@@ -20,7 +20,7 @@ import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 
-let mockPlatform: any;
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
