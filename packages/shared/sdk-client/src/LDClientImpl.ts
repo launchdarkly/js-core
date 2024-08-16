@@ -217,7 +217,6 @@ export default class LDClientImpl implements LDClient {
           },
           {},
         );
-
         await this.flagManager.init(context, descriptors).then(identifyResolve());
       },
     });

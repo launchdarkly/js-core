@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, clone, Hasher, LDContext, Platform } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import {
   createBasicPlatform,
   createLogger,
@@ -9,26 +9,6 @@ import {
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
-
-class MockHasher implements Hasher {
-  private concated: string = '';
-
-  update(data: string): Hasher {
-    this.concated += data;
-    return this;
-  }
-  digest(_encoding: string): string {
-    return this.concated;
-  }
-}
-
-let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
-
-beforeEach(() => {
-  mockPlatform = createBasicPlatform();
-  logger = createLogger();
-});
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
@@ -61,13 +41,23 @@ const autoEnv = {
     os: { name: 'An OS', version: '1.0.1', family: 'orange' },
   },
 };
-let ldc: LDClientImpl;
-let defaultPutResponse: Flags;
-
 describe('sdk-client object', () => {
+  let ldc: LDClientImpl;
+  let defaultPutResponse: Flags;
+  let mockPlatform: ReturnType<typeof createBasicPlatform>;
+  let logger: ReturnType<typeof createLogger>;
+
   beforeEach(() => {
+    mockPlatform = createBasicPlatform();
+    logger = createLogger();
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+    const hasher = {
+      update: jest.fn((): Hasher => hasher),
+      digest: jest.fn(() => 'digested1'),
+    };
+    mockPlatform.crypto.createHash.mockReturnValue(hasher);
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
@@ -78,7 +68,8 @@ describe('sdk-client object', () => {
       .mockReturnValue('/stream/path');
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await ldc.close();
     jest.resetAllMocks();
   });
 
@@ -103,11 +94,6 @@ describe('sdk-client object', () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
-    const hasher: Hasher = {
-      update: jest.fn(() => hasher),
-      digest: jest.fn(() => 'digested1'),
-    };
-    mockPlatform.crypto.createHash = jest.fn(() => hasher);
 
     await ldc.identify(carContext);
     const c = ldc.getContext();
@@ -174,11 +160,6 @@ describe('sdk-client object', () => {
     const carContext: LDContext = { kind: 'car', anonymous: true, key: '' };
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
-    const hasher: Hasher = {
-      update: jest.fn(() => hasher),
-      digest: jest.fn(() => 'digested1'),
-    };
-    mockPlatform.crypto.createHash = jest.fn(() => hasher);
 
     await ldc.identify(carContext);
     const c = ldc.getContext();
@@ -227,17 +208,15 @@ describe('sdk-client object', () => {
     expect(emitter.listenerCount('error')).toEqual(1);
   });
 
-  it('can complete identification using storage', async () => {
+  test('can complete identification using storage', async () => {
     const data: Record<string, string> = {};
-    mockPlatform.storage = {
-      get: jest.fn((key) =>data[key]),
-      set: jest.fn((key: string, value: string) => {
-        data[key] = value;
-      }),
-      clear: jest.fn((key: string) => {
-        delete data[key];
-      }),
-    };
+    mockPlatform.storage.get.mockImplementation((key) => data[key]);
+    mockPlatform.storage.set.mockImplementation((key: string, value: string) => {
+      data[key] = value;
+    });
+    mockPlatform.storage.clear.mockImplementation((key: string) => {
+      delete data[key];
+    });
 
     // First identify should populate storage.
     await ldc.identify(context);
@@ -250,44 +229,23 @@ describe('sdk-client object', () => {
     expect(logger.debug).toHaveBeenCalledWith('Identify completing with cached flags');
   });
 
-  it('does not complete identify using storage when instructed to wait for the network response', async () => {
+  test('does not complete identify using storage when instructed to wait for the network response', async () => {
     const data: Record<string, string> = {};
-
-    const isolateCrypto: Platform = {
-      encoding: mockPlatform.encoding,
-      info: mockPlatform.info,
-      requests: mockPlatform.requests,
-      crypto: {
-        createHash: (type: string) => {
-          console.log('CREATING HASHER', type);
-          return new MockHasher();
-        },
-        createHmac: jest.fn(),
-        randomUUID: jest.fn(() => 'VERY_RANDOM_ID'),
-      },
-      storage: {
-        get: async (key: string) => data[key],
-        set: async (key: string, value: string) => {
-          data[key] = value;
-        },
-        clear: async (key: string) => {
-          delete data[key];
-        },
-      },
-    };
-
-    const otherClient = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, isolateCrypto, {
-      logger,
-      sendEvents: false,
+    mockPlatform.storage.get.mockImplementation((key) => data[key]);
+    mockPlatform.storage.set.mockImplementation((key: string, value: string) => {
+      data[key] = value;
+    });
+    mockPlatform.storage.clear.mockImplementation((key: string) => {
+      delete data[key];
     });
 
     // First identify should populate storage.
-    await otherClient.identify(context);
+    await ldc.identify(context);
 
     expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
 
     // Second identify would use storage, but we instruct it not to.
-    await otherClient.identify(context, { waitForNetworkResults: true, timeout: 5 });
+    await ldc.identify(context, { waitForNetworkResults: true, timeout: 5 });
 
     expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
   });
