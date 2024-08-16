@@ -1,10 +1,10 @@
-import { logger } from '@launchdarkly/private-js-mocks';
+import { createLogger } from '@launchdarkly/private-js-mocks';
 
 import ApplicationTags from '../../src/options/ApplicationTags';
 
 describe.each([
   [
-    { application: { id: 'is-valid', version: 'also-valid' }, logger },
+    { application: { id: 'is-valid', version: 'also-valid' }, logger: createLogger() },
     'application-id/is-valid application-version/also-valid',
     [],
   ],
@@ -16,28 +16,36 @@ describe.each([
         name: 'test-app-1',
         versionName: 'test-version-1',
       },
-      logger,
+      logger: createLogger(),
     },
     'application-id/is-valid application-name/test-app-1 application-version/also-valid application-version-name/test-version-1',
     [],
   ],
-  [{ application: { id: 'is-valid' }, logger }, 'application-id/is-valid', []],
-  [{ application: { version: 'also-valid' }, logger }, 'application-version/also-valid', []],
-  [{ application: {}, logger }, undefined, []],
-  [{ logger }, undefined, []],
+  [{ application: { id: 'is-valid' }, logger: createLogger() }, 'application-id/is-valid', []],
+  [
+    { application: { version: 'also-valid' }, logger: createLogger() },
+    'application-version/also-valid',
+    [],
+  ],
+  [{ application: {}, logger: createLogger() }, undefined, []],
+  [{ logger: createLogger() }, undefined, []],
   [undefined, undefined, []],
 
   // Above ones are 'valid' cases. Below are invalid.
-  [{ application: { id: 'bad tag' }, logger }, undefined, [/Config option "application.id" must/]],
   [
-    { application: { id: 'bad tag', version: 'good-tag' }, logger },
+    { application: { id: 'bad tag' }, logger: createLogger() },
+    undefined,
+    [/Config option "application.id" must/],
+  ],
+  [
+    { application: { id: 'bad tag', version: 'good-tag' }, logger: createLogger() },
     'application-version/good-tag',
     [/Config option "application.id" must/],
   ],
   [
     {
       application: { id: 'bad tag', version: 'good-tag', name: '', versionName: 'test-version-1' },
-      logger,
+      logger: createLogger(),
     },
     'application-version/good-tag application-version-name/test-version-1',
     [/Config option "application.id" must/, /Config option "application.name" must/],
@@ -50,7 +58,7 @@ describe.each([
         name: 'invalid name',
         versionName: 'invalid version name',
       },
-      logger,
+      logger: createLogger(),
     },
     undefined,
     [
@@ -80,10 +88,10 @@ describe.each([
     });
 
     it(`logs issues it encounters for ${JSON.stringify(config)}`, () => {
-      expect(logger.warn).toHaveBeenCalledTimes(warnings.length);
+      expect(config?.logger?.warn).toHaveBeenCalledTimes(warnings.length);
 
       warnings.forEach((regExp) => {
-        expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(regExp));
+        expect(config?.logger?.warn).toHaveBeenCalledWith(expect.stringMatching(regExp));
       });
     });
   });

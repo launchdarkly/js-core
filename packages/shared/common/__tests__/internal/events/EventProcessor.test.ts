@@ -1,5 +1,10 @@
-import { ContextDeduplicator, createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
+import {
+  ContextDeduplicator,
+  createBasicPlatform,
+  createLogger,
+} from '@launchdarkly/private-js-mocks';
 
+import { LDContextCommon, LDMultiKindContext } from '../../../src/api/context';
 import { LDContextDeduplicator, LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import Context from '../../../src/Context';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
@@ -8,12 +13,13 @@ import shouldSample from '../../../src/internal/events/sampling';
 import BasicLogger from '../../../src/logging/BasicLogger';
 import format from '../../../src/logging/format';
 import ClientContext from '../../../src/options/ClientContext';
-import { LDContextCommon, LDMultiKindContext } from '../../../src/api/context';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let clientContext: ClientContext;
+let logger: ReturnType<typeof createLogger>;
 
 beforeEach(() => {
+  logger = createLogger();
   mockPlatform = createBasicPlatform();
   clientContext = {
     basicConfiguration: {

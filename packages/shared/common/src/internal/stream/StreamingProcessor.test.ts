@@ -1,25 +1,30 @@
-import { createBasicPlatform, logger } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
-import { EventName, Info, ProcessStreamResponse } from '../../api';
+import { EventName, Info, LDLogger, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
-import { ServiceEndpoints } from '../../options';
 import { defaultHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import StreamingProcessor from './StreamingProcessor';
 
-const basicConfiguration = {
-  sdkKey: 'testSdkKey',
-  serviceEndpoints: {
-    events: '',
-    polling: '',
-    streaming: 'https://mockstream.ld.com',
-    diagnosticEventPath: '/diagnostic',
-    analyticsEventPath: '/bulk',
-    includeAuthorizationHeader: true,
-  },
-  logger,
+let logger: ReturnType<typeof createLogger>;
+
+const serviceEndpoints = {
+  events: '',
+  polling: '',
+  streaming: 'https://mockstream.ld.com',
+  diagnosticEventPath: '/diagnostic',
+  analyticsEventPath: '/bulk',
+  includeAuthorizationHeader: true,
 };
+
+function getBasicConfiguration(inLogger: LDLogger) {
+  return {
+    sdkKey: 'testSdkKey',
+    serviceEndpoints,
+    inLogger,
+  };
+}
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
@@ -38,6 +43,7 @@ let basicPlatform: any;
 
 beforeEach(() => {
   basicPlatform = createBasicPlatform();
+  logger = createLogger();
 });
 
 const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
@@ -49,7 +55,6 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
 });
 
 describe('given a stream processor with mock event source', () => {
-  let serviceEndpoints: ServiceEndpoints;
   let info: Info;
   let streamingProcessor: LDStreamProcessor;
   let diagnosticsManager: DiagnosticsManager;
@@ -73,7 +78,6 @@ describe('given a stream processor with mock event source', () => {
     mockErrorHandler = jest.fn();
 
     info = basicPlatform.info;
-    serviceEndpoints = basicConfiguration.serviceEndpoints;
 
     basicPlatform.requests = {
       createEventSource: jest.fn((streamUri: string, options: any) => {
@@ -99,7 +103,7 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor = new StreamingProcessor(
       sdkKey,
       {
-        basicConfiguration,
+        basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
       },
       '/all',
@@ -134,7 +138,7 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor = new StreamingProcessor(
       sdkKey,
       {
-        basicConfiguration,
+        basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
       },
       '/all',

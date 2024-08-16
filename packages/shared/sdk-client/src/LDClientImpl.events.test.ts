@@ -6,7 +6,6 @@ import {
   LDContext,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
-
 import {
   createBasicPlatform,
   logger,

@@ -1,7 +1,13 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
-import { logger } from '@launchdarkly/private-js-mocks';
+import { createLogger } from '@launchdarkly/private-js-mocks';
 
 import { init } from '../src';
+
+let logger: ReturnType<typeof createLogger>;
+
+beforeEach(() => {
+  logger = createLogger();
+});
 
 it('fires ready event in offline mode', (done) => {
   const client = init('sdk_key', { offline: true });
