@@ -16,6 +16,10 @@ export const setupMockStreamingProcessor = (
   errorTimeoutSeconds: number = 0,
   initTimeoutMs: number = 0,
 ) => {
+  let initTimeoutHandle: any;
+  let patchTimeoutHandle: any;
+  let deleteTimeoutHandle: any;
+
   MockStreamingProcessor.mockImplementation(
     (
       sdkKey: string,
@@ -28,7 +32,7 @@ export const setupMockStreamingProcessor = (
     ) => ({
       start: jest.fn(async () => {
         if (shouldError) {
-          setTimeout(() => {
+          initTimeoutHandle = setTimeout(() => {
             const unauthorized = new Error('test-error') as LDStreamingError;
             // @ts-ignore
             unauthorized.code = 401;
@@ -36,18 +40,28 @@ export const setupMockStreamingProcessor = (
           }, errorTimeoutSeconds * 1000);
         } else {
           // execute put which will resolve the identify promise
-          setTimeout(() => listeners.get('put')?.processJson(putResponseJson), initTimeoutMs);
+          initTimeoutHandle = setTimeout(() => {
+            listeners.get('put')?.processJson(putResponseJson);
+          }, initTimeoutMs);
 
           if (patchResponseJson) {
-            setTimeout(() => listeners.get('patch')?.processJson(patchResponseJson));
+            patchTimeoutHandle = setTimeout(() =>
+              listeners.get('patch')?.processJson(patchResponseJson),
+            );
           }
 
           if (deleteResponseJson) {
-            setTimeout(() => listeners.get('delete')?.processJson(deleteResponseJson));
+            deleteTimeoutHandle = setTimeout(() =>
+              listeners.get('delete')?.processJson(deleteResponseJson),
+            );
           }
         }
       }),
-      close: jest.fn(),
+      close: jest.fn(() => {
+        clearTimeout(initTimeoutHandle);
+        clearTimeout(patchTimeoutHandle);
+        clearTimeout(deleteTimeoutHandle);
+      }),
       eventSource: {},
     }),
   );

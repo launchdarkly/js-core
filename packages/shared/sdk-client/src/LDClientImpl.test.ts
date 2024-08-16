@@ -57,11 +57,11 @@ describe('sdk-client object', () => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
-    const hasher: Hasher = {
-      update: jest.fn(() => hasher),
+    const hasher = {
+      update: jest.fn((): Hasher => hasher),
       digest: jest.fn(() => 'digested1'),
     };
-    mockPlatform.crypto.createHash = jest.fn(() => hasher);
+    mockPlatform.crypto.createHash.mockReturnValue(hasher);
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
