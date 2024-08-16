@@ -17,7 +17,6 @@ beforeEach(() => {
   logger = createLogger();
 });
 
-
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
   const actualMock = jest.requireActual('@launchdarkly/private-js-mocks');
