@@ -15,7 +15,7 @@ export interface LDIdentifyOptions {
    * still be loaded, but the promise returned by the identify function will not
    * resolve as a result of those cached values being loaded. Generally this
    * option should NOT be used and instead flag changes should be listened to.
-   * It the client is set to offline mode, then this option is ignored.
+   * If the client is set to offline mode, then this option is ignored.
    *
    * Defaults to false.
    */
