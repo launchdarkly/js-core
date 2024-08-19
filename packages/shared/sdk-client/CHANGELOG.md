@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.4.0...js-client-sdk-common-v1.5.0) (2024-08-19)
+
+
+### Features
+
+* Allow waiting for the network response on identify. ([#548](https://github.com/launchdarkly/js-core/issues/548)) ([1375660](https://github.com/launchdarkly/js-core/commit/1375660afe39204205344e62ffc1ba3fbcce3950))
+
 ## [1.4.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.3.0...js-client-sdk-common-v1.4.0) (2024-08-15)
 
 
