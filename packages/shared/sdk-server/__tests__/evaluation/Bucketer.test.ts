@@ -85,11 +85,11 @@ describe('Bucketer.test', () => {
     ],
   ])('given bucketing parameters', (context, key, attr, salt, kindForRollout, seed, expected) => {
     it('hashes the correct string', () => {
-      const hasher: Hasher = {
-        update: jest.fn(() => hasher),
+      const hasher = {
+        update: jest.fn((): Hasher => hasher),
         digest: jest.fn(() => '1234567890123456'),
       };
-      mockPlatform.crypto.createHash = jest.fn(() => hasher);
+      mockPlatform.crypto.createHash.mockReturnValue(hasher);
 
       const validatedContext = Context.fromLDContext(context);
       const attrRef = new AttributeReference(attr);
@@ -120,11 +120,11 @@ describe('Bucketer.test', () => {
     ['bad', 'key'],
   ])('when given a non string or integer reference', (kind, attr) => {
     it('buckets to 0 when given bad data', () => {
-      const hasher: Hasher = {
-        update: jest.fn(() => hasher),
+      const hasher = {
+        update: jest.fn((): Hasher => hasher),
         digest: jest.fn(() => 'digested1'),
       };
-      mockPlatform.crypto.createHash = jest.fn(() => hasher);
+      mockPlatform.crypto.createHash.mockReturnValue(hasher);
 
       const validatedContext = Context.fromLDContext({
         key: 'context-key',
