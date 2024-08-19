@@ -10,14 +10,6 @@ import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
 import { Flags } from './types';
 
-let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
-
-beforeEach(() => {
-  mockPlatform = createBasicPlatform();
-  logger = createLogger();
-});
-
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
   const actualMock = jest.requireActual('@launchdarkly/private-js-mocks');
@@ -49,11 +41,15 @@ const autoEnv = {
     os: { name: 'An OS', version: '1.0.1', family: 'orange' },
   },
 };
-let ldc: LDClientImpl;
-let defaultPutResponse: Flags;
-
 describe('sdk-client object', () => {
+  let ldc: LDClientImpl;
+  let defaultPutResponse: Flags;
+  let mockPlatform: ReturnType<typeof createBasicPlatform>;
+  let logger: ReturnType<typeof createLogger>;
+
   beforeEach(() => {
+    mockPlatform = createBasicPlatform();
+    logger = createLogger();
     defaultPutResponse = clone<Flags>(mockResponseJson);
     setupMockStreamingProcessor(false, defaultPutResponse);
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
@@ -96,6 +92,8 @@ describe('sdk-client object', () => {
   test('identify success', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
 
     await ldc.identify(carContext);
     const c = ldc.getContext();
@@ -161,6 +159,8 @@ describe('sdk-client object', () => {
     defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', anonymous: true, key: '' };
 
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+
     await ldc.identify(carContext);
     const c = ldc.getContext();
     const all = ldc.allFlags();
@@ -206,5 +206,47 @@ describe('sdk-client object', () => {
 
     expect(emitter.listenerCount('change')).toEqual(1);
     expect(emitter.listenerCount('error')).toEqual(1);
+  });
+
+  test('can complete identification using storage', async () => {
+    const data: Record<string, string> = {};
+    mockPlatform.storage.get.mockImplementation((key) => data[key]);
+    mockPlatform.storage.set.mockImplementation((key: string, value: string) => {
+      data[key] = value;
+    });
+    mockPlatform.storage.clear.mockImplementation((key: string) => {
+      delete data[key];
+    });
+
+    // First identify should populate storage.
+    await ldc.identify(context);
+
+    expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
+
+    // Second identify should use storage.
+    await ldc.identify(context);
+
+    expect(logger.debug).toHaveBeenCalledWith('Identify completing with cached flags');
+  });
+
+  test('does not complete identify using storage when instructed to wait for the network response', async () => {
+    const data: Record<string, string> = {};
+    mockPlatform.storage.get.mockImplementation((key) => data[key]);
+    mockPlatform.storage.set.mockImplementation((key: string, value: string) => {
+      data[key] = value;
+    });
+    mockPlatform.storage.clear.mockImplementation((key: string) => {
+      delete data[key];
+    });
+
+    // First identify should populate storage.
+    await ldc.identify(context);
+
+    expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
+
+    // Second identify would use storage, but we instruct it not to.
+    await ldc.identify(context, { waitForNetworkResults: true, timeout: 5 });
+
+    expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
   });
 });
