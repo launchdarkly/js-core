@@ -1,8 +1,14 @@
 import { integrations } from '@launchdarkly/js-server-sdk-common';
-import { logger } from '@launchdarkly/private-js-mocks';
+import { createLogger } from '@launchdarkly/private-js-mocks';
 
 import { Context, LDClient } from '../src';
 import LDClientNode from '../src/LDClientNode';
+
+let logger: ReturnType<typeof createLogger>;
+
+beforeEach(() => {
+  logger = createLogger();
+});
 
 describe('given an LDClient with test data', () => {
   let client: LDClient;

@@ -1,8 +1,14 @@
-import { basicPlatform } from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDOptions } from '../api';
 import Configuration from '../options/Configuration';
 import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
+
+let mockPlatform: ReturnType<typeof createBasicPlatform>;
+
+beforeEach(() => {
+  mockPlatform = createBasicPlatform();
+});
 
 const mockFeatureStore = {
   getDescription: jest.fn(() => 'Mock Feature Store'),
@@ -81,7 +87,7 @@ describe.each([
   });
 
   it('translates the configuration correctly', () => {
-    const c = createDiagnosticsInitConfig(configuration, basicPlatform, mockFeatureStore as any);
+    const c = createDiagnosticsInitConfig(configuration, mockPlatform, mockFeatureStore as any);
 
     expect(c).toMatchObject(configOut);
   });
@@ -89,18 +95,21 @@ describe.each([
 
 describe.each([true, false])('Given proxy && proxyAuth = %p', (auth) => {
   beforeEach(() => {
-    basicPlatform.requests.usingProxy = jest.fn(() => auth);
-    basicPlatform.requests.usingProxyAuth = jest.fn(() => auth);
+    // Adding properties which are not part of the base platform.
+    // @ts-ignore
+    mockPlatform.requests.usingProxy = jest.fn(() => auth);
+    // @ts-ignore
+    mockPlatform.requests.usingProxyAuth = jest.fn(() => auth);
   });
 
   afterEach(() => {
     jest.resetAllMocks();
   });
 
-  it('it gets the proxy configuration from the basicPlatform', () => {
+  it('it gets the proxy configuration from the mock platform', () => {
     const c = createDiagnosticsInitConfig(
       new Configuration(),
-      basicPlatform,
+      mockPlatform,
       mockFeatureStore as any,
     );
 

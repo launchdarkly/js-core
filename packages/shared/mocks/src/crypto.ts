@@ -1,12 +1,9 @@
 import type { Hasher } from '@common';
 
-// eslint-disable-next-line import/no-mutable-exports
-export let hasher: Hasher;
-
 export const setupCrypto = () => {
   let counter = 0;
-  hasher = {
-    update: jest.fn(() => hasher),
+  const hasher = {
+    update: jest.fn((): Hasher => hasher),
     digest: jest.fn(() => '1234567890123456'),
   };
 

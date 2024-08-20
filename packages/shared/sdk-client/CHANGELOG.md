@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.5.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.4.0...js-client-sdk-common-v1.5.0) (2024-08-19)
+
+
+### Features
+
+* Allow waiting for the network response on identify. ([#548](https://github.com/launchdarkly/js-core/issues/548)) ([1375660](https://github.com/launchdarkly/js-core/commit/1375660afe39204205344e62ffc1ba3fbcce3950))
+
+## [1.4.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.3.0...js-client-sdk-common-v1.4.0) (2024-08-15)
+
+
+### Features
+
+* Remove event target shim. ([#545](https://github.com/launchdarkly/js-core/issues/545)) ([448ad67](https://github.com/launchdarkly/js-core/commit/448ad67815b9ec29abd322ed8483b2367147b146)), closes [#412](https://github.com/launchdarkly/js-core/issues/412)
+
 ## [1.3.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.2.0...js-client-sdk-common-v1.3.0) (2024-08-12)
 
 

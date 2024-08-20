@@ -1,7 +1,13 @@
 import { type EventName } from '@launchdarkly/js-client-sdk-common';
-import { logger } from '@launchdarkly/private-js-mocks';
+import { createLogger } from '@launchdarkly/private-js-mocks';
 
 import EventSource, { backoff, jitter } from './EventSource';
+
+let logger: ReturnType<typeof createLogger>;
+
+beforeEach(() => {
+  logger = createLogger();
+});
 
 describe('EventSource', () => {
   const uri = 'https://mock.events.uri';

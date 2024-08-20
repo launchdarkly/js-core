@@ -1,4 +1,4 @@
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
@@ -17,7 +17,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      mocks.basicPlatform,
+      createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),
         sendEvents: false,
@@ -281,7 +281,7 @@ describe('given an offline client', () => {
     td = new TestData();
     client = new LDClientImpl(
       'sdk-key',
-      mocks.basicPlatform,
+      createBasicPlatform(),
       {
         offline: true,
         updateProcessor: td.getFactory(),

@@ -1,5 +1,28 @@
 # Changelog
 
+## [10.5.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.5.0...react-native-client-sdk-v10.5.1) (2024-08-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.4.0 to 1.5.0
+
+## [10.5.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.4.0...react-native-client-sdk-v10.5.0) (2024-08-15)
+
+
+### Features
+
+* Remove event target shim. ([#545](https://github.com/launchdarkly/js-core/issues/545)) ([448ad67](https://github.com/launchdarkly/js-core/commit/448ad67815b9ec29abd322ed8483b2367147b146)), closes [#412](https://github.com/launchdarkly/js-core/issues/412)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.3.0 to 1.4.0
+
 ## [10.4.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.3.1...react-native-client-sdk-v10.4.0) (2024-08-12)
 
 
