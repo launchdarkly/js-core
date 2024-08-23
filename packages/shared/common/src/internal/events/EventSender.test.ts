@@ -25,6 +25,9 @@ const basicConfig = {
     analyticsEventPath: '/bulk',
     diagnosticEventPath: '/diagnostic',
     includeAuthorizationHeader: true,
+    getPollingUri: (_: string): string => '/sdk/latest-all',
+    getStreamingUri: (_: string): string => '/all',
+    getFilteredUri: (_: string): string => '',
   },
 };
 const testEventData1 = { eventId: 'test-event-data-1' };

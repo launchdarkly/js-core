@@ -27,6 +27,7 @@ app.get('/', (req, res) => {
       'all-flags-with-reasons',
       'tags',
       'big-segments',
+      'filtering',
       'user-type',
       'migrations',
       'event-sampling',

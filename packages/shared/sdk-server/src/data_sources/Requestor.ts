@@ -33,7 +33,7 @@ export default class Requestor implements LDFeatureRequestor {
     private readonly requests: Requests,
   ) {
     this.headers = defaultHeaders(sdkKey, info, config.tags);
-    this.uri = `${config.serviceEndpoints.polling}/sdk/latest-all`;
+    this.uri = config.serviceEndpoints.getPollingUri('/sdk/latest-all');
   }
 
   /**
