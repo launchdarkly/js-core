@@ -6,9 +6,22 @@ import {
   mockLDProvider,
   mockReactNativeLDClient,
   mockUseLDClient,
+  resetLDMocks,
 } from '.';
 
 describe('react-native', () => {
+  test('reset LD Mocks', () => {
+    const {
+      result: { current },
+    } = renderHook(() => mockUseLDClient());
+
+    current?.track('event');
+    expect(ldClientMock.track).toHaveBeenCalledTimes(1);
+
+    resetLDMocks();
+    expect(ldClientMock.track).toHaveBeenCalledTimes(0);
+  });
+
   test('mock boolean flag correctly', () => {
     mockFlags({ 'bool-flag': true });
   });
@@ -34,6 +47,7 @@ describe('react-native', () => {
   });
 
   test('mock ldClient correctly', () => {
+    resetLDMocks();
     const {
       result: { current },
     } = renderHook(() => mockUseLDClient());

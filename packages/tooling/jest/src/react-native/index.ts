@@ -71,3 +71,21 @@ export const mockFlags = (flags: LDFlagSet) => {
     return flags[flagKey] as object;
   });
 };
+
+export const resetLDMocks = () => {
+  ldClientMock.allFlags.mockReset();
+  ldClientMock.boolVariation.mockReset();
+  ldClientMock.close.mockReset();
+  ldClientMock.flush.mockReset();
+  ldClientMock.getContext.mockReset();
+  ldClientMock.identify.mockReset();
+  ldClientMock.jsonVariation.mockReset();
+  ldClientMock.logger.mockReset();
+  ldClientMock.numberVariation.mockReset();
+  ldClientMock.off.mockReset();
+  ldClientMock.on.mockReset();
+  ldClientMock.setConnectionMode.mockReset();
+  ldClientMock.stringVariation.mockReset();
+  ldClientMock.track.mockReset();
+  ldClientMock.variation.mockReset();
+}
