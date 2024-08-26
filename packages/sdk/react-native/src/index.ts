@@ -5,11 +5,8 @@
  *
  * @packageDocumentation
  */
-import { setupPolyfill } from './polyfills';
 import ReactNativeLDClient from './ReactNativeLDClient';
 import RNOptions, { RNStorage } from './RNOptions';
-
-setupPolyfill();
 
 export * from '@launchdarkly/js-client-sdk-common';
 

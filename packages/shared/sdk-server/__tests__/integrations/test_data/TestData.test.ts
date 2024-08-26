@@ -1,5 +1,5 @@
 import { AttributeReference, ClientContext } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../../src/evaluation/data/Flag';
 import { FlagRule } from '../../../src/evaluation/data/FlagRule';
@@ -39,7 +39,7 @@ describe('TestData', () => {
     const facade = new AsyncStoreFacade(store);
 
     const processor = td.getFactory()(
-      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
       store,
       initSuccessHandler,
     );
@@ -54,7 +54,7 @@ describe('TestData', () => {
     const td = new TestData();
     const store = new InMemoryFeatureStore();
     const processor = td.getFactory()(
-      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
       store,
       initSuccessHandler,
     );
@@ -75,7 +75,7 @@ describe('TestData', () => {
 
     const store = new InMemoryFeatureStore();
     const processor = td.getFactory()(
-      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
       store,
       initSuccessHandler,
     );
@@ -122,7 +122,7 @@ describe('TestData', () => {
 
     const store = new InMemoryFeatureStore();
     const processor = td.getFactory()(
-      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
       store,
       initSuccessHandler,
     );
@@ -151,7 +151,7 @@ describe('TestData', () => {
     const store = new InMemoryFeatureStore();
 
     const processor = td.getFactory()(
-      new ClientContext('', new Configuration({}), mocks.basicPlatform),
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
       store,
       initSuccessHandler,
     );

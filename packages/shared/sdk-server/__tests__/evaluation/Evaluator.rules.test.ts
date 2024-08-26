@@ -1,7 +1,7 @@
 // Tests of flag evaluation at the rule level. Clause-level behavior is covered
 // in detail in Evaluator.clause.tests and (TODO: File for segments).
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
@@ -21,7 +21,7 @@ const basicMultiKindUser: LDContext = { kind: 'multi', user: { key: 'userkey' } 
 describe('Evaluator.rules', () => {
   let evaluator: Evaluator;
   beforeEach(() => {
-    evaluator = new Evaluator(mocks.basicPlatform, noQueries);
+    evaluator = new Evaluator(createBasicPlatform(), noQueries);
   });
 
   describe('when evaluating user equivalent contexts', () => {

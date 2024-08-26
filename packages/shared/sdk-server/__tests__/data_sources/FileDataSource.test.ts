@@ -1,5 +1,5 @@
 import { ClientContext, Context, Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
-import * as mocks from '@launchdarkly/private-js-mocks';
+import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
@@ -178,7 +178,7 @@ describe('given a mock filesystem and memory feature store', () => {
             logger,
           }),
           {
-            ...mocks.basicPlatform,
+            ...createBasicPlatform(),
             fileSystem: filesystem as unknown as Filesystem,
           },
         ),
@@ -287,7 +287,7 @@ describe('given a mock filesystem and memory feature store', () => {
   it('can evaluate simple loaded flags', async () => {
     await createFileDataSource(true, [{ path: 'file1.json', data: allPropertiesJson }]);
 
-    const evaluator = new Evaluator(mocks.basicPlatform, {
+    const evaluator = new Evaluator(createBasicPlatform(), {
       getFlag: async (key) =>
         ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
       getSegment: async (key) =>
@@ -302,7 +302,7 @@ describe('given a mock filesystem and memory feature store', () => {
 
   it('can evaluate full loaded flags', async () => {
     await createFileDataSource(true, [{ path: 'file1.json', data: allPropertiesJson }]);
-    const evaluator = new Evaluator(mocks.basicPlatform, {
+    const evaluator = new Evaluator(createBasicPlatform(), {
       getFlag: async (key) =>
         ((await asyncFeatureStore.get(VersionedDataKinds.Features, key)) as Flag) ?? undefined,
       getSegment: async (key) =>
@@ -451,7 +451,7 @@ describe('given a mock filesystem and memory feature store', () => {
         {
           path: 'file1.json',
           data: `{
-            "flagValues": 
+            "flagValues":
             {
               "${flag2Key}": "${flag2Value}"
             }
@@ -474,7 +474,7 @@ describe('given a mock filesystem and memory feature store', () => {
     filesystem.fileData['file1.json'] = {
       timestamp: 100,
       data: `{
-      "flagValues": 
+      "flagValues":
       {
         "${flag2Key}": "differentValue"
       }
@@ -495,7 +495,7 @@ describe('given a mock filesystem and memory feature store', () => {
         {
           path: 'file1.json',
           data: `{
-            "flagValues": 
+            "flagValues":
             {
               "${flag2Key}": "${flag2Value}"
             }
@@ -518,7 +518,7 @@ describe('given a mock filesystem and memory feature store', () => {
     filesystem.fileData['file1.json'] = {
       timestamp: 100,
       data: `{
-      "flagValues": 
+      "flagValues":
       {
         "${flag2Key}": "${flag2Value}"
       }

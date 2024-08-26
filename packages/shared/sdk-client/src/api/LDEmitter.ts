@@ -1,51 +1,18 @@
+import { LDLogger } from '@launchdarkly/js-sdk-common';
+
 export type EventName = 'error' | 'change';
 
-type CustomEventListeners = {
-  original: Function;
-  custom: Function;
-};
-/**
- * Native api usage: EventTarget.
- *
- * This is an event emitter using the standard built-in EventTarget web api.
- * https://developer.mozilla.org/en-US/docs/Web/API/EventTarget
- *
- * In react-native use event-target-shim to polyfill EventTarget. This is safe
- * because the react-native repo uses it too.
- * https://github.com/mysticatea/event-target-shim
- */
 export default class LDEmitter {
-  private et: EventTarget = new EventTarget();
+  private listeners: Map<EventName, Function[]> = new Map();
 
-  private listeners: Map<EventName, CustomEventListeners[]> = new Map();
+  constructor(private logger?: LDLogger) {}
 
-  /**
-   * Cache all listeners in a Map so we can remove them later
-   * @param name string event name
-   * @param originalListener pointer to the original function as specified by
-   * the consumer
-   * @param customListener pointer to the custom function based on original
-   * listener. This is needed to allow for CustomEvents.
-   * @private
-   */
-  private saveListener(name: EventName, originalListener: Function, customListener: Function) {
-    const listener = { original: originalListener, custom: customListener };
+  on(name: EventName, listener: Function) {
     if (!this.listeners.has(name)) {
       this.listeners.set(name, [listener]);
     } else {
       this.listeners.get(name)?.push(listener);
     }
-  }
-
-  on(name: EventName, listener: Function) {
-    const customListener = (e: Event) => {
-      const { detail } = e as CustomEvent;
-
-      // invoke listener with args from CustomEvent
-      listener(...detail);
-    };
-    this.saveListener(name, listener, customListener);
-    this.et.addEventListener(name, customListener);
   }
 
   /**
@@ -61,11 +28,8 @@ export default class LDEmitter {
     }
 
     if (listener) {
-      const toBeRemoved = existingListeners.find((c) => c.original === listener);
-      this.et.removeEventListener(name, toBeRemoved?.custom as any);
-
       // remove from internal cache
-      const updated = existingListeners.filter((l) => l.original !== listener);
+      const updated = existingListeners.filter((fn) => fn !== listener);
       if (updated.length === 0) {
         this.listeners.delete(name);
       } else {
@@ -74,15 +38,21 @@ export default class LDEmitter {
       return;
     }
 
-    // remove all listeners
-    existingListeners.forEach((l) => {
-      this.et.removeEventListener(name, l.custom as any);
-    });
+    // listener was not specified, so remove them all for that event
     this.listeners.delete(name);
   }
 
+  private invokeListener(listener: Function, name: EventName, ...detail: any[]) {
+    try {
+      listener(...detail);
+    } catch (err) {
+      this.logger?.error(`Encountered error invoking handler for "${name}", detail: "${err}"`);
+    }
+  }
+
   emit(name: EventName, ...detail: any[]) {
-    this.et.dispatchEvent(new CustomEvent(name, { detail }));
+    const listeners = this.listeners.get(name);
+    listeners?.forEach((listener) => this.invokeListener(listener, name, ...detail));
   }
 
   eventNames(): string[] {
