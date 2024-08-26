@@ -74,6 +74,9 @@ function makeConfig(config?: { pollInterval?: number; useReport?: boolean }): Po
       analyticsEventPath: '',
       diagnosticEventPath: '',
       includeAuthorizationHeader: false,
+      getPollingUri: (_: string): string => 'http://example.example.example/sdk/latest-all',
+      getStreamingUri: (_: string): string => '/all',
+      getFilteredUri: (_: string): string => '',
     },
   };
 }

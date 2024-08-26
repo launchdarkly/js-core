@@ -49,7 +49,6 @@ class StreamingProcessor implements LDStreamProcessor {
     this.headers = defaultHeaders(sdkKey, info, tags);
     this.logger = logger;
     this.requests = requests;
-
     this.streamUri = basicConfiguration.serviceEndpoints.getStreamingUri(streamUriPath);
   }
 
