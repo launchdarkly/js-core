@@ -61,7 +61,7 @@ it('warns for invalid configuration', () => {
     logger,
   );
 
-  expect(logger.warn).toHaveBeenCalledTimes(3);
+  expect(logger.warn).toHaveBeenCalledTimes(4);
   expect(logger.warn).toHaveBeenCalledWith(
     'Config option "runInBackground" should be of type boolean, got string, using default value',
   );

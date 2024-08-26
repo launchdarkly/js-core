@@ -1,4 +1,4 @@
-import { LDOptions, Storage } from '@launchdarkly/js-client-sdk-common';
+import { LDOptions } from '@launchdarkly/js-client-sdk-common';
 
 /**
  * Interface for providing custom storage implementations for react Native.
