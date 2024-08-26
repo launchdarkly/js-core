@@ -27,9 +27,14 @@ export interface RNSpecificOptions {
   readonly automaticBackgroundHandling?: boolean;
 
   /**
-   * Custom persistence layer for offline mode.
+   * Custom storage implementation.
    *
-   * Defaults to AsyncStorage.
+   * Typical SDK usage will not involve using customized storage.
+   *
+   * Storage is used used for caching flag values for context as well as persisting generated
+   * identifiers. Storage could be used for additional features in the future.
+   *
+   * Defaults to @react-native-async-storage/async-storage.
    */
   readonly storage?: Storage;
 }
