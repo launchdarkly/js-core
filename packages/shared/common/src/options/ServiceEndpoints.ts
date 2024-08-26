@@ -49,15 +49,15 @@ export default class ServiceEndpoints {
   }
 
   /**
-  * Constructs and returns the URI to be used for a streaming connection.
-  */
+   * Constructs and returns the URI to be used for a streaming connection.
+   */
   public getStreamingUri(path: string): string {
     return this.getFilteredUri(`${this.streaming}${path}`);
   }
 
   /**
-  * Constructs and returns the URI to be used for a polling connection.
-  */
+   * Constructs and returns the URI to be used for a polling connection.
+   */
   public getPollingUri(path: string): string {
     return this.getFilteredUri(`${this.polling}${path}`);
   }
@@ -75,7 +75,7 @@ export default class ServiceEndpoints {
     }
 
     try {
-      let url = new URL(uri);
+      const url = new URL(uri);
       url.searchParams.set('filter', this.payloadFilterKey);
       return url.toString();
     } catch (e) {

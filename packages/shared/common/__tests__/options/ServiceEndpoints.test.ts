@@ -35,9 +35,19 @@ describe.each([
 });
 
 it('applies payload filter to polling and streaming endpoints', () => {
-  const endpoints = new ServiceEndpoints('https://stream.launchdarkly.com', 'https://sdk.launchdarkly.com', 'https://events.launchdarkly.com', '/bulk', '/diagnostic', true, 'filterKey');
+  const endpoints = new ServiceEndpoints(
+    'https://stream.launchdarkly.com',
+    'https://sdk.launchdarkly.com',
+    'https://events.launchdarkly.com',
+    '/bulk',
+    '/diagnostic',
+    true,
+    'filterKey',
+  );
 
-  expect(endpoints.getStreamingUri('')).toEqual('https://stream.launchdarkly.com/?filter=filterKey');
+  expect(endpoints.getStreamingUri('')).toEqual(
+    'https://stream.launchdarkly.com/?filter=filterKey',
+  );
   expect(endpoints.getPollingUri('')).toEqual('https://sdk.launchdarkly.com/?filter=filterKey');
   expect(endpoints.events).toEqual('https://events.launchdarkly.com');
 });
