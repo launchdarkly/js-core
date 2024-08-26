@@ -1,6 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 import validateOptions, { filterToBaseOptions } from './options';
+import { RNStorage } from './RNOptions';
 
 it('logs no warnings when all configuration is valid', () => {
   const logger: LDLogger = {
@@ -10,11 +11,24 @@ it('logs no warnings when all configuration is valid', () => {
     error: jest.fn(),
   };
 
+  const storage: RNStorage = {
+    get(_key: string): Promise<string | null> {
+      throw new Error('Function not implemented.');
+    },
+    set(_key: string, _value: string): Promise<void> {
+      throw new Error('Function not implemented.');
+    },
+    clear(_key: string): Promise<void> {
+      throw new Error('Function not implemented.');
+    },
+  };
+
   validateOptions(
     {
       runInBackground: true,
       automaticBackgroundHandling: true,
       automaticNetworkHandling: true,
+      storage,
     },
     logger,
   );
@@ -41,6 +55,8 @@ it('warns for invalid configuration', () => {
       automaticBackgroundHandling: 42,
       // @ts-ignore
       automaticNetworkHandling: {},
+      // @ts-ignore
+      storage: 'potato',
     },
     logger,
   );
@@ -54,6 +70,9 @@ it('warns for invalid configuration', () => {
   );
   expect(logger.warn).toHaveBeenCalledWith(
     'Config option "automaticNetworkHandling" should be of type boolean, got object, using default value',
+  );
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "storage" should be of type object, got string, using default value',
   );
 });
 
@@ -69,6 +88,7 @@ it('applies default options', () => {
   expect(opts.runInBackground).toBe(false);
   expect(opts.automaticBackgroundHandling).toBe(true);
   expect(opts.automaticNetworkHandling).toBe(true);
+  expect(opts.storage).toBeUndefined();
 
   expect(logger.debug).not.toHaveBeenCalled();
   expect(logger.info).not.toHaveBeenCalled();
@@ -83,11 +103,24 @@ it('filters to base options', () => {
     warn: jest.fn(),
     error: jest.fn(),
   };
+  const storage: RNStorage = {
+    get(_key: string): Promise<string | null> {
+      throw new Error('Function not implemented.');
+    },
+    set(_key: string, _value: string): Promise<void> {
+      throw new Error('Function not implemented.');
+    },
+    clear(_key: string): Promise<void> {
+      throw new Error('Function not implemented.');
+    },
+  };
+
   const opts = {
     debug: false,
     runInBackground: true,
     automaticBackgroundHandling: true,
     automaticNetworkHandling: true,
+    storage,
   };
 
   const baseOpts = filterToBaseOptions(opts);

@@ -7,7 +7,7 @@
  */
 import { setupPolyfill } from './polyfills';
 import ReactNativeLDClient from './ReactNativeLDClient';
-import RNOptions from './RNOptions';
+import RNOptions, { RNStorage } from './RNOptions';
 
 setupPolyfill();
 
@@ -15,4 +15,4 @@ export * from '@launchdarkly/js-client-sdk-common';
 
 export * from './hooks';
 export * from './provider';
-export { ReactNativeLDClient, RNOptions as LDOptions };
+export { ReactNativeLDClient, RNOptions as LDOptions, RNStorage };

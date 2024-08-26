@@ -41,7 +41,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
    * @param options {@link LDOptions} to initialize the client with.
    */
   constructor(sdkKey: string, autoEnvAttributes: AutoEnvAttributes, options: LDOptions = {}) {
-    const { logger: customLogger, debug, storage } = options;
+    const { logger: customLogger, debug } = options;
     const logger =
       customLogger ??
       new BasicLogger({
@@ -56,10 +56,12 @@ export default class ReactNativeLDClient extends LDClientImpl {
       highTimeoutThreshold: 15,
     };
 
+    const validatedRnOptions = validateOptions(options, logger);
+
     super(
       sdkKey,
       autoEnvAttributes,
-      createPlatform(logger, storage),
+      createPlatform(logger, validatedRnOptions.storage),
       { ...filterToBaseOptions(options), logger },
       internalOptions,
     );
@@ -78,7 +80,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
       },
     };
 
-    const validatedRnOptions = validateOptions(options, logger);
     const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
     this.connectionManager = new ConnectionManager(
       logger,

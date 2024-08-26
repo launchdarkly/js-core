@@ -323,3 +323,7 @@ it('identify timeout equal to threshold', () => {
   client.identify({ key: 'potato', kind: 'user' }, { timeout: 15 });
   expect(logger.warn).not.toHaveBeenCalled();
 });
+
+it('uses custom storage', () => {
+  
+});
