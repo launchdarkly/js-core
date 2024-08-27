@@ -18,7 +18,6 @@ import {
 import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { ConnectionMode, LDClient, type LDOptions } from './api';
-import LDEmitter, { EventName } from './LDEmitter';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
@@ -33,6 +32,7 @@ import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import FlagManager from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
+import LDEmitter, { EventName } from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
