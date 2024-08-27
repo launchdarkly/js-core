@@ -5,10 +5,10 @@ import {
   setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
 
-import LDEmitter from './api/LDEmitter';
 import { toMulti } from './context/addAutoEnv';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
+import LDEmitter from './LDEmitter';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
