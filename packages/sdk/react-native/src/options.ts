@@ -6,24 +6,27 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
-import RNOptions from './RNOptions';
+import RNOptions, { RNStorage } from './RNOptions';
 
 export interface ValidatedOptions {
   runInBackground: boolean;
   automaticNetworkHandling: boolean;
   automaticBackgroundHandling: boolean;
+  storage?: RNStorage;
 }
 
 const optDefaults = {
   runInBackground: false,
   automaticNetworkHandling: true,
   automaticBackgroundHandling: true,
+  storage: undefined,
 };
 
 const validators: { [Property in keyof RNOptions]: TypeValidator | undefined } = {
   runInBackground: TypeValidators.Boolean,
   automaticNetworkHandling: TypeValidators.Boolean,
   automaticBackgroundHandling: TypeValidators.Boolean,
+  storage: TypeValidators.Object,
 };
 
 export function filterToBaseOptions(opts: RNOptions): LDOptions {
