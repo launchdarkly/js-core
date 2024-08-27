@@ -7,7 +7,7 @@ export interface LDIdentifyOptions {
    *
    * Defaults to 5 seconds.
    */
-  timeout: number;
+  timeout?: number;
 
   /**
    * When true indicates that the SDK will attempt to wait for values from
