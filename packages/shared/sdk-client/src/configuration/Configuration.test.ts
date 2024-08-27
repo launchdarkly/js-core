@@ -20,7 +20,6 @@ describe('Configuration', () => {
       withReasons: false,
       eventsUri: 'https://events.launchdarkly.com',
       flushInterval: 30,
-      inspectors: [],
       logger: {
         destination: console.error,
         logLevel: 1,

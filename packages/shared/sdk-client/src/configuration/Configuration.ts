@@ -10,7 +10,6 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { ConnectionMode, type LDOptions } from '../api';
-import { LDInspection } from '../api/LDInspection';
 import validators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
@@ -41,7 +40,6 @@ export default class Configuration {
   public readonly useReport = false;
   public readonly withReasons = false;
 
-  public readonly inspectors: LDInspection[] = [];
   public readonly privateAttributes: string[] = [];
 
   public readonly initialConnectionMode: ConnectionMode = 'streaming';

@@ -2,7 +2,6 @@
 import { noop, TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { type LDOptions } from '../api';
-import { LDInspection } from '../api/LDInspection';
 
 class BootStrapValidator implements TypeValidator {
   is(u: unknown): boolean {
@@ -46,22 +45,11 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
 
   pollInterval: TypeValidators.numberWithMin(30),
 
-  // TODO: inspectors
-  // @ts-ignore
-  inspectors: TypeValidators.createTypeArray<LDInspection>('LDInspection[]', {
-    type: 'flag-used',
-    method: noop,
-    name: '',
-  }),
   privateAttributes: TypeValidators.StringArray,
 
   applicationInfo: TypeValidators.Object,
-  // TODO: bootstrap
-  bootstrap: new BootStrapValidator(),
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
-  // TODO: hash
-  hash: TypeValidators.String,
 };
 
 export default validators;

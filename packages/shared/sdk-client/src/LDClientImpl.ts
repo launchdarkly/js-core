@@ -6,8 +6,6 @@ import {
   internal,
   LDClientError,
   LDContext,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
   LDFlagSet,
   LDFlagValue,
   LDLogger,
@@ -20,12 +18,17 @@ import {
 import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { ConnectionMode, LDClient, type LDOptions } from './api';
-import LDEmitter, { EventName } from './api/LDEmitter';
+import LDEmitter, { EventName } from './LDEmitter';
+import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
+import {
+  createErrorEvaluationDetail,
+  createSuccessEvaluationDetail,
+} from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import FlagManager from './flag-manager/FlagManager';
@@ -33,8 +36,7 @@ import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import PollingProcessor from './polling/PollingProcessor';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
-const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
-  internal;
+const { ClientMessages, ErrorKinds } = internal;
 
 export default class LDClientImpl implements LDClient {
   private readonly config: Configuration;
@@ -483,7 +485,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
-  ): LDFlagValue {
+  ): LDEvaluationDetail {
     if (!this.uncheckedContext) {
       this.logger.debug(ClientMessages.missingContextKeyNoEvent);
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);

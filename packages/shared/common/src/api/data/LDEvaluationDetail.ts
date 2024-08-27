@@ -1,6 +1,8 @@
 import { LDEvaluationReason } from './LDEvaluationReason';
 import { LDFlagValue } from './LDFlagValue';
 
+// TODO: On major version change "variationIndex" to only be optional and not nullable.
+
 /**
  * An object that combines the result of a feature flag evaluation with information about
  * how it was calculated.
