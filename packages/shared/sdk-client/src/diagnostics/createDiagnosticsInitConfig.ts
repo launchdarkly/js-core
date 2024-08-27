@@ -26,8 +26,9 @@ const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConf
   reconnectTimeMillis: secondsToMillis(config.streamInitialReconnectDelay),
   diagnosticRecordingIntervalMillis: secondsToMillis(config.diagnosticRecordingInterval),
   allAttributesPrivate: config.allAttributesPrivate,
-  usingSecureMode: !!config.hash,
-  bootstrapMode: !!config.bootstrap,
+  // TODO: Implement when corresponding features are implemented.
+  usingSecureMode: false,
+  bootstrapMode: false,
 });
 
 export default createDiagnosticsInitConfig;

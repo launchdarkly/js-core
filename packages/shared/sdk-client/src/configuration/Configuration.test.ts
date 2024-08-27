@@ -79,17 +79,6 @@ describe('Configuration', () => {
     );
   });
 
-  test('invalid bootstrap should use default', () => {
-    // @ts-ignore
-    const config = new Configuration({ bootstrap: 'localStora' });
-
-    expect(config.bootstrap).toBeUndefined();
-    expect(console.error).toHaveBeenNthCalledWith(
-      1,
-      expect.stringMatching(/should be of type LDFlagSet, got string/i),
-    );
-  });
-
   test('recognize maxCachedContexts', () => {
     const config = new Configuration({ maxCachedContexts: 3 });
 
