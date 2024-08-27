@@ -5,6 +5,7 @@ import {
   Options,
   Requests,
   Response,
+  getPollingUri,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureRequestor } from '../api/subsystems';
@@ -33,7 +34,7 @@ export default class Requestor implements LDFeatureRequestor {
     private readonly requests: Requests,
   ) {
     this.headers = defaultHeaders(sdkKey, info, config.tags);
-    this.uri = config.serviceEndpoints.getPollingUri('/sdk/latest-all');
+    this.uri = getPollingUri(config.serviceEndpoints, '/sdk/latest-all', []);
   }
 
   /**

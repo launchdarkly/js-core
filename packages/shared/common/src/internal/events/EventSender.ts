@@ -10,7 +10,7 @@ import {
   isHttpRecoverable,
   LDUnexpectedResponseError,
 } from '../../errors';
-import { ClientContext } from '../../options';
+import { ClientContext, getEventsUri } from '../../options';
 import { defaultHeaders, httpErrorMessage, sleep } from '../../utils';
 
 export default class EventSender implements LDEventSender {
@@ -27,7 +27,6 @@ export default class EventSender implements LDEventSender {
     const {
       sdkKey,
       serviceEndpoints: {
-        events,
         analyticsEventPath,
         diagnosticEventPath,
         includeAuthorizationHeader,
@@ -37,8 +36,8 @@ export default class EventSender implements LDEventSender {
     const { crypto, info, requests } = platform;
 
     this.defaultHeaders = defaultHeaders(sdkKey, info, tags, includeAuthorizationHeader);
-    this.eventsUri = `${events}${analyticsEventPath}`;
-    this.diagnosticEventsUri = `${events}${diagnosticEventPath}`;
+    this.eventsUri = getEventsUri(basicConfiguration.serviceEndpoints, analyticsEventPath, []);
+    this.diagnosticEventsUri = getEventsUri(basicConfiguration.serviceEndpoints, diagnosticEventPath, []);
     this.requests = requests;
     this.crypto = crypto;
   }

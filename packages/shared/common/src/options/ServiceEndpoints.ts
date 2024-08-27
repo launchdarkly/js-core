@@ -2,6 +2,10 @@ function canonicalizeUri(uri: string): string {
   return uri.replace(/\/+$/, '');
 }
 
+function canonicalizePath(path: string): string {
+  return path.replace(/^\/+/, '').replace(/\?$/, '');
+}
+
 /**
  * Specifies the base service URIs used by SDK components.
  */
@@ -11,7 +15,7 @@ export default class ServiceEndpoints {
   public readonly streaming: string;
   public readonly polling: string;
   public readonly events: string;
-  private readonly payloadFilterKey?: string;
+  public readonly payloadFilterKey?: string;
 
   /** Valid paths are:
    * /bulk
@@ -47,39 +51,63 @@ export default class ServiceEndpoints {
     this.includeAuthorizationHeader = includeAuthorizationHeader;
     this.payloadFilterKey = payloadFilterKey;
   }
+}
 
-  /**
-   * Constructs and returns the URI to be used for a streaming connection.
-   */
-  public getStreamingUri(path: string): string {
-    return this.getFilteredUri(`${this.streaming}${path}`);
+function getWithParams(uri: string, parameters: {key: string, value: string}[]) {
+  if (parameters.length === 0) {
+    return uri;
   }
 
-  /**
-   * Constructs and returns the URI to be used for a polling connection.
-   */
-  public getPollingUri(path: string): string {
-    return this.getFilteredUri(`${this.polling}${path}`);
+  let parts = parameters.map(({key, value}) => `${key}=${value}`);
+  return `${uri}?${parts.join('&')}`;
+}
+
+/**
+ * Get the URI for the streaming endpoint.
+ *
+ * @param endpoints The service endpoints.
+ * @param canonicalizedPath The path to the resource, devoid of any query parameters or hrefs.
+ * @param parameters The query parameters. These query parameters must already have the appropriate encoding applied. This function WILL NOT apply it for you.
+ */
+export function getStreamingUri(endpoints: ServiceEndpoints, canonicalizedPath: string, parameters: {key: string, value: string}[]): string {
+  canonicalizedPath = canonicalizePath(canonicalizedPath);
+
+  let combinedParameters = [...parameters]
+  if (endpoints.payloadFilterKey) {
+    combinedParameters.push({key: 'filter', value: endpoints.payloadFilterKey});
   }
 
-  /**
-   * If a payload filter was present in the SDK config, this function will
-   * apply that as a query parameter to the provided URI.
-   *
-   * If the provided uri cannot be parsed, this method will return that uri
-   * unmodified.
-   */
-  public getFilteredUri(uri: string): string {
-    if (!this.payloadFilterKey) {
-      return uri;
-    }
+  return getWithParams(`${endpoints.streaming}/${canonicalizedPath}`, combinedParameters);
+}
 
-    try {
-      const url = new URL(uri);
-      url.searchParams.set('filter', this.payloadFilterKey);
-      return url.toString();
-    } catch (e) {
-      return uri;
-    }
+/**
+ * Get the URI for the polling endpoint.
+ *
+ * @param endpoints The service endpoints.
+ * @param canonicalizedPath The path to the resource, devoid of any query parameters or hrefs.
+ * @param parameters The query parameters. These query parameters must already have the appropriate encoding applied. This function WILL NOT apply it for you.
+ */
+export function getPollingUri(endpoints: ServiceEndpoints, canonicalizedPath: string, parameters: {key: string, value: string}[]): string {
+  canonicalizedPath = canonicalizePath(canonicalizedPath);
+
+  let combinedParameters = [...parameters]
+  if (endpoints.payloadFilterKey) {
+    combinedParameters.push({key: 'filter', value: endpoints.payloadFilterKey});
   }
+
+  return getWithParams(`${endpoints.polling}/${canonicalizedPath}`, combinedParameters);
+}
+
+
+/**
+ * Get the URI for the events endpoint.
+ *
+ * @param endpoints The service endpoints.
+ * @param canonicalizedPath The path to the resource, devoid of any query parameters or hrefs.
+ * @param parameters The query parameters. These query parameters must already have the appropriate encoding applied. This function WILL NOT apply it for you.
+ */
+export function getEventsUri(endpoints: ServiceEndpoints, canonicalizedPath: string, parameters: {key: string, value: string}[]): string {
+  canonicalizedPath = canonicalizePath(canonicalizedPath);
+
+  return getWithParams(`${endpoints.events}/${canonicalizedPath}`, parameters);
 }

@@ -401,15 +401,17 @@ export default class LDClientImpl implements LDClient {
     identifyResolve: any,
     identifyReject: any,
   ) {
-    let pollingPath = this.createPollUriPath(context);
+    let parameters: { key: string; value: string }[] = [];
     if (this.config.withReasons) {
-      pollingPath = `${pollingPath}?withReasons=true`;
+      parameters = [{ key: 'withReasons', value: 'true' }];
     }
+
     this.updateProcessor = new PollingProcessor(
       this.sdkKey,
       this.clientContext.platform.requests,
       this.clientContext.platform.info,
-      pollingPath,
+      this.createPollUriPath(context),
+      parameters,
       this.config,
       async (flags) => {
         this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
@@ -438,15 +440,16 @@ export default class LDClientImpl implements LDClient {
     identifyResolve: any,
     identifyReject: any,
   ) {
-    let streamingPath = this.createStreamUriPath(context);
+    let parameters: { key: string; value: string }[] = [];
     if (this.config.withReasons) {
-      streamingPath = `${streamingPath}?withReasons=true`;
+      parameters = [{ key: 'withReasons', value: 'true' }];
     }
 
     this.updateProcessor = new internal.StreamingProcessor(
       this.sdkKey,
       this.clientContext,
-      streamingPath,
+      this.createStreamUriPath(context),
+      parameters,
       this.createStreamListeners(checkedContext, identifyResolve),
       this.diagnosticsManager,
       (e) => {

@@ -16,9 +16,6 @@ const serviceEndpoints = {
   diagnosticEventPath: '/diagnostic',
   analyticsEventPath: '/bulk',
   includeAuthorizationHeader: true,
-  getPollingUri: (_: string): string => '/sdk/latest-all',
-  getStreamingUri: (_: string): string => 'https://mockstream.ld.com/all',
-  getFilteredUri: (_: string): string => '',
 };
 
 function getBasicConfiguration(inLogger: LDLogger) {
@@ -110,6 +107,7 @@ describe('given a stream processor with mock event source', () => {
         platform: basicPlatform,
       },
       '/all',
+      [],
       listeners,
       diagnosticsManager,
       mockErrorHandler,
@@ -145,6 +143,7 @@ describe('given a stream processor with mock event source', () => {
         platform: basicPlatform,
       },
       '/all',
+      [],
       listeners,
       diagnosticsManager,
       mockErrorHandler,
