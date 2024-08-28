@@ -2,7 +2,6 @@ import { internal, LDEvaluationDetail, LDEvaluationReason } from '@launchdarkly/
 
 import Reasons from './Reasons';
 
-const { createErrorEvaluationDetail, createSuccessEvaluationDetail } = internal;
 /**
  * A class which encapsulates the result of an evaluation. It allows for differentiating between
  * successful and error result types.
@@ -31,11 +30,22 @@ export default class EvalResult {
   }
 
   static forError(errorKind: internal.ErrorKinds, message?: string, def?: any): EvalResult {
-    return new EvalResult(true, createErrorEvaluationDetail(errorKind, def), message);
+    return new EvalResult(
+      true,
+      {
+        value: def ?? null,
+        variationIndex: null,
+        reason: { kind: 'ERROR', errorKind },
+      },
+      message,
+    );
   }
 
   static forSuccess(value: any, reason: LDEvaluationReason, variationIndex?: number) {
-    const successDetail = createSuccessEvaluationDetail(value, variationIndex, reason);
-    return new EvalResult(false, successDetail as LDEvaluationDetail);
+    return new EvalResult(false, {
+      value,
+      variationIndex: variationIndex === undefined ? null : variationIndex,
+      reason,
+    });
   }
 }

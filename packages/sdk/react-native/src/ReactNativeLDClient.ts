@@ -56,10 +56,12 @@ export default class ReactNativeLDClient extends LDClientImpl {
       highTimeoutThreshold: 15,
     };
 
+    const validatedRnOptions = validateOptions(options, logger);
+
     super(
       sdkKey,
       autoEnvAttributes,
-      createPlatform(logger),
+      createPlatform(logger, validatedRnOptions.storage),
       { ...filterToBaseOptions(options), logger },
       internalOptions,
     );
@@ -78,7 +80,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
       },
     };
 
-    const validatedRnOptions = validateOptions(options, logger);
     const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
     this.connectionManager = new ConnectionManager(
       logger,
