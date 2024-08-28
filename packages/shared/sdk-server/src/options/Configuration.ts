@@ -55,7 +55,7 @@ const validations: Record<string, TypeValidator> = {
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
   application: TypeValidators.Object,
-  payloadFilterKey: TypeValidators.String,
+  payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
 };
 
