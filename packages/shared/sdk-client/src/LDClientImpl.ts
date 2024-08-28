@@ -403,7 +403,7 @@ export default class LDClientImpl implements LDClient {
   ) {
     let parameters: { key: string; value: string }[] = [];
     if (this.config.withReasons) {
-      parameters = [{ key: 'withReasons', value: 'true' }];
+      parameters.push({ key: 'withReasons', value: 'true' });
     }
 
     this.updateProcessor = new PollingProcessor(
@@ -442,7 +442,7 @@ export default class LDClientImpl implements LDClient {
   ) {
     let parameters: { key: string; value: string }[] = [];
     if (this.config.withReasons) {
-      parameters = [{ key: 'withReasons', value: 'true' }];
+      parameters.push({ key: 'withReasons', value: 'true' });
     }
 
     this.updateProcessor = new internal.StreamingProcessor(
