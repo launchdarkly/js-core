@@ -88,4 +88,4 @@ export const resetLDMocks = () => {
   ldClientMock.stringVariation.mockReset();
   ldClientMock.track.mockReset();
   ldClientMock.variation.mockReset();
-}
+};
