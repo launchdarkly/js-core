@@ -1,13 +1,7 @@
-import {
-  LDContext,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDFlagSet,
-  LDFlagValue,
-  LDLogger,
-} from '@launchdarkly/js-sdk-common';
+import { LDContext, LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import ConnectionMode from './ConnectionMode';
+import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
 
 /**

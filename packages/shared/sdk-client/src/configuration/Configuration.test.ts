@@ -20,7 +20,6 @@ describe('Configuration', () => {
       withReasons: false,
       eventsUri: 'https://events.launchdarkly.com',
       flushInterval: 30,
-      inspectors: [],
       logger: {
         destination: console.error,
         logLevel: 1,
@@ -77,17 +76,6 @@ describe('Configuration', () => {
     expect(console.error).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('"flushInterval" had invalid value of 1, using minimum of 2 instead'),
-    );
-  });
-
-  test('invalid bootstrap should use default', () => {
-    // @ts-ignore
-    const config = new Configuration({ bootstrap: 'localStora' });
-
-    expect(config.bootstrap).toBeUndefined();
-    expect(console.error).toHaveBeenNthCalledWith(
-      1,
-      expect.stringMatching(/should be of type LDFlagSet, got string/i),
     );
   });
 
