@@ -108,27 +108,26 @@ describe('Configuration', () => {
   });
 
   it.each([
-    ["1"],
-    ["camelCaseWorks"],
-    ["PascalCaseWorks"],
-    ["kebab-case-works"],
-    ["snake_case_works"],
+    ['1'],
+    ['camelCaseWorks'],
+    ['PascalCaseWorks'],
+    ['kebab-case-works'],
+    ['snake_case_works'],
   ])('allow setting valid payload filter keys', (filter) => {
-    const config = new Configuration({payloadFilterKey: filter});
+    const config = new Configuration({ payloadFilterKey: filter });
     expect(config.payloadFilterKey).toEqual(filter);
     expect(console.error).toHaveBeenCalledTimes(0);
   });
 
-  it.each([
-    ['invalid-@-filter'],
-    ['_invalid-filter'],
-    ['-invalid-filter'],
-  ])('ignores invalid filters and logs a warning', (filter) => {
-    const config = new Configuration({payloadFilterKey: filter});
-    expect(config.payloadFilterKey).toBeUndefined();
-    expect(console.error).toHaveBeenNthCalledWith(
-      1,
-      expect.stringMatching(/should be of type string matching/i),
-    );
-  });
+  it.each([['invalid-@-filter'], ['_invalid-filter'], ['-invalid-filter']])(
+    'ignores invalid filters and logs a warning',
+    (filter) => {
+      const config = new Configuration({ payloadFilterKey: filter });
+      expect(config.payloadFilterKey).toBeUndefined();
+      expect(console.error).toHaveBeenNthCalledWith(
+        1,
+        expect.stringMatching(/should be of type string matching/i),
+      );
+    },
+  );
 });

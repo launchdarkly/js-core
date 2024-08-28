@@ -331,11 +331,11 @@ describe('when setting different options', () => {
   });
 
   it.each([
-    ["1", "1", []],
-    ["camelCaseWorks", "camelCaseWorks", []],
-    ["PascalCaseWorks", "PascalCaseWorks", []],
-    ["kebab-case-works", "kebab-case-works", []],
-    ["snake_case_works", "snake_case_works", []],
+    ['1', '1', []],
+    ['camelCaseWorks', 'camelCaseWorks', []],
+    ['PascalCaseWorks', 'PascalCaseWorks', []],
+    ['kebab-case-works', 'kebab-case-works', []],
+    ['snake_case_works', 'snake_case_works', []],
     [
       'invalid-@-filter',
       undefined,
@@ -357,7 +357,6 @@ describe('when setting different options', () => {
     expect(config.payloadFilterKey).toEqual(expected);
     logger(config).expectMessages(logs);
   });
-
 
   it('discards unrecognized options with a warning', () => {
     // @ts-ignore
