@@ -1,11 +1,11 @@
 import {
   defaultHeaders,
+  getPollingUri,
   Info,
   LDStreamingError,
   Options,
   Requests,
   Response,
-  getPollingUri,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureRequestor } from '../api/subsystems';

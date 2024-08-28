@@ -53,12 +53,12 @@ export default class ServiceEndpoints {
   }
 }
 
-function getWithParams(uri: string, parameters: {key: string, value: string}[]) {
+function getWithParams(uri: string, parameters: { key: string; value: string }[]) {
   if (parameters.length === 0) {
     return uri;
   }
 
-  let parts = parameters.map(({key, value}) => `${key}=${value}`);
+  const parts = parameters.map(({ key, value }) => `${key}=${value}`);
   return `${uri}?${parts.join('&')}`;
 }
 
@@ -66,15 +66,19 @@ function getWithParams(uri: string, parameters: {key: string, value: string}[]) 
  * Get the URI for the streaming endpoint.
  *
  * @param endpoints The service endpoints.
- * @param canonicalizedPath The path to the resource, devoid of any query parameters or hrefs.
+ * @param path The path to the resource, devoid of any query parameters or hrefs.
  * @param parameters The query parameters. These query parameters must already have the appropriate encoding applied. This function WILL NOT apply it for you.
  */
-export function getStreamingUri(endpoints: ServiceEndpoints, canonicalizedPath: string, parameters: {key: string, value: string}[]): string {
-  canonicalizedPath = canonicalizePath(canonicalizedPath);
+export function getStreamingUri(
+  endpoints: ServiceEndpoints,
+  path: string,
+  parameters: { key: string; value: string }[],
+): string {
+  const canonicalizedPath = canonicalizePath(path);
 
-  let combinedParameters = [...parameters]
+  const combinedParameters = [...parameters];
   if (endpoints.payloadFilterKey) {
-    combinedParameters.push({key: 'filter', value: endpoints.payloadFilterKey});
+    combinedParameters.push({ key: 'filter', value: endpoints.payloadFilterKey });
   }
 
   return getWithParams(`${endpoints.streaming}/${canonicalizedPath}`, combinedParameters);
@@ -84,30 +88,37 @@ export function getStreamingUri(endpoints: ServiceEndpoints, canonicalizedPath: 
  * Get the URI for the polling endpoint.
  *
  * @param endpoints The service endpoints.
- * @param canonicalizedPath The path to the resource, devoid of any query parameters or hrefs.
+ * @param path The path to the resource, devoid of any query parameters or hrefs.
  * @param parameters The query parameters. These query parameters must already have the appropriate encoding applied. This function WILL NOT apply it for you.
  */
-export function getPollingUri(endpoints: ServiceEndpoints, canonicalizedPath: string, parameters: {key: string, value: string}[]): string {
-  canonicalizedPath = canonicalizePath(canonicalizedPath);
+export function getPollingUri(
+  endpoints: ServiceEndpoints,
+  path: string,
+  parameters: { key: string; value: string }[],
+): string {
+  const canonicalizedPath = canonicalizePath(path);
 
-  let combinedParameters = [...parameters]
+  const combinedParameters = [...parameters];
   if (endpoints.payloadFilterKey) {
-    combinedParameters.push({key: 'filter', value: endpoints.payloadFilterKey});
+    combinedParameters.push({ key: 'filter', value: endpoints.payloadFilterKey });
   }
 
   return getWithParams(`${endpoints.polling}/${canonicalizedPath}`, combinedParameters);
 }
 
-
 /**
  * Get the URI for the events endpoint.
  *
  * @param endpoints The service endpoints.
- * @param canonicalizedPath The path to the resource, devoid of any query parameters or hrefs.
+ * @param path The path to the resource, devoid of any query parameters or hrefs.
  * @param parameters The query parameters. These query parameters must already have the appropriate encoding applied. This function WILL NOT apply it for you.
  */
-export function getEventsUri(endpoints: ServiceEndpoints, canonicalizedPath: string, parameters: {key: string, value: string}[]): string {
-  canonicalizedPath = canonicalizePath(canonicalizedPath);
+export function getEventsUri(
+  endpoints: ServiceEndpoints,
+  path: string,
+  parameters: { key: string; value: string }[],
+): string {
+  const canonicalizedPath = canonicalizePath(path);
 
   return getWithParams(`${endpoints.events}/${canonicalizedPath}`, parameters);
 }
