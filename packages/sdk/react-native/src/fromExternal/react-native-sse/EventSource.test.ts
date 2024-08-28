@@ -24,14 +24,14 @@ describe('EventSource', () => {
       .mockImplementationOnce(() => 0.888)
       .mockImplementationOnce(() => 0.999);
 
-      mockXhr = {
-        open: jest.fn(),
-        send: jest.fn(),
-        setRequestHeader: jest.fn(),
-        abort: jest.fn(),
-      };
+    mockXhr = {
+      open: jest.fn(),
+      send: jest.fn(),
+      setRequestHeader: jest.fn(),
+      abort: jest.fn(),
+    };
 
-      jest.spyOn(window, 'XMLHttpRequest').mockImplementation(() => mockXhr as XMLHttpRequest);
+    jest.spyOn(window, 'XMLHttpRequest').mockImplementation(() => mockXhr as XMLHttpRequest);
 
     eventSource = new EventSource<EventName>(uri, { logger });
     eventSource.onclose = jest.fn();
@@ -84,7 +84,9 @@ describe('EventSource', () => {
   test('initial connection', () => {
     jest.runAllTimers();
 
-    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/\[EventSource\] opening new connection./));
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringMatching(/\[EventSource\] opening new connection./),
+    );
     expect(mockXhr.open).toHaveBeenCalledTimes(1);
     expect(eventSource.onclose).toHaveBeenCalledTimes(0);
   });

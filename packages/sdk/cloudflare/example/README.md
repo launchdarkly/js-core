@@ -40,8 +40,8 @@ npx wrangler kv:key get --binding=LD_KV "LD-Env-test-client-side-id" --preview
 5. Edit [index.ts](https://github.com/launchdarkly/js-core/blob/main/packages/sdk/cloudflare/example/src/index.ts#L6) to use your clientSideID and a valid flag key from the test data you just inserted.
 
 ```ts
-    const clientSideID = 'test-client-side-id';
-    const flagKey = 'test-boolean-flag';
+const clientSideID = 'test-client-side-id';
+const flagKey = 'test-boolean-flag';
 ```
 
 6. Finally:
