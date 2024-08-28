@@ -401,7 +401,7 @@ export default class LDClientImpl implements LDClient {
     identifyResolve: any,
     identifyReject: any,
   ) {
-    let parameters: { key: string; value: string }[] = [];
+    const parameters: { key: string; value: string }[] = [];
     if (this.config.withReasons) {
       parameters.push({ key: 'withReasons', value: 'true' });
     }
@@ -440,7 +440,7 @@ export default class LDClientImpl implements LDClient {
     identifyResolve: any,
     identifyReject: any,
   ) {
-    let parameters: { key: string; value: string }[] = [];
+    const parameters: { key: string; value: string }[] = [];
     if (this.config.withReasons) {
       parameters.push({ key: 'withReasons', value: 'true' });
     }
