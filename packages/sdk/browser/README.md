@@ -11,12 +11,7 @@
 > [!CAUTION]
 > This library is a beta version and should not be considered ready for production use while this message is visible.
 
-## Features
-
-- Supports both React Server Components and Client Components
-- Idiomatic server side rendering
-- Bootstrapping out of the box
-
+<!--
 ## Install
 
 ```shell
@@ -26,6 +21,7 @@ npm i @launchdarkly/js-client-sdk
 # yarn
 yarn add -D @launchdarkly/js-client-sdk
 ```
+-->
 ## Getting started
 
 Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/client-side/javascript#getting-started) for instructions on getting started with using the SDK.
