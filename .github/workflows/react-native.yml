@@ -51,7 +51,7 @@ jobs:
       - uses: ./actions/release-secrets
         name: 'Get mobile key'
         with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN_EXAMPLE }}
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
           ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = MOBILE_KEY'
 
       - name: Enable KVM group perms (for performance)
