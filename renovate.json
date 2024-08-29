@@ -1,14 +1,10 @@
 {
-  "extends": [
-    "config:recommended"
-  ],
+  "extends": ["config:recommended"],
   "packageRules": [
     {
       "enabled": false,
       "matchDatasources": ["npm"],
-      "matchPackageNames": [
-        "*"
-      ]
+      "matchPackageNames": ["*"]
     }
   ],
   "vulnerabilityAlerts": {
