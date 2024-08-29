@@ -68,10 +68,10 @@ export function makeSdkConfig(options, tag) {
     );
   }
   if (options.wrapper) {
-    if(options.wrapper.name) {
+    if (options.wrapper.name) {
       cf.wrapperName = options.wrapper.name;
     }
-    if(options.wrapper.version) {
+    if (options.wrapper.version) {
       cf.wrapperVersion = options.wrapper.version;
     }
   }
@@ -117,7 +117,7 @@ export async function newSdkClientEntity(options) {
     makeSdkConfig(options.configuration, options.tag),
   );
   try {
-    await client.waitForInitialization({timeout: timeout});
+    await client.waitForInitialization({ timeout: timeout });
   } catch (_) {
     // if waitForInitialization() rejects, the client failed to initialize, see next line
   }
