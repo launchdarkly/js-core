@@ -60,6 +60,9 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Expo Prebuild
+        run: npx expo prebuild
+
       - name: Detox build
         run: yarn detox build --configuration android.emu.release
 
