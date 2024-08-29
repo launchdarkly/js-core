@@ -54,6 +54,11 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
           ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = MOBILE_KEY'
 
+
+      - name: Create .env file.
+        run: echo "MOBILE_KEY=$MOBILE_KEY" > .env
+
+
       - name: Enable KVM group perms (for performance)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
