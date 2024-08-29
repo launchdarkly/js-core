@@ -76,7 +76,7 @@ jobs:
         run: node -e "console.log('AVD_NAME=' + require('./.detoxrc').devices.emulator.device.avdName)" >> $GITHUB_OUTPUT
 
       - name: Detox test
-        uses: reactivecircus/android-emulator-runner@a3dcdb348bb02349cd939d168a74e31a9094b7f0
+        uses: reactivecircus/android-emulator-runner@f0d1ed2dcad93c7479e8b2f2226c83af54494915
         with:
           api-level: 31
           arch: x86_64
