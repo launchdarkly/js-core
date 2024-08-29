@@ -24,7 +24,7 @@ export default class TestHook {
   }
 
   beforeEvaluation(hookContext, data) {
-    if(this._errors?.beforeEvaluation) {
+    if (this._errors?.beforeEvaluation) {
       throw new Error(this._errors.beforeEvaluation);
     }
     this._safePost({
@@ -36,7 +36,7 @@ export default class TestHook {
   }
 
   afterEvaluation(hookContext, data, detail) {
-    if(this._errors?.afterEvaluation) {
+    if (this._errors?.afterEvaluation) {
       throw new Error(this._errors.afterEvaluation);
     }
     this._safePost({
@@ -45,7 +45,6 @@ export default class TestHook {
       stage: 'afterEvaluation',
       evaluationDetail: detail,
     });
-
 
     return { ...data, ...(this._data?.['afterEvaluation'] || {}) };
   }

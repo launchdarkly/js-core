@@ -5,10 +5,7 @@
       "name": "Akamai SDK",
       "type": "edge",
       "path": "packages/sdk/akamai-base",
-      "languages": [
-        "JavaScript",
-        "TypeScript"
-      ],
+      "languages": ["JavaScript", "TypeScript"],
       "releases": {
         "tag-prefix": "akamai-server-base-sdk-"
       }
@@ -17,10 +14,7 @@
       "name": "Akamai SDK for EdgeKV",
       "type": "edge",
       "path": "packages/sdk/akamai-edgekv",
-      "languages": [
-        "JavaScript",
-        "TypeScript"
-      ],
+      "languages": ["JavaScript", "TypeScript"],
       "releases": {
         "tag-prefix": "akamai-server-edgekv-sdk-"
       }
@@ -29,10 +23,7 @@
       "name": "Cloudflare SDK",
       "type": "edge",
       "path": "packages/sdk/cloudflare",
-      "languages": [
-        "JavaScript",
-        "TypeScript"
-      ],
+      "languages": ["JavaScript", "TypeScript"],
       "releases": {
         "tag-prefix": "cloudflare-server-sdk-"
       }
@@ -41,10 +32,7 @@
       "name": "React Native SDK",
       "type": "client-side",
       "path": "packages/sdk/react-native",
-      "languages": [
-        "JavaScript",
-        "TypeScript"
-      ],
+      "languages": ["JavaScript", "TypeScript"],
       "releases": {
         "tag-prefix": "react-native-client-sdk-"
       }
@@ -53,10 +41,7 @@
       "name": "Node.js Server SDK",
       "type": "server-side",
       "path": "packages/sdk/server-node",
-      "languages": [
-        "JavaScript",
-        "TypeScript"
-      ],
+      "languages": ["JavaScript", "TypeScript"],
       "releases": {
         "tag-prefix": "node-server-sdk-"
       }
@@ -65,10 +50,7 @@
       "name": "Vercel Edge SDK",
       "type": "edge",
       "path": "packages/sdk/vercel",
-      "languages": [
-        "JavaScript",
-        "TypeScript"
-      ],
+      "languages": ["JavaScript", "TypeScript"],
       "releases": {
         "tag-prefix": "vercel-server-sdk-"
       }

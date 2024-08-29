@@ -16,7 +16,6 @@ export default function Welcome() {
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 
-
   const setConnectionMode = (m: ConnectionMode) => {
     ldc.setConnectionMode(m);
   };
@@ -51,7 +50,10 @@ export default function Welcome() {
         testID="flagKey"
       />
       <View style={styles.connectionModeContainer}>
-        <TouchableOpacity style={styles.buttonContainer} onPress={() => setConnectionMode('offline')}>
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={() => setConnectionMode('offline')}
+        >
           <Text style={styles.buttonText}>Set offline</Text>
         </TouchableOpacity>
         <TouchableOpacity
