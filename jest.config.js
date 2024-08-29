@@ -1,7 +1,7 @@
 module.exports = {
   transform: { '^.+\\.ts?$': 'ts-jest' },
   testMatch: ['**/__tests__/**/*test.ts?(x)'],
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   collectCoverageFrom: [
     'packages/sdk/server-node/src/**/*.ts',
