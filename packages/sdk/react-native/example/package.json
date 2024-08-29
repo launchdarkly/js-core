@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@config-plugins/detox": "^8.0.0",
     "@types/detox": "^18.1.0",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.10.5",

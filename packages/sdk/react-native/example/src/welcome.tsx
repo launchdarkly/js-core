@@ -5,7 +5,7 @@ import { ConnectionMode } from '@launchdarkly/js-client-sdk-common';
 import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const [flagKey, setFlagKey] = useState('my-boolean-flag-1');
+  const [flagKey, setFlagKey] = useState('sample-feature');
   const [userKey, setUserKey] = useState('');
   const flagValue = useBoolVariation(flagKey, false);
   const ldc = useLDClient();

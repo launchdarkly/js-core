@@ -39,3 +39,6 @@ ios
 android
 
 !yarn.lock
+
+# detox
+artifacts
