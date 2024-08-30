@@ -28,6 +28,7 @@ app.get('/', (req, res) => {
       'tags',
       'big-segments',
       'filtering',
+      'filtering-strict',
       'user-type',
       'migrations',
       'event-sampling',
