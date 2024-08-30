@@ -18,11 +18,12 @@ describe('given the example application', () => {
   });
 
   it('can identify and evaluate with non-default values', async () => {
+    const featureFlagKey = process.env.LAUNCHDARKLY_FLAG_KEY ?? 'sample-feature';
     await element(by.id('userKey')).typeText('example-user-key');
-    await element(by.id('flagKey')).replaceText(process.env.LAUNCHDARKLY_FLAG_KEY ?? 'sample-feature');
+    await element(by.id('flagKey')).replaceText(featureFlagKey);
     await element(by.text(/identify/i)).tap();
 
-    await waitFor(element(by.text(/hello-boolean: true/i)))
+    await waitFor(element(by.text(new RegExp(`${featureFlagKey}: true`))))
       .toBeVisible()
       .withTimeout(2000);
   });
