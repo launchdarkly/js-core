@@ -86,6 +86,7 @@ jobs:
           api-level: 31
           arch: x86_64
           avd-name: ${{ steps.device.outputs.AVD_NAME }}
+          working-directory: packages/sdk/react-native/example
           script: yarn detox test --configuration android.emu.release --headless --record-logs all
 
       - name: Upload artifacts
