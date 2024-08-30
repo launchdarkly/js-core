@@ -19,7 +19,7 @@ describe('given the example application', () => {
 
   it('can identify and evaluate with non-default values', async () => {
     await element(by.id('userKey')).typeText('example-user-key');
-    await element(by.id('flagKey')).replaceText('hello-boolean');
+    await element(by.id('flagKey')).replaceText(process.env.LAUNCHDARKLY_FLAG_KEY ?? 'sample-feature');
     await element(by.text(/identify/i)).tap();
 
     await waitFor(element(by.text(/hello-boolean: true/i)))
