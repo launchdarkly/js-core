@@ -7,7 +7,7 @@ describe('Configuration', () => {
     console.error = jest.fn();
   });
 
-  test('defaults', () => {
+  it('has valid default values', () => {
     const config = new Configuration();
 
     expect(config).toMatchObject({
@@ -36,12 +36,12 @@ describe('Configuration', () => {
     expect(console.error).not.toHaveBeenCalled();
   });
 
-  test('specified options should be set', () => {
+  it('allows specifying valid wrapperName', () => {
     const config = new Configuration({ wrapperName: 'test' });
     expect(config).toMatchObject({ wrapperName: 'test' });
   });
 
-  test('unknown option', () => {
+  it('warns and ignored invalid keys', () => {
     // @ts-ignore
     const config = new Configuration({ baseballUri: 1 });
 
@@ -49,7 +49,7 @@ describe('Configuration', () => {
     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('unknown config option'));
   });
 
-  test('wrong type for boolean should be converted', () => {
+  it('converts boolean types', () => {
     // @ts-ignore
     const config = new Configuration({ sendEvents: 0 });
 
@@ -59,7 +59,7 @@ describe('Configuration', () => {
     );
   });
 
-  test('wrong type for number should use default', () => {
+  it('ignores wrong type for number and logs appropriately', () => {
     // @ts-ignore
     const config = new Configuration({ capacity: true });
 
@@ -69,7 +69,7 @@ describe('Configuration', () => {
     );
   });
 
-  test('enforce minimum flushInterval', () => {
+  it('enforces minimum flushInterval', () => {
     const config = new Configuration({ flushInterval: 1 });
 
     expect(config.flushInterval).toEqual(2);
@@ -79,14 +79,14 @@ describe('Configuration', () => {
     );
   });
 
-  test('recognize maxCachedContexts', () => {
+  it('allows setting a valid maxCachedContexts', () => {
     const config = new Configuration({ maxCachedContexts: 3 });
 
     expect(config.maxCachedContexts).toBeDefined();
     expect(console.error).not.toHaveBeenCalled();
   });
 
-  test('enforce minimum maxCachedContext', () => {
+  it('enforces minimum maxCachedContext', () => {
     const config = new Configuration({ maxCachedContexts: -1 });
 
     expect(config.maxCachedContexts).toBeDefined();
@@ -95,4 +95,28 @@ describe('Configuration', () => {
       expect.stringContaining('had invalid value of -1'),
     );
   });
+
+  it.each([
+    ['1'],
+    ['camelCaseWorks'],
+    ['PascalCaseWorks'],
+    ['kebab-case-works'],
+    ['snake_case_works'],
+  ])('allow setting valid payload filter keys', (filter) => {
+    const config = new Configuration({ payloadFilterKey: filter });
+    expect(config.payloadFilterKey).toEqual(filter);
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
+
+  it.each([['invalid-@-filter'], ['_invalid-filter'], ['-invalid-filter']])(
+    'ignores invalid filters and logs a warning',
+    (filter) => {
+      const config = new Configuration({ payloadFilterKey: filter });
+      expect(config.payloadFilterKey).toBeUndefined();
+      expect(console.error).toHaveBeenNthCalledWith(
+        1,
+        expect.stringMatching(/should be of type string matching/i),
+      );
+    },
+  );
 });

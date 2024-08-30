@@ -78,6 +78,7 @@ export default class Configuration {
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
+      pristineOptions.payloadFilterKey,
     );
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
   }

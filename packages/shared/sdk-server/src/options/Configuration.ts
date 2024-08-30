@@ -55,6 +55,7 @@ const validations: Record<string, TypeValidator> = {
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
   application: TypeValidators.Object,
+  payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
 };
 
@@ -197,6 +198,8 @@ export default class Configuration {
 
   public readonly tags: ApplicationTags;
 
+  public readonly payloadFilterKey?: string;
+
   public readonly diagnosticRecordingInterval: number;
 
   public readonly featureStoreFactory: (clientContext: LDClientContext) => LDFeatureStore;
@@ -234,6 +237,7 @@ export default class Configuration {
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
+      validatedOptions.payloadFilterKey,
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;
@@ -255,6 +259,7 @@ export default class Configuration {
     this.tlsParams = validatedOptions.tlsParams;
     this.diagnosticOptOut = validatedOptions.diagnosticOptOut;
     this.wrapperName = validatedOptions.wrapperName;
+    this.payloadFilterKey = validatedOptions.payloadFilterKey;
     this.wrapperVersion = validatedOptions.wrapperVersion;
     this.tags = new ApplicationTags(validatedOptions);
     this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;

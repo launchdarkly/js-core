@@ -40,6 +40,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   applicationInfo: TypeValidators.Object,
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
+  payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
 };
 
 export default validators;

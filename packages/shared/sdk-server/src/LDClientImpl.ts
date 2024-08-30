@@ -217,6 +217,7 @@ export default class LDClientImpl implements LDClient {
             sdkKey,
             clientContext,
             '/all',
+            [],
             listeners,
             this.diagnosticsManager,
             (e) => this.dataSourceErrorHandler(e),
