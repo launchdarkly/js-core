@@ -90,7 +90,8 @@ jobs:
           script: yarn detox test --configuration android.emu.release --headless --record-logs all
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: detox-artifacts
           path: artifacts
