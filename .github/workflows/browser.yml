@@ -1,0 +1,33 @@
+name: sdk/browser
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-browser:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # Node versions to run on.
+        version: [18, 21]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/js-client-sdk'
+          workspace_path: packages/sdk/browser

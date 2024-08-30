@@ -14,6 +14,11 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/vercel-server-sdk](packages/sdk/vercel/README.md)               | [![NPM][sdk-vercel-npm-badge]][sdk-vercel-npm-link]               | [Vercel][package-sdk-vercel-issues]               | [![Actions Status][sdk-vercel-ci-badge]][sdk-vercel-ci]               |
 | [@launchdarkly/react-native-client-sdk](packages/sdk/react-native/README.md)   | [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]   | [React-Native][package-sdk-react-native-issues]   | [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]   |
 
+<!--
+TODO: Add row once @launchdarkly/js-client-sdk has been published.
+| [@launchdarkly/js-client-sdk](packages/sdk/browser/README.md)   | [![NPM][sdk-browser-npm-badge]][sdk-browser-npm-link]   | [Browser][package-sdk-browser-issues]   | [![Actions Status][sdk-browser-ci-badge]][sdk-browser-ci]   |
+-->
+
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | [@launchdarkly/js-sdk-common](packages/shared/common/README.md)                      | [![NPM][common-npm-badge]][common-npm-link]                               | [Common][package-shared-common-issues]                      | [![Actions Status][shared-common-ci-badge]][shared-common-ci]                   |
@@ -169,3 +174,13 @@ We encourage pull requests and other contributions from the community. Check out
 [node-otel-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-otel.svg?style=flat-square
 [node-otel-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-otel
 [node-otel-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+telemetry%2Fnode-server-sdk-otel%22+
+[//]: # 'sdk/browser'
+[sdk-browser-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/browser.yml/badge.svg
+[sdk-browser-ci]: https://github.com/launchdarkly/js-core/actions/workflows/browser.yml
+[sdk-browser-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/js-client-sdk.svg?style=flat-square
+[sdk-browser-npm-link]: https://www.npmjs.com/package/@launchdarkly/js-client-sdk
+[sdk-browser-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-browser-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/browser/docs/
+[sdk-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/js-client-sdk.svg?style=flat-square
+[sdk-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/js-client-sdk.svg?style=flat-square
+[package-sdk-browser-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fbrowser%22+
