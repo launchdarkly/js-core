@@ -88,6 +88,13 @@ export interface LDClient {
    */
   waitForInitialization(options?: LDWaitForInitializationOptions): Promise<LDClient>;
 
+  modelConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: unknown,
+    variables: Map<string, any>,
+  ): Promise<unknown>;
+
   /**
    * Determines the variation of a feature flag for a context.
    *
