@@ -7,7 +7,7 @@ name: sdk/react-native/example
 
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'rlamb/build-rn-example']
     paths-ignore:
       - '**.md' #Do not need to run CI for markdown changes.
   pull_request:
