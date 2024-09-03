@@ -37,12 +37,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
       - name: Install deps
         run: yarn workspaces focus
       - name: Build
@@ -55,10 +49,8 @@ jobs:
           ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = MOBILE_KEY,
             /sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
 
-
       - name: Create .env file.
         run: echo "MOBILE_KEY=$MOBILE_KEY" > .env
-
 
       - name: Enable KVM group perms (for performance)
         run: |
@@ -68,6 +60,13 @@ jobs:
 
       - name: Expo Prebuild
         run: npx expo prebuild
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: 'gradle'
 
       - name: Detox build
         run: yarn detox build --configuration android.emu.release
