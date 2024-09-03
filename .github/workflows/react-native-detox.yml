@@ -13,10 +13,10 @@ on:
   pull_request:
     branches: [main, 'feat/**']
     paths:
-      - 'packages/shared/common/***'
-      - 'packages/shared/sdk-client/***'
-      - 'packages/sdk/react-native/***'
-      - 'packages/shared/mocks/***'
+      - 'packages/shared/common/**'
+      - 'packages/shared/sdk-client/**'
+      - 'packages/sdk/react-native/**'
+      - 'packages/shared/mocks/**'
 
 jobs:
   detox-android:
