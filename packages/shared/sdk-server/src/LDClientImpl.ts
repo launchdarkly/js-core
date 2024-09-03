@@ -345,7 +345,7 @@ export default class LDClientImpl implements LDClient {
    * @example
    * const key = "welcome_prompt";
    * const context = new LDContext(...);
-   * const variables = new Map<string, string>([["username", "John"]]);
+   * const variables = new Record<string, string>([["username", "John"]]);
    * const defaultValue = "Welcome, user!";
    *
    * const result = modelConfig(key, context, variables, defaultValue);
@@ -372,7 +372,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: string,
-    variables?: Map<string, string>,
+    variables?: Record<string, string>,
   ): Promise<any> {
     const detail = await this.hookRunner.withEvaluationSeries(
       key,
@@ -389,10 +389,10 @@ export default class LDClientImpl implements LDClient {
 
     const allVariables = { ldctx: context, ...variables };
 
-    detail.value.prompt.forEach((entry: any) => {
-      // eslint-disable-next-line no-param-reassign
-      entry.content = this.interpolateTemplate(entry.content, allVariables);
-    });
+    detail.value.prompt = detail.value.prompt.map((entry: any) => ({
+      ...entry,
+      content: this.interpolateTemplate(entry.content, allVariables),
+    }));
 
     return detail.value;
   }
