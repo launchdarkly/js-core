@@ -343,7 +343,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: false #${{ needs.release-please.outputs.package-react-universal-release == 'true' }}
+    if: false #${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-universal-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
