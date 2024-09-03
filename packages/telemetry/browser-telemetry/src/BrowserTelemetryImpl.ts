@@ -134,13 +134,23 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   captureError(exception: Error): void {
-    const data: ErrorData = {
-      type: exception.name || exception.constructor.name || 'generic',
-      message: exception.message,
-      stack: parse(exception, this.options.stack),
-      breadcrumbs: [...this.breadcrumbs],
-      sessionId: this.sessionId,
-    };
+    const validException = exception !== undefined && exception !== null;
+
+    const data: ErrorData = validException
+      ? {
+          type: exception.name || exception.constructor?.name || 'generic',
+          message: exception.message,
+          stack: parse(exception, this.options.stack),
+          breadcrumbs: [...this.breadcrumbs],
+          sessionId: this.sessionId,
+        }
+      : {
+          type: 'generic',
+          message: 'null or undefined exception',
+          stack: { frames: [] },
+          breadcrumbs: [...this.breadcrumbs],
+          sessionId: this.sessionId,
+        };
     this.capture(ERROR_KEY, data);
     this.dispatchError(exception);
   }
