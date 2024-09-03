@@ -321,8 +321,8 @@ export default class LDClientImpl implements LDClient {
    * @param variables - An object containing the variables to be used for interpolation.
    * @returns The interpolated string.
    */
-  interpolateTemplate(template: string, variables: Record<string, string>): string {
-    return Mustache.render(template, variables);
+  interpolateTemplate(template: string, variables: Record<string, unknown>): string {
+    return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
   }
 
   /**
