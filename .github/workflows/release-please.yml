@@ -52,11 +52,11 @@ jobs:
 
   release-sdk-client:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-common']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-client-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -72,11 +72,11 @@ jobs:
 
   release-sdk-server:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-common']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-server-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -92,11 +92,11 @@ jobs:
 
   release-sdk-server-edge:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -112,11 +112,11 @@ jobs:
 
   release-akamai-edgeworker-sdk:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -132,11 +132,11 @@ jobs:
 
   release-cloudflare:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-sdk-server-edge']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-cloudflare-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -152,11 +152,11 @@ jobs:
 
   release-react-native:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-sdk-client']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-react-native-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -172,11 +172,11 @@ jobs:
 
   release-server-node:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-server-node-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -192,11 +192,11 @@ jobs:
 
   release-vercel:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-sdk-server-edge']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-vercel-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -212,11 +212,11 @@ jobs:
 
   release-akamai-base:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-akamai-edgeworker-sdk']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-base-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -232,11 +232,11 @@ jobs:
 
   release-akamai-edgekv:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-akamai-edgeworker-sdk']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -252,11 +252,11 @@ jobs:
 
   release-node-server-sdk-redis:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-server-node']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -276,11 +276,11 @@ jobs:
 
   release-node-server-sdk-dynamodb:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-server-node']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -298,11 +298,11 @@ jobs:
 
   release-node-server-sdk-otel:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-server-node']
     permissions:
       id-token: write
       contents: write
-    if: ${{ needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -339,7 +339,7 @@ jobs:
 
   release-tooling-react-universal:
     runs-on: ubuntu-latest
-    needs: ['release-please']
+    needs: ['release-please', 'release-server-node', 'release-sdk-client']
     permissions:
       id-token: write
       contents: write
