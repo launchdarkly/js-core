@@ -372,7 +372,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: string,
-    variables?: Record<string, string>,
+    variables?: Record<string, unknown>,
   ): Promise<any> {
     const detail = await this.hookRunner.withEvaluationSeries(
       key,
