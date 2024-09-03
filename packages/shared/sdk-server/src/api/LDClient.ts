@@ -92,7 +92,7 @@ export interface LDClient {
     key: string,
     context: LDContext,
     defaultValue: unknown,
-    variables: Record<string, unknown>,
+    variables: Record<string, string>,
   ): Promise<unknown>;
 
   /**

@@ -327,7 +327,7 @@ export default class LDClientImpl implements LDClient {
    * @param variables - An object containing the variables to be used for interpolation.
    * @returns The interpolated string.
    */
-  interpolateTemplate(template: string, variables: Record<string, any>): string {
+  interpolateTemplate(template: string, variables: Record<string, string>): string {
     this.configureMustache();
     return Mustache.render(template, variables);
   }
@@ -372,7 +372,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: string,
-    variables?: Record<string, unknown>,
+    variables?: Record<string, string>,
   ): Promise<any> {
     const detail = await this.hookRunner.withEvaluationSeries(
       key,
