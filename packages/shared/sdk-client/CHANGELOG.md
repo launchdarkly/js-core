@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.6.0...js-client-sdk-common-v1.7.0) (2024-09-03)
+
+
+### Features
+
+* Add support for Payload Filtering ([#551](https://github.com/launchdarkly/js-core/issues/551)) ([6f44383](https://github.com/launchdarkly/js-core/commit/6f4438323baed802d8f951ac82494e6cfa9932c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.7.0 to 2.8.0
+
 ## [1.6.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.5.0...js-client-sdk-common-v1.6.0) (2024-08-28)
 
 
