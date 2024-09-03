@@ -81,8 +81,7 @@ jobs:
         name: 'Get NPM token'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/production/common/releasing/npm/token = NODE_AUTH_TOKEN,
-          /sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
+          ssm_parameter_pairs: '/production/common/releasing/npm/token = NODE_AUTH_TOKEN'
       - name: Setup .yarnrc.yml
         if: ${{ inputs.package_registry == 'npm' }}
         shell: bash

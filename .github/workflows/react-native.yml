@@ -52,7 +52,8 @@ jobs:
         name: 'Get mobile key'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
-          ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = MOBILE_KEY'
+          ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = MOBILE_KEY,
+            /sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
 
 
       - name: Create .env file.
