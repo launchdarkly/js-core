@@ -314,12 +314,6 @@ export default class LDClientImpl implements LDClient {
     return this.clientWithTimeout(this.initializedPromise, options?.timeout, this.logger);
   }
 
-  configureMustache() {
-    // Use unescaped HTML
-    // https://github.com/janl/mustache.js?tab=readme-ov-file#variables
-    Mustache.escape = (text: string) => text;
-  }
-
   /**
    * Parses and interpolates a template string with the provided variables.
    *
@@ -328,7 +322,6 @@ export default class LDClientImpl implements LDClient {
    * @returns The interpolated string.
    */
   interpolateTemplate(template: string, variables: Record<string, string>): string {
-    this.configureMustache();
     return Mustache.render(template, variables);
   }
 
@@ -372,7 +365,7 @@ export default class LDClientImpl implements LDClient {
     key: string,
     context: LDContext,
     defaultValue: string,
-    variables?: Record<string, string>,
+    variables?: Record<string, unknown>,
   ): Promise<any> {
     const detail = await this.hookRunner.withEvaluationSeries(
       key,
