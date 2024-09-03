@@ -27,6 +27,9 @@ import parse from './stack/StackParser';
 const CUSTOM_KEY_PREFIX = '$ld:telemetry';
 const ERROR_KEY = `${CUSTOM_KEY_PREFIX}:error`;
 const SESSION_CAPTURE_KEY = `${CUSTOM_KEY_PREFIX}:sessionCapture`;
+const GENERIC_EXCEPTION = 'generic';
+const NULL_EXCEPTION_MESSAGE = 'exception was null or undefined';
+const MISSING_MESSAGE = 'exception had no message';
 
 function safeValue(u: unknown): string | boolean | number | undefined {
   switch (typeof u) {
@@ -138,21 +141,22 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
     const data: ErrorData = validException
       ? {
-          type: exception.name || exception.constructor?.name || 'generic',
-          message: exception.message,
+          type: exception.name || exception.constructor?.name || GENERIC_EXCEPTION,
+          // Only coalesce null/undefined, not empty.
+          message: exception.message ?? MISSING_MESSAGE,
           stack: parse(exception, this.options.stack),
           breadcrumbs: [...this.breadcrumbs],
           sessionId: this.sessionId,
         }
       : {
-          type: 'generic',
-          message: 'null or undefined exception',
+          type: GENERIC_EXCEPTION,
+          message: NULL_EXCEPTION_MESSAGE,
           stack: { frames: [] },
           breadcrumbs: [...this.breadcrumbs],
           sessionId: this.sessionId,
         };
     this.capture(ERROR_KEY, data);
-    this.dispatchError(exception);
+    this.dispatchError(data);
   }
 
   captureErrorEvent(errorEvent: ErrorEvent): void {
@@ -207,9 +211,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.dispatchFlagDetailChanged(flagKey, detail);
   }
 
-  private dispatchError(exception: Error) {
+  private dispatchError(exception: ErrorData) {
     this.collectors.forEach((collector) => {
-      collector.handleErrorEvent?.(exception.name, exception.message);
+      collector.handleErrorEvent?.(exception.type, exception.message);
     });
   }
 
