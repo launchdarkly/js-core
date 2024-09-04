@@ -41,6 +41,7 @@
 <a href="platform-1.ServiceEndpoints.html#diagnosticEventPath" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>diagnostic<wbr/>Event<wbr/>Path</span></a>
 <a href="platform-1.ServiceEndpoints.html#events" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>events</span></a>
 <a href="platform-1.ServiceEndpoints.html#includeAuthorizationHeader" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>include<wbr/>Authorization<wbr/>Header</span></a>
+<a href="platform-1.ServiceEndpoints.html#payloadFilterKey" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>payload<wbr/>Filter<wbr/>Key?</span></a>
 <a href="platform-1.ServiceEndpoints.html#polling" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>polling</span></a>
 <a href="platform-1.ServiceEndpoints.html#streaming" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>streaming</span></a>
 <a href="platform-1.ServiceEndpoints.html#DEFAULT_EVENTS" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>DEFAULT_<wbr/>EVENTS</span></a>
@@ -50,7 +51,7 @@
 <section class="tsd-panel tsd-member"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_ServiceEndpoints"><span class="tsd-kind-constructor-signature">new <wbr/>Service<wbr/>Endpoints</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">streaming</span>, <span class="tsd-kind-parameter">polling</span>, <span class="tsd-kind-parameter">events</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">analyticsEventPath</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">diagnosticEventPath</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">includeAuthorizationHeader</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.ServiceEndpoints.html" class="tsd-signature-type tsd-kind-class">ServiceEndpoints</a><a href="#constructor.new_ServiceEndpoints" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_ServiceEndpoints"><span class="tsd-kind-constructor-signature">new <wbr/>Service<wbr/>Endpoints</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">streaming</span>, <span class="tsd-kind-parameter">polling</span>, <span class="tsd-kind-parameter">events</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">analyticsEventPath</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">diagnosticEventPath</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">includeAuthorizationHeader</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">payloadFilterKey</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.ServiceEndpoints.html" class="tsd-signature-type tsd-kind-class">ServiceEndpoints</a><a href="#constructor.new_ServiceEndpoints" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -66,10 +67,12 @@
 <li>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">diagnosticEventPath</span>: <span class="tsd-signature-type">string</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li>
 <li>
-<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">includeAuthorizationHeader</span>: <span class="tsd-signature-type">boolean</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">includeAuthorizationHeader</span>: <span class="tsd-signature-type">boolean</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">payloadFilterKey</span>: <span class="tsd-signature-type">string</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="platform-1.ServiceEndpoints.html" class="tsd-signature-type tsd-kind-class">ServiceEndpoints</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:22</li></ul></aside></li></ul></section></section>
+<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:23</li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member"><a id="analyticsEventPath" class="tsd-anchor"></a>
@@ -82,7 +85,7 @@
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:14</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:15</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="diagnosticEventPath" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>diagnostic<wbr/>Event<wbr/>Path</span><a href="#diagnosticEventPath" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">diagnostic<wbr/>Event<wbr/>Path</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
@@ -93,7 +96,7 @@
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:20</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:21</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="events" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>events</span><a href="#events" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">events</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
@@ -103,7 +106,12 @@
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>include<wbr/>Authorization<wbr/>Header</span><a href="#includeAuthorizationHeader" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">include<wbr/>Authorization<wbr/>Header</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:21</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:22</li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="payloadFilterKey" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>payload<wbr/>Filter<wbr/>Key</span><a href="#payloadFilterKey" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">payload<wbr/>Filter<wbr/>Key</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/common/dist/options/ServiceEndpoints.d.ts:9</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="polling" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>polling</span><a href="#polling" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">polling</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
@@ -143,6 +151,7 @@
 <li><a href="#diagnosticEventPath" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>diagnostic<wbr/>Event<wbr/>Path</span></a></li>
 <li><a href="#events" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>events</span></a></li>
 <li><a href="#includeAuthorizationHeader" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>include<wbr/>Authorization<wbr/>Header</span></a></li>
+<li><a href="#payloadFilterKey" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>payload<wbr/>Filter<wbr/>Key</span></a></li>
 <li><a href="#polling" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>polling</span></a></li>
 <li><a href="#streaming" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>streaming</span></a></li>
 <li><a href="#DEFAULT_EVENTS" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>DEFAULT_<wbr/>EVENTS</span></a></li></ul></div></details></div>
@@ -231,6 +240,9 @@
 <li><a href="../modules.html#deepCompact"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>deep<wbr/>Compact</span></a></li>
 <li><a href="../modules.html#defaultHeaders"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>default<wbr/>Headers</span></a></li>
 <li><a href="../modules.html#fastDeepEqual"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>fast<wbr/>Deep<wbr/>Equal</span></a></li>
+<li><a href="../modules.html#getEventsUri"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>get<wbr/>Events<wbr/>Uri</span></a></li>
+<li><a href="../modules.html#getPollingUri"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>get<wbr/>Polling<wbr/>Uri</span></a></li>
+<li><a href="../modules.html#getStreamingUri"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>get<wbr/>Streaming<wbr/>Uri</span></a></li>
 <li><a href="../modules.html#httpErrorMessage"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>http<wbr/>Error<wbr/>Message</span></a></li>
 <li><a href="../modules.html#internal"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>internal</span></a></li>
 <li><a href="../modules.html#isHttpLocallyRecoverable"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>is<wbr/>Http<wbr/>Locally<wbr/>Recoverable</span></a></li>
@@ -325,6 +337,9 @@
 <li><a href="../functions/platform-1.deepCompact.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deep<wbr/>Compact</span></a></li>
 <li><a href="../functions/platform-1.defaultHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>default<wbr/>Headers</span></a></li>
 <li><a href="../functions/platform-1.fastDeepEqual.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>fast<wbr/>Deep<wbr/>Equal</span></a></li>
+<li><a href="../functions/platform-1.getEventsUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Events<wbr/>Uri</span></a></li>
+<li><a href="../functions/platform-1.getPollingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Polling<wbr/>Uri</span></a></li>
+<li><a href="../functions/platform-1.getStreamingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Streaming<wbr/>Uri</span></a></li>
 <li><a href="../functions/platform-1.httpErrorMessage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>http<wbr/>Error<wbr/>Message</span></a></li>
 <li><a href="../functions/platform-1.isHttpLocallyRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Locally<wbr/>Recoverable</span></a></li>
 <li><a href="../functions/platform-1.isHttpRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Recoverable</span></a></li>

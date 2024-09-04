@@ -63,7 +63,7 @@
 <section class="tsd-panel tsd-member"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_StreamingProcessor"><span class="tsd-kind-constructor-signature">new <wbr/>Streaming<wbr/>Processor</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">sdkKey</span>, <span class="tsd-kind-parameter">clientContext</span>, <span class="tsd-kind-parameter">streamUriPath</span>, <span class="tsd-kind-parameter">listeners</span>, <span class="tsd-kind-parameter">diagnosticsManager</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">errorHandler</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">streamInitialReconnectDelay</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.internal.StreamingProcessor.html" class="tsd-signature-type tsd-kind-class">StreamingProcessor</a><a href="#constructor.new_StreamingProcessor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_StreamingProcessor"><span class="tsd-kind-constructor-signature">new <wbr/>Streaming<wbr/>Processor</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">sdkKey</span>, <span class="tsd-kind-parameter">clientContext</span>, <span class="tsd-kind-parameter">streamUriPath</span>, <span class="tsd-kind-parameter">parameters</span>, <span class="tsd-kind-parameter">listeners</span>, <span class="tsd-kind-parameter">diagnosticsManager</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">errorHandler</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">streamInitialReconnectDelay</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.internal.StreamingProcessor.html" class="tsd-signature-type tsd-kind-class">StreamingProcessor</a><a href="#constructor.new_StreamingProcessor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -74,6 +74,8 @@
 <h5><span class="tsd-kind-parameter">clientContext</span>: <a href="platform-1.ClientContext.html" class="tsd-signature-type tsd-kind-class">ClientContext</a></h5></li>
 <li>
 <h5><span class="tsd-kind-parameter">streamUriPath</span>: <span class="tsd-signature-type">string</span></h5></li>
+<li>
+<h5><span class="tsd-kind-parameter">parameters</span>: <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">key</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span></h5></li>
 <li>
 <h5><span class="tsd-kind-parameter">listeners</span>: <span class="tsd-signature-type ">Map</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/platform-1.EventName.html" class="tsd-signature-type tsd-kind-type-alias">EventName</a><span class="tsd-signature-symbol">, </span><a href="../types/platform-1.ProcessStreamResponse.html" class="tsd-signature-type tsd-kind-type-alias">ProcessStreamResponse</a><span class="tsd-signature-symbol">&gt;</span></h5></li>
 <li>
@@ -121,12 +123,12 @@
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>log<wbr/>Connection<wbr/>Result</span><a href="#logConnectionResult" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">log<wbr/>Connection<wbr/>Result</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:19</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:22</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="logConnectionStarted" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>log<wbr/>Connection<wbr/>Started</span><a href="#logConnectionStarted" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">log<wbr/>Connection<wbr/>Started</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:18</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:21</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="logger" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>logger</span><a href="#logger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">logger</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
@@ -149,7 +151,7 @@ diagnostics and logging logic.</p>
 <h4>Returns</h4><p>boolean whether to retry the connection.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:29</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:32</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="streamInitialReconnectDelay" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>stream<wbr/>Initial<wbr/>Reconnect<wbr/>Delay</span><a href="#streamInitialReconnectDelay" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">stream<wbr/>Initial<wbr/>Reconnect<wbr/>Delay</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
@@ -170,7 +172,7 @@ diagnostics and logging logic.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDStreamProcessor.close</p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:32</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:35</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="start" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>start</span><a href="#start" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -179,7 +181,7 @@ diagnostics and logging logic.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDStreamProcessor.start</p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:30</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:33</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="stop" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>stop</span><a href="#stop" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -188,7 +190,7 @@ diagnostics and logging logic.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDStreamProcessor.stop</p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:31</li></ul></aside></li></ul></section></section></div>
+<li>Defined in packages/shared/common/dist/internal/stream/StreamingProcessor.d.ts:34</li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -310,6 +312,9 @@ diagnostics and logging logic.</p>
 <li><a href="../modules.html#deepCompact"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>deep<wbr/>Compact</span></a></li>
 <li><a href="../modules.html#defaultHeaders"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>default<wbr/>Headers</span></a></li>
 <li><a href="../modules.html#fastDeepEqual"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>fast<wbr/>Deep<wbr/>Equal</span></a></li>
+<li><a href="../modules.html#getEventsUri"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>get<wbr/>Events<wbr/>Uri</span></a></li>
+<li><a href="../modules.html#getPollingUri"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>get<wbr/>Polling<wbr/>Uri</span></a></li>
+<li><a href="../modules.html#getStreamingUri"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>get<wbr/>Streaming<wbr/>Uri</span></a></li>
 <li><a href="../modules.html#httpErrorMessage"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>http<wbr/>Error<wbr/>Message</span></a></li>
 <li><a href="../modules.html#internal"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>internal</span></a></li>
 <li><a href="../modules.html#isHttpLocallyRecoverable"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>is<wbr/>Http<wbr/>Locally<wbr/>Recoverable</span></a></li>
@@ -427,6 +432,9 @@ diagnostics and logging logic.</p>
 <li><a href="../functions/platform-1.deepCompact.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deep<wbr/>Compact</span></a></li>
 <li><a href="../functions/platform-1.defaultHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>default<wbr/>Headers</span></a></li>
 <li><a href="../functions/platform-1.fastDeepEqual.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>fast<wbr/>Deep<wbr/>Equal</span></a></li>
+<li><a href="../functions/platform-1.getEventsUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Events<wbr/>Uri</span></a></li>
+<li><a href="../functions/platform-1.getPollingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Polling<wbr/>Uri</span></a></li>
+<li><a href="../functions/platform-1.getStreamingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Streaming<wbr/>Uri</span></a></li>
 <li><a href="../functions/platform-1.httpErrorMessage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>http<wbr/>Error<wbr/>Message</span></a></li>
 <li><a href="../functions/platform-1.isHttpLocallyRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Locally<wbr/>Recoverable</span></a></li>
 <li><a href="../functions/platform-1.isHttpRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Recoverable</span></a></li>
