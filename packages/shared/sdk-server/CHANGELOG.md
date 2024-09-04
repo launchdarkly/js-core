@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.6.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.5.0...js-server-sdk-common-v2.6.0) (2024-09-03)
+
+
+### Features
+
+* Add support for Payload Filtering ([#551](https://github.com/launchdarkly/js-core/issues/551)) ([6f44383](https://github.com/launchdarkly/js-core/commit/6f4438323baed802d8f951ac82494e6cfa9932c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.7.0 to 2.8.0
+
 ## [2.5.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.5...js-server-sdk-common-v2.5.0) (2024-08-28)
 
 
