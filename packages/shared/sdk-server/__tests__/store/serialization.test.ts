@@ -8,6 +8,7 @@ import {
   deserializePatch,
   nullReplacer,
   replacer,
+  serializeFlag,
   serializeSegment,
 } from '../../src/store/serialization';
 
@@ -594,4 +595,12 @@ it('serialization converts sets back to arrays for includedContexts/excludedCont
   expect(jsonDeserialized.excludedContexts[0].values).toEqual(excluded);
   expect(jsonDeserialized.includedContexts[0].generated_valuesSet).toBeUndefined();
   expect(jsonDeserialized.excludedContexts[0].generated_valuesSet).toBeUndefined();
+});
+
+it('serializes null values without issue', () => {
+  const jsonString = makeSerializedAllData(flagWithNullInJsonVariation);
+  const parsed = deserializeAll(jsonString);
+  const serialized = serializeFlag(parsed!.data.flags.flagName);
+  // After serialization nulls should still be there, and any memo generated items should be gone.
+  expect(JSON.parse(serialized)).toEqual(flagWithNullInJsonVariation);
 });

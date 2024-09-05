@@ -38,16 +38,18 @@ export function nullReplacer(target: any, excludeKeys?: string[]): void {
     key: string;
     value: any;
     parent: any;
-    skip: boolean;
   }[] = [];
 
   if (target === null || target === undefined) {
     return;
   }
 
+  const filteredEntries = Object.entries(target).filter(
+    ([key, _value]) => !excludeKeys?.includes(key),
+  );
+
   stack.push(
-    ...Object.entries(target).map(([key, value]) => ({
-      skip: excludeKeys?.includes(key) ?? false,
+    ...filteredEntries.map(([key, value]) => ({
       key,
       value,
       parent: target,
@@ -56,10 +58,6 @@ export function nullReplacer(target: any, excludeKeys?: string[]): void {
 
   while (stack.length) {
     const item = stack.pop()!;
-    if (item.skip) {
-      // eslint-disable-next-line no-continue
-      continue;
-    }
     // Do not remove items from arrays.
     if (item.value === null && !Array.isArray(item.parent)) {
       delete item.parent[item.key];
