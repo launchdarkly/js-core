@@ -448,7 +448,7 @@ it('does remove null from objects that are inside of arrays', () => {
   });
 });
 
-it('can handle attempting to replace nulls for an undefined of null value', () => {
+it('can handle attempting to replace nulls for an undefined or null value', () => {
   expect(() => {
     nullReplacer(null);
     nullReplacer(undefined);
