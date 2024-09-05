@@ -13,19 +13,6 @@ import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 // The max size where we use an array instead of a set.
 const TARGET_LIST_ARRAY_CUTOFF = 100;
 
-/**
- * @internal
- */
-export function reviver(this: any, key: string, value: any): any {
-  // Whenever a null is included we want to remove the field.
-  // In this way validation checks do not have to consider null, only undefined.
-  if (value === null) {
-    return undefined;
-  }
-
-  return value;
-}
-
 export interface FlagsAndSegments {
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
@@ -33,6 +20,63 @@ export interface FlagsAndSegments {
 
 export interface AllData {
   data: FlagsAndSegments;
+}
+
+/**
+ * Performs deep removal of null values.
+ *
+ * Does not remove null values from arrays.
+ *
+ * Note: This is a non-recursive implementation for performance and to avoid
+ * potential stack overflows.
+ *
+ * @param target The target to remove null values from.
+ * @param excludeKeys A list of top-level keys to exclude from null removal.
+ */
+export function nullReplacer(target: any, excludeKeys?: string[]): void {
+  const stack: {
+    key: string;
+    value: any;
+    parent: any;
+    skip: boolean;
+  }[] = [];
+
+  if (target === null || target === undefined) {
+    return;
+  }
+
+  stack.push(
+    ...Object.entries(target).map(([key, value]) => ({
+      skip: excludeKeys?.includes(key) ?? false,
+      key,
+      value,
+      parent: target,
+    })),
+  );
+
+  while (stack.length) {
+    const item = stack.pop()!;
+    if (item.skip) {
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+    // Do not remove items from arrays.
+    if (item.value === null && !Array.isArray(item.parent)) {
+      delete item.parent[item.key];
+    } else if (typeof item.value === 'object' && item.value !== null) {
+      // Add all the children to the stack. This includes array children.
+      // The items in the array could themselves be objects which need nulls
+      // removed from them.
+      stack.push(
+        ...Object.entries(item.value).map(([key, value]) => ({
+          key,
+          value,
+          parent: item.value,
+          skip: false,
+        })),
+      );
+    }
+  }
 }
 
 /**
@@ -112,6 +156,8 @@ function processRollout(rollout?: Rollout) {
  * @internal
  */
 export function processFlag(flag: Flag) {
+  nullReplacer(flag, ['variations']);
+
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
     processRollout(rollout);
@@ -135,6 +181,7 @@ export function processFlag(flag: Flag) {
  * @internal
  */
 export function processSegment(segment: Segment) {
+  nullReplacer(segment);
   if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
     segment.generated_includedSet = new Set(segment.included);
     delete segment.included;
@@ -187,7 +234,7 @@ export function processSegment(segment: Segment) {
 
 function tryParse(data: string): any {
   try {
-    return JSON.parse(data, reviver);
+    return JSON.parse(data);
   } catch {
     return undefined;
   }
