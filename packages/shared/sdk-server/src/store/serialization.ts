@@ -54,6 +54,10 @@ export function replacer(this: any, key: string, value: any): any {
       return undefined;
     }
   }
+  // Allow null/undefined values to pass through without modification.
+  if (value === null || value === undefined) {
+    return value;
+  }
   if (value.generated_includedSet) {
     value.included = [...value.generated_includedSet];
     delete value.generated_includedSet;
