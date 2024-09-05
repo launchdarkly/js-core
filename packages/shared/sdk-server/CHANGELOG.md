@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.6.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.6.0...js-server-sdk-common-v2.6.1) (2024-09-05)
+
+
+### Bug Fixes
+
+* Correctly handle null values in JSON variations. ([#569](https://github.com/launchdarkly/js-core/issues/569)) ([907d08b](https://github.com/launchdarkly/js-core/commit/907d08b730ce9745c1b221f2f539f7c56c3a0234)), closes [#568](https://github.com/launchdarkly/js-core/issues/568)
+
 ## [2.6.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.5.0...js-server-sdk-common-v2.6.0) (2024-09-03)
 
 
