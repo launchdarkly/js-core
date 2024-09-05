@@ -70,7 +70,6 @@ export function nullReplacer(target: any, excludeKeys?: string[]): void {
           key,
           value,
           parent: item.value,
-          skip: false,
         })),
       );
     }
