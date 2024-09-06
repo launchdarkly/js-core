@@ -1,28 +1,10 @@
-import { AutoEnvAttributes, clone, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
-import {
-  createBasicPlatform,
-  createLogger,
-  MockStreamingProcessor,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
+import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
+import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
+import { MockEventSource } from './LDClientImpl.mocks';
 import { Flags } from './types';
-
-jest.mock('@launchdarkly/js-sdk-common', () => {
-  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const actualMock = jest.requireActual('@launchdarkly/private-js-mocks');
-  return {
-    ...actual,
-    ...{
-      internal: {
-        ...actual.internal,
-        StreamingProcessor: actualMock.MockStreamingProcessor,
-      },
-    },
-  };
-});
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
@@ -41,8 +23,11 @@ const autoEnv = {
     os: { name: 'An OS', version: '1.0.1', family: 'orange' },
   },
 };
+
 describe('sdk-client object', () => {
   let ldc: LDClientImpl;
+  let mockEventSource: MockEventSource;
+  let simulatedEvents: { data?: any }[] = [];
   let defaultPutResponse: Flags;
   let mockPlatform: ReturnType<typeof createBasicPlatform>;
   let logger: ReturnType<typeof createLogger>;
@@ -51,7 +36,6 @@ describe('sdk-client object', () => {
     mockPlatform = createBasicPlatform();
     logger = createLogger();
     defaultPutResponse = clone<Flags>(mockResponseJson);
-    setupMockStreamingProcessor(false, defaultPutResponse);
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
     const hasher = {
       update: jest.fn((): Hasher => hasher),
@@ -59,13 +43,28 @@ describe('sdk-client object', () => {
     };
     mockPlatform.crypto.createHash.mockReturnValue(hasher);
 
+    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
+      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return '/stream/path';
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return '/stream/path';
+      },
+    });
+
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
+
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
-    jest
-      .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
-      .mockReturnValue('/stream/path');
   });
 
   afterEach(async () => {
@@ -90,10 +89,17 @@ describe('sdk-client object', () => {
   });
 
   test('identify success', async () => {
-    defaultPutResponse['dev-test-flag'].value = false;
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+
+    // need reference within test to run assertions against
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateEvents('put', [{ data: JSON.stringify(defaultPutResponse) }]);
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
 
     await ldc.identify(carContext);
     const c = ldc.getContext();
@@ -105,20 +111,26 @@ describe('sdk-client object', () => {
       ...autoEnv,
     });
     expect(all).toMatchObject({
-      'dev-test-flag': false,
+      'dev-test-flag': true,
     });
-    expect(MockStreamingProcessor).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      '/stream/path',
-      expect.anything(),
-      undefined,
+
+    expect(mockCreateEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('/stream/path'),
       expect.anything(),
     );
   });
 
   test('identify success withReasons', async () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    // need reference within test to run assertions against
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateEvents('put', [{ data: JSON.stringify(defaultPutResponse) }]);
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
+
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
@@ -127,18 +139,16 @@ describe('sdk-client object', () => {
 
     await ldc.identify(carContext);
 
-    expect(MockStreamingProcessor).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      '/stream/path?withReasons=true',
-      expect.anything(),
-      undefined,
+    expect(mockCreateEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('?withReasons=true'),
       expect.anything(),
     );
   });
 
   test('identify success without auto env', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
       logger,
@@ -157,6 +167,8 @@ describe('sdk-client object', () => {
 
   test('identify anonymous', async () => {
     defaultPutResponse['dev-test-flag'].value = false;
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
     const carContext: LDContext = { kind: 'car', anonymous: true, key: '' };
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
@@ -184,7 +196,14 @@ describe('sdk-client object', () => {
   });
 
   test('identify error stream error', async () => {
-    setupMockStreamingProcessor(true);
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateError({ status: 404, message: 'test-error' });
+        return mockEventSource;
+      },
+    );
+
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     await expect(ldc.identify(carContext)).rejects.toThrow('test-error');

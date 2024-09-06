@@ -2,6 +2,7 @@ import {
   AutoEnvAttributes,
   ClientContext,
   clone,
+  Encoding,
   internal,
   LDContext,
   subsystem,
@@ -10,11 +11,11 @@ import {
   createBasicPlatform,
   createLogger,
   MockEventProcessor,
-  setupMockStreamingProcessor,
 } from '@launchdarkly/private-js-mocks';
 
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import LDClientImpl from './LDClientImpl';
+import { MockEventSource } from './LDClientImpl.mocks';
 import { Flags } from './types';
 
 type InputCustomEvent = internal.InputCustomEvent;
@@ -36,7 +37,6 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
     ...{
       internal: {
         ...actual.internal,
-        StreamingProcessor: m.MockStreamingProcessor,
         EventProcessor: m.MockEventProcessor,
       },
     },
@@ -45,6 +45,7 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 
 const testSdkKey = 'test-sdk-key';
 let ldc: LDClientImpl;
+let mockEventSource: MockEventSource;
 let defaultPutResponse: Flags;
 const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
@@ -66,15 +67,31 @@ describe('sdk-client object', () => {
         sendEvent: mockedSendEvent,
       }),
     );
-    setupMockStreamingProcessor(false, defaultPutResponse);
+
+    const simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    mockPlatform.storage.get.mockImplementation(() => undefined);
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
+
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
     });
-    jest
-      .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
-      .mockReturnValue('/stream/path');
+
+    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
+      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return '/stream/path';
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return '/stream/path';
+      },
+    });
   });
 
   afterEach(() => {

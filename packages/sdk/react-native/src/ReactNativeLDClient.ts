@@ -4,9 +4,11 @@ import {
   base64UrlEncode,
   BasicLogger,
   ConnectionMode,
+  Encoding,
   internal,
   LDClientImpl,
   type LDContext,
+  StreamingPaths,
 } from '@launchdarkly/js-client-sdk-common';
 
 import validateOptions, { filterToBaseOptions } from './options';
@@ -103,8 +105,15 @@ export default class ReactNativeLDClient extends LDClientImpl {
     return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
   }
 
-  override createStreamUriPath(context: LDContext) {
-    return `/meval/${this.encodeContext(context)}`;
+  override getStreamingPaths(): StreamingPaths {
+    return {
+      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/meval`;
+      },
+    };
   }
 
   override createPollUriPath(context: LDContext): string {

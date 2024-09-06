@@ -3,6 +3,7 @@ import {
   ClientContext,
   clone,
   Context,
+  Encoding,
   internal,
   LDClientError,
   LDContext,
@@ -31,6 +32,7 @@ import EventFactory from './events/EventFactory';
 import FlagManager from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import PollingProcessor from './polling/PollingProcessor';
+import { StreamingPaths, StreamingProcessor } from './streaming';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 const { createErrorEvaluationDetail, createSuccessEvaluationDetail, ClientMessages, ErrorKinds } =
@@ -256,17 +258,19 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
-  /**
-   * Generates the url path for streaming.
-   *
-   * @protected This function must be overridden in subclasses for streaming
-   * to work.
-   * @param _context The LDContext object
-   */
-  protected createStreamUriPath(_context: LDContext): string {
-    throw new Error(
-      'createStreamUriPath not implemented. Client sdks must implement createStreamUriPath for streaming to work.',
-    );
+  protected getStreamingPaths(): StreamingPaths {
+    return {
+      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        throw new Error(
+          'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with GET to work.',
+        );
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        throw new Error(
+          'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with REPORT to work.',
+        );
+      },
+    };
   }
 
   /**
@@ -436,16 +440,21 @@ export default class LDClientImpl implements LDClient {
     identifyResolve: any,
     identifyReject: any,
   ) {
-    let streamingPath = this.createStreamUriPath(context);
-    if (this.config.withReasons) {
-      streamingPath = `${streamingPath}?withReasons=true`;
-    }
-
-    this.updateProcessor = new internal.StreamingProcessor(
-      this.sdkKey,
-      this.clientContext,
-      streamingPath,
+    this.updateProcessor = new StreamingProcessor(
+      JSON.stringify(context),
+      {
+        credential: this.sdkKey,
+        streamingEndpoint: this.config.serviceEndpoints.streaming,
+        paths: this.getStreamingPaths(),
+        tags: this.clientContext.basicConfiguration.tags,
+        info: this.platform.info,
+        initialRetryDelayMillis: 1000,
+        withReasons: this.config.withReasons,
+        useReport: this.config.useReport,
+      },
       this.createStreamListeners(checkedContext, identifyResolve),
+      this.platform.requests,
+      this.platform.encoding!,
       this.diagnosticsManager,
       (e) => {
         identifyReject(e);
