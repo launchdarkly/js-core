@@ -1,4 +1,5 @@
 import { Context, Crypto } from '@launchdarkly/js-sdk-common';
+
 import digest from '../crypto/digest';
 
 export type Namespace = 'LaunchDarkly' | 'AnonymousKeys' | 'ContextKeys' | 'ContextIndex';

@@ -12,9 +12,9 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import Configuration from '../configuration';
+import digest from '../crypto/digest';
 import { getOrGenerateKey } from '../storage/getOrGenerateKey';
 import { namespaceForGeneratedContextKey } from '../storage/namespaceUtils';
-import digest from '../crypto/digest';
 
 const { isLegacyUser, isSingleKind, isMultiKind } = internal;
 const defaultAutoEnvSchemaVersion = '1.0';
