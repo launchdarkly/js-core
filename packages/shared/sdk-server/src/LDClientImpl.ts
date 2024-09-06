@@ -689,9 +689,9 @@ export default class LDClientImpl implements LDClient {
   secureModeHash(context: LDContext): string {
     const checkedContext = Context.fromLDContext(context);
     const key = checkedContext.valid ? checkedContext.canonicalKey : undefined;
-    if(!this.platform.crypto.createHmac) {
+    if (!this.platform.crypto.createHmac) {
       // This represents an error in platform implementation.
-      throw new Error("Platform must implement createHmac");
+      throw new Error('Platform must implement createHmac');
     }
     const hmac = this.platform.crypto.createHmac('sha256', this.sdkKey);
 

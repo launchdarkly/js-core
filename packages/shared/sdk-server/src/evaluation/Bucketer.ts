@@ -26,9 +26,9 @@ export default class Bucketer {
   private sha1Hex(value: string) {
     const hash = this.crypto.createHash('sha1');
     hash.update(value);
-    if(!hash.digest) {
+    if (!hash.digest) {
       // This represents an error in platform implementation.
-      throw new Error("Platform must implement digest or asyncDigest");
+      throw new Error('Platform must implement digest or asyncDigest');
     }
     return hash.digest('hex');
   }

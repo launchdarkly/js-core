@@ -9,9 +9,9 @@ function hashAndBase64Encode(crypto: Crypto): (input: string) => Promise<string>
   return async (input) => {
     const hasher = crypto.createHash('sha256').update(input);
     const digestMethod = hasher.digest ?? hasher.asyncDigest;
-    if(digestMethod) {
+    if (digestMethod) {
       // This represents an error in platform implementation.
-      throw new Error("Platform must implement digest or asyncDigest");
+      throw new Error('Platform must implement digest or asyncDigest');
     }
     return digestMethod!('base64');
   };
