@@ -15,6 +15,7 @@ import { ItemDescriptor } from './ItemDescriptor';
 export default class FlagPersistence {
   private contextIndex: ContextIndex | undefined;
   private indexKey?: string;
+  private indexKeyPromise: Promise<string>;
 
   constructor(
     private readonly platform: Platform,
@@ -24,13 +25,8 @@ export default class FlagPersistence {
     private readonly flagUpdater: FlagUpdater,
     private readonly logger: LDLogger,
     private readonly timeStamper: () => number = () => Date.now(),
-  ) {}
-
-  private async getIndexKey() {
-    if (!this.indexKey) {
-      this.indexKey = await namespaceForContextIndex(this.environmentNamespace);
-    }
-    return this.indexKey;
+  ) {
+    this.indexKeyPromise = namespaceForContextIndex(this.environmentNamespace);
   }
 
   /**
@@ -108,7 +104,7 @@ export default class FlagPersistence {
       return this.contextIndex;
     }
 
-    const json = await this.platform.storage?.get(await this.getIndexKey());
+    const json = await this.platform.storage?.get(await this.indexKeyPromise);
     if (!json) {
       this.contextIndex = new ContextIndex();
       return this.contextIndex;
@@ -137,7 +133,7 @@ export default class FlagPersistence {
     await Promise.all(pruned.map(async (it) => this.platform.storage?.clear(it.id)));
 
     // store index
-    await this.platform.storage?.set(await this.getIndexKey(), index.toJson());
+    await this.platform.storage?.set(await this.indexKeyPromise, index.toJson());
     const allFlags = this.flagStore.getAll();
 
     // mapping item descriptors to flags
