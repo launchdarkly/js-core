@@ -31,10 +31,7 @@ export class DefaultFlagStore implements FlagStore {
   }
 
   get(key: string): ItemDescriptor | undefined {
-    if (Object.prototype.hasOwnProperty.call(this.flags, key)) {
-      return this.flags[key];
-    }
-    return undefined;
+    return this.flags[key];
   }
 
   getAll(): { [key: string]: ItemDescriptor } {

@@ -141,8 +141,12 @@ describe('FlagPersistence tests', () => {
 
     await fpUnderTest.init(context, flags);
 
-    const contextDataKey = namespaceForContextData(mockPlatform.crypto, TEST_NAMESPACE, context);
-    const contextIndexKey = namespaceForContextIndex(TEST_NAMESPACE);
+    const contextDataKey = await namespaceForContextData(
+      mockPlatform.crypto,
+      TEST_NAMESPACE,
+      context,
+    );
+    const contextIndexKey = await namespaceForContextIndex(TEST_NAMESPACE);
     expect(await memoryStorage.get(contextIndexKey)).toContain(contextDataKey);
     expect(await memoryStorage.get(contextDataKey)).toContain('flagA');
   });
@@ -175,9 +179,17 @@ describe('FlagPersistence tests', () => {
     await fpUnderTest.init(context1, flags);
     await fpUnderTest.init(context2, flags);
 
-    const context1DataKey = namespaceForContextData(mockPlatform.crypto, TEST_NAMESPACE, context1);
-    const context2DataKey = namespaceForContextData(mockPlatform.crypto, TEST_NAMESPACE, context2);
-    const contextIndexKey = namespaceForContextIndex(TEST_NAMESPACE);
+    const context1DataKey = await namespaceForContextData(
+      mockPlatform.crypto,
+      TEST_NAMESPACE,
+      context1,
+    );
+    const context2DataKey = await namespaceForContextData(
+      mockPlatform.crypto,
+      TEST_NAMESPACE,
+      context2,
+    );
+    const contextIndexKey = await namespaceForContextIndex(TEST_NAMESPACE);
 
     const indexData = await memoryStorage.get(contextIndexKey);
     expect(indexData).not.toContain(context1DataKey);
@@ -213,7 +225,7 @@ describe('FlagPersistence tests', () => {
 
     await fpUnderTest.init(context, flags);
     await fpUnderTest.init(context, flags);
-    const contextIndexKey = namespaceForContextIndex(TEST_NAMESPACE);
+    const contextIndexKey = await namespaceForContextIndex(TEST_NAMESPACE);
 
     const indexData = await memoryStorage.get(contextIndexKey);
     expect(indexData).toContain(`"timestamp":2`);
@@ -248,7 +260,11 @@ describe('FlagPersistence tests', () => {
     await fpUnderTest.init(context, flags);
     await fpUnderTest.upsert(context, 'flagA', { version: 2, flag: flagAv2 });
 
-    const contextDataKey = namespaceForContextData(mockPlatform.crypto, TEST_NAMESPACE, context);
+    const contextDataKey = await namespaceForContextData(
+      mockPlatform.crypto,
+      TEST_NAMESPACE,
+      context,
+    );
 
     // check memory flag store and persistence
     expect(flagStore.get('flagA')?.version).toEqual(2);
@@ -286,12 +302,12 @@ describe('FlagPersistence tests', () => {
       flag: makeMockFlag(),
     });
 
-    const activeContextDataKey = namespaceForContextData(
+    const activeContextDataKey = await namespaceForContextData(
       mockPlatform.crypto,
       TEST_NAMESPACE,
       activeContext,
     );
-    const inactiveContextDataKey = namespaceForContextData(
+    const inactiveContextDataKey = await namespaceForContextData(
       mockPlatform.crypto,
       TEST_NAMESPACE,
       inactiveContext,
