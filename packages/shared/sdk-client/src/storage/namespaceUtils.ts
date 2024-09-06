@@ -1,4 +1,5 @@
 import { Context, Crypto } from '@launchdarkly/js-sdk-common';
+import digest from '../crypto/digest';
 
 export type Namespace = 'LaunchDarkly' | 'AnonymousKeys' | 'ContextKeys' | 'ContextIndex';
 
@@ -7,18 +8,7 @@ export type Namespace = 'LaunchDarkly' | 'AnonymousKeys' | 'ContextKeys' | 'Cont
  */
 function hashAndBase64Encode(crypto: Crypto): (input: string) => Promise<string> {
   return async (input) => {
-    const hasher = crypto.createHash('sha256').update(input);
-    const digest = async (encoding: string) => {
-      if (hasher.digest) {
-        return hasher.digest(encoding);
-      }
-      if (hasher.asyncDigest) {
-        return hasher.asyncDigest(encoding);
-      }
-      // This represents an error in platform implementation.
-      throw new Error('Platform must implement digest or asyncDigest');
-    };
-    return digest('base64');
+    return digest(crypto.createHash('sha256').update(input), 'base64');
   };
 }
 
