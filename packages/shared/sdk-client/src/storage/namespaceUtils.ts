@@ -8,9 +8,7 @@ export type Namespace = 'LaunchDarkly' | 'AnonymousKeys' | 'ContextKeys' | 'Cont
  * Hashes the input and encodes it as base64
  */
 function hashAndBase64Encode(crypto: Crypto): (input: string) => Promise<string> {
-  return async (input) => {
-    return digest(crypto.createHash('sha256').update(input), 'base64');
-  };
+  return async (input) => digest(crypto.createHash('sha256').update(input), 'base64');
 }
 
 const noop = async (input: string) => input; // no-op transform
