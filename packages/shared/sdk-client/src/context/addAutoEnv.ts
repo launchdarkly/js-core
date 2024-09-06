@@ -60,11 +60,16 @@ export const addApplicationInfo = async (
 
     const hasher = crypto.createHash('sha256');
     hasher.update(id);
-    const digest = hasher.digest || hasher.asyncDigest;
-    if (!digest) {
+    const digest = async (encoding: string) => {
+      if (hasher.digest) {
+        return hasher.digest(encoding);
+      } else if (hasher.asyncDigest) {
+        return hasher.asyncDigest(encoding);
+      }
       // This represents an error in platform implementation.
       throw new Error('Platform must implement digest or asyncDigest');
-    }
+    };
+
     app.key = await digest('base64');
     app.envAttributesVersion = app.envAttributesVersion || defaultAutoEnvSchemaVersion;
 

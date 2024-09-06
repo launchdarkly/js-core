@@ -8,12 +8,16 @@ export type Namespace = 'LaunchDarkly' | 'AnonymousKeys' | 'ContextKeys' | 'Cont
 function hashAndBase64Encode(crypto: Crypto): (input: string) => Promise<string> {
   return async (input) => {
     const hasher = crypto.createHash('sha256').update(input);
-    const digestMethod = hasher.digest ?? hasher.asyncDigest;
-    if (!digestMethod) {
+    const digest = async (encoding: string) => {
+      if (hasher.digest) {
+        return hasher.digest(encoding);
+      } else if (hasher.asyncDigest) {
+        return hasher.asyncDigest(encoding);
+      }
       // This represents an error in platform implementation.
       throw new Error('Platform must implement digest or asyncDigest');
-    }
-    return digestMethod!('base64');
+    };
+    return digest('base64');
   };
 }
 
