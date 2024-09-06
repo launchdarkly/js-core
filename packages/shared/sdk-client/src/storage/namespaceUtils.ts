@@ -11,7 +11,8 @@ function hashAndBase64Encode(crypto: Crypto): (input: string) => Promise<string>
     const digest = async (encoding: string) => {
       if (hasher.digest) {
         return hasher.digest(encoding);
-      } else if (hasher.asyncDigest) {
+      }
+      if (hasher.asyncDigest) {
         return hasher.asyncDigest(encoding);
       }
       // This represents an error in platform implementation.
