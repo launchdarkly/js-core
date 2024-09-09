@@ -22,6 +22,7 @@ const serviceEndpoints = {
   diagnosticEventPath: '/diagnostic',
   analyticsEventPath: '/bulk',
   includeAuthorizationHeader: true,
+  payloadFilterKey: 'testPayloadFilterKey'
 };
 
 const dateNowString = '2023-08-10';
@@ -39,24 +40,27 @@ const event = {
 
 let basicPlatform: Platform;
 
-function getStreamingDataSourceConfig(): StreamingDataSourceConfig {
+function getStreamingDataSourceConfig(
+  withReasons: boolean = false,
+  useReport: boolean = false,
+): StreamingDataSourceConfig {
   return {
     credential: sdkKey,
     // eslint-disable-next-line object-shorthand
     serviceEndpoints: serviceEndpoints,
     paths: {
       pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
-        return '/stream/path';
+        return '/stream/path/get';
       },
       pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
-        return '/stream/path';
+        return '/stream/path/report';
       },
     },
     tags: undefined,
     info: basicPlatform.info,
     initialRetryDelayMillis: 1000,
-    withReasons: false,
-    useReport: false,
+    withReasons,
+    useReport,
   };
 }
 
@@ -73,9 +77,9 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
   close: jest.fn(),
 });
 
-describe('given a stream processor with mock event source', () => {
+describe('given a stream processor', () => {
   let info: Info;
-  let streamingProcessor: subsystem.LDStreamProcessor;
+  let streamingProcessor: StreamingProcessor;
   let diagnosticsManager: internal.DiagnosticsManager;
   let listeners: Map<EventName, ProcessStreamResponse>;
   let mockEventSource: any;
@@ -142,7 +146,7 @@ describe('given a stream processor with mock event source', () => {
 
   it('uses expected uri and eventSource init args', () => {
     expect(basicPlatform.requests.createEventSource).toBeCalledWith(
-      `${serviceEndpoints.streaming}/stream/path`,
+      `${serviceEndpoints.streaming}/stream/path/get?filter=testPayloadFilterKey`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, undefined),
@@ -166,7 +170,57 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor.start();
 
     expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
-      `${serviceEndpoints.streaming}/stream/path`,
+      `${serviceEndpoints.streaming}/stream/path/get?filter=testPayloadFilterKey`,
+      {
+        errorFilter: expect.any(Function),
+        headers: defaultHeaders(sdkKey, info, undefined),
+        initialRetryDelayMillis: 1000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
+    );
+  });
+
+  it('uses the report path and modifies init dict when useReport is true ', () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(true, true),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      diagnosticsManager,
+      mockErrorHandler,
+    );
+    streamingProcessor.start();
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/stream/path/report?withReasons=true&filter=testPayloadFilterKey`,
+      {
+        method: 'REPORT',
+        body: 'mockContextString',
+        errorFilter: expect.any(Function),
+        headers: defaultHeaders(sdkKey, info, undefined),
+        initialRetryDelayMillis: 1000,
+        readTimeoutMillis: 300000,
+        retryResetIntervalMillis: 60000,
+      },
+    );
+  });
+
+  it('withReasons and payload filter coexist', () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(true, false),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      diagnosticsManager,
+      mockErrorHandler,
+    );
+    streamingProcessor.start();
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/stream/path/get?withReasons=true&filter=testPayloadFilterKey`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, undefined),
