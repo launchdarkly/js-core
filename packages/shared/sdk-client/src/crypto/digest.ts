@@ -1,6 +1,6 @@
 import { Hasher } from '@launchdarkly/js-sdk-common';
 
-export default function digest(hasher: Hasher, encoding: string) {
+export default async function digest(hasher: Hasher, encoding: string): Promise<string> {
   if (hasher.digest) {
     return hasher.digest(encoding);
   }
