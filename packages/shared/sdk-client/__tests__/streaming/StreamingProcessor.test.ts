@@ -7,7 +7,6 @@ import {
   LDStreamingError,
   Platform,
   ProcessStreamResponse,
-  subsystem,
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
@@ -22,7 +21,7 @@ const serviceEndpoints = {
   diagnosticEventPath: '/diagnostic',
   analyticsEventPath: '/bulk',
   includeAuthorizationHeader: true,
-  payloadFilterKey: 'testPayloadFilterKey'
+  payloadFilterKey: 'testPayloadFilterKey',
 };
 
 const dateNowString = '2023-08-10';
