@@ -1,7 +1,8 @@
-import { ApplicationTags, Encoding, Info } from '@launchdarkly/js-sdk-common';
+import { ApplicationTags, Encoding, Info, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
 
 export interface DataSourceConfig {
   credential: string;
+  serviceEndpoints: ServiceEndpoints;
   info: Info;
   tags?: ApplicationTags;
   withReasons: boolean;
@@ -10,7 +11,6 @@ export interface DataSourceConfig {
 
 export interface StreamingDataSourceConfig extends DataSourceConfig {
   initialRetryDelayMillis: number;
-  streamingEndpoint: string;
   paths: StreamingPaths;
 }
 

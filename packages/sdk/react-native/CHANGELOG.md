@@ -1,5 +1,28 @@
 # Changelog
 
+## [10.6.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.6.0...react-native-client-sdk-v10.6.1) (2024-09-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.6.0 to 1.7.0
+
+## [10.6.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.5.1...react-native-client-sdk-v10.6.0) (2024-08-28)
+
+
+### Features
+
+* custom storage option for React Native SDK ([#539](https://github.com/launchdarkly/js-core/issues/539)) ([115bd82](https://github.com/launchdarkly/js-core/commit/115bd828c665731084665b5d94bb3836942332b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.5.0 to 1.6.0
+
 ## [10.5.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.5.0...react-native-client-sdk-v10.5.1) (2024-08-19)
 
 

@@ -1,6 +1,14 @@
 import ApplicationTags from './ApplicationTags';
 import ClientContext from './ClientContext';
 import OptionMessages from './OptionMessages';
-import ServiceEndpoints from './ServiceEndpoints';
+import ServiceEndpoints, { getEventsUri, getPollingUri, getStreamingUri } from './ServiceEndpoints';
 
-export { ApplicationTags, OptionMessages, ServiceEndpoints, ClientContext };
+export {
+  ApplicationTags,
+  OptionMessages,
+  ServiceEndpoints,
+  ClientContext,
+  getStreamingUri,
+  getPollingUri,
+  getEventsUri,
+};

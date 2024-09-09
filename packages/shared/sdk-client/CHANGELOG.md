@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.7.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.6.0...js-client-sdk-common-v1.7.0) (2024-09-03)
+
+
+### Features
+
+* Add support for Payload Filtering ([#551](https://github.com/launchdarkly/js-core/issues/551)) ([6f44383](https://github.com/launchdarkly/js-core/commit/6f4438323baed802d8f951ac82494e6cfa9932c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.7.0 to 2.8.0
+
+## [1.6.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.5.0...js-client-sdk-common-v1.6.0) (2024-08-28)
+
+
+### Features
+
+* Correct client evaluation typings. ([#554](https://github.com/launchdarkly/js-core/issues/554)) ([64ab88d](https://github.com/launchdarkly/js-core/commit/64ab88d278308564b4cd7b6433870c7adb09142a))
+* Make timeout optional in LDIdentifyOptions. ([#552](https://github.com/launchdarkly/js-core/issues/552)) ([fa247b2](https://github.com/launchdarkly/js-core/commit/fa247b2db821d11c8360752ba5f28b4ecff493c7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.6.0 to 2.7.0
+
 ## [1.5.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.4.0...js-client-sdk-common-v1.5.0) (2024-08-19)
 
 

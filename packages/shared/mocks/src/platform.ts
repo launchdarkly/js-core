@@ -1,10 +1,6 @@
-import type { Encoding, Platform, PlatformData, Requests, SdkData, Storage } from '@common';
+import type { PlatformData, SdkData } from '@common';
 
 import { setupCrypto } from './crypto';
-
-const encoding: Encoding = {
-  btoa: (s: string) => Buffer.from(s).toString('base64'),
-};
 
 const setupInfo = () => ({
   platformData: jest.fn(

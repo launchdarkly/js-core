@@ -2,6 +2,33 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.5.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.3...node-server-sdk-v9.5.4) (2024-09-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.6.0 to 2.6.1
+
+## [9.5.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.2...node-server-sdk-v9.5.3) (2024-09-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.5.0 to 2.6.0
+
+## [9.5.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.1...node-server-sdk-v9.5.2) (2024-08-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.4.5 to 2.5.0
+
 ## [9.5.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.0...node-server-sdk-v9.5.1) (2024-08-12)
 
 

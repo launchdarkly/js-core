@@ -1,4 +1,8 @@
-import ServiceEndpoints from '../../src/options/ServiceEndpoints';
+import ServiceEndpoints, {
+  getEventsUri,
+  getPollingUri,
+  getStreamingUri,
+} from '../../src/options/ServiceEndpoints';
 
 describe.each([
   [
@@ -32,4 +36,27 @@ describe.each([
     expect(endpoints.polling).toEqual(expected.baseUri);
     expect(endpoints.events).toEqual(expected.eventsUri);
   });
+});
+
+it('applies payload filter to polling and streaming endpoints', () => {
+  const endpoints = new ServiceEndpoints(
+    'https://stream.launchdarkly.com',
+    'https://sdk.launchdarkly.com',
+    'https://events.launchdarkly.com',
+    '/bulk',
+    '/diagnostic',
+    true,
+    'filterKey',
+  );
+
+  expect(getStreamingUri(endpoints, '/all', [])).toEqual(
+    'https://stream.launchdarkly.com/all?filter=filterKey',
+  );
+  expect(getPollingUri(endpoints, '/sdk/latest-all', [])).toEqual(
+    'https://sdk.launchdarkly.com/sdk/latest-all?filter=filterKey',
+  );
+  expect(
+    getPollingUri(endpoints, '/sdk/latest-all', [{ key: 'withReasons', value: 'true' }]),
+  ).toEqual('https://sdk.launchdarkly.com/sdk/latest-all?withReasons=true&filter=filterKey');
+  expect(getEventsUri(endpoints, '/bulk', [])).toEqual('https://events.launchdarkly.com/bulk');
 });

@@ -5,7 +5,7 @@ import { ConnectionMode } from '@launchdarkly/js-client-sdk-common';
 import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-  const [flagKey, setFlagKey] = useState('my-boolean-flag-1');
+  const [flagKey, setFlagKey] = useState('sample-feature');
   const [userKey, setUserKey] = useState('');
   const flagValue = useBoolVariation(flagKey, false);
   const ldc = useLDClient();
@@ -15,7 +15,6 @@ export default function Welcome() {
       .identify({ kind: 'user', key: userKey }, { timeout: 5 })
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
-
 
   const setConnectionMode = (m: ConnectionMode) => {
     ldc.setConnectionMode(m);
@@ -51,7 +50,10 @@ export default function Welcome() {
         testID="flagKey"
       />
       <View style={styles.connectionModeContainer}>
-        <TouchableOpacity style={styles.buttonContainer} onPress={() => setConnectionMode('offline')}>
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={() => setConnectionMode('offline')}
+        >
           <Text style={styles.buttonText}>Set offline</Text>
         </TouchableOpacity>
         <TouchableOpacity

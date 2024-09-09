@@ -3,6 +3,7 @@ import {
   Encoding,
   EventName,
   EventSource,
+  getStreamingUri,
   httpErrorMessage,
   HttpErrorResponse,
   internal,
@@ -44,12 +45,13 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     private readonly errorHandler?: internal.StreamingErrorHandler,
     private readonly logger?: LDLogger,
   ) {
-    let path = dataSourceConfig.useReport
+    const path = dataSourceConfig.useReport
       ? dataSourceConfig.paths.pathReport(encoding, dataSourceConfig.credential, plainContextString)
       : dataSourceConfig.paths.pathGet(encoding, dataSourceConfig.credential, plainContextString);
 
-    if (dataSourceConfig.withReasons) {
-      path = `${path}?withReasons=true`;
+    const parameters: { key: string; value: string }[] = [];
+    if (this.dataSourceConfig.withReasons) {
+      parameters.push({ key: 'withReasons', value: 'true' });
     }
 
     this.headers = defaultHeaders(
@@ -60,7 +62,7 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
 
     this.logger = logger;
     this.requests = requests;
-    this.streamUri = `${dataSourceConfig.streamingEndpoint}${path}`;
+    this.streamUri = getStreamingUri(dataSourceConfig.serviceEndpoints, path, parameters);
   }
 
   private logConnectionStarted() {

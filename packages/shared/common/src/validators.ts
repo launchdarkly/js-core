@@ -118,7 +118,7 @@ export class StringMatchingRegex extends Type<string> {
   }
 
   override is(u: unknown): u is string {
-    return !!(u as string).match(this.expression);
+    return typeof u === 'string' && !!(u as string).match(this.expression);
   }
 }
 

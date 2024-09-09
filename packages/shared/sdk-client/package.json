@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk-common",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,7 +30,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "2.6.0"
+    "@launchdarkly/js-sdk-common": "2.8.0"
   },
   "devDependencies": {
     "@launchdarkly/private-js-mocks": "0.0.1",

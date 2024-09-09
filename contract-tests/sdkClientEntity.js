@@ -26,11 +26,17 @@ export function makeSdkConfig(options, tag) {
   if (options.streaming) {
     cf.streamUri = options.streaming.baseUri;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+    if (options.streaming.filter) {
+      cf.payloadFilterKey = options.streaming.filter;
+    }
   }
   if (options.polling) {
     cf.stream = false;
     cf.baseUri = options.polling.baseUri;
     cf.pollInterface = options.polling.pollIntervalMs / 1000;
+    if (options.polling.filter) {
+      cf.payloadFilterKey = options.polling.filter;
+    }
   }
   if (options.events) {
     cf.allAttributesPrivate = options.events.allAttributesPrivate;
@@ -68,10 +74,10 @@ export function makeSdkConfig(options, tag) {
     );
   }
   if (options.wrapper) {
-    if(options.wrapper.name) {
+    if (options.wrapper.name) {
       cf.wrapperName = options.wrapper.name;
     }
-    if(options.wrapper.version) {
+    if (options.wrapper.version) {
       cf.wrapperVersion = options.wrapper.version;
     }
   }
@@ -117,7 +123,7 @@ export async function newSdkClientEntity(options) {
     makeSdkConfig(options.configuration, options.tag),
   );
   try {
-    await client.waitForInitialization({timeout: timeout});
+    await client.waitForInitialization({ timeout: timeout });
   } catch (_) {
     // if waitForInitialization() rejects, the client failed to initialize, see next line
   }

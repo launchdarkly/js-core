@@ -25,6 +25,7 @@ export const setupMockStreamingProcessor = (
       sdkKey: string,
       clientContext: ClientContext,
       streamUriPath: string,
+      parameters: { key: string; value: string }[],
       listeners: Map<EventName, ProcessStreamResponse>,
       diagnosticsManager: internal.DiagnosticsManager,
       errorHandler: internal.StreamingErrorHandler,

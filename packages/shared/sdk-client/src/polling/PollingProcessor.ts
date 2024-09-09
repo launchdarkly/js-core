@@ -1,5 +1,6 @@
 import {
   ApplicationTags,
+  getPollingUri,
   httpErrorMessage,
   HttpErrorResponse,
   Info,
@@ -48,11 +49,12 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     requests: Requests,
     info: Info,
     uriPath: string,
+    parameters: { key: string; value: string }[],
     config: PollingConfig,
     private readonly dataHandler: (flags: Flags) => void,
     private readonly errorHandler?: PollingErrorHandler,
   ) {
-    const uri = `${config.serviceEndpoints.polling}${uriPath}`;
+    const uri = getPollingUri(config.serviceEndpoints, uriPath, parameters);
     this.logger = config.logger;
     this.pollInterval = config.pollInterval;
 

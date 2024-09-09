@@ -10,7 +10,6 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { ConnectionMode, type LDOptions } from '../api';
-import { LDInspection } from '../api/LDInspection';
 import validators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
@@ -41,7 +40,6 @@ export default class Configuration {
   public readonly useReport: boolean = false;
   public readonly withReasons: boolean = false;
 
-  public readonly inspectors: LDInspection[] = [];
   public readonly privateAttributes: string[] = [];
 
   public readonly initialConnectionMode: ConnectionMode = 'streaming';
@@ -80,6 +78,7 @@ export default class Configuration {
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
+      pristineOptions.payloadFilterKey,
     );
     this.useReport = pristineOptions.useReport ?? false;
 

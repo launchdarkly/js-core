@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.8.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.7.0...js-sdk-common-v2.8.0) (2024-09-03)
+
+
+### Features
+
+* Add support for Payload Filtering ([#551](https://github.com/launchdarkly/js-core/issues/551)) ([6f44383](https://github.com/launchdarkly/js-core/commit/6f4438323baed802d8f951ac82494e6cfa9932c5))
+
+## [2.7.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.6.0...js-sdk-common-v2.7.0) (2024-08-28)
+
+
+### Features
+
+* Correct client evaluation typings. ([#554](https://github.com/launchdarkly/js-core/issues/554)) ([64ab88d](https://github.com/launchdarkly/js-core/commit/64ab88d278308564b4cd7b6433870c7adb09142a))
+
 ## [2.6.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.5.0...js-sdk-common-v2.6.0) (2024-08-12)
 
 

@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*", "package.json", "__tests__/index.test.ts"],
+  "compilerOptions": {
+    "composite": true
+  }
+}

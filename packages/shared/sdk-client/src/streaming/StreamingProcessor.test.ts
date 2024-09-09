@@ -43,7 +43,8 @@ let basicPlatform: Platform;
 function getStreamingDataSourceConfig(): StreamingDataSourceConfig {
   return {
     credential: sdkKey,
-    streamingEndpoint: serviceEndpoints.streaming,
+    // eslint-disable-next-line object-shorthand
+    serviceEndpoints: serviceEndpoints,
     paths: {
       pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
         return '/stream/path';

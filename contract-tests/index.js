@@ -27,6 +27,8 @@ app.get('/', (req, res) => {
       'all-flags-with-reasons',
       'tags',
       'big-segments',
+      'filtering',
+      'filtering-strict',
       'user-type',
       'migrations',
       'event-sampling',
@@ -35,7 +37,7 @@ app.get('/', (req, res) => {
       'inline-context',
       'anonymous-redaction',
       'evaluation-hooks',
-      'wrapper'
+      'wrapper',
     ],
   });
 });
