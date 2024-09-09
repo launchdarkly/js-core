@@ -7,7 +7,6 @@ import {
   LDStreamingError,
   Platform,
   ProcessStreamResponse,
-  Requests,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
