@@ -4,7 +4,7 @@
     "declaration": true,
     "declarationMap": true,
     "jsx": "react-jsx",
-    "lib": ["es6", "dom"],
+    "lib": ["ES2017", "dom"],
     "module": "ES6",
     "moduleResolution": "node",
     "noImplicitOverride": true,
