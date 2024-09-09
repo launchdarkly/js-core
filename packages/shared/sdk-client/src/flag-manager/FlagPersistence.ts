@@ -14,7 +14,8 @@ import { ItemDescriptor } from './ItemDescriptor';
  */
 export default class FlagPersistence {
   private contextIndex: ContextIndex | undefined;
-  private indexKey: string;
+  private indexKey?: string;
+  private indexKeyPromise: Promise<string>;
 
   constructor(
     private readonly platform: Platform,
@@ -25,7 +26,7 @@ export default class FlagPersistence {
     private readonly logger: LDLogger,
     private readonly timeStamper: () => number = () => Date.now(),
   ) {
-    this.indexKey = namespaceForContextIndex(this.environmentNamespace);
+    this.indexKeyPromise = namespaceForContextIndex(this.environmentNamespace);
   }
 
   /**
@@ -55,7 +56,7 @@ export default class FlagPersistence {
    * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
    */
   async loadCached(context: Context): Promise<boolean> {
-    const storageKey = namespaceForContextData(
+    const storageKey = await namespaceForContextData(
       this.platform.crypto,
       this.environmentNamespace,
       context,
@@ -103,7 +104,7 @@ export default class FlagPersistence {
       return this.contextIndex;
     }
 
-    const json = await this.platform.storage?.get(this.indexKey);
+    const json = await this.platform.storage?.get(await this.indexKeyPromise);
     if (!json) {
       this.contextIndex = new ContextIndex();
       return this.contextIndex;
@@ -121,7 +122,7 @@ export default class FlagPersistence {
 
   private async storeCache(context: Context): Promise<void> {
     const index = await this.loadIndex();
-    const storageKey = namespaceForContextData(
+    const storageKey = await namespaceForContextData(
       this.platform.crypto,
       this.environmentNamespace,
       context,
@@ -132,7 +133,7 @@ export default class FlagPersistence {
     await Promise.all(pruned.map(async (it) => this.platform.storage?.clear(it.id)));
 
     // store index
-    await this.platform.storage?.set(this.indexKey, index.toJson());
+    await this.platform.storage?.set(await this.indexKeyPromise, index.toJson());
     const allFlags = this.flagStore.getAll();
 
     // mapping item descriptors to flags

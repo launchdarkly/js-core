@@ -337,7 +337,7 @@ describe('automatic environment attributes', () => {
   });
 
   describe('addApplicationInfo', () => {
-    test('add id, version, name, versionName', () => {
+    test('add id, version, name, versionName', async () => {
       config = new Configuration({
         applicationInfo: {
           id: 'com.from-config.ld',
@@ -346,7 +346,7 @@ describe('automatic environment attributes', () => {
           versionName: 'test-ld-version-name',
         },
       });
-      const ldApplication = addApplicationInfo(mockPlatform, config);
+      const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
@@ -358,8 +358,8 @@ describe('automatic environment attributes', () => {
       });
     });
 
-    test('add auto env application id, name, version', () => {
-      const ldApplication = addApplicationInfo(mockPlatform, config);
+    test('add auto env application id, name, version', async () => {
+      const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
@@ -370,7 +370,7 @@ describe('automatic environment attributes', () => {
       });
     });
 
-    test('final return value should not contain falsy values', () => {
+    test('final return value should not contain falsy values', async () => {
       const mockData = info.platformData();
       info.platformData = jest.fn().mockReturnValueOnce({
         ...mockData,
@@ -384,7 +384,7 @@ describe('automatic environment attributes', () => {
         },
       });
 
-      const ldApplication = addApplicationInfo(mockPlatform, config);
+      const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toEqual({
         envAttributesVersion: '1.0',
@@ -393,15 +393,15 @@ describe('automatic environment attributes', () => {
       });
     });
 
-    test('omit if customer and auto env data are unavailable', () => {
+    test('omit if customer and auto env data are unavailable', async () => {
       info.platformData = jest.fn().mockReturnValueOnce({});
 
-      const ldApplication = addApplicationInfo(mockPlatform, config);
+      const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
 
-    test('omit if customer unavailable and auto env data are falsy', () => {
+    test('omit if customer unavailable and auto env data are falsy', async () => {
       const mockData = info.platformData();
       info.platformData = jest.fn().mockReturnValueOnce({
         ld_application: {
@@ -412,27 +412,27 @@ describe('automatic environment attributes', () => {
         },
       });
 
-      const ldApplication = addApplicationInfo(mockPlatform, config);
+      const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
 
-    test('omit if customer data is unavailable and auto env data only contains key and attributesVersion', () => {
+    test('omit if customer data is unavailable and auto env data only contains key and attributesVersion', async () => {
       info.platformData = jest.fn().mockReturnValueOnce({
         ld_application: { key: 'key-from-sdk', envAttributesVersion: '0.0.1' },
       });
 
-      const ldApplication = addApplicationInfo(mockPlatform, config);
+      const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
 
-    test('omit if no id specified', () => {
+    test('omit if no id specified', async () => {
       info.platformData = jest
         .fn()
         .mockReturnValueOnce({ ld_application: { version: null, locale: '' } });
       config = new Configuration({ applicationInfo: { version: '1.2.3' } });
-      const ldApplication = addApplicationInfo(mockPlatform, config);
+      const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
     });
