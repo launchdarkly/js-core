@@ -9,8 +9,7 @@ global.TextEncoder = TextEncoder;
 // Crypto is injectable as it is also not correctly available with the combination of node and jsdom.
 
 /**
- * The links below are different from js-sha256 and are useful to verify the
- * correctness of hash and encoding output:
+ * Test vectors generated using.
  * https://www.liavaag.org/English/SHA-Generator/
  */
 describe('PlatformHasher', () => {
