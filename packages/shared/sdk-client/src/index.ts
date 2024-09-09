@@ -18,5 +18,4 @@ export type {
 
 export { StreamingPaths } from './streaming';
 
-
 export { LDClientImpl };

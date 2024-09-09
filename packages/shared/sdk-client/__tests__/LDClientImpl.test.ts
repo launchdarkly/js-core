@@ -2,9 +2,9 @@ import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchda
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import LDClientImpl from '../src/LDClientImpl';
-import { MockEventSource } from '../src/LDClientImpl.mocks';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
+import { MockEventSource } from './streaming/LDClientImpl.mocks';
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };

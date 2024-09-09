@@ -12,7 +12,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
-import { StreamingDataSourceConfig, StreamingProcessor } from '.';
+import { StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
 
 let logger: ReturnType<typeof createLogger>;
 

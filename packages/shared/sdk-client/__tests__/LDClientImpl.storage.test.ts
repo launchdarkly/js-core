@@ -2,11 +2,11 @@ import { AutoEnvAttributes, clone, Encoding, type LDContext } from '@launchdarkl
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { toMulti } from '../src/context/addAutoEnv';
-import { MockEventSource } from '../src/LDClientImpl.mocks';
+import LDClientImpl from '../src/LDClientImpl';
 import LDEmitter from '../src/LDEmitter';
 import { Flags, PatchFlag } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
-import LDClientImpl from '../src/LDClientImpl';
+import { MockEventSource } from './streaming/LDClientImpl.mocks';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;
