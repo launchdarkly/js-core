@@ -42,6 +42,7 @@ jest.mock('../src/platform', () => ({
     requests: {
       createEventSource: jest.fn(),
       fetch: jest.fn(),
+      getEventSourceCapabilities: jest.fn(),
     },
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
@@ -70,6 +71,7 @@ it('uses correct default diagnostic url', () => {
     requests: {
       createEventSource: jest.fn(),
       fetch: mockedFetch,
+      getEventSourceCapabilities: jest.fn(),
     },
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
@@ -97,6 +99,7 @@ it('uses correct default analytics event url', async () => {
     requests: {
       createEventSource: createMockEventSource,
       fetch: mockedFetch,
+      getEventSourceCapabilities: jest.fn(),
     },
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
@@ -128,6 +131,7 @@ it('uses correct default polling url', async () => {
     requests: {
       createEventSource: jest.fn(),
       fetch: mockedFetch,
+      getEventSourceCapabilities: jest.fn(),
     },
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
@@ -158,6 +162,7 @@ it('uses correct default streaming url', (done) => {
     requests: {
       createEventSource: mockedCreateEventSource,
       fetch: jest.fn(),
+      getEventSourceCapabilities: jest.fn(),
     },
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
@@ -197,6 +202,7 @@ it('includes authorization header for polling', async () => {
     requests: {
       createEventSource: jest.fn(),
       fetch: mockedFetch,
+      getEventSourceCapabilities: jest.fn(),
     },
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
@@ -231,6 +237,7 @@ it('includes authorization header for streaming', (done) => {
     requests: {
       createEventSource: mockedCreateEventSource,
       fetch: jest.fn(),
+      getEventSourceCapabilities: jest.fn(),
     },
     encoding: new PlatformEncoding(),
     storage: new PlatformStorage(logger),
