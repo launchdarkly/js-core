@@ -6,6 +6,7 @@ import type {
   Options,
   Requests,
   Response,
+  EventSourceCapabilities,
 } from '@launchdarkly/js-server-sdk-common';
 
 class NoopResponse implements Response {
@@ -40,5 +41,13 @@ export default class EdgeRequests implements Requests {
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
     return new NullEventSource(url, eventSourceInitDict);
+  }
+
+  getEventSourceCapabilities(): EventSourceCapabilities {
+    return {
+      readTimeout: false,
+      headers: false,
+      customMethod: false,
+    };
   }
 }
