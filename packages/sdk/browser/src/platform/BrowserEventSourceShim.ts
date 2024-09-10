@@ -24,13 +24,15 @@ export default class BrowserEventSourceShim implements LDEventSource {
   // The type of the handle can be platform specific and we treat is opaquely.
   private reconnectTimeoutHandle?: any;
 
+  private listeners: Record<string, EventListener[]> = {};
+
   constructor(
     private readonly url: string,
     options: EventSourceInitDict,
   ) {
     this.backoff = new Backoff(options.initialRetryDelayMillis);
     this.errorFilter = options.errorFilter;
-    this.createEventSource();
+    this.openConnection();
   }
 
   onclose: (() => void) | undefined;
@@ -41,7 +43,7 @@ export default class BrowserEventSourceShim implements LDEventSource {
 
   onretrying: ((e: { delayMillis: number }) => void) | undefined;
 
-  private createEventSource() {
+  private openConnection() {
     this.es = new EventSource(this.url);
     this.es.onopen = () => {
       this.backoff.reset();
@@ -51,11 +53,18 @@ export default class BrowserEventSourceShim implements LDEventSource {
     // typing.
     this.es.onerror = (err: any) => {
       this.handleError(err);
+      this.onerror?.(err);
     };
+    Object.entries(this.listeners).forEach(([eventName, listeners]) => {
+      listeners.forEach((listener) => {
+        this.es?.addEventListener(eventName, listener);
+      });
+    });
   }
 
   addEventListener(type: EventName, listener: EventListener): void {
-    // TODO: Cache listeners so they can be re-added.
+    this.listeners[type] ??= [];
+    this.listeners[type].push(listener);
     this.es?.addEventListener(type, listener);
   }
 
@@ -63,12 +72,16 @@ export default class BrowserEventSourceShim implements LDEventSource {
     // Ensure any pending retry attempts are not done.
     clearTimeout(this.reconnectTimeoutHandle);
     this.reconnectTimeoutHandle = undefined;
+
+    // Close the event source and notify any listeners.
     this.es?.close();
+    this.onclose?.();
   }
 
   private tryConnect(delayMs: number) {
+    this.onretrying?.({ delayMillis: delayMs });
     this.reconnectTimeoutHandle = setTimeout(() => {
-      this.createEventSource();
+      this.openConnection();
     }, delayMs);
   }
 
