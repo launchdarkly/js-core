@@ -78,10 +78,30 @@ export interface Options {
   timeout?: number;
 }
 
+export interface EventSourceCapabilities {
+  /**
+   * If true the event source supports read timeouts.
+   */
+  readTimeout: boolean;
+
+  /**
+   * If true the event source supports customized verbs POST/REPORT instead of
+   * only the default GET.
+   */
+  customMethod: boolean;
+
+  /**
+   * If true the event source supports setting HTTP headers.
+   */
+  headers: boolean;
+}
+
 export interface Requests {
   fetch(url: string, options?: Options): Promise<Response>;
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource;
+
+  getEventSourceCapabilities(): EventSourceCapabilities;
 
   /**
    * Returns true if a proxy is configured.

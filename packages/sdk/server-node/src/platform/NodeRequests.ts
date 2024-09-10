@@ -7,6 +7,7 @@ import { HttpsProxyAgentOptions } from 'https-proxy-agent';
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 
 import {
+  EventSourceCapabilities,
   LDLogger,
   LDProxyOptions,
   LDTLSOptions,
@@ -156,6 +157,14 @@ export default class NodeRequests implements platform.Requests {
       jitterRatio: 0.5,
     };
     return new LDEventSource(url, expandedOptions);
+  }
+
+  getEventSourceCapabilities(): EventSourceCapabilities {
+    return {
+      readTimeout: true,
+      headers: true,
+      customMethod: true,
+    };
   }
 
   usingProxy(): boolean {
