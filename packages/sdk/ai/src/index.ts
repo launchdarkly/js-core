@@ -2,16 +2,8 @@ import Mustache from 'mustache';
 
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
-enum FeedbackKind {
-  Positive = 'positive',
-  Negative = 'negative',
-}
-
-export interface TokenMetrics {
-  total: number;
-  input: number;
-  output: number;
-}
+import { LDAIConfigTracker } from './LDAIConfigTracker';
+import { LDAIConfig } from './types';
 
 export class AIClient {
   private ldClient: LDClient;
@@ -72,7 +64,7 @@ export class AIClient {
     context: LDContext,
     defaultValue: string,
     variables?: Record<string, unknown>,
-  ): Promise<any> {
+  ): Promise<LDAIConfig> {
     const detail = await this.ldClient.variationDetail(key, context, defaultValue);
 
     const allVariables = { ldctx: context, ...variables };
@@ -82,65 +74,13 @@ export class AIClient {
       content: this.interpolateTemplate(entry.content, allVariables),
     }));
 
-    return detail.value;
-  }
-
-  trackDuration(context: LDContext, duration: number) {
-    this.ldClient.track('$ld:ai:duration:total', context, duration);
-  }
-
-  trackTokens(context: LDContext, tokens: TokenMetrics) {
-    if (tokens.total > 0) {
-      this.ldClient.track('$ld:ai:tokens:total', context, null, tokens.total);
-    }
-    if (tokens.input > 0) {
-      this.ldClient.track('$ld:ai:tokens:input', context, null, tokens.input);
-    }
-    if (tokens.output > 0) {
-      this.ldClient.track('$ld:ai:tokens:output', context, null, tokens.output);
-    }
-  }
-
-  trackError(context: LDContext, error: number) {
-    this.ldClient.track('$ld:ai:error', context, null, error);
-  }
-
-  trackGeneration(context: LDContext, generation: number) {
-    this.ldClient.track('$ld:ai:generation', context, null, generation);
-  }
-
-  trackFeedback(context: LDContext, feedback: { kind: FeedbackKind }) {
-    if (feedback.kind === FeedbackKind.Positive) {
-      this.ldClient.track('$ld:ai:feedback:user:positive', context, null, 1);
-    } else if (feedback.kind === FeedbackKind.Negative) {
-      this.ldClient.track('$ld:ai:feedback:user:negative', context, null, 1);
-    }
+    return {
+      config: detail.value,
+      tracker: new LDAIConfigTracker(this.ldClient, key, context),
+    };
   }
 }
 
 export function init(ldClient: LDClient): AIClient {
   return new AIClient(ldClient);
-}
-
-export interface TokenUsage {
-  completionTokens?: number;
-  promptTokens?: number;
-  totalTokens?: number;
-}
-
-export interface UnderscoreTokenUsage {
-  completion_tokens?: number;
-  prompt_tokens?: number;
-  total_tokens?: number;
-}
-
-export function openAiUsageToTokenMetrics(usage: TokenUsage | UnderscoreTokenUsage): TokenMetrics {
-  return {
-    total: 'total_tokens' in usage ? usage.total_tokens : (usage as TokenUsage).totalTokens ?? 0,
-    input: 'prompt_tokens' in usage ? usage.prompt_tokens : (usage as TokenUsage).promptTokens ?? 0,
-    output:
-      'completion_tokens' in usage
-        ? usage.completion_tokens
-        : (usage as TokenUsage).completionTokens ?? 0,
-  };
 }
