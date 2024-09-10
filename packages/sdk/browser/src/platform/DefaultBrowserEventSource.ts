@@ -50,7 +50,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
   private openConnection() {
     this.es = new EventSource(this.url);
     this.es.onopen = () => {
-      this.backoff.reset();
+      this.backoff.success();
       this.onopen?.();
     };
     // The error could be from a polyfill, or from the browser event source, so we are loose on the
@@ -101,7 +101,6 @@ export default class DefaultBrowserEventSource implements LDEventSource {
       return;
     }
 
-    const delay = this.backoff.getNextRetryDelay();
-    this.tryConnect(delay);
+    this.tryConnect(this.backoff.fail());
   }
 }
