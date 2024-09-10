@@ -45,10 +45,10 @@ describe('sdk-client object', () => {
 
     jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
       pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
-        return '/stream/path';
+        return '/stream/path/get';
       },
       pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
-        return '/stream/path';
+        return '/stream/path/report';
       },
     });
 
@@ -140,6 +140,31 @@ describe('sdk-client object', () => {
 
     expect(mockCreateEventSource).toHaveBeenCalledWith(
       expect.stringContaining('?withReasons=true'),
+      expect.anything(),
+    );
+  });
+
+  test('identify success useReport', async () => {
+    const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    // need reference within test to run assertions against
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateEvents('put', [{ data: JSON.stringify(defaultPutResponse) }]);
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
+
+    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
+      logger,
+      sendEvents: false,
+      useReport: true,
+    });
+
+    await ldc.identify(carContext);
+
+    expect(mockCreateEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('/stream/path/report'),
       expect.anything(),
     );
   });

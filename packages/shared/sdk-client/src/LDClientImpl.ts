@@ -1,6 +1,5 @@
 import {
   AutoEnvAttributes,
-  ClientContext,
   clone,
   Context,
   Encoding,
@@ -35,7 +34,8 @@ import FlagManager from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter, { EventName } from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
-import { StreamingPaths, StreamingProcessor } from './streaming';
+import { StreamingProcessor } from './streaming';
+import { DataSourcePaths } from './streaming/DataSourceConfig';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 const { ClientMessages, ErrorKinds } = internal;
@@ -56,8 +56,6 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flagManager: FlagManager;
-
-  private readonly clientContext: ClientContext;
 
   private eventSendingEnabled: boolean = true;
   private networkAvailable: boolean = true;
@@ -83,7 +81,6 @@ export default class LDClientImpl implements LDClient {
 
     this.config = new Configuration(options, internalOptions);
     this.connectionMode = this.config.initialConnectionMode;
-    this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
     this.flagManager = new FlagManager(
       this.platform,
@@ -260,7 +257,7 @@ export default class LDClientImpl implements LDClient {
     return listeners;
   }
 
-  protected getStreamingPaths(): StreamingPaths {
+  protected getStreamingPaths(): DataSourcePaths {
     return {
       pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
         throw new Error(
@@ -275,18 +272,19 @@ export default class LDClientImpl implements LDClient {
     };
   }
 
-  /**
-   * Generates the url path for polling.
-   * @param _context
-   *
-   * @protected This function must be overridden in subclasses for polling
-   * to work.
-   * @param _context The LDContext object
-   */
-  protected createPollUriPath(_context: LDContext): string {
-    throw new Error(
-      'createPollUriPath not implemented. Client sdks must implement createPollUriPath for polling to work.',
-    );
+  protected getPollingPaths(): DataSourcePaths {
+    return {
+      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        throw new Error(
+          'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with GET to work.',
+        );
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        throw new Error(
+          'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with REPORT to work.',
+        );
+      },
+    };
   }
 
   private createIdentifyPromise(timeout: number) {
@@ -405,18 +403,20 @@ export default class LDClientImpl implements LDClient {
     identifyResolve: any,
     identifyReject: any,
   ) {
-    const parameters: { key: string; value: string }[] = [];
-    if (this.config.withReasons) {
-      parameters.push({ key: 'withReasons', value: 'true' });
-    }
-
     this.updateProcessor = new PollingProcessor(
-      this.sdkKey,
-      this.clientContext.platform.requests,
-      this.clientContext.platform.info,
-      this.createPollUriPath(context),
-      parameters,
-      this.config,
+      JSON.stringify(context),
+      {
+        credential: this.sdkKey,
+        serviceEndpoints: this.config.serviceEndpoints,
+        paths: this.getPollingPaths(),
+        tags: this.config.tags,
+        info: this.platform.info,
+        pollInterval: this.config.pollInterval,
+        withReasons: this.config.withReasons,
+        useReport: this.config.useReport,
+      },
+      this.platform.requests,
+      this.platform.encoding!,
       async (flags) => {
         this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
 
@@ -450,9 +450,9 @@ export default class LDClientImpl implements LDClient {
         credential: this.sdkKey,
         serviceEndpoints: this.config.serviceEndpoints,
         paths: this.getStreamingPaths(),
-        tags: this.clientContext.basicConfiguration.tags,
+        tags: this.config.tags,
         info: this.platform.info,
-        initialRetryDelayMillis: 1000,
+        initialRetryDelayMillis: this.config.streamInitialReconnectDelay * 1000,
         withReasons: this.config.withReasons,
         useReport: this.config.useReport,
       },

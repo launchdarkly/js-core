@@ -29,26 +29,26 @@ export class LDRequestError extends Error implements HttpErrorResponse {
  */
 export default class Requestor {
   private readonly headers: { [key: string]: string };
-  private verb: string;
 
   constructor(
     sdkKey: string,
     private requests: Requests,
     info: Info,
     private readonly uri: string,
-    useReport: boolean,
     tags: ApplicationTags,
+    private readonly method: string,
+    private readonly body?: string,
   ) {
     this.headers = defaultHeaders(sdkKey, info, tags);
-    this.verb = useReport ? 'REPORT' : 'GET';
   }
 
   async requestPayload(): Promise<string> {
     let status: number | undefined;
     try {
       const res = await this.requests.fetch(this.uri, {
-        method: this.verb,
+        method: this.method,
         headers: this.headers,
+        body: this.body,
       });
       if (isOk(res.status)) {
         return await res.text();

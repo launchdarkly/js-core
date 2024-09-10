@@ -16,6 +16,6 @@ export type {
   ConnectionMode,
 } from './api';
 
-export { StreamingPaths } from './streaming';
+export { DataSourcePaths } from './streaming';
 
 export { LDClientImpl };

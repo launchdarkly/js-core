@@ -1,5 +1,8 @@
-import { StreamingDataSourceConfig, StreamingPaths } from './DataSourceConfig';
+import {
+  DataSourcePaths,
+  PollingDataSourceConfig,
+  StreamingDataSourceConfig,
+} from './DataSourceConfig';
 import StreamingProcessor from './StreamingProcessor';
 
-export { StreamingPaths };
-export { StreamingProcessor, StreamingDataSourceConfig };
+export { DataSourcePaths, PollingDataSourceConfig, StreamingProcessor, StreamingDataSourceConfig };

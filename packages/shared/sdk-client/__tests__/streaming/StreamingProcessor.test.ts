@@ -55,7 +55,7 @@ function getStreamingDataSourceConfig(
         return '/stream/path/report';
       },
     },
-    tags: undefined,
+    tags: {},
     info: basicPlatform.info,
     initialRetryDelayMillis: 1000,
     withReasons,

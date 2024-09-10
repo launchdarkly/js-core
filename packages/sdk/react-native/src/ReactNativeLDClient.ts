@@ -4,11 +4,11 @@ import {
   base64UrlEncode,
   BasicLogger,
   ConnectionMode,
+  DataSourcePaths,
   Encoding,
   internal,
   LDClientImpl,
   type LDContext,
-  StreamingPaths,
 } from '@launchdarkly/js-client-sdk-common';
 
 import validateOptions, { filterToBaseOptions } from './options';
@@ -105,7 +105,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
     return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
   }
 
-  override getStreamingPaths(): StreamingPaths {
+  override getStreamingPaths(): DataSourcePaths {
     return {
       pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
         return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
@@ -116,8 +116,15 @@ export default class ReactNativeLDClient extends LDClientImpl {
     };
   }
 
-  override createPollUriPath(context: LDContext): string {
-    return `/msdk/evalx/contexts/${this.encodeContext(context)}`;
+  override getPollingPaths(): DataSourcePaths {
+    return {
+      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/msdk/evalx/contexts`;
+      },
+    };
   }
 
   override async setConnectionMode(mode: ConnectionMode): Promise<void> {
