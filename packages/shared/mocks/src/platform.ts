@@ -49,6 +49,7 @@ export const createBasicPlatform = () => ({
   requests: {
     fetch: jest.fn(),
     createEventSource: jest.fn(),
+    getEventSourceCapabilities: jest.fn(),
   },
   storage: {
     get: jest.fn(),
