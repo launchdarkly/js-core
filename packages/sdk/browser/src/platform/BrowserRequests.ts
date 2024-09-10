@@ -7,7 +7,7 @@ import {
   Response,
 } from '@launchdarkly/js-client-sdk-common';
 
-import BrowserEventSourceShim from './BrowserEventSourceShim';
+import DefaultBrowserEventSource from './DefaultBrowserEventSource';
 
 export default class BrowserRequests implements Requests {
   fetch(url: string, options?: Options): Promise<Response> {
@@ -15,7 +15,7 @@ export default class BrowserRequests implements Requests {
   }
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource {
-    return new BrowserEventSourceShim(url, eventSourceInitDict);
+    return new DefaultBrowserEventSource(url, eventSourceInitDict);
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {

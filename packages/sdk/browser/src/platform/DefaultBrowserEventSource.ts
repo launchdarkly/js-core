@@ -16,7 +16,11 @@ import Backoff from './Backoff';
  * This event source does not support headers.
  */
 
-export default class BrowserEventSourceShim implements LDEventSource {
+/**
+ * Browser event source implementation which extends the built-in event
+ * source with additional reconnection logic.
+ */
+export default class DefaultBrowserEventSource implements LDEventSource {
   private es?: EventSource;
   private backoff: Backoff;
   private errorFilter: (err: HttpErrorResponse) => boolean;
@@ -86,19 +90,18 @@ export default class BrowserEventSourceShim implements LDEventSource {
   }
 
   private handleError(err: any): void {
+    this.close();
+
     // The event source may not produce a status. But the LaunchDarkly
     // polyfill can. If we can get the status, then we should stop retrying
     // on certain error codes.
     if (err.status && typeof err.status === 'number' && !this.errorFilter(err)) {
       // If we encounter an unrecoverable condition, then we do not want to
       // retry anymore.
-      this.close();
       return;
     }
 
     const delay = this.backoff.getNextRetryDelay();
-
-    this.close();
     this.tryConnect(delay);
   }
 }
