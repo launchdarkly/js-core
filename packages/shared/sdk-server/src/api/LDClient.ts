@@ -88,6 +88,20 @@ export interface LDClient {
    */
   waitForInitialization(options?: LDWaitForInitializationOptions): Promise<LDClient>;
 
+  /**
+   * Determines the variation of a feature flag for a context.
+   *
+   * @param key The unique key of the feature flag.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param callback A Node-style callback to receive the result value. If omitted, you will receive
+   *   a Promise instead.
+   * @returns
+   *   If you provided a callback, then nothing. Otherwise, a Promise which will be resolved with
+   *   the result value.
+   */
   variation(
     key: string,
     context: LDContext,
