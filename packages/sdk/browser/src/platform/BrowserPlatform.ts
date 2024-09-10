@@ -2,10 +2,12 @@ import {
   Crypto,
   /* platform */
   LDOptions,
+  Requests,
   Storage,
 } from '@launchdarkly/js-client-sdk-common';
 
 import BrowserCrypto from './BrowserCrypto';
+import BrowserRequests from './BrowserRequests';
 import LocalStorage, { isLocalStorageSupported } from './LocalStorage';
 
 export default class BrowserPlatform /* implements platform.Platform */ {
@@ -13,7 +15,7 @@ export default class BrowserPlatform /* implements platform.Platform */ {
   // info: Info;
   // fileSystem?: Filesystem;
   crypto: Crypto = new BrowserCrypto();
-  // requests: Requests;
+  requests: Requests = new BrowserRequests();
   storage?: Storage;
 
   constructor(options: LDOptions) {

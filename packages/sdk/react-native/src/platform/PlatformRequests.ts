@@ -1,6 +1,7 @@
 import type {
   EventName,
   EventSource,
+  EventSourceCapabilities,
   EventSourceInitDict,
   LDLogger,
   Options,
@@ -19,6 +20,14 @@ export default class PlatformRequests implements Requests {
       retryAndHandleError: eventSourceInitDict.errorFilter,
       logger: this.logger,
     });
+  }
+
+  getEventSourceCapabilities(): EventSourceCapabilities {
+    return {
+      readTimeout: false,
+      headers: true,
+      customVerb: true,
+    };
   }
 
   fetch(url: string, options?: Options): Promise<Response> {
