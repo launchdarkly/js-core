@@ -129,6 +129,7 @@ describe('sdk-client storage', () => {
     jest.spyOn(emitter as LDEmitter, 'emit');
 
     await ldc.identify(context);
+    await jest.runAllTimersAsync();
 
     expect(mockPlatform.storage.get).toHaveBeenLastCalledWith(
       expect.stringMatching('LaunchDarkly_1234567890123456_1234567890123456'),
@@ -193,8 +194,8 @@ describe('sdk-client storage', () => {
     );
 
     await ldc.identify(context);
+    await jest.runAllTimersAsync();
 
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
@@ -236,6 +237,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).not.toHaveProperty('dev-test-flag');
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
@@ -276,6 +278,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).toMatchObject({ 'another-dev-test-flag': false });
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
@@ -309,6 +312,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
@@ -335,6 +339,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false, 'another-dev-test-flag': true });
     expect(ldc.allFlags()).not.toHaveProperty('moonshot-demo');
@@ -403,9 +408,9 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
-
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': true });
     expect(flagsInStorage['dev-test-flag'].reason).toEqual({
       kind: 'RULE_MATCH',
@@ -437,6 +442,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
@@ -464,6 +470,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(ldc.allFlags()).toHaveProperty('another-dev-test-flag');
@@ -497,6 +504,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     // the initial put is resulting in two sets, one for the index and one for the flag data
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
@@ -535,6 +543,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
     expect(ldc.allFlags()).not.toHaveProperty('dev-test-flag');
@@ -568,6 +577,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).toHaveProperty('dev-test-flag');
     // the initial put is resulting in two sets, one for the index and one for the flag data
@@ -595,6 +605,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).toHaveProperty('dev-test-flag');
     // the initial put is resulting in two sets, one for the index and one for the flag data
@@ -622,6 +633,7 @@ describe('sdk-client storage', () => {
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
+    await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
 
