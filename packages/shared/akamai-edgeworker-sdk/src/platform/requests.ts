@@ -2,11 +2,11 @@
 import { Headers, NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
+  EventSourceCapabilities,
   EventSourceInitDict,
   Options,
   Requests,
   Response,
-  EventSourceCapabilities,
 } from '@launchdarkly/js-server-sdk-common';
 
 class NoopResponse implements Response {

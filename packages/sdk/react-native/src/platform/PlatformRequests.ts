@@ -25,8 +25,8 @@ export default class PlatformRequests implements Requests {
   getEventSourceCapabilities(): EventSourceCapabilities {
     return {
       readTimeout: false,
-      headers: false,
-      customMethod: false,
+      headers: true,
+      customMethod: true,
     };
   }
 
