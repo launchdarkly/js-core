@@ -163,7 +163,7 @@ export default class NodeRequests implements platform.Requests {
     return {
       readTimeout: true,
       headers: true,
-      customVerb: true,
+      customMethod: true,
     };
   }
 

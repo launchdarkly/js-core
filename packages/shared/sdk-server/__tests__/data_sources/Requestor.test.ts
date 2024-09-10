@@ -75,6 +75,9 @@ describe('given a requestor', () => {
       createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
         throw new Error('Function not implemented.');
       },
+      getEventSourceCapabilities() {
+        throw new Error('Function not implemented.');
+      },
     };
 
     requestor = new Requestor(

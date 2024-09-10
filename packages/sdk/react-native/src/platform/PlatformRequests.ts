@@ -26,7 +26,7 @@ export default class PlatformRequests implements Requests {
     return {
       readTimeout: false,
       headers: true,
-      customVerb: true,
+      customMethod: true,
     };
   }
 

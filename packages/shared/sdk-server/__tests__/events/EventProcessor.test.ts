@@ -111,6 +111,9 @@ function makePlatform(requestState: RequestState) {
     createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
       throw new Error('Function not implemented.');
     },
+    getEventSourceCapabilities() {
+      throw new Error('Function not implemented.');
+    },
   };
   return {
     info,

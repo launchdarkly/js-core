@@ -329,6 +329,7 @@ function makeMockPlatform(storage: Storage, crypto: Crypto): Platform {
     requests: {
       fetch: jest.fn(),
       createEventSource: jest.fn(),
+      getEventSourceCapabilities: jest.fn(),
     },
   };
 }
