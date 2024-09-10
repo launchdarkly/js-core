@@ -80,7 +80,14 @@ export interface Options {
 
 export interface EventSourceCapabilities {
   /**
-   * If true the event source supports read timeouts.
+   * If true the event source supports read timeouts. A read timeout for an
+   * event source represents the maximum time between receiving any data.
+   * If you receive 1 byte, and then a period of time greater than the read
+   * time out elapses, and you do not receive a second byte, then that would
+   * cause the event source to timeout.
+   *
+   * It is not a timeout for the read of the entire body, which should be
+   * indefinite.
    */
   readTimeout: boolean;
 
