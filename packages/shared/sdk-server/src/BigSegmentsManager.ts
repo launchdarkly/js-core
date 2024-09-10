@@ -144,6 +144,10 @@ export default class BigSegmentsManager {
   private hashForUserKey(userKey: string): string {
     const hasher = this.crypto.createHash('sha256');
     hasher.update(userKey);
+    if (!hasher.digest) {
+      // This represents an error in platform implementation.
+      throw new Error('Platform must implement digest or asyncDigest');
+    }
     return hasher.digest('base64');
   }
 

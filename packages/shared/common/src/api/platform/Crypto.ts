@@ -7,7 +7,19 @@
  */
 export interface Hasher {
   update(data: string): Hasher;
-  digest(encoding: string): string;
+  /**
+   * Note: All server SDKs MUST implement synchronous digest.
+   *
+   * Server SDKs have high performance requirements for bucketing users.
+   */
+  digest?(encoding: string): string;
+
+  /**
+   * Note: Client-side SDKs MUST implement either synchronous or asynchronous digest.
+   *
+   * Client SDKs do not have high throughput hashing operations.
+   */
+  asyncDigest?(encoding: string): Promise<string>;
 }
 
 /**
@@ -17,7 +29,7 @@ export interface Hasher {
  *
  * The has implementation must support digesting to 'hex'.
  */
-export interface Hmac extends Hasher {
+export interface Hmac {
   update(data: string): Hasher;
   digest(encoding: string): string;
 }
@@ -27,6 +39,9 @@ export interface Hmac extends Hasher {
  */
 export interface Crypto {
   createHash(algorithm: string): Hasher;
-  createHmac(algorithm: string, key: string): Hmac;
+  /**
+   * Note: Server SDKs MUST implement createHmac.
+   */
+  createHmac?(algorithm: string, key: string): Hmac;
   randomUUID(): string;
 }

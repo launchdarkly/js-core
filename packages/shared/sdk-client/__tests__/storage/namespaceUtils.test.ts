@@ -1,23 +1,25 @@
 import { concatNamespacesAndValues } from '../../src/storage/namespaceUtils';
 
-const mockHash = (input: string) => `${input}Hashed`;
-const noop = (input: string) => input;
+const mockHash = async (input: string) => `${input}Hashed`;
+const noop = async (input: string) => input;
 
 describe('concatNamespacesAndValues tests', () => {
   test('it handles one part', async () => {
-    const result = concatNamespacesAndValues([{ value: 'LaunchDarkly', transform: mockHash }]);
+    const result = await concatNamespacesAndValues([
+      { value: 'LaunchDarkly', transform: mockHash },
+    ]);
 
     expect(result).toEqual('LaunchDarklyHashed');
   });
 
   test('it handles empty parts', async () => {
-    const result = concatNamespacesAndValues([]);
+    const result = await concatNamespacesAndValues([]);
 
     expect(result).toEqual('');
   });
 
   test('it handles many parts', async () => {
-    const result = concatNamespacesAndValues([
+    const result = await concatNamespacesAndValues([
       { value: 'LaunchDarkly', transform: mockHash },
       { value: 'ContextKeys', transform: mockHash },
       { value: 'aKind', transform: mockHash },
@@ -27,7 +29,7 @@ describe('concatNamespacesAndValues tests', () => {
   });
 
   test('it handles mixture of hashing and no hashing', async () => {
-    const result = concatNamespacesAndValues([
+    const result = await concatNamespacesAndValues([
       { value: 'LaunchDarkly', transform: mockHash },
       { value: 'ContextKeys', transform: noop },
       { value: 'aKind', transform: mockHash },

@@ -15,7 +15,7 @@ import { ItemDescriptor } from './ItemDescriptor';
 export default class FlagManager {
   private flagStore = new DefaultFlagStore();
   private flagUpdater: FlagUpdater;
-  private flagPersistence: FlagPersistence;
+  private flagPersistencePromise: Promise<FlagPersistence>;
 
   /**
    * @param platform implementation of various platform provided functionality
@@ -31,10 +31,26 @@ export default class FlagManager {
     logger: LDLogger,
     private readonly timeStamper: () => number = () => Date.now(),
   ) {
-    const environmentNamespace = namespaceForEnvironment(platform.crypto, sdkKey);
-
     this.flagUpdater = new FlagUpdater(this.flagStore, logger);
-    this.flagPersistence = new FlagPersistence(
+    this.flagPersistencePromise = this.initPersistence(
+      platform,
+      sdkKey,
+      maxCachedContexts,
+      logger,
+      timeStamper,
+    );
+  }
+
+  private async initPersistence(
+    platform: Platform,
+    sdkKey: string,
+    maxCachedContexts: number,
+    logger: LDLogger,
+    timeStamper: () => number = () => Date.now(),
+  ): Promise<FlagPersistence> {
+    const environmentNamespace = await namespaceForEnvironment(platform.crypto, sdkKey);
+
+    return new FlagPersistence(
       platform,
       environmentNamespace,
       maxCachedContexts,
@@ -64,7 +80,7 @@ export default class FlagManager {
    * Persistence initialization is handled by {@link FlagPersistence}
    */
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
-    return this.flagPersistence.init(context, newFlags);
+    return (await this.flagPersistencePromise).init(context, newFlags);
   }
 
   /**
@@ -72,14 +88,14 @@ export default class FlagManager {
    * it is of an older version, then an update will not be performed.
    */
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
-    return this.flagPersistence.upsert(context, key, item);
+    return (await this.flagPersistencePromise).upsert(context, key, item);
   }
 
   /**
    * Asynchronously load cached values from persistence.
    */
   async loadCached(context: Context): Promise<boolean> {
-    return this.flagPersistence.loadCached(context);
+    return (await this.flagPersistencePromise).loadCached(context);
   }
 
   /**

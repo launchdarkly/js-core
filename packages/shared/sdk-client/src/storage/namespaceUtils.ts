@@ -1,24 +1,26 @@
 import { Context, Crypto } from '@launchdarkly/js-sdk-common';
 
+import digest from '../crypto/digest';
+
 export type Namespace = 'LaunchDarkly' | 'AnonymousKeys' | 'ContextKeys' | 'ContextIndex';
 
 /**
  * Hashes the input and encodes it as base64
  */
-function hashAndBase64Encode(crypto: Crypto): (input: string) => string {
-  return (input) => crypto.createHash('sha256').update(input).digest('base64');
+function hashAndBase64Encode(crypto: Crypto): (input: string) => Promise<string> {
+  return async (input) => digest(crypto.createHash('sha256').update(input), 'base64');
 }
 
-const noop = (input: string) => input; // no-op transform
+const noop = async (input: string) => input; // no-op transform
 
-export function concatNamespacesAndValues(
-  parts: { value: Namespace | string; transform: (value: string) => string }[],
-): string {
-  const processedParts = parts.map((part) => part.transform(part.value)); // use the transform from each part to transform the value
+export async function concatNamespacesAndValues(
+  parts: { value: Namespace | string; transform: (value: string) => Promise<string> }[],
+): Promise<string> {
+  const processedParts = await Promise.all(parts.map((part) => part.transform(part.value))); // use the transform from each part to transform the value
   return processedParts.join('_');
 }
 
-export function namespaceForEnvironment(crypto: Crypto, sdkKey: string): string {
+export async function namespaceForEnvironment(crypto: Crypto, sdkKey: string): Promise<string> {
   return concatNamespacesAndValues([
     { value: 'LaunchDarkly', transform: noop },
     { value: sdkKey, transform: hashAndBase64Encode(crypto) }, // hash sdk key and encode it
@@ -33,7 +35,7 @@ export function namespaceForEnvironment(crypto: Crypto, sdkKey: string): string 
  * when the data under the LaunchDarkly_AnonymousKeys namespace is merged with data under the
  * LaunchDarkly_ContextKeys namespace.
  */
-export function namespaceForAnonymousGeneratedContextKey(kind: string): string {
+export async function namespaceForAnonymousGeneratedContextKey(kind: string): Promise<string> {
   return concatNamespacesAndValues([
     { value: 'LaunchDarkly', transform: noop },
     { value: 'AnonymousKeys', transform: noop },
@@ -41,7 +43,7 @@ export function namespaceForAnonymousGeneratedContextKey(kind: string): string {
   ]);
 }
 
-export function namespaceForGeneratedContextKey(kind: string): string {
+export async function namespaceForGeneratedContextKey(kind: string): Promise<string> {
   return concatNamespacesAndValues([
     { value: 'LaunchDarkly', transform: noop },
     { value: 'ContextKeys', transform: noop },
@@ -49,18 +51,18 @@ export function namespaceForGeneratedContextKey(kind: string): string {
   ]);
 }
 
-export function namespaceForContextIndex(environmentNamespace: string): string {
+export async function namespaceForContextIndex(environmentNamespace: string): Promise<string> {
   return concatNamespacesAndValues([
     { value: environmentNamespace, transform: noop },
     { value: 'ContextIndex', transform: noop },
   ]);
 }
 
-export function namespaceForContextData(
+export async function namespaceForContextData(
   crypto: Crypto,
   environmentNamespace: string,
   context: Context,
-): string {
+): Promise<string> {
   return concatNamespacesAndValues([
     { value: environmentNamespace, transform: noop }, // use existing namespace as is, don't transform
     { value: context.canonicalKey, transform: hashAndBase64Encode(crypto) }, // hash and encode canonical key
