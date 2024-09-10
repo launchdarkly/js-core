@@ -177,6 +177,13 @@ it('stops polling when stopped', (done) => {
     createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
       throw new Error('Function not implemented.');
     },
+    getEventSourceCapabilities(): EventSourceCapabilities {
+      return {
+        readTimeout: false,
+        headers: false,
+        customMethod: false,
+      };
+    },
   };
   const dataCallback = jest.fn();
   const errorCallback = jest.fn();
