@@ -76,7 +76,7 @@ export class AIClient {
 
     return {
       config: detail.value,
-      tracker: new LDAIConfigTracker(this.ldClient, key, context),
+      tracker: new LDAIConfigTracker(this.ldClient, detail.value.variationId, context),
     };
   }
 }
