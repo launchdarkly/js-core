@@ -40,6 +40,7 @@
   "devDependencies": {
     "@launchdarkly/private-js-mocks": "0.0.1",
     "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.0.2",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.1",
@@ -59,7 +60,6 @@
     "prettier": "^3.0.0",
     "rimraf": "^5.0.5",
     "rollup": "^3.23.0",
-    "rollup-plugin-generate-package-json": "^3.2.0",
     "ts-jest": "^29.1.1",
     "typedoc": "0.25.0",
     "typescript": "^5.5.3"
