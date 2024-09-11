@@ -11,7 +11,8 @@ import DefaultBrowserEventSource from './DefaultBrowserEventSource';
 
 export default class BrowserRequests implements Requests {
   fetch(url: string, options?: Options): Promise<Response> {
-    return this.fetch(url, options);
+    // @ts-ignore
+    return fetch(url, options);
   }
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource {
