@@ -2,8 +2,8 @@ import {
   Crypto,
   Encoding,
   Info,
-  /* platform */
   LDOptions,
+  Platform,
   Requests,
   Storage,
 } from '@launchdarkly/js-client-sdk-common';
@@ -14,7 +14,7 @@ import BrowserInfo from './BrowserInfo';
 import BrowserRequests from './BrowserRequests';
 import LocalStorage, { isLocalStorageSupported } from './LocalStorage';
 
-export default class BrowserPlatform /* implements platform.Platform */ {
+export default class BrowserPlatform implements Platform {
   encoding: Encoding = new BrowserEncoding();
   info: Info = new BrowserInfo();
   // fileSystem?: Filesystem;
