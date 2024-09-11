@@ -1,6 +1,7 @@
 import {
   Crypto,
   Encoding,
+  Info,
   /* platform */
   LDOptions,
   Requests,
@@ -9,12 +10,13 @@ import {
 
 import BrowserCrypto from './BrowserCrypto';
 import BrowserEncoding from './BrowserEncoding';
+import BrowserInfo from './BrowserInfo';
 import BrowserRequests from './BrowserRequests';
 import LocalStorage, { isLocalStorageSupported } from './LocalStorage';
 
 export default class BrowserPlatform /* implements platform.Platform */ {
   encoding: Encoding = new BrowserEncoding();
-  // info: Info;
+  info: Info = new BrowserInfo();
   // fileSystem?: Filesystem;
   crypto: Crypto = new BrowserCrypto();
   requests: Requests = new BrowserRequests();
