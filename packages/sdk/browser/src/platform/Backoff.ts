@@ -1,6 +1,5 @@
 const MAX_RETRY_DELAY = 30 * 1000; // Maximum retry delay 30 seconds.
 const JITTER_RATIO = 0.5; // Delay should be 50%-100% of calculated time.
-const RESET_INTERVAL = 60 * 1000; // Reset interval in seconds.
 
 /**
  * Implements exponential backoff and jitter. This class tracks successful connections and failures
@@ -24,6 +23,7 @@ export default class Backoff {
 
   constructor(
     initialRetryDelayMillis: number,
+    private readonly retryResetIntervalMillis: number,
     private readonly random = Math.random,
   ) {
     // Initial retry delay cannot be 0.
@@ -62,7 +62,10 @@ export default class Backoff {
   fail(timeStampMs: number = Date.now()): number {
     // If the last successful connection was active for more than the RESET_INTERVAL, then we
     // return to the initial retry delay.
-    if (this.activeSince !== undefined && timeStampMs - this.activeSince > RESET_INTERVAL) {
+    if (
+      this.activeSince !== undefined &&
+      timeStampMs - this.activeSince > this.retryResetIntervalMillis
+    ) {
       this.retryCount = 0;
     }
     this.activeSince = undefined;

@@ -34,7 +34,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     private readonly url: string,
     options: EventSourceInitDict,
   ) {
-    this.backoff = new Backoff(options.initialRetryDelayMillis);
+    this.backoff = new Backoff(options.initialRetryDelayMillis, options.retryResetIntervalMillis);
     this.errorFilter = options.errorFilter;
     this.openConnection();
   }
