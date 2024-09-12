@@ -3,6 +3,7 @@ import {
   cancelableTimedPromise,
   ClientContext,
   Context,
+  defaultHeaders,
   internal,
   LDClientError,
   LDContext,
@@ -207,6 +208,7 @@ export default class LDClientImpl implements LDClient {
       },
     };
     this.evaluator = new Evaluator(this.platform, queries);
+    const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
 
     const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
       put: () => this.initSuccess(),
@@ -214,18 +216,18 @@ export default class LDClientImpl implements LDClient {
     const makeDefaultProcessor = () =>
       config.stream
         ? new internal.StreamingProcessor(
-            sdkKey,
             clientContext,
             '/all',
             [],
             listeners,
+            baseHeaders,
             this.diagnosticsManager,
             (e) => this.dataSourceErrorHandler(e),
             this.config.streamInitialReconnectDelay,
           )
         : new PollingProcessor(
             config,
-            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+            new Requestor(config, this.platform.requests, baseHeaders),
             dataSourceUpdates,
             () => this.initSuccess(),
             (e) => this.dataSourceErrorHandler(e),

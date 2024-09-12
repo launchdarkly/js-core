@@ -3,11 +3,13 @@ import {
   ClientContext,
   clone,
   Context,
+  defaultHeaders,
   internal,
   LDClientError,
   LDContext,
   LDFlagSet,
   LDFlagValue,
+  LDHeaders,
   LDLogger,
   Platform,
   ProcessStreamResponse,
@@ -60,6 +62,7 @@ export default class LDClientImpl implements LDClient {
   private eventSendingEnabled: boolean = true;
   private networkAvailable: boolean = true;
   private connectionMode: ConnectionMode;
+  private baseHeaders: LDHeaders;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -109,6 +112,14 @@ export default class LDClientImpl implements LDClient {
       const ldContext = Context.toLDContext(context);
       this.emitter.emit('change', ldContext, flagKeys);
     });
+
+    this.baseHeaders = defaultHeaders(
+      this.sdkKey,
+      this.platform.info,
+      this.config.tags,
+      true,
+      'x-launchdarkly-user-agent',
+    );
   }
 
   /**
@@ -407,12 +418,11 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.updateProcessor = new PollingProcessor(
-      this.sdkKey,
       this.clientContext.platform.requests,
-      this.clientContext.platform.info,
       this.createPollUriPath(context),
       parameters,
       this.config,
+      this.baseHeaders,
       async (flags) => {
         this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
 
@@ -446,11 +456,11 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.updateProcessor = new internal.StreamingProcessor(
-      this.sdkKey,
       this.clientContext,
       this.createStreamUriPath(context),
       parameters,
       this.createStreamListeners(checkedContext, identifyResolve),
+      this.baseHeaders,
       this.diagnosticsManager,
       (e) => {
         identifyReject(e);

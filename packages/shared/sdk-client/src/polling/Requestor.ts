@@ -4,6 +4,7 @@ import {
   defaultHeaders,
   HttpErrorResponse,
   Info,
+  LDHeaders,
   Requests,
 } from '@launchdarkly/js-sdk-common';
 
@@ -32,14 +33,12 @@ export default class Requestor {
   private verb: string;
 
   constructor(
-    sdkKey: string,
     private requests: Requests,
-    info: Info,
     private readonly uri: string,
     useReport: boolean,
-    tags: ApplicationTags,
+    baseHeaders: LDHeaders,
   ) {
-    this.headers = defaultHeaders(sdkKey, info, tags);
+    this.headers = { ...baseHeaders };
     this.verb = useReport ? 'REPORT' : 'GET';
   }
 

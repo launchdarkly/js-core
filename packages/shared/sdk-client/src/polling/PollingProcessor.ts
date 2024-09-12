@@ -1,10 +1,12 @@
 import {
   ApplicationTags,
+  defaultHeaders,
   getPollingUri,
   httpErrorMessage,
   HttpErrorResponse,
   Info,
   isHttpRecoverable,
+  LDHeaders,
   LDLogger,
   LDPollingError,
   Requests,
@@ -45,12 +47,11 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private requestor: Requestor;
 
   constructor(
-    sdkKey: string,
     requests: Requests,
-    info: Info,
     uriPath: string,
     parameters: { key: string; value: string }[],
     config: PollingConfig,
+    baseHeaders: LDHeaders,
     private readonly dataHandler: (flags: Flags) => void,
     private readonly errorHandler?: PollingErrorHandler,
   ) {
@@ -58,7 +59,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     this.logger = config.logger;
     this.pollInterval = config.pollInterval;
 
-    this.requestor = new Requestor(sdkKey, requests, info, uri, config.useReport, config.tags);
+    this.requestor = new Requestor(requests, uri, config.useReport, baseHeaders);
   }
 
   private async poll() {
