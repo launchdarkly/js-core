@@ -101,7 +101,6 @@ describe('given a stream processor with mock event source', () => {
 
     diagnosticsManager = new DiagnosticsManager(sdkKey, basicPlatform, {});
     streamingProcessor = new StreamingProcessor(
-      sdkKey,
       {
         basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
@@ -109,6 +108,11 @@ describe('given a stream processor with mock event source', () => {
       '/all',
       [],
       listeners,
+      {
+        authorization: 'my-sdk-key',
+        'user-agent': 'TestUserAgent/2.0.2',
+        'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+      },
       diagnosticsManager,
       mockErrorHandler,
     );
@@ -137,7 +141,6 @@ describe('given a stream processor with mock event source', () => {
 
   it('sets streamInitialReconnectDelay correctly', () => {
     streamingProcessor = new StreamingProcessor(
-      sdkKey,
       {
         basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
@@ -145,6 +148,11 @@ describe('given a stream processor with mock event source', () => {
       '/all',
       [],
       listeners,
+      {
+        authorization: 'my-sdk-key',
+        'user-agent': 'TestUserAgent/2.0.2',
+        'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+      },
       diagnosticsManager,
       mockErrorHandler,
       22,
