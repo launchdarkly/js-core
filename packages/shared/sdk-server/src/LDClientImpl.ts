@@ -158,6 +158,7 @@ export default class LDClientImpl implements LDClient {
     }
     this.config = config;
     this.logger = config.logger;
+    const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
 
     const clientContext = new ClientContext(sdkKey, config, platform);
     const featureStore = config.featureStoreFactory(clientContext);
@@ -178,6 +179,7 @@ export default class LDClientImpl implements LDClient {
       this.eventProcessor = new internal.EventProcessor(
         config,
         clientContext,
+        baseHeaders,
         new ContextDeduplicator(config),
         this.diagnosticsManager,
       );
@@ -208,7 +210,6 @@ export default class LDClientImpl implements LDClient {
       },
     };
     this.evaluator = new Evaluator(this.platform, queries);
-    const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
 
     const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
       put: () => this.initSuccess(),

@@ -131,7 +131,12 @@ describe('given an event processor', () => {
       }),
     );
     contextDeduplicator = new ContextDeduplicator();
-    eventProcessor = new EventProcessor(eventProcessorConfig, clientContext, contextDeduplicator);
+    eventProcessor = new EventProcessor(
+      eventProcessorConfig,
+      clientContext,
+      {},
+      contextDeduplicator,
+    );
   });
 
   afterEach(() => {
@@ -788,6 +793,7 @@ describe('given an event processor', () => {
     eventProcessor = new EventProcessor(
       eventProcessorConfig,
       clientContextWithDebug,
+      {},
       contextDeduplicator,
     );
 

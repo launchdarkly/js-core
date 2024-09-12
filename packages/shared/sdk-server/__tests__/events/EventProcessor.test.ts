@@ -199,6 +199,7 @@ describe('given an event processor with diagnostics manager', () => {
     eventProcessor = new internal.EventProcessor(
       testConfig,
       clientContext,
+      {},
       new ContextDeduplicator(config),
       diagnosticsManager,
     );

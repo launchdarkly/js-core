@@ -86,6 +86,15 @@ export default class LDClientImpl implements LDClient {
     this.connectionMode = this.config.initialConnectionMode;
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
+
+    this.baseHeaders = defaultHeaders(
+      this.sdkKey,
+      this.platform.info,
+      this.config.tags,
+      this.config.serviceEndpoints.includeAuthorizationHeader,
+      this.config.userAgentHeaderName,
+    );
+
     this.flagManager = new FlagManager(
       this.platform,
       sdkKey,
@@ -97,6 +106,7 @@ export default class LDClientImpl implements LDClient {
       sdkKey,
       this.config,
       platform,
+      this.baseHeaders,
       this.diagnosticsManager,
       !this.isOffline(),
     );
@@ -112,14 +122,6 @@ export default class LDClientImpl implements LDClient {
       const ldContext = Context.toLDContext(context);
       this.emitter.emit('change', ldContext, flagKeys);
     });
-
-    this.baseHeaders = defaultHeaders(
-      this.sdkKey,
-      this.platform.info,
-      this.config.tags,
-      true,
-      'x-launchdarkly-user-agent',
-    );
   }
 
   /**
