@@ -25,6 +25,7 @@ export class BrowserClient extends LDClientImpl {
       diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
       includeAuthorizationHeader: false,
       highTimeoutThreshold: 5,
+      userAgentHeaderName: 'x-launchdarkly-user-agent',
     });
   }
 
