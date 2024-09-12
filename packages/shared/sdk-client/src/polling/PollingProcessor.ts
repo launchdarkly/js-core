@@ -1,10 +1,8 @@
 import {
   ApplicationTags,
-  defaultHeaders,
   getPollingUri,
   httpErrorMessage,
   HttpErrorResponse,
-  Info,
   isHttpRecoverable,
   LDHeaders,
   LDLogger,

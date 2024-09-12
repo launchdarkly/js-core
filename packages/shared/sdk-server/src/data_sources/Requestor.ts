@@ -1,7 +1,5 @@
 import {
-  defaultHeaders,
   getPollingUri,
-  Info,
   LDHeaders,
   LDStreamingError,
   Options,

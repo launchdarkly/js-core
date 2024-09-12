@@ -1,12 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import {
-  ApplicationTags,
-  defaultHeaders,
-  HttpErrorResponse,
-  Info,
-  LDHeaders,
-  Requests,
-} from '@launchdarkly/js-sdk-common';
+import { HttpErrorResponse, LDHeaders, Requests } from '@launchdarkly/js-sdk-common';
 
 function isOk(status: number) {
   return status >= 200 && status <= 299;
