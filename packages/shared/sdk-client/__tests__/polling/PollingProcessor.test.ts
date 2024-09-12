@@ -3,6 +3,7 @@ import { waitFor } from '@testing-library/dom';
 import {
   Encoding,
   EventSource,
+  EventSourceCapabilities,
   EventSourceInitDict,
   Info,
   PlatformData,
@@ -46,6 +47,13 @@ function makeRequests(): Requests {
     fetch: mockFetch('{ "flagA": true }', 200),
     createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
       throw new Error('Function not implemented.');
+    },
+    getEventSourceCapabilities(): EventSourceCapabilities {
+      return {
+        readTimeout: false,
+        headers: false,
+        customMethod: false,
+      };
     },
   };
 }
@@ -179,6 +187,13 @@ it('stops polling when stopped', (done) => {
     fetch: jest.fn(),
     createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
       throw new Error('Function not implemented.');
+    },
+    getEventSourceCapabilities(): EventSourceCapabilities {
+      return {
+        readTimeout: false,
+        headers: false,
+        customMethod: false,
+      };
     },
   };
   const dataCallback = jest.fn();
