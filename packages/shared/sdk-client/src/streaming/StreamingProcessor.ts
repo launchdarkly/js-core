@@ -45,6 +45,13 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     private readonly errorHandler?: internal.StreamingErrorHandler,
     private readonly logger?: LDLogger,
   ) {
+    // TODO: SC-255969 Implement better REPORT fallback logic
+    if (dataSourceConfig.useReport && !requests.getEventSourceCapabilities().customMethod) {
+      logger?.warn(
+        "Configuration option useReport is true, but platform's EventSource does not support custom methods. Streaming may not work.",
+      );
+    }
+
     const path = dataSourceConfig.useReport
       ? dataSourceConfig.paths.pathReport(encoding, dataSourceConfig.credential, plainContextString)
       : dataSourceConfig.paths.pathGet(encoding, dataSourceConfig.credential, plainContextString);

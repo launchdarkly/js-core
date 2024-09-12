@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Encoding, EventSourceCapabilities, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import LDClientImpl from '../src/LDClientImpl';
@@ -53,6 +53,11 @@ describe('sdk-client object', () => {
     });
 
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    mockPlatform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: true,
+    }));
     mockPlatform.requests.createEventSource.mockImplementation(
       (streamUri: string = '', options: any = {}) => {
         mockEventSource = new MockEventSource(streamUri, options);

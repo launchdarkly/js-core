@@ -106,6 +106,11 @@ describe('given a stream processor', () => {
         mockEventSource = createMockEventSource(streamUri, options);
         return mockEventSource;
       }),
+      getEventSourceCapabilities: jest.fn(() => ({
+        readTimeout: true,
+        headers: true,
+        customMethod: true,
+      })),
     } as any;
     simulatePutEvent = (e: any = event) => {
       mockEventSource.addEventListener.mock.calls[0][1](e);
