@@ -6,7 +6,7 @@ import {
   LDOptions,
 } from '@launchdarkly/js-client-sdk';
 
-import { CommandParams } from './CommandParams';
+import { CommandParams, CommandType, ValueType } from './CommandParams';
 import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
 import { makeLogger } from './makeLogger';
 
@@ -93,25 +93,25 @@ export class ClientEntity {
   async doCommand(params: CommandParams) {
     this.logger.info(`Received command: ${params.command}`);
     switch (params.command) {
-      case 'evaluate': {
+      case CommandType.EvaluateFlag: {
         const evaluationParams = params.evaluate;
         if (!evaluationParams) {
           throw malformedCommand;
         }
         if (evaluationParams.detail) {
           switch (evaluationParams.valueType) {
-            case 'bool':
+            case ValueType.Bool:
               return this.client.boolVariationDetail(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as boolean,
               );
-            case 'int': // Intentional fallthrough.
-            case 'double':
+            case ValueType.Int: // Intentional fallthrough.
+            case ValueType.Double:
               return this.client.numberVariationDetail(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as number,
               );
-            case 'string':
+            case ValueType.String:
               return this.client.stringVariationDetail(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as string,
@@ -124,22 +124,22 @@ export class ClientEntity {
           }
         }
         switch (evaluationParams.valueType) {
-          case 'bool':
+          case ValueType.Bool:
             return {
               value: this.client.boolVariation(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as boolean,
               ),
             };
-          case 'int': // Intentional fallthrough.
-          case 'double':
+          case ValueType.Int: // Intentional fallthrough.
+          case ValueType.Double:
             return {
               value: this.client.numberVariation(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as number,
               ),
             };
-          case 'string':
+          case ValueType.String:
             return {
               value: this.client.stringVariation(
                 evaluationParams.flagKey,
@@ -153,10 +153,10 @@ export class ClientEntity {
         }
       }
 
-      case 'evaluateAll':
+      case CommandType.EvaluateAllFlags:
         return { state: this.client.allFlags() };
 
-      case 'identifyEvent': {
+      case CommandType.IdentifyEvent: {
         const identifyParams = params.identifyEvent;
         if (!identifyParams) {
           throw malformedCommand;
@@ -167,7 +167,7 @@ export class ClientEntity {
         return undefined;
       }
 
-      case 'customEvent': {
+      case CommandType.CustomEvent: {
         const customEventParams = params.customEvent;
         if (!customEventParams) {
           throw malformedCommand;
@@ -180,7 +180,7 @@ export class ClientEntity {
         return undefined;
       }
 
-      case 'flushEvents':
+      case CommandType.FlushEvents:
         this.client.flush();
         return undefined;
 
