@@ -1,7 +1,6 @@
 import {
-  defaultHeaders,
   getPollingUri,
-  Info,
+  LDHeaders,
   LDStreamingError,
   Options,
   Requests,
@@ -28,12 +27,11 @@ export default class Requestor implements LDFeatureRequestor {
   > = {};
 
   constructor(
-    sdkKey: string,
     config: Configuration,
-    info: Info,
     private readonly requests: Requests,
+    baseHeaders: LDHeaders,
   ) {
-    this.headers = defaultHeaders(sdkKey, info, config.tags);
+    this.headers = { ...baseHeaders };
     this.uri = getPollingUri(config.serviceEndpoints, '/sdk/latest-all', []);
   }
 
