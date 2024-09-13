@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "start": "vite",
+    "lint": "eslint ./src",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk": "0.0.0"

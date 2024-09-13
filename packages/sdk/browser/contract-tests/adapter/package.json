@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "yarn build && node dist/index.js",
     "lint": "eslint ./src",
-    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore"
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
   },
   "author": "",
   "license": "UNLICENSED",
