@@ -40,6 +40,7 @@ export default class TestHarnessWebSocket {
             'user-type',
             'inline-context',
             'anonymous-redaction',
+            'strongly-typed',
           ];
 
           break;

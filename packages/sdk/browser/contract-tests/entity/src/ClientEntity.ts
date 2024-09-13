@@ -6,11 +6,14 @@ import {
   LDOptions,
 } from '@launchdarkly/js-client-sdk';
 
+import { CommandParams } from './CommandParams';
+import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
 import { makeLogger } from './makeLogger';
 
 export const badCommandError = new Error('unsupported command');
+export const malformedCommand = new Error('command was malformed');
 
-function makeSdkConfig(options: any, tag: string) {
+function makeSdkConfig(options: SDKConfigParams, tag: string) {
   if (!options.clientSide) {
     throw new Error('configuration did not include clientSide options');
   }
@@ -87,30 +90,93 @@ export class ClientEntity {
     this.logger.info('Test ended');
   }
 
-  async doCommand(params: any) {
+  async doCommand(params: CommandParams) {
     this.logger.info(`Received command: ${params.command}`);
     switch (params.command) {
       case 'evaluate': {
-        const pe = params.evaluate;
-        if (pe.detail) {
-          return this.client.variationDetail(pe.flagKey, pe.defaultValue);
+        const evaluationParams = params.evaluate;
+        if (!evaluationParams) {
+          throw malformedCommand;
         }
-        const value = this.client.variation(pe.flagKey, pe.defaultValue);
-        return { value };
+        if (evaluationParams.detail) {
+          switch (evaluationParams.valueType) {
+            case 'bool':
+              return this.client.boolVariationDetail(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue as boolean,
+              );
+            case 'int': // Intentional fallthrough.
+            case 'double':
+              return this.client.numberVariationDetail(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue as number,
+              );
+            case 'string':
+              return this.client.stringVariationDetail(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue as string,
+              );
+            default:
+              return this.client.variationDetail(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue,
+              );
+          }
+        }
+        switch (evaluationParams.valueType) {
+          case 'bool':
+            return {
+              value: this.client.boolVariation(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue as boolean,
+              ),
+            };
+          case 'int': // Intentional fallthrough.
+          case 'double':
+            return {
+              value: this.client.numberVariation(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue as number,
+              ),
+            };
+          case 'string':
+            return {
+              value: this.client.stringVariation(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue as string,
+              ),
+            };
+          default:
+            return {
+              value: this.client.variation(evaluationParams.flagKey, evaluationParams.defaultValue),
+            };
+        }
       }
 
       case 'evaluateAll':
         return { state: this.client.allFlags() };
 
-      case 'identifyEvent':
-        await this.client.identify(params.identifyEvent.user || params.identifyEvent.context, {
+      case 'identifyEvent': {
+        const identifyParams = params.identifyEvent;
+        if (!identifyParams) {
+          throw malformedCommand;
+        }
+        await this.client.identify(identifyParams.user || identifyParams.context, {
           waitForNetworkResults: true,
         });
         return undefined;
+      }
 
       case 'customEvent': {
-        const pce = params.customEvent;
-        this.client.track(pce.eventKey, pce.data, pce.metricValue);
+        const customEventParams = params.customEvent;
+        if (!customEventParams) {
+          throw malformedCommand;
+        }
+        this.client.track(
+          customEventParams.eventKey,
+          customEventParams.data,
+          customEventParams.metricValue,
+        );
         return undefined;
       }
 
@@ -124,7 +190,7 @@ export class ClientEntity {
   }
 }
 
-export async function newSdkClientEntity(options: any) {
+export async function newSdkClientEntity(options: CreateInstanceParams) {
   const logger = makeLogger(options.tag);
 
   logger.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
