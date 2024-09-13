@@ -2,21 +2,21 @@ import { LDLogger } from '@launchdarkly/js-client-sdk';
 
 export function makeLogger(tag: string): LDLogger {
   return {
-    debug(...args: any[]) {
+    debug(message, ...args: any[]) {
       // eslint-disable-next-line no-console
-      console.debug(`${new Date().toISOString()} [${tag}]:`, ...args);
+      console.debug(`${new Date().toISOString()} [${tag}]: ${message}`, ...args);
     },
-    info(...args: any[]) {
+    info(message, ...args: any[]) {
       // eslint-disable-next-line no-console
-      console.info(`${new Date().toISOString()} [${tag}]:`, ...args);
+      console.info(`${new Date().toISOString()} [${tag}]: ${message}`, ...args);
     },
-    warn(...args: any[]) {
+    warn(message, ...args: any[]) {
       // eslint-disable-next-line no-console
-      console.warn(`${new Date().toISOString()} [${tag}]:`, ...args);
+      console.warn(`${new Date().toISOString()} [${tag}]: ${message}`, ...args);
     },
-    error(...args: any[]) {
+    error(message, ...args: any[]) {
       // eslint-disable-next-line no-console
-      console.error(`${new Date().toISOString()} [${tag}]:`, ...args);
+      console.error(`${new Date().toISOString()} [${tag}]: ${message}`, ...args);
     },
   };
 }
