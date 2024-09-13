@@ -122,7 +122,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
         return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
       },
       pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
-        return `/msdk/evalx/contexts`;
+        return `/msdk/evalx/context`;
       },
     };
   }
