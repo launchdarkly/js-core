@@ -114,10 +114,22 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
   start() {
     this.logConnectionStarted();
 
+    let methodAndBodyOverrides;
+    if (this.dataSourceConfig.useReport) {
+      // REPORT will include a body, so content type is required.
+      this.headers['content-type'] = 'application/json';
+
+      // orverrides default method with REPORT and adds body.
+      methodAndBodyOverrides = { method: 'REPORT', body: this.plainContextString };
+    } else {
+      // no method or body override
+      methodAndBodyOverrides = {};
+    }
+
     // TLS is handled by the platform implementation.
     const eventSource = this.requests.createEventSource(this.streamUri, {
-      headers: this.headers,
-      ...(this.dataSourceConfig.useReport && { method: 'REPORT', body: this.plainContextString }),
+      headers: this.headers, // adds content-type header required when body will be present
+      ...methodAndBodyOverrides,
       errorFilter: (error: HttpErrorResponse) => this.retryAndHandleError(error),
       initialRetryDelayMillis: this.dataSourceConfig.initialRetryDelayMillis,
       readTimeoutMillis: 5 * 60 * 1000,

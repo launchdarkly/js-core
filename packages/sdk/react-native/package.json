@@ -35,7 +35,7 @@
     "test": "jest",
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test",
-    "android": "yarn && yarn ./example && yarn build && (cd example/ && yarn android-release)",
+    "android": "yarn && yarn ./example && yarn build && (cd example/ && yarn android)",
     "ios": "yarn && yarn ./example && yarn build && (cd example/ && yarn ios-go)"
   },
   "peerDependencies": {

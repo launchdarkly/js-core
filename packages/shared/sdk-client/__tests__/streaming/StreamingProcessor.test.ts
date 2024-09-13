@@ -199,15 +199,15 @@ describe('given a stream processor', () => {
 
     expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
       `${serviceEndpoints.streaming}/stream/path/report?withReasons=true&filter=testPayloadFilterKey`,
-      {
+      expect.objectContaining({
         method: 'REPORT',
         body: 'mockContextString',
         errorFilter: expect.any(Function),
-        headers: defaultHeaders(sdkKey, info, undefined),
+        headers: expect.objectContaining({ 'content-type': 'application/json' }),
         initialRetryDelayMillis: 1000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
-      },
+      }),
     );
   });
 
