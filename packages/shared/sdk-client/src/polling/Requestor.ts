@@ -22,17 +22,13 @@ export class LDRequestError extends Error implements HttpErrorResponse {
  * @internal
  */
 export default class Requestor {
-  private readonly headers: { [key: string]: string };
-
   constructor(
     private requests: Requests,
     private readonly uri: string,
-    baseHeaders: LDHeaders,
+    private readonly headers: { [key: string]: string },
     private readonly method: string,
     private readonly body?: string,
-  ) {
-    this.headers = { ...baseHeaders };
-  }
+  ) {}
 
   async requestPayload(): Promise<string> {
     let status: number | undefined;

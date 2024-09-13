@@ -49,13 +49,16 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     const uri = getPollingUri(dataSourceConfig.serviceEndpoints, path, parameters);
     this.pollInterval = dataSourceConfig.pollInterval;
 
-    this.requestor = new Requestor(
-      requests,
-      uri,
-      dataSourceConfig.baseHeaders,
-      dataSourceConfig.useReport ? 'REPORT' : 'GET',
-      dataSourceConfig.useReport ? plainContextString : undefined, // context is in body for REPORT
-    );
+    let method = 'GET';
+    const headers: { [key: string]: string } = { ...dataSourceConfig.baseHeaders };
+    let body;
+    if (dataSourceConfig.useReport) {
+      method = 'REPORT';
+      headers['content-type'] = 'application/json';
+      body = plainContextString; // context is in body for REPORT
+    }
+
+    this.requestor = new Requestor(requests, uri, headers, method, body);
   }
 
   private async poll() {

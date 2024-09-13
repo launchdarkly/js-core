@@ -277,6 +277,9 @@ it('can be configured to use the "REPORT" method', () => {
     expect.anything(),
     expect.objectContaining({
       method: 'REPORT',
+      headers: expect.objectContaining({
+        'content-type': 'application/json',
+      }),
       body: 'mockContextString',
     }),
   );

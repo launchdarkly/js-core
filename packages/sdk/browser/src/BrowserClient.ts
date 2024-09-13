@@ -2,6 +2,8 @@ import {
   AutoEnvAttributes,
   base64UrlEncode,
   LDClient as CommonClient,
+  DataSourcePaths,
+  Encoding,
   LDClientImpl,
   LDContext,
   LDOptions,
@@ -33,11 +35,27 @@ export class BrowserClient extends LDClientImpl {
     return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
   }
 
-  override createStreamUriPath(context: LDContext) {
-    return `/eval/${this.clientSideId}/${this.encodeContext(context)}`;
+  override getStreamingPaths(): DataSourcePaths {
+    const parentThis = this;
+    return {
+      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/eval/${parentThis.clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/eval/${parentThis.clientSideId}`;
+      },
+    };
   }
 
-  override createPollUriPath(context: LDContext): string {
-    return `/sdk/evalx/${this.clientSideId}/contexts/${this.encodeContext(context)}`;
+  override getPollingPaths(): DataSourcePaths {
+    const parentThis = this;
+    return {
+      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/sdk/evalx/${parentThis.clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+        return `/sdk/evalx/${parentThis.clientSideId}/contexts`;
+      },
+    };
   }
 }
