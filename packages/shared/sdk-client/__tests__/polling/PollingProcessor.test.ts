@@ -4,11 +4,8 @@ import {
   EventSource,
   EventSourceCapabilities,
   EventSourceInitDict,
-  Info,
-  PlatformData,
   Requests,
   Response,
-  SdkData,
 } from '@launchdarkly/js-sdk-common';
 
 import PollingProcessor, { PollingConfig } from '../../src/polling/PollingProcessor';
@@ -56,13 +53,6 @@ function makeRequests(): Requests {
   };
 }
 
-function makeInfo(sdkData: SdkData = {}, platformData: PlatformData = {}): Info {
-  return {
-    sdkData: () => sdkData,
-    platformData: () => platformData,
-  };
-}
-
 function makeConfig(config?: { pollInterval?: number; useReport?: boolean }): PollingConfig {
   return {
     pollInterval: config?.pollInterval ?? 60 * 5,
@@ -90,12 +80,11 @@ it('makes no requests until it is started', () => {
   const requests = makeRequests();
   // eslint-disable-next-line no-new
   new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     makeConfig(),
+    {},
     (_flags) => {},
     (_error) => {},
   );
@@ -107,12 +96,11 @@ it('polls immediately when started', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     makeConfig(),
+    {},
     (_flags) => {},
     (_error) => {},
   );
@@ -128,12 +116,11 @@ it('calls callback on success', async () => {
   const errorCallback = jest.fn();
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     makeConfig(),
+    {},
     dataCallback,
     errorCallback,
   );
@@ -150,12 +137,11 @@ it('polls repeatedly', async () => {
 
   requests.fetch = mockFetch('{ "flagA": true }', 200);
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     makeConfig({ pollInterval: 0.1 }),
+    {},
     dataCallback,
     errorCallback,
   );
@@ -189,12 +175,11 @@ it('stops polling when stopped', (done) => {
   const errorCallback = jest.fn();
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/stops',
     [],
     makeConfig({ pollInterval: 0.01 }),
+    {},
     dataCallback,
     errorCallback,
   );
@@ -212,15 +197,14 @@ it('includes the correct headers on requests', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo({
-      userAgentBase: 'AnSDK',
-      version: '42',
-    }),
     '/polling',
     [],
     makeConfig(),
+    {
+      authorization: 'the-sdk-key',
+      'user-agent': 'AnSDK/42',
+    },
     (_flags) => {},
     (_error) => {},
   );
@@ -242,12 +226,11 @@ it('defaults to using the "GET" verb', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     makeConfig(),
+    {},
     (_flags) => {},
     (_error) => {},
   );
@@ -266,12 +249,11 @@ it('can be configured to use the "REPORT" verb', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     makeConfig({ useReport: true }),
+    {},
     (_flags) => {},
     (_error) => {},
   );
@@ -293,12 +275,11 @@ it('continues polling after receiving bad JSON', async () => {
   const config = makeConfig({ pollInterval: 0.1 });
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     config,
+    {},
     dataCallback,
     errorCallback,
   );
@@ -322,12 +303,11 @@ it('continues polling after an exception thrown during a request', async () => {
   const config = makeConfig({ pollInterval: 0.1 });
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     config,
+    {},
     dataCallback,
     errorCallback,
   );
@@ -354,12 +334,11 @@ it('can handle recoverable http errors', async () => {
   const config = makeConfig({ pollInterval: 0.1 });
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     config,
+    {},
     dataCallback,
     errorCallback,
   );
@@ -384,12 +363,11 @@ it('stops polling on unrecoverable error codes', (done) => {
   const config = makeConfig({ pollInterval: 0.01 });
 
   const polling = new PollingProcessor(
-    'the-sdk-key',
     requests,
-    makeInfo(),
     '/polling',
     [],
     config,
+    {},
     dataCallback,
     errorCallback,
   );
