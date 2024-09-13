@@ -54,7 +54,7 @@ export class BrowserClient extends LDClientImpl {
         return `/sdk/evalx/${parentThis.clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
       },
       pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
-        return `/sdk/evalx/${parentThis.clientSideId}/contexts`;
+        return `/sdk/evalx/${parentThis.clientSideId}/context`;
       },
     };
   }
