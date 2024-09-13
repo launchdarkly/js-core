@@ -55,8 +55,11 @@ function getStreamingDataSourceConfig(
         return '/stream/path/report';
       },
     },
-    tags: {},
-    info: basicPlatform.info,
+    baseHeaders: {
+      authorization: 'my-sdk-key',
+      'user-agent': 'TestUserAgent/2.0.2',
+      'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+    },
     initialRetryDelayMillis: 1000,
     withReasons,
     useReport,

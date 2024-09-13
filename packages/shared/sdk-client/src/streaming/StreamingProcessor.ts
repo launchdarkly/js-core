@@ -61,14 +61,9 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
       parameters.push({ key: 'withReasons', value: 'true' });
     }
 
-    this.headers = defaultHeaders(
-      dataSourceConfig.credential,
-      dataSourceConfig.info,
-      dataSourceConfig.tags,
-    );
-
-    this.logger = logger;
     this.requests = requests;
+    this.headers = { ...dataSourceConfig.baseHeaders };
+    this.logger = logger;
     this.streamUri = getStreamingUri(dataSourceConfig.serviceEndpoints, path, parameters);
   }
 

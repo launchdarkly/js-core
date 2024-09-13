@@ -10,7 +10,7 @@ import { LDStreamProcessor } from '../../api/subsystem';
 import { LDStreamingError } from '../../errors';
 import { ClientContext } from '../../options';
 import { getStreamingUri } from '../../options/ServiceEndpoints';
-import { defaultHeaders, httpErrorMessage, shouldRetry } from '../../utils';
+import { httpErrorMessage, LDHeaders, shouldRetry } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import { StreamingErrorHandler } from './types';
 
@@ -35,20 +35,20 @@ class StreamingProcessor implements LDStreamProcessor {
   private connectionAttemptStartTime?: number;
 
   constructor(
-    sdkKey: string,
     clientContext: ClientContext,
     streamUriPath: string,
     parameters: { key: string; value: string }[],
     private readonly listeners: Map<EventName, ProcessStreamResponse>,
+    baseHeaders: LDHeaders,
     private readonly diagnosticsManager?: DiagnosticsManager,
     private readonly errorHandler?: StreamingErrorHandler,
     private readonly streamInitialReconnectDelay = 1,
   ) {
     const { basicConfiguration, platform } = clientContext;
-    const { logger, tags } = basicConfiguration;
-    const { info, requests } = platform;
+    const { logger } = basicConfiguration;
+    const { requests } = platform;
 
-    this.headers = defaultHeaders(sdkKey, info, tags);
+    this.headers = { ...baseHeaders };
     this.logger = logger;
     this.requests = requests;
     this.streamUri = getStreamingUri(

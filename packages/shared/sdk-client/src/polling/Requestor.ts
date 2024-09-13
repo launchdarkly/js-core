@@ -1,11 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import {
-  ApplicationTags,
-  defaultHeaders,
-  HttpErrorResponse,
-  Info,
-  Requests,
-} from '@launchdarkly/js-sdk-common';
+import { HttpErrorResponse, LDHeaders, Requests } from '@launchdarkly/js-sdk-common';
 
 function isOk(status: number) {
   return status >= 200 && status <= 299;
@@ -31,15 +25,13 @@ export default class Requestor {
   private readonly headers: { [key: string]: string };
 
   constructor(
-    sdkKey: string,
     private requests: Requests,
-    info: Info,
     private readonly uri: string,
-    tags: ApplicationTags,
+    baseHeaders: LDHeaders,
     private readonly method: string,
     private readonly body?: string,
   ) {
-    this.headers = defaultHeaders(sdkKey, info, tags);
+    this.headers = { ...baseHeaders };
   }
 
   async requestPayload(): Promise<string> {

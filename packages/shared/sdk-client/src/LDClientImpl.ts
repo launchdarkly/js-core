@@ -2,12 +2,14 @@ import {
   AutoEnvAttributes,
   clone,
   Context,
+  defaultHeaders,
   Encoding,
   internal,
   LDClientError,
   LDContext,
   LDFlagSet,
   LDFlagValue,
+  LDHeaders,
   LDLogger,
   Platform,
   ProcessStreamResponse,
@@ -60,6 +62,7 @@ export default class LDClientImpl implements LDClient {
   private eventSendingEnabled: boolean = true;
   private networkAvailable: boolean = true;
   private connectionMode: ConnectionMode;
+  private baseHeaders: LDHeaders;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -82,6 +85,15 @@ export default class LDClientImpl implements LDClient {
     this.config = new Configuration(options, internalOptions);
     this.connectionMode = this.config.initialConnectionMode;
     this.logger = this.config.logger;
+
+    this.baseHeaders = defaultHeaders(
+      this.sdkKey,
+      this.platform.info,
+      this.config.tags,
+      this.config.serviceEndpoints.includeAuthorizationHeader,
+      this.config.userAgentHeaderName,
+    );
+
     this.flagManager = new FlagManager(
       this.platform,
       sdkKey,
@@ -93,6 +105,7 @@ export default class LDClientImpl implements LDClient {
       sdkKey,
       this.config,
       platform,
+      this.baseHeaders,
       this.diagnosticsManager,
       !this.isOffline(),
     );
@@ -409,8 +422,7 @@ export default class LDClientImpl implements LDClient {
         credential: this.sdkKey,
         serviceEndpoints: this.config.serviceEndpoints,
         paths: this.getPollingPaths(),
-        tags: this.config.tags,
-        info: this.platform.info,
+        baseHeaders: this.baseHeaders,
         pollInterval: this.config.pollInterval,
         withReasons: this.config.withReasons,
         useReport: this.config.useReport,
@@ -450,8 +462,7 @@ export default class LDClientImpl implements LDClient {
         credential: this.sdkKey,
         serviceEndpoints: this.config.serviceEndpoints,
         paths: this.getStreamingPaths(),
-        tags: this.config.tags,
-        info: this.platform.info,
+        baseHeaders: this.baseHeaders,
         initialRetryDelayMillis: this.config.streamInitialReconnectDelay * 1000,
         withReasons: this.config.withReasons,
         useReport: this.config.useReport,
@@ -541,8 +552,8 @@ export default class LDClientImpl implements LDClient {
     }
 
     const successDetail = createSuccessEvaluationDetail(value, variation, reason);
-    if (variation === undefined || variation === null) {
-      this.logger.debug('Result value is null in variation');
+    if (value === undefined || value === null) {
+      this.logger.debug('Result value is null. Providing default value.');
       successDetail.value = defaultValue;
     }
     this.eventProcessor?.sendEvent(

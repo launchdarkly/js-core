@@ -2,6 +2,7 @@ import type {
   ClientContext,
   EventName,
   internal,
+  LDHeaders,
   LDStreamingError,
   ProcessStreamResponse,
 } from '@common';
@@ -22,11 +23,11 @@ export const setupMockStreamingProcessor = (
 
   MockStreamingProcessor.mockImplementation(
     (
-      sdkKey: string,
       clientContext: ClientContext,
       streamUriPath: string,
       parameters: { key: string; value: string }[],
       listeners: Map<EventName, ProcessStreamResponse>,
+      baseHeaders: LDHeaders,
       diagnosticsManager: internal.DiagnosticsManager,
       errorHandler: internal.StreamingErrorHandler,
       _streamInitialReconnectDelay: number,

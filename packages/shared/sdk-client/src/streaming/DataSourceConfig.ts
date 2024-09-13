@@ -1,10 +1,9 @@
-import { ApplicationTags, Encoding, Info, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
+import { Encoding, LDHeaders, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
 
 export interface DataSourceConfig {
   credential: string;
   serviceEndpoints: ServiceEndpoints;
-  info: Info;
-  tags: ApplicationTags;
+  baseHeaders: LDHeaders;
   withReasons: boolean;
   useReport: boolean;
   paths: DataSourcePaths;

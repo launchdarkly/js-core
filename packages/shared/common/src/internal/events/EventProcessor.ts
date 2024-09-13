@@ -5,6 +5,7 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
+import { LDHeaders } from '../../utils';
 import { DiagnosticsManager } from '../diagnostics';
 import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
@@ -106,13 +107,14 @@ export default class EventProcessor implements LDEventProcessor {
   constructor(
     private readonly config: EventProcessorOptions,
     clientContext: ClientContext,
+    baseHeaders: LDHeaders,
     private readonly contextDeduplicator?: LDContextDeduplicator,
     private readonly diagnosticsManager?: DiagnosticsManager,
     start: boolean = true,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
-    this.eventSender = new EventSender(clientContext);
+    this.eventSender = new EventSender(clientContext, baseHeaders);
 
     this.contextFilter = new ContextFilter(
       config.allAttributesPrivate,

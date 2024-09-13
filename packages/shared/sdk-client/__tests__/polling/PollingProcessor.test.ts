@@ -5,11 +5,8 @@ import {
   EventSource,
   EventSourceCapabilities,
   EventSourceInitDict,
-  Info,
-  PlatformData,
   Requests,
   Response,
-  SdkData,
 } from '@launchdarkly/js-sdk-common';
 
 import PollingProcessor from '../../src/polling/PollingProcessor';
@@ -64,13 +61,6 @@ function makeEncoding(): Encoding {
   };
 }
 
-function makeInfo(sdkData: SdkData = {}, platformData: PlatformData = {}): Info {
-  return {
-    sdkData: () => sdkData,
-    platformData: () => platformData,
-  };
-}
-
 const serviceEndpoints = {
   events: 'mockEventsEndpoint',
   polling: 'mockPollingEndpoint',
@@ -97,8 +87,7 @@ function makeConfig(
         return '/poll/path/report';
       },
     },
-    tags: {},
-    info: makeInfo(),
+    baseHeaders: {},
     withReasons,
     useReport,
     pollInterval,
@@ -221,10 +210,10 @@ it('includes the correct headers on requests', () => {
   const requests = makeRequests();
 
   const config = makeConfig(1, true, false);
-  config.info = makeInfo({
-    userAgentBase: 'AnSDK',
-    version: '42',
-  });
+  config.baseHeaders = {
+    authorization: 'the-sdk-key',
+    'user-agent': 'AnSDK/42',
+  };
 
   const polling = new PollingProcessor(
     'mockContextString',

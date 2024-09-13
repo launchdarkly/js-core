@@ -4,6 +4,7 @@ import {
   httpErrorMessage,
   HttpErrorResponse,
   isHttpRecoverable,
+  LDHeaders,
   LDLogger,
   LDPollingError,
   Requests,
@@ -50,13 +51,11 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     this.pollInterval = dataSourceConfig.pollInterval;
 
     this.requestor = new Requestor(
-      this.dataSourceConfig.credential,
       requests,
-      this.dataSourceConfig.info,
       uri,
-      this.dataSourceConfig.tags,
-      this.dataSourceConfig.useReport ? 'REPORT' : 'GET',
-      this.dataSourceConfig.useReport ? plainContextString : undefined, // context is in body for REPORT
+      dataSourceConfig.baseHeaders,
+      dataSourceConfig.useReport ? 'REPORT' : 'GET',
+      dataSourceConfig.useReport ? plainContextString : undefined, // context is in body for REPORT
     );
   }
 
