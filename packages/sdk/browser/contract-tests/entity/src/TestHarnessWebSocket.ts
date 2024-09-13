@@ -1,4 +1,5 @@
-import { LDLogger } from '@launchdarkly/js-client-sdk-common';
+import { LDLogger } from '@launchdarkly/js-client-sdk';
+
 import { ClientEntity, newSdkClientEntity } from './ClientEntity';
 import { makeLogger } from './makeLogger';
 
@@ -31,6 +32,17 @@ export default class TestHarnessWebSocket {
       const data = JSON.parse(msg.data);
       const resData: any = { reqId: data.reqId };
       switch (data.command) {
+        case 'getCapabilities':
+          resData.capabilities = [
+            'client-side',
+            'service-endpoints',
+            'tags',
+            'user-type',
+            'inline-context',
+            'anonymous-redaction',
+          ];
+
+          break;
         case 'createClient':
           {
             resData.resourceUrl = `/clients/${this.clientCounter}`;
