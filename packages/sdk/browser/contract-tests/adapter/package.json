@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "run": "node dist/index.js",
     "test": "jest",
     "lint": "eslint ./src"
   },

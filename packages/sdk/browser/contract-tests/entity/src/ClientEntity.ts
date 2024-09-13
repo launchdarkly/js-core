@@ -59,7 +59,8 @@ function makeSdkConfig(options: any, tag: string) {
   }
 
   // Can contain streaming and polling, if streaming is set override the initial connection
-  // mode.
+  // mode. This can be removed when we add JS specific initialization that uses polling
+  // and then streaming.
   if (options.streaming) {
     if (options.streaming.baseUri) {
       cf.streamUri = options.streaming.baseUri;

@@ -19,6 +19,7 @@ export default class TestHarnessWebSocket {
     };
 
     this.ws.onmessage = async (msg) => {
+      console.log("Test harness message", msg);
       const data = JSON.parse(msg.data);
       const resData: any = { reqId: data.reqId };
       switch (data.command) {

@@ -24,7 +24,8 @@
     "packages/telemetry/node-server-sdk-otel",
     "packages/tooling/jest",
     "packages/sdk/browser",
-    "packages/sdk/browser/contract-tests/entity"
+    "packages/sdk/browser/contract-tests/entity",
+    "packages/sdk/browser/contract-tests/adapter"
   ],
   "private": true,
   "scripts": {

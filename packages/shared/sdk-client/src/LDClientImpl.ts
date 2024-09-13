@@ -545,8 +545,8 @@ export default class LDClientImpl implements LDClient {
     }
 
     const successDetail = createSuccessEvaluationDetail(value, variation, reason);
-    if (variation === undefined || variation === null) {
-      this.logger.debug('Result value is null in variation');
+    if (value === undefined || value === null) {
+      this.logger.debug('Result value is null');
       successDetail.value = defaultValue;
     }
     this.eventProcessor?.sendEvent(

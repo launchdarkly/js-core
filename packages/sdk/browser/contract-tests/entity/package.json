@@ -1,5 +1,5 @@
 {
-  "name": "test-event-source",
+  "name": "browser-contract-test-service",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,9 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "file:../js-core/packages/sdk/browser",
-    "@launchdarkly/js-client-sdk-common": "file:../js-core/packages/shared/sdk-client",
-    "@launchdarkly/js-sdk-common": "file:../js-core/packages/shared/common"
+    "@launchdarkly/js-client-sdk": "0.0.0"
   },
   "devDependencies": {
     "typescript": "^5.5.3",
