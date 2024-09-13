@@ -6,29 +6,9 @@ import {
   LDOptions,
 } from '@launchdarkly/js-client-sdk';
 
-export const badCommandError = new Error('unsupported command');
+import { makeLogger } from './makeLogger';
 
-function makeLogger(tag: string): LDLogger {
-  const doLog = (level: string, ...args: any[]): void => {
-    // eslint-disable-next-line no-console
-    console.log(`${new Date().toISOString()} [${tag}] ${level}:`, ...args);
-  };
-  return {
-    debug(...args: any[]) {
-      doLog('debug', ...args);
-    },
-    info(...args: any[]) {
-      doLog('debug', ...args);
-    },
-    warn(...args: any[]) {
-      doLog('debug', ...args);
-    },
-    error(...args: any[]) {
-      // eslint-disable-next-line no-console
-      console.error(`${new Date().toISOString()} [${tag}] error:`, ...args);
-    },
-  };
-}
+export const badCommandError = new Error('unsupported command');
 
 function makeSdkConfig(options: any, tag: string) {
   if (!options.clientSide) {

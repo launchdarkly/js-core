@@ -6,8 +6,8 @@ import TestHarnessWebSocket from './TestHarnessWebSocket';
 // const client = init('618959580d89aa15579acf1d', AutoEnvAttributes.Enabled);
 
 async function runContractTests() {
-  // eslint-disable-next-line no-new
-  new TestHarnessWebSocket('ws://localhost:8001');
+  const ws = new TestHarnessWebSocket('ws://localhost:8001');
+  ws.connect();
 }
 
 runContractTests();
