@@ -1,6 +1,5 @@
 // eslint-disable-next-line prettier/prettier
-import './style.css'
-
+import './style.css';
 import TestHarnessWebSocket from './TestHarnessWebSocket';
 
 // const client = init('618959580d89aa15579acf1d', AutoEnvAttributes.Enabled);

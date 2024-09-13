@@ -1,12 +1,12 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { WebSocketServer } from 'ws';
 import bodyParser from 'body-parser';
-import express from 'express';
 import cors from 'cors';
+import { randomUUID } from 'crypto';
+import express from 'express';
 import http from 'node:http';
 import util from 'node:util';
-
-import { randomUUID } from 'crypto';
+import { WebSocketServer } from 'ws';
 
 let server: http.Server | undefined;
 
@@ -14,21 +14,21 @@ async function main() {
   const wss = new WebSocketServer({ port: 8001 });
   const waiters: Record<string, (data: unknown) => void> = {};
 
-  console.log("Running contract test harness adapter.");
+  console.log('Running contract test harness adapter.');
   wss.on('connection', async (ws) => {
     ws.on('error', console.error);
 
-    ws.on('message', function message(stringData: string) {
+    ws.on('message', (stringData: string) => {
       const data = JSON.parse(stringData);
       if (Object.prototype.hasOwnProperty.call(waiters, data.reqId)) {
         waiters[data.reqId](data);
         delete waiters[data.reqId];
       } else {
-        console.error("Did not find outstanding request", data.reqId);
+        console.error('Did not find outstanding request', data.reqId);
       }
     });
 
-    const send = (data: { [key: string]: unknown, reqId: string }): Promise<any> => {
+    const send = (data: { [key: string]: unknown; reqId: string }): Promise<any> => {
       let resolver: (data: unknown) => void;
       const waiter = new Promise((resolve) => {
         resolver = resolve;
@@ -48,11 +48,13 @@ async function main() {
 
     const port = 8000;
 
-    app.use(cors({
-      origin: '*',
-      allowedHeaders: '*',
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-    }));
+    app.use(
+      cors({
+        origin: '*',
+        allowedHeaders: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      }),
+    );
     app.use(bodyParser.json());
 
     app.get('/', async (_req, res) => {
@@ -66,7 +68,11 @@ async function main() {
     });
 
     app.post('/', async (req, res) => {
-      const commandResult = await send({ command: 'createClient', body: req.body, reqId: randomUUID() });
+      const commandResult = await send({
+        command: 'createClient',
+        body: req.body,
+        reqId: randomUUID(),
+      });
       if (commandResult.resourceUrl) {
         res.set('Location', commandResult.resourceUrl);
       }
@@ -77,7 +83,12 @@ async function main() {
     });
 
     app.post('/clients/:id', async (req, res) => {
-      const commandResult = await send({ command: 'runCommand', id: req.params.id, body: req.body, reqId: randomUUID() });
+      const commandResult = await send({
+        command: 'runCommand',
+        id: req.params.id,
+        body: req.body,
+        reqId: randomUUID(),
+      });
       if (commandResult.status) {
         res.status(commandResult.status);
       }
@@ -96,6 +107,5 @@ async function main() {
       console.log('Listening on port %d', port);
     });
   });
-
 }
 main();
