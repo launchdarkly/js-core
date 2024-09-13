@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, clone, Encoding, EventSourceCapabilities, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import LDClientImpl from '../src/LDClientImpl';

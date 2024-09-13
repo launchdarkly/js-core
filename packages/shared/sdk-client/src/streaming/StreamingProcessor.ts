@@ -1,5 +1,4 @@
 import {
-  defaultHeaders,
   Encoding,
   EventName,
   EventSource,

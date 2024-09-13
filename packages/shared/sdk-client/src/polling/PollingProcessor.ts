@@ -4,7 +4,6 @@ import {
   httpErrorMessage,
   HttpErrorResponse,
   isHttpRecoverable,
-  LDHeaders,
   LDLogger,
   LDPollingError,
   Requests,
