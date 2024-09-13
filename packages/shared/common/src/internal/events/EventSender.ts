@@ -11,7 +11,7 @@ import {
   LDUnexpectedResponseError,
 } from '../../errors';
 import { ClientContext, getEventsUri } from '../../options';
-import { httpErrorMessage, LDHeaders, sleep } from '../../utils';
+import { defaultHeaders, httpErrorMessage, sleep } from '../../utils';
 
 export default class EventSender implements LDEventSender {
   private crypto: Crypto;
@@ -22,14 +22,16 @@ export default class EventSender implements LDEventSender {
   private eventsUri: string;
   private requests: Requests;
 
-  constructor(clientContext: ClientContext, baseHeaders: LDHeaders) {
+  constructor(clientContext: ClientContext) {
     const { basicConfiguration, platform } = clientContext;
     const {
-      serviceEndpoints: { analyticsEventPath, diagnosticEventPath },
+      sdkKey,
+      serviceEndpoints: { analyticsEventPath, diagnosticEventPath, includeAuthorizationHeader },
+      tags,
     } = basicConfiguration;
-    const { crypto, requests } = platform;
+    const { crypto, info, requests } = platform;
 
-    this.defaultHeaders = { ...baseHeaders };
+    this.defaultHeaders = defaultHeaders(sdkKey, info, tags, includeAuthorizationHeader);
     this.eventsUri = getEventsUri(basicConfiguration.serviceEndpoints, analyticsEventPath, []);
     this.diagnosticEventsUri = getEventsUri(
       basicConfiguration.serviceEndpoints,

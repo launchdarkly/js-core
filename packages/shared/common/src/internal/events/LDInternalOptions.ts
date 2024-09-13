@@ -12,7 +12,6 @@ export type LDInternalOptions = {
   analyticsEventPath?: string;
   diagnosticEventPath?: string;
   includeAuthorizationHeader?: boolean;
-  userAgentHeaderName?: 'user-agent' | 'x-launchdarkly-user-agent';
 
   /**
    * In seconds. Log a warning if identifyTimeout is greater than this value.

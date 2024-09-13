@@ -3,13 +3,11 @@ import {
   ClientContext,
   clone,
   Context,
-  defaultHeaders,
   internal,
   LDClientError,
   LDContext,
   LDFlagSet,
   LDFlagValue,
-  LDHeaders,
   LDLogger,
   Platform,
   ProcessStreamResponse,
@@ -62,7 +60,6 @@ export default class LDClientImpl implements LDClient {
   private eventSendingEnabled: boolean = true;
   private networkAvailable: boolean = true;
   private connectionMode: ConnectionMode;
-  private baseHeaders: LDHeaders;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -86,15 +83,6 @@ export default class LDClientImpl implements LDClient {
     this.connectionMode = this.config.initialConnectionMode;
     this.clientContext = new ClientContext(sdkKey, this.config, platform);
     this.logger = this.config.logger;
-
-    this.baseHeaders = defaultHeaders(
-      this.sdkKey,
-      this.platform.info,
-      this.config.tags,
-      this.config.serviceEndpoints.includeAuthorizationHeader,
-      this.config.userAgentHeaderName,
-    );
-
     this.flagManager = new FlagManager(
       this.platform,
       sdkKey,
@@ -106,7 +94,6 @@ export default class LDClientImpl implements LDClient {
       sdkKey,
       this.config,
       platform,
-      this.baseHeaders,
       this.diagnosticsManager,
       !this.isOffline(),
     );
@@ -420,11 +407,12 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.updateProcessor = new PollingProcessor(
+      this.sdkKey,
       this.clientContext.platform.requests,
+      this.clientContext.platform.info,
       this.createPollUriPath(context),
       parameters,
       this.config,
-      this.baseHeaders,
       async (flags) => {
         this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
 
@@ -458,11 +446,11 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.updateProcessor = new internal.StreamingProcessor(
+      this.sdkKey,
       this.clientContext,
       this.createStreamUriPath(context),
       parameters,
       this.createStreamListeners(checkedContext, identifyResolve),
-      this.baseHeaders,
       this.diagnosticsManager,
       (e) => {
         identifyReject(e);
@@ -545,8 +533,8 @@ export default class LDClientImpl implements LDClient {
     }
 
     const successDetail = createSuccessEvaluationDetail(value, variation, reason);
-    if (value === undefined || value === null) {
-      this.logger.debug('Result value is null');
+    if (variation === undefined || variation === null) {
+      this.logger.debug('Result value is null in variation');
       successDetail.value = defaultValue;
     }
     this.eventProcessor?.sendEvent(

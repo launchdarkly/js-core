@@ -112,12 +112,6 @@ describe('given an event sender', () => {
 
     eventSender = new EventSender(
       new ClientContext('sdk-key', basicConfig, { ...mockPlatform, info }),
-      {
-        authorization: 'sdk-key',
-        'user-agent': 'TestUserAgent/2.0.2',
-        'x-launchdarkly-tags': 'application-id/testApplication1 application-version/1.0.0',
-        'x-launchdarkly-wrapper': 'Rapper/1.2.3',
-      },
     );
 
     eventSenderResult = await eventSender.sendEventData(

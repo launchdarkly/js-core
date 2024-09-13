@@ -109,8 +109,8 @@ describe('sdk-client object', () => {
     });
     expect(MockStreamingProcessor).toHaveBeenCalledWith(
       expect.anything(),
-      '/stream/path',
       expect.anything(),
+      '/stream/path',
       expect.anything(),
       expect.anything(),
       undefined,
@@ -130,9 +130,9 @@ describe('sdk-client object', () => {
 
     expect(MockStreamingProcessor).toHaveBeenCalledWith(
       expect.anything(),
+      expect.anything(),
       '/stream/path',
       [{ key: 'withReasons', value: 'true' }],
-      expect.anything(),
       expect.anything(),
       undefined,
       expect.anything(),

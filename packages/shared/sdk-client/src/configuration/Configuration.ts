@@ -64,8 +64,6 @@ export default class Configuration {
 
   public readonly pollInterval: number = DEFAULT_POLLING_INTERVAL;
 
-  public readonly userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent';
-
   // Allow indexing Configuration by a string
   [index: string]: any;
 
@@ -83,7 +81,6 @@ export default class Configuration {
       pristineOptions.payloadFilterKey,
     );
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
-    this.userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {
