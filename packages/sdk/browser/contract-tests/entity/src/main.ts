@@ -1,4 +1,9 @@
+// eslint-disable-next-line prettier/prettier
+import './style.css'
+
 import TestHarnessWebSocket from './TestHarnessWebSocket';
+
+// const client = init('618959580d89aa15579acf1d', AutoEnvAttributes.Enabled);
 
 async function runContractTests() {
   // eslint-disable-next-line no-new

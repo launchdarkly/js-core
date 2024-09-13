@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "run": "node dist/index.js",
+    "start": "yarn build && node dist/index.js",
     "test": "jest",
     "lint": "eslint ./src"
   },
