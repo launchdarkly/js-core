@@ -1,0 +1,20 @@
+{
+  "name": "test-event-source",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "file:../js-core/packages/sdk/browser",
+    "@launchdarkly/js-client-sdk-common": "file:../js-core/packages/shared/sdk-client",
+    "@launchdarkly/js-sdk-common": "file:../js-core/packages/shared/common"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  }
+}

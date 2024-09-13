@@ -23,7 +23,8 @@
     "packages/store/node-server-sdk-dynamodb",
     "packages/telemetry/node-server-sdk-otel",
     "packages/tooling/jest",
-    "packages/sdk/browser"
+    "packages/sdk/browser",
+    "packages/sdk/browser/contract-tests/entity"
   ],
   "private": true,
   "scripts": {
