@@ -3,6 +3,9 @@ import {
   LDContext,
   LDContextCommon,
   LDContextMeta,
+  LDEvaluationDetail,
+  LDEvaluationDetailTyped,
+  LDEvaluationReason,
   LDFlagSet,
   LDLogger,
   LDLogLevel,
@@ -26,6 +29,9 @@ export {
   LDSingleKindContext,
   LDLogLevel,
   LDLogger,
+  LDEvaluationDetail,
+  LDEvaluationDetailTyped,
+  LDEvaluationReason,
 };
 
 export function init(
