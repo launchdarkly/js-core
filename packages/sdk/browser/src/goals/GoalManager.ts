@@ -1,5 +1,4 @@
 import {
-  LDLogger,
   LDUnexpectedResponseError,
   Requests,
   ServiceEndpoints,
@@ -16,17 +15,16 @@ export default class GoalManager {
   private tracker?: GoalTracker;
 
   constructor(
+    private readonly credential: string,
     private readonly requests: Requests,
     private readonly serviceEndpoints: ServiceEndpoints,
     private readonly reportError: (err: Error) => void,
     private readonly reportGoal: (url: string, goal: Goal) => void,
-    private readonly logger?: LDLogger,
-
     locationWatcherFactory: (cb: () => void) => LocationWatcher = (cb) =>
       new DefaultLocationWatcher(cb),
   ) {
     // TODO: Generate URL in a better way.
-    this.url = `${this.serviceEndpoints}/sdk/goals/${Credential}`;
+    this.url = `${this.serviceEndpoints.polling}/sdk/goals/${credential}`;
 
     this.watcher = locationWatcherFactory(() => {
       this.createTracker();
@@ -57,5 +55,6 @@ export default class GoalManager {
 
   close(): void {
     this.watcher?.close();
+    this.tracker?.close();
   }
 }

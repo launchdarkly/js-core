@@ -1,0 +1,127 @@
+import { jest } from '@jest/globals';
+
+import {
+  LDUnexpectedResponseError,
+  Requests,
+  ServiceEndpoints,
+} from '@launchdarkly/js-client-sdk-common';
+
+import GoalManager from '../../src/goals/GoalManager';
+import { Goal } from '../../src/goals/Goals';
+import { LocationWatcher } from '../../src/goals/LocationWatcher';
+
+describe('given a GoalManager with mocked dependencies', () => {
+  let mockRequests: jest.Mocked<Requests>;
+  let mockServiceEndpoints: ServiceEndpoints;
+  let mockReportError: jest.Mock;
+  let mockReportGoal: jest.Mock;
+  let mockLocationWatcherFactory: () => { cb?: () => void } & LocationWatcher;
+  let mockLocationWatcher: { cb?: () => void } & LocationWatcher;
+  let goalManager: GoalManager;
+  const mockCredential = 'test-credential';
+
+  beforeEach(() => {
+    mockRequests = { fetch: jest.fn() } as any;
+    mockServiceEndpoints = new ServiceEndpoints('streaming', 'polling', 'events');
+    mockReportError = jest.fn();
+    mockReportGoal = jest.fn();
+    mockLocationWatcher = { close: jest.fn() };
+    // @ts-expect-error The type is correct, but TS cannot handle the jest.fn typing
+    mockLocationWatcherFactory = jest.fn((cb: () => void) => {
+      mockLocationWatcher.cb = cb;
+      return mockLocationWatcher;
+    });
+
+    goalManager = new GoalManager(
+      mockCredential,
+      mockRequests,
+      mockServiceEndpoints,
+      mockReportError,
+      mockReportGoal,
+      mockLocationWatcherFactory,
+    );
+  });
+
+  describe('when initializing with successful goal fetch', () => {
+    const mockGoals: Goal[] = [
+      { key: 'goal1', kind: 'click', selector: '#button1' },
+      { key: 'goal2', kind: 'click', selector: '#button2' },
+    ];
+
+    beforeEach(() => {
+      mockRequests.fetch.mockResolvedValue({
+        json: () => Promise.resolve(mockGoals),
+      } as any);
+    });
+
+    it('should fetch goals and set up the location watcher', async () => {
+      await goalManager.initialize();
+
+      expect(mockRequests.fetch).toHaveBeenCalledWith('polling/sdk/goals/test-credential');
+      expect(mockLocationWatcherFactory).toHaveBeenCalled();
+    });
+  });
+
+  describe('when initializing with a failed goal fetch', () => {
+    const error = new Error('Fetch failed');
+
+    beforeEach(() => {
+      mockRequests.fetch.mockRejectedValue(error);
+    });
+
+    it('Then it should report an unexpected response error', async () => {
+      await goalManager.initialize();
+
+      expect(mockReportError).toHaveBeenCalledWith(expect.any(LDUnexpectedResponseError));
+    });
+  });
+
+  it('should close the watcher and tracker when closed', () => {
+    goalManager.close();
+
+    expect(mockLocationWatcher.close).toHaveBeenCalled();
+  });
+
+  describe('goal emission based on URL changes', () => {
+    const mockGoals: Goal[] = [
+      {
+        key: 'goal1',
+        kind: 'pageview',
+        urls: [
+          {
+            kind: 'exact',
+            url: 'https://example.com/target',
+          },
+        ],
+      },
+    ];
+
+    beforeEach(async () => {
+      mockRequests.fetch.mockResolvedValue({
+        json: () => Promise.resolve(mockGoals),
+      } as any);
+      await goalManager.initialize();
+    });
+
+    it('should not emit a goal on initial load, but emit after URL change', () => {
+      // Check that no goal was emitted on initial load
+      expect(mockReportGoal).not.toHaveBeenCalled();
+
+      // Simulate URL change to match the goal
+      Object.defineProperty(window, 'location', {
+        value: { href: 'https://example.com/target' },
+        writable: true,
+      });
+
+      // Trigger the location change callback
+      mockLocationWatcher.cb?.();
+
+      // Check that the goal was emitted after URL change
+      expect(mockReportGoal).toHaveBeenCalledWith('https://example.com/target', {
+        key: 'goal1',
+        kind: 'pageview',
+        urls: [{ kind: 'exact', url: 'https://example.com/target' }],
+      });
+    });
+  });
+});
