@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 import LocalStorage from '../../src/platform/LocalStorage';
 
 it('can set values', async () => {
@@ -16,7 +18,7 @@ it('can set values', async () => {
   expect(spy).toHaveBeenCalledWith('test-key', 'test-value');
 
   expect(logger.debug).not.toHaveBeenCalled();
-  expect(logger.info).not.toHaveBeenCalled();
+expect(logger.info).not.toHaveBeenCalled();
   expect(logger.warn).not.toHaveBeenCalled();
   expect(logger.error).not.toHaveBeenCalled();
 });
