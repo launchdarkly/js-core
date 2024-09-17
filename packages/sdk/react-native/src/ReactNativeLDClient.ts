@@ -107,10 +107,10 @@ export default class ReactNativeLDClient extends LDClientImpl {
 
   override getStreamingPaths(): DataSourcePaths {
     return {
-      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
         return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/meval`;
       },
     };
@@ -118,10 +118,10 @@ export default class ReactNativeLDClient extends LDClientImpl {
 
   override getPollingPaths(): DataSourcePaths {
     return {
-      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
         return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/msdk/evalx/context`;
       },
     };

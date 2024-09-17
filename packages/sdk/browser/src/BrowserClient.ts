@@ -38,10 +38,10 @@ export class BrowserClient extends LDClientImpl {
   override getStreamingPaths(): DataSourcePaths {
     const parentThis = this;
     return {
-      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
         return `/eval/${parentThis.clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/eval/${parentThis.clientSideId}`;
       },
     };
@@ -50,10 +50,10 @@ export class BrowserClient extends LDClientImpl {
   override getPollingPaths(): DataSourcePaths {
     const parentThis = this;
     return {
-      pathGet(encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
         return `/sdk/evalx/${parentThis.clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/sdk/evalx/${parentThis.clientSideId}/context`;
       },
     };

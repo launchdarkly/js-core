@@ -34,9 +34,7 @@
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "jest",
     "coverage": "yarn test --coverage",
-    "check": "yarn prettier && yarn lint && yarn build && yarn test",
-    "android": "yarn && yarn ./example && yarn build && (cd example/ && yarn android)",
-    "ios": "yarn && yarn ./example && yarn build && (cd example/ && yarn ios-go)"
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "peerDependencies": {
     "react": "*",

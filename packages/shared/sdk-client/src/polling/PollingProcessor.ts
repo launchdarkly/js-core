@@ -38,8 +38,8 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     private readonly logger?: LDLogger,
   ) {
     const path = dataSourceConfig.useReport
-      ? dataSourceConfig.paths.pathReport(encoding, dataSourceConfig.credential, plainContextString)
-      : dataSourceConfig.paths.pathGet(encoding, dataSourceConfig.credential, plainContextString);
+      ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
+      : dataSourceConfig.paths.pathGet(encoding, plainContextString);
 
     const parameters: { key: string; value: string }[] = [];
     if (this.dataSourceConfig.withReasons) {

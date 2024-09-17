@@ -80,10 +80,10 @@ function makeConfig(
     credential: 'the-sdk-key',
     serviceEndpoints,
     paths: {
-      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
         return '/poll/path/get';
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/poll/path/report';
       },
     },

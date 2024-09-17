@@ -25,6 +25,7 @@ const reportJsonError = (
   errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
 };
 
+// TODO: SDK-156 - Move to Server SDK specific location
 class StreamingProcessor implements LDStreamProcessor {
   private readonly headers: { [key: string]: string | string[] };
   private readonly streamUri: string;

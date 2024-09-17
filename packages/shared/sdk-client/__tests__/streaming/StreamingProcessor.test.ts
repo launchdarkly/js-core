@@ -48,10 +48,10 @@ function getStreamingDataSourceConfig(
     // eslint-disable-next-line object-shorthand
     serviceEndpoints: serviceEndpoints,
     paths: {
-      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path/get';
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path/report';
       },
     },

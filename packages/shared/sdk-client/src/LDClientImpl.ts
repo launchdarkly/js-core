@@ -272,12 +272,12 @@ export default class LDClientImpl implements LDClient {
 
   protected getStreamingPaths(): DataSourcePaths {
     return {
-      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
         throw new Error(
           'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with GET to work.',
         );
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         throw new Error(
           'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with REPORT to work.',
         );
@@ -287,12 +287,12 @@ export default class LDClientImpl implements LDClient {
 
   protected getPollingPaths(): DataSourcePaths {
     return {
-      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
         throw new Error(
           'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with GET to work.',
         );
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         throw new Error(
           'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with REPORT to work.',
         );

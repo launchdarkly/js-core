@@ -52,10 +52,10 @@ describe('sdk-client storage', () => {
     });
 
     jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path';
       },
-      pathReport(_encoding: Encoding, _credential: string, _plainContextString: string): string {
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path';
       },
     });

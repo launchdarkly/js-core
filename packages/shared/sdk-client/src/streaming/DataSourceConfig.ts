@@ -18,6 +18,6 @@ export interface StreamingDataSourceConfig extends DataSourceConfig {
 }
 
 export interface DataSourcePaths {
-  pathGet(encoding: Encoding, credential: string, plainContextString: string): string;
-  pathReport(encoding: Encoding, credential: string, plainContextString: string): string;
+  pathGet(encoding: Encoding, plainContextString: string): string;
+  pathReport(encoding: Encoding, plainContextString: string): string;
 }
