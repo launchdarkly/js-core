@@ -213,6 +213,10 @@ export default class LDClientImpl implements LDClient {
     return this.uncheckedContext ? clone<LDContext>(this.uncheckedContext) : undefined;
   }
 
+  protected getInternalContext(): Context | undefined {
+    return this.checkedContext;
+  }
+
   private createStreamListeners(
     context: Context,
     identifyResolve: any,
@@ -671,5 +675,9 @@ export default class LDClientImpl implements LDClient {
       this.logger?.debug('Stopping event processor.');
       this.eventProcessor?.close();
     }
+  }
+
+  protected sendEvent(event: internal.InputEvent): void {
+    this.eventProcessor?.sendEvent(event);
   }
 }

@@ -58,7 +58,23 @@ it('should not trigger pageview goals for non-matching URLs', () => {
 });
 
 it('should add click event listener for click goals', () => {
-  const goals: Goal[] = [{ key: 'click1', kind: 'click', selector: '.button' }];
+  const goals: Goal[] = [
+    {
+      key: 'click1',
+      kind: 'click',
+      selector: '.button',
+      urls: [{ kind: 'exact', url: 'http://example.com' }],
+    },
+  ];
+
+  jest.spyOn(window, 'location', 'get').mockImplementation(
+    () =>
+      ({
+        href: 'http://example.com',
+        search: '',
+        hash: '',
+      }) as Location,
+  );
 
   new GoalTracker(goals, mockOnEvent);
 
@@ -76,7 +92,23 @@ it('should not add click event listener if no click goals', () => {
 });
 
 it('should trigger click goals when matching element is clicked', () => {
-  const goals: Goal[] = [{ key: 'click1', kind: 'click', selector: '.button' }];
+  const goals: Goal[] = [
+    {
+      key: 'click1',
+      kind: 'click',
+      selector: '.button',
+      urls: [{ kind: 'exact', url: 'http://example.com' }],
+    },
+  ];
+
+  jest.spyOn(window, 'location', 'get').mockImplementation(
+    () =>
+      ({
+        href: 'http://example.com',
+        search: '',
+        hash: '',
+      }) as Location,
+  );
 
   new GoalTracker(goals, mockOnEvent);
 
@@ -90,8 +122,55 @@ it('should trigger click goals when matching element is clicked', () => {
   document.body.removeChild(button);
 });
 
+it('should not trigger click goals when matching element is clicked but URL does not match', () => {
+  const goals: Goal[] = [
+    {
+      key: 'click1',
+      kind: 'click',
+      selector: '.button',
+      urls: [{ kind: 'exact', url: 'http://example.com' }],
+    },
+  ];
+
+  jest.spyOn(window, 'location', 'get').mockImplementation(
+    () =>
+      ({
+        href: 'http://other.com',
+        search: '',
+        hash: '',
+      }) as Location,
+  );
+
+  new GoalTracker(goals, mockOnEvent);
+
+  const button = document.createElement('button');
+  button.className = 'button';
+  document.body.appendChild(button);
+  button.click();
+
+  expect(mockOnEvent).not.toHaveBeenCalled();
+
+  document.body.removeChild(button);
+});
+
 it('should remove click event listener on close', () => {
-  const goals: Goal[] = [{ key: 'click1', kind: 'click', selector: '.button' }];
+  const goals: Goal[] = [
+    {
+      key: 'click1',
+      kind: 'click',
+      selector: '.button',
+      urls: [{ kind: 'exact', url: 'http://example.com' }],
+    },
+  ];
+
+  jest.spyOn(window, 'location', 'get').mockImplementation(
+    () =>
+      ({
+        href: 'http://example.com',
+        search: '',
+        hash: '',
+      }) as Location,
+  );
 
   const tracker = new GoalTracker(goals, mockOnEvent);
   tracker.close();
@@ -100,7 +179,23 @@ it('should remove click event listener on close', () => {
 });
 
 it('should trigger the click goal for parent elements which match the selector', () => {
-  const goals: Goal[] = [{ key: 'click1', kind: 'click', selector: '.my-selector' }];
+  const goals: Goal[] = [
+    {
+      key: 'click1',
+      kind: 'click',
+      selector: '.my-selector',
+      urls: [{ kind: 'exact', url: 'http://example.com' }],
+    },
+  ];
+
+  jest.spyOn(window, 'location', 'get').mockImplementation(
+    () =>
+      ({
+        href: 'http://example.com',
+        search: '',
+        hash: '',
+      }) as Location,
+  );
 
   new GoalTracker(goals, mockOnEvent);
 

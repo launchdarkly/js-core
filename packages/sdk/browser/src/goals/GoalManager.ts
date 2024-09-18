@@ -15,16 +15,16 @@ export default class GoalManager {
   private tracker?: GoalTracker;
 
   constructor(
-    private readonly credential: string,
+    credential: string,
     private readonly requests: Requests,
-    private readonly serviceEndpoints: ServiceEndpoints,
+    baseUrl: string,
     private readonly reportError: (err: Error) => void,
     private readonly reportGoal: (url: string, goal: Goal) => void,
     locationWatcherFactory: (cb: () => void) => LocationWatcher = (cb) =>
       new DefaultLocationWatcher(cb),
   ) {
     // TODO: Generate URL in a better way.
-    this.url = `${this.serviceEndpoints.polling}/sdk/goals/${credential}`;
+    this.url = `${baseUrl}/sdk/goals/${credential}`;
 
     this.watcher = locationWatcherFactory(() => {
       this.createTracker();
@@ -37,6 +37,8 @@ export default class GoalManager {
   }
 
   private createTracker() {
+    console.log('createTracker');
+    this.tracker?.close();
     if (this.goals && this.goals.length) {
       this.tracker = new GoalTracker(this.goals, (goal) => {
         this.reportGoal(window.location.href, goal);

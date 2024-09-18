@@ -1,6 +1,6 @@
 import Context from '../../Context';
 
-export default interface InputIdentifyEvent {
+export default interface InputPageViewEvent {
   kind: 'pageview';
   samplingRatio: number;
   key: string;

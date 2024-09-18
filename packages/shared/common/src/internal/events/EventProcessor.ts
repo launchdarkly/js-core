@@ -10,9 +10,11 @@ import { DiagnosticsManager } from '../diagnostics';
 import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify, isMigration } from './guards';
+import InputClickEvent from './InputClickEvent';
 import InputEvent from './InputEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
 import InputMigrationEvent from './InputMigrationEvent';
+import InputPageViewEvent from './InputPageViewEvent';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 import shouldSample from './sampling';
 
@@ -55,6 +57,25 @@ interface FeatureOutputEvent {
 
 interface IndexInputEvent extends Omit<InputIdentifyEvent, 'kind'> {
   kind: 'index';
+}
+
+interface ClickOutputEvent {
+  kind: 'click';
+  key: string;
+  url: string;
+  creationDate: number;
+  contextKeys: Record<string, string>;
+  selector: string;
+  samplingRatio?: number;
+}
+
+interface PageviewOutputEvent {
+  kind: 'pageview';
+  key: string;
+  url: string;
+  creationDate: number;
+  contextKeys: Record<string, string>;
+  samplingRatio?: number;
 }
 
 /**
@@ -325,6 +346,27 @@ export default class EventProcessor implements LDEventProcessor {
           out.metricValue = event.metricValue;
         }
 
+        return out;
+      }
+      case 'click': {
+        const out: ClickOutputEvent = {
+          kind: 'click',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+          selector: event.selector,
+        };
+        return out;
+      }
+      case 'pageview': {
+        const out: PageviewOutputEvent = {
+          kind: 'pageview',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+        };
         return out;
       }
       default:

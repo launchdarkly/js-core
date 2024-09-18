@@ -66,19 +66,16 @@ function findGoalsForClick(event: Event, clickGoals: ClickGoal[]) {
 export default class GoalTracker {
   private clickHandler?: (event: Event) => void;
   constructor(goals: Goal[], onEvent: EventHandler) {
-    const pageviewGoals = goals.filter((goal) => goal.kind === 'pageview');
-    const clickGoals = goals.filter((goal) => goal.kind === 'click');
+    const goalsMatchingUrl = goals.filter((goal) =>
+      goal.urls?.some((matcher) =>
+        matchesUrl(matcher, window.location.href, window.location.search, window.location.hash),
+      ),
+    );
 
-    pageviewGoals.forEach((goal) => {
-      const urlMatchers = goal.urls ?? [];
-      urlMatchers.forEach((matcher) => {
-        if (
-          matchesUrl(matcher, window.location.href, window.location.search, window.location.hash)
-        ) {
-          onEvent(goal);
-        }
-      });
-    });
+    const pageviewGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'pageview');
+    const clickGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'click');
+
+    pageviewGoals.forEach((event) => onEvent(event));
 
     if (clickGoals.length) {
       // Click handler is not a member function in order to avoid having to bind it for the event

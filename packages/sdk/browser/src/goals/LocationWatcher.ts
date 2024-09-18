@@ -24,6 +24,7 @@ export class DefaultLocationWatcher {
    * @param callback Callback that is executed whenever a URL change is detected.
    */
   constructor(callback: () => void) {
+    this.previousLocation = window.location.href;
     const checkUrl = () => {
       const currentLocation = window.location.href;
 

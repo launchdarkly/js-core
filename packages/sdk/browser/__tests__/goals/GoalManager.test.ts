@@ -1,10 +1,6 @@
 import { jest } from '@jest/globals';
 
-import {
-  LDUnexpectedResponseError,
-  Requests,
-  ServiceEndpoints,
-} from '@launchdarkly/js-client-sdk-common';
+import { LDUnexpectedResponseError, Requests } from '@launchdarkly/js-client-sdk-common';
 
 import GoalManager from '../../src/goals/GoalManager';
 import { Goal } from '../../src/goals/Goals';
@@ -12,7 +8,6 @@ import { LocationWatcher } from '../../src/goals/LocationWatcher';
 
 describe('given a GoalManager with mocked dependencies', () => {
   let mockRequests: jest.Mocked<Requests>;
-  let mockServiceEndpoints: ServiceEndpoints;
   let mockReportError: jest.Mock;
   let mockReportGoal: jest.Mock;
   let mockLocationWatcherFactory: () => { cb?: () => void } & LocationWatcher;
@@ -22,7 +17,6 @@ describe('given a GoalManager with mocked dependencies', () => {
 
   beforeEach(() => {
     mockRequests = { fetch: jest.fn() } as any;
-    mockServiceEndpoints = new ServiceEndpoints('streaming', 'polling', 'events');
     mockReportError = jest.fn();
     mockReportGoal = jest.fn();
     mockLocationWatcher = { close: jest.fn() };
@@ -35,7 +29,7 @@ describe('given a GoalManager with mocked dependencies', () => {
     goalManager = new GoalManager(
       mockCredential,
       mockRequests,
-      mockServiceEndpoints,
+      'polling',
       mockReportError,
       mockReportGoal,
       mockLocationWatcherFactory,
