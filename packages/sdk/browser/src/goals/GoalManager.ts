@@ -1,8 +1,4 @@
-import {
-  LDUnexpectedResponseError,
-  Requests,
-  ServiceEndpoints,
-} from '@launchdarkly/js-client-sdk-common';
+import { LDUnexpectedResponseError, Requests } from '@launchdarkly/js-client-sdk-common';
 
 import { Goal } from './Goals';
 import GoalTracker from './GoalTracker';
@@ -37,7 +33,6 @@ export default class GoalManager {
   }
 
   private createTracker() {
-    console.log('createTracker');
     this.tracker?.close();
     if (this.goals && this.goals.length) {
       this.tracker = new GoalTracker(this.goals, (goal) => {

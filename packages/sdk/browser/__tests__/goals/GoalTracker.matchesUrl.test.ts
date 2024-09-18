@@ -24,8 +24,8 @@ it.each([
     'https://example.com?potato=true#brown',
   ],
 ])('returns false for non-matching "exact" matcher kind', (href, query, hash, matcherUrl) => {
-  const matcher: Matcher = { kind: 'exact', url: 'https://example.com' };
-  const result = matchesUrl(matcher, 'https://different.com', '', '');
+  const matcher: Matcher = { kind: 'exact', url: matcherUrl };
+  const result = matchesUrl(matcher, href, query, hash);
   expect(result).toBe(false);
 });
 
