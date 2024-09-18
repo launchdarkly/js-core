@@ -1,6 +1,7 @@
 import { waitFor } from '@testing-library/dom';
 
 import {
+  Encoding,
   EventSource,
   EventSourceCapabilities,
   EventSourceInitDict,
@@ -8,7 +9,8 @@ import {
   Response,
 } from '@launchdarkly/js-sdk-common';
 
-import PollingProcessor, { PollingConfig } from '../../src/polling/PollingProcessor';
+import PollingProcessor from '../../src/polling/PollingProcessor';
+import { PollingDataSourceConfig } from '../../src/streaming';
 
 function mockResponse(value: string, statusCode: number) {
   const response: Response = {
@@ -53,26 +55,42 @@ function makeRequests(): Requests {
   };
 }
 
-function makeConfig(config?: { pollInterval?: number; useReport?: boolean }): PollingConfig {
+function makeEncoding(): Encoding {
   return {
-    pollInterval: config?.pollInterval ?? 60 * 5,
-    // eslint-disable-next-line no-console
-    logger: {
-      error: jest.fn(),
-      warn: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
+    btoa: jest.fn(),
+  };
+}
+
+const serviceEndpoints = {
+  events: 'mockEventsEndpoint',
+  polling: 'mockPollingEndpoint',
+  streaming: 'mockStreamingEndpoint',
+  diagnosticEventPath: '/diagnostic',
+  analyticsEventPath: '/bulk',
+  includeAuthorizationHeader: true,
+  payloadFilterKey: 'testPayloadFilterKey',
+};
+
+function makeConfig(
+  pollInterval: number,
+  withReasons: boolean,
+  useReport: boolean,
+): PollingDataSourceConfig {
+  return {
+    credential: 'the-sdk-key',
+    serviceEndpoints,
+    paths: {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
+        return '/poll/path/get';
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return '/poll/path/report';
+      },
     },
-    tags: {},
-    useReport: config?.useReport ?? false,
-    serviceEndpoints: {
-      streaming: '',
-      polling: 'http://example.example.example',
-      events: '',
-      analyticsEventPath: '',
-      diagnosticEventPath: '',
-      includeAuthorizationHeader: false,
-    },
+    baseHeaders: {},
+    withReasons,
+    useReport,
+    pollInterval,
   };
 }
 
@@ -80,11 +98,10 @@ it('makes no requests until it is started', () => {
   const requests = makeRequests();
   // eslint-disable-next-line no-new
   new PollingProcessor(
+    'mockContextString',
+    makeConfig(1, true, false),
     requests,
-    '/polling',
-    [],
-    makeConfig(),
-    {},
+    makeEncoding(),
     (_flags) => {},
     (_error) => {},
   );
@@ -96,11 +113,10 @@ it('polls immediately when started', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(1, true, false),
     requests,
-    '/polling',
-    [],
-    makeConfig(),
-    {},
+    makeEncoding(),
     (_flags) => {},
     (_error) => {},
   );
@@ -116,11 +132,10 @@ it('calls callback on success', async () => {
   const errorCallback = jest.fn();
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(1000, true, false),
     requests,
-    '/polling',
-    [],
-    makeConfig(),
-    {},
+    makeEncoding(),
     dataCallback,
     errorCallback,
   );
@@ -137,11 +152,10 @@ it('polls repeatedly', async () => {
 
   requests.fetch = mockFetch('{ "flagA": true }', 200);
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(0.1, true, false),
     requests,
-    '/polling',
-    [],
-    makeConfig({ pollInterval: 0.1 }),
-    {},
+    makeEncoding(),
     dataCallback,
     errorCallback,
   );
@@ -175,11 +189,10 @@ it('stops polling when stopped', (done) => {
   const errorCallback = jest.fn();
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(0.01, true, false),
     requests,
-    '/stops',
-    [],
-    makeConfig({ pollInterval: 0.01 }),
-    {},
+    makeEncoding(),
     dataCallback,
     errorCallback,
   );
@@ -196,15 +209,17 @@ it('stops polling when stopped', (done) => {
 it('includes the correct headers on requests', () => {
   const requests = makeRequests();
 
+  const config = makeConfig(1, true, false);
+  config.baseHeaders = {
+    authorization: 'the-sdk-key',
+    'user-agent': 'AnSDK/42',
+  };
+
   const polling = new PollingProcessor(
+    'mockContextString',
+    config,
     requests,
-    '/polling',
-    [],
-    makeConfig(),
-    {
-      authorization: 'the-sdk-key',
-      'user-agent': 'AnSDK/42',
-    },
+    makeEncoding(),
     (_flags) => {},
     (_error) => {},
   );
@@ -222,15 +237,14 @@ it('includes the correct headers on requests', () => {
   polling.stop();
 });
 
-it('defaults to using the "GET" verb', () => {
+it('defaults to using the "GET" method', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(1000, true, false),
     requests,
-    '/polling',
-    [],
-    makeConfig(),
-    {},
+    makeEncoding(),
     (_flags) => {},
     (_error) => {},
   );
@@ -240,20 +254,20 @@ it('defaults to using the "GET" verb', () => {
     expect.anything(),
     expect.objectContaining({
       method: 'GET',
+      body: undefined,
     }),
   );
   polling.stop();
 });
 
-it('can be configured to use the "REPORT" verb', () => {
+it('can be configured to use the "REPORT" method', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(1000, true, true),
     requests,
-    '/polling',
-    [],
-    makeConfig({ useReport: true }),
-    {},
+    makeEncoding(),
     (_flags) => {},
     (_error) => {},
   );
@@ -263,6 +277,10 @@ it('can be configured to use the "REPORT" verb', () => {
     expect.anything(),
     expect.objectContaining({
       method: 'REPORT',
+      headers: expect.objectContaining({
+        'content-type': 'application/json',
+      }),
+      body: 'mockContextString',
     }),
   );
   polling.stop();
@@ -272,16 +290,21 @@ it('continues polling after receiving bad JSON', async () => {
   const requests = makeRequests();
   const dataCallback = jest.fn();
   const errorCallback = jest.fn();
-  const config = makeConfig({ pollInterval: 0.1 });
+  const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(0.1, true, false),
     requests,
-    '/polling',
-    [],
-    config,
-    {},
+    makeEncoding(),
     dataCallback,
     errorCallback,
+    logger,
   );
   polling.start();
 
@@ -292,7 +315,7 @@ it('continues polling after receiving bad JSON', async () => {
   requests.fetch = mockFetch('{ham', 200);
   await waitFor(() => expect(requests.fetch).toHaveBeenCalled());
   await waitFor(() => expect(errorCallback).toHaveBeenCalled());
-  expect(config.logger.error).toHaveBeenCalledWith('Polling received invalid data');
+  expect(logger.error).toHaveBeenCalledWith('Polling received invalid data');
   polling.stop();
 });
 
@@ -300,16 +323,21 @@ it('continues polling after an exception thrown during a request', async () => {
   const requests = makeRequests();
   const dataCallback = jest.fn();
   const errorCallback = jest.fn();
-  const config = makeConfig({ pollInterval: 0.1 });
+  const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(0.1, true, false),
     requests,
-    '/polling',
-    [],
-    config,
-    {},
+    makeEncoding(),
     dataCallback,
     errorCallback,
+    logger,
   );
   polling.start();
 
@@ -322,7 +350,7 @@ it('continues polling after an exception thrown during a request', async () => {
   });
   await waitFor(() => expect(requests.fetch).toHaveBeenCalled());
   polling.stop();
-  expect(config.logger.error).toHaveBeenCalledWith(
+  expect(logger.error).toHaveBeenCalledWith(
     'Received I/O error (bad) for polling request - will retry',
   );
 });
@@ -331,16 +359,21 @@ it('can handle recoverable http errors', async () => {
   const requests = makeRequests();
   const dataCallback = jest.fn();
   const errorCallback = jest.fn();
-  const config = makeConfig({ pollInterval: 0.1 });
+  const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(0.1, true, false),
     requests,
-    '/polling',
-    [],
-    config,
-    {},
+    makeEncoding(),
     dataCallback,
     errorCallback,
+    logger,
   );
   polling.start();
 
@@ -351,25 +384,28 @@ it('can handle recoverable http errors', async () => {
   requests.fetch = mockFetch('', 408);
   await waitFor(() => expect(requests.fetch).toHaveBeenCalled());
   polling.stop();
-  expect(config.logger.error).toHaveBeenCalledWith(
-    'Received error 408 for polling request - will retry',
-  );
+  expect(logger.error).toHaveBeenCalledWith('Received error 408 for polling request - will retry');
 });
 
 it('stops polling on unrecoverable error codes', (done) => {
   const requests = makeRequests();
   const dataCallback = jest.fn();
   const errorCallback = jest.fn();
-  const config = makeConfig({ pollInterval: 0.01 });
+  const logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 
   const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(0.01, true, false),
     requests,
-    '/polling',
-    [],
-    config,
-    {},
+    makeEncoding(),
     dataCallback,
     errorCallback,
+    logger,
   );
   polling.start();
 
@@ -378,7 +414,7 @@ it('stops polling on unrecoverable error codes', (done) => {
   // Polling should stop on the 401, but we need to give some time for more
   // polls to be done.
   setTimeout(() => {
-    expect(config.logger.error).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       'Received error 401 (invalid SDK key) for polling request - giving up permanently',
     );
     expect(requests.fetch).toHaveBeenCalledTimes(1);

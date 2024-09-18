@@ -16,7 +16,9 @@ export default class PlatformRequests implements Requests {
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {
     return new RNEventSource<EventName>(url, {
+      method: eventSourceInitDict.method ?? 'GET',
       headers: eventSourceInitDict.headers,
+      body: eventSourceInitDict.body,
       retryAndHandleError: eventSourceInitDict.errorFilter,
       logger: this.logger,
     });

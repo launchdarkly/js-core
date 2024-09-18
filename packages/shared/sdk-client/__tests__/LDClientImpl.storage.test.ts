@@ -1,15 +1,12 @@
-import { AutoEnvAttributes, clone, type LDContext, noop } from '@launchdarkly/js-sdk-common';
-import {
-  createBasicPlatform,
-  createLogger,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
+import { AutoEnvAttributes, clone, Encoding, type LDContext } from '@launchdarkly/js-sdk-common';
+import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { toMulti } from '../src/context/addAutoEnv';
 import LDClientImpl from '../src/LDClientImpl';
 import LDEmitter from '../src/LDEmitter';
-import { DeleteFlag, Flags, PatchFlag } from '../src/types';
+import { Flags, PatchFlag } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
+import { MockEventSource } from './streaming/LDClientImpl.mocks';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;
@@ -19,25 +16,12 @@ beforeEach(() => {
   logger = createLogger();
 });
 
-jest.mock('@launchdarkly/js-sdk-common', () => {
-  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const { MockStreamingProcessor } = jest.requireActual('@launchdarkly/private-js-mocks');
-  return {
-    ...actual,
-    ...{
-      internal: {
-        ...actual.internal,
-        StreamingProcessor: MockStreamingProcessor,
-      },
-    },
-  };
-});
-
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
 const flagStorageKey = 'LaunchDarkly_1234567890123456_1234567890123456';
 const indexStorageKey = 'LaunchDarkly_1234567890123456_ContextIndex';
 let ldc: LDClientImpl;
+let mockEventSource: MockEventSource;
 let emitter: LDEmitter;
 let defaultPutResponse: Flags;
 let defaultFlagKeys: string[];
@@ -49,36 +33,6 @@ const onChangePromise = () =>
       res(changes);
     });
   });
-
-// Common setup code for all tests
-// 1. Sets up streaming
-// 2. Sets up the change listener
-// 3. Runs identify
-// 4. Get all flags
-const identifyGetAllFlags = async (
-  shouldError: boolean = false,
-  putResponse = defaultPutResponse,
-  patchResponse?: PatchFlag,
-  deleteResponse?: DeleteFlag,
-  waitForChange: boolean = true,
-) => {
-  setupMockStreamingProcessor(shouldError, putResponse, patchResponse, deleteResponse);
-  const changePromise = onChangePromise();
-
-  try {
-    await ldc.identify(context);
-  } catch (e) {
-    /* empty */
-  }
-  jest.runAllTimers();
-
-  // if streaming errors, don't wait for 'change' because it will not be sent.
-  if (waitForChange && !shouldError) {
-    await changePromise;
-  }
-
-  return ldc.allFlags();
-};
 
 describe('sdk-client storage', () => {
   beforeEach(() => {
@@ -97,9 +51,14 @@ describe('sdk-client storage', () => {
       }
     });
 
-    jest
-      .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
-      .mockReturnValue('/stream/path');
+    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path';
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path';
+      },
+    });
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
       logger,
@@ -116,8 +75,17 @@ describe('sdk-client storage', () => {
   });
 
   test('initialize from storage succeeds without streaming', async () => {
-    // make sure streaming errors
-    const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateError({ status: 404, message: 'test-error' });
+        return mockEventSource;
+      },
+    );
+
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
 
     expect(mockPlatform.storage.get).toHaveBeenCalledWith(flagStorageKey);
 
@@ -130,7 +98,8 @@ describe('sdk-client storage', () => {
       context,
       expect.objectContaining({ message: 'test-error' }),
     );
-    expect(allFlags).toEqual({
+
+    expect(ldc.allFlags()).toEqual({
       'dev-test-flag': true,
       'easter-i-tunes-special': false,
       'easter-specials': 'no specials',
@@ -143,6 +112,14 @@ describe('sdk-client storage', () => {
   });
 
   test('initialize from storage succeeds with auto env', async () => {
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateError({ status: 404, message: 'test-error' });
+        return mockEventSource;
+      },
+    );
+
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
@@ -151,7 +128,8 @@ describe('sdk-client storage', () => {
     emitter = ldc.emitter;
     jest.spyOn(emitter as LDEmitter, 'emit');
 
-    const allFlags = await identifyGetAllFlags(true, defaultPutResponse);
+    await ldc.identify(context);
+    await jest.runAllTimersAsync();
 
     expect(mockPlatform.storage.get).toHaveBeenLastCalledWith(
       expect.stringMatching('LaunchDarkly_1234567890123456_1234567890123456'),
@@ -171,7 +149,7 @@ describe('sdk-client storage', () => {
       expect.objectContaining(toMulti(context)),
       expect.objectContaining({ message: 'test-error' }),
     );
-    expect(allFlags).toEqual({
+    expect(ldc.allFlags()).toEqual({
       'dev-test-flag': true,
       'easter-i-tunes-special': false,
       'easter-specials': 'no specials',
@@ -184,36 +162,38 @@ describe('sdk-client storage', () => {
   });
 
   test('not emitting change event when changed keys is empty', async () => {
-    let LDClientImplTestNoChange;
-    jest.isolateModules(async () => {
-      LDClientImplTestNoChange = jest.requireActual('../src/LDClientImpl').default;
-      ldc = new LDClientImplTestNoChange(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-        logger,
-        sendEvents: false,
-      });
-    });
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        return mockEventSource;
+      },
+    );
 
     // @ts-ignore
     emitter = ldc.emitter;
     jest.spyOn(emitter as LDEmitter, 'emit');
 
     // expect emission
-    await identifyGetAllFlags(true, defaultPutResponse);
+    await ldc.identify(context);
 
     // expit no emission
-    await identifyGetAllFlags(true, defaultPutResponse);
+    await ldc.identify(context);
 
     expect(emitter.emit).toHaveBeenCalledTimes(1);
   });
 
   test('no storage, cold start from streaming', async () => {
-    // fake previously cached flags even though there's no storage for this context
-    // @ts-ignore
-    ldc.flags = defaultPutResponse;
+    const simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
     mockPlatform.storage.get.mockImplementation(() => undefined);
-    setupMockStreamingProcessor(false, defaultPutResponse);
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
 
-    ldc.identify(context).then(noop);
+    await ldc.identify(context);
     await jest.runAllTimersAsync();
 
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
@@ -244,12 +224,22 @@ describe('sdk-client storage', () => {
   test('syncing storage when a flag is deleted', async () => {
     const putResponse = clone<Flags>(defaultPutResponse);
     delete putResponse['dev-test-flag'];
-    const allFlags = await identifyGetAllFlags(false, putResponse);
 
-    // wait for async code to resolve promises
+    const simulatedEvents = [{ data: JSON.stringify(putResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
+
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
 
-    expect(allFlags).not.toHaveProperty('dev-test-flag');
+    expect(ldc.allFlags()).not.toHaveProperty('dev-test-flag');
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
@@ -275,12 +265,22 @@ describe('sdk-client storage', () => {
       variation: 1,
       trackEvents: false,
     };
-    const allFlags = await identifyGetAllFlags(false, putResponse);
 
-    // wait for async code to resolve promises
+    const simulatedEvents = [{ data: JSON.stringify(putResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
+
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
 
-    expect(allFlags).toMatchObject({ 'another-dev-test-flag': false });
+    expect(ldc.allFlags()).toMatchObject({ 'another-dev-test-flag': false });
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
@@ -299,9 +299,22 @@ describe('sdk-client storage', () => {
     const putResponse = clone<Flags>(defaultPutResponse);
     putResponse['dev-test-flag'].version = 999;
     putResponse['dev-test-flag'].value = false;
-    const allFlags = await identifyGetAllFlags(false, putResponse);
 
-    expect(allFlags).toMatchObject({ 'dev-test-flag': false });
+    const simulatedEvents = [{ data: JSON.stringify(putResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
+
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
+    await jest.runAllTimersAsync();
+
+    expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
   });
 
@@ -313,13 +326,23 @@ describe('sdk-client storage', () => {
     putResponse['dev-test-flag'].value = false;
     putResponse['another-dev-test-flag'] = newFlag;
     delete putResponse['moonshot-demo'];
-    const allFlags = await identifyGetAllFlags(false, putResponse);
 
-    // wait for async code to resolve promises
+    const simulatedEvents = [{ data: JSON.stringify(putResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
+
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
 
-    expect(allFlags).toMatchObject({ 'dev-test-flag': false, 'another-dev-test-flag': true });
-    expect(allFlags).not.toHaveProperty('moonshot-demo');
+    expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false, 'another-dev-test-flag': true });
+    expect(ldc.allFlags()).not.toHaveProperty('moonshot-demo');
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, [
       'moonshot-demo',
       'dev-test-flag',
@@ -328,15 +351,16 @@ describe('sdk-client storage', () => {
   });
 
   test('syncing storage when PUT is consistent so no change', async () => {
-    const allFlags = await identifyGetAllFlags(
-      false,
-      defaultPutResponse,
-      undefined,
-      undefined,
-      false,
+    const simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
     );
 
-    // wait for async code to resolve promises
+    await ldc.identify(context);
     await jest.runAllTimersAsync();
 
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
@@ -356,7 +380,7 @@ describe('sdk-client storage', () => {
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
 
     // this is defaultPutResponse
-    expect(allFlags).toEqual({
+    expect(ldc.allFlags()).toEqual({
       'dev-test-flag': true,
       'easter-i-tunes-special': false,
       'easter-specials': 'no specials',
@@ -372,13 +396,22 @@ describe('sdk-client storage', () => {
     const putResponse = clone<Flags>(defaultPutResponse);
     putResponse['dev-test-flag'].reason = { kind: 'RULE_MATCH', inExperiment: true };
 
-    const allFlags = await identifyGetAllFlags(false, putResponse);
+    const simulatedEvents = [{ data: JSON.stringify(putResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
 
-    // wait for async code to resolve promises
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
 
-    expect(allFlags).toMatchObject({ 'dev-test-flag': true });
+    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': true });
     expect(flagsInStorage['dev-test-flag'].reason).toEqual({
       kind: 'RULE_MATCH',
       inExperiment: true,
@@ -395,13 +428,24 @@ describe('sdk-client storage', () => {
     patchResponse.value = false;
     patchResponse.version += 1;
 
-    const allFlags = await identifyGetAllFlags(false, defaultPutResponse, patchResponse);
+    const putEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    const patchEvents = [{ data: JSON.stringify(patchResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', putEvents);
+        mockEventSource.simulateEvents('patch', patchEvents);
+        return mockEventSource;
+      },
+    );
 
-    // wait for async code to resolve promises
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
-    expect(allFlags).toMatchObject({ 'dev-test-flag': false });
+    expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(4);
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
     expect(emitter.emit).toHaveBeenCalledTimes(2);
@@ -412,13 +456,24 @@ describe('sdk-client storage', () => {
     const patchResponse = clone<PatchFlag>(defaultPutResponse['dev-test-flag']);
     patchResponse.key = 'another-dev-test-flag';
 
-    const allFlags = await identifyGetAllFlags(false, defaultPutResponse, patchResponse);
+    const putEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    const patchEvents = [{ data: JSON.stringify(patchResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', putEvents);
+        mockEventSource.simulateEvents('patch', patchEvents);
+        return mockEventSource;
+      },
+    );
 
-    // wait for async code to resolve promises
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
-    expect(allFlags).toHaveProperty('another-dev-test-flag');
+    expect(ldc.allFlags()).toHaveProperty('another-dev-test-flag');
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       4,
       flagStorageKey,
@@ -435,19 +490,28 @@ describe('sdk-client storage', () => {
     patchResponse.value = false;
     patchResponse.version -= 1;
 
-    const allFlags = await identifyGetAllFlags(
-      false,
-      defaultPutResponse,
-      patchResponse,
-      undefined,
-      false,
+    const putEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    const patchEvents = [{ data: JSON.stringify(patchResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', putEvents);
+        mockEventSource.simulateEvents('patch', patchEvents);
+        return mockEventSource;
+      },
     );
 
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(0);
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
+    await jest.runAllTimersAsync();
+
+    // the initial put is resulting in two sets, one for the index and one for the flag data
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
 
     // this is defaultPutResponse
-    expect(allFlags).toEqual({
+    expect(ldc.allFlags()).toEqual({
       'dev-test-flag': true,
       'easter-i-tunes-special': false,
       'easter-specials': 'no specials',
@@ -465,18 +529,24 @@ describe('sdk-client storage', () => {
       version: defaultPutResponse['dev-test-flag'].version + 1,
     };
 
-    const allFlags = await identifyGetAllFlags(
-      false,
-      defaultPutResponse,
-      undefined,
-      deleteResponse,
+    const putEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    const deleteEvents = [{ data: JSON.stringify(deleteResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', putEvents);
+        mockEventSource.simulateEvents('delete', deleteEvents);
+        return mockEventSource;
+      },
     );
 
-    // wait for async code to resolve promises
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
-    expect(allFlags).not.toHaveProperty('dev-test-flag');
+    expect(ldc.allFlags()).not.toHaveProperty('dev-test-flag');
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       4,
       flagStorageKey,
@@ -493,16 +563,25 @@ describe('sdk-client storage', () => {
       version: defaultPutResponse['dev-test-flag'].version,
     };
 
-    const allFlags = await identifyGetAllFlags(
-      false,
-      defaultPutResponse,
-      undefined,
-      deleteResponse,
-      false,
+    const putEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    const deleteEvents = [{ data: JSON.stringify(deleteResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', putEvents);
+        mockEventSource.simulateEvents('delete', deleteEvents);
+        return mockEventSource;
+      },
     );
 
-    expect(allFlags).toHaveProperty('dev-test-flag');
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(0);
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
+    await jest.runAllTimersAsync();
+
+    expect(ldc.allFlags()).toHaveProperty('dev-test-flag');
+    // the initial put is resulting in two sets, one for the index and one for the flag data
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -512,16 +591,25 @@ describe('sdk-client storage', () => {
       version: defaultPutResponse['dev-test-flag'].version - 1,
     };
 
-    const allFlags = await identifyGetAllFlags(
-      false,
-      defaultPutResponse,
-      undefined,
-      deleteResponse,
-      false,
+    const putEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    const deleteEvents = [{ data: JSON.stringify(deleteResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', putEvents);
+        mockEventSource.simulateEvents('delete', deleteEvents);
+        return mockEventSource;
+      },
     );
 
-    expect(allFlags).toHaveProperty('dev-test-flag');
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(0);
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
+    await jest.runAllTimersAsync();
+
+    expect(ldc.allFlags()).toHaveProperty('dev-test-flag');
+    // the initial put is resulting in two sets, one for the index and one for the flag data
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -531,9 +619,20 @@ describe('sdk-client storage', () => {
       version: 1,
     };
 
-    await identifyGetAllFlags(false, defaultPutResponse, undefined, deleteResponse, false);
+    const putEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+    const deleteEvents = [{ data: JSON.stringify(deleteResponse) }];
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', putEvents);
+        mockEventSource.simulateEvents('delete', deleteEvents);
+        return mockEventSource;
+      },
+    );
 
-    // wait for async code to resolve promises
+    const changePromise = onChangePromise();
+    await ldc.identify(context);
+    await changePromise;
     await jest.runAllTimersAsync();
 
     const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;

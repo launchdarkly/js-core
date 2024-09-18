@@ -35,6 +35,8 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
 
   pollInterval: TypeValidators.numberWithMin(30),
 
+  useReport: TypeValidators.Boolean,
+
   privateAttributes: TypeValidators.StringArray,
 
   applicationInfo: TypeValidators.Object,

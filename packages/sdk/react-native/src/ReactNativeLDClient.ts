@@ -4,6 +4,8 @@ import {
   base64UrlEncode,
   BasicLogger,
   ConnectionMode,
+  DataSourcePaths,
+  Encoding,
   internal,
   LDClientImpl,
   type LDContext,
@@ -103,12 +105,26 @@ export default class ReactNativeLDClient extends LDClientImpl {
     return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
   }
 
-  override createStreamUriPath(context: LDContext) {
-    return `/meval/${this.encodeContext(context)}`;
+  override getStreamingPaths(): DataSourcePaths {
+    return {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
+        return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return `/meval`;
+      },
+    };
   }
 
-  override createPollUriPath(context: LDContext): string {
-    return `/msdk/evalx/contexts/${this.encodeContext(context)}`;
+  override getPollingPaths(): DataSourcePaths {
+    return {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
+        return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return `/msdk/evalx/context`;
+      },
+    };
   }
 
   override async setConnectionMode(mode: ConnectionMode): Promise<void> {
