@@ -1,62 +1,69 @@
 import {
+  Encoding,
   EventName,
   EventSource,
+  getStreamingUri,
+  httpErrorMessage,
   HttpErrorResponse,
+  internal,
   LDLogger,
+  LDStreamingError,
   ProcessStreamResponse,
   Requests,
-} from '../../api';
-import { LDStreamProcessor } from '../../api/subsystem';
-import { LDStreamingError } from '../../errors';
-import { ClientContext } from '../../options';
-import { getStreamingUri } from '../../options/ServiceEndpoints';
-import { httpErrorMessage, LDHeaders, shouldRetry } from '../../utils';
-import { DiagnosticsManager } from '../diagnostics';
-import { StreamingErrorHandler } from './types';
+  shouldRetry,
+  subsystem,
+} from '@launchdarkly/js-sdk-common';
+
+import { StreamingDataSourceConfig } from './DataSourceConfig';
 
 const reportJsonError = (
   type: string,
   data: string,
   logger?: LDLogger,
-  errorHandler?: StreamingErrorHandler,
+  errorHandler?: internal.StreamingErrorHandler,
 ) => {
   logger?.error(`Stream received invalid data in "${type}" message`);
   logger?.debug(`Invalid JSON follows: ${data}`);
   errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
 };
 
-// TODO: SDK-156 - Move to Server SDK specific location
-class StreamingProcessor implements LDStreamProcessor {
+class StreamingProcessor implements subsystem.LDStreamProcessor {
   private readonly headers: { [key: string]: string | string[] };
   private readonly streamUri: string;
-  private readonly logger?: LDLogger;
 
   private eventSource?: EventSource;
-  private requests: Requests;
   private connectionAttemptStartTime?: number;
 
   constructor(
-    clientContext: ClientContext,
-    streamUriPath: string,
-    parameters: { key: string; value: string }[],
+    private readonly plainContextString: string,
+    private readonly dataSourceConfig: StreamingDataSourceConfig,
     private readonly listeners: Map<EventName, ProcessStreamResponse>,
-    baseHeaders: LDHeaders,
-    private readonly diagnosticsManager?: DiagnosticsManager,
-    private readonly errorHandler?: StreamingErrorHandler,
-    private readonly streamInitialReconnectDelay = 1,
+    private readonly requests: Requests,
+    encoding: Encoding,
+    private readonly diagnosticsManager?: internal.DiagnosticsManager,
+    private readonly errorHandler?: internal.StreamingErrorHandler,
+    private readonly logger?: LDLogger,
   ) {
-    const { basicConfiguration, platform } = clientContext;
-    const { logger } = basicConfiguration;
-    const { requests } = platform;
+    // TODO: SC-255969 Implement better REPORT fallback logic
+    if (dataSourceConfig.useReport && !requests.getEventSourceCapabilities().customMethod) {
+      logger?.error(
+        "Configuration option useReport is true, but platform's EventSource does not support custom HTTP methods. Streaming may not work.",
+      );
+    }
 
-    this.headers = { ...baseHeaders };
-    this.logger = logger;
+    const path = dataSourceConfig.useReport
+      ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
+      : dataSourceConfig.paths.pathGet(encoding, plainContextString);
+
+    const parameters: { key: string; value: string }[] = [];
+    if (this.dataSourceConfig.withReasons) {
+      parameters.push({ key: 'withReasons', value: 'true' });
+    }
+
     this.requests = requests;
-    this.streamUri = getStreamingUri(
-      basicConfiguration.serviceEndpoints,
-      streamUriPath,
-      parameters,
-    );
+    this.headers = { ...dataSourceConfig.baseHeaders };
+    this.logger = logger;
+    this.streamUri = getStreamingUri(dataSourceConfig.serviceEndpoints, path, parameters);
   }
 
   private logConnectionStarted() {
@@ -101,11 +108,24 @@ class StreamingProcessor implements LDStreamProcessor {
   start() {
     this.logConnectionStarted();
 
+    let methodAndBodyOverrides;
+    if (this.dataSourceConfig.useReport) {
+      // REPORT will include a body, so content type is required.
+      this.headers['content-type'] = 'application/json';
+
+      // orverrides default method with REPORT and adds body.
+      methodAndBodyOverrides = { method: 'REPORT', body: this.plainContextString };
+    } else {
+      // no method or body override
+      methodAndBodyOverrides = {};
+    }
+
     // TLS is handled by the platform implementation.
     const eventSource = this.requests.createEventSource(this.streamUri, {
-      headers: this.headers,
+      headers: this.headers, // adds content-type header required when body will be present
+      ...methodAndBodyOverrides,
       errorFilter: (error: HttpErrorResponse) => this.retryAndHandleError(error),
-      initialRetryDelayMillis: 1000 * this.streamInitialReconnectDelay,
+      initialRetryDelayMillis: this.dataSourceConfig.initialRetryDelayMillis,
       readTimeoutMillis: 5 * 60 * 1000,
       retryResetIntervalMillis: 60 * 1000,
     });

@@ -1,42 +1,26 @@
 import {
-  ApplicationTags,
+  Encoding,
   getPollingUri,
   httpErrorMessage,
   HttpErrorResponse,
   isHttpRecoverable,
-  LDHeaders,
   LDLogger,
   LDPollingError,
   Requests,
-  ServiceEndpoints,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
+import { PollingDataSourceConfig } from '../streaming/DataSourceConfig';
 import { Flags } from '../types';
 import Requestor, { LDRequestError } from './Requestor';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
 /**
- * Subset of configuration required for polling.
- *
- * @internal
- */
-export type PollingConfig = {
-  logger: LDLogger;
-  pollInterval: number;
-  tags: ApplicationTags;
-  useReport: boolean;
-  serviceEndpoints: ServiceEndpoints;
-};
-
-/**
  * @internal
  */
 export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private stopped = false;
-
-  private logger?: LDLogger;
 
   private pollInterval: number;
 
@@ -45,19 +29,36 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private requestor: Requestor;
 
   constructor(
+    private readonly plainContextString: string,
+    private readonly dataSourceConfig: PollingDataSourceConfig,
     requests: Requests,
-    uriPath: string,
-    parameters: { key: string; value: string }[],
-    config: PollingConfig,
-    baseHeaders: LDHeaders,
+    encoding: Encoding,
     private readonly dataHandler: (flags: Flags) => void,
     private readonly errorHandler?: PollingErrorHandler,
+    private readonly logger?: LDLogger,
   ) {
-    const uri = getPollingUri(config.serviceEndpoints, uriPath, parameters);
-    this.logger = config.logger;
-    this.pollInterval = config.pollInterval;
+    const path = dataSourceConfig.useReport
+      ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
+      : dataSourceConfig.paths.pathGet(encoding, plainContextString);
 
-    this.requestor = new Requestor(requests, uri, config.useReport, baseHeaders);
+    const parameters: { key: string; value: string }[] = [];
+    if (this.dataSourceConfig.withReasons) {
+      parameters.push({ key: 'withReasons', value: 'true' });
+    }
+
+    const uri = getPollingUri(dataSourceConfig.serviceEndpoints, path, parameters);
+    this.pollInterval = dataSourceConfig.pollInterval;
+
+    let method = 'GET';
+    const headers: { [key: string]: string } = { ...dataSourceConfig.baseHeaders };
+    let body;
+    if (dataSourceConfig.useReport) {
+      method = 'REPORT';
+      headers['content-type'] = 'application/json';
+      body = plainContextString; // context is in body for REPORT
+    }
+
+    this.requestor = new Requestor(requests, uri, headers, method, body);
   }
 
   private async poll() {

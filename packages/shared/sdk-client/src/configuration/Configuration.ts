@@ -31,14 +31,14 @@ export default class Configuration {
   public readonly flushInterval = 30;
   public readonly streamInitialReconnectDelay = 1;
 
-  public readonly allAttributesPrivate = false;
-  public readonly debug = false;
-  public readonly diagnosticOptOut = false;
-  public readonly sendEvents = true;
-  public readonly sendLDHeaders = true;
+  public readonly allAttributesPrivate: boolean = false;
+  public readonly debug: boolean = false;
+  public readonly diagnosticOptOut: boolean = false;
+  public readonly sendEvents: boolean = true;
+  public readonly sendLDHeaders: boolean = true;
 
-  public readonly useReport = false;
-  public readonly withReasons = false;
+  public readonly useReport: boolean = false;
+  public readonly withReasons: boolean = false;
 
   public readonly privateAttributes: string[] = [];
 
@@ -82,6 +82,8 @@ export default class Configuration {
       internalOptions.includeAuthorizationHeader,
       pristineOptions.payloadFilterKey,
     );
+    this.useReport = pristineOptions.useReport ?? false;
+
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
     this.userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
   }

@@ -28,6 +28,7 @@
     "docs",
     "example",
     "node_modules",
+    "contract-tests",
     "babel.config.js",
     "jest.config.ts",
     "jestSetupFile.ts",

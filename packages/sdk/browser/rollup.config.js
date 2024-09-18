@@ -1,8 +1,8 @@
 import common from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
-import json from '@rollup/plugin-json';
 
 const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
@@ -38,12 +38,6 @@ export default [
   },
   {
     ...getSharedConfig('cjs', 'dist/index.cjs.js'),
-    plugins: [
-      typescript(),
-      common(),
-      resolve(),
-      terser(),
-      json(),
-    ],
+    plugins: [typescript(), common(), resolve(), terser(), json()],
   },
 ];

@@ -1,14 +1,11 @@
-import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
-import {
-  createBasicPlatform,
-  createLogger,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
+import { AutoEnvAttributes, clone, Encoding, LDContext } from '@launchdarkly/js-sdk-common';
+import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { toMulti } from '../src/context/addAutoEnv';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
+import { MockEventSource } from './streaming/LDClientImpl.mocks';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;
@@ -18,24 +15,12 @@ beforeEach(() => {
   logger = createLogger();
 });
 
-jest.mock('@launchdarkly/js-sdk-common', () => {
-  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const m = jest.requireActual('@launchdarkly/private-js-mocks');
-  return {
-    ...actual,
-    ...{
-      internal: {
-        ...actual.internal,
-        StreamingProcessor: m.MockStreamingProcessor,
-      },
-    },
-  };
-});
-
 const testSdkKey = 'test-sdk-key';
 const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
 let ldc: LDClientImpl;
+let mockEventSource: MockEventSource;
+let simulatedEvents: { data?: any }[] = [];
 let defaultPutResponse: Flags;
 
 const DEFAULT_IDENTIFY_TIMEOUT = 5;
@@ -48,30 +33,38 @@ describe('sdk-client identify timeout', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
 
-    // simulate streaming error after a long timeout
-    setupMockStreamingProcessor(true, defaultPutResponse, undefined, undefined, 30);
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
 
     ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
       logger,
       sendEvents: false,
     });
-    jest
-      .spyOn(LDClientImpl.prototype as any, 'createStreamUriPath')
-      .mockReturnValue('/stream/path');
+    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path';
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path';
+      },
+    });
   });
 
   afterEach(() => {
     jest.resetAllMocks();
   });
 
-  // streaming is setup to error in beforeEach to cause a timeout
   test('rejects with default timeout of 5s', async () => {
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT * 1000).then();
     await expect(ldc.identify(carContext)).rejects.toThrow(/identify timed out/);
     expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/identify timed out/));
   });
 
-  // streaming is setup to error in beforeEach to cause a timeout
   test('rejects with custom timeout', async () => {
     const timeout = 15;
     jest.advanceTimersByTimeAsync(timeout * 1000).then();
@@ -79,7 +72,9 @@ describe('sdk-client identify timeout', () => {
   });
 
   test('resolves with default timeout', async () => {
-    setupMockStreamingProcessor(false, defaultPutResponse);
+    // set simulated events to be default response
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT * 1000).then();
 
     await expect(ldc.identify(carContext)).resolves.toBeUndefined();
@@ -99,7 +94,10 @@ describe('sdk-client identify timeout', () => {
 
   test('resolves with custom timeout', async () => {
     const timeout = 15;
-    setupMockStreamingProcessor(false, defaultPutResponse);
+
+    // set simulated events to be default response
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
     jest.advanceTimersByTimeAsync(timeout).then();
 
     await expect(ldc.identify(carContext, { timeout })).resolves.toBeUndefined();
@@ -119,7 +117,10 @@ describe('sdk-client identify timeout', () => {
 
   test('setting high timeout threshold with internalOptions', async () => {
     const highTimeoutThreshold = 20;
-    setupMockStreamingProcessor(false, defaultPutResponse);
+
+    // set simulated events to be default response
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
     ldc = new LDClientImpl(
       testSdkKey,
       AutoEnvAttributes.Enabled,
@@ -139,7 +140,10 @@ describe('sdk-client identify timeout', () => {
 
   test('warning when timeout is too high', async () => {
     const highTimeout = 60;
-    setupMockStreamingProcessor(false, defaultPutResponse);
+
+    // set simulated events to be default response
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
     jest.advanceTimersByTimeAsync(highTimeout * 1000).then();
 
     await ldc.identify(carContext, { timeout: highTimeout });
@@ -148,7 +152,9 @@ describe('sdk-client identify timeout', () => {
   });
 
   test('safe timeout should not warn', async () => {
-    setupMockStreamingProcessor(false, defaultPutResponse);
+    // set simulated events to be default response
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT * 1000).then();
 
     await ldc.identify(carContext, { timeout: DEFAULT_IDENTIFY_TIMEOUT });

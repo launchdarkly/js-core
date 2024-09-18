@@ -1,5 +1,5 @@
 // eslint-disable-next-line max-classes-per-file
-import { HttpErrorResponse, LDHeaders, Requests } from '@launchdarkly/js-sdk-common';
+import { HttpErrorResponse, Requests } from '@launchdarkly/js-sdk-common';
 
 function isOk(status: number) {
   return status >= 200 && status <= 299;
@@ -22,25 +22,21 @@ export class LDRequestError extends Error implements HttpErrorResponse {
  * @internal
  */
 export default class Requestor {
-  private readonly headers: { [key: string]: string };
-  private verb: string;
-
   constructor(
     private requests: Requests,
     private readonly uri: string,
-    useReport: boolean,
-    baseHeaders: LDHeaders,
-  ) {
-    this.headers = { ...baseHeaders };
-    this.verb = useReport ? 'REPORT' : 'GET';
-  }
+    private readonly headers: { [key: string]: string },
+    private readonly method: string,
+    private readonly body?: string,
+  ) {}
 
   async requestPayload(): Promise<string> {
     let status: number | undefined;
     try {
       const res = await this.requests.fetch(this.uri, {
-        method: this.verb,
+        method: this.method,
         headers: this.headers,
+        body: this.body,
       });
       if (isOk(res.status)) {
         return await res.text();

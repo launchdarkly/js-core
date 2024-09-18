@@ -3,8 +3,8 @@ import {
   base64UrlEncode,
   BasicLogger,
   LDClient as CommonClient,
-  Context,
-  internal,
+  DataSourcePaths,
+  Encoding,
   LDClientImpl,
   LDContext,
 } from '@launchdarkly/js-client-sdk-common';
@@ -97,11 +97,27 @@ export class BrowserClient extends LDClientImpl {
     return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
   }
 
-  override createStreamUriPath(context: LDContext) {
-    return `/eval/${this.clientSideId}/${this.encodeContext(context)}`;
+  override getStreamingPaths(): DataSourcePaths {
+    const parentThis = this;
+    return {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
+        return `/eval/${parentThis.clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return `/eval/${parentThis.clientSideId}`;
+      },
+    };
   }
 
-  override createPollUriPath(context: LDContext): string {
-    return `/sdk/evalx/${this.clientSideId}/contexts/${this.encodeContext(context)}`;
+  override getPollingPaths(): DataSourcePaths {
+    const parentThis = this;
+    return {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
+        return `/sdk/evalx/${parentThis.clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return `/sdk/evalx/${parentThis.clientSideId}/context`;
+      },
+    };
   }
 }

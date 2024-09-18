@@ -199,6 +199,14 @@ export interface LDOptions {
   pollInterval?: number;
 
   /**
+   * Directs the SDK to use the REPORT method for HTTP requests instead of GET. (Default: `false`)
+   *
+   * This setting applies both to requests to the streaming service, as well as flag requests when the SDK is in polling
+   * mode.
+   */
+  useReport?: boolean;
+
+  /**
    * Whether LaunchDarkly should provide additional information about how flag values were
    * calculated.
    *

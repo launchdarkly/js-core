@@ -1,4 +1,3 @@
-
 export default {
   extensionsToTreatAsEsm: ['.ts'],
   verbose: true,

@@ -1,0 +1,12 @@
+streaming/requests/method and headers/REPORT/http
+streaming/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
+streaming/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
+streaming/requests/context properties/single kind minimal/REPORT
+streaming/requests/context properties/single kind with all attributes/REPORT
+streaming/requests/context properties/multi-kind/REPORT
+polling/requests/method and headers/REPORT/http
+polling/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
+polling/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
+polling/requests/context properties/single kind minimal/REPORT
+polling/requests/context properties/single kind with all attributes/REPORT
+polling/requests/context properties/multi-kind/REPORT
