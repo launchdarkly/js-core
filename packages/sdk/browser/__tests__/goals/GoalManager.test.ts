@@ -36,38 +36,30 @@ describe('given a GoalManager with mocked dependencies', () => {
     );
   });
 
-  describe('when initializing with successful goal fetch', () => {
+  it('should fetch goals and set up the location watcher', async () => {
     const mockGoals: Goal[] = [
       { key: 'goal1', kind: 'click', selector: '#button1' },
       { key: 'goal2', kind: 'click', selector: '#button2' },
     ];
 
-    beforeEach(() => {
-      mockRequests.fetch.mockResolvedValue({
-        json: () => Promise.resolve(mockGoals),
-      } as any);
-    });
+    mockRequests.fetch.mockResolvedValue({
+      json: () => Promise.resolve(mockGoals),
+    } as any);
 
-    it('should fetch goals and set up the location watcher', async () => {
-      await goalManager.initialize();
+    await goalManager.initialize();
 
-      expect(mockRequests.fetch).toHaveBeenCalledWith('polling/sdk/goals/test-credential');
-      expect(mockLocationWatcherFactory).toHaveBeenCalled();
-    });
+    expect(mockRequests.fetch).toHaveBeenCalledWith('polling/sdk/goals/test-credential');
+    expect(mockLocationWatcherFactory).toHaveBeenCalled();
   });
 
-  describe('when initializing with a failed goal fetch', () => {
+  it('should handle failed initial fetch by reporting an unexpected response error', async () => {
     const error = new Error('Fetch failed');
 
-    beforeEach(() => {
-      mockRequests.fetch.mockRejectedValue(error);
-    });
+    mockRequests.fetch.mockRejectedValue(error);
 
-    it('Then it should report an unexpected response error', async () => {
-      await goalManager.initialize();
+    await goalManager.initialize();
 
-      expect(mockReportError).toHaveBeenCalledWith(expect.any(LDUnexpectedResponseError));
-    });
+    expect(mockReportError).toHaveBeenCalledWith(expect.any(LDUnexpectedResponseError));
   });
 
   it('should close the watcher and tracker when closed', () => {
@@ -76,7 +68,7 @@ describe('given a GoalManager with mocked dependencies', () => {
     expect(mockLocationWatcher.close).toHaveBeenCalled();
   });
 
-  describe('goal emission based on URL changes', () => {
+  it('should not emit a goal on initial for a non-matching URL, but should emit after URL change to a matching URL', async () => {
     const mockGoals: Goal[] = [
       {
         key: 'goal1',
@@ -90,32 +82,33 @@ describe('given a GoalManager with mocked dependencies', () => {
       },
     ];
 
-    beforeEach(async () => {
-      mockRequests.fetch.mockResolvedValue({
-        json: () => Promise.resolve(mockGoals),
-      } as any);
-      await goalManager.initialize();
+    Object.defineProperty(window, 'location', {
+      value: { href: 'https://example.com/not-target' },
+      writable: true,
     });
 
-    it('should not emit a goal on initial load, but emit after URL change', () => {
-      // Check that no goal was emitted on initial load
-      expect(mockReportGoal).not.toHaveBeenCalled();
+    mockRequests.fetch.mockResolvedValue({
+      json: () => Promise.resolve(mockGoals),
+    } as any);
+    await goalManager.initialize();
 
-      // Simulate URL change to match the goal
-      Object.defineProperty(window, 'location', {
-        value: { href: 'https://example.com/target' },
-        writable: true,
-      });
+    // Check that no goal was emitted on initial load
+    expect(mockReportGoal).not.toHaveBeenCalled();
 
-      // Trigger the location change callback
-      mockLocationWatcher.cb?.();
+    // Simulate URL change to match the goal
+    Object.defineProperty(window, 'location', {
+      value: { href: 'https://example.com/target' },
+      writable: true,
+    });
 
-      // Check that the goal was emitted after URL change
-      expect(mockReportGoal).toHaveBeenCalledWith('https://example.com/target', {
-        key: 'goal1',
-        kind: 'pageview',
-        urls: [{ kind: 'exact', url: 'https://example.com/target' }],
-      });
+    // Trigger the location change callback
+    mockLocationWatcher.cb?.();
+
+    // Check that the goal was emitted after URL change
+    expect(mockReportGoal).toHaveBeenCalledWith('https://example.com/target', {
+      key: 'goal1',
+      kind: 'pageview',
+      urls: [{ kind: 'exact', url: 'https://example.com/target' }],
     });
   });
 });
