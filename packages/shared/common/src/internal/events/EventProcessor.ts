@@ -10,11 +10,9 @@ import { DiagnosticsManager } from '../diagnostics';
 import EventSender from './EventSender';
 import EventSummarizer, { SummarizedFlagsEvent } from './EventSummarizer';
 import { isFeature, isIdentify, isMigration } from './guards';
-import InputClickEvent from './InputClickEvent';
 import InputEvent from './InputEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
 import InputMigrationEvent from './InputMigrationEvent';
-import InputPageViewEvent from './InputPageViewEvent';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 import shouldSample from './sampling';
 

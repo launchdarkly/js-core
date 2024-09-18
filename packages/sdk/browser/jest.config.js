@@ -4,7 +4,7 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jest-environment-jsdom',
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { useESM: true }]
+    '^.+\\.tsx?$': ['ts-jest', { useESM: true }],
   },
-  testPathIgnorePatterns: ['./dist']
-}
+  testPathIgnorePatterns: ['./dist'],
+};
