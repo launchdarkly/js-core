@@ -36,6 +36,7 @@ interface CustomOutputEvent {
   data?: any;
   metricValue?: number;
   samplingRatio?: number;
+  url?: string;
 }
 
 interface FeatureOutputEvent {
@@ -342,6 +343,10 @@ export default class EventProcessor implements LDEventProcessor {
         }
         if (event.metricValue !== undefined) {
           out.metricValue = event.metricValue;
+        }
+
+        if (event.url !== undefined) {
+          out.url = event.url;
         }
 
         return out;

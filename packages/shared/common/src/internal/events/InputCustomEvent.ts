@@ -13,6 +13,8 @@ export default class InputCustomEvent {
     // Currently custom events are not sampled, but this is here to make the handling
     // code more uniform.
     public readonly samplingRatio: number = 1,
+    // Browser SDKs can include a URL for custom events.
+    public readonly url?: string,
   ) {
     this.creationDate = Date.now();
     this.context = context;

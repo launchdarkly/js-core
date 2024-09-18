@@ -5,6 +5,7 @@ import {
   LDClient as CommonClient,
   DataSourcePaths,
   Encoding,
+  internal,
   LDClientImpl,
   LDContext,
 } from '@launchdarkly/js-client-sdk-common';
@@ -119,5 +120,18 @@ export class BrowserClient extends LDClientImpl {
         return `/sdk/evalx/${parentThis.clientSideId}/context`;
       },
     };
+  }
+
+  override track(key: string, data?: any, metricValue?: number): void {
+    const context = this.getInternalContext();
+    if (!context || !context) {
+      this.logger.warn(internal.ClientMessages.missingContextKeyNoEvent);
+      return;
+    }
+
+    this.sendEvent({
+    this.eventProcessor?.sendEvent(
+      this.eventFactoryDefault.customEvent(key, context, data, metricValue),
+    );
   }
 }
