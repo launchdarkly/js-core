@@ -1,7 +1,5 @@
 import { Info, PlatformData, SdkData } from '@launchdarkly/js-client-sdk-common';
 
-import { name, version } from '../../package.json';
-
 export default class BrowserInfo implements Info {
   platformData(): PlatformData {
     return {
@@ -10,8 +8,8 @@ export default class BrowserInfo implements Info {
   }
   sdkData(): SdkData {
     return {
-      name,
-      version,
+      name: '@launchdarkly/js-client-sdk',
+      version: '0.0.0', // x-release-please-version
       userAgentBase: 'JSClient',
     };
   }

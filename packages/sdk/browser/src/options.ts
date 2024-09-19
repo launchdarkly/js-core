@@ -28,12 +28,12 @@ export interface BrowserOptions extends LDOptionsBase {
 
 export interface ValidatedOptions {
   fetchGoals: boolean;
-  eventUrlTransformer?: (url: string) => string;
+  eventUrlTransformer: (url: string) => string;
 }
 
 const optDefaults = {
   fetchGoals: true,
-  eventUrlTransformer: undefined,
+  eventUrlTransformer: (url: string) => url,
 };
 
 const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefined } = {

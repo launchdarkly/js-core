@@ -1,3 +1,4 @@
+import { LDClientInternalOptions } from './configuration/Configuration';
 import LDClientImpl from './LDClientImpl';
 
 export * from '@launchdarkly/js-sdk-common';
@@ -18,4 +19,4 @@ export type {
 
 export { DataSourcePaths } from './streaming';
 
-export { LDClientImpl };
+export { LDClientImpl, LDClientInternalOptions };

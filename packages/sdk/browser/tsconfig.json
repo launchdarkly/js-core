@@ -30,7 +30,7 @@
     "node_modules",
     "contract-tests",
     "babel.config.js",
-    "jest.config.ts",
+    "jest.config.js",
     "jestSetupFile.ts",
     "**/*.test.ts*"
   ]

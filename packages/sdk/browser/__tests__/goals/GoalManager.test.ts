@@ -47,6 +47,7 @@ describe('given a GoalManager with mocked dependencies', () => {
     } as any);
 
     await goalManager.initialize();
+    goalManager.startTracking();
 
     expect(mockRequests.fetch).toHaveBeenCalledWith('polling/sdk/goals/test-credential');
     expect(mockLocationWatcherFactory).toHaveBeenCalled();
@@ -58,6 +59,7 @@ describe('given a GoalManager with mocked dependencies', () => {
     mockRequests.fetch.mockRejectedValue(error);
 
     await goalManager.initialize();
+    goalManager.startTracking();
 
     expect(mockReportError).toHaveBeenCalledWith(expect.any(LDUnexpectedResponseError));
   });
@@ -91,6 +93,7 @@ describe('given a GoalManager with mocked dependencies', () => {
       json: () => Promise.resolve(mockGoals),
     } as any);
     await goalManager.initialize();
+    goalManager.startTracking();
 
     // Check that no goal was emitted on initial load
     expect(mockReportGoal).not.toHaveBeenCalled();

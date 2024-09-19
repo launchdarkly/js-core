@@ -2,7 +2,7 @@ import {
   Crypto,
   Encoding,
   Info,
-  LDOptions,
+  LDLogger,
   Platform,
   Requests,
   Storage,
@@ -22,9 +22,9 @@ export default class BrowserPlatform implements Platform {
   requests: Requests = new BrowserRequests();
   storage?: Storage;
 
-  constructor(options: LDOptions) {
+  constructor(logger: LDLogger) {
     if (isLocalStorageSupported()) {
-      this.storage = new LocalStorage(options.logger);
+      this.storage = new LocalStorage(logger);
     }
   }
 }

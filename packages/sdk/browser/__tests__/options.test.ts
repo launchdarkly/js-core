@@ -54,7 +54,7 @@ it('applies default options', () => {
   const opts = validateOptions({}, logger);
 
   expect(opts.fetchGoals).toBe(true);
-  expect(opts.eventUrlTransformer).toBeUndefined();
+  expect(opts.eventUrlTransformer).toBeDefined();
 
   expect(logger.debug).not.toHaveBeenCalled();
   expect(logger.info).not.toHaveBeenCalled();

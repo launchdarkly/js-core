@@ -75,7 +75,9 @@ export default class GoalTracker {
     const pageviewGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'pageview');
     const clickGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'click');
 
-    pageviewGoals.forEach((event) => onEvent(event));
+    pageviewGoals.forEach((event) => {
+      onEvent(event);
+    });
 
     if (clickGoals.length) {
       // Click handler is not a member function in order to avoid having to bind it for the event
