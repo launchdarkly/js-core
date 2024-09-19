@@ -18,7 +18,6 @@ import {
 import { BrowserClient, LDClient } from './BrowserClient';
 import { BrowserOptions as LDOptions } from './options';
 
-// TODO: Export and use browser specific options.
 export {
   LDClient,
   LDFlagSet,

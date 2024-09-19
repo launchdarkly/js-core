@@ -372,6 +372,27 @@ export default class EventProcessor implements LDEventProcessor {
         };
         return out;
       }
+      case 'click': {
+        const out: ClickOutputEvent = {
+          kind: 'click',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+          selector: event.selector,
+        };
+        return out;
+      }
+      case 'pageview': {
+        const out: PageviewOutputEvent = {
+          kind: 'pageview',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+        };
+        return out;
+      }
       default:
         // This would happen during the addition of a new event type to the SDK.
         return event;
