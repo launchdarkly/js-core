@@ -1,5 +1,3 @@
-import InputCustomEvent from './InputCustomEvent';
-
 /**
  * This is for internal use only.
  *
