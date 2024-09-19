@@ -14,10 +14,10 @@ import {
   Platform,
   ProcessStreamResponse,
   EventName as StreamEventName,
+  subsystem,
   timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
-import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { ConnectionMode, LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
@@ -51,7 +51,7 @@ export default class LDClientImpl implements LDClient {
   private eventProcessor?: internal.EventProcessor;
   private identifyTimeout: number = 5;
   readonly logger: LDLogger;
-  private updateProcessor?: LDStreamProcessor;
+  private updateProcessor?: subsystem.LDStreamProcessor;
 
   private readonly highTimeoutThreshold: number = 15;
 
