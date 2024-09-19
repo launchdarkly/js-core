@@ -57,6 +57,25 @@ interface IndexInputEvent extends Omit<InputIdentifyEvent, 'kind'> {
   kind: 'index';
 }
 
+interface ClickOutputEvent {
+  kind: 'click';
+  key: string;
+  url: string;
+  creationDate: number;
+  contextKeys: Record<string, string>;
+  selector: string;
+  samplingRatio?: number;
+}
+
+interface PageviewOutputEvent {
+  kind: 'pageview';
+  key: string;
+  url: string;
+  creationDate: number;
+  contextKeys: Record<string, string>;
+  samplingRatio?: number;
+}
+
 /**
  * The event processor doesn't need to know anything about the shape of the
  * diagnostic events.
@@ -325,6 +344,27 @@ export default class EventProcessor implements LDEventProcessor {
           out.metricValue = event.metricValue;
         }
 
+        return out;
+      }
+      case 'click': {
+        const out: ClickOutputEvent = {
+          kind: 'click',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+          selector: event.selector,
+        };
+        return out;
+      }
+      case 'pageview': {
+        const out: PageviewOutputEvent = {
+          kind: 'pageview',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+        };
         return out;
       }
       default:

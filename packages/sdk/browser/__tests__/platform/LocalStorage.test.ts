@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 import LocalStorage from '../../src/platform/LocalStorage';
 
 it('can set values', async () => {

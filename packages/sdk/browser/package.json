@@ -30,14 +30,16 @@
     "build": "rollup -c rollup.config.js",
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.7.0"
+    "@launchdarkly/js-client-sdk-common": "1.7.0",
+    "escape-string-regexp": "^5.0.0"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@launchdarkly/private-js-mocks": "0.0.1",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-json": "^6.1.0",
