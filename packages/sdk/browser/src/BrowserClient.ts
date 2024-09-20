@@ -5,8 +5,10 @@ import {
   LDClient as CommonClient,
   DataSourcePaths,
   Encoding,
+  internal,
   LDClientImpl,
   LDContext,
+  Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
 import GoalManager from './goals/GoalManager';
@@ -25,6 +27,7 @@ export class BrowserClient extends LDClientImpl {
     private readonly clientSideId: string,
     autoEnvAttributes: AutoEnvAttributes,
     options: BrowserOptions = {},
+    overridePlatform?: Platform,
   ) {
     const { logger: customLogger, debug } = options;
     const logger =
@@ -38,14 +41,24 @@ export class BrowserClient extends LDClientImpl {
     // TODO: Use the already-configured baseUri from the SDK config. SDK-560
     const baseUrl = options.baseUri ?? 'https://clientsdk.launchdarkly.com';
 
-    const platform = new BrowserPlatform(options);
+    const platform = overridePlatform ?? new BrowserPlatform(logger);
     const ValidatedBrowserOptions = validateOptions(options, logger);
+    const { eventUrlTransformer } = ValidatedBrowserOptions;
     super(clientSideId, autoEnvAttributes, platform, filterToBaseOptions(options), {
       analyticsEventPath: `/events/bulk/${clientSideId}`,
       diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
       includeAuthorizationHeader: false,
       highTimeoutThreshold: 5,
       userAgentHeaderName: 'x-launchdarkly-user-agent',
+      trackEventModifier: (event: internal.InputCustomEvent) =>
+        new internal.InputCustomEvent(
+          event.context,
+          event.key,
+          event.data,
+          event.metricValue,
+          event.samplingRatio,
+          eventUrlTransformer(window.location.href),
+        ),
     });
 
     if (ValidatedBrowserOptions.fetchGoals) {
@@ -62,10 +75,11 @@ export class BrowserClient extends LDClientImpl {
           if (!context) {
             return;
           }
+          const transformedUrl = eventUrlTransformer(url);
           if (isClick(goal)) {
             this.sendEvent({
               kind: 'click',
-              url,
+              url: transformedUrl,
               samplingRatio: 1,
               key: goal.key,
               creationDate: Date.now(),
@@ -75,7 +89,7 @@ export class BrowserClient extends LDClientImpl {
           } else {
             this.sendEvent({
               kind: 'pageview',
-              url,
+              url: transformedUrl,
               samplingRatio: 1,
               key: goal.key,
               creationDate: Date.now(),
@@ -119,5 +133,10 @@ export class BrowserClient extends LDClientImpl {
         return `/sdk/evalx/${parentThis.clientSideId}/context`;
       },
     };
+  }
+
+  override async identify(context: LDContext): Promise<void> {
+    await super.identify(context);
+    this.goalManager?.startTracking();
   }
 }

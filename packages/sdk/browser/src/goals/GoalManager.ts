@@ -9,6 +9,7 @@ export default class GoalManager {
   private url: string;
   private watcher?: LocationWatcher;
   private tracker?: GoalTracker;
+  private isTracking = false;
 
   constructor(
     credential: string,
@@ -29,10 +30,20 @@ export default class GoalManager {
 
   public async initialize(): Promise<void> {
     await this.fetchGoals();
+    // If tracking has been started before goal fetching completes, we need to
+    // create the tracker so it can start watching for events.
+    this.createTracker();
+  }
+
+  public startTracking() {
+    this.isTracking = true;
     this.createTracker();
   }
 
   private createTracker() {
+    if (!this.isTracking) {
+      return;
+    }
     this.tracker?.close();
     if (this.goals && this.goals.length) {
       this.tracker = new GoalTracker(this.goals, (goal) => {

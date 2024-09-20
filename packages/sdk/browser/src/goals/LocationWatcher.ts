@@ -1,4 +1,4 @@
-export const LOCATION_WATCHER_INTERVAL = 300;
+export const LOCATION_WATCHER_INTERVAL_MS = 300;
 
 // Using any for the timer handle because the type is not the same for all
 // platforms and we only need to use it opaquely.
@@ -39,7 +39,7 @@ export class DefaultLocationWatcher {
      * Details on when popstate is called:
      * https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event#when_popstate_is_sent
      */
-    this.watcherHandle = setInterval(checkUrl, LOCATION_WATCHER_INTERVAL);
+    this.watcherHandle = setInterval(checkUrl, LOCATION_WATCHER_INTERVAL_MS);
 
     window.addEventListener('popstate', checkUrl);
 

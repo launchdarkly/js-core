@@ -23,6 +23,7 @@ import { ConnectionMode, LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
+import { LDClientInternalOptions } from './configuration/Configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
@@ -72,7 +73,7 @@ export default class LDClientImpl implements LDClient {
     public readonly autoEnvAttributes: AutoEnvAttributes,
     public readonly platform: Platform,
     options: LDOptions,
-    internalOptions?: internal.LDInternalOptions,
+    internalOptions?: LDClientInternalOptions,
   ) {
     if (!sdkKey) {
       throw new Error('You must configure the client with a client-side SDK key');
@@ -502,7 +503,9 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor?.sendEvent(
-      this.eventFactoryDefault.customEvent(key, this.checkedContext!, data, metricValue),
+      this.config.trackEventModifier(
+        this.eventFactoryDefault.customEvent(key, this.checkedContext!, data, metricValue),
+      ),
     );
   }
 

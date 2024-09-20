@@ -18,10 +18,8 @@ import {
 import { BrowserClient, LDClient } from './BrowserClient';
 import { BrowserOptions as LDOptions } from './options';
 
-// TODO: Export and use browser specific options.
 export {
   LDClient,
-  AutoEnvAttributes,
   LDFlagSet,
   LDContext,
   LDContextCommon,
@@ -36,10 +34,7 @@ export {
   LDEvaluationReason,
 };
 
-export function init(
-  clientSideId: string,
-  autoEnvAttributes: AutoEnvAttributes,
-  options?: LDOptions,
-): LDClient {
-  return new BrowserClient(clientSideId, autoEnvAttributes, options);
+export function init(clientSideId: string, options?: LDOptions): LDClient {
+  // AutoEnvAttributes are not supported yet in the browser SDK.
+  return new BrowserClient(clientSideId, AutoEnvAttributes.Disabled, options);
 }
