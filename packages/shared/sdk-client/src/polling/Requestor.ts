@@ -18,8 +18,6 @@ export class LDRequestError extends Error implements HttpErrorResponse {
 /**
  * Note: The requestor is implemented independently from polling such that it can be used to
  * make a one-off request.
- *
- * @internal
  */
 export default class Requestor {
   constructor(

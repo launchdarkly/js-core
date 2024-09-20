@@ -63,7 +63,7 @@ export default class LDClientImpl implements LDClient {
   private networkAvailable: boolean = true;
   private connectionMode: ConnectionMode;
   private baseHeaders: LDHeaders;
-  private dataManager: DataManager;
+  protected dataManager: DataManager;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -125,9 +125,7 @@ export default class LDClientImpl implements LDClient {
     });
 
     this.dataManager = dataManagerFactory(
-      this.platform,
       this.flagManager,
-      this.sdkKey,
       this.config,
       this.baseHeaders,
       this.emitter,

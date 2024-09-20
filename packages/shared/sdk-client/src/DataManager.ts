@@ -35,9 +35,7 @@ export interface DataManager {
 
 export interface DataManagerFactory {
   (
-    platform: Platform,
     flagManager: FlagManager,
-    credential: string,
     configuration: Configuration,
     baseHeaders: LDHeaders,
     emitter: LDEmitter,
@@ -46,23 +44,23 @@ export interface DataManagerFactory {
 }
 
 export class DefaultDataManager implements DataManager {
-  private updateProcessor?: subsystem.LDStreamProcessor;
-  private readonly logger: LDLogger;
-  private connectionMode: ConnectionMode = 'streaming';
-  private context?: Context;
+  protected updateProcessor?: subsystem.LDStreamProcessor;
+  protected readonly logger: LDLogger;
+  protected connectionMode: ConnectionMode = 'streaming';
+  protected context?: Context;
   // Not implemented yet.
-  private networkAvailable: boolean = true;
+  protected networkAvailable: boolean = true;
 
   constructor(
-    private readonly platform: Platform,
-    private readonly flagManager: FlagManager,
-    private readonly credential: string,
-    private readonly config: Configuration,
-    private readonly getPollingPaths: () => DataSourcePaths,
-    private readonly getStreamingPaths: () => DataSourcePaths,
-    private readonly baseHeaders: LDHeaders,
-    private readonly emitter: LDEmitter,
-    private readonly diagnosticsManager?: internal.DiagnosticsManager,
+    protected readonly platform: Platform,
+    protected readonly flagManager: FlagManager,
+    protected readonly credential: string,
+    protected readonly config: Configuration,
+    protected readonly getPollingPaths: () => DataSourcePaths,
+    protected readonly getStreamingPaths: () => DataSourcePaths,
+    protected readonly baseHeaders: LDHeaders,
+    protected readonly emitter: LDEmitter,
+    protected readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
     this.connectionMode = config.initialConnectionMode;
@@ -72,10 +70,10 @@ export class DefaultDataManager implements DataManager {
     this.networkAvailable = available;
   }
 
-  setConnectionMode(mode: ConnectionMode): Promise<void> {
+  async setConnectionMode(mode: ConnectionMode): Promise<void> {
     if (this.connectionMode === mode) {
       this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
-      return Promise.resolve();
+      return;
     }
 
     this.connectionMode = mode;
@@ -99,8 +97,6 @@ export class DefaultDataManager implements DataManager {
         );
         break;
     }
-
-    return Promise.resolve();
   }
 
   async identify(
@@ -140,13 +136,13 @@ export class DefaultDataManager implements DataManager {
     }
   }
 
-  private setupConnection(
+  protected setupConnection(
     context: Context,
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
   ) {
     const rawContext = Context.toLDContext(context)!;
-    console.log("RAW CONTEXT", JSON.stringify(rawContext, null, 2));
+
     this.updateProcessor?.close();
     switch (this.connectionMode) {
       case 'streaming':
@@ -161,7 +157,7 @@ export class DefaultDataManager implements DataManager {
     this.updateProcessor!.start();
   }
 
-  private createPollingProcessor(
+  protected createPollingProcessor(
     context: LDContext,
     checkedContext: Context,
     identifyResolve?: () => void,
@@ -202,7 +198,7 @@ export class DefaultDataManager implements DataManager {
     );
   }
 
-  private createStreamingProcessor(
+  protected createStreamingProcessor(
     context: LDContext,
     checkedContext: Context,
     identifyResolve?: () => void,
@@ -230,7 +226,7 @@ export class DefaultDataManager implements DataManager {
     );
   }
 
-  private createStreamListeners(
+  protected createStreamListeners(
     context: Context,
     identifyResolve?: () => void,
   ): Map<EventName, ProcessStreamResponse> {
