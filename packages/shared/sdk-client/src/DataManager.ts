@@ -12,8 +12,8 @@ import {
 
 import ConnectionMode from './api/ConnectionMode';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
-import Configuration from './configuration';
-import FlagManager from './flag-manager/FlagManager';
+import { Configuration } from './configuration/Configuration';
+import { FlagManager } from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
@@ -29,6 +29,8 @@ export interface DataManager {
   ): Promise<void>;
 
   setConnectionMode(mode: ConnectionMode): Promise<void>;
+
+  setNetworkAvailability(available: boolean): void;
 }
 
 export interface DataManagerFactory {
@@ -41,6 +43,7 @@ export interface DataManagerFactory {
     getStreamingPaths: () => DataSourcePaths,
     baseHeaders: LDHeaders,
     emitter: LDEmitter,
+    diagnosticsManager?: internal.DiagnosticsManager,
   ): DataManager;
 }
 
@@ -49,7 +52,8 @@ export class DefaultDataManager implements DataManager {
   private readonly logger: LDLogger;
   private connectionMode: ConnectionMode = 'streaming';
   private context?: Context;
-  private identifyTimeout?: number;
+  // Not implemented yet.
+  private networkAvailable: boolean = true;
 
   constructor(
     private readonly platform: Platform,
@@ -60,10 +64,14 @@ export class DefaultDataManager implements DataManager {
     private readonly getStreamingPaths: () => DataSourcePaths,
     private readonly baseHeaders: LDHeaders,
     private readonly emitter: LDEmitter,
-    private readonly diagnosticsManager: internal.DiagnosticsManager,
+    private readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
     this.connectionMode = config.initialConnectionMode;
+  }
+
+  setNetworkAvailability(available: boolean): void {
+    this.networkAvailable = available;
   }
 
   setConnectionMode(mode: ConnectionMode): Promise<void> {
@@ -102,14 +110,17 @@ export class DefaultDataManager implements DataManager {
     identifyReject: (err: Error) => void,
     context: Context,
     identifyOptions?: LDIdentifyOptions,
-  ) {
-    this.identifyTimeout = identifyOptions?.timeout;
+  ): Promise<void> {
+    const offline = this.connectionMode === 'offline';
+    // In offline mode we do not support waiting for results.
+    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
+
     const loadedFromCache = await this.flagManager.loadCached(context);
-    if (loadedFromCache && !identifyOptions?.waitForNetworkResults) {
+    if (loadedFromCache && !waitForNetworkResults) {
       this.logger.debug('Identify completing with cached flags');
       identifyResolve();
     }
-    if (loadedFromCache && identifyOptions?.waitForNetworkResults) {
+    if (loadedFromCache && waitForNetworkResults) {
       this.logger.debug(
         'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
       );

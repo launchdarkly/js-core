@@ -1,10 +1,10 @@
 import { ClientContext, internal, LDHeaders, Platform } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
+import ConfigurationImpl from '../configuration';
 
 const createEventProcessor = (
   clientSideID: string,
-  config: Configuration,
+  config: ConfigurationImpl,
   platform: Platform,
   baseHeaders: LDHeaders,
   diagnosticsManager?: internal.DiagnosticsManager,

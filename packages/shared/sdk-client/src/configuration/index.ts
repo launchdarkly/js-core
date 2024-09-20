@@ -1,3 +1,3 @@
-import Configuration from './Configuration';
+import ConfigurationImpl from './Configuration';
 
-export default Configuration;
+export default ConfigurationImpl;

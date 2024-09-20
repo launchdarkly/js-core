@@ -18,15 +18,53 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   trackEventModifier?: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
 }
 
-export default class Configuration {
+export interface Configuration {
+  readonly logger: ReturnType<typeof createSafeLogger>;
+  readonly baseUri: string;
+  readonly eventsUri: string;
+  readonly streamUri: string;
+  readonly maxCachedContexts: number;
+  readonly capacity: number;
+  readonly diagnosticRecordingInterval: number;
+  readonly flushInterval: number;
+  readonly streamInitialReconnectDelay: number;
+  readonly allAttributesPrivate: boolean;
+  readonly debug: boolean;
+  readonly diagnosticOptOut: boolean;
+  readonly sendEvents: boolean;
+  readonly sendLDHeaders: boolean;
+  readonly useReport: boolean;
+  readonly withReasons: boolean;
+  readonly privateAttributes: string[];
+  readonly initialConnectionMode: ConnectionMode;
+  readonly tags: ApplicationTags;
+  readonly applicationInfo?: {
+    id?: string;
+    version?: string;
+    name?: string;
+    versionName?: string;
+  };
+  readonly bootstrap?: LDFlagSet;
+  readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
+  readonly stream?: boolean;
+  readonly hash?: string;
+  readonly wrapperName?: string;
+  readonly wrapperVersion?: string;
+  readonly serviceEndpoints: ServiceEndpoints;
+  readonly pollInterval: number;
+  readonly userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent';
+  readonly trackEventModifier: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
+}
+
+export default class ConfigurationImpl implements Configuration {
   public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
   public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
 
   public readonly logger = createSafeLogger();
 
-  public readonly baseUri = Configuration.DEFAULT_POLLING;
+  public readonly baseUri = ConfigurationImpl.DEFAULT_POLLING;
   public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
-  public readonly streamUri = Configuration.DEFAULT_STREAM;
+  public readonly streamUri = ConfigurationImpl.DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
 
@@ -97,7 +135,7 @@ export default class Configuration {
     this.trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
   }
 
-  validateTypesAndNames(pristineOptions: LDOptions): string[] {
+  private validateTypesAndNames(pristineOptions: LDOptions): string[] {
     const errors: string[] = [];
 
     Object.entries(pristineOptions).forEach(([k, v]) => {

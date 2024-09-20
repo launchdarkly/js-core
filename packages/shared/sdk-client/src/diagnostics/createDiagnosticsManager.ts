@@ -1,11 +1,11 @@
 import { internal, Platform } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
+import ConfigurationImpl from '../configuration';
 import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
 
 const createDiagnosticsManager = (
   clientSideID: string,
-  config: Configuration,
+  config: ConfigurationImpl,
   platform: Platform,
 ) => {
   if (config.sendEvents && !config.diagnosticOptOut) {

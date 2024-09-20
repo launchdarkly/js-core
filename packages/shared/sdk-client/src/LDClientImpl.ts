@@ -22,10 +22,11 @@ import {
 import { ConnectionMode, LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
-import Configuration from './configuration';
+import ConfigurationImpl from './configuration';
 import { LDClientInternalOptions } from './configuration/Configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
+import { DataManager, DataManagerFactory } from './DataManager';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import {
   createErrorEvaluationDetail,
@@ -33,18 +34,16 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import FlagManager from './flag-manager/FlagManager';
+import DefaultFlagManager from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter, { EventName } from './LDEmitter';
-import PollingProcessor from './polling/PollingProcessor';
-import { StreamingProcessor } from './streaming';
 import { DataSourcePaths } from './streaming/DataSourceConfig';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 const { ClientMessages, ErrorKinds } = internal;
 
 export default class LDClientImpl implements LDClient {
-  private readonly config: Configuration;
+  private readonly config: ConfigurationImpl;
   private uncheckedContext?: LDContext;
   private checkedContext?: Context;
   private readonly diagnosticsManager?: internal.DiagnosticsManager;
@@ -58,12 +57,13 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
-  private flagManager: FlagManager;
+  private flagManager: DefaultFlagManager;
 
   private eventSendingEnabled: boolean = true;
   private networkAvailable: boolean = true;
   private connectionMode: ConnectionMode;
   private baseHeaders: LDHeaders;
+  private dataManager: DataManager;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -73,6 +73,7 @@ export default class LDClientImpl implements LDClient {
     public readonly autoEnvAttributes: AutoEnvAttributes,
     public readonly platform: Platform,
     options: LDOptions,
+    dataManagerFactory: DataManagerFactory,
     internalOptions?: LDClientInternalOptions,
   ) {
     if (!sdkKey) {
@@ -83,7 +84,7 @@ export default class LDClientImpl implements LDClient {
       throw new Error('Platform must implement Encoding because btoa is required.');
     }
 
-    this.config = new Configuration(options, internalOptions);
+    this.config = new ConfigurationImpl(options, internalOptions);
     this.connectionMode = this.config.initialConnectionMode;
     this.logger = this.config.logger;
 
@@ -95,7 +96,7 @@ export default class LDClientImpl implements LDClient {
       this.config.userAgentHeaderName,
     );
 
-    this.flagManager = new FlagManager(
+    this.flagManager = new DefaultFlagManager(
       this.platform,
       sdkKey,
       this.config.maxCachedContexts,
@@ -122,6 +123,18 @@ export default class LDClientImpl implements LDClient {
       const ldContext = Context.toLDContext(context);
       this.emitter.emit('change', ldContext, flagKeys);
     });
+
+    this.dataManager = dataManagerFactory(
+      this.platform,
+      this.flagManager,
+      this.sdkKey,
+      this.config,
+      this.getPollingPaths,
+      this.getStreamingPaths,
+      this.baseHeaders,
+      this.emitter,
+      this.diagnosticsManager,
+    );
   }
 
   /**
@@ -130,34 +143,9 @@ export default class LDClientImpl implements LDClient {
    * @param mode - One of supported {@link ConnectionMode}. Default is 'streaming'.
    */
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    if (this.connectionMode === mode) {
-      this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
-      return Promise.resolve();
-    }
-
-    this.connectionMode = mode;
-    this.logger.debug(`setConnectionMode ${mode}.`);
-
-    switch (mode) {
-      case 'offline':
-        this.updateProcessor?.close();
-        break;
-      case 'polling':
-      case 'streaming':
-        if (this.uncheckedContext) {
-          // identify will start the update processor
-          return this.identify(this.uncheckedContext, { timeout: this.identifyTimeout });
-        }
-
-        break;
-      default:
-        this.logger.warn(
-          `Unknown ConnectionMode: ${mode}. Only 'offline', 'streaming', and 'polling' are supported.`,
-        );
-        break;
-    }
-
-    return Promise.resolve();
+    // TODO: Set connection mode should have a timeout. It doesn't make sense for it to be the
+    // timeout from the most recent identify call. Or it needs to not be async.
+    return this.dataManager.setConnectionMode(mode);
   }
 
   /**
@@ -341,9 +329,6 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    // In offline mode we do not support waiting for results.
-    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !this.isOffline();
-
     if (identifyOptions?.timeout) {
       this.identifyTimeout = identifyOptions.timeout;
     }
@@ -377,110 +362,9 @@ export default class LDClientImpl implements LDClient {
     );
     this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
 
-    const loadedFromCache = await this.flagManager.loadCached(this.checkedContext);
-    if (loadedFromCache && !waitForNetworkResults) {
-      this.logger.debug('Identify completing with cached flags');
-      identifyResolve();
-    }
-    if (loadedFromCache && waitForNetworkResults) {
-      this.logger.debug(
-        'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
-      );
-    }
-
-    if (this.isOffline()) {
-      if (loadedFromCache) {
-        this.logger.debug('Offline identify - using cached flags.');
-      } else {
-        this.logger.debug(
-          'Offline identify - no cached flags, using defaults or already loaded flags.',
-        );
-        identifyResolve();
-      }
-    } else {
-      this.updateProcessor?.close();
-      switch (this.getConnectionMode()) {
-        case 'streaming':
-          this.createStreamingProcessor(context, checkedContext, identifyResolve, identifyReject);
-          break;
-        case 'polling':
-          this.createPollingProcessor(context, checkedContext, identifyResolve, identifyReject);
-          break;
-        default:
-          break;
-      }
-      this.updateProcessor!.start();
-    }
+    await this.dataManager.identify(context, identifyResolve, identifyReject);
 
     return identifyPromise;
-  }
-
-  private createPollingProcessor(
-    context: LDContext,
-    checkedContext: Context,
-    identifyResolve: any,
-    identifyReject: any,
-  ) {
-    this.updateProcessor = new PollingProcessor(
-      JSON.stringify(context),
-      {
-        credential: this.sdkKey,
-        serviceEndpoints: this.config.serviceEndpoints,
-        paths: this.getPollingPaths(),
-        baseHeaders: this.baseHeaders,
-        pollInterval: this.config.pollInterval,
-        withReasons: this.config.withReasons,
-        useReport: this.config.useReport,
-      },
-      this.platform.requests,
-      this.platform.encoding!,
-      async (flags) => {
-        this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
-
-        // mapping flags to item descriptors
-        const descriptors = Object.entries(flags).reduce(
-          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag };
-            return acc;
-          },
-          {},
-        );
-
-        await this.flagManager.init(checkedContext, descriptors).then(identifyResolve());
-      },
-      (err) => {
-        identifyReject(err);
-        this.emitter.emit('error', context, err);
-      },
-    );
-  }
-
-  private createStreamingProcessor(
-    context: LDContext,
-    checkedContext: Context,
-    identifyResolve: any,
-    identifyReject: any,
-  ) {
-    this.updateProcessor = new StreamingProcessor(
-      JSON.stringify(context),
-      {
-        credential: this.sdkKey,
-        serviceEndpoints: this.config.serviceEndpoints,
-        paths: this.getStreamingPaths(),
-        baseHeaders: this.baseHeaders,
-        initialRetryDelayMillis: this.config.streamInitialReconnectDelay * 1000,
-        withReasons: this.config.withReasons,
-        useReport: this.config.useReport,
-      },
-      this.createStreamListeners(checkedContext, identifyResolve),
-      this.platform.requests,
-      this.platform.encoding!,
-      this.diagnosticsManager,
-      (e) => {
-        identifyReject(e);
-        this.emitter.emit('error', context, e);
-      },
-    );
   }
 
   off(eventName: EventName, listener: Function): void {
@@ -653,6 +537,7 @@ export default class LDClientImpl implements LDClient {
   protected setNetworkAvailability(available: boolean): void {
     this.networkAvailable = available;
     // Not yet supported.
+    this.dataManager.setNetworkAvailability(available);
   }
 
   /**

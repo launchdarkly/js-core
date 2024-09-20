@@ -3,11 +3,16 @@ import {
   base64UrlEncode,
   BasicLogger,
   LDClient as CommonClient,
+  Configuration,
   DataSourcePaths,
+  DefaultDataManager,
   Encoding,
+  FlagManager,
   internal,
   LDClientImpl,
   LDContext,
+  LDEmitter,
+  LDHeaders,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -44,22 +49,50 @@ export class BrowserClient extends LDClientImpl {
     const platform = overridePlatform ?? new BrowserPlatform(logger);
     const ValidatedBrowserOptions = validateOptions(options, logger);
     const { eventUrlTransformer } = ValidatedBrowserOptions;
-    super(clientSideId, autoEnvAttributes, platform, filterToBaseOptions(options), {
-      analyticsEventPath: `/events/bulk/${clientSideId}`,
-      diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
-      includeAuthorizationHeader: false,
-      highTimeoutThreshold: 5,
-      userAgentHeaderName: 'x-launchdarkly-user-agent',
-      trackEventModifier: (event: internal.InputCustomEvent) =>
-        new internal.InputCustomEvent(
-          event.context,
-          event.key,
-          event.data,
-          event.metricValue,
-          event.samplingRatio,
-          eventUrlTransformer(window.location.href),
+    super(
+      clientSideId,
+      autoEnvAttributes,
+      platform,
+      filterToBaseOptions(options),
+      (
+        inPlatform: Platform,
+        flagManager: FlagManager,
+        credential: string,
+        configuration: Configuration,
+        getPollingPaths: () => DataSourcePaths,
+        getStreamingPaths: () => DataSourcePaths,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new DefaultDataManager(
+          inPlatform,
+          flagManager,
+          credential,
+          configuration,
+          getPollingPaths,
+          getStreamingPaths,
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
         ),
-    });
+      {
+        analyticsEventPath: `/events/bulk/${clientSideId}`,
+        diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
+        includeAuthorizationHeader: false,
+        highTimeoutThreshold: 5,
+        userAgentHeaderName: 'x-launchdarkly-user-agent',
+        trackEventModifier: (event: internal.InputCustomEvent) =>
+          new internal.InputCustomEvent(
+            event.context,
+            event.key,
+            event.data,
+            event.metricValue,
+            event.samplingRatio,
+            eventUrlTransformer(window.location.href),
+          ),
+      },
+    );
 
     if (ValidatedBrowserOptions.fetchGoals) {
       this.goalManager = new GoalManager(

@@ -6,13 +6,23 @@ import { DefaultFlagStore } from './FlagStore';
 import FlagUpdater, { FlagsChangeCallback } from './FlagUpdater';
 import { ItemDescriptor } from './ItemDescriptor';
 
+export interface FlagManager {
+  get(key: string): ItemDescriptor | undefined;
+  getAll(): { [key: string]: ItemDescriptor };
+  init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void>;
+  upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean>;
+  loadCached(context: Context): Promise<boolean>;
+  on(callback: FlagsChangeCallback): void;
+  off(callback: FlagsChangeCallback): void;
+}
+
 /**
  * Top level manager of flags for the client. LDClient should be using this
  * class and not any of the specific instances managed by it. Updates from
  * data sources should be directed to the [init] and [upsert] methods of this
  * class.
  */
-export default class FlagManager {
+export default class DefaultFlagManager implements FlagManager {
   private flagStore = new DefaultFlagStore();
   private flagUpdater: FlagUpdater;
   private flagPersistencePromise: Promise<FlagPersistence>;

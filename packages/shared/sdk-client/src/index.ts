@@ -1,5 +1,6 @@
 import { LDClientInternalOptions } from './configuration/Configuration';
 import LDClientImpl from './LDClientImpl';
+import LDEmitter from './LDEmitter';
 
 export * from '@launchdarkly/js-sdk-common';
 
@@ -17,6 +18,13 @@ export type {
   ConnectionMode,
 } from './api';
 
+export type { DataManager, DataManagerFactory } from './DataManager';
+export type { FlagManager } from './flag-manager/FlagManager';
+export type { Configuration } from './configuration/Configuration';
+
+export type { LDEmitter };
+
 export { DataSourcePaths } from './streaming';
+export { DefaultDataManager } from './DataManager';
 
 export { LDClientImpl, LDClientInternalOptions };

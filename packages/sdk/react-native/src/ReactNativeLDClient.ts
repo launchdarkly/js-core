@@ -3,12 +3,18 @@ import {
   AutoEnvAttributes,
   base64UrlEncode,
   BasicLogger,
+  type Configuration,
   ConnectionMode,
   DataSourcePaths,
+  DefaultDataManager,
   Encoding,
+  FlagManager,
   internal,
   LDClientImpl,
   type LDContext,
+  LDEmitter,
+  LDHeaders,
+  type Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
 import validateOptions, { filterToBaseOptions } from './options';
@@ -65,6 +71,28 @@ export default class ReactNativeLDClient extends LDClientImpl {
       autoEnvAttributes,
       createPlatform(logger, validatedRnOptions.storage),
       { ...filterToBaseOptions(options), logger },
+      (
+        platform: Platform,
+        flagManager: FlagManager,
+        credential: string,
+        configuration: Configuration,
+        getPollingPaths: () => DataSourcePaths,
+        getStreamingPaths: () => DataSourcePaths,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new DefaultDataManager(
+          platform,
+          flagManager,
+          credential,
+          configuration,
+          getPollingPaths,
+          getStreamingPaths,
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
       internalOptions,
     );
 
