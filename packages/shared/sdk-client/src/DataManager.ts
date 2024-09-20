@@ -111,6 +111,7 @@ export class DefaultDataManager implements DataManager {
     context: Context,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void> {
+    this.context = context;
     const offline = this.connectionMode === 'offline';
     // In offline mode we do not support waiting for results.
     const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
@@ -147,6 +148,7 @@ export class DefaultDataManager implements DataManager {
     identifyReject?: (err: Error) => void,
   ) {
     const rawContext = Context.toLDContext(context)!;
+    console.log("RAW CONTEXT", JSON.stringify(rawContext, null, 2));
     this.updateProcessor?.close();
     switch (this.connectionMode) {
       case 'streaming':

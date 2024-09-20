@@ -293,7 +293,11 @@ export default class LDClientImpl implements LDClient {
     };
   }
 
-  private createIdentifyPromise(timeout: number) {
+  private createIdentifyPromise(timeout: number): {
+    identifyPromise: Promise<void>;
+    identifyResolve: () => void;
+    identifyReject: (err: Error) => void;
+  } {
     let res: any;
     let rej: any;
 
@@ -362,7 +366,12 @@ export default class LDClientImpl implements LDClient {
     );
     this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
 
-    await this.dataManager.identify(context, identifyResolve, identifyReject);
+    await this.dataManager.identify(
+      identifyResolve,
+      identifyReject,
+      checkedContext,
+      identifyOptions,
+    );
 
     return identifyPromise;
   }
