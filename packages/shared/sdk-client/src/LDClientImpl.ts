@@ -129,8 +129,6 @@ export default class LDClientImpl implements LDClient {
       this.flagManager,
       this.sdkKey,
       this.config,
-      this.getPollingPaths,
-      this.getStreamingPaths,
       this.baseHeaders,
       this.emitter,
       this.diagnosticsManager,
@@ -261,36 +259,6 @@ export default class LDClientImpl implements LDClient {
     });
 
     return listeners;
-  }
-
-  protected getStreamingPaths(): DataSourcePaths {
-    return {
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with GET to work.',
-        );
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with REPORT to work.',
-        );
-      },
-    };
-  }
-
-  protected getPollingPaths(): DataSourcePaths {
-    return {
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with GET to work.',
-        );
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with REPORT to work.',
-        );
-      },
-    };
   }
 
   private createIdentifyPromise(timeout: number): {

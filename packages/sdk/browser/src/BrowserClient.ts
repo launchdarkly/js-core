@@ -59,8 +59,6 @@ export class BrowserClient extends LDClientImpl {
         flagManager: FlagManager,
         credential: string,
         configuration: Configuration,
-        getPollingPaths: () => DataSourcePaths,
-        getStreamingPaths: () => DataSourcePaths,
         baseHeaders: LDHeaders,
         emitter: LDEmitter,
         diagnosticsManager?: internal.DiagnosticsManager,
@@ -70,8 +68,22 @@ export class BrowserClient extends LDClientImpl {
           flagManager,
           credential,
           configuration,
-          getPollingPaths,
-          getStreamingPaths,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/eval/${clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/eval/${clientSideId}`;
+            },
+          }),
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/eval/${clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/eval/${clientSideId}`;
+            },
+          }),
           baseHeaders,
           emitter,
           diagnosticsManager,
@@ -138,34 +150,6 @@ export class BrowserClient extends LDClientImpl {
       // would return that promise.
       this.goalManager.initialize();
     }
-  }
-
-  private encodeContext(context: LDContext) {
-    return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
-  }
-
-  override getStreamingPaths(): DataSourcePaths {
-    const parentThis = this;
-    return {
-      pathGet(encoding: Encoding, _plainContextString: string): string {
-        return `/eval/${parentThis.clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return `/eval/${parentThis.clientSideId}`;
-      },
-    };
-  }
-
-  override getPollingPaths(): DataSourcePaths {
-    const parentThis = this;
-    return {
-      pathGet(encoding: Encoding, _plainContextString: string): string {
-        return `/sdk/evalx/${parentThis.clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return `/sdk/evalx/${parentThis.clientSideId}/context`;
-      },
-    };
   }
 
   override async identify(context: LDContext): Promise<void> {

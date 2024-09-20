@@ -76,8 +76,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
         flagManager: FlagManager,
         credential: string,
         configuration: Configuration,
-        getPollingPaths: () => DataSourcePaths,
-        getStreamingPaths: () => DataSourcePaths,
         baseHeaders: LDHeaders,
         emitter: LDEmitter,
         diagnosticsManager?: internal.DiagnosticsManager,
@@ -87,8 +85,22 @@ export default class ReactNativeLDClient extends LDClientImpl {
           flagManager,
           credential,
           configuration,
-          getPollingPaths,
-          getStreamingPaths,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+          }),
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/meval`;
+            },
+          }),
           baseHeaders,
           emitter,
           diagnosticsManager,
@@ -127,32 +139,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
   private baseSetConnectionMode(mode: ConnectionMode) {
     // Jest had problems with calls to super from nested arrow functions, so this method proxies the call.
     super.setConnectionMode(mode);
-  }
-
-  private encodeContext(context: LDContext) {
-    return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
-  }
-
-  override getStreamingPaths(): DataSourcePaths {
-    return {
-      pathGet(encoding: Encoding, _plainContextString: string): string {
-        return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return `/meval`;
-      },
-    };
-  }
-
-  override getPollingPaths(): DataSourcePaths {
-    return {
-      pathGet(encoding: Encoding, _plainContextString: string): string {
-        return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return `/msdk/evalx/context`;
-      },
-    };
   }
 
   override async setConnectionMode(mode: ConnectionMode): Promise<void> {

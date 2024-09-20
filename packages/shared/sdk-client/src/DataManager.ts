@@ -39,8 +39,6 @@ export interface DataManagerFactory {
     flagManager: FlagManager,
     credential: string,
     configuration: Configuration,
-    getPollingPaths: () => DataSourcePaths,
-    getStreamingPaths: () => DataSourcePaths,
     baseHeaders: LDHeaders,
     emitter: LDEmitter,
     diagnosticsManager?: internal.DiagnosticsManager,
