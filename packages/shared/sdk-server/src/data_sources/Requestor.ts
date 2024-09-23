@@ -1,7 +1,7 @@
 import {
   getPollingUri,
+  internal,
   LDHeaders,
-  LDStreamingError,
   Options,
   Requests,
   Response,
@@ -9,6 +9,10 @@ import {
 
 import { LDFeatureRequestor } from '../api/subsystems';
 import Configuration from '../options/Configuration';
+import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common/dist/internal';
+
+// TODO: revisit usage of internal and figure out best practice
+const { LDPollingError } = internal;
 
 /**
  * @internal
@@ -77,7 +81,7 @@ export default class Requestor implements LDFeatureRequestor {
     try {
       const { res, body } = await this.requestWithETagCache(this.uri, options);
       if (res.status !== 200 && res.status !== 304) {
-        const err = new LDStreamingError(`Unexpected status code: ${res.status}`, res.status);
+        const err = new LDPollingError(DataSourceErrorKind.ErrorResponse, `Unexpected status code: ${res.status}`, res.status);
         return cb(err, undefined);
       }
       return cb(undefined, res.status === 304 ? null : body);

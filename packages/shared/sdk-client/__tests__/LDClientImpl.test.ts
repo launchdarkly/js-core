@@ -1,6 +1,7 @@
 import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
+import { DataSourceState } from '../src/datasource/DataSourceStatus';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
@@ -31,6 +32,13 @@ describe('sdk-client object', () => {
   let defaultPutResponse: Flags;
   let mockPlatform: ReturnType<typeof createBasicPlatform>;
   let logger: ReturnType<typeof createLogger>;
+
+  const onDataSourceChangePromise = () =>
+    new Promise<string[]>((res) => {
+      ldc.on('dataSourceStatus', (_context: LDContext, changes: string[]) => {
+        res(changes);
+      });
+    });
 
   beforeEach(() => {
     mockPlatform = createBasicPlatform();
@@ -296,5 +304,65 @@ describe('sdk-client object', () => {
     await ldc.identify(context, { waitForNetworkResults: true, timeout: 5 });
 
     expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
+  });
+
+  test('data source status emits valid when successful initialization', async () => {
+    const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+
+    // need reference within test to run assertions against
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateEvents('put', [{ data: JSON.stringify(defaultPutResponse) }]);
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
+
+    const spyListener = jest.fn();
+    ldc.on('dataSourceStatus', spyListener);
+    const changePromise = onDataSourceChangePromise();
+    await ldc.identify(carContext);
+    await changePromise;
+
+    expect(spyListener).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        state: DataSourceState.Valid,
+        stateSince: expect.any(Number),
+        lastError: undefined,
+      }),
+    );
+  });
+
+  test('data source status emits shutdown when initialization encounters unrecoverable error', async () => {
+    const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+
+    // need reference within test to run assertions against
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateError({ status: 404, message: 'test-error' }); // unrecoverable error
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
+
+    const spyListener = jest.fn();
+    ldc.on('dataSourceStatus', spyListener);
+    const changePromise = onDataSourceChangePromise();
+
+    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    await changePromise;
+
+    expect(spyListener).toHaveBeenCalledTimes(1);
+    expect(spyListener).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        state: DataSourceState.Shutdown,
+        stateSince: expect.any(Number),
+        lastError: expect.anything(),
+      }),
+    );
   });
 });

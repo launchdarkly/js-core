@@ -89,8 +89,7 @@ describe('sdk-client storage', () => {
 
     expect(mockPlatform.storage.get).toHaveBeenCalledWith(flagStorageKey);
 
-    // 'change' should not have been emitted
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(emitter.emit).toHaveBeenCalledTimes(3);
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
     expect(emitter.emit).toHaveBeenNthCalledWith(
       2,
@@ -136,7 +135,7 @@ describe('sdk-client storage', () => {
     );
 
     // 'change' should not have been emitted
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(emitter.emit).toHaveBeenCalledTimes(3);
     expect(emitter.emit).toHaveBeenNthCalledWith(
       1,
       'change',
@@ -376,7 +375,7 @@ describe('sdk-client storage', () => {
     );
 
     // we expect one change from the local storage init, but no further change from the PUT
-    expect(emitter.emit).toHaveBeenCalledTimes(1);
+    expect(emitter.emit).toHaveBeenCalledTimes(2);
     expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
 
     // this is defaultPutResponse
@@ -448,7 +447,7 @@ describe('sdk-client storage', () => {
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(4);
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(emitter.emit).toHaveBeenCalledTimes(3);
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
   });
 
@@ -480,7 +479,7 @@ describe('sdk-client storage', () => {
       expect.stringContaining(JSON.stringify(patchResponse)),
     );
     expect(flagsInStorage).toHaveProperty('another-dev-test-flag');
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(emitter.emit).toHaveBeenCalledTimes(3);
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['another-dev-test-flag']);
   });
 
@@ -553,7 +552,7 @@ describe('sdk-client storage', () => {
       expect.stringContaining('dev-test-flag'),
     );
     expect(flagsInStorage['dev-test-flag']).toMatchObject({ ...deleteResponse, deleted: true });
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
+    expect(emitter.emit).toHaveBeenCalledTimes(3);
     expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
   });
 

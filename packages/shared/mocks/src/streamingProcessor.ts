@@ -1,11 +1,6 @@
-import type {
-  ClientContext,
-  EventName,
-  internal,
-  LDHeaders,
-  LDStreamingError,
-  ProcessStreamResponse,
-} from '@common';
+import type { ClientContext, EventName, internal, LDHeaders, ProcessStreamResponse } from '@common';
+
+type LDStreamingError = internal.LDStreamingError;
 
 export const MockStreamingProcessor = jest.fn();
 

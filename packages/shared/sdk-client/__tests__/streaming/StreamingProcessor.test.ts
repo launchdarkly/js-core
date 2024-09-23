@@ -4,13 +4,14 @@ import {
   EventName,
   Info,
   internal,
-  LDStreamingError,
   Platform,
   ProcessStreamResponse,
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
+
+const { DataSourceErrorKind, LDStreamingError } = internal;
 
 let logger: ReturnType<typeof createLogger>;
 
@@ -327,7 +328,7 @@ describe('given a stream processor', () => {
 
       expect(willRetry).toBeFalsy();
       expect(mockErrorHandler).toBeCalledWith(
-        new LDStreamingError(testError.message, testError.status),
+        new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
       );
       expect(logger.error).toBeCalledWith(
         expect.stringMatching(new RegExp(`${status}.*permanently`)),

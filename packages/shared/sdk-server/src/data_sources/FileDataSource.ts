@@ -1,6 +1,6 @@
 import {
   Filesystem,
-  LDFileDataSourceError,
+  internal,
   LDLogger,
   subsystem,
   VoidFunction,
@@ -14,6 +14,8 @@ import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import FileLoader from './FileLoader';
 
+// TODO: revisit usage of internal and figure out best practice
+type LDFileDataSourceError = internal.LDFileDataSourceError;
 export type FileDataSourceErrorHandler = (err: LDFileDataSourceError) => void;
 
 function makeFlagWithValue(key: string, value: any, version: number): Flag {

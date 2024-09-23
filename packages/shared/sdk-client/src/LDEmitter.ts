@@ -1,6 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-export type EventName = 'error' | 'change';
+// TODO: is one emitter with many event names what we want long term?
+export type EventName = 'error' | 'change' | 'dataSourceStatus';
 
 export default class LDEmitter {
   private listeners: Map<EventName, Function[]> = new Map();

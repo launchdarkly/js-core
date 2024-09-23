@@ -1,8 +1,8 @@
 import {
   httpErrorMessage,
+  internal,
   isHttpRecoverable,
   LDLogger,
-  LDPollingError,
   subsystem,
   VoidFunction,
 } from '@launchdarkly/js-sdk-common';
@@ -13,7 +13,9 @@ import { deserializePoll } from '../store';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import Requestor from './Requestor';
 
-export type PollingErrorHandler = (err: LDPollingError) => void;
+// TODO: revisit usage of internal and figure out best practice
+const { DataSourceErrorKind, LDPollingError } = internal;
+export type PollingErrorHandler = (err: internal.LDPollingError) => void;
 
 /**
  * @internal
@@ -46,7 +48,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     const reportJsonError = (data: string) => {
       this.logger?.error('Polling received invalid data');
       this.logger?.debug(`Invalid JSON follows: ${data}`);
-      this.errorHandler?.(new LDPollingError('Malformed JSON data in polling response'));
+      this.errorHandler?.(new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed JSON data in polling response'));
     };
 
     const startTime = Date.now();
@@ -61,7 +63,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
         if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
           this.logger?.error(message);
-          this.errorHandler?.(new LDPollingError(message, status));
+          this.errorHandler?.(new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status));
           // It is not recoverable, return and do not trigger another
           // poll.
           return;

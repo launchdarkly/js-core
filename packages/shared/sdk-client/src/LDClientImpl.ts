@@ -25,6 +25,9 @@ import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
+import DataSourceEventHandler from './datasource/DataSourceEventHandler';
+import DataSourceStatus from './datasource/DataSourceStatus';
+import DataSourceStatusManager from './datasource/DataSourceStatusManager';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import {
   createErrorEvaluationDetail,
@@ -33,7 +36,6 @@ import {
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import FlagManager from './flag-manager/FlagManager';
-import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter, { EventName } from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
 import { StreamingProcessor } from './streaming';
@@ -58,6 +60,8 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flagManager: FlagManager;
+  private dataSourceStatusManager: DataSourceStatusManager;
+  private dataSourceEventHandler: DataSourceEventHandler;
 
   private eventSendingEnabled: boolean = true;
   private networkAvailable: boolean = true;
@@ -100,6 +104,12 @@ export default class LDClientImpl implements LDClient {
       this.config.maxCachedContexts,
       this.config.logger,
     );
+    this.dataSourceStatusManager = new DataSourceStatusManager();
+    this.dataSourceEventHandler = new DataSourceEventHandler(
+      this.flagManager,
+      this.dataSourceStatusManager,
+      this.config.logger,
+    );
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
     this.eventProcessor = createEventProcessor(
       sdkKey,
@@ -121,6 +131,10 @@ export default class LDClientImpl implements LDClient {
       const ldContext = Context.toLDContext(context);
       this.emitter.emit('change', ldContext, flagKeys);
     });
+
+    this.dataSourceStatusManager.on((status: DataSourceStatus) => {
+      this.emitter.emit('dataSourceStatus', status);
+    });
   }
 
   /**
@@ -140,6 +154,7 @@ export default class LDClientImpl implements LDClient {
     switch (mode) {
       case 'offline':
         this.updateProcessor?.close();
+        this.dataSourceStatusManager.setOffline();
         break;
       case 'polling':
       case 'streaming':
@@ -188,6 +203,7 @@ export default class LDClientImpl implements LDClient {
     await this.flush();
     this.eventProcessor?.close();
     this.updateProcessor?.close();
+    this.dataSourceStatusManager.setShutdown();
     this.logger.debug('Closed event processor and data source.');
   }
 
@@ -220,50 +236,22 @@ export default class LDClientImpl implements LDClient {
 
     listeners.set('put', {
       deserializeData: JSON.parse,
-      processJson: async (evalResults: Flags) => {
-        this.logger.debug(`Stream PUT: ${Object.keys(evalResults)}`);
-
-        // mapping flags to item descriptors
-        const descriptors = Object.entries(evalResults).reduce(
-          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag };
-            return acc;
-          },
-          {},
-        );
-        await this.flagManager.init(context, descriptors).then(identifyResolve());
+      processJson: async (flags: Flags) => {
+        this.dataSourceEventHandler.handlePut(context, flags).then(identifyResolve());
       },
     });
 
     listeners.set('patch', {
       deserializeData: JSON.parse,
       processJson: async (patchFlag: PatchFlag) => {
-        this.logger.debug(`Stream PATCH ${JSON.stringify(patchFlag, null, 2)}`);
-        this.flagManager.upsert(context, patchFlag.key, {
-          version: patchFlag.version,
-          flag: patchFlag,
-        });
+        this.dataSourceEventHandler.handlePatch(context, patchFlag);
       },
     });
 
     listeners.set('delete', {
       deserializeData: JSON.parse,
       processJson: async (deleteFlag: DeleteFlag) => {
-        this.logger.debug(`Stream DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
-
-        this.flagManager.upsert(context, deleteFlag.key, {
-          version: deleteFlag.version,
-          flag: {
-            ...deleteFlag,
-            deleted: true,
-            // props below are set to sensible defaults. they are irrelevant
-            // because this flag has been deleted.
-            flagVersion: 0,
-            value: undefined,
-            variation: 0,
-            trackEvents: false,
-          },
-        });
+        this.dataSourceEventHandler.handleDelete(context, deleteFlag);
       },
     });
 
@@ -393,7 +381,9 @@ export default class LDClientImpl implements LDClient {
         identifyResolve();
       }
     } else {
+      // we don't update data source status in this path because we are about to start again
       this.updateProcessor?.close();
+
       switch (this.getConnectionMode()) {
         case 'streaming':
           this.createStreamingProcessor(context, checkedContext, identifyResolve, identifyReject);
@@ -429,23 +419,13 @@ export default class LDClientImpl implements LDClient {
       },
       this.platform.requests,
       this.platform.encoding!,
-      async (flags) => {
-        this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
-
-        // mapping flags to item descriptors
-        const descriptors = Object.entries(flags).reduce(
-          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag };
-            return acc;
-          },
-          {},
-        );
-
-        await this.flagManager.init(checkedContext, descriptors).then(identifyResolve());
+      async (flags: Flags) => {
+        this.dataSourceEventHandler.handlePut(checkedContext, flags);
       },
       (err) => {
-        identifyReject(err);
         this.emitter.emit('error', context, err);
+        this.dataSourceEventHandler.handlePollingError(err);
+        identifyReject(err);
       },
     );
   }
@@ -472,8 +452,9 @@ export default class LDClientImpl implements LDClient {
       this.platform.encoding!,
       this.diagnosticsManager,
       (e) => {
-        identifyReject(e);
         this.emitter.emit('error', context, e);
+        this.dataSourceEventHandler.handleStreamingError(e);
+        identifyReject(e);
       },
     );
   }
@@ -645,7 +626,7 @@ export default class LDClientImpl implements LDClient {
    */
   protected setNetworkAvailability(available: boolean): void {
     this.networkAvailable = available;
-    // Not yet supported.
+    // TODO: SDK-702 - Implement network availability behaviors
   }
 
   /**

@@ -7,7 +7,6 @@ import {
   HttpErrorResponse,
   internal,
   LDLogger,
-  LDStreamingError,
   ProcessStreamResponse,
   Requests,
   shouldRetry,
@@ -15,6 +14,9 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { StreamingDataSourceConfig } from './DataSourceConfig';
+
+// TODO: revisit usage of internal and figure out best practice
+const { DataSourceErrorKind, LDStreamingError } = internal;
 
 const reportJsonError = (
   type: string,
@@ -24,7 +26,9 @@ const reportJsonError = (
 ) => {
   logger?.error(`Stream received invalid data in "${type}" message`);
   logger?.debug(`Invalid JSON follows: ${data}`);
-  errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
+  errorHandler?.(
+    new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed JSON data in event stream'),
+  );
 };
 
 class StreamingProcessor implements subsystem.LDStreamProcessor {
@@ -94,7 +98,9 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
   private retryAndHandleError(err: HttpErrorResponse) {
     if (!shouldRetry(err)) {
       this.logConnectionResult(false);
-      this.errorHandler?.(new LDStreamingError(err.message, err.status));
+      this.errorHandler?.(
+        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status, false),
+      );
       this.logger?.error(httpErrorMessage(err, 'streaming request'));
       return false;
     }
@@ -162,7 +168,12 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
           }
           processJson(dataJson);
         } else {
-          this.errorHandler?.(new LDStreamingError('Unexpected payload from event stream'));
+          this.errorHandler?.(
+            new LDStreamingError(
+              DataSourceErrorKind.InvalidData,
+              'Unexpected payload from event stream',
+            ),
+          );
         }
       });
     });
