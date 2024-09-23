@@ -8,6 +8,9 @@ type DataSourceErrorKind = internal.DataSourceErrorKind;
 
 export type DataSourceStatusCallback = (status: DataSourceStatus) => void;
 
+/**
+ * Tracks the current data source status and emits updates when the status changes.
+ */
 export default class DataSourceStatusManager {
   private state: DataSourceState;
   private stateSinceMillis: number; // UNIX epoch timestamp in milliseconds
@@ -33,6 +36,12 @@ export default class DataSourceStatusManager {
     };
   }
 
+  /**
+   * Updates the state of the manager.
+   * 
+   * @param requestedState to track
+   * @param isError to indicate that the state update is a result of an error occurring.
+   */
   private updateState(requestedState: DataSourceState, isError = false) {
     const newState =
       requestedState === DataSourceState.Interrupted && this.state === DataSourceState.Initializing // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
@@ -50,31 +59,51 @@ export default class DataSourceStatusManager {
     }
   }
 
-  off(listener: DataSourceStatusCallback) {
-    this.emitter.off('dataSourceStatus', listener);
-  }
-
+  /**
+   * @param listener that will be registered to receive updates
+   */
   on(listener: DataSourceStatusCallback) {
     this.emitter.on('dataSourceStatus', listener);
   }
 
+  /**
+   * @param listener that will be unregisted and will no longer receive updates
+   */
+  off(listener: DataSourceStatusCallback) {
+    this.emitter.off('dataSourceStatus', listener);
+  }
+
+  /**
+   * Sets the state to {@link DataSourceState.Valid}
+   */
   setValid() {
     this.updateState(DataSourceState.Valid);
   }
 
+  /**
+   * Sets the state to {@link DataSourceState.SetOffline}
+   */
   setOffline() {
     this.updateState(DataSourceState.SetOffline);
   }
 
-  // TODO: SDK-702 - Implement network availability behaviors
-  // setNetworkUnavailable() {
-  //   this.updateState(DataSourceState.NetworkUnavailable);
-  // }
-
+  /**
+   * Sets the state to {@link DataSourceState.Shutdown}
+   */
   setShutdown() {
     this.updateState(DataSourceState.Shutdown);
   }
 
+  /**
+   * Reports a datasource error to this manager. Since the {@link DataSourceStatus} includes error
+   * information, it is possible that that a {@link DataSourceStatus} update is emitted with
+   * the same {@link DataSourceState}.
+   *
+   * @param kind of the error
+   * @param message for the error
+   * @param statusCode of the error if there was one
+   * @param recoverable to indicate that the error is anticipated to be recoverable
+   */
   setError(
     kind: DataSourceErrorKind,
     message: string,
@@ -90,4 +119,9 @@ export default class DataSourceStatusManager {
     this.errorInfo = errorInfo;
     this.updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Shutdown, true);
   }
+
+  // TODO: SDK-702 - Implement network availability behaviors
+  // setNetworkUnavailable() {
+  //   this.updateState(DataSourceState.NetworkUnavailable);
+  // }
 }

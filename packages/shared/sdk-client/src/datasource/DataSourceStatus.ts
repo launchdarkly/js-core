@@ -28,15 +28,12 @@ export default interface DataSourceStatus {
    * {@link DataSourceStatus.Initializing} or an invalid state such as
    * {@link DataSourceState.Interrupted}.
    *
-   * - For {@linkDataSourceState.interrupted}, it is the time that the data source
+   * - For {@link DataSourceState.interrupted}, it is the time that the data source
    * most recently entered an error state, after previously having been
-   * {@linkDataSourceState.valid}.
+   * {@link DataSourceState.valid}.
    *
-   * For {@linkDataSourceState.shutdown}, it is the time that the data source
+   * For {@link DataSourceState.Shutdown}, it is the time that the data source
    * encountered an unrecoverable error or that the datasource was explicitly shut down.
-   *
-   * For {@linkDataSourceState.networkUnavailable} it is the time that the SDK switched
-   * the data source off due to network unavailability.
    */
   readonly stateSince: number;
 
