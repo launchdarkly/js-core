@@ -38,7 +38,7 @@ export default class DataSourceStatusManager {
 
   /**
    * Updates the state of the manager.
-   * 
+   *
    * @param requestedState to track
    * @param isError to indicate that the state update is a result of an error occurring.
    */

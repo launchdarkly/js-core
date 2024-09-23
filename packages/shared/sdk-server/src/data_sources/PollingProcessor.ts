@@ -48,7 +48,12 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     const reportJsonError = (data: string) => {
       this.logger?.error('Polling received invalid data');
       this.logger?.debug(`Invalid JSON follows: ${data}`);
-      this.errorHandler?.(new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed JSON data in polling response'));
+      this.errorHandler?.(
+        new LDPollingError(
+          DataSourceErrorKind.InvalidData,
+          'Malformed JSON data in polling response',
+        ),
+      );
     };
 
     const startTime = Date.now();
@@ -63,7 +68,9 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
         if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
           this.logger?.error(message);
-          this.errorHandler?.(new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status));
+          this.errorHandler?.(
+            new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
+          );
           // It is not recoverable, return and do not trigger another
           // poll.
           return;
