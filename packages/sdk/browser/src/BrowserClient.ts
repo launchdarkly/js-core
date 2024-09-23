@@ -15,6 +15,7 @@ import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
+import { LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common/dist/api/LDIdentifyOptions';
 
 /**
  * We are not supporting dynamically setting the connection mode on the LDClient.
@@ -135,8 +136,8 @@ export class BrowserClient extends LDClientImpl {
     };
   }
 
-  override async identify(context: LDContext): Promise<void> {
-    await super.identify(context);
+  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
+    await super.identify(context, identifyOptions);
     this.goalManager?.startTracking();
   }
 }
