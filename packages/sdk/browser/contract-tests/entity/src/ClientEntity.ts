@@ -65,6 +65,8 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     };
   }
 
+  cf.fetchGoals = false;
+
   return cf;
 }
 
