@@ -1,7 +1,5 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import ConnectionMode from './ConnectionMode';
-
 export interface LDOptions {
   /**
    * Whether all context attributes (except the context key) should be marked as private, and

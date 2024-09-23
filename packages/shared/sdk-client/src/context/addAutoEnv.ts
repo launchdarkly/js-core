@@ -103,7 +103,11 @@ export const addDeviceInfo = async (platform: Platform) => {
   return undefined;
 };
 
-export const addAutoEnv = async (context: LDContext, platform: Platform, config: ConfigurationImpl) => {
+export const addAutoEnv = async (
+  context: LDContext,
+  platform: Platform,
+  config: ConfigurationImpl,
+) => {
   // LDUser is not supported for auto env reporting
   if (isLegacyUser(context)) {
     return context as LDUser;
