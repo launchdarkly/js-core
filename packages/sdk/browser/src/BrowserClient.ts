@@ -10,12 +10,12 @@ import {
   LDContext,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
+import { LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common/dist/api/LDIdentifyOptions';
 
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
-import { LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common/dist/api/LDIdentifyOptions';
 
 /**
  * We are not supporting dynamically setting the connection mode on the LDClient.
