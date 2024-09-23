@@ -13,12 +13,12 @@ import {
   LDHeaders,
 } from '@launchdarkly/js-client-sdk-common';
 
+import MobileDataManager from './MobileDataManager';
 import validateOptions, { filterToBaseOptions } from './options';
 import createPlatform from './platform';
 import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
 import LDOptions from './RNOptions';
 import RNStateDetector from './RNStateDetector';
-import MobileDataManager from './MobileDataManager';
 
 /**
  * The React Native LaunchDarkly client. Instantiate this class to create an
@@ -62,7 +62,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
     };
 
     const validatedRnOptions = validateOptions(options, logger);
-    const platform = createPlatform(logger, validatedRnOptions.storage)
+    const platform = createPlatform(logger, validatedRnOptions.storage);
 
     super(
       sdkKey,

@@ -4,7 +4,6 @@ import {
   BasicLogger,
   LDClient as CommonClient,
   Configuration,
-  DefaultDataManager,
   Encoding,
   FlagManager,
   internal,
@@ -53,6 +52,7 @@ export class BrowserClient extends LDClientImpl {
     const baseUrl = options.baseUri ?? 'https://clientsdk.launchdarkly.com';
 
     const platform = overridePlatform ?? new BrowserPlatform(logger);
+<<<<<<< HEAD
     const validatedBrowserOptions = validateOptions(options, logger);
     const { eventUrlTransformer } = validatedBrowserOptions;
     super(
@@ -110,6 +110,26 @@ export class BrowserClient extends LDClientImpl {
           ),
       },
     );
+=======
+    const ValidatedBrowserOptions = validateOptions(options, logger);
+    const { eventUrlTransformer } = ValidatedBrowserOptions;
+    super(clientSideId, autoEnvAttributes, platform, filterToBaseOptions(options), {
+      analyticsEventPath: `/events/bulk/${clientSideId}`,
+      diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
+      includeAuthorizationHeader: false,
+      highTimeoutThreshold: 5,
+      userAgentHeaderName: 'x-launchdarkly-user-agent',
+      trackEventModifier: (event: internal.InputCustomEvent) =>
+        new internal.InputCustomEvent(
+          event.context,
+          event.key,
+          event.data,
+          event.metricValue,
+          event.samplingRatio,
+          eventUrlTransformer(window.location.href),
+        ),
+    });
+>>>>>>> origin/rlamb/fix-browser-contract-test-build
 
     if (validatedBrowserOptions.fetchGoals) {
       this.goalManager = new GoalManager(
@@ -171,5 +191,24 @@ export class BrowserClient extends LDClientImpl {
     }
   }
 
+<<<<<<< HEAD
   // TODO: Setup event listeners.
+=======
+  override getPollingPaths(): DataSourcePaths {
+    const parentThis = this;
+    return {
+      pathGet(encoding: Encoding, _plainContextString: string): string {
+        return `/sdk/evalx/${parentThis.clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return `/sdk/evalx/${parentThis.clientSideId}/context`;
+      },
+    };
+  }
+
+  override async identify(context: LDContext): Promise<void> {
+    await super.identify(context);
+    this.goalManager?.startTracking();
+  }
+>>>>>>> origin/rlamb/fix-browser-contract-test-build
 }

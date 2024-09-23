@@ -3,7 +3,6 @@ import {
   clone,
   Context,
   defaultHeaders,
-  Encoding,
   internal,
   LDClientError,
   LDContext,
@@ -37,7 +36,6 @@ import EventFactory from './events/EventFactory';
 import DefaultFlagManager from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter, { EventName } from './LDEmitter';
-import { DataSourcePaths } from './streaming/DataSourceConfig';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 const { ClientMessages, ErrorKinds } = internal;
