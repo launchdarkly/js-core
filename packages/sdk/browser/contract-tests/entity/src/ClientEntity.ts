@@ -1,10 +1,4 @@
-import {
-  AutoEnvAttributes,
-  init,
-  LDClient,
-  LDLogger,
-  LDOptions,
-} from '@launchdarkly/js-client-sdk';
+import { init, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
 
 import { CommandParams, CommandType, ValueType } from './CommandParams';
 import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
@@ -205,11 +199,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     options.configuration.clientSide?.initialUser ||
     options.configuration.clientSide?.initialContext ||
     makeDefaultInitialContext();
-  const client = init(
-    options.configuration.credential || 'unknown-env-id',
-    AutoEnvAttributes.Disabled, // TODO: Determine capability.
-    sdkConfig,
-  );
+  const client = init(options.configuration.credential || 'unknown-env-id', sdkConfig);
   let failed = false;
   try {
     await Promise.race([
