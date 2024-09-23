@@ -52,6 +52,8 @@ export default class BrowserDataManager extends DefaultDataManager {
     const plainContextString = JSON.stringify(Context.toLDContext(context));
     const requestor = this.getRequestor(plainContextString);
 
+    // TODO: Handle wait for network results in a meaningful way. SDK-707
+
     try {
       const payload = await requestor.requestPayload();
       const listeners = this.createStreamListeners(context, identifyResolve);
