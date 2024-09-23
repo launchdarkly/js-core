@@ -1,10 +1,23 @@
-import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
+import {
+  AutoEnvAttributes,
+  base64UrlEncode,
+  clone,
+  Encoding,
+  Hasher,
+  internal,
+  LDContext,
+  LDHeaders,
+} from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
+import { Configuration } from '../src/configuration/Configuration';
+import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDClientImpl from '../src/LDClientImpl';
+import LDEmitter from '../src/LDEmitter';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import TestDataManager from './TestDataManager';
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
@@ -43,15 +56,6 @@ describe('sdk-client object', () => {
     };
     mockPlatform.crypto.createHash.mockReturnValue(hasher);
 
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path/get';
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path/report';
-      },
-    });
-
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
     mockPlatform.requests.getEventSourceCapabilities.mockImplementation(() => ({
       readTimeout: true,
@@ -66,10 +70,47 @@ describe('sdk-client object', () => {
       },
     );
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new TestDataManager(
+          mockPlatform,
+          flagManager,
+          testSdkKey,
+          configuration,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+          }),
+          () => ({
+            pathGet(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path/get';
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path/report';
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
+    );
   });
 
   afterEach(async () => {
@@ -135,11 +176,48 @@ describe('sdk-client object', () => {
     });
     mockPlatform.requests.createEventSource = mockCreateEventSource;
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-      withReasons: true,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+        withReasons: true,
+      },
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new TestDataManager(
+          mockPlatform,
+          flagManager,
+          testSdkKey,
+          configuration,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+          }),
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/meval`;
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
+    );
 
     await ldc.identify(carContext);
 
@@ -160,11 +238,48 @@ describe('sdk-client object', () => {
     });
     mockPlatform.requests.createEventSource = mockCreateEventSource;
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-      useReport: true,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+        useReport: true,
+      },
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new TestDataManager(
+          mockPlatform,
+          flagManager,
+          testSdkKey,
+          configuration,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+          }),
+          () => ({
+            pathGet(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path/get';
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path/report';
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
+    );
 
     await ldc.identify(carContext);
 
@@ -179,10 +294,47 @@ describe('sdk-client object', () => {
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Disabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new TestDataManager(
+          mockPlatform,
+          flagManager,
+          testSdkKey,
+          configuration,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+          }),
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/meval`;
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
+    );
 
     await ldc.identify(carContext);
     const c = ldc.getContext();

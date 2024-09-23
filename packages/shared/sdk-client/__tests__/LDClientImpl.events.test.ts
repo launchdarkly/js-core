@@ -1,10 +1,12 @@
 import {
   AutoEnvAttributes,
+  base64UrlEncode,
   ClientContext,
   clone,
   Encoding,
   internal,
   LDContext,
+  LDHeaders,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 import {
@@ -13,10 +15,14 @@ import {
   MockEventProcessor,
 } from '@launchdarkly/private-js-mocks';
 
+import { Configuration } from '../src/configuration/Configuration';
+import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDClientImpl from '../src/LDClientImpl';
+import LDEmitter from '../src/LDEmitter';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import TestDataManager from './TestDataManager';
 
 type InputCustomEvent = internal.InputCustomEvent;
 type InputIdentifyEvent = internal.InputIdentifyEvent;
@@ -80,18 +86,46 @@ describe('sdk-client object', () => {
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-    });
-
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
       },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-    });
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new TestDataManager(
+          mockPlatform,
+          flagManager,
+          testSdkKey,
+          configuration,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+          }),
+          () => ({
+            pathGet(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path';
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path';
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
+    );
   });
 
   afterEach(() => {

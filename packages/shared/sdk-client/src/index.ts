@@ -27,7 +27,7 @@ export type { Configuration } from './configuration/Configuration';
 export type { LDEmitter };
 
 export { DataSourcePaths } from './streaming';
-export { BaseDataManager as DefaultDataManager } from './DataManager';
+export { BaseDataManager } from './DataManager';
 export { Requestor };
 
 export { LDClientImpl, LDClientInternalOptions };

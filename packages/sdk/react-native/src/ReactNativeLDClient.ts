@@ -81,6 +81,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
           flagManager,
           sdkKey,
           configuration,
+          validatedRnOptions,
           () => ({
             pathGet(encoding: Encoding, _plainContextString: string): string {
               return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
@@ -103,6 +104,8 @@ export default class ReactNativeLDClient extends LDClientImpl {
         ),
       internalOptions,
     );
+
+    this.setEventSendingEnabled(!this.isOffline(), false);
 
     const dataManager = this.dataManager as MobileDataManager;
     const destination: ConnectionDestination = {

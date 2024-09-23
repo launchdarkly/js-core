@@ -159,7 +159,7 @@ export class BrowserClient extends LDClientImpl {
     }
   }
 
-  override async identify(context: LDContext, identifyOptions: LDIdentifyOptions): Promise<void> {
+  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     await super.identify(context, identifyOptions);
     this.goalManager?.startTracking();
   }

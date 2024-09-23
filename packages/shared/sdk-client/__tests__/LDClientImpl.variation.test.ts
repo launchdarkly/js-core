@@ -1,16 +1,23 @@
 import {
   AutoEnvAttributes,
+  base64UrlEncode,
   clone,
   Context,
   Encoding,
+  internal,
   LDContext,
+  LDHeaders,
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
+import { Configuration } from '../src/configuration/Configuration';
+import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDClientImpl from '../src/LDClientImpl';
+import LDEmitter from '../src/LDEmitter';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import TestDataManager from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;
@@ -31,14 +38,6 @@ let defaultPutResponse: Flags;
 describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-    });
 
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
     mockPlatform.requests.createEventSource.mockImplementation(
@@ -49,10 +48,47 @@ describe('sdk-client object', () => {
       },
     );
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Disabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new TestDataManager(
+          mockPlatform,
+          flagManager,
+          testSdkKey,
+          configuration,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+          }),
+          () => ({
+            pathGet(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path';
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return '/stream/path';
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
+    );
   });
 
   afterEach(() => {

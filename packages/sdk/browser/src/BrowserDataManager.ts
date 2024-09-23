@@ -1,8 +1,8 @@
 import {
+  BaseDataManager,
   Configuration,
   Context,
   DataSourcePaths,
-  DefaultDataManager,
   FlagManager,
   getPollingUri,
   internal,
@@ -15,7 +15,7 @@ import {
 
 import { ValidatedOptions } from './options';
 
-export default class BrowserDataManager extends DefaultDataManager {
+export default class BrowserDataManager extends BaseDataManager {
   constructor(
     platform: Platform,
     flagManager: FlagManager,
@@ -48,7 +48,9 @@ export default class BrowserDataManager extends DefaultDataManager {
     _identifyOptions?: LDIdentifyOptions,
   ): Promise<void> {
     this.context = context;
-    await this.flagManager.loadCached(context);
+    if (await this.flagManager.loadCached(context)) {
+      this.logger.debug('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
+    }
     const plainContextString = JSON.stringify(Context.toLDContext(context));
     const requestor = this.getRequestor(plainContextString);
 

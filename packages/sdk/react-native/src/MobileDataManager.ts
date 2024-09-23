@@ -1,14 +1,49 @@
 import {
+  BaseDataManager,
+  Configuration,
   ConnectionMode,
   Context,
-  DefaultDataManager,
+  DataSourcePaths,
+  FlagManager,
+  internal,
+  LDEmitter,
+  LDHeaders,
   LDIdentifyOptions,
+  Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
-export default class MobileDataManager extends DefaultDataManager {
+import { ValidatedOptions } from './options';
+
+export default class MobileDataManager extends BaseDataManager {
   // Not implemented yet.
   protected networkAvailable: boolean = true;
   protected connectionMode: ConnectionMode = 'streaming';
+
+  constructor(
+    platform: Platform,
+    flagManager: FlagManager,
+    credential: string,
+    config: Configuration,
+    private readonly rnConfig: ValidatedOptions,
+    getPollingPaths: () => DataSourcePaths,
+    getStreamingPaths: () => DataSourcePaths,
+    baseHeaders: LDHeaders,
+    emitter: LDEmitter,
+    diagnosticsManager?: internal.DiagnosticsManager,
+  ) {
+    super(
+      platform,
+      flagManager,
+      credential,
+      config,
+      getPollingPaths,
+      getStreamingPaths,
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+    this.connectionMode = rnConfig.initialConnectionMode;
+  }
 
   override async identify(
     identifyResolve: () => void,

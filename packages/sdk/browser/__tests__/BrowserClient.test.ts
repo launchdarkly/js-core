@@ -141,7 +141,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        stream: false,
         logger,
         diagnosticOptOut: true,
       },
@@ -169,7 +169,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        stream: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>
@@ -202,7 +202,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        stream: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>
@@ -245,7 +245,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        stream: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>
