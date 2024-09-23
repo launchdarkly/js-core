@@ -1,10 +1,4 @@
-import {
-  AutoEnvAttributes,
-  init,
-  LDClient,
-  LDLogger,
-  LDOptions,
-} from '@launchdarkly/js-client-sdk';
+import { init, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
 
 import { CommandParams, CommandType, ValueType } from './CommandParams';
 import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
@@ -35,7 +29,6 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   }
 
   if (options.polling) {
-    cf.initialConnectionMode = 'polling';
     if (options.polling.baseUri) {
       cf.baseUri = options.polling.baseUri;
     }
@@ -48,7 +41,7 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     if (options.streaming.baseUri) {
       cf.streamUri = options.streaming.baseUri;
     }
-    cf.initialConnectionMode = 'streaming';
+    cf.stream = true;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
   }
 
@@ -205,11 +198,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     options.configuration.clientSide?.initialUser ||
     options.configuration.clientSide?.initialContext ||
     makeDefaultInitialContext();
-  const client = init(
-    options.configuration.credential || 'unknown-env-id',
-    AutoEnvAttributes.Disabled, // TODO: Determine capability.
-    sdkConfig,
-  );
+  const client = init(options.configuration.credential || 'unknown-env-id', sdkConfig);
   let failed = false;
   try {
     await Promise.race([

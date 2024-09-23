@@ -43,7 +43,7 @@ export interface DataManagerFactory {
   ): DataManager;
 }
 
-export class DefaultDataManager implements DataManager {
+export abstract class BaseDataManager implements DataManager {
   protected updateProcessor?: subsystem.LDStreamProcessor;
   protected readonly logger: LDLogger;
   protected connectionMode: ConnectionMode = 'streaming';
@@ -99,42 +99,12 @@ export class DefaultDataManager implements DataManager {
     }
   }
 
-  async identify(
+  abstract identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
     context: Context,
     identifyOptions?: LDIdentifyOptions,
-  ): Promise<void> {
-    this.context = context;
-    const offline = this.connectionMode === 'offline';
-    // In offline mode we do not support waiting for results.
-    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
-
-    const loadedFromCache = await this.flagManager.loadCached(context);
-    if (loadedFromCache && !waitForNetworkResults) {
-      this.logger.debug('Identify completing with cached flags');
-      identifyResolve();
-    }
-    if (loadedFromCache && waitForNetworkResults) {
-      this.logger.debug(
-        'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
-      );
-    }
-
-    if (this.connectionMode === 'offline') {
-      if (loadedFromCache) {
-        this.logger.debug('Offline identify - using cached flags.');
-      } else {
-        this.logger.debug(
-          'Offline identify - no cached flags, using defaults or already loaded flags.',
-        );
-        identifyResolve();
-      }
-    } else {
-      // Context has been validated in LDClientImpl.identify
-      this.setupConnection(context, identifyResolve, identifyReject);
-    }
-  }
+  ): Promise<void>;
 
   protected setupConnection(
     context: Context,

@@ -40,6 +40,7 @@ export default class BrowserDataManager extends DefaultDataManager {
       diagnosticsManager,
     );
   }
+
   override async identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
