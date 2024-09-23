@@ -3,6 +3,7 @@ import {
   createSafeLogger,
   internal,
   LDFlagSet,
+  LDLogger,
   NumberWithMinimum,
   OptionMessages,
   ServiceEndpoints,
@@ -19,7 +20,7 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
 }
 
 export interface Configuration {
-  readonly logger: ReturnType<typeof createSafeLogger>;
+  readonly logger: LDLogger;
   readonly baseUri: string;
   readonly eventsUri: string;
   readonly streamUri: string;
@@ -59,7 +60,7 @@ export default class ConfigurationImpl implements Configuration {
   public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
   public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
 
-  public readonly logger = createSafeLogger();
+  public readonly logger: LDLogger = createSafeLogger();
 
   public readonly baseUri = ConfigurationImpl.DEFAULT_POLLING;
   public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
