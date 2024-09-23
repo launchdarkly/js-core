@@ -10,7 +10,6 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import ConnectionMode from './api/ConnectionMode';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration } from './configuration/Configuration';
 import { FlagManager } from './flag-manager/FlagManager';
@@ -27,10 +26,6 @@ export interface DataManager {
     context: Context,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void>;
-
-  setConnectionMode(mode: ConnectionMode): Promise<void>;
-
-  setNetworkAvailability(available: boolean): void;
 }
 
 export interface DataManagerFactory {
@@ -46,10 +41,7 @@ export interface DataManagerFactory {
 export abstract class BaseDataManager implements DataManager {
   protected updateProcessor?: subsystem.LDStreamProcessor;
   protected readonly logger: LDLogger;
-  protected connectionMode: ConnectionMode = 'streaming';
   protected context?: Context;
-  // Not implemented yet.
-  protected networkAvailable: boolean = true;
 
   constructor(
     protected readonly platform: Platform,
@@ -63,40 +55,6 @@ export abstract class BaseDataManager implements DataManager {
     protected readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
-    this.connectionMode = config.initialConnectionMode;
-  }
-
-  setNetworkAvailability(available: boolean): void {
-    this.networkAvailable = available;
-  }
-
-  async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    if (this.connectionMode === mode) {
-      this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
-      return;
-    }
-
-    this.connectionMode = mode;
-    this.logger.debug(`setConnectionMode ${mode}.`);
-
-    switch (mode) {
-      case 'offline':
-        this.updateProcessor?.close();
-        break;
-      case 'polling':
-      case 'streaming':
-        if (this.context) {
-          // identify will start the update processor
-          this.setupConnection(this.context);
-        }
-
-        break;
-      default:
-        this.logger.warn(
-          `Unknown ConnectionMode: ${mode}. Only 'offline', 'streaming', and 'polling' are supported.`,
-        );
-        break;
-    }
   }
 
   abstract identify(
@@ -105,27 +63,6 @@ export abstract class BaseDataManager implements DataManager {
     context: Context,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void>;
-
-  protected setupConnection(
-    context: Context,
-    identifyResolve?: () => void,
-    identifyReject?: (err: Error) => void,
-  ) {
-    const rawContext = Context.toLDContext(context)!;
-
-    this.updateProcessor?.close();
-    switch (this.connectionMode) {
-      case 'streaming':
-        this.createStreamingProcessor(rawContext, context, identifyResolve, identifyReject);
-        break;
-      case 'polling':
-        this.createPollingProcessor(rawContext, context, identifyResolve, identifyReject);
-        break;
-      default:
-        break;
-    }
-    this.updateProcessor!.start();
-  }
 
   protected createPollingProcessor(
     context: LDContext,

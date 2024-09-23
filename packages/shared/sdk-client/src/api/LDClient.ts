@@ -76,14 +76,6 @@ export interface LDClient {
   flush(): Promise<{ error?: Error; result: boolean }>;
 
   /**
-   * Gets the SDK connection mode.
-   *
-   * @remarks
-   * Possible values are offline or streaming. See {@link ConnectionMode} for more information.
-   */
-  getConnectionMode(): ConnectionMode;
-
-  /**
    * Returns the client's current context.
    *
    * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
@@ -230,13 +222,6 @@ export interface LDClient {
    *   receive parameters, depending on the type of event.
    */
   on(key: string, callback: (...args: any[]) => void): void;
-
-  /**
-   * Sets the SDK connection mode.
-   *
-   * @param mode - One of supported {@link ConnectionMode}. By default, the SDK uses streaming.
-   */
-  setConnectionMode(mode: ConnectionMode): void;
 
   /**
    * Determines the string variation of a feature flag.

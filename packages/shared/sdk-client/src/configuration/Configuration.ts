@@ -9,7 +9,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { ConnectionMode, type LDOptions } from '../api';
+import { type LDOptions } from '../api';
 import validators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
@@ -36,7 +36,6 @@ export interface Configuration {
   readonly useReport: boolean;
   readonly withReasons: boolean;
   readonly privateAttributes: string[];
-  readonly initialConnectionMode: ConnectionMode;
   readonly tags: ApplicationTags;
   readonly applicationInfo?: {
     id?: string;
@@ -83,8 +82,6 @@ export default class ConfigurationImpl implements Configuration {
   public readonly withReasons: boolean = false;
 
   public readonly privateAttributes: string[] = [];
-
-  public readonly initialConnectionMode: ConnectionMode = 'streaming';
 
   public readonly tags: ApplicationTags;
   public readonly applicationInfo?: {

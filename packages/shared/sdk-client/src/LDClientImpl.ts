@@ -18,7 +18,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { ConnectionMode, LDClient, type LDOptions } from './api';
+import { LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import ConfigurationImpl from './configuration';
@@ -57,9 +57,7 @@ export default class LDClientImpl implements LDClient {
   private emitter: LDEmitter;
   private flagManager: DefaultFlagManager;
 
-  private eventSendingEnabled: boolean = true;
-  private networkAvailable: boolean = true;
-  private connectionMode: ConnectionMode;
+  private eventSendingEnabled: boolean = false;
   private baseHeaders: LDHeaders;
   protected dataManager: DataManager;
 
@@ -83,7 +81,6 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.config = new ConfigurationImpl(options, internalOptions);
-    this.connectionMode = this.config.initialConnectionMode;
     this.logger = this.config.logger;
 
     this.baseHeaders = defaultHeaders(
@@ -107,7 +104,6 @@ export default class LDClientImpl implements LDClient {
       platform,
       this.baseHeaders,
       this.diagnosticsManager,
-      !this.isOffline(),
     );
     this.emitter = new LDEmitter();
     this.emitter.on('change', (c: LDContext, changedKeys: string[]) => {
@@ -129,28 +125,6 @@ export default class LDClientImpl implements LDClient {
       this.emitter,
       this.diagnosticsManager,
     );
-  }
-
-  /**
-   * Sets the SDK connection mode.
-   *
-   * @param mode - One of supported {@link ConnectionMode}. Default is 'streaming'.
-   */
-  async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    // TODO: Set connection mode should have a timeout. It doesn't make sense for it to be the
-    // timeout from the most recent identify call. Or it needs to not be async.
-    return this.dataManager.setConnectionMode(mode);
-  }
-
-  /**
-   * Gets the SDK connection mode.
-   */
-  getConnectionMode(): ConnectionMode {
-    return this.connectionMode;
-  }
-
-  isOffline() {
-    return this.connectionMode === 'offline';
   }
 
   allFlags(): LDFlagSet {
@@ -498,19 +472,6 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
-  }
-
-  /**
-   * Inform the client of the network state. Can be used to modify connection behavior.
-   *
-   * For instance the implementation may choose to suppress errors from connections if the client
-   * knows that there is no network available.
-   * @param _available True when there is an available network.
-   */
-  protected setNetworkAvailability(available: boolean): void {
-    this.networkAvailable = available;
-    // Not yet supported.
-    this.dataManager.setNetworkAvailability(available);
   }
 
   /**

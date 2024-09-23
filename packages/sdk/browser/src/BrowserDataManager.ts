@@ -74,12 +74,22 @@ export default class BrowserDataManager extends DefaultDataManager {
   }
 
   startDataSource() {
-    // Should always be streaming for browser SDKs for now.
-    if (this.connectionMode !== 'streaming') {
-      this.setConnectionMode('streaming');
-    } else if (this.context && !this.updateProcessor) {
+    if (this.context && !this.updateProcessor) {
       this.setupConnection(this.context);
     }
+  }
+
+  private setupConnection(
+    context: Context,
+    identifyResolve?: () => void,
+    identifyReject?: (err: Error) => void,
+  ) {
+    const rawContext = Context.toLDContext(context)!;
+
+    this.updateProcessor?.close();
+    this.createStreamingProcessor(rawContext, context, identifyResolve, identifyReject);
+
+    this.updateProcessor!.start();
   }
 
   private getRequestor(plainContextString: string): Requestor {

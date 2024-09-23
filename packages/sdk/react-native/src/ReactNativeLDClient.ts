@@ -104,9 +104,10 @@ export default class ReactNativeLDClient extends LDClientImpl {
       internalOptions,
     );
 
+    const dataManager = this.dataManager as MobileDataManager;
     const destination: ConnectionDestination = {
       setNetworkAvailability: (available: boolean) => {
-        this.setNetworkAvailability(available);
+        dataManager.setNetworkAvailability(available);
       },
       setEventSendingEnabled: (enabled: boolean, flush: boolean) => {
         this.setEventSendingEnabled(enabled, flush);
@@ -114,7 +115,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
       setConnectionMode: async (mode: ConnectionMode) => {
         // Pass the connection mode to the base implementation.
         // The RN implementation will pass the connection mode through the connection manager.
-        this.baseSetConnectionMode(mode);
+        dataManager.setConnectionMode(mode);
       },
     };
 
@@ -132,16 +133,24 @@ export default class ReactNativeLDClient extends LDClientImpl {
     );
   }
 
-  private baseSetConnectionMode(mode: ConnectionMode) {
-    // Jest had problems with calls to super from nested arrow functions, so this method proxies the call.
-    super.setConnectionMode(mode);
-  }
-
-  override async setConnectionMode(mode: ConnectionMode): Promise<void> {
+  async setConnectionMode(mode: ConnectionMode): Promise<void> {
     // Set the connection mode before setting offline, in case there is any mode transition work
     // such as flushing on entering the background.
     this.connectionManager.setConnectionMode(mode);
     // For now the data source connection and the event processing state are connected.
     this.connectionManager.setOffline(mode === 'offline');
+  }
+
+  /**
+   * Gets the SDK connection mode.
+   */
+  getConnectionMode(): ConnectionMode {
+    const dataManager = this.dataManager as MobileDataManager;
+    return dataManager.getConnectionMode();
+  }
+
+  isOffline() {
+    const dataManager = this.dataManager as MobileDataManager;
+    return dataManager.getConnectionMode() === 'offline';
   }
 }

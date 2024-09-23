@@ -1,4 +1,5 @@
 import {
+  ConnectionMode,
   LDLogger,
   LDOptions,
   OptionMessages,
@@ -8,18 +9,29 @@ import {
 
 import RNOptions, { RNStorage } from './RNOptions';
 
+class ConnectionModeValidator implements TypeValidator {
+  is(u: unknown): u is ConnectionMode {
+    return u === 'offline' || u === 'streaming' || u === 'polling';
+  }
+  getType(): string {
+    return 'ConnectionMode (offline | streaming | polling)';
+  }
+}
+
 export interface ValidatedOptions {
   runInBackground: boolean;
   automaticNetworkHandling: boolean;
   automaticBackgroundHandling: boolean;
   storage?: RNStorage;
+  initialConnectionMode: ConnectionMode;
 }
 
-const optDefaults = {
+const optDefaults: ValidatedOptions = {
   runInBackground: false,
   automaticNetworkHandling: true,
   automaticBackgroundHandling: true,
   storage: undefined,
+  initialConnectionMode: 'streaming',
 };
 
 const validators: { [Property in keyof RNOptions]: TypeValidator | undefined } = {
@@ -27,6 +39,7 @@ const validators: { [Property in keyof RNOptions]: TypeValidator | undefined } =
   automaticNetworkHandling: TypeValidators.Boolean,
   automaticBackgroundHandling: TypeValidators.Boolean,
   storage: TypeValidators.Object,
+  initialConnectionMode: new ConnectionModeValidator(),
 };
 
 export function filterToBaseOptions(opts: RNOptions): LDOptions {
@@ -48,6 +61,7 @@ export default function validateOptions(opts: RNOptions, logger: LDLogger): Vali
     const value = opts[key];
     if (value !== undefined) {
       if (validator.is(value)) {
+        // @ts-ignore The type inference has some problems here.
         output[key as keyof ValidatedOptions] = value as any;
       } else {
         logger.warn(OptionMessages.wrongOptionType(key, validator.getType(), typeof value));

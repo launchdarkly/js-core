@@ -8,7 +8,6 @@ const createEventProcessor = (
   platform: Platform,
   baseHeaders: LDHeaders,
   diagnosticsManager?: internal.DiagnosticsManager,
-  start: boolean = false,
 ): internal.EventProcessor | undefined => {
   if (config.sendEvents) {
     return new internal.EventProcessor(
@@ -17,7 +16,6 @@ const createEventProcessor = (
       baseHeaders,
       undefined,
       diagnosticsManager,
-      start,
     );
   }
 

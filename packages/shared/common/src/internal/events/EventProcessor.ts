@@ -130,7 +130,6 @@ export default class EventProcessor implements LDEventProcessor {
     baseHeaders: LDHeaders,
     private readonly contextDeduplicator?: LDContextDeduplicator,
     private readonly diagnosticsManager?: DiagnosticsManager,
-    start: boolean = true,
   ) {
     this.capacity = config.eventsCapacity;
     this.logger = clientContext.basicConfiguration.logger;
@@ -140,10 +139,6 @@ export default class EventProcessor implements LDEventProcessor {
       config.allAttributesPrivate,
       config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
-
-    if (start) {
-      this.start();
-    }
   }
 
   start() {
