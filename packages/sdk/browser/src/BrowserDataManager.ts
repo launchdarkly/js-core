@@ -18,6 +18,11 @@ import { ValidatedOptions } from './options';
 const logTag = '[BrowserDataManager]';
 
 export default class BrowserDataManager extends BaseDataManager {
+  // If streaming is forced on or off, then we follow that setting.
+  // Otherwise we automatically manage streaming state.
+  private forcedStreaming?: boolean = undefined;
+  private automaticStreamingState?: boolean = false;
+
   constructor(
     platform: Platform,
     flagManager: FlagManager,
@@ -41,6 +46,7 @@ export default class BrowserDataManager extends BaseDataManager {
       emitter,
       diagnosticsManager,
     );
+    this.forcedStreaming = browserConfig.streaming;
   }
 
   private debugLog(message: any, ...args: any[]) {
@@ -76,12 +82,37 @@ export default class BrowserDataManager extends BaseDataManager {
     }
   }
 
-  stopDataSource() {
+  setForcedStreaming(streaming?: boolean) {
+    this.forcedStreaming = streaming;
+    this.updateStreamingState();
+  }
+
+  setAutomaticStreamingState(streaming: boolean) {
+    this.automaticStreamingState = streaming;
+    this.updateStreamingState();
+  }
+
+  private updateStreamingState() {
+    const shouldBeStreaming =
+      this.forcedStreaming || (this.automaticStreamingState && this.forcedStreaming === undefined);
+
+    this.debugLog(
+      `Updating streaming state. forced(${this.forcedStreaming}) automatic(${this.automaticStreamingState})`,
+    );
+
+    if (shouldBeStreaming) {
+      this.startDataSource();
+    } else {
+      this.stopDataSource();
+    }
+  }
+
+  private stopDataSource() {
     this.updateProcessor?.close();
     this.updateProcessor = undefined;
   }
 
-  startDataSource() {
+  private startDataSource() {
     if (this.updateProcessor) {
       this.debugLog('Update processor already active. Not changing state.');
       return;

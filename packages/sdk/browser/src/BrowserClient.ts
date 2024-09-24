@@ -14,6 +14,7 @@ import {
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 import { LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common/dist/api/LDIdentifyOptions';
+import { EventName } from '@launchdarkly/js-client-sdk-common/dist/LDEmitter';
 
 import BrowserDataManager from './BrowserDataManager';
 import GoalManager from './goals/GoalManager';
@@ -29,11 +30,21 @@ export type LDClient = Omit<
   CommonClient,
   'setConnectionMode' | 'getConnectionMode' | 'getOffline'
 > & {
-  setStreaming(streaming: boolean): void;
+  /**
+   * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
+   *
+   * If this is true, the client will always attempt to maintain a streaming connection; if false,
+   * it never will. If you leave the value undefined (the default), the client will open a streaming
+   * connection if you subscribe to `"change"` or `"change:flag-key"` events (see {@link LDClient.on}).
+   *
+   * This can also be set as the `streaming` property of {@link LDOptions}.
+   */
+  setStreaming(streaming?: boolean): void;
 };
 
 export class BrowserClient extends LDClientImpl {
   private readonly goalManager?: GoalManager;
+
   constructor(
     private readonly clientSideId: string,
     autoEnvAttributes: AutoEnvAttributes,
@@ -164,12 +175,27 @@ export class BrowserClient extends LDClientImpl {
     this.goalManager?.startTracking();
   }
 
-  setStreaming(streaming: boolean): void {
+  setStreaming(streaming?: boolean): void {
+    // With FDv2 we may want to consider if we support connection mode directly.
+    // Maybe with an extension to connection mode for 'automatic'.
     const browserDataManager = this.dataManager as BrowserDataManager;
-    if (streaming) {
-      browserDataManager.startDataSource();
-    } else {
-      browserDataManager.stopDataSource();
-    }
+    browserDataManager.setForcedStreaming(streaming);
+  }
+
+  private updateAutomaticStreamingState() {
+    const browserDataManager = this.dataManager as BrowserDataManager;
+    // This will need changed if support for listening to individual flag change
+    // events it added.
+    browserDataManager.setAutomaticStreamingState(!!this.emitter.listenerCount('change'));
+  }
+
+  override on(eventName: EventName, listener: Function): void {
+    super.on(eventName, listener);
+    this.updateAutomaticStreamingState();
+  }
+
+  override off(eventName: EventName, listener: Function): void {
+    super.off(eventName, listener);
+    this.updateAutomaticStreamingState();
   }
 }

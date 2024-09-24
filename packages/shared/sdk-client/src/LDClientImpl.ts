@@ -54,7 +54,7 @@ export default class LDClientImpl implements LDClient {
 
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
-  private emitter: LDEmitter;
+  protected emitter: LDEmitter;
   private flagManager: DefaultFlagManager;
 
   private eventSendingEnabled: boolean = false;
