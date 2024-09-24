@@ -117,6 +117,9 @@ export default class BrowserDataManager extends BaseDataManager {
   }
 
   private stopDataSource() {
+    if (this.updateProcessor) {
+      this.debugLog('Stopping update processor.');
+    }
     this.updateProcessor?.close();
     this.updateProcessor = undefined;
   }

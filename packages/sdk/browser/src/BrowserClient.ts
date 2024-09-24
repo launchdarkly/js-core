@@ -4,6 +4,7 @@ import {
   BasicLogger,
   LDClient as CommonClient,
   Configuration,
+  createSafeLogger,
   Encoding,
   FlagManager,
   internal,
@@ -52,12 +53,18 @@ export class BrowserClient extends LDClientImpl {
     overridePlatform?: Platform,
   ) {
     const { logger: customLogger, debug } = options;
+    // Overrides the default logger from the common implementation.
     const logger =
       customLogger ??
-      new BasicLogger({
-        level: debug ? 'debug' : 'info',
+      createSafeLogger({
         // eslint-disable-next-line no-console
-        destination: console.log,
+        debug: debug ? console.debug : () => {},
+        // eslint-disable-next-line no-console
+        info: console.info,
+        // eslint-disable-next-line no-console
+        warn: console.warn,
+        // eslint-disable-next-line no-console
+        error: console.error,
       });
 
     // TODO: Use the already-configured baseUri from the SDK config. SDK-560
@@ -70,7 +77,7 @@ export class BrowserClient extends LDClientImpl {
       clientSideId,
       autoEnvAttributes,
       platform,
-      filterToBaseOptions(options),
+      filterToBaseOptions({ ...options, logger }),
       (
         flagManager: FlagManager,
         configuration: Configuration,
