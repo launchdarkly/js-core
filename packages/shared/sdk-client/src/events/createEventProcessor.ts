@@ -16,6 +16,7 @@ const createEventProcessor = (
       baseHeaders,
       undefined,
       diagnosticsManager,
+      false,
     );
   }
 
