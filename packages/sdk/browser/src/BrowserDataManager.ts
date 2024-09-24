@@ -21,7 +21,18 @@ export default class BrowserDataManager extends BaseDataManager {
   // If streaming is forced on or off, then we follow that setting.
   // Otherwise we automatically manage streaming state.
   private forcedStreaming?: boolean = undefined;
-  private automaticStreamingState?: boolean = false;
+  private automaticStreamingState: boolean = false;
+
+  // +-----------+-----------+---------------+
+  // |  forced   | automatic |     state     |
+  // +-----------+-----------+---------------+
+  // | true      | false     | streaming     |
+  // | true      | true      | streaming     |
+  // | false     | true      | not streaming |
+  // | false     | false     | not streaming |
+  // | undefined | true      | streaming     |
+  // | undefined | false     | not streaming |
+  // +-----------+-----------+---------------+
 
   constructor(
     platform: Platform,
