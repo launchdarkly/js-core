@@ -15,6 +15,8 @@ import {
 
 import { ValidatedOptions } from './options';
 
+const logTag = '[BrowserDataManager]';
+
 export default class BrowserDataManager extends BaseDataManager {
   constructor(
     platform: Platform,
@@ -41,6 +43,10 @@ export default class BrowserDataManager extends BaseDataManager {
     );
   }
 
+  private debugLog(message: any, ...args: any[]) {
+    this.logger.debug(`${logTag} ${message}`, ...args);
+  }
+
   override async identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
@@ -49,7 +55,7 @@ export default class BrowserDataManager extends BaseDataManager {
   ): Promise<void> {
     this.context = context;
     if (await this.flagManager.loadCached(context)) {
-      this.logger.debug('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
+      this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
     }
     const plainContextString = JSON.stringify(Context.toLDContext(context));
     const requestor = this.getRequestor(plainContextString);
@@ -76,9 +82,18 @@ export default class BrowserDataManager extends BaseDataManager {
   }
 
   startDataSource() {
-    if (this.context && !this.updateProcessor) {
-      this.setupConnection(this.context);
+    if (this.updateProcessor) {
+      this.debugLog('Update processor already active. Not changing state.');
+      return;
     }
+
+    if (!this.context) {
+      this.debugLog('Context not set, not starting update processor.');
+      return;
+    }
+
+    this.debugLog('Starting update processor.');
+    this.setupConnection(this.context);
   }
 
   private setupConnection(
