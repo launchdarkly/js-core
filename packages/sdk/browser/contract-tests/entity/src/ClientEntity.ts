@@ -41,7 +41,7 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     if (options.streaming.baseUri) {
       cf.streamUri = options.streaming.baseUri;
     }
-    cf.stream = true;
+    cf.streaming = true;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
   }
 

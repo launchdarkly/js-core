@@ -71,7 +71,7 @@ export default class BrowserDataManager extends BaseDataManager {
       identifyReject(e);
     }
 
-    if (this.browserConfig.stream) {
+    if (this.browserConfig.streaming) {
       this.setupConnection(context);
     }
   }

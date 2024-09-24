@@ -129,7 +129,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        stream: false,
+        streaming: false,
         logger,
         diagnosticOptOut: true,
       },
@@ -157,7 +157,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        stream: false,
+        streaming: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>
@@ -190,7 +190,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        stream: false,
+        streaming: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>
@@ -233,7 +233,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        stream: false,
+        streaming: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>

@@ -128,7 +128,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       off: jest.fn(),
     } as unknown as jest.Mocked<FlagManager>;
 
-    browserConfig = validateOptions({ stream: false }, logger);
+    browserConfig = validateOptions({ streaming: false }, logger);
     baseHeaders = {};
     emitter = {
       emit: jest.fn(),
@@ -173,7 +173,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       flagManager,
       'test-credential',
       config,
-      validateOptions({ stream: true }, logger),
+      validateOptions({ streaming: true }, logger),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;

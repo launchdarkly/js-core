@@ -34,25 +34,25 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    *
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
-  stream?: boolean;
+  streaming?: boolean;
 }
 
 export interface ValidatedOptions {
   fetchGoals: boolean;
   eventUrlTransformer: (url: string) => string;
-  stream?: boolean;
+  streaming?: boolean;
 }
 
 const optDefaults = {
   fetchGoals: true,
   eventUrlTransformer: (url: string) => url,
-  stream: undefined,
+  streaming: undefined,
 };
 
 const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefined } = {
   fetchGoals: TypeValidators.Boolean,
   eventUrlTransformer: TypeValidators.Function,
-  stream: TypeValidators.Boolean,
+  streaming: TypeValidators.Boolean,
 };
 
 export function filterToBaseOptions(opts: BrowserOptions): LDOptionsBase {
