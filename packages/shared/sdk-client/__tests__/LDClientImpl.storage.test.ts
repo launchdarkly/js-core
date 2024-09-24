@@ -17,7 +17,7 @@ import LDEmitter from '../src/LDEmitter';
 import { Flags, PatchFlag } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
-import TestDataManager from './TestDataManager';
+import TestDataManager, { makeTestDataManagerFactory } from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;
@@ -70,38 +70,7 @@ describe('sdk-client storage', () => {
         logger,
         sendEvents: false,
       },
-      (
-        flagManager: FlagManager,
-        configuration: Configuration,
-        baseHeaders: LDHeaders,
-        inEmitter: LDEmitter,
-        diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new TestDataManager(
-          mockPlatform,
-          flagManager,
-          testSdkKey,
-          configuration,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/context`;
-            },
-          }),
-          () => ({
-            pathGet(_encoding: Encoding, _plainContextString: string): string {
-              return '/stream/path/get';
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return '/stream/path/report';
-            },
-          }),
-          baseHeaders,
-          inEmitter,
-          diagnosticsManager,
-        ),
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
     );
 
     // @ts-ignore
@@ -167,38 +136,7 @@ describe('sdk-client storage', () => {
         logger,
         sendEvents: false,
       },
-      (
-        flagManager: FlagManager,
-        configuration: Configuration,
-        baseHeaders: LDHeaders,
-        inEmitter: LDEmitter,
-        diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new TestDataManager(
-          mockPlatform,
-          flagManager,
-          testSdkKey,
-          configuration,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/context`;
-            },
-          }),
-          () => ({
-            pathGet(_encoding: Encoding, _plainContextString: string): string {
-              return '/stream/path/get';
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return '/stream/path/report';
-            },
-          }),
-          baseHeaders,
-          inEmitter,
-          diagnosticsManager,
-        ),
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
     );
     // @ts-ignore
     emitter = ldc.emitter;

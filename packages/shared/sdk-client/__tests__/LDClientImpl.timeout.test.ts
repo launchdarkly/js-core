@@ -17,7 +17,7 @@ import LDEmitter from '../src/LDEmitter';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
-import TestDataManager from './TestDataManager';
+import TestDataManager, { makeTestDataManagerFactory } from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;
@@ -61,38 +61,7 @@ describe('sdk-client identify timeout', () => {
         logger,
         sendEvents: false,
       },
-      (
-        flagManager: FlagManager,
-        configuration: Configuration,
-        baseHeaders: LDHeaders,
-        emitter: LDEmitter,
-        diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new TestDataManager(
-          mockPlatform,
-          flagManager,
-          testSdkKey,
-          configuration,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/context`;
-            },
-          }),
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/meval`;
-            },
-          }),
-          baseHeaders,
-          emitter,
-          diagnosticsManager,
-        ),
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
     );
   });
 
@@ -170,38 +139,7 @@ describe('sdk-client identify timeout', () => {
         logger,
         sendEvents: false,
       },
-      (
-        flagManager: FlagManager,
-        configuration: Configuration,
-        baseHeaders: LDHeaders,
-        emitter: LDEmitter,
-        diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new TestDataManager(
-          mockPlatform,
-          flagManager,
-          testSdkKey,
-          configuration,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/context`;
-            },
-          }),
-          () => ({
-            pathGet(_encoding: Encoding, _plainContextString: string): string {
-              return '/stream/path';
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return '/stream/path';
-            },
-          }),
-          baseHeaders,
-          emitter,
-          diagnosticsManager,
-        ),
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
       { highTimeoutThreshold },
     );
     const customTimeout = 10;

@@ -1,7 +1,17 @@
-import { Context } from '@launchdarkly/js-sdk-common';
+import {
+  base64UrlEncode,
+  Context,
+  Encoding,
+  internal,
+  LDHeaders,
+  Platform,
+} from '@launchdarkly/js-sdk-common';
 
 import { LDIdentifyOptions } from '../src/api';
-import { BaseDataManager } from '../src/DataManager';
+import { Configuration } from '../src/configuration/Configuration';
+import { BaseDataManager, DataManagerFactory } from '../src/DataManager';
+import { FlagManager } from '../src/flag-manager/FlagManager';
+import LDEmitter from '../src/LDEmitter';
 
 export default class TestDataManager extends BaseDataManager {
   override async identify(
@@ -40,4 +50,39 @@ export default class TestDataManager extends BaseDataManager {
 
     this.updateProcessor!.start();
   }
+}
+
+export function makeTestDataManagerFactory(sdkKey: string, platform: Platform): DataManagerFactory {
+  return (
+    flagManager: FlagManager,
+    configuration: Configuration,
+    baseHeaders: LDHeaders,
+    emitter: LDEmitter,
+    diagnosticsManager?: internal.DiagnosticsManager,
+  ) =>
+    new TestDataManager(
+      platform,
+      flagManager,
+      sdkKey,
+      configuration,
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/context`;
+        },
+      }),
+      () => ({
+        pathGet(_encoding: Encoding, _plainContextString: string): string {
+          return '/stream/path';
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return '/stream/path/report';
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
 }
