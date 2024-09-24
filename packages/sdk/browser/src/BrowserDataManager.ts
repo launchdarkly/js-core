@@ -88,9 +88,7 @@ export default class BrowserDataManager extends BaseDataManager {
       identifyReject(e);
     }
 
-    if (this.browserConfig.streaming) {
-      this.setupConnection(context);
-    }
+    this.updateStreamingState();
   }
 
   setForcedStreaming(streaming?: boolean) {
