@@ -23,6 +23,7 @@ import { ConnectionMode, LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import Configuration from './configuration';
+import { LDClientInternalOptions } from './configuration/Configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
 import DataSourceEventHandler from './datasource/DataSourceEventHandler';
@@ -76,7 +77,7 @@ export default class LDClientImpl implements LDClient {
     public readonly autoEnvAttributes: AutoEnvAttributes,
     public readonly platform: Platform,
     options: LDOptions,
-    internalOptions?: internal.LDInternalOptions,
+    internalOptions?: LDClientInternalOptions,
   ) {
     if (!sdkKey) {
       throw new Error('You must configure the client with a client-side SDK key');
@@ -226,6 +227,10 @@ export default class LDClientImpl implements LDClient {
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
     return this.uncheckedContext ? clone<LDContext>(this.uncheckedContext) : undefined;
+  }
+
+  protected getInternalContext(): Context | undefined {
+    return this.checkedContext;
   }
 
   private createStreamListeners(
@@ -479,7 +484,9 @@ export default class LDClientImpl implements LDClient {
     }
 
     this.eventProcessor?.sendEvent(
-      this.eventFactoryDefault.customEvent(key, this.checkedContext!, data, metricValue),
+      this.config.trackEventModifier(
+        this.eventFactoryDefault.customEvent(key, this.checkedContext!, data, metricValue),
+      ),
     );
   }
 
@@ -659,5 +666,9 @@ export default class LDClientImpl implements LDClient {
       this.logger?.debug('Stopping event processor.');
       this.eventProcessor?.close();
     }
+  }
+
+  protected sendEvent(event: internal.InputEvent): void {
+    this.eventProcessor?.sendEvent(event);
   }
 }

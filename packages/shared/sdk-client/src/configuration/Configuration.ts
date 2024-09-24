@@ -14,6 +14,10 @@ import validators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
 
+export interface LDClientInternalOptions extends internal.LDInternalOptions {
+  trackEventModifier?: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
+}
+
 export default class Configuration {
   public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
   public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
@@ -66,10 +70,14 @@ export default class Configuration {
 
   public readonly userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent';
 
+  public readonly trackEventModifier: (
+    event: internal.InputCustomEvent,
+  ) => internal.InputCustomEvent;
+
   // Allow indexing Configuration by a string
   [index: string]: any;
 
-  constructor(pristineOptions: LDOptions = {}, internalOptions: internal.LDInternalOptions = {}) {
+  constructor(pristineOptions: LDOptions = {}, internalOptions: LDClientInternalOptions = {}) {
     const errors = this.validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
 
@@ -86,6 +94,7 @@ export default class Configuration {
 
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
     this.userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
+    this.trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
   }
 
   validateTypesAndNames(pristineOptions: LDOptions): string[] {

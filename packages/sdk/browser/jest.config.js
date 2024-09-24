@@ -1,11 +1,10 @@
 export default {
-  preset: 'ts-jest',
+  extensionsToTreatAsEsm: ['.ts'],
+  verbose: true,
+  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jest-environment-jsdom',
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
-    // process `*.tsx` files with `ts-jest`
+    '^.+\\.tsx?$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.json' }],
   },
-  moduleNameMapper: {
-    '\\.(gif|ttf|eot|svg|png)$': '<rootDir>/test/__ mocks __/fileMock.js',
-  },
+  testPathIgnorePatterns: ['./dist'],
 };

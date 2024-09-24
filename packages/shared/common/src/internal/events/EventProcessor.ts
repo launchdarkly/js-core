@@ -36,6 +36,7 @@ interface CustomOutputEvent {
   data?: any;
   metricValue?: number;
   samplingRatio?: number;
+  url?: string;
 }
 
 interface FeatureOutputEvent {
@@ -55,6 +56,25 @@ interface FeatureOutputEvent {
 
 interface IndexInputEvent extends Omit<InputIdentifyEvent, 'kind'> {
   kind: 'index';
+}
+
+interface ClickOutputEvent {
+  kind: 'click';
+  key: string;
+  url: string;
+  creationDate: number;
+  contextKeys: Record<string, string>;
+  selector: string;
+  samplingRatio?: number;
+}
+
+interface PageviewOutputEvent {
+  kind: 'pageview';
+  key: string;
+  url: string;
+  creationDate: number;
+  contextKeys: Record<string, string>;
+  samplingRatio?: number;
 }
 
 /**
@@ -325,6 +345,31 @@ export default class EventProcessor implements LDEventProcessor {
           out.metricValue = event.metricValue;
         }
 
+        if (event.url !== undefined) {
+          out.url = event.url;
+        }
+
+        return out;
+      }
+      case 'click': {
+        const out: ClickOutputEvent = {
+          kind: 'click',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+          selector: event.selector,
+        };
+        return out;
+      }
+      case 'pageview': {
+        const out: PageviewOutputEvent = {
+          kind: 'pageview',
+          creationDate: event.creationDate,
+          contextKeys: event.context.kindsAndKeys,
+          key: event.key,
+          url: event.url,
+        };
         return out;
       }
       default:

@@ -10,17 +10,16 @@ import {
   LDLogger,
   LDLogLevel,
   LDMultiKindContext,
-  LDOptions,
   LDSingleKindContext,
 } from '@launchdarkly/js-client-sdk-common';
 
+// The exported LDClient and LDOptions are the browser specific implementations.
+// These shadow the common implementations.
 import { BrowserClient, LDClient } from './BrowserClient';
+import { BrowserOptions as LDOptions } from './options';
 
-// TODO: Export and use browser specific options.
 export {
   LDClient,
-  AutoEnvAttributes,
-  LDOptions,
   LDFlagSet,
   LDContext,
   LDContextCommon,
@@ -29,15 +28,13 @@ export {
   LDSingleKindContext,
   LDLogLevel,
   LDLogger,
+  LDOptions,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDEvaluationReason,
 };
 
-export function init(
-  clientSideId: string,
-  autoEnvAttributes: AutoEnvAttributes,
-  options?: LDOptions,
-): LDClient {
-  return new BrowserClient(clientSideId, autoEnvAttributes, options);
+export function init(clientSideId: string, options?: LDOptions): LDClient {
+  // AutoEnvAttributes are not supported yet in the browser SDK.
+  return new BrowserClient(clientSideId, AutoEnvAttributes.Disabled, options);
 }
