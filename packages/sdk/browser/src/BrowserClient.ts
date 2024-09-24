@@ -172,6 +172,4 @@ export class BrowserClient extends LDClientImpl {
       browserDataManager.stopDataSource();
     }
   }
-
-  // TODO: Setup event listeners.
 }
