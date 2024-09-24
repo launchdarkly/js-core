@@ -1,12 +1,9 @@
 import {
   AutoEnvAttributes,
-  base64UrlEncode,
   ClientContext,
   clone,
-  Encoding,
   internal,
   LDContext,
-  LDHeaders,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 import {
@@ -15,15 +12,11 @@ import {
   MockEventProcessor,
 } from '@launchdarkly/private-js-mocks';
 
-import { Configuration } from '../src/configuration/Configuration';
-import { DataManagerFactory } from '../src/DataManager';
-import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDClientImpl from '../src/LDClientImpl';
-import LDEmitter from '../src/LDEmitter';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
-import TestDataManager, { makeTestDataManagerFactory } from './TestDataManager';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 type InputCustomEvent = internal.InputCustomEvent;
 type InputIdentifyEvent = internal.InputIdentifyEvent;

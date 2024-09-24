@@ -1,23 +1,12 @@
-import {
-  AutoEnvAttributes,
-  base64UrlEncode,
-  clone,
-  Encoding,
-  internal,
-  LDContext,
-  LDHeaders,
-} from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, LDContext } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
-import { Configuration } from '../src/configuration/Configuration';
 import { toMulti } from '../src/context/addAutoEnv';
-import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDClientImpl from '../src/LDClientImpl';
-import LDEmitter from '../src/LDEmitter';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
-import TestDataManager, { makeTestDataManagerFactory } from './TestDataManager';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;

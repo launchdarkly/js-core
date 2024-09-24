@@ -1,23 +1,11 @@
-import {
-  AutoEnvAttributes,
-  base64UrlEncode,
-  clone,
-  Encoding,
-  Hasher,
-  internal,
-  LDContext,
-  LDHeaders,
-} from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
-import { Configuration } from '../src/configuration/Configuration';
-import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDClientImpl from '../src/LDClientImpl';
-import LDEmitter from '../src/LDEmitter';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
-import TestDataManager, { makeTestDataManagerFactory } from './TestDataManager';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
