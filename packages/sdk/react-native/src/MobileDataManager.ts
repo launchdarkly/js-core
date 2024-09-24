@@ -14,6 +14,8 @@ import {
 
 import { ValidatedOptions } from './options';
 
+const logTag = '[MobileDataManager]';
+
 export default class MobileDataManager extends BaseDataManager {
   // Not implemented yet.
   protected networkAvailable: boolean = true;
@@ -45,6 +47,10 @@ export default class MobileDataManager extends BaseDataManager {
     this.connectionMode = rnConfig.initialConnectionMode;
   }
 
+  private debugLog(message: any, ...args: any[]) {
+    this.logger.debug(`${logTag} ${message}`, ...args);
+  }
+
   override async identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
@@ -58,20 +64,20 @@ export default class MobileDataManager extends BaseDataManager {
 
     const loadedFromCache = await this.flagManager.loadCached(context);
     if (loadedFromCache && !waitForNetworkResults) {
-      this.logger.debug('Identify completing with cached flags');
+      this.debugLog('Identify completing with cached flags');
       identifyResolve();
     }
     if (loadedFromCache && waitForNetworkResults) {
-      this.logger.debug(
+      this.debugLog(
         'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
       );
     }
 
     if (this.connectionMode === 'offline') {
       if (loadedFromCache) {
-        this.logger.debug('Offline identify - using cached flags.');
+        this.debugLog('Offline identify - using cached flags.');
       } else {
-        this.logger.debug(
+        this.debugLog(
           'Offline identify - no cached flags, using defaults or already loaded flags.',
         );
         identifyResolve();
@@ -109,12 +115,12 @@ export default class MobileDataManager extends BaseDataManager {
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
     if (this.connectionMode === mode) {
-      this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
+      this.debugLog(`setConnectionMode ignored. Mode is already '${mode}'.`);
       return;
     }
 
     this.connectionMode = mode;
-    this.logger.debug(`setConnectionMode ${mode}.`);
+    this.debugLog(`setConnectionMode ${mode}.`);
 
     switch (mode) {
       case 'offline':

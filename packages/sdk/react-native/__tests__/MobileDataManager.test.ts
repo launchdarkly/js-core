@@ -177,7 +177,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     const initialMode = mobileDataManager.getConnectionMode();
     await mobileDataManager.setConnectionMode(initialMode);
     expect(logger.debug).toHaveBeenCalledWith(
-      `setConnectionMode ignored. Mode is already '${initialMode}'.`,
+      `[MobileDataManager] setConnectionMode ignored. Mode is already '${initialMode}'.`,
     );
     expect(mobileDataManager.getConnectionMode()).toBe(initialMode);
   });
@@ -231,7 +231,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
 
     await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
-    expect(logger.debug).toHaveBeenCalledWith('Identify completing with cached flags');
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[MobileDataManager] Identify completing with cached flags',
+    );
 
     expect(flagManager.loadCached).toHaveBeenCalledWith(context);
     expect(identifyResolve).toHaveBeenCalled();
@@ -248,7 +250,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
+      '[MobileDataManager] Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
     );
 
     expect(flagManager.loadCached).toHaveBeenCalledWith(context);
@@ -268,7 +270,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      'Offline identify - no cached flags, using defaults or already loaded flags.',
+      '[MobileDataManager] Offline identify - no cached flags, using defaults or already loaded flags.',
     );
 
     expect(flagManager.loadCached).toHaveBeenCalledWith(context);
@@ -287,7 +289,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
 
     await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
-    expect(logger.debug).toHaveBeenCalledWith('Offline identify - using cached flags.');
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[MobileDataManager] Offline identify - using cached flags.',
+    );
 
     expect(flagManager.loadCached).toHaveBeenCalledWith(context);
     expect(identifyResolve).toHaveBeenCalled();
