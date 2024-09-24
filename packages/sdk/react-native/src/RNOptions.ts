@@ -100,7 +100,7 @@ export interface RNSpecificOptions {
    * Sets the mode to use for connections when the SDK is initialized.
    *
    * @remarks
-   * Possible values are offline or streaming. See {@link ConnectionMode} for more information.
+   * Possible values are offline, streaming, or polling. See {@link ConnectionMode} for more information.
    *
    * @defaultValue streaming.
    */
