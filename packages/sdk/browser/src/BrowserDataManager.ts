@@ -172,5 +172,4 @@ export default class BrowserDataManager extends BaseDataManager {
     const uri = getPollingUri(this.config.serviceEndpoints, path, parameters);
     return new Requestor(this.platform.requests, uri, headers, method, body);
   }
-  // TODO: Automatically start streaming if event handlers are registered.
 }
