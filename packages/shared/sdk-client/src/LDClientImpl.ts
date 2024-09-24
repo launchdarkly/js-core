@@ -106,15 +106,13 @@ export default class LDClientImpl implements LDClient {
       this.diagnosticsManager,
     );
     this.emitter = new LDEmitter();
-    this.emitter.on('change', (c: LDContext, changedKeys: string[]) => {
-      this.logger.debug(`change: context: ${JSON.stringify(c)}, flags: ${changedKeys}`);
-    });
     this.emitter.on('error', (c: LDContext, err: any) => {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
     });
 
     this.flagManager.on((context, flagKeys) => {
       const ldContext = Context.toLDContext(context);
+      this.logger.debug(`change: context: ${JSON.stringify(ldContext)}, flags: ${flagKeys}`);
       this.emitter.emit('change', ldContext, flagKeys);
     });
 
