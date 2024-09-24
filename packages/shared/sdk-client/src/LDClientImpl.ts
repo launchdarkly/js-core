@@ -425,7 +425,7 @@ export default class LDClientImpl implements LDClient {
       this.platform.requests,
       this.platform.encoding!,
       async (flags: Flags) => {
-        this.dataSourceEventHandler.handlePut(checkedContext, flags);
+        this.dataSourceEventHandler.handlePut(checkedContext, flags).then(identifyResolve);
       },
       (err) => {
         this.emitter.emit('error', context, err);

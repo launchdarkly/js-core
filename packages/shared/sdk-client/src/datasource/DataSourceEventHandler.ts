@@ -26,7 +26,7 @@ export default class DataSourceEventHandler {
       },
       {},
     );
-    await this.flagManager.init(context, descriptors).then();
+    await this.flagManager.init(context, descriptors);
     this.statusManager.setValid();
   }
 
