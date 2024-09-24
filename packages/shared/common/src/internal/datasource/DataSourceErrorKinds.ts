@@ -12,9 +12,4 @@ export enum DataSourceErrorKind {
 
   /// The SDK received malformed data from the LaunchDarkly service.
   InvalidData,
-
-  /// The data source itself is working, but when it tried to put an
-  /// update into the data store, the data store failed (so the SDK may
-  /// not have cached the latest data).
-  StoreError,
 }
