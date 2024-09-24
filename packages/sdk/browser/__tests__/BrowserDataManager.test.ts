@@ -332,4 +332,21 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       '[BrowserDataManager] Updating streaming state. forced(false) automatic(true)',
     );
   });
+
+  it('starts streaming on identify if the automatic state is true', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    dataManager.setForcedStreaming(undefined);
+    dataManager.setAutomaticStreamingState(true);
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+
+    flagManager.loadCached.mockResolvedValue(false);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
+  });
 });
