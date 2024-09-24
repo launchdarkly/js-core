@@ -48,11 +48,6 @@ function mockResponse(value: string, statusCode: number) {
   return Promise.resolve(response);
 }
 
-/**
- * Mocks fetch. Returns the fetch jest.Mock object.
- * @param remoteJson
- * @param statusCode
- */
 function mockFetch(value: string, statusCode: number = 200) {
   const f = jest.fn();
   // @ts-ignore
