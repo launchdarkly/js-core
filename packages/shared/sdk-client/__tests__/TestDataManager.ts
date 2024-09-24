@@ -1,7 +1,7 @@
 import { Context } from '@launchdarkly/js-sdk-common';
+
 import { LDIdentifyOptions } from '../src/api';
 import { BaseDataManager } from '../src/DataManager';
-
 
 export default class TestDataManager extends BaseDataManager {
   override async identify(
@@ -30,7 +30,7 @@ export default class TestDataManager extends BaseDataManager {
   private setupConnection(
     context: Context,
     identifyResolve?: () => void,
-    identifyReject?: (err: Error) => void
+    identifyReject?: (err: Error) => void,
   ) {
     const rawContext = Context.toLDContext(context)!;
 
