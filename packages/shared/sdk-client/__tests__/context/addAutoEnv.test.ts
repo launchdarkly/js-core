@@ -338,7 +338,7 @@ describe('automatic environment attributes', () => {
 
   describe('addApplicationInfo', () => {
     test('add id, version, name, versionName', async () => {
-      config = new Configuration({
+      config = new ConfigurationImpl({
         applicationInfo: {
           id: 'com.from-config.ld',
           version: '2.2.2',
@@ -431,7 +431,7 @@ describe('automatic environment attributes', () => {
       info.platformData = jest
         .fn()
         .mockReturnValueOnce({ ld_application: { version: null, locale: '' } });
-      config = new Configuration({ applicationInfo: { version: '1.2.3' } });
+      config = new ConfigurationImpl({ applicationInfo: { version: '1.2.3' } });
       const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();
