@@ -21,7 +21,7 @@ import {
 import { LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
-import { ConfigurationImpl, LDClientInternalOptions } from './configuration';
+import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
 import { DataManager, DataManagerFactory } from './DataManager';
@@ -40,7 +40,7 @@ import { DeleteFlag, Flags, PatchFlag } from './types';
 const { ClientMessages, ErrorKinds } = internal;
 
 export default class LDClientImpl implements LDClient {
-  private readonly config: ConfigurationImpl;
+  private readonly config: Configuration;
   private uncheckedContext?: LDContext;
   private checkedContext?: Context;
   private readonly diagnosticsManager?: internal.DiagnosticsManager;
