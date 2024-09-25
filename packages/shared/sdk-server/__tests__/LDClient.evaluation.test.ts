@@ -270,6 +270,75 @@ describe('given an LDClient with test data', () => {
     expect(res.reason.kind).toEqual('ERROR');
     expect(res.reason.errorKind).toEqual('WRONG_TYPE');
   });
+
+  it('includes prerequisite information for flags with prerequisites', async () => {
+    await td.update(td.flag('is-prereq').valueForAll(true));
+    await td.usePreconfiguredFlag({
+      key: 'has-prereq-depth-1',
+      on: true,
+      prerequisites: [
+        {
+          key: 'is-prereq',
+          variation: 0,
+        },
+      ],
+      fallthrough: {
+        variation: 0,
+      },
+      offVariation: 1,
+      variations: [true, false],
+      clientSideAvailability: {
+        usingMobileKey: true,
+        usingEnvironmentId: true,
+      },
+      clientSide: true,
+      version: 4,
+    });
+
+    const res = await client.variationDetail('has-prereq-depth-1', defaultUser, false);
+    expect(res.value).toEqual(true);
+    expect(res.reason.kind).toEqual('FALLTHROUGH');
+    expect(res.prerequisites).toEqual(['is-prereq']);
+  });
+
+  it.each([
+    ['boolVariationDetail', true, false],
+    ['numberVariationDetail', 42, 3.14],
+    ['stringVariationDetail', 'value', 'default'],
+    ['jsonVariationDetail', { value: 'value' }, { value: 'default' }],
+  ])(
+    'includes prerequisite information for typed evals',
+    async (method: string, value: any, def: any) => {
+      await td.update(td.flag('is-prereq').valueForAll(true));
+      await td.usePreconfiguredFlag({
+        key: 'has-prereq-depth-1',
+        on: true,
+        prerequisites: [
+          {
+            key: 'is-prereq',
+            variation: 0,
+          },
+        ],
+        fallthrough: {
+          variation: 0,
+        },
+        offVariation: 1,
+        variations: [value, def],
+        clientSideAvailability: {
+          usingMobileKey: true,
+          usingEnvironmentId: true,
+        },
+        clientSide: true,
+        version: 4,
+      });
+
+      // @ts-ignore Typescript cannot infer the matching method types.
+      const res = await client[method]('has-prereq-depth-1', defaultUser, def);
+      expect(res.value).toEqual(value);
+      expect(res.reason.kind).toEqual('FALLTHROUGH');
+      expect(res.prerequisites).toEqual(['is-prereq']);
+    },
+  );
 });
 
 describe('given an offline client', () => {
