@@ -6,22 +6,51 @@ import { DefaultFlagStore } from './FlagStore';
 import FlagUpdater, { FlagsChangeCallback } from './FlagUpdater';
 import { ItemDescriptor } from './ItemDescriptor';
 
+/**
+ * Top level manager of flags for the client. LDClient should be using this
+ * interface and not any of the specific instances managed by it. Updates from
+ * data sources should be directed to the [init] and [upsert] methods of this
+ * interface.
+ */
 export interface FlagManager {
+  /**
+   * Attempts to get a flag by key from the current flags.
+   */
   get(key: string): ItemDescriptor | undefined;
+
+  /**
+   * Gets all the current flags.
+   */
   getAll(): { [key: string]: ItemDescriptor };
+
+  /**
+   * Initializes the flag manager with data from a data source.
+   * Persistence initialization is handled by {@link FlagPersistence}
+   */
   init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void>;
+
+  /**
+   * Attempt to update a flag. If the flag is for the wrong context, or
+   * it is of an older version, then an update will not be performed.
+   */
   upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean>;
+
+  /**
+   * Asynchronously load cached values from persistence.
+   */
   loadCached(context: Context): Promise<boolean>;
+
+  /**
+   * Register a flag change callback.
+   */
   on(callback: FlagsChangeCallback): void;
+
+  /**
+   * Unregister a flag change callback.
+   */
   off(callback: FlagsChangeCallback): void;
 }
 
-/**
- * Top level manager of flags for the client. LDClient should be using this
- * class and not any of the specific instances managed by it. Updates from
- * data sources should be directed to the [init] and [upsert] methods of this
- * class.
- */
 export default class DefaultFlagManager implements FlagManager {
   private flagStore = new DefaultFlagStore();
   private flagUpdater: FlagUpdater;
@@ -71,53 +100,30 @@ export default class DefaultFlagManager implements FlagManager {
     );
   }
 
-  /**
-   * Attempts to get a flag by key from the current flags.
-   */
   get(key: string): ItemDescriptor | undefined {
     return this.flagStore.get(key);
   }
 
-  /**
-   * Gets all the current flags.
-   */
   getAll(): { [key: string]: ItemDescriptor } {
     return this.flagStore.getAll();
   }
 
-  /**
-   * Initializes the flag manager with data from a data source.
-   * Persistence initialization is handled by {@link FlagPersistence}
-   */
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
     return (await this.flagPersistencePromise).init(context, newFlags);
   }
 
-  /**
-   * Attempt to update a flag. If the flag is for the wrong context, or
-   * it is of an older version, then an update will not be performed.
-   */
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
     return (await this.flagPersistencePromise).upsert(context, key, item);
   }
 
-  /**
-   * Asynchronously load cached values from persistence.
-   */
   async loadCached(context: Context): Promise<boolean> {
     return (await this.flagPersistencePromise).loadCached(context);
   }
 
-  /**
-   * Register a flag change callback.
-   */
   on(callback: FlagsChangeCallback): void {
     this.flagUpdater.on(callback);
   }
 
-  /**
-   * Unregister a flag change callback.
-   */
   off(callback: FlagsChangeCallback): void {
     this.flagUpdater.off(callback);
   }

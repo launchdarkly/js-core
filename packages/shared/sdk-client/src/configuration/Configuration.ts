@@ -56,15 +56,17 @@ export interface Configuration {
   readonly trackEventModifier: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
 }
 
-export default class ConfigurationImpl implements Configuration {
-  public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
-  public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
+const DEFAULT_POLLING: string = 'https://clientsdk.launchdarkly.com';
+const DEFAULT_STREAM: string = 'https://clientstream.launchdarkly.com';
 
+export { DEFAULT_POLLING, DEFAULT_STREAM };
+
+export default class ConfigurationImpl implements Configuration {
   public readonly logger: LDLogger = createSafeLogger();
 
-  public readonly baseUri = ConfigurationImpl.DEFAULT_POLLING;
+  public readonly baseUri = DEFAULT_POLLING;
   public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
-  public readonly streamUri = ConfigurationImpl.DEFAULT_STREAM;
+  public readonly streamUri = DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
 
