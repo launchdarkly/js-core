@@ -21,8 +21,7 @@ import {
 import { LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
-import ConfigurationImpl from './configuration';
-import { LDClientInternalOptions } from './configuration/Configuration';
+import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
 import { DataManager, DataManagerFactory } from './DataManager';
@@ -33,7 +32,7 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import DefaultFlagManager from './flag-manager/FlagManager';
+import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter, { EventName } from './LDEmitter';
 import { DeleteFlag, Flags, PatchFlag } from './types';

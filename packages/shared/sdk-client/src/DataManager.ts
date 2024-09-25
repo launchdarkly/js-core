@@ -20,6 +20,20 @@ import { DataSourcePaths, StreamingProcessor } from './streaming';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 export interface DataManager {
+  /**
+   * This function handles the data management aspects of the identification process.
+   *
+   * Implementation Note: The identifyResolve and identifyReject function resolve or reject the
+   * identify function at LDClient level. It is likely in individual implementations that these
+   * functions will be passed to other components, such as a datasource, do indicate when the
+   * identify process has been completed. The data manager identify function should return once
+   * everything has been set in motion to complete the identification process.
+   *
+   * @param identifyResolve Called to reject the identify operation.
+   * @param identifyReject Called to complete the identify operation.
+   * @param context The context being identified.
+   * @param identifyOptions Options for identification.
+   */
   identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
@@ -28,6 +42,9 @@ export interface DataManager {
   ): Promise<void>;
 }
 
+/**
+ * Factory interface for constructing data managers.
+ */
 export interface DataManagerFactory {
   (
     flagManager: FlagManager,

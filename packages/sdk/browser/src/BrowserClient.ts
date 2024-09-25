@@ -1,7 +1,6 @@
 import {
   AutoEnvAttributes,
   base64UrlEncode,
-  BasicLogger,
   LDClient as CommonClient,
   Configuration,
   createSafeLogger,

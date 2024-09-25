@@ -11,7 +11,7 @@ import {
   Platform,
 } from '@launchdarkly/js-sdk-common';
 
-import ConfigurationImpl from '../configuration';
+import { Configuration } from '../configuration';
 import digest from '../crypto/digest';
 import { getOrGenerateKey } from '../storage/getOrGenerateKey';
 import { namespaceForGeneratedContextKey } from '../storage/namespaceUtils';
@@ -39,7 +39,7 @@ export const toMulti = (c: LDSingleKindContext) => {
  */
 export const addApplicationInfo = async (
   { crypto, info }: Platform,
-  { applicationInfo }: ConfigurationImpl,
+  { applicationInfo }: Configuration,
 ): Promise<LDApplication | undefined> => {
   const { ld_application } = info.platformData();
   let app = deepCompact<LDApplication>(ld_application) ?? ({} as LDApplication);
@@ -103,11 +103,7 @@ export const addDeviceInfo = async (platform: Platform) => {
   return undefined;
 };
 
-export const addAutoEnv = async (
-  context: LDContext,
-  platform: Platform,
-  config: ConfigurationImpl,
-) => {
+export const addAutoEnv = async (context: LDContext, platform: Platform, config: Configuration) => {
   // LDUser is not supported for auto env reporting
   if (isLegacyUser(context)) {
     return context as LDUser;
