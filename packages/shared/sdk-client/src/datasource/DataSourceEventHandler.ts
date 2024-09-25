@@ -3,6 +3,7 @@ import { Context, internal, LDLogger } from '@launchdarkly/js-sdk-common';
 import FlagManager from '../flag-manager/FlagManager';
 import { ItemDescriptor } from '../flag-manager/ItemDescriptor';
 import { DeleteFlag, Flags, PatchFlag } from '../types';
+import { DataSourceState } from './DataSourceStatus';
 import DataSourceStatusManager from './DataSourceStatusManager';
 
 type LDStreamingError = internal.LDStreamingError;
@@ -27,7 +28,7 @@ export default class DataSourceEventHandler {
       {},
     );
     await this.flagManager.init(context, descriptors);
-    this.statusManager.setValid();
+    this.statusManager.requestStateUpdate(DataSourceState.Valid);
   }
 
   async handlePatch(context: Context, patchFlag: PatchFlag) {
@@ -57,10 +58,10 @@ export default class DataSourceEventHandler {
   }
 
   handleStreamingError(error: LDStreamingError) {
-    this.statusManager.setError(error.kind, error.message, error.code, error.recoverable);
+    this.statusManager.reportError(error.kind, error.message, error.code, error.recoverable);
   }
 
   handlePollingError(error: LDPollingError) {
-    this.statusManager.setError(error.kind, error.message, error.status, error.recoverable);
+    this.statusManager.reportError(error.kind, error.message, error.status, error.recoverable);
   }
 }

@@ -27,7 +27,7 @@ import { LDClientInternalOptions } from './configuration/Configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
 import DataSourceEventHandler from './datasource/DataSourceEventHandler';
-import DataSourceStatus from './datasource/DataSourceStatus';
+import DataSourceStatus, { DataSourceState } from './datasource/DataSourceStatus';
 import DataSourceStatusManager from './datasource/DataSourceStatusManager';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import {
@@ -155,7 +155,7 @@ export default class LDClientImpl implements LDClient {
     switch (mode) {
       case 'offline':
         this.updateProcessor?.close();
-        this.dataSourceStatusManager.setOffline();
+        this.dataSourceStatusManager.requestStateUpdate(DataSourceState.SetOffline);
         break;
       case 'polling':
       case 'streaming':
@@ -204,7 +204,7 @@ export default class LDClientImpl implements LDClient {
     await this.flush();
     this.eventProcessor?.close();
     this.updateProcessor?.close();
-    this.dataSourceStatusManager.setShutdown();
+    this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Closed);
     this.logger.debug('Closed event processor and data source.');
   }
 
@@ -387,7 +387,10 @@ export default class LDClientImpl implements LDClient {
       }
     } else {
       // we don't update data source status in this path because we are about to start again
-      this.updateProcessor?.close();
+      if (this.updateProcessor) {
+        this.updateProcessor.close();
+        this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Closed);
+      }
 
       switch (this.getConnectionMode()) {
         case 'streaming':
@@ -399,6 +402,8 @@ export default class LDClientImpl implements LDClient {
         default:
           break;
       }
+      // update status before starting processor to ensure potential errors are reported after initializing
+      this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
       this.updateProcessor!.start();
     }
 

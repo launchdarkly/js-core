@@ -22,7 +22,7 @@ export default class DataSourceStatusManager {
   private emitter: LDEmitter;
 
   constructor(timeStamper: () => number = () => Date.now()) {
-    this.state = DataSourceState.Initializing;
+    this.state = DataSourceState.Closed;
     this.stateSinceMillis = timeStamper();
     this.emitter = new LDEmitter();
     this.timeStamper = timeStamper;
@@ -74,24 +74,12 @@ export default class DataSourceStatusManager {
   }
 
   /**
-   * Sets the state to {@link DataSourceState.Valid}
+   * Requests the manager move to the provided state.  This request may be ignored
+   * if the current state cannot transition to the requested state.
+   * @param state that is requested
    */
-  setValid() {
-    this.updateState(DataSourceState.Valid);
-  }
-
-  /**
-   * Sets the state to {@link DataSourceState.SetOffline}
-   */
-  setOffline() {
-    this.updateState(DataSourceState.SetOffline);
-  }
-
-  /**
-   * Sets the state to {@link DataSourceState.Shutdown}
-   */
-  setShutdown() {
-    this.updateState(DataSourceState.Shutdown);
+  requestStateUpdate(state: DataSourceState) {
+    this.updateState(state);
   }
 
   /**
@@ -104,7 +92,7 @@ export default class DataSourceStatusManager {
    * @param statusCode of the error if there was one
    * @param recoverable to indicate that the error is anticipated to be recoverable
    */
-  setError(
+  reportError(
     kind: DataSourceErrorKind,
     message: string,
     statusCode?: number,
@@ -117,7 +105,7 @@ export default class DataSourceStatusManager {
       time: this.timeStamper(),
     };
     this.errorInfo = errorInfo;
-    this.updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Shutdown, true);
+    this.updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Closed, true);
   }
 
   // TODO: SDK-702 - Implement network availability behaviors

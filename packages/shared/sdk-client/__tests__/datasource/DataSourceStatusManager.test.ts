@@ -4,39 +4,40 @@ import { DataSourceState } from '../../src/datasource/DataSourceStatus';
 import DataSourceStatusManager from '../../src/datasource/DataSourceStatusManager';
 
 describe('DataSourceStatusManager', () => {
-  test('its first state is initializing', async () => {
+  test('its first state is closed', async () => {
     const underTest = new DataSourceStatusManager();
+    expect(underTest.status.state).toEqual(DataSourceState.Closed);
+  });
+
+  test('it stays at initializing if receives recoverable error', async () => {
+    const underTest = new DataSourceStatusManager();
+    underTest.requestStateUpdate(DataSourceState.Initializing);
+    underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
     expect(underTest.status.state).toEqual(DataSourceState.Initializing);
   });
 
-  test('it stays at initializing if receives non shutdown error', async () => {
+  test('it moves to closed if receives unrecoverable error', async () => {
     const underTest = new DataSourceStatusManager();
-    underTest.setError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
-    expect(underTest.status.state).toEqual(DataSourceState.Initializing);
-  });
-
-  test('it moves to shutdown if receives shutdown error', async () => {
-    const underTest = new DataSourceStatusManager();
-    underTest.setError(DataSourceErrorKind.ErrorResponse, 'womp', 404, false);
-    expect(underTest.status.state).toEqual(DataSourceState.Shutdown);
+    underTest.requestStateUpdate(DataSourceState.Initializing);
+    underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, false);
+    expect(underTest.status.state).toEqual(DataSourceState.Closed);
   });
 
   test('it updates last error time with each error, but not stateSince', async () => {
     let time = 0;
     const stamper: () => number = () => time;
     const underTest = new DataSourceStatusManager(stamper);
-
-    underTest.setError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
+    underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
     expect(underTest.status.stateSince).toEqual(0);
     expect(underTest.status.lastError?.time).toEqual(0);
 
     time += 1;
-    underTest.setError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
+    underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
     expect(underTest.status.stateSince).toEqual(0);
     expect(underTest.status.lastError?.time).toEqual(1);
 
     time += 1;
-    underTest.setError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
+    underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
     expect(underTest.status.stateSince).toEqual(0);
     expect(underTest.status.lastError?.time).toEqual(2);
   });
@@ -46,15 +47,15 @@ describe('DataSourceStatusManager', () => {
     const stamper: () => number = () => time;
 
     const underTest = new DataSourceStatusManager(stamper);
-    expect(underTest.status.state).toEqual(DataSourceState.Initializing);
+    expect(underTest.status.state).toEqual(DataSourceState.Closed);
     expect(underTest.status.stateSince).toEqual(0);
 
     time += 1;
-    underTest.setValid();
+    underTest.requestStateUpdate(DataSourceState.Valid);
     expect(underTest.status.stateSince).toEqual(1);
 
     time += 1;
-    underTest.setShutdown();
+    underTest.requestStateUpdate(DataSourceState.Closed);
     expect(underTest.status.stateSince).toEqual(2);
   });
 
@@ -65,13 +66,13 @@ describe('DataSourceStatusManager', () => {
     const spyListener = jest.fn();
     underTest.on(spyListener);
 
-    underTest.setOffline();
+    underTest.requestStateUpdate(DataSourceState.SetOffline);
     time += 1;
-    underTest.setError(DataSourceErrorKind.ErrorResponse, 'womp', 400, true);
+    underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 400, true);
     time += 1;
-    underTest.setError(DataSourceErrorKind.ErrorResponse, 'womp', 400, true);
+    underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 400, true);
     time += 1;
-    underTest.setShutdown();
+    underTest.requestStateUpdate(DataSourceState.Closed);
     expect(spyListener).toHaveBeenCalledTimes(4);
     expect(spyListener).toHaveBeenNthCalledWith(
       1,
@@ -100,7 +101,7 @@ describe('DataSourceStatusManager', () => {
     expect(spyListener).toHaveBeenNthCalledWith(
       4,
       expect.objectContaining({
-        state: DataSourceState.Shutdown,
+        state: DataSourceState.Closed,
         stateSince: 3,
         lastError: expect.anything(),
       }),

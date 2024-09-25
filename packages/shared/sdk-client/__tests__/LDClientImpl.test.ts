@@ -33,12 +33,18 @@ describe('sdk-client object', () => {
   let mockPlatform: ReturnType<typeof createBasicPlatform>;
   let logger: ReturnType<typeof createLogger>;
 
-  const onDataSourceChangePromise = () =>
-    new Promise<string[]>((res) => {
-      ldc.on('dataSourceStatus', (_context: LDContext, changes: string[]) => {
-        res(changes);
+  function onDataSourceChangePromise(numToAwait: number) {
+    let countdown = numToAwait;
+    // eslint-disable-next-line no-new
+    return new Promise<void>((res) => {
+      ldc.on('dataSourceStatus', () => {
+        countdown -= 1;
+        if (countdown === 0) {
+          res();
+        }
       });
     });
+  }
 
   beforeEach(() => {
     mockPlatform = createBasicPlatform();
@@ -321,12 +327,21 @@ describe('sdk-client object', () => {
 
     const spyListener = jest.fn();
     ldc.on('dataSourceStatus', spyListener);
-    const changePromise = onDataSourceChangePromise();
+    const changePromise = onDataSourceChangePromise(2);
     await ldc.identify(carContext);
     await changePromise;
 
+    expect(spyListener).toHaveBeenCalledTimes(2);
     expect(spyListener).toHaveBeenNthCalledWith(
       1,
+      expect.objectContaining({
+        state: DataSourceState.Initializing,
+        stateSince: expect.any(Number),
+        lastError: undefined,
+      }),
+    );
+    expect(spyListener).toHaveBeenNthCalledWith(
+      2,
       expect.objectContaining({
         state: DataSourceState.Valid,
         stateSince: expect.any(Number),
@@ -335,7 +350,7 @@ describe('sdk-client object', () => {
     );
   });
 
-  test('data source status emits shutdown when initialization encounters unrecoverable error', async () => {
+  test('data source status emits closed when initialization encounters unrecoverable error', async () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
@@ -350,16 +365,23 @@ describe('sdk-client object', () => {
 
     const spyListener = jest.fn();
     ldc.on('dataSourceStatus', spyListener);
-    const changePromise = onDataSourceChangePromise();
-
+    const changePromise = onDataSourceChangePromise(2);
     await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
     await changePromise;
 
-    expect(spyListener).toHaveBeenCalledTimes(1);
+    expect(spyListener).toHaveBeenCalledTimes(2);
     expect(spyListener).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        state: DataSourceState.Shutdown,
+        state: DataSourceState.Initializing,
+        stateSince: expect.any(Number),
+        lastError: undefined,
+      }),
+    );
+    expect(spyListener).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        state: DataSourceState.Closed,
         stateSince: expect.any(Number),
         lastError: expect.anything(),
       }),

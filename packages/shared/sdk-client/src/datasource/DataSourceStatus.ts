@@ -5,7 +5,7 @@ export enum DataSourceState {
   Valid,
   Interrupted,
   SetOffline,
-  Shutdown,
+  Closed,
   // TODO: SDK-702 - Implement network availability behaviors
   // NetworkUnavailable,
 }
@@ -20,8 +20,8 @@ export default interface DataSourceStatus {
    * The UNIX epoch timestamp in milliseconds that the value of State most recently changed.
    *
    * The meaning of this depends on the current state:
-   * For {@link DataSourceState.Initializing}, it is the time that the SDK started
-   * initializing.
+   * For {@link DataSourceState.Initializing}, it is the time that the datasource started
+   * attempting to retrieve data.
    *
    * For {@link DataSourceState.Valid}, it is the time that the data source most
    * recently entered a valid state, after previously having been
@@ -32,8 +32,8 @@ export default interface DataSourceStatus {
    * most recently entered an error state, after previously having been
    * {@link DataSourceState.valid}.
    *
-   * For {@link DataSourceState.Shutdown}, it is the time that the data source
-   * encountered an unrecoverable error or that the datasource was explicitly shut down.
+   * For {@link DataSourceState.Closed}, it is the time that the data source
+   * encountered an unrecoverable error or that the datasource was explicitly closed.
    */
   readonly stateSince: number;
 
