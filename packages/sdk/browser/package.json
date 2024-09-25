@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "rollup -c rollup.config.js",
+    "build": "tsc --noEmit && rollup -c rollup.config.js",
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand",

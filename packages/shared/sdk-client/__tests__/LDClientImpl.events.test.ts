@@ -2,7 +2,6 @@ import {
   AutoEnvAttributes,
   ClientContext,
   clone,
-  Encoding,
   internal,
   LDContext,
   subsystem,
@@ -17,6 +16,7 @@ import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 type InputCustomEvent = internal.InputCustomEvent;
 type InputIdentifyEvent = internal.InputIdentifyEvent;
@@ -80,18 +80,15 @@ describe('sdk-client object', () => {
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-    });
-
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
       },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-    });
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
   });
 
   afterEach(() => {

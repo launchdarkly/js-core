@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, clone, Encoding, type LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, type LDContext } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { toMulti } from '../src/context/addAutoEnv';
@@ -7,6 +7,7 @@ import LDEmitter from '../src/LDEmitter';
 import { Flags, PatchFlag } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let logger: ReturnType<typeof createLogger>;
@@ -51,19 +52,16 @@ describe('sdk-client storage', () => {
       }
     });
 
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Disabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
       },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-    });
-
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
 
     // @ts-ignore
     emitter = ldc.emitter;
@@ -120,10 +118,16 @@ describe('sdk-client storage', () => {
       },
     );
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
     // @ts-ignore
     emitter = ldc.emitter;
     jest.spyOn(emitter as LDEmitter, 'emit');
