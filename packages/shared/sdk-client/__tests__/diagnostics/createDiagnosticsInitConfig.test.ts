@@ -9,7 +9,7 @@ describe('createDiagnosticsInitConfig', () => {
   let initConfig: DiagnosticsInitConfig;
 
   beforeEach(() => {
-    initConfig = createDiagnosticsInitConfig(new Configuration());
+    initConfig = createDiagnosticsInitConfig(new ConfigurationImpl());
   });
 
   test('defaults', () => {
