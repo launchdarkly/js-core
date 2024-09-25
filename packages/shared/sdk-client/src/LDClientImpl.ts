@@ -21,7 +21,7 @@ import {
 import { LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
-import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
+import { ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
 import { DataManager, DataManagerFactory } from './DataManager';
@@ -54,7 +54,7 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryDefault = new EventFactory(false);
   private eventFactoryWithReasons = new EventFactory(true);
   protected emitter: LDEmitter;
-  private flagManager: DefaultFlagManager;
+  private flagManager: FlagManager;
 
   private eventSendingEnabled: boolean = false;
   private baseHeaders: LDHeaders;
