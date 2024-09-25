@@ -1,6 +1,6 @@
 import { secondsToMillis } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../../src/configuration';
+import { ConfigurationImpl } from '../../src/configuration';
 import createDiagnosticsInitConfig, {
   type DiagnosticsInitConfig,
 } from '../../src/diagnostics/createDiagnosticsInitConfig';
@@ -29,7 +29,7 @@ describe('createDiagnosticsInitConfig', () => {
 
   test('non-default config', () => {
     const custom = createDiagnosticsInitConfig(
-      new Configuration({
+      new ConfigurationImpl({
         baseUri: 'https://dev.ld.com',
         streamUri: 'https://stream.ld.com',
         eventsUri: 'https://events.ld.com',

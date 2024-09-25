@@ -7,7 +7,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
-import Configuration from '../../src/configuration';
+import { Configuration, ConfigurationImpl } from '../../src/configuration';
 import {
   addApplicationInfo,
   addAutoEnv,
@@ -31,7 +31,7 @@ describe('automatic environment attributes', () => {
   beforeEach(() => {
     ({ crypto, info } = mockPlatform);
     (crypto.randomUUID as jest.Mock).mockResolvedValue('test-device-key-1');
-    config = new Configuration({ logger });
+    config = new ConfigurationImpl({ logger });
   });
 
   afterEach(() => {
