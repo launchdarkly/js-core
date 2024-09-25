@@ -17,10 +17,12 @@ export function createSuccessEvaluationDetail(
   value: LDFlagValue,
   variationIndex?: number,
   reason?: LDEvaluationReason,
+  prerequisites?: string[],
 ): LDEvaluationDetail {
   return {
     value,
     variationIndex: variationIndex ?? null,
     reason: reason ?? null,
+    prerequisites,
   };
 }

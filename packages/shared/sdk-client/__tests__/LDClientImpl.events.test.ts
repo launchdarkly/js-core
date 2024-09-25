@@ -199,4 +199,45 @@ describe('sdk-client object', () => {
       expect.stringMatching(/was called with a non-numeric/),
     );
   });
+
+  it('sends events for prerequisite flags', async () => {
+    await ldc.identify({ kind: 'user', key: 'bob' });
+    ldc.variation('has-prereq-depth-1', false);
+    ldc.flush();
+
+    // Prerequisite evaluation event should be emitted before the evaluation event for the flag
+    // being evaluated.
+    expect(mockedSendEvent).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        context: expect.anything(),
+        creationDate: expect.any(Number),
+        default: undefined,
+        key: 'is-prereq',
+        kind: 'feature',
+        samplingRatio: 1,
+        trackEvents: true,
+        value: true,
+        variation: 0,
+        version: 1,
+        withReasons: false,
+      }),
+    );
+    expect(mockedSendEvent).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        context: expect.anything(),
+        creationDate: expect.any(Number),
+        default: false,
+        key: 'has-prereq-depth-1',
+        kind: 'feature',
+        samplingRatio: 1,
+        trackEvents: true,
+        value: true,
+        variation: 0,
+        version: 4,
+        withReasons: false,
+      }),
+    );
+  });
 });
