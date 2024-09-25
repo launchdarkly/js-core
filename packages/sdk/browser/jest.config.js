@@ -7,5 +7,5 @@ export default {
     '^.+\\.tsx?$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.json' }],
   },
   testPathIgnorePatterns: ['./dist', './src'],
-  testMatch: ['**.test.ts']
+  testMatch: ['**.test.ts'],
 };
