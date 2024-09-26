@@ -26,7 +26,7 @@
 <ul class="tsd-hierarchy">
 <li><a href="../interfaces/platform-1.subsystem.LDEventProcessor.html" class="tsd-signature-type tsd-kind-interface">LDEventProcessor</a></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:13</li></ul></aside>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:14</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -74,7 +74,7 @@
 <section class="tsd-panel tsd-member"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_EventProcessor"><span class="tsd-kind-constructor-signature">new <wbr/>Event<wbr/>Processor</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">config</span>, <span class="tsd-kind-parameter">clientContext</span>, <span class="tsd-kind-parameter">contextDeduplicator</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">diagnosticsManager</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">start</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.internal.EventProcessor.html" class="tsd-signature-type tsd-kind-class">EventProcessor</a><a href="#constructor.new_EventProcessor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_EventProcessor"><span class="tsd-kind-constructor-signature">new <wbr/>Event<wbr/>Processor</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">config</span>, <span class="tsd-kind-parameter">clientContext</span>, <span class="tsd-kind-parameter">baseHeaders</span>, <span class="tsd-kind-parameter">contextDeduplicator</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">diagnosticsManager</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">start</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.internal.EventProcessor.html" class="tsd-signature-type tsd-kind-class">EventProcessor</a><a href="#constructor.new_EventProcessor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -84,6 +84,8 @@
 <li>
 <h5><span class="tsd-kind-parameter">clientContext</span>: <a href="platform-1.ClientContext.html" class="tsd-signature-type tsd-kind-class">ClientContext</a></h5></li>
 <li>
+<h5><span class="tsd-kind-parameter">baseHeaders</span>: <a href="../types/platform-1.LDHeaders.html" class="tsd-signature-type tsd-kind-type-alias">LDHeaders</a></h5></li>
+<li>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">contextDeduplicator</span>: <a href="../interfaces/platform-1.subsystem.LDContextDeduplicator.html" class="tsd-signature-type tsd-kind-interface">LDContextDeduplicator</a></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li>
 <li>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">diagnosticsManager</span>: <a href="platform-1.internal.DiagnosticsManager.html" class="tsd-signature-type tsd-kind-class">DiagnosticsManager</a></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li>
@@ -91,124 +93,124 @@
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">start</span>: <span class="tsd-signature-type">boolean</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="platform-1.internal.EventProcessor.html" class="tsd-signature-type tsd-kind-class">EventProcessor</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:32</li></ul></aside></li></ul></section></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:33</li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="capacity" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>capacity</span><a href="#capacity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">capacity</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:26</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:27</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="config" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>config</span><a href="#config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">config</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:14</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:15</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="contextDeduplicator" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>context<wbr/>Deduplicator</span><a href="#contextDeduplicator" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">context<wbr/>Deduplicator</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:15</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:16</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="contextFilter" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>context<wbr/>Filter</span><a href="#contextFilter" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">context<wbr/>Filter</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:28</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:29</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="deduplicatedUsers" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>deduplicated<wbr/>Users</span><a href="#deduplicatedUsers" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">deduplicated<wbr/>Users</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:22</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:23</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="diagnosticsManager" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>diagnostics<wbr/>Manager</span><a href="#diagnosticsManager" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">diagnostics<wbr/>Manager</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:16</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:17</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="diagnosticsTimer" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>diagnostics<wbr/>Timer</span><a href="#diagnosticsTimer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">diagnostics<wbr/>Timer</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:29</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:30</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="droppedEvents" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>dropped<wbr/>Events</span><a href="#droppedEvents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">dropped<wbr/>Events</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:21</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:22</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="enqueue" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>enqueue</span><a href="#enqueue" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">enqueue</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:39</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:40</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="eventSender" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>event<wbr/>Sender</span><a href="#eventSender" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">event<wbr/>Sender</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:17</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:18</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="eventsInLastBatch" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>events<wbr/>In<wbr/>Last<wbr/>Batch</span><a href="#eventsInLastBatch" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">events<wbr/>In<wbr/>Last<wbr/>Batch</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:24</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:25</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="exceededCapacity" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>exceeded<wbr/>Capacity</span><a href="#exceededCapacity" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">exceeded<wbr/>Capacity</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:23</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:24</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="flushTimer" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>flush<wbr/>Timer</span><a href="#flushTimer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">flush<wbr/>Timer</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:30</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:31</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="flushUsersTimer" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>flush<wbr/>Users<wbr/>Timer</span><a href="#flushUsersTimer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">flush<wbr/>Users<wbr/>Timer</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:31</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:32</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="lastKnownPastTime" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>last<wbr/>Known<wbr/>Past<wbr/>Time</span><a href="#lastKnownPastTime" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">last<wbr/>Known<wbr/>Past<wbr/>Time</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:20</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:21</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="logger" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>logger</span><a href="#logger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">logger</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:27</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:28</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="makeOutputEvent" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>make<wbr/>Output<wbr/>Event</span><a href="#makeOutputEvent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">make<wbr/>Output<wbr/>Event</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:38</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:39</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="postDiagnosticEvent" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>post<wbr/>Diagnostic<wbr/>Event</span><a href="#postDiagnosticEvent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">post<wbr/>Diagnostic<wbr/>Event</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:34</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:35</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="queue" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>queue</span><a href="#queue" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">queue</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:19</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:20</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="shouldDebugEvent" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>should<wbr/>Debug<wbr/>Event</span><a href="#shouldDebugEvent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">should<wbr/>Debug<wbr/>Event</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:40</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:41</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="shutdown" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>shutdown</span><a href="#shutdown" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">shutdown</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:25</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:26</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="summarizer" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>summarizer</span><a href="#summarizer" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">summarizer</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:18</li></ul></aside></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:19</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="tryPostingEvents" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>try<wbr/>Posting<wbr/>Events</span><a href="#tryPostingEvents" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">try<wbr/>Posting<wbr/>Events</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:41</li></ul></aside></section></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:42</li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member"><a id="close" class="tsd-anchor"></a>
@@ -219,7 +221,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/platform-1.subsystem.LDEventProcessor.html">LDEventProcessor</a>.<a href="../interfaces/platform-1.subsystem.LDEventProcessor.html#close">close</a></p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:35</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:36</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="flush" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>flush</span><a href="#flush" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -228,7 +230,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/platform-1.subsystem.LDEventProcessor.html">LDEventProcessor</a>.<a href="../interfaces/platform-1.subsystem.LDEventProcessor.html#flush">flush</a></p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:36</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:37</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="sendEvent" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>send<wbr/>Event</span><a href="#sendEvent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -242,7 +244,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/platform-1.subsystem.LDEventProcessor.html">LDEventProcessor</a>.<a href="../interfaces/platform-1.subsystem.LDEventProcessor.html#sendEvent">sendEvent</a></p>
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:37</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:38</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="start" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>start</span><a href="#start" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -250,7 +252,7 @@
 <li class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:33</li></ul></aside></li></ul></section></section></div>
+<li>Defined in packages/shared/common/dist/internal/events/EventProcessor.d.ts:34</li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -317,6 +319,7 @@
 <li><a href="../modules.html#EventListener"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Event<wbr/>Listener</span></a></li>
 <li><a href="../modules.html#EventName"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Event<wbr/>Name</span></a></li>
 <li><a href="../modules.html#EventSource"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Event<wbr/>Source</span></a></li>
+<li><a href="../modules.html#EventSourceCapabilities"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Event<wbr/>Source<wbr/>Capabilities</span></a></li>
 <li><a href="../modules.html#EventSourceInitDict"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Event<wbr/>Source<wbr/>Init<wbr/>Dict</span></a></li>
 <li><a href="../modules.html#FactoryOrInstance"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Factory<wbr/>Or<wbr/>Instance</span></a></li>
 <li><a href="../modules.html#Filesystem"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Filesystem</span></a></li>
@@ -458,6 +461,7 @@
 <li><a href="../interfaces/platform-1.Crypto.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Crypto</span></a></li>
 <li><a href="../interfaces/platform-1.Encoding.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Encoding</span></a></li>
 <li><a href="../interfaces/platform-1.EventSource.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source</span></a></li>
+<li><a href="../interfaces/platform-1.EventSourceCapabilities.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Capabilities</span></a></li>
 <li><a href="../interfaces/platform-1.EventSourceInitDict.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Init<wbr/>Dict</span></a></li>
 <li><a href="../interfaces/platform-1.Filesystem.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Filesystem</span></a></li>
 <li><a href="../interfaces/platform-1.Hasher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Hasher</span></a></li>
