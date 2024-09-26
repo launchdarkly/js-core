@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { DataSourceState } from '../src/datasource/DataSourceStatus';
@@ -6,6 +6,7 @@ import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
@@ -57,15 +58,6 @@ describe('sdk-client object', () => {
     };
     mockPlatform.crypto.createHash.mockReturnValue(hasher);
 
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path/get';
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path/report';
-      },
-    });
-
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
     mockPlatform.requests.getEventSourceCapabilities.mockImplementation(() => ({
       readTimeout: true,
@@ -80,10 +72,16 @@ describe('sdk-client object', () => {
       },
     );
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
   });
 
   afterEach(async () => {
@@ -149,11 +147,17 @@ describe('sdk-client object', () => {
     });
     mockPlatform.requests.createEventSource = mockCreateEventSource;
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-      withReasons: true,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+        withReasons: true,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
 
     await ldc.identify(carContext);
 
@@ -174,11 +178,17 @@ describe('sdk-client object', () => {
     });
     mockPlatform.requests.createEventSource = mockCreateEventSource;
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-      useReport: true,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+        useReport: true,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
 
     await ldc.identify(carContext);
 
@@ -193,10 +203,16 @@ describe('sdk-client object', () => {
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Disabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
 
     await ldc.identify(carContext);
     const c = ldc.getContext();

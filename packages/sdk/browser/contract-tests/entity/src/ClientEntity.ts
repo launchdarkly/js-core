@@ -29,7 +29,6 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   }
 
   if (options.polling) {
-    cf.initialConnectionMode = 'polling';
     if (options.polling.baseUri) {
       cf.baseUri = options.polling.baseUri;
     }
@@ -42,7 +41,7 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     if (options.streaming.baseUri) {
       cf.streamUri = options.streaming.baseUri;
     }
-    cf.initialConnectionMode = 'streaming';
+    cf.streaming = true;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
   }
 

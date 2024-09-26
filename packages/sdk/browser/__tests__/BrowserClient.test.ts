@@ -4,7 +4,6 @@ import {
   AutoEnvAttributes,
   EventSourceCapabilities,
   EventSourceInitDict,
-  Hasher,
   LDLogger,
   PlatformData,
   Requests,
@@ -12,6 +11,7 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserClient } from '../src/BrowserClient';
+import { MockHasher } from './MockHasher';
 
 function mockResponse(value: string, statusCode: number) {
   const response: Response = {
@@ -79,18 +79,6 @@ function makeRequests(): Requests {
   };
 }
 
-class MockHasher implements Hasher {
-  update(_data: string): Hasher {
-    return this;
-  }
-  digest?(_encoding: string): string {
-    return 'hashed';
-  }
-  async asyncDigest?(_encoding: string): Promise<string> {
-    return 'hashed';
-  }
-}
-
 describe('given a mock platform for a BrowserClient', () => {
   const logger: LDLogger = {
     debug: jest.fn(),
@@ -141,7 +129,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        streaming: false,
         logger,
         diagnosticOptOut: true,
       },
@@ -169,7 +157,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        streaming: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>
@@ -202,7 +190,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        streaming: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>
@@ -245,7 +233,7 @@ describe('given a mock platform for a BrowserClient', () => {
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
-        initialConnectionMode: 'polling',
+        streaming: false,
         logger,
         diagnosticOptOut: true,
         eventUrlTransformer: (url: string) =>

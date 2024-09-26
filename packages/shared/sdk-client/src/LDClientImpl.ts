@@ -3,7 +3,6 @@ import {
   clone,
   Context,
   defaultHeaders,
-  Encoding,
   internal,
   LDClientError,
   LDContext,
@@ -14,21 +13,18 @@ import {
   Platform,
   ProcessStreamResponse,
   EventName as StreamEventName,
+  subsystem,
   timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
-import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
-import { ConnectionMode, LDClient, type LDOptions } from './api';
+import { LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
-import Configuration from './configuration';
-import { LDClientInternalOptions } from './configuration/Configuration';
+import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
-import DataSourceEventHandler from './datasource/DataSourceEventHandler';
-import DataSourceStatus, { DataSourceState } from './datasource/DataSourceStatus';
-import DataSourceStatusManager from './datasource/DataSourceStatusManager';
+import { DataManager, DataManagerFactory } from './DataManager';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import {
   createErrorEvaluationDetail,
@@ -36,12 +32,8 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import FlagManager from './flag-manager/FlagManager';
+import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
 import LDEmitter, { EventName } from './LDEmitter';
-import PollingProcessor from './polling/PollingProcessor';
-import { StreamingProcessor } from './streaming';
-import { DataSourcePaths } from './streaming/DataSourceConfig';
-import { DeleteFlag, Flags, PatchFlag } from './types';
 
 const { ClientMessages, ErrorKinds } = internal;
 
@@ -53,7 +45,7 @@ export default class LDClientImpl implements LDClient {
   private eventProcessor?: internal.EventProcessor;
   private identifyTimeout: number = 5;
   readonly logger: LDLogger;
-  private updateProcessor?: LDStreamProcessor;
+  private updateProcessor?: subsystem.LDStreamProcessor;
 
   private readonly highTimeoutThreshold: number = 15;
 
@@ -61,13 +53,10 @@ export default class LDClientImpl implements LDClient {
   private eventFactoryWithReasons = new EventFactory(true);
   private emitter: LDEmitter;
   private flagManager: FlagManager;
-  private dataSourceStatusManager: DataSourceStatusManager;
-  private dataSourceEventHandler: DataSourceEventHandler;
 
-  private eventSendingEnabled: boolean = true;
-  private networkAvailable: boolean = true;
-  private connectionMode: ConnectionMode;
+  private eventSendingEnabled: boolean = false;
   private baseHeaders: LDHeaders;
+  protected dataManager: DataManager;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -77,6 +66,7 @@ export default class LDClientImpl implements LDClient {
     public readonly autoEnvAttributes: AutoEnvAttributes,
     public readonly platform: Platform,
     options: LDOptions,
+    dataManagerFactory: DataManagerFactory,
     internalOptions?: LDClientInternalOptions,
   ) {
     if (!sdkKey) {
@@ -87,8 +77,7 @@ export default class LDClientImpl implements LDClient {
       throw new Error('Platform must implement Encoding because btoa is required.');
     }
 
-    this.config = new Configuration(options, internalOptions);
-    this.connectionMode = this.config.initialConnectionMode;
+    this.config = new ConfigurationImpl(options, internalOptions);
     this.logger = this.config.logger;
 
     this.baseHeaders = defaultHeaders(
@@ -99,16 +88,10 @@ export default class LDClientImpl implements LDClient {
       this.config.userAgentHeaderName,
     );
 
-    this.flagManager = new FlagManager(
+    this.flagManager = new DefaultFlagManager(
       this.platform,
       sdkKey,
       this.config.maxCachedContexts,
-      this.config.logger,
-    );
-    this.dataSourceStatusManager = new DataSourceStatusManager();
-    this.dataSourceEventHandler = new DataSourceEventHandler(
-      this.flagManager,
-      this.dataSourceStatusManager,
       this.config.logger,
     );
     this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
@@ -118,7 +101,6 @@ export default class LDClientImpl implements LDClient {
       platform,
       this.baseHeaders,
       this.diagnosticsManager,
-      !this.isOffline(),
     );
     this.emitter = new LDEmitter();
     this.emitter.on('change', (c: LDContext, changedKeys: string[]) => {
@@ -133,57 +115,18 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('change', ldContext, flagKeys);
     });
 
-    this.dataSourceStatusManager.on((status: DataSourceStatus) => {
-      this.emitter.emit('dataSourceStatus', status);
-    });
-  }
+    // TODO: update this to get events from DataManager
+    // this.dataSourceStatusManager.on((status: DataSourceStatus) => {
+    //   this.emitter.emit('dataSourceStatus', status);
+    // });
 
-  /**
-   * Sets the SDK connection mode.
-   *
-   * @param mode - One of supported {@link ConnectionMode}. Default is 'streaming'.
-   */
-  async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    if (this.connectionMode === mode) {
-      this.logger.debug(`setConnectionMode ignored. Mode is already '${mode}'.`);
-      return Promise.resolve();
-    }
-
-    this.connectionMode = mode;
-    this.logger.debug(`setConnectionMode ${mode}.`);
-
-    switch (mode) {
-      case 'offline':
-        this.updateProcessor?.close();
-        this.dataSourceStatusManager.requestStateUpdate(DataSourceState.SetOffline);
-        break;
-      case 'polling':
-      case 'streaming':
-        if (this.uncheckedContext) {
-          // identify will start the update processor
-          return this.identify(this.uncheckedContext, { timeout: this.identifyTimeout });
-        }
-
-        break;
-      default:
-        this.logger.warn(
-          `Unknown ConnectionMode: ${mode}. Only 'offline', 'streaming', and 'polling' are supported.`,
-        );
-        break;
-    }
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Gets the SDK connection mode.
-   */
-  getConnectionMode(): ConnectionMode {
-    return this.connectionMode;
-  }
-
-  isOffline() {
-    return this.connectionMode === 'offline';
+    this.dataManager = dataManagerFactory(
+      this.flagManager,
+      this.config,
+      this.baseHeaders,
+      this.emitter,
+      this.diagnosticsManager,
+    );
   }
 
   allFlags(): LDFlagSet {
@@ -204,7 +147,6 @@ export default class LDClientImpl implements LDClient {
     await this.flush();
     this.eventProcessor?.close();
     this.updateProcessor?.close();
-    this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Closed);
     this.logger.debug('Closed event processor and data source.');
   }
 
@@ -233,67 +175,11 @@ export default class LDClientImpl implements LDClient {
     return this.checkedContext;
   }
 
-  private createStreamListeners(
-    context: Context,
-    identifyResolve: any,
-  ): Map<StreamEventName, ProcessStreamResponse> {
-    const listeners = new Map<StreamEventName, ProcessStreamResponse>();
-
-    listeners.set('put', {
-      deserializeData: JSON.parse,
-      processJson: async (flags: Flags) => {
-        this.dataSourceEventHandler.handlePut(context, flags).then(identifyResolve());
-      },
-    });
-
-    listeners.set('patch', {
-      deserializeData: JSON.parse,
-      processJson: async (patchFlag: PatchFlag) => {
-        this.dataSourceEventHandler.handlePatch(context, patchFlag);
-      },
-    });
-
-    listeners.set('delete', {
-      deserializeData: JSON.parse,
-      processJson: async (deleteFlag: DeleteFlag) => {
-        this.dataSourceEventHandler.handleDelete(context, deleteFlag);
-      },
-    });
-
-    return listeners;
-  }
-
-  protected getStreamingPaths(): DataSourcePaths {
-    return {
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with GET to work.',
-        );
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getStreamingPaths not implemented. Client sdks must implement getStreamingPaths for streaming with REPORT to work.',
-        );
-      },
-    };
-  }
-
-  protected getPollingPaths(): DataSourcePaths {
-    return {
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with GET to work.',
-        );
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        throw new Error(
-          'getPollingPaths not implemented. Client sdks must implement getPollingPaths for polling with REPORT to work.',
-        );
-      },
-    };
-  }
-
-  private createIdentifyPromise(timeout: number) {
+  private createIdentifyPromise(timeout: number): {
+    identifyPromise: Promise<void>;
+    identifyResolve: () => void;
+    identifyReject: (err: Error) => void;
+  } {
     let res: any;
     let rej: any;
 
@@ -329,9 +215,6 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    // In offline mode we do not support waiting for results.
-    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !this.isOffline();
-
     if (identifyOptions?.timeout) {
       this.identifyTimeout = identifyOptions.timeout;
     }
@@ -365,108 +248,14 @@ export default class LDClientImpl implements LDClient {
     );
     this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
 
-    const loadedFromCache = await this.flagManager.loadCached(this.checkedContext);
-    if (loadedFromCache && !waitForNetworkResults) {
-      this.logger.debug('Identify completing with cached flags');
-      identifyResolve();
-    }
-    if (loadedFromCache && waitForNetworkResults) {
-      this.logger.debug(
-        'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
-      );
-    }
-
-    if (this.isOffline()) {
-      if (loadedFromCache) {
-        this.logger.debug('Offline identify - using cached flags.');
-      } else {
-        this.logger.debug(
-          'Offline identify - no cached flags, using defaults or already loaded flags.',
-        );
-        identifyResolve();
-      }
-    } else {
-      // we don't update data source status in this path because we are about to start again
-      if (this.updateProcessor) {
-        this.updateProcessor.close();
-        this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Closed);
-      }
-
-      switch (this.getConnectionMode()) {
-        case 'streaming':
-          this.createStreamingProcessor(context, checkedContext, identifyResolve, identifyReject);
-          break;
-        case 'polling':
-          this.createPollingProcessor(context, checkedContext, identifyResolve, identifyReject);
-          break;
-        default:
-          break;
-      }
-      // update status before starting processor to ensure potential errors are reported after initializing
-      this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
-      this.updateProcessor!.start();
-    }
+    await this.dataManager.identify(
+      identifyResolve,
+      identifyReject,
+      checkedContext,
+      identifyOptions,
+    );
 
     return identifyPromise;
-  }
-
-  private createPollingProcessor(
-    context: LDContext,
-    checkedContext: Context,
-    identifyResolve: any,
-    identifyReject: any,
-  ) {
-    this.updateProcessor = new PollingProcessor(
-      JSON.stringify(context),
-      {
-        credential: this.sdkKey,
-        serviceEndpoints: this.config.serviceEndpoints,
-        paths: this.getPollingPaths(),
-        baseHeaders: this.baseHeaders,
-        pollInterval: this.config.pollInterval,
-        withReasons: this.config.withReasons,
-        useReport: this.config.useReport,
-      },
-      this.platform.requests,
-      this.platform.encoding!,
-      async (flags: Flags) => {
-        this.dataSourceEventHandler.handlePut(checkedContext, flags).then(identifyResolve);
-      },
-      (err) => {
-        this.emitter.emit('error', context, err);
-        this.dataSourceEventHandler.handlePollingError(err);
-        identifyReject(err);
-      },
-    );
-  }
-
-  private createStreamingProcessor(
-    context: LDContext,
-    checkedContext: Context,
-    identifyResolve: any,
-    identifyReject: any,
-  ) {
-    this.updateProcessor = new StreamingProcessor(
-      JSON.stringify(context),
-      {
-        credential: this.sdkKey,
-        serviceEndpoints: this.config.serviceEndpoints,
-        paths: this.getStreamingPaths(),
-        baseHeaders: this.baseHeaders,
-        initialRetryDelayMillis: this.config.streamInitialReconnectDelay * 1000,
-        withReasons: this.config.withReasons,
-        useReport: this.config.useReport,
-      },
-      this.createStreamListeners(checkedContext, identifyResolve),
-      this.platform.requests,
-      this.platform.encoding!,
-      this.diagnosticsManager,
-      (e) => {
-        this.emitter.emit('error', context, e);
-        this.dataSourceEventHandler.handleStreamingError(e);
-        identifyReject(e);
-      },
-    );
   }
 
   off(eventName: EventName, listener: Function): void {
@@ -627,18 +416,6 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
-  }
-
-  /**
-   * Inform the client of the network state. Can be used to modify connection behavior.
-   *
-   * For instance the implementation may choose to suppress errors from connections if the client
-   * knows that there is no network available.
-   * @param _available True when there is an available network.
-   */
-  protected setNetworkAvailability(available: boolean): void {
-    this.networkAvailable = available;
-    // TODO: SDK-702 - Implement network availability behaviors
   }
 
   /**

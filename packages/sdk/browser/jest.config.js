@@ -6,5 +6,6 @@ export default {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.json' }],
   },
-  testPathIgnorePatterns: ['./dist'],
+  testPathIgnorePatterns: ['./dist', './src'],
+  testMatch: ['**.test.ts'],
 };

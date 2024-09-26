@@ -3,15 +3,19 @@ import {
   base64UrlEncode,
   BasicLogger,
   LDClient as CommonClient,
-  DataSourcePaths,
+  Configuration,
   Encoding,
+  FlagManager,
   internal,
   LDClientImpl,
   LDContext,
+  LDEmitter,
+  LDHeaders,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 import { LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common/dist/api/LDIdentifyOptions';
 
+import BrowserDataManager from './BrowserDataManager';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
@@ -19,8 +23,14 @@ import BrowserPlatform from './platform/BrowserPlatform';
 
 /**
  * We are not supporting dynamically setting the connection mode on the LDClient.
+ * The SDK does not support offline mode. Instead bootstrap data can be used.
  */
-export type LDClient = Omit<CommonClient, 'setConnectionMode'>;
+export type LDClient = Omit<
+  CommonClient,
+  'setConnectionMode' | 'getConnectionMode' | 'getOffline'
+> & {
+  setStreaming(streaming: boolean): void;
+};
 
 export class BrowserClient extends LDClientImpl {
   private readonly goalManager?: GoalManager;
@@ -43,26 +53,67 @@ export class BrowserClient extends LDClientImpl {
     const baseUrl = options.baseUri ?? 'https://clientsdk.launchdarkly.com';
 
     const platform = overridePlatform ?? new BrowserPlatform(logger);
-    const ValidatedBrowserOptions = validateOptions(options, logger);
-    const { eventUrlTransformer } = ValidatedBrowserOptions;
-    super(clientSideId, autoEnvAttributes, platform, filterToBaseOptions(options), {
-      analyticsEventPath: `/events/bulk/${clientSideId}`,
-      diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
-      includeAuthorizationHeader: false,
-      highTimeoutThreshold: 5,
-      userAgentHeaderName: 'x-launchdarkly-user-agent',
-      trackEventModifier: (event: internal.InputCustomEvent) =>
-        new internal.InputCustomEvent(
-          event.context,
-          event.key,
-          event.data,
-          event.metricValue,
-          event.samplingRatio,
-          eventUrlTransformer(window.location.href),
+    const validatedBrowserOptions = validateOptions(options, logger);
+    const { eventUrlTransformer } = validatedBrowserOptions;
+    super(
+      clientSideId,
+      autoEnvAttributes,
+      platform,
+      filterToBaseOptions(options),
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new BrowserDataManager(
+          platform,
+          flagManager,
+          clientSideId,
+          configuration,
+          validatedBrowserOptions,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/sdk/evalx/${clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/sdk/evalx/${clientSideId}/context`;
+            },
+          }),
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/eval/${clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/eval/${clientSideId}`;
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
         ),
-    });
+      {
+        analyticsEventPath: `/events/bulk/${clientSideId}`,
+        diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
+        includeAuthorizationHeader: false,
+        highTimeoutThreshold: 5,
+        userAgentHeaderName: 'x-launchdarkly-user-agent',
+        trackEventModifier: (event: internal.InputCustomEvent) =>
+          new internal.InputCustomEvent(
+            event.context,
+            event.key,
+            event.data,
+            event.metricValue,
+            event.samplingRatio,
+            eventUrlTransformer(window.location.href),
+          ),
+      },
+    );
 
-    if (ValidatedBrowserOptions.fetchGoals) {
+    this.setEventSendingEnabled(true, false);
+
+    if (validatedBrowserOptions.fetchGoals) {
       this.goalManager = new GoalManager(
         clientSideId,
         platform.requests,
@@ -108,36 +159,17 @@ export class BrowserClient extends LDClientImpl {
     }
   }
 
-  private encodeContext(context: LDContext) {
-    return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
-  }
-
-  override getStreamingPaths(): DataSourcePaths {
-    const parentThis = this;
-    return {
-      pathGet(encoding: Encoding, _plainContextString: string): string {
-        return `/eval/${parentThis.clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return `/eval/${parentThis.clientSideId}`;
-      },
-    };
-  }
-
-  override getPollingPaths(): DataSourcePaths {
-    const parentThis = this;
-    return {
-      pathGet(encoding: Encoding, _plainContextString: string): string {
-        return `/sdk/evalx/${parentThis.clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return `/sdk/evalx/${parentThis.clientSideId}/context`;
-      },
-    };
-  }
-
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     await super.identify(context, identifyOptions);
     this.goalManager?.startTracking();
+  }
+
+  setStreaming(streaming: boolean): void {
+    const browserDataManager = this.dataManager as BrowserDataManager;
+    if (streaming) {
+      browserDataManager.startDataSource();
+    } else {
+      browserDataManager.stopDataSource();
+    }
   }
 }
