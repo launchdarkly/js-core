@@ -6,7 +6,6 @@ import { DeleteFlag, Flags, PatchFlag } from '../types';
 import { DataSourceState } from './DataSourceStatus';
 import DataSourceStatusManager from './DataSourceStatusManager';
 
-
 type LDStreamingError = internal.LDStreamingError;
 type LDPollingError = internal.LDPollingError;
 

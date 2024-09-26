@@ -17,7 +17,10 @@ export default class DataSourceStatusManager {
   private errorInfo?: DataSourceStatusErrorInfo;
   private timeStamper: () => number;
 
-  constructor(private readonly emitter: LDEmitter, timeStamper: () => number = () => Date.now()) {
+  constructor(
+    private readonly emitter: LDEmitter,
+    timeStamper: () => number = () => Date.now(),
+  ) {
     this.state = DataSourceState.Closed;
     this.stateSinceMillis = timeStamper();
     this.timeStamper = timeStamper;
