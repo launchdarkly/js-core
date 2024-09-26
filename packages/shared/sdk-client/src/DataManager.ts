@@ -78,7 +78,7 @@ export abstract class BaseDataManager implements DataManager {
     protected readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
-    this.dataSourceStatusManager = new DataSourceStatusManager();
+    this.dataSourceStatusManager = new DataSourceStatusManager(emitter);
     this.dataSourceEventHandler = new DataSourceEventHandler(
       flagManager,
       this.dataSourceStatusManager,

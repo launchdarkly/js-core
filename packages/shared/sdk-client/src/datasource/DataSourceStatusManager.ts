@@ -17,14 +17,9 @@ export default class DataSourceStatusManager {
   private errorInfo?: DataSourceStatusErrorInfo;
   private timeStamper: () => number;
 
-  // TODO: at the moment the LDEmitter requires an event name internally, would be nice to not need to provide an event name,
-  // but perhaps also not worth refactoring/supporting another style
-  private emitter: LDEmitter;
-
-  constructor(timeStamper: () => number = () => Date.now()) {
+  constructor(private readonly emitter: LDEmitter, timeStamper: () => number = () => Date.now()) {
     this.state = DataSourceState.Closed;
     this.stateSinceMillis = timeStamper();
-    this.emitter = new LDEmitter();
     this.timeStamper = timeStamper;
   }
 
@@ -57,20 +52,6 @@ export default class DataSourceStatusManager {
     if (changedState || isError) {
       this.emitter.emit('dataSourceStatus', this.status);
     }
-  }
-
-  /**
-   * @param listener that will be registered to receive updates
-   */
-  on(listener: DataSourceStatusCallback) {
-    this.emitter.on('dataSourceStatus', listener);
-  }
-
-  /**
-   * @param listener that will be unregisted and will no longer receive updates
-   */
-  off(listener: DataSourceStatusCallback) {
-    this.emitter.off('dataSourceStatus', listener);
   }
 
   /**

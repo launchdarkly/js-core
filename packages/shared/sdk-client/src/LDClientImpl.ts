@@ -115,11 +115,6 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('change', ldContext, flagKeys);
     });
 
-    // TODO: update this to get events from DataManager
-    // this.dataSourceStatusManager.on((status: DataSourceStatus) => {
-    //   this.emitter.emit('dataSourceStatus', status);
-    // });
-
     this.dataManager = dataManagerFactory(
       this.flagManager,
       this.config,
