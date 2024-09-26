@@ -11,8 +11,6 @@ import {
   LDHeaders,
   LDLogger,
   Platform,
-  ProcessStreamResponse,
-  EventName as StreamEventName,
   subsystem,
   timedPromise,
   TypeValidators,

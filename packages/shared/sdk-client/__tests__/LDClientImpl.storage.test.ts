@@ -136,7 +136,6 @@ describe('sdk-client storage', () => {
       expect.stringMatching('LaunchDarkly_1234567890123456_1234567890123456'),
     );
 
-    // 'change' should not have been emitted
     expect(emitter.emit).toHaveBeenCalledWith(
       'change',
       expect.objectContaining(toMulti(context)),
