@@ -265,7 +265,7 @@ export default class Context {
     if (kinds.length === 1) {
       const kind = kinds[0];
       const created = new Context(true, kind);
-      created.context = contexts[kind];
+      created.context = { ...contexts[kind], kind };
       created.privateAttributeReferences = privateAttributes;
       created.isUser = kind === 'user';
       return created;
