@@ -17,7 +17,6 @@ import DataSourceEventHandler from './datasource/DataSourceEventHandler';
 import { DataSourceState } from './datasource/DataSourceStatus';
 import DataSourceStatusManager from './datasource/DataSourceStatusManager';
 import { FlagManager } from './flag-manager/FlagManager';
-import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
 import { DataSourcePaths, StreamingProcessor } from './streaming';
