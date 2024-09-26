@@ -113,18 +113,7 @@ export abstract class BaseDataManager implements DataManager {
       this.platform.requests,
       this.platform.encoding!,
       async (flags) => {
-        this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
-
-        // mapping flags to item descriptors
-        const descriptors = Object.entries(flags).reduce(
-          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag };
-            return acc;
-          },
-          {},
-        );
-
-        await this.flagManager.init(checkedContext, descriptors);
+        await this.dataSourceEventHandler.handlePut(checkedContext, flags);
         identifyResolve?.();
       },
       (err) => {
