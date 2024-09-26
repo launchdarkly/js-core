@@ -1,4 +1,3 @@
-import { LDContext } from '../dist';
 import { AttributeReference, Context } from '../src';
 import ContextFilter from '../src/ContextFilter';
 
