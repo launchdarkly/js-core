@@ -74,9 +74,6 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     };
     config = {
       logger,
-      baseUri: 'string',
-      eventsUri: 'string',
-      streamUri: 'string',
       maxCachedContexts: 5,
       capacity: 100,
       diagnosticRecordingInterval: 1000,
