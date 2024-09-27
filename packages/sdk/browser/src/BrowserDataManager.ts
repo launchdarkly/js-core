@@ -73,15 +73,15 @@ export default class BrowserDataManager extends BaseDataManager {
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void> {
     this.context = context;
-    const browserIdentifyOptions = identifyOptions as BrowserIdentifyOptions;
-    if (browserIdentifyOptions.hash) {
+    const browserIdentifyOptions = identifyOptions as BrowserIdentifyOptions | undefined;
+    if (browserIdentifyOptions?.hash) {
       this.setConnectionParams({
         queryParameters: [{ key: 'h', value: browserIdentifyOptions.hash }],
       });
     } else {
       this.setConnectionParams();
     }
-    this.secureModeHash = browserIdentifyOptions.hash;
+    this.secureModeHash = browserIdentifyOptions?.hash;
     if (await this.flagManager.loadCached(context)) {
       this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
     }
