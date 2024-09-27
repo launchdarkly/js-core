@@ -15,7 +15,7 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 import { EventName } from '@launchdarkly/js-client-sdk-common/dist/LDEmitter';
 
-import { BrowserIdentifyOptions as LDIdentifyOptions } from '../BrowserIdentifyOptions';
+import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import BrowserDataManager from './BrowserDataManager';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';

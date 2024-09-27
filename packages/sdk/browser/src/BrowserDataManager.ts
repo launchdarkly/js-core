@@ -13,7 +13,7 @@ import {
   Requestor,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserIdentifyOptions } from '../BrowserIdentifyOptions';
+import { BrowserIdentifyOptions } from './BrowserIdentifyOptions';
 import { ValidatedOptions } from './options';
 
 const logTag = '[BrowserDataManager]';

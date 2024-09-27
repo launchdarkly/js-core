@@ -17,7 +17,7 @@ import {
   ServiceEndpoints,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserIdentifyOptions } from '../BrowserIdentifyOptions';
+import { BrowserIdentifyOptions } from '../src/BrowserIdentifyOptions';
 import BrowserDataManager from '../src/BrowserDataManager';
 import validateOptions, { ValidatedOptions } from '../src/options';
 import BrowserEncoding from '../src/platform/BrowserEncoding';
