@@ -7,6 +7,7 @@ export interface DataSourceConfig {
   withReasons: boolean;
   useReport: boolean;
   paths: DataSourcePaths;
+  queryParameters?: { key: string; value: string }[];
 }
 
 export interface PollingDataSourceConfig extends DataSourceConfig {

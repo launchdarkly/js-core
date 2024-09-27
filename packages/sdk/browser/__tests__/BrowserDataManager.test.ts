@@ -11,13 +11,13 @@ import {
   internal,
   LDEmitter,
   LDHeaders,
-  LDIdentifyOptions,
   LDLogger,
   Platform,
   Response,
   ServiceEndpoints,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { BrowserIdentifyOptions } from '../BrowserIdentifyOptions';
 import BrowserDataManager from '../src/BrowserDataManager';
 import validateOptions, { ValidatedOptions } from '../src/options';
 import BrowserEncoding from '../src/platform/BrowserEncoding';
@@ -196,7 +196,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     );
 
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
@@ -205,9 +205,91 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     expect(platform.requests.createEventSource).toHaveBeenCalled();
   });
 
+  it('includes the secure mode hash for streaming requests', async () => {
+    dataManager = new BrowserDataManager(
+      platform,
+      flagManager,
+      'test-credential',
+      config,
+      validateOptions({ streaming: true }, logger),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/context`;
+        },
+      }),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/meval`;
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: BrowserIdentifyOptions = { hash: 'potato' };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      '/meval/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?h=potato&withReasons=true',
+      expect.anything(),
+    );
+  });
+
+  it('includes secure mode hash for initial poll request', async () => {
+    dataManager = new BrowserDataManager(
+      platform,
+      flagManager,
+      'test-credential',
+      config,
+      validateOptions({ streaming: false }, logger),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/context`;
+        },
+      }),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/meval`;
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: BrowserIdentifyOptions = { hash: 'potato' };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      '/msdk/evalx/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?withReasons=true&h=potato',
+      expect.anything(),
+    );
+  });
+
   it('should load cached flags and continue to poll to complete identify', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
@@ -230,7 +312,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('should identify from polling when there are no cached flags', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
@@ -253,7 +335,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('creates a stream when streaming is enabled after construction', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
@@ -268,7 +350,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('does not re-create the stream if it already running', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
@@ -296,7 +378,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('starts a stream on demand when not forced on/off', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
@@ -315,7 +397,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('does not start a stream when forced off', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
@@ -335,7 +417,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('starts streaming on identify if the automatic state is true', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyOptions: BrowserIdentifyOptions = {};
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 

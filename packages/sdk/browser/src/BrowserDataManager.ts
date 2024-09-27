@@ -13,6 +13,7 @@ import {
   Requestor,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { BrowserIdentifyOptions } from '../BrowserIdentifyOptions';
 import { ValidatedOptions } from './options';
 
 const logTag = '[BrowserDataManager]';
@@ -22,6 +23,7 @@ export default class BrowserDataManager extends BaseDataManager {
   // Otherwise we automatically manage streaming state.
   private forcedStreaming?: boolean = undefined;
   private automaticStreamingState: boolean = false;
+  private secureModeHash?: string;
 
   // +-----------+-----------+---------------+
   // |  forced   | automatic |     state     |
@@ -68,9 +70,18 @@ export default class BrowserDataManager extends BaseDataManager {
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
     context: Context,
-    _identifyOptions?: LDIdentifyOptions,
+    identifyOptions?: LDIdentifyOptions,
   ): Promise<void> {
     this.context = context;
+    const browserIdentifyOptions = identifyOptions as BrowserIdentifyOptions;
+    if (browserIdentifyOptions.hash) {
+      this.setConnectionParams({
+        queryParameters: [{ key: 'h', value: browserIdentifyOptions.hash }],
+      });
+    } else {
+      this.setConnectionParams();
+    }
+    this.secureModeHash = browserIdentifyOptions.hash;
     if (await this.flagManager.loadCached(context)) {
       this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
     }
@@ -161,6 +172,9 @@ export default class BrowserDataManager extends BaseDataManager {
     const parameters: { key: string; value: string }[] = [];
     if (this.config.withReasons) {
       parameters.push({ key: 'withReasons', value: 'true' });
+    }
+    if (this.secureModeHash) {
+      parameters.push({ key: 'h', value: this.secureModeHash });
     }
 
     const headers: { [key: string]: string } = { ...this.baseHeaders };

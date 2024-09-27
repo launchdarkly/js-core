@@ -55,10 +55,15 @@ export interface DataManagerFactory {
   ): DataManager;
 }
 
+export interface ConnectionParams {
+  queryParameters?: { key: string; value: string }[];
+}
+
 export abstract class BaseDataManager implements DataManager {
   protected updateProcessor?: subsystem.LDStreamProcessor;
   protected readonly logger: LDLogger;
   protected context?: Context;
+  private connectionParams?: ConnectionParams;
 
   constructor(
     protected readonly platform: Platform,
@@ -72,6 +77,13 @@ export abstract class BaseDataManager implements DataManager {
     protected readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
+  }
+
+  /**
+   * Set additional connection parameters for requests polling/streaming.
+   */
+  protected setConnectionParams(connectionParams?: ConnectionParams) {
+    this.connectionParams = connectionParams;
   }
 
   abstract identify(
@@ -97,6 +109,7 @@ export abstract class BaseDataManager implements DataManager {
         pollInterval: this.config.pollInterval,
         withReasons: this.config.withReasons,
         useReport: this.config.useReport,
+        queryParameters: this.connectionParams?.queryParameters,
       },
       this.platform.requests,
       this.platform.encoding!,
@@ -138,6 +151,7 @@ export abstract class BaseDataManager implements DataManager {
         initialRetryDelayMillis: this.config.streamInitialReconnectDelay * 1000,
         withReasons: this.config.withReasons,
         useReport: this.config.useReport,
+        queryParameters: this.connectionParams?.queryParameters,
       },
       this.createStreamListeners(checkedContext, identifyResolve),
       this.platform.requests,
