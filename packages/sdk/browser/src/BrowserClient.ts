@@ -32,6 +32,8 @@ import BrowserPlatform from './platform/BrowserPlatform';
  *
  * @ignore Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
  * @ignore Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
+ * @ignore Implementation Note: The browser SDK has different identify options, so omits the base implementation
+ * @ignore from the interface.
  */
 export type LDClient = Omit<
   CommonClient,
