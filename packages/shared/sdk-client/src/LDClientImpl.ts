@@ -11,8 +11,6 @@ import {
   LDHeaders,
   LDLogger,
   Platform,
-  ProcessStreamResponse,
-  EventName as StreamEventName,
   subsystem,
   timedPromise,
   TypeValidators,
@@ -33,9 +31,7 @@ import {
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
-import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter, { EventName } from './LDEmitter';
-import { DeleteFlag, Flags, PatchFlag } from './types';
 
 const { ClientMessages, ErrorKinds } = internal;
 
