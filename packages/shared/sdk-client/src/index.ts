@@ -1,5 +1,6 @@
 import { LDClientInternalOptions } from './configuration/Configuration';
 import DataSourceStatus from './datasource/DataSourceStatus';
+import DataSourceStatusErrorInfo from './datasource/DataSourceStatusErrorInfo';
 import LDClientImpl from './LDClientImpl';
 import LDEmitter from './LDEmitter';
 import Requestor from './polling/Requestor';
@@ -31,4 +32,4 @@ export { DataSourcePaths } from './streaming';
 export { BaseDataManager } from './DataManager';
 export { Requestor };
 
-export { DataSourceStatus, LDClientImpl, LDClientInternalOptions };
+export { DataSourceStatus, DataSourceStatusErrorInfo, LDClientImpl, LDClientInternalOptions };

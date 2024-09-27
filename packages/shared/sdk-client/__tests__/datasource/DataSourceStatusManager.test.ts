@@ -1,4 +1,4 @@
-import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common/dist/internal';
+import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common';
 
 import { DataSourceState } from '../../src/datasource/DataSourceStatus';
 import DataSourceStatusManager from '../../src/datasource/DataSourceStatusManager';

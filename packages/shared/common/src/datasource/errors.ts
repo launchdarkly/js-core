@@ -35,5 +35,3 @@ export class LDStreamingError extends Error {
     this.recoverable = recoverable;
   }
 }
-
-export type StreamingErrorHandler = (err: LDStreamingError) => void;

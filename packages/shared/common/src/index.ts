@@ -1,6 +1,7 @@
 import AttributeReference from './AttributeReference';
 import Context from './Context';
 import ContextFilter from './ContextFilter';
+import { DataSourceErrorKind, LDPollingError, LDStreamingError } from './datasource';
 
 export * from './api';
 export * from './validators';
@@ -11,4 +12,11 @@ export * from './utils';
 export * as internal from './internal';
 export * from './errors';
 
-export { AttributeReference, Context, ContextFilter };
+export {
+  AttributeReference,
+  Context,
+  ContextFilter,
+  DataSourceErrorKind,
+  LDPollingError,
+  LDStreamingError,
+};

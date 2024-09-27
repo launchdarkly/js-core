@@ -2,9 +2,9 @@ import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mock
 
 import { EventName, Info, LDLogger, ProcessStreamResponse } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
+import { DataSourceErrorKind } from '../../datasource/DataSourceErrorKinds';
+import { LDStreamingError } from '../../datasource/errors';
 import { defaultHeaders } from '../../utils';
-import { DataSourceErrorKind } from '../datasource/DataSourceErrorKinds';
-import { LDStreamingError } from '../datasource/errors';
 import { DiagnosticsManager } from '../diagnostics';
 import StreamingProcessor from './StreamingProcessor';
 

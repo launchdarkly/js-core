@@ -7,12 +7,13 @@ import {
   Requests,
 } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
+import { DataSourceErrorKind } from '../../datasource/DataSourceErrorKinds';
+import { LDStreamingError } from '../../datasource/errors';
 import { ClientContext } from '../../options';
 import { getStreamingUri } from '../../options/ServiceEndpoints';
 import { httpErrorMessage, LDHeaders, shouldRetry } from '../../utils';
-import { DataSourceErrorKind } from '../datasource/DataSourceErrorKinds';
-import { LDStreamingError, StreamingErrorHandler } from '../datasource/errors';
 import { DiagnosticsManager } from '../diagnostics';
+import { StreamingErrorHandler } from './types';
 
 const reportJsonError = (
   type: string,

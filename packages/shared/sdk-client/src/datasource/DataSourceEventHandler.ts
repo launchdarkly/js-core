@@ -1,13 +1,10 @@
-import { Context, internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { Context, LDLogger, LDPollingError, LDStreamingError } from '@launchdarkly/js-sdk-common';
 
 import { FlagManager } from '../flag-manager/FlagManager';
 import { ItemDescriptor } from '../flag-manager/ItemDescriptor';
 import { DeleteFlag, Flags, PatchFlag } from '../types';
 import { DataSourceState } from './DataSourceStatus';
 import DataSourceStatusManager from './DataSourceStatusManager';
-
-type LDStreamingError = internal.LDStreamingError;
-type LDPollingError = internal.LDPollingError;
 
 export default class DataSourceEventHandler {
   constructor(
