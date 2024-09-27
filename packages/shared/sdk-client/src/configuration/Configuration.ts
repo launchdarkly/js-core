@@ -6,6 +6,7 @@ import {
   LDLogger,
   NumberWithMinimum,
   OptionMessages,
+  SafeLogger,
   ServiceEndpoints,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -21,9 +22,6 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
 
 export interface Configuration {
   readonly logger: LDLogger;
-  readonly baseUri: string;
-  readonly eventsUri: string;
-  readonly streamUri: string;
   readonly maxCachedContexts: number;
   readonly capacity: number;
   readonly diagnosticRecordingInterval: number;
@@ -61,12 +59,20 @@ const DEFAULT_STREAM: string = 'https://clientstream.launchdarkly.com';
 
 export { DEFAULT_POLLING, DEFAULT_STREAM };
 
+function ensureSafeLogger(logger?: LDLogger): LDLogger {
+  if (logger instanceof SafeLogger) {
+    return logger;
+  }
+  // Even if logger is not defined this will produce a valid logger.
+  return createSafeLogger(logger);
+}
+
 export default class ConfigurationImpl implements Configuration {
   public readonly logger: LDLogger = createSafeLogger();
 
-  public readonly baseUri = DEFAULT_POLLING;
-  public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
-  public readonly streamUri = DEFAULT_STREAM;
+  private readonly baseUri = DEFAULT_POLLING;
+  private readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
+  private readonly streamUri = DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
 
@@ -116,6 +122,7 @@ export default class ConfigurationImpl implements Configuration {
   [index: string]: any;
 
   constructor(pristineOptions: LDOptions = {}, internalOptions: LDClientInternalOptions = {}) {
+    this.logger = ensureSafeLogger(pristineOptions.logger);
     const errors = this.validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
 
@@ -161,6 +168,8 @@ export default class ConfigurationImpl implements Configuration {
           } else {
             errors.push(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
           }
+        } else if (k === 'logger') {
+          // Logger already assigned.
         } else {
           // if an option is explicitly null, coerce to undefined
           this[k] = v ?? undefined;
