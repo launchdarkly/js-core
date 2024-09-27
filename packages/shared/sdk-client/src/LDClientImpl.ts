@@ -11,8 +11,6 @@ import {
   LDHeaders,
   LDLogger,
   Platform,
-  ProcessStreamResponse,
-  EventName as StreamEventName,
   subsystem,
   timedPromise,
   TypeValidators,
@@ -33,9 +31,7 @@ import {
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
-import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter, { EventName } from './LDEmitter';
-import { DeleteFlag, Flags, PatchFlag } from './types';
 
 const { ClientMessages, ErrorKinds } = internal;
 
@@ -168,64 +164,6 @@ export default class LDClientImpl implements LDClient {
 
   protected getInternalContext(): Context | undefined {
     return this.checkedContext;
-  }
-
-  private createStreamListeners(
-    context: Context,
-    identifyResolve: any,
-  ): Map<StreamEventName, ProcessStreamResponse> {
-    const listeners = new Map<StreamEventName, ProcessStreamResponse>();
-
-    listeners.set('put', {
-      deserializeData: JSON.parse,
-      processJson: async (evalResults: Flags) => {
-        this.logger.debug(`Stream PUT: ${Object.keys(evalResults)}`);
-
-        // mapping flags to item descriptors
-        const descriptors = Object.entries(evalResults).reduce(
-          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag };
-            return acc;
-          },
-          {},
-        );
-        await this.flagManager.init(context, descriptors).then(identifyResolve());
-      },
-    });
-
-    listeners.set('patch', {
-      deserializeData: JSON.parse,
-      processJson: async (patchFlag: PatchFlag) => {
-        this.logger.debug(`Stream PATCH ${JSON.stringify(patchFlag, null, 2)}`);
-        this.flagManager.upsert(context, patchFlag.key, {
-          version: patchFlag.version,
-          flag: patchFlag,
-        });
-      },
-    });
-
-    listeners.set('delete', {
-      deserializeData: JSON.parse,
-      processJson: async (deleteFlag: DeleteFlag) => {
-        this.logger.debug(`Stream DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
-
-        this.flagManager.upsert(context, deleteFlag.key, {
-          version: deleteFlag.version,
-          flag: {
-            ...deleteFlag,
-            deleted: true,
-            // props below are set to sensible defaults. they are irrelevant
-            // because this flag has been deleted.
-            flagVersion: 0,
-            value: undefined,
-            variation: 0,
-            trackEvents: false,
-          },
-        });
-      },
-    });
-
-    return listeners;
   }
 
   private createIdentifyPromise(timeout: number): {
