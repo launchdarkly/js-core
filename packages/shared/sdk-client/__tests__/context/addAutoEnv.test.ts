@@ -233,8 +233,8 @@ describe('automatic environment attributes', () => {
 
       await addAutoEnv(context, mockPlatform, config);
 
-      expect(config.logger.warn).toHaveBeenCalledTimes(1);
-      expect(config.logger.warn).toHaveBeenCalledWith(
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.stringMatching(/ld_application.*already exists/),
       );
     });
@@ -251,10 +251,8 @@ describe('automatic environment attributes', () => {
 
       await addAutoEnv(context, mockPlatform, config);
 
-      expect(config.logger.warn).toHaveBeenCalledTimes(1);
-      expect(config.logger.warn).toHaveBeenCalledWith(
-        expect.stringMatching(/ld_device.*already exists/),
-      );
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/ld_device.*already exists/));
     });
 
     test('single context with an attribute called ld_application should have auto env attributes', async () => {
