@@ -18,6 +18,22 @@ import { ValidatedOptions } from './options';
 const logTag = '[BrowserDataManager]';
 
 export default class BrowserDataManager extends BaseDataManager {
+  // If streaming is forced on or off, then we follow that setting.
+  // Otherwise we automatically manage streaming state.
+  private forcedStreaming?: boolean = undefined;
+  private automaticStreamingState: boolean = false;
+
+  // +-----------+-----------+---------------+
+  // |  forced   | automatic |     state     |
+  // +-----------+-----------+---------------+
+  // | true      | false     | streaming     |
+  // | true      | true      | streaming     |
+  // | false     | true      | not streaming |
+  // | false     | false     | not streaming |
+  // | undefined | true      | streaming     |
+  // | undefined | false     | not streaming |
+  // +-----------+-----------+---------------+
+
   constructor(
     platform: Platform,
     flagManager: FlagManager,
@@ -41,6 +57,7 @@ export default class BrowserDataManager extends BaseDataManager {
       emitter,
       diagnosticsManager,
     );
+    this.forcedStreaming = browserConfig.streaming;
   }
 
   private debugLog(message: any, ...args: any[]) {
@@ -71,17 +88,43 @@ export default class BrowserDataManager extends BaseDataManager {
       identifyReject(e);
     }
 
-    if (this.browserConfig.streaming) {
-      this.setupConnection(context);
+    this.updateStreamingState();
+  }
+
+  setForcedStreaming(streaming?: boolean) {
+    this.forcedStreaming = streaming;
+    this.updateStreamingState();
+  }
+
+  setAutomaticStreamingState(streaming: boolean) {
+    this.automaticStreamingState = streaming;
+    this.updateStreamingState();
+  }
+
+  private updateStreamingState() {
+    const shouldBeStreaming =
+      this.forcedStreaming || (this.automaticStreamingState && this.forcedStreaming === undefined);
+
+    this.debugLog(
+      `Updating streaming state. forced(${this.forcedStreaming}) automatic(${this.automaticStreamingState})`,
+    );
+
+    if (shouldBeStreaming) {
+      this.startDataSource();
+    } else {
+      this.stopDataSource();
     }
   }
 
-  stopDataSource() {
+  private stopDataSource() {
+    if (this.updateProcessor) {
+      this.debugLog('Stopping update processor.');
+    }
     this.updateProcessor?.close();
     this.updateProcessor = undefined;
   }
 
-  startDataSource() {
+  private startDataSource() {
     if (this.updateProcessor) {
       this.debugLog('Update processor already active. Not changing state.');
       return;
@@ -132,5 +175,4 @@ export default class BrowserDataManager extends BaseDataManager {
     const uri = getPollingUri(this.config.serviceEndpoints, path, parameters);
     return new Requestor(this.platform.requests, uri, headers, method, body);
   }
-  // TODO: Automatically start streaming if event handlers are registered.
 }

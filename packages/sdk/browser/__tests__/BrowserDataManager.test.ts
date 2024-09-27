@@ -128,7 +128,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       off: jest.fn(),
     } as unknown as jest.Mocked<FlagManager>;
 
-    browserConfig = validateOptions({ streaming: false }, logger);
+    browserConfig = validateOptions({}, logger);
     baseHeaders = {};
     emitter = {
       emit: jest.fn(),
@@ -262,7 +262,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
-    dataManager.startDataSource();
+    dataManager.setForcedStreaming(true);
     expect(platform.requests.createEventSource).toHaveBeenCalled();
   });
 
@@ -277,8 +277,8 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
-    dataManager.startDataSource();
-    dataManager.startDataSource();
+    dataManager.setForcedStreaming(true);
+    dataManager.setForcedStreaming(true);
     expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
     expect(logger.debug).toHaveBeenCalledWith(
       '[BrowserDataManager] Update processor already active. Not changing state.',
@@ -287,10 +287,66 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('does not start a stream if identify has not been called', async () => {
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
-    dataManager.startDataSource();
+    dataManager.setForcedStreaming(true);
     expect(platform.requests.createEventSource).not.toHaveBeenCalledTimes(1);
     expect(logger.debug).toHaveBeenCalledWith(
       '[BrowserDataManager] Context not set, not starting update processor.',
     );
+  });
+
+  it('starts a stream on demand when not forced on/off', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    flagManager.loadCached.mockResolvedValue(false);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    dataManager.setAutomaticStreamingState(true);
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith('[BrowserDataManager] Starting update processor.');
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[BrowserDataManager] Updating streaming state. forced(undefined) automatic(true)',
+    );
+  });
+
+  it('does not start a stream when forced off', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    dataManager.setForcedStreaming(false);
+
+    flagManager.loadCached.mockResolvedValue(false);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    dataManager.setAutomaticStreamingState(true);
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[BrowserDataManager] Updating streaming state. forced(false) automatic(true)',
+    );
+  });
+
+  it('starts streaming on identify if the automatic state is true', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    dataManager.setForcedStreaming(undefined);
+    dataManager.setAutomaticStreamingState(true);
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+
+    flagManager.loadCached.mockResolvedValue(false);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
   });
 });
