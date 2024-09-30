@@ -1,4 +1,5 @@
 import {
+  DataSourceErrorKind,
   Encoding,
   EventName,
   EventSource,
@@ -7,6 +8,7 @@ import {
   HttpErrorResponse,
   internal,
   LDLogger,
+  LDStreamingError,
   ProcessStreamResponse,
   Requests,
   shouldRetry,
@@ -14,9 +16,6 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { StreamingDataSourceConfig } from './DataSourceConfig';
-
-// TODO: revisit usage of internal and figure out best practice
-const { DataSourceErrorKind, LDStreamingError } = internal;
 
 const reportJsonError = (
   type: string,

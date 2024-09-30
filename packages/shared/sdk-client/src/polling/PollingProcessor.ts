@@ -1,11 +1,12 @@
 import {
+  DataSourceErrorKind,
   Encoding,
   getPollingUri,
   httpErrorMessage,
   HttpErrorResponse,
-  internal,
   isHttpRecoverable,
   LDLogger,
+  LDPollingError,
   Requests,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -14,9 +15,7 @@ import { PollingDataSourceConfig } from '../streaming/DataSourceConfig';
 import { Flags } from '../types';
 import Requestor, { LDRequestError } from './Requestor';
 
-// TODO: revisit usage of internal and figure out best practice
-const { DataSourceErrorKind, LDPollingError } = internal;
-export type PollingErrorHandler = (err: internal.LDPollingError) => void;
+export type PollingErrorHandler = (err: LDPollingError) => void;
 
 /**
  * @internal

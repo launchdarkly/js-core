@@ -1,8 +1,9 @@
 import {
+  DataSourceErrorKind,
   httpErrorMessage,
-  internal,
   isHttpRecoverable,
   LDLogger,
+  LDPollingError,
   subsystem,
   VoidFunction,
 } from '@launchdarkly/js-sdk-common';
@@ -13,9 +14,7 @@ import { deserializePoll } from '../store';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import Requestor from './Requestor';
 
-// TODO: revisit usage of internal and figure out best practice
-const { DataSourceErrorKind, LDPollingError } = internal;
-export type PollingErrorHandler = (err: internal.LDPollingError) => void;
+export type PollingErrorHandler = (err: LDPollingError) => void;
 
 /**
  * @internal

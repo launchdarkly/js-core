@@ -1,7 +1,8 @@
 import {
+  DataSourceErrorKind,
   getPollingUri,
-  internal,
   LDHeaders,
+  LDPollingError,
   Options,
   Requests,
   Response,
@@ -9,11 +10,6 @@ import {
 
 import { LDFeatureRequestor } from '../api/subsystems';
 import Configuration from '../options/Configuration';
-
-const { DataSourceErrorKind } = internal;
-
-// TODO: revisit usage of internal and figure out best practice
-const { LDPollingError } = internal;
 
 /**
  * @internal

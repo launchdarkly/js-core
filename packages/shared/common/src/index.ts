@@ -1,7 +1,12 @@
 import AttributeReference from './AttributeReference';
 import Context from './Context';
 import ContextFilter from './ContextFilter';
-import { DataSourceErrorKind, LDPollingError, LDStreamingError } from './datasource';
+import {
+  DataSourceErrorKind,
+  LDFileDataSourceError,
+  LDPollingError,
+  LDStreamingError,
+} from './datasource';
 
 export * from './api';
 export * from './validators';
@@ -19,4 +24,5 @@ export {
   DataSourceErrorKind,
   LDPollingError,
   LDStreamingError,
+  LDFileDataSourceError,
 };
