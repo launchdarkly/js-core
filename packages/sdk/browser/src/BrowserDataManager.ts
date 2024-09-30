@@ -3,6 +3,7 @@ import {
   Configuration,
   Context,
   DataSourcePaths,
+  DataSourceState,
   FlagManager,
   getPollingUri,
   internal,
@@ -80,6 +81,7 @@ export default class BrowserDataManager extends BaseDataManager {
     // TODO: Handle wait for network results in a meaningful way. SDK-707
 
     try {
+      this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
       const payload = await requestor.requestPayload();
       const listeners = this.createStreamListeners(context, identifyResolve);
       const putListener = listeners.get('put');
