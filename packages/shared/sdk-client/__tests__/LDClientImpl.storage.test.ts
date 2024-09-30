@@ -87,11 +87,8 @@ describe('sdk-client storage', () => {
 
     expect(mockPlatform.storage.get).toHaveBeenCalledWith(flagStorageKey);
 
-    // 'change' should not have been emitted
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
-    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
-    expect(emitter.emit).toHaveBeenNthCalledWith(
-      2,
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, defaultFlagKeys);
+    expect(emitter.emit).toHaveBeenCalledWith(
       'error',
       context,
       expect.objectContaining({ message: 'test-error' }),
@@ -139,16 +136,12 @@ describe('sdk-client storage', () => {
       expect.stringMatching('LaunchDarkly_1234567890123456_1234567890123456'),
     );
 
-    // 'change' should not have been emitted
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
-    expect(emitter.emit).toHaveBeenNthCalledWith(
-      1,
+    expect(emitter.emit).toHaveBeenCalledWith(
       'change',
       expect.objectContaining(toMulti(context)),
       defaultFlagKeys,
     );
-    expect(emitter.emit).toHaveBeenNthCalledWith(
-      2,
+    expect(emitter.emit).toHaveBeenCalledWith(
       'error',
       expect.objectContaining(toMulti(context)),
       expect.objectContaining({ message: 'test-error' }),
@@ -175,15 +168,17 @@ describe('sdk-client storage', () => {
 
     // @ts-ignore
     emitter = ldc.emitter;
-    jest.spyOn(emitter as LDEmitter, 'emit');
+    const spy = jest.spyOn(emitter as LDEmitter, 'emit');
 
     // expect emission
     await ldc.identify(context);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, defaultFlagKeys);
 
-    // expit no emission
+    // clear the spy so we can tell if change was invoked again
+    spy.mockClear();
+    // expect no emission
     await ldc.identify(context);
-
-    expect(emitter.emit).toHaveBeenCalledTimes(1);
+    expect(emitter.emit).not.toHaveBeenCalledWith('change', context, defaultFlagKeys);
   });
 
   test('no storage, cold start from streaming', async () => {
@@ -256,8 +251,8 @@ describe('sdk-client storage', () => {
       JSON.stringify(putResponse),
     );
 
-    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, defaultFlagKeys);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
 
   test('syncing storage when a flag is added', async () => {
@@ -296,7 +291,7 @@ describe('sdk-client storage', () => {
       flagStorageKey,
       JSON.stringify(putResponse),
     );
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['another-dev-test-flag']);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['another-dev-test-flag']);
   });
 
   test('syncing storage when a flag is updated', async () => {
@@ -319,7 +314,7 @@ describe('sdk-client storage', () => {
     await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
 
   test('syncing storage on multiple flag operations', async () => {
@@ -347,7 +342,7 @@ describe('sdk-client storage', () => {
 
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false, 'another-dev-test-flag': true });
     expect(ldc.allFlags()).not.toHaveProperty('moonshot-demo');
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, [
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, [
       'moonshot-demo',
       'dev-test-flag',
       'another-dev-test-flag',
@@ -380,8 +375,7 @@ describe('sdk-client storage', () => {
     );
 
     // we expect one change from the local storage init, but no further change from the PUT
-    expect(emitter.emit).toHaveBeenCalledTimes(1);
-    expect(emitter.emit).toHaveBeenNthCalledWith(1, 'change', context, defaultFlagKeys);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, defaultFlagKeys);
 
     // this is defaultPutResponse
     expect(ldc.allFlags()).toEqual({
@@ -423,7 +417,7 @@ describe('sdk-client storage', () => {
 
     // both previous and current are true but inExperiment has changed
     // so a change event should be emitted
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
 
   test('patch should emit change event', async () => {
@@ -452,8 +446,7 @@ describe('sdk-client storage', () => {
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(4);
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
 
   test('patch should add new flags', async () => {
@@ -484,8 +477,7 @@ describe('sdk-client storage', () => {
       expect.stringContaining(JSON.stringify(patchResponse)),
     );
     expect(flagsInStorage).toHaveProperty('another-dev-test-flag');
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['another-dev-test-flag']);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['another-dev-test-flag']);
   });
 
   test('patch should ignore older version', async () => {
@@ -557,8 +549,7 @@ describe('sdk-client storage', () => {
       expect.stringContaining('dev-test-flag'),
     );
     expect(flagsInStorage['dev-test-flag']).toMatchObject({ ...deleteResponse, deleted: true });
-    expect(emitter.emit).toHaveBeenCalledTimes(2);
-    expect(emitter.emit).toHaveBeenNthCalledWith(2, 'change', context, ['dev-test-flag']);
+    expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
 
   test('delete should not delete equal version', async () => {

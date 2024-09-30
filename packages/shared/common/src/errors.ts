@@ -2,33 +2,6 @@
 // more complex, then they could be independent files.
 /* eslint-disable max-classes-per-file */
 
-export class LDFileDataSourceError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'LaunchDarklyFileDataSourceError';
-  }
-}
-
-export class LDPollingError extends Error {
-  public readonly status?: number;
-
-  constructor(message: string, status?: number) {
-    super(message);
-    this.status = status;
-    this.name = 'LaunchDarklyPollingError';
-  }
-}
-
-export class LDStreamingError extends Error {
-  public readonly code?: number;
-
-  constructor(message: string, code?: number) {
-    super(message);
-    this.code = code;
-    this.name = 'LaunchDarklyStreamingError';
-  }
-}
-
 export class LDUnexpectedResponseError extends Error {
   constructor(message: string) {
     super(message);

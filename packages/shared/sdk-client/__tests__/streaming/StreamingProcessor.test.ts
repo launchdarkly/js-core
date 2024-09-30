@@ -1,4 +1,5 @@
 import {
+  DataSourceErrorKind,
   defaultHeaders,
   Encoding,
   EventName,
@@ -327,7 +328,7 @@ describe('given a stream processor', () => {
 
       expect(willRetry).toBeFalsy();
       expect(mockErrorHandler).toBeCalledWith(
-        new LDStreamingError(testError.message, testError.status),
+        new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
       );
       expect(logger.error).toBeCalledWith(
         expect.stringMatching(new RegExp(`${status}.*permanently`)),

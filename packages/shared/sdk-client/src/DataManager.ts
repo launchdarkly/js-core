@@ -9,11 +9,14 @@ import {
   ProcessStreamResponse,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
+import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration } from './configuration/Configuration';
+import DataSourceEventHandler from './datasource/DataSourceEventHandler';
+import { DataSourceState } from './datasource/DataSourceStatus';
+import DataSourceStatusManager from './datasource/DataSourceStatusManager';
 import { FlagManager } from './flag-manager/FlagManager';
-import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import LDEmitter from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
 import { DataSourcePaths, StreamingProcessor } from './streaming';
@@ -59,6 +62,8 @@ export abstract class BaseDataManager implements DataManager {
   protected updateProcessor?: subsystem.LDStreamProcessor;
   protected readonly logger: LDLogger;
   protected context?: Context;
+  protected readonly dataSourceStatusManager: DataSourceStatusManager;
+  private readonly dataSourceEventHandler: DataSourceEventHandler;
 
   constructor(
     protected readonly platform: Platform,
@@ -72,6 +77,12 @@ export abstract class BaseDataManager implements DataManager {
     protected readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
+    this.dataSourceStatusManager = new DataSourceStatusManager(emitter);
+    this.dataSourceEventHandler = new DataSourceEventHandler(
+      flagManager,
+      this.dataSourceStatusManager,
+      this.config.logger,
+    );
   }
 
   abstract identify(
@@ -87,7 +98,7 @@ export abstract class BaseDataManager implements DataManager {
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
   ) {
-    this.updateProcessor = new PollingProcessor(
+    const processor = new PollingProcessor(
       JSON.stringify(context),
       {
         credential: this.credential,
@@ -101,24 +112,19 @@ export abstract class BaseDataManager implements DataManager {
       this.platform.requests,
       this.platform.encoding!,
       async (flags) => {
-        this.logger.debug(`Handling polling result: ${Object.keys(flags)}`);
-
-        // mapping flags to item descriptors
-        const descriptors = Object.entries(flags).reduce(
-          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag };
-            return acc;
-          },
-          {},
-        );
-
-        await this.flagManager.init(checkedContext, descriptors);
+        await this.dataSourceEventHandler.handlePut(checkedContext, flags);
         identifyResolve?.();
       },
       (err) => {
-        identifyReject?.(err);
         this.emitter.emit('error', context, err);
+        this.dataSourceEventHandler.handlePollingError(err);
+        identifyReject?.(err);
       },
+    );
+
+    this.updateProcessor = this.decorateProcessorWithStatusReporting(
+      processor,
+      this.dataSourceStatusManager,
     );
   }
 
@@ -128,7 +134,7 @@ export abstract class BaseDataManager implements DataManager {
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
   ) {
-    this.updateProcessor = new StreamingProcessor(
+    const processor = new StreamingProcessor(
       JSON.stringify(context),
       {
         credential: this.credential,
@@ -144,9 +150,15 @@ export abstract class BaseDataManager implements DataManager {
       this.platform.encoding!,
       this.diagnosticsManager,
       (e) => {
-        identifyReject?.(e);
         this.emitter.emit('error', context, e);
+        this.dataSourceEventHandler.handleStreamingError(e);
+        identifyReject?.(e);
       },
+    );
+
+    this.updateProcessor = this.decorateProcessorWithStatusReporting(
+      processor,
+      this.dataSourceStatusManager,
     );
   }
 
@@ -158,18 +170,8 @@ export abstract class BaseDataManager implements DataManager {
 
     listeners.set('put', {
       deserializeData: JSON.parse,
-      processJson: async (evalResults: Flags) => {
-        this.logger.debug(`Stream PUT: ${Object.keys(evalResults)}`);
-
-        // mapping flags to item descriptors
-        const descriptors = Object.entries(evalResults).reduce(
-          (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-            acc[key] = { version: flag.version, flag };
-            return acc;
-          },
-          {},
-        );
-        await this.flagManager.init(context, descriptors);
+      processJson: async (flags: Flags) => {
+        await this.dataSourceEventHandler.handlePut(context, flags);
         identifyResolve?.();
       },
     });
@@ -177,35 +179,38 @@ export abstract class BaseDataManager implements DataManager {
     listeners.set('patch', {
       deserializeData: JSON.parse,
       processJson: async (patchFlag: PatchFlag) => {
-        this.logger.debug(`Stream PATCH ${JSON.stringify(patchFlag, null, 2)}`);
-        this.flagManager.upsert(context, patchFlag.key, {
-          version: patchFlag.version,
-          flag: patchFlag,
-        });
+        this.dataSourceEventHandler.handlePatch(context, patchFlag);
       },
     });
 
     listeners.set('delete', {
       deserializeData: JSON.parse,
       processJson: async (deleteFlag: DeleteFlag) => {
-        this.logger.debug(`Stream DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
-
-        this.flagManager.upsert(context, deleteFlag.key, {
-          version: deleteFlag.version,
-          flag: {
-            ...deleteFlag,
-            deleted: true,
-            // props below are set to sensible defaults. they are irrelevant
-            // because this flag has been deleted.
-            flagVersion: 0,
-            value: undefined,
-            variation: 0,
-            trackEvents: false,
-          },
-        });
+        this.dataSourceEventHandler.handleDelete(context, deleteFlag);
       },
     });
 
     return listeners;
+  }
+
+  private decorateProcessorWithStatusReporting(
+    processor: LDStreamProcessor,
+    statusManager: DataSourceStatusManager,
+  ): LDStreamProcessor {
+    return {
+      start: () => {
+        // update status before starting processor to ensure potential errors are reported after initializing
+        statusManager.requestStateUpdate(DataSourceState.Initializing);
+        processor.start();
+      },
+      stop: () => {
+        processor.stop();
+        statusManager.requestStateUpdate(DataSourceState.Closed);
+      },
+      close: () => {
+        processor.close();
+        statusManager.requestStateUpdate(DataSourceState.Closed);
+      },
+    };
   }
 }

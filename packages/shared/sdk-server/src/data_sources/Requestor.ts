@@ -1,7 +1,8 @@
 import {
+  DataSourceErrorKind,
   getPollingUri,
   LDHeaders,
-  LDStreamingError,
+  LDPollingError,
   Options,
   Requests,
   Response,
@@ -77,7 +78,11 @@ export default class Requestor implements LDFeatureRequestor {
     try {
       const { res, body } = await this.requestWithETagCache(this.uri, options);
       if (res.status !== 200 && res.status !== 304) {
-        const err = new LDStreamingError(`Unexpected status code: ${res.status}`, res.status);
+        const err = new LDPollingError(
+          DataSourceErrorKind.ErrorResponse,
+          `Unexpected status code: ${res.status}`,
+          res.status,
+        );
         return cb(err, undefined);
       }
       return cb(undefined, res.status === 304 ? null : body);

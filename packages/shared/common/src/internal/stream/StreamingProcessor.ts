@@ -7,7 +7,8 @@ import {
   Requests,
 } from '../../api';
 import { LDStreamProcessor } from '../../api/subsystem';
-import { LDStreamingError } from '../../errors';
+import { DataSourceErrorKind } from '../../datasource/DataSourceErrorKinds';
+import { LDStreamingError } from '../../datasource/errors';
 import { ClientContext } from '../../options';
 import { getStreamingUri } from '../../options/ServiceEndpoints';
 import { httpErrorMessage, LDHeaders, shouldRetry } from '../../utils';
@@ -22,7 +23,9 @@ const reportJsonError = (
 ) => {
   logger?.error(`Stream received invalid data in "${type}" message`);
   logger?.debug(`Invalid JSON follows: ${data}`);
-  errorHandler?.(new LDStreamingError('Malformed JSON data in event stream'));
+  errorHandler?.(
+    new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed JSON data in event stream'),
+  );
 };
 
 // TODO: SDK-156 - Move to Server SDK specific location
@@ -87,7 +90,9 @@ class StreamingProcessor implements LDStreamProcessor {
   private retryAndHandleError(err: HttpErrorResponse) {
     if (!shouldRetry(err)) {
       this.logConnectionResult(false);
-      this.errorHandler?.(new LDStreamingError(err.message, err.status));
+      this.errorHandler?.(
+        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
+      );
       this.logger?.error(httpErrorMessage(err, 'streaming request'));
       return false;
     }
@@ -142,7 +147,12 @@ class StreamingProcessor implements LDStreamProcessor {
           }
           processJson(dataJson);
         } else {
-          this.errorHandler?.(new LDStreamingError('Unexpected payload from event stream'));
+          this.errorHandler?.(
+            new LDStreamingError(
+              DataSourceErrorKind.Unknown,
+              'Unexpected payload from event stream',
+            ),
+          );
         }
       });
     });
