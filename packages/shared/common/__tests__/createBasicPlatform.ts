@@ -1,4 +1,5 @@
 import { PlatformData, SdkData } from '../src/api';
+import { setupCrypto } from './setupCrypto';
 
 const setupInfo = () => ({
   platformData: jest.fn(

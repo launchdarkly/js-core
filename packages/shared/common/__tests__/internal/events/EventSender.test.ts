@@ -6,13 +6,13 @@ import { createBasicPlatform } from '../../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
+function runWithTimers<T>(fn: () => Promise<T>) {
+  const promise = fn();
+  return jest.runAllTimersAsync().then(() => promise);
+}
+
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
-});
-
-jest.mock('../../utils', () => {
-  const actual = jest.requireActual('../../utils');
-  return { ...actual, sleep: jest.fn() };
 });
 
 const basicConfig = {
@@ -119,9 +119,8 @@ describe('given an event sender', () => {
       },
     );
 
-    eventSenderResult = await eventSender.sendEventData(
-      LDEventType.AnalyticsEvents,
-      testEventData1,
+    eventSenderResult = await runWithTimers(() =>
+      eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
     );
   });
 
@@ -141,9 +140,8 @@ describe('given an event sender', () => {
 
   it('includes the payload', async () => {
     const { status: status1 } = eventSenderResult;
-    const { status: status2 } = await eventSender.sendEventData(
-      LDEventType.DiagnosticEvent,
-      testEventData2,
+    const { status: status2 } = await runWithTimers(() =>
+      eventSender.sendEventData(LDEventType.DiagnosticEvent, testEventData2),
     );
 
     expect(status1).toEqual(LDDeliveryStatus.Succeeded);
@@ -167,7 +165,9 @@ describe('given an event sender', () => {
 
   it('sends a unique payload for analytics events', async () => {
     // send the same request again to assert unique uuids
-    await eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1);
+    await runWithTimers(() =>
+      eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
+    );
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenNthCalledWith(
@@ -189,9 +189,8 @@ describe('given an event sender', () => {
   describe.each([400, 408, 429, 503])('given recoverable errors', (responseStatusCode) => {
     beforeEach(async () => {
       setupMockFetch(responseStatusCode);
-      eventSenderResult = await eventSender.sendEventData(
-        LDEventType.AnalyticsEvents,
-        testEventData1,
+      eventSenderResult = await runWithTimers(() =>
+        eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
       );
     });
 
@@ -209,9 +208,8 @@ describe('given an event sender', () => {
 
   it('given a result for too large of a payload', async () => {
     setupMockFetch(413);
-    eventSenderResult = await eventSender.sendEventData(
-      LDEventType.AnalyticsEvents,
-      testEventData1,
+    eventSenderResult = await runWithTimers(() =>
+      eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
     );
 
     const errorMessage = `Received error 413 for event posting - giving up permanently`;
@@ -227,9 +225,8 @@ describe('given an event sender', () => {
   describe.each([401, 403])('given unrecoverable errors', (responseStatusCode) => {
     beforeEach(async () => {
       setupMockFetch(responseStatusCode);
-      eventSenderResult = await eventSender.sendEventData(
-        LDEventType.AnalyticsEvents,
-        testEventData1,
+      eventSenderResult = await runWithTimers(() =>
+        eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
       );
     });
 
