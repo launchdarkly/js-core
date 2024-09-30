@@ -209,7 +209,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
     let identifyResolve: () => void;
     let identifyReject: (err: Error) => void;
-    const identifyResolveCalled = new Promise<void>((resolve) => {
+    await new Promise<void>((resolve) => {
       identifyResolve = jest.fn().mockImplementation(() => {
         resolve();
       });
@@ -218,7 +218,6 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       // this is the function under test
       dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
     });
-    await identifyResolveCalled;
 
     expect(logger.debug).toHaveBeenCalledWith(
       '[BrowserDataManager] Identify - Flags loaded from cache. Continuing to initialize via a poll.',
@@ -239,7 +238,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
     let identifyResolve: () => void;
     let identifyReject: (err: Error) => void;
-    const identifyResolveCalled = new Promise<void>((resolve) => {
+    await new Promise<void>((resolve) => {
       identifyResolve = jest.fn().mockImplementation(() => {
         resolve();
       });
@@ -248,7 +247,6 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       // this is the function under test
       dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
     });
-    await identifyResolveCalled;
 
     expect(logger.debug).not.toHaveBeenCalledWith(
       'Identify - Flags loaded from cache. Continuing to initialize via a poll.',
