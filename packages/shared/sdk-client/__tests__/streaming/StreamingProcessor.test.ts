@@ -1,17 +1,17 @@
 import {
+  DataSourceErrorKind,
   defaultHeaders,
   Encoding,
   EventName,
   Info,
   internal,
+  LDStreamingError,
   Platform,
   ProcessStreamResponse,
 } from '@launchdarkly/js-sdk-common';
 import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
-
-const { DataSourceErrorKind, LDStreamingError } = internal;
 
 let logger: ReturnType<typeof createLogger>;
 
