@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@launchdarkly/private-js-mocks": "0.0.1",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.0.2",

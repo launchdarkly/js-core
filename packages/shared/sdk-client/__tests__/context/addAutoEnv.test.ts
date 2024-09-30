@@ -2,10 +2,10 @@ import {
   Crypto,
   Info,
   type LDContext,
+  LDLogger,
   LDMultiKindContext,
   LDUser,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { Configuration, ConfigurationImpl } from '../../src/configuration';
 import {
@@ -14,13 +14,19 @@ import {
   addDeviceInfo,
   toMulti,
 } from '../../src/context/addAutoEnv';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 describe('automatic environment attributes', () => {

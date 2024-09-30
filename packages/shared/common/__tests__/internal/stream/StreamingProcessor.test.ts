@@ -1,14 +1,13 @@
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
+import { EventName, Info, LDLogger, ProcessStreamResponse } from '../../../src/api';
+import { LDStreamProcessor } from '../../../src/api/subsystem';
+import { DataSourceErrorKind } from '../../../src/datasource/DataSourceErrorKinds';
+import { LDStreamingError } from '../../../src/datasource/errors';
+import { defaultHeaders } from '../../../src/utils';
+import { DiagnosticsManager } from '../../../src/internal/diagnostics';
+import StreamingProcessor from '../../../src/internal/stream/StreamingProcessor';
+import { createBasicPlatform } from '../../createBasicPlatform';
 
-import { EventName, Info, LDLogger, ProcessStreamResponse } from '../../api';
-import { LDStreamProcessor } from '../../api/subsystem';
-import { DataSourceErrorKind } from '../../datasource/DataSourceErrorKinds';
-import { LDStreamingError } from '../../datasource/errors';
-import { defaultHeaders } from '../../utils';
-import { DiagnosticsManager } from '../diagnostics';
-import StreamingProcessor from './StreamingProcessor';
-
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 const serviceEndpoints = {
   events: '',
@@ -44,7 +43,12 @@ let basicPlatform: any;
 
 beforeEach(() => {
   basicPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 const createMockEventSource = (streamUri: string = '', options: any = {}) => ({

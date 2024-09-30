@@ -1,8 +1,7 @@
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
-import { LDOptions } from '../api';
-import Configuration from '../options/Configuration';
-import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
+import { LDOptions } from '../../src/api';
+import Configuration from '../../src/options/Configuration';
+import createDiagnosticsInitConfig from '../../src/diagnostics/createDiagnosticsInitConfig';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 

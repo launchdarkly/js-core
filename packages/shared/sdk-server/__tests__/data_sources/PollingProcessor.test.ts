@@ -1,5 +1,4 @@
 import { ClientContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDFeatureStore } from '../../src';
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
@@ -8,6 +7,7 @@ import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
+import { createBasicPlatform } from '../createBasicPlatform';
 import TestLogger, { LogLevel } from '../Logger';
 
 describe('given an event processor', () => {

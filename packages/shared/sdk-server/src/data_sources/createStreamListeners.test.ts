@@ -1,5 +1,4 @@
-import { createLogger } from '@launchdarkly/private-js-mocks';
-
+import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { LDDataSourceUpdates } from '../api/subsystems';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
@@ -7,10 +6,15 @@ import { createStreamListeners } from './createStreamListeners';
 
 jest.mock('../store/serialization');
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 const allData = {

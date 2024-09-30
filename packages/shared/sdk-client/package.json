@@ -33,7 +33,6 @@
     "@launchdarkly/js-sdk-common": "2.9.0"
   },
   "devDependencies": {
-    "@launchdarkly/private-js-mocks": "0.0.1",
     "@testing-library/dom": "^9.3.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@types/jest": "^29.5.3",

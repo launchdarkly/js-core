@@ -1,16 +1,19 @@
 import { EventEmitter } from 'node:events';
 
-import { noop } from '@launchdarkly/js-server-sdk-common';
-import { createLogger } from '@launchdarkly/private-js-mocks';
+import { LDLogger, noop } from '@launchdarkly/js-server-sdk-common';
 
 import createCallbacks from '../../src/api/createCallbacks';
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
-
 describe('createCallbacks', () => {
   let emitter: EventEmitter;
   const err = new Error('test error');

@@ -1,11 +1,7 @@
-import {
-  createBasicPlatform,
-  MockStreamingProcessor,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
-
 import { LDClientImpl, LDOptions } from '../src';
 import TestLogger, { LogLevel } from './Logger';
+import { createBasicPlatform } from './createBasicPlatform';
+import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');

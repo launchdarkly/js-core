@@ -1,17 +1,14 @@
 import { subsystem } from '@launchdarkly/js-sdk-common';
-import {
-  createBasicPlatform,
-  MockStreamingProcessor,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
 
 import { LDClientImpl, LDFeatureStore } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../src/store/VersionedDataKinds';
+import { createBasicPlatform } from './createBasicPlatform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
+import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');

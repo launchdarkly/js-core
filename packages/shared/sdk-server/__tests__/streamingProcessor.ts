@@ -5,7 +5,7 @@ import type {
   LDHeaders,
   LDStreamingError,
   ProcessStreamResponse,
-} from '@common';
+} from '@launchdarkly/js-sdk-common';
 
 export const MockStreamingProcessor = jest.fn();
 

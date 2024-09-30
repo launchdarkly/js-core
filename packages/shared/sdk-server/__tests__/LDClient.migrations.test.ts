@@ -1,8 +1,7 @@
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
 import { LDClientImpl, LDMigrationStage } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
 import { LDClientCallbacks } from '../src/LDClientImpl';
+import { createBasicPlatform } from './createBasicPlatform';
 
 /**
  * Basic callback handler that records errors for tests.

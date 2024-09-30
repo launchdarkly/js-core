@@ -1,10 +1,9 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
 import { AttributeReference, LDClientImpl } from '../src';
 import { Op } from '../src/evaluation/data/Clause';
 import TestData from '../src/integrations/test_data/TestData';
+import { createBasicPlatform } from './createBasicPlatform';
 import { makeFlagWithSegmentMatch } from './evaluation/flags';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';

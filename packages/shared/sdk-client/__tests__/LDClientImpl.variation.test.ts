@@ -1,18 +1,29 @@
-import { AutoEnvAttributes, clone, Context, LDContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
+import {
+  AutoEnvAttributes,
+  clone,
+  Context,
+  LDContext,
+  LDLogger,
+} from '@launchdarkly/js-sdk-common';
 
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
+import { createBasicPlatform } from './createBasicPlatform';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
 import { makeTestDataManagerFactory } from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 const testSdkKey = 'test-sdk-key';

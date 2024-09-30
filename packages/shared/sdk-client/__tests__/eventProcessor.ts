@@ -1,4 +1,4 @@
-import type { ClientContext, internal, subsystem } from '@common';
+import { ClientContext, internal, subsystem } from '@launchdarkly/js-sdk-common';
 
 export const MockEventProcessor = jest.fn();
 

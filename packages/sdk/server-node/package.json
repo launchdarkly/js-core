@@ -50,7 +50,6 @@
     "launchdarkly-eventsource": "2.0.3"
   },
   "devDependencies": {
-    "@launchdarkly/private-js-mocks": "0.0.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",

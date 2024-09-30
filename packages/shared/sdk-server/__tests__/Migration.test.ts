@@ -1,5 +1,3 @@
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
 import {
   LDClientImpl,
   LDConcurrentExecution,
@@ -10,6 +8,7 @@ import {
 import { TestData } from '../src/integrations';
 import { LDClientCallbacks } from '../src/LDClientImpl';
 import { createMigration, LDMigrationError, LDMigrationSuccess } from '../src/Migration';
+import { createBasicPlatform } from './createBasicPlatform';
 import makeCallbacks from './makeCallbacks';
 
 describe('given an LDClient with test data', () => {

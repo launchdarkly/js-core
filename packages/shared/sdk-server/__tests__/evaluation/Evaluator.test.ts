@@ -1,10 +1,10 @@
 import { Context, LDContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Flag } from '../../src/evaluation/data/Flag';
 import EvalResult from '../../src/evaluation/EvalResult';
 import Evaluator from '../../src/evaluation/Evaluator';
 import Reasons from '../../src/evaluation/Reasons';
+import { createBasicPlatform } from '../createBasicPlatform';
 import noQueries from './mocks/noQueries';
 
 const offBaseFlag = {

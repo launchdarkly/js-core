@@ -1,9 +1,8 @@
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
-import { Info, PlatformData, SdkData } from '../../api';
-import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../api/subsystem';
-import { ApplicationTags, ClientContext } from '../../options';
-import EventSender from './EventSender';
+import { Info, PlatformData, SdkData } from '../../../src/api';
+import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../../src/api/subsystem';
+import { ApplicationTags, ClientContext } from '../../../src/options';
+import EventSender from '../../../src/internal/events/EventSender';
+import { createBasicPlatform } from '../../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
