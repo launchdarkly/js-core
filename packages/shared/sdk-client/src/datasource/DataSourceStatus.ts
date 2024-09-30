@@ -1,11 +1,11 @@
 import DataSourceStatusErrorInfo from './DataSourceStatusErrorInfo';
 
 export enum DataSourceState {
-  Initializing,
-  Valid,
-  Interrupted,
-  SetOffline,
-  Closed,
+  Initializing = 'INITIALIZING',
+  Valid = 'VALID',
+  Interrupted = 'INTERRUPTED',
+  SetOffline = 'SET_OFFLINE',
+  Closed = 'CLOSED',
   // TODO: SDK-702 - Implement network availability behaviors
   // NetworkUnavailable,
 }
