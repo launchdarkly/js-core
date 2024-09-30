@@ -18,9 +18,9 @@ export type DiagnosticsInitConfig = {
   bootstrapMode: boolean;
 };
 const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConfig => ({
-  customBaseURI: config.baseUri !== DEFAULT_POLLING,
-  customStreamURI: config.streamUri !== DEFAULT_STREAM,
-  customEventsURI: config.eventsUri !== ServiceEndpoints.DEFAULT_EVENTS,
+  customBaseURI: config.serviceEndpoints.polling !== DEFAULT_POLLING,
+  customStreamURI: config.serviceEndpoints.streaming !== DEFAULT_STREAM,
+  customEventsURI: config.serviceEndpoints.events !== ServiceEndpoints.DEFAULT_EVENTS,
   eventsCapacity: config.capacity,
   eventsFlushIntervalMillis: secondsToMillis(config.flushInterval),
   reconnectTimeMillis: secondsToMillis(config.streamInitialReconnectDelay),

@@ -282,7 +282,9 @@ describe('sdk-client object', () => {
     const carContext2: LDContext = { kind: 'car', key: 'test-car-2' };
     await ldc.identify(carContext2);
 
-    expect(emitter.listenerCount('change')).toEqual(1);
+    // No default listeners. This is important for clients to be able to determine if there are
+    // any listeners and act on that information.
+    expect(emitter.listenerCount('change')).toEqual(0);
     expect(emitter.listenerCount('error')).toEqual(1);
   });
 

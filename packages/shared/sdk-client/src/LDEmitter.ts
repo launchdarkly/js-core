@@ -2,6 +2,12 @@ import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 export type EventName = 'error' | 'change' | 'dataSourceStatus';
 
+/**
+ * Implementation Note: There should not be any default listeners for change events in a client
+ * implementation. Default listeners mean a client cannot determine when there are actual
+ * application developer provided listeners. If we require default listeners, then we should add
+ * a system to allow listeners which have counts independent of the primary listener counts.
+ */
 export default class LDEmitter {
   private listeners: Map<EventName, Function[]> = new Map();
 
