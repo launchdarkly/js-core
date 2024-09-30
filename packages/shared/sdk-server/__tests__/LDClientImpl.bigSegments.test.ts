@@ -5,9 +5,9 @@ import { BigSegmentStore } from '../src/api/interfaces';
 import makeBigSegmentRef from '../src/evaluation/makeBigSegmentRef';
 import TestData from '../src/integrations/test_data/TestData';
 import LDClientImpl from '../src/LDClientImpl';
+import { createBasicPlatform } from './createBasicPlatform';
 import { makeSegmentMatchClause } from './evaluation/flags';
 import makeCallbacks from './makeCallbacks';
-import { createBasicPlatform } from './createBasicPlatform';
 
 const user = { key: 'userkey' };
 const bigSegment = {

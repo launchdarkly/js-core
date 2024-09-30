@@ -1,4 +1,4 @@
-import { LDLogger, type EventName } from '@launchdarkly/js-client-sdk-common';
+import { type EventName, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 import EventSource, {
   backoff,

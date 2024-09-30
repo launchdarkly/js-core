@@ -1,4 +1,5 @@
 import { PlatformData, SdkData } from '@launchdarkly/js-sdk-common';
+
 import { setupCrypto } from './setupCrypto';
 
 const setupInfo = () => ({

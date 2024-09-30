@@ -1,6 +1,6 @@
 import { LDClientImpl, LDOptions } from '../src';
-import TestLogger, { LogLevel } from './Logger';
 import { createBasicPlatform } from './createBasicPlatform';
+import TestLogger, { LogLevel } from './Logger';
 import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {

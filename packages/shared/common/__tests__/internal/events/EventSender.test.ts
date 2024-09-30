@@ -1,7 +1,7 @@
 import { Info, PlatformData, SdkData } from '../../../src/api';
 import { LDDeliveryStatus, LDEventSenderResult, LDEventType } from '../../../src/api/subsystem';
-import { ApplicationTags, ClientContext } from '../../../src/options';
 import EventSender from '../../../src/internal/events/EventSender';
+import { ApplicationTags, ClientContext } from '../../../src/options';
 import { createBasicPlatform } from '../../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;

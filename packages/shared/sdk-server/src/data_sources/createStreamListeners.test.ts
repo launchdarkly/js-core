@@ -1,4 +1,5 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
+
 import { LDDataSourceUpdates } from '../api/subsystems';
 import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';

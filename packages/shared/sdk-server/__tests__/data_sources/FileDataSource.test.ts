@@ -8,8 +8,8 @@ import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import TestLogger from '../Logger';
 import { createBasicPlatform } from '../createBasicPlatform';
+import TestLogger from '../Logger';
 
 const flag1Key = 'flag1';
 const flag2Key = 'flag2';

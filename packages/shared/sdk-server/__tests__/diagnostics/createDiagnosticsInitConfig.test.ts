@@ -1,6 +1,6 @@
 import { LDOptions } from '../../src/api';
-import Configuration from '../../src/options/Configuration';
 import createDiagnosticsInitConfig from '../../src/diagnostics/createDiagnosticsInitConfig';
+import Configuration from '../../src/options/Configuration';
 import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;

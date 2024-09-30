@@ -2,9 +2,9 @@ import { EventName, Info, LDLogger, ProcessStreamResponse } from '../../../src/a
 import { LDStreamProcessor } from '../../../src/api/subsystem';
 import { DataSourceErrorKind } from '../../../src/datasource/DataSourceErrorKinds';
 import { LDStreamingError } from '../../../src/datasource/errors';
-import { defaultHeaders } from '../../../src/utils';
 import { DiagnosticsManager } from '../../../src/internal/diagnostics';
 import StreamingProcessor from '../../../src/internal/stream/StreamingProcessor';
+import { defaultHeaders } from '../../../src/utils';
 import { createBasicPlatform } from '../../createBasicPlatform';
 
 let logger: LDLogger;
