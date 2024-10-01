@@ -14,7 +14,7 @@ function getUpdateProcessorFactory(shouldError: boolean = false, initTimeoutMs: 
   return (
     _clientContext: LDClientContext,
     featureStore: LDFeatureStore,
-    initSuccessHandler: VoidFunction,
+    initSuccessHandler: Function,
     errorHandler?: (e: Error) => void,
   ) => ({
     start: jest.fn(async () => {
