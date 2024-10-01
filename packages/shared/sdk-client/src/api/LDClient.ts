@@ -214,6 +214,9 @@ export interface LDClient {
    *   The callback parameters are the context and an Error object. Errors are also output by
    *   the {@link logger} at the error level.
    *
+   * - `"dataSourceStatus"`: Event indicating that there has been a change in the status of the
+   *   data source. This will include the state of the data source as well any error information.
+   *
    * @param key
    *   The name of the event for which to listen.
    * @param callback

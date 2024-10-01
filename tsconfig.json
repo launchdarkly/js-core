@@ -8,9 +8,6 @@
       "path": "./packages/shared/common/tsconfig.ref.json"
     },
     {
-      "path": "./packages/shared/mocks/tsconfig.ref.json"
-    },
-    {
       "path": "./packages/shared/sdk-client/tsconfig.ref.json"
     },
     {

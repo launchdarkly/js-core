@@ -1,4 +1,4 @@
-import type { Hasher } from '@common';
+import { Hasher } from '../src/api';
 
 export const setupCrypto = () => {
   let counter = 0;
