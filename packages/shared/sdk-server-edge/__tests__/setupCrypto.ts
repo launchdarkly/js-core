@@ -1,4 +1,4 @@
-import { Hasher } from '@launchdarkly/js-sdk-common';
+import { Hasher } from '@launchdarkly/js-server-sdk-common';
 
 export const setupCrypto = () => {
   let counter = 0;
