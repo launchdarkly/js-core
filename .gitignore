@@ -1,4 +1,4 @@
-package-lock.json
+spackage-lock.json
 yarn.lock
 dist/
 node_modules/
@@ -21,3 +21,4 @@ yarn-error.log
 .vscode
 dump.rdb
 .wrangler
+stats.html

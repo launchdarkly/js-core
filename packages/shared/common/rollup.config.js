@@ -3,9 +3,14 @@ import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+import { visualizer } from "rollup-plugin-visualizer";
+
 
 const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
+  // Intermediate modules don't bundle all dependencies. We leave that to leaf-node
+  // SDK implementations.
+  external: [/node_modules/],
   output: [
     {
       format: format,
@@ -33,13 +38,15 @@ export default [
         transformMixedEsModules: true,
         esmExternals: true,
       }),
-      resolve(),
+      // resolve(),
       terser(),
       json(),
+      // The 'sourcemap' option allows using the minified size, not the size before minification.
+      visualizer({ sourcemap: true }),
     ],
   },
   {
     ...getSharedConfig('cjs', 'dist/index.cjs.js'),
-    plugins: [typescript({tsconfig: './tsconfig.json'}), common(), resolve(), terser(), json()],
+    plugins: [typescript({ tsconfig: './tsconfig.json' }), common(), resolve(), terser(), json()],
   },
 ];
