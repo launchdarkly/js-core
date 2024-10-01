@@ -1,5 +1,3 @@
-import { renderHook } from '@testing-library/react-hooks';
-
 import {
   ldClientMock,
   mockFlags,
@@ -11,9 +9,7 @@ import {
 
 describe('react-native', () => {
   test('reset LD Mocks', () => {
-    const {
-      result: { current },
-    } = renderHook(() => mockUseLDClient());
+    const current = mockUseLDClient();
 
     current?.track('event');
     expect(ldClientMock.track).toHaveBeenCalledTimes(1);
@@ -24,18 +20,22 @@ describe('react-native', () => {
 
   test('mock boolean flag correctly', () => {
     mockFlags({ 'bool-flag': true });
+    expect(ldClientMock.boolVariation).toBeDefined();
   });
 
   test('mock number flag correctly', () => {
     mockFlags({ 'number-flag': 42 });
+    expect(ldClientMock.numberVariation).toBeDefined();
   });
 
   test('mock string flag correctly', () => {
     mockFlags({ 'string-flag': 'hello' });
+    expect(ldClientMock.stringVariation).toBeDefined();
   });
 
   test('mock json flag correctly', () => {
     mockFlags({ 'json-flag': { key: 'value' } });
+    expect(ldClientMock.jsonVariation).toBeDefined();
   });
 
   test('mock LDProvider correctly', () => {
@@ -48,9 +48,7 @@ describe('react-native', () => {
 
   test('mock ldClient correctly', () => {
     resetLDMocks();
-    const {
-      result: { current },
-    } = renderHook(() => mockUseLDClient());
+    const current = mockUseLDClient();
 
     current?.track('event');
     expect(ldClientMock.track).toHaveBeenCalledTimes(1);
