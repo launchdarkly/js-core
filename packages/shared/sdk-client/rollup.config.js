@@ -9,7 +9,7 @@ const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
   // Intermediate modules don't bundle all dependencies. We leave that to leaf-node
   // SDK implementations.
-  external: [/node_modules/],
+  external: ['@launchdarkly/js-sdk-common'],
   output: [
     {
       format: format,
