@@ -75,7 +75,7 @@ describe('given test data with big segments', () => {
       };
 
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-test-data',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
@@ -114,7 +114,7 @@ describe('given test data with big segments', () => {
       };
 
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-with-user',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
@@ -153,7 +153,7 @@ describe('given test data with big segments', () => {
       };
 
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-store-error',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
@@ -180,7 +180,7 @@ describe('given test data with big segments', () => {
   describe('given a client without big segment support.', () => {
     beforeEach(async () => {
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-no-store',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),

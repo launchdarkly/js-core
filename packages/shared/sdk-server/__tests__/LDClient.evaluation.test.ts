@@ -8,20 +8,6 @@ import VersionedDataKinds from '../src/store/VersionedDataKinds';
 import { createBasicPlatform } from './createBasicPlatform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
-import { MockStreamingProcessor, setupMockStreamingProcessor } from './streamingProcessor';
-
-jest.mock('@launchdarkly/js-sdk-common', () => {
-  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  return {
-    ...actual,
-    ...{
-      internal: {
-        ...actual.internal,
-        StreamingProcessor: MockStreamingProcessor,
-      },
-    },
-  };
-});
 
 const defaultUser = { key: 'user' };
 
@@ -32,7 +18,7 @@ describe('given an LDClient with test data', () => {
   beforeEach(async () => {
     td = new TestData();
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-evaluation-test-data',
       createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),
@@ -278,7 +264,7 @@ describe('given an offline client', () => {
     logger = new TestLogger();
     td = new TestData();
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-evaluation-offline',
       createBasicPlatform(),
       {
         offline: true,
@@ -342,7 +328,7 @@ describe('given a client and store that are uninitialized', () => {
     });
 
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-evaluation-uninitialized-store',
       createBasicPlatform(),
       {
         updateProcessor: new InertUpdateProcessor(),
@@ -389,14 +375,18 @@ describe('given a client that is un-initialized and store that is initialized', 
       },
       segments: {},
     });
-    setupMockStreamingProcessor(true);
 
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-initialized-store',
       createBasicPlatform(),
       {
         sendEvents: false,
         featureStore: store,
+        updateProcessor: () => ({
+          start: jest.fn(),
+          stop: jest.fn(),
+          close: jest.fn(),
+        }),
       },
       makeCallbacks(true),
     );

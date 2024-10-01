@@ -1,4 +1,6 @@
-import { PlatformData, SdkData } from '../src/api';
+import { PlatformData, SdkData } from '@launchdarkly/js-sdk-common';
+
+import { setupCrypto } from './setupCrypto';
 
 const setupInfo = () => ({
   platformData: jest.fn(

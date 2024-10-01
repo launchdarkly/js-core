@@ -17,7 +17,7 @@ describe('given an LDClient with test data', () => {
     queue = new AsyncQueue();
     td = new TestData();
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-listeners',
       createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),

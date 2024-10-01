@@ -29,7 +29,7 @@ describe('given a client with mock event processor', () => {
 
     td = new TestData();
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-events',
       createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),

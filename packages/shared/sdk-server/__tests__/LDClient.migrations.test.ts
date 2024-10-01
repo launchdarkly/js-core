@@ -32,7 +32,7 @@ describe('given an LDClient with test data', () => {
     td = new TestData();
     [errors, callbacks] = makeCallbacks();
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-migration',
       createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),
