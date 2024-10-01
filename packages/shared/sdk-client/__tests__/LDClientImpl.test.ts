@@ -1,9 +1,9 @@
-import { AutoEnvAttributes, clone, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
+import { AutoEnvAttributes, clone, Hasher, LDContext, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { DataSourceState } from '../src/datasource/DataSourceStatus';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
+import { createBasicPlatform } from './createBasicPlatform';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
 import { makeTestDataManagerFactory } from './TestDataManager';
@@ -32,7 +32,7 @@ describe('sdk-client object', () => {
   let simulatedEvents: { data?: any }[] = [];
   let defaultPutResponse: Flags;
   let mockPlatform: ReturnType<typeof createBasicPlatform>;
-  let logger: ReturnType<typeof createLogger>;
+  let logger: LDLogger;
 
   function onDataSourceChangePromise(numToAwait: number) {
     let countdown = numToAwait;
@@ -49,7 +49,12 @@ describe('sdk-client object', () => {
 
   beforeEach(() => {
     mockPlatform = createBasicPlatform();
-    logger = createLogger();
+    logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
     defaultPutResponse = clone<Flags>(mockResponseJson);
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
     const hasher = {

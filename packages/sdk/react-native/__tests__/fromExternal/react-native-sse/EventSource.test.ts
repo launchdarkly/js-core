@@ -1,15 +1,19 @@
-import { type EventName } from '@launchdarkly/js-client-sdk-common';
-import { createLogger } from '@launchdarkly/private-js-mocks';
+import { type EventName, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 import EventSource, {
   backoff,
   jitter,
 } from '../../../src/fromExternal/react-native-sse/EventSource';
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 describe('EventSource', () => {

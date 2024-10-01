@@ -1,24 +1,46 @@
-import {
-  createBasicPlatform,
-  MockStreamingProcessor,
-  setupMockStreamingProcessor,
-} from '@launchdarkly/private-js-mocks';
+import { LDClientContext, LDStreamingError } from '@launchdarkly/js-sdk-common';
 
-import { LDClientImpl, LDOptions } from '../src';
+import { LDOptions } from '../src/api/options/LDOptions';
+import { LDFeatureStore } from '../src/api/subsystems/LDFeatureStore';
+import LDClientImpl from '../src/LDClientImpl';
+import { createBasicPlatform } from './createBasicPlatform';
 import TestLogger, { LogLevel } from './Logger';
 
-jest.mock('@launchdarkly/js-sdk-common', () => {
-  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  return {
-    ...actual,
-    ...{
-      internal: {
-        ...actual.internal,
-        StreamingProcessor: MockStreamingProcessor,
-      },
-    },
-  };
-});
+function getUpdateProcessorFactory(shouldError: boolean = false, initTimeoutMs: number = 0) {
+  let initTimeoutHandle: any;
+  let patchTimeoutHandle: any;
+  let deleteTimeoutHandle: any;
+
+  return (
+    _clientContext: LDClientContext,
+    featureStore: LDFeatureStore,
+    initSuccessHandler: Function,
+    errorHandler?: (e: Error) => void,
+  ) => ({
+    start: jest.fn(async () => {
+      if (shouldError) {
+        initTimeoutHandle = setTimeout(() => {
+          const unauthorized = new Error('test-error') as LDStreamingError;
+          // @ts-ignore
+          unauthorized.code = 401;
+          errorHandler?.(unauthorized);
+        }, 0);
+      } else {
+        // execute put which will resolve the identify promise
+        initTimeoutHandle = setTimeout(() => {
+          featureStore.init({}, () => {});
+          initSuccessHandler();
+        }, initTimeoutMs);
+      }
+    }),
+    close: jest.fn(() => {
+      clearTimeout(initTimeoutHandle);
+      clearTimeout(patchTimeoutHandle);
+      clearTimeout(deleteTimeoutHandle);
+    }),
+    eventSource: {},
+  });
+}
 
 describe('LDClientImpl', () => {
   let client: LDClientImpl;
@@ -30,11 +52,7 @@ describe('LDClientImpl', () => {
     hasEventListeners: jest.fn().mockName('hasEventListeners'),
   };
   const createClient = (options: LDOptions = {}) =>
-    new LDClientImpl('sdk-key', createBasicPlatform(), options, callbacks);
-
-  beforeEach(() => {
-    setupMockStreamingProcessor();
-  });
+    new LDClientImpl('sdk-key-ldclientimpl.test', createBasicPlatform(), options, callbacks);
 
   afterEach(() => {
     client.close();
@@ -42,7 +60,7 @@ describe('LDClientImpl', () => {
   });
 
   it('fires ready event in online mode', async () => {
-    client = createClient();
+    client = createClient({ updateProcessor: getUpdateProcessorFactory() });
     const initializedClient = await client.waitForInitialization({ timeout: 10 });
 
     expect(initializedClient).toEqual(client);
@@ -53,8 +71,7 @@ describe('LDClientImpl', () => {
   });
 
   it('wait for initialization completes even if initialization completes before it is called', (done) => {
-    setupMockStreamingProcessor();
-    client = createClient();
+    client = createClient({ updateProcessor: getUpdateProcessorFactory() });
 
     setTimeout(async () => {
       const initializedClient = await client.waitForInitialization({ timeout: 10 });
@@ -64,7 +81,7 @@ describe('LDClientImpl', () => {
   });
 
   it('waiting for initialization the second time produces the same result', async () => {
-    client = createClient();
+    client = createClient({ updateProcessor: getUpdateProcessorFactory() });
     await client.waitForInitialization({ timeout: 10 });
 
     const initializedClient = await client.waitForInitialization({ timeout: 10 });
@@ -83,9 +100,7 @@ describe('LDClientImpl', () => {
   });
 
   it('initialization fails: failed event fires and initialization promise rejects', async () => {
-    setupMockStreamingProcessor(true);
-    client = createClient();
-
+    client = createClient({ updateProcessor: getUpdateProcessorFactory(true) });
     await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
 
     expect(client.initialized()).toBeFalsy();
@@ -95,8 +110,7 @@ describe('LDClientImpl', () => {
   });
 
   it('initialization promise is rejected even if the failure happens before wait is called', (done) => {
-    setupMockStreamingProcessor(true);
-    client = createClient();
+    client = createClient({ updateProcessor: getUpdateProcessorFactory(true) });
 
     setTimeout(async () => {
       await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
@@ -110,8 +124,7 @@ describe('LDClientImpl', () => {
   });
 
   it('waiting a second time results in the same rejection', async () => {
-    setupMockStreamingProcessor(true);
-    client = createClient();
+    client = createClient({ updateProcessor: getUpdateProcessorFactory(true) });
 
     await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
     await expect(client.waitForInitialization({ timeout: 10 })).rejects.toThrow('failed');
@@ -128,13 +141,13 @@ describe('LDClientImpl', () => {
   });
 
   it('resolves immediately if the client is already ready', async () => {
-    client = createClient();
+    client = createClient({ updateProcessor: getUpdateProcessorFactory() });
     await client.waitForInitialization({ timeout: 10 });
     await client.waitForInitialization({ timeout: 10 });
   });
 
   it('creates only one Promise when waiting for initialization - when not using a timeout', async () => {
-    client = createClient();
+    client = createClient({ updateProcessor: getUpdateProcessorFactory() });
     const p1 = client.waitForInitialization();
     const p2 = client.waitForInitialization();
 
@@ -142,17 +155,20 @@ describe('LDClientImpl', () => {
   });
 
   it('rejects the returned promise when initialization does not complete within the timeout', async () => {
-    setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 10000);
-    client = createClient();
+    client = createClient({
+      updateProcessor: getUpdateProcessorFactory(false, 10000),
+    });
     await expect(async () => client.waitForInitialization({ timeout: 1 })).rejects.toThrow(
       'waitForInitialization timed out after 1 seconds.',
     );
   });
 
   it('logs an error when the initialization does not complete within the timeout', async () => {
-    setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 10000);
     const logger = new TestLogger();
-    client = createClient({ logger });
+    client = createClient({
+      logger,
+      updateProcessor: getUpdateProcessorFactory(false, 10000),
+    });
     try {
       await client.waitForInitialization({ timeout: 1 });
     } catch {
@@ -167,14 +183,18 @@ describe('LDClientImpl', () => {
   });
 
   it('does not reject the returned promise when initialization completes within the timeout', async () => {
-    setupMockStreamingProcessor(undefined, undefined, undefined, undefined, undefined, 1000);
-    client = createClient();
-    await expect(async () => client.waitForInitialization({ timeout: 5 })).not.toThrow();
+    client = createClient({
+      updateProcessor: getUpdateProcessorFactory(false, 100),
+    });
+    await expect(client.waitForInitialization({ timeout: 3 })).resolves.not.toThrow();
   });
 
   it('logs when no timeout is set', async () => {
     const logger = new TestLogger();
-    client = createClient({ logger });
+    client = createClient({
+      logger,
+      updateProcessor: getUpdateProcessorFactory(),
+    });
     await client.waitForInitialization();
     logger.expectMessages([
       {
@@ -187,7 +207,10 @@ describe('LDClientImpl', () => {
 
   it('logs when the timeout is too high', async () => {
     const logger = new TestLogger();
-    client = createClient({ logger });
+    client = createClient({
+      logger,
+      updateProcessor: getUpdateProcessorFactory(),
+    });
     await client.waitForInitialization({ timeout: Number.MAX_SAFE_INTEGER });
 
     logger.expectMessages([
@@ -203,7 +226,7 @@ describe('LDClientImpl', () => {
     'does not log when timeout is under high timeout threshold',
     async (timeout) => {
       const logger = new TestLogger();
-      client = createClient({ logger });
+      client = createClient({ logger, updateProcessor: getUpdateProcessorFactory() });
       await client.waitForInitialization({ timeout });
       expect(logger.getCount(LogLevel.Warn)).toBe(0);
     },

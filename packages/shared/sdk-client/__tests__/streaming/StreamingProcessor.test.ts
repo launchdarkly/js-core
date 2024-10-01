@@ -5,15 +5,16 @@ import {
   EventName,
   Info,
   internal,
+  LDLogger,
   LDStreamingError,
   Platform,
   ProcessStreamResponse,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
+import { createBasicPlatform } from '../createBasicPlatform';
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 const serviceEndpoints = {
   events: '',
@@ -69,7 +70,12 @@ function getStreamingDataSourceConfig(
 
 beforeEach(() => {
   basicPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 const createMockEventSource = (streamUri: string = '', options: any = {}) => ({

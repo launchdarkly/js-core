@@ -1,12 +1,12 @@
 // Tests of flag evaluation at the rule level. Clause-level behavior is covered
 // in detail in Evaluator.clause.tests and (TODO: File for segments).
 import { AttributeReference, Context, LDContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { Clause } from '../../src/evaluation/data/Clause';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { FlagRule } from '../../src/evaluation/data/FlagRule';
 import Evaluator from '../../src/evaluation/Evaluator';
+import { createBasicPlatform } from '../createBasicPlatform';
 import {
   makeClauseThatDoesNotMatchUser,
   makeClauseThatMatchesUser,

@@ -4,17 +4,15 @@ import {
   clone,
   internal,
   LDContext,
+  LDLogger,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
-import {
-  createBasicPlatform,
-  createLogger,
-  MockEventProcessor,
-} from '@launchdarkly/private-js-mocks';
 
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
+import { createBasicPlatform } from './createBasicPlatform';
 import * as mockResponseJson from './evaluation/mockResponse.json';
+import { MockEventProcessor } from './eventProcessor';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
 import { makeTestDataManagerFactory } from './TestDataManager';
 
@@ -22,16 +20,21 @@ type InputCustomEvent = internal.InputCustomEvent;
 type InputIdentifyEvent = internal.InputIdentifyEvent;
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');
-  const m = jest.requireActual('@launchdarkly/private-js-mocks');
+  const m = jest.requireActual('./eventProcessor');
   return {
     ...actual,
     ...{

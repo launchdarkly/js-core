@@ -2,7 +2,6 @@
   "name": "@launchdarkly/js-core",
   "workspaces": [
     "packages/shared/common",
-    "packages/shared/mocks",
     "packages/shared/sdk-client",
     "packages/shared/sdk-server",
     "packages/shared/sdk-server-edge",

@@ -1,7 +1,7 @@
 import { Crypto, Storage } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { getOrGenerateKey } from '../../src/storage/getOrGenerateKey';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
