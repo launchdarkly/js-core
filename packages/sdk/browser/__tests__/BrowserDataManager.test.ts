@@ -75,9 +75,6 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     };
     config = {
       logger,
-      baseUri: 'string',
-      eventsUri: 'string',
-      streamUri: 'string',
       maxCachedContexts: 5,
       capacity: 100,
       diagnosticRecordingInterval: 1000,
@@ -291,20 +288,27 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('should load cached flags and continue to poll to complete identify', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: BrowserIdentifyOptions = {};
-    const identifyResolve = jest.fn();
-    const identifyReject = jest.fn();
 
     flagManager.loadCached.mockResolvedValue(true);
 
-    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+    let identifyResolve: () => void;
+    let identifyReject: (err: Error) => void;
+    await new Promise<void>((resolve) => {
+      identifyResolve = jest.fn().mockImplementation(() => {
+        resolve();
+      });
+      identifyReject = jest.fn();
+
+      // this is the function under test
+      dataManager.identify(identifyResolve, identifyReject, context, {});
+    });
 
     expect(logger.debug).toHaveBeenCalledWith(
       '[BrowserDataManager] Identify - Flags loaded from cache. Continuing to initialize via a poll.',
     );
 
     expect(flagManager.loadCached).toHaveBeenCalledWith(context);
-    expect(identifyResolve).toHaveBeenCalled();
+    expect(identifyResolve!).toHaveBeenCalled();
     expect(flagManager.init).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ flagA: { flag: true, version: undefined } }),
@@ -344,20 +348,25 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
 
   it('should identify from polling when there are no cached flags', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
-    const identifyOptions: BrowserIdentifyOptions = {};
-    const identifyResolve = jest.fn();
-    const identifyReject = jest.fn();
 
-    flagManager.loadCached.mockResolvedValue(false);
+    let identifyResolve: () => void;
+    let identifyReject: (err: Error) => void;
+    await new Promise<void>((resolve) => {
+      identifyResolve = jest.fn().mockImplementation(() => {
+        resolve();
+      });
+      identifyReject = jest.fn();
 
-    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+      // this is the function under test
+      dataManager.identify(identifyResolve, identifyReject, context, {});
+    });
 
     expect(logger.debug).not.toHaveBeenCalledWith(
       'Identify - Flags loaded from cache. Continuing to initialize via a poll.',
     );
 
     expect(flagManager.loadCached).toHaveBeenCalledWith(context);
-    expect(identifyResolve).toHaveBeenCalled();
+    expect(identifyResolve!).toHaveBeenCalled();
     expect(flagManager.init).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ flagA: { flag: true, version: undefined } }),

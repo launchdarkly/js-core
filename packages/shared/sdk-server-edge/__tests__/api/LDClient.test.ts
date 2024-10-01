@@ -1,7 +1,7 @@
 import { internal } from '@launchdarkly/js-server-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import LDClient from '../../src/api/LDClient';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 jest.mock('@launchdarkly/js-sdk-common', () => {
   const actual = jest.requireActual('@launchdarkly/js-sdk-common');

@@ -1,6 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-export type EventName = 'error' | 'change';
+export type EventName = 'error' | 'change' | 'dataSourceStatus';
 
 /**
  * Implementation Note: There should not be any default listeners for change events in a client

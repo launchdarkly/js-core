@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import { createSafeLogger } from '@launchdarkly/js-sdk-common';
+
 import ConfigurationImpl from '../../src/configuration/Configuration';
 
 describe('Configuration', () => {
@@ -119,4 +121,49 @@ describe('Configuration', () => {
       );
     },
   );
+});
+
+it('makes a safe logger', () => {
+  const badLogger = {
+    debug: () => {
+      throw new Error('bad');
+    },
+    info: () => {
+      throw new Error('bad');
+    },
+    warn: () => {
+      throw new Error('bad');
+    },
+    error: () => {
+      throw new Error('bad');
+    },
+  };
+  const config = new ConfigurationImpl({
+    logger: badLogger,
+  });
+
+  expect(() => config.logger.debug('debug')).not.toThrow();
+  expect(() => config.logger.info('info')).not.toThrow();
+  expect(() => config.logger.warn('warn')).not.toThrow();
+  expect(() => config.logger.error('error')).not.toThrow();
+  expect(config.logger).not.toBe(badLogger);
+});
+
+it('does not wrap already safe loggers', () => {
+  const logger = createSafeLogger({
+    debug: () => {
+      throw new Error('bad');
+    },
+    info: () => {
+      throw new Error('bad');
+    },
+    warn: () => {
+      throw new Error('bad');
+    },
+    error: () => {
+      throw new Error('bad');
+    },
+  });
+  const config = new ConfigurationImpl({ logger });
+  expect(config.logger).toBe(logger);
 });

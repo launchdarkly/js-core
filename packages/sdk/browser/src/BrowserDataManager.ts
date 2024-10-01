@@ -2,7 +2,9 @@ import {
   BaseDataManager,
   Configuration,
   Context,
+  DataSourceErrorKind,
   DataSourcePaths,
+  DataSourceState,
   FlagManager,
   getPollingUri,
   internal,
@@ -107,11 +109,24 @@ export default class BrowserDataManager extends BaseDataManager {
     identifyReject: (err: Error) => void,
   ) {
     try {
+      this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
       const payload = await requestor.requestPayload();
-      const listeners = this.createStreamListeners(context, identifyResolve);
-      const putListener = listeners.get('put');
-      putListener!.processJson(putListener!.deserializeData(payload));
+      try {
+        const listeners = this.createStreamListeners(context, identifyResolve);
+        const putListener = listeners.get('put');
+        putListener!.processJson(putListener!.deserializeData(payload));
+      } catch (e: any) {
+        this.dataSourceStatusManager.reportError(
+          DataSourceErrorKind.InvalidData,
+          e.message ?? 'Could not parse poll response',
+        );
+      }
     } catch (e: any) {
+      this.dataSourceStatusManager.reportError(
+        DataSourceErrorKind.NetworkError,
+        e.message ?? 'unexpected network error',
+        e.status,
+      );
       identifyReject(e);
     }
   }
