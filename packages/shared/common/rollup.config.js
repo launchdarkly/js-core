@@ -26,6 +26,8 @@ export default [
     plugins: [
       typescript({
         module: 'esnext',
+        tsconfig: './tsconfig.json',
+        outputToFilesystem: true,
       }),
       common({
         transformMixedEsModules: true,

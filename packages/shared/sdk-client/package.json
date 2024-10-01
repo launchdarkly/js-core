@@ -3,7 +3,7 @@
   "version": "1.8.0",
   "type": "module",
   "main": "./dist/index.es.js",
-  "types": "./dist/src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-client",
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
     "client"
   ],
   "exports": {
-    "types": "./dist/src/index.d.ts",
+    "types": "./dist/index.d.ts",
     "require": "./dist/index.cjs.js",
     "import": "./dist/index.es.js"
   },

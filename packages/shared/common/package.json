@@ -3,7 +3,7 @@
   "version": "2.9.0",
   "type": "module",
   "main": "./dist/index.es.js",
-  "types": "./dist/src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/common",
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
   },
   "scripts": {
     "test": "npx jest --ci",
-    "build": "npx tsc && rollup -c rollup.config.js",
+    "build": "npx tsc --noEmit && rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint --fix",
