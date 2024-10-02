@@ -22,7 +22,7 @@ export type {
   LDIdentifyOptions,
 } from './api';
 
-export type { DataManager, DataManagerFactory } from './DataManager';
+export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
 export type { FlagManager } from './flag-manager/FlagManager';
 export type { Configuration } from './configuration/Configuration';
 

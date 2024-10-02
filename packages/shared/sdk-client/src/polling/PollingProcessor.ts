@@ -42,7 +42,9 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
       : dataSourceConfig.paths.pathGet(encoding, plainContextString);
 
-    const parameters: { key: string; value: string }[] = [];
+    const parameters: { key: string; value: string }[] = [
+      ...(dataSourceConfig.queryParameters ?? []),
+    ];
     if (this.dataSourceConfig.withReasons) {
       parameters.push({ key: 'withReasons', value: 'true' });
     }

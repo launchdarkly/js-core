@@ -16,6 +16,7 @@ import {
 // The exported LDClient and LDOptions are the browser specific implementations.
 // These shadow the common implementations.
 import { BrowserClient, LDClient } from './BrowserClient';
+import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { BrowserOptions as LDOptions } from './options';
 
 export {
@@ -32,6 +33,7 @@ export {
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDEvaluationReason,
+  LDIdentifyOptions,
 };
 
 export function init(clientSideId: string, options?: LDOptions): LDClient {
