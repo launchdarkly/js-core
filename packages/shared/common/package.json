@@ -2,7 +2,7 @@
   "name": "@launchdarkly/js-sdk-common",
   "version": "2.9.0",
   "type": "module",
-  "main": "./dist/index.es.js",
+  "main": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/common",
   "repository": {
@@ -20,8 +20,8 @@
   ],
   "exports": {
     "types": "./dist/index.d.ts",
-    "require": "./dist/index.cjs.js",
-    "import": "./dist/index.es.js"
+    "require": "./dist/index.cjs",
+    "import": "./dist/index.mjs"
   },
   "scripts": {
     "test": "npx jest --ci",

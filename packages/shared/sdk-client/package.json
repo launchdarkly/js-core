@@ -2,7 +2,7 @@
   "name": "@launchdarkly/js-client-sdk-common",
   "version": "1.8.0",
   "type": "module",
-  "main": "./dist/index.es.js",
+  "main": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-client",
   "repository": {
@@ -20,8 +20,8 @@
   ],
   "exports": {
     "types": "./dist/index.d.ts",
-    "require": "./dist/index.cjs.js",
-    "import": "./dist/index.es.js"
+    "require": "./dist/index.cjs",
+    "import": "./dist/index.mjs"
   },
   "scripts": {
     "doc": "../../../scripts/build-doc.sh .",
