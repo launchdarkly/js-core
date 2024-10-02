@@ -16,7 +16,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, type LDOptions } from './api';
+import { Hook, LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
@@ -31,6 +31,7 @@ import {
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
+import HookRunner from './HookRunner';
 import LDEmitter, { EventName } from './LDEmitter';
 
 const { ClientMessages, ErrorKinds } = internal;
@@ -55,6 +56,7 @@ export default class LDClientImpl implements LDClient {
   private eventSendingEnabled: boolean = false;
   private baseHeaders: LDHeaders;
   protected dataManager: DataManager;
+  private hookRunner: HookRunner;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -118,6 +120,8 @@ export default class LDClientImpl implements LDClient {
       this.emitter,
       this.diagnosticsManager,
     );
+
+    this.hookRunner = new HookRunner(this.logger, this.config.hooks);
   }
 
   allFlags(): LDFlagSet {
@@ -239,6 +243,8 @@ export default class LDClientImpl implements LDClient {
     );
     this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
 
+    const afterIdentify = this.hookRunner.identify(context, identifyOptions?.timeout);
+
     await this.dataManager.identify(
       identifyResolve,
       identifyReject,
@@ -246,7 +252,16 @@ export default class LDClientImpl implements LDClient {
       identifyOptions,
     );
 
-    return identifyPromise;
+    return identifyPromise.then(
+      (res) => {
+        afterIdentify('completed');
+        return res;
+      },
+      (e) => {
+        afterIdentify('error');
+        throw e;
+      },
+    );
   }
 
   off(eventName: EventName, listener: Function): void {
@@ -343,11 +358,18 @@ export default class LDClientImpl implements LDClient {
   }
 
   variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
-    const { value } = this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault);
+    const { value } = this.hookRunner.withEvaluation(
+      flagKey,
+      this.uncheckedContext,
+      defaultValue,
+      () => this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault),
+    );
     return value;
   }
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
-    return this.variationInternal(flagKey, defaultValue, this.eventFactoryWithReasons);
+    return this.hookRunner.withEvaluation(flagKey, this.uncheckedContext, defaultValue, () =>
+      this.variationInternal(flagKey, defaultValue, this.eventFactoryWithReasons),
+    );
   }
 
   private typedEval<T>(
@@ -356,7 +378,9 @@ export default class LDClientImpl implements LDClient {
     eventFactory: EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): LDEvaluationDetailTyped<T> {
-    return this.variationInternal(key, defaultValue, eventFactory, typeChecker);
+    return this.hookRunner.withEvaluation(key, this.uncheckedContext, defaultValue, () =>
+      this.variationInternal(key, defaultValue, eventFactory, typeChecker),
+    );
   }
 
   boolVariation(key: string, defaultValue: boolean): boolean {
@@ -407,6 +431,10 @@ export default class LDClientImpl implements LDClient {
 
   jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
     return this.variationDetail(key, defaultValue);
+  }
+
+  addHook(hook: Hook): void {
+    this.hookRunner.addHook(hook);
   }
 
   /**
