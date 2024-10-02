@@ -9,9 +9,6 @@ import typescript from '@rollup/plugin-typescript';
 
 const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
-  // Intermediate modules don't bundle all dependencies. We leave that to leaf-node
-  // SDK implementations.
-  external: [/node_modules/],
   output: [
     {
       format: format,
