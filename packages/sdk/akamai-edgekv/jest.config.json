@@ -1,6 +1,5 @@
 {
-  "preset": "ts-jest/presets/default-esm",
-  // "transform": { "^.+\\.ts?$": "ts-jest" },
+  "transform": { "^.+\\.ts?$": "ts-jest" },
   "testMatch": ["**/*.test.ts?(x)"],
   "testPathIgnorePatterns": ["node_modules", "example", "dist"],
   "modulePathIgnorePatterns": ["dist"],
