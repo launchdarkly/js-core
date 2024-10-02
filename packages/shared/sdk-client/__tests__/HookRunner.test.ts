@@ -202,6 +202,33 @@ describe('given a hook runner and test hook', () => {
     );
   });
 
+  it('should log "unknown hook" when getMetadata returns an empty name', () => {
+    const errorHook: Hook = {
+      getMetadata: jest.fn().mockImplementation(() => ({
+        name: '',
+      })),
+      beforeEvaluation: jest.fn().mockImplementation(() => {
+        throw new Error('Test error in beforeEvaluation');
+      }),
+      afterEvaluation: jest.fn(),
+    };
+
+    const errorHookRunner = new HookRunner(logger, [errorHook]);
+
+    errorHookRunner.withEvaluation('test-flag', { kind: 'user', key: 'user-123' }, false, () => ({
+      value: true,
+      variationIndex: 1,
+      reason: { kind: 'OFF' },
+    }));
+
+    // Verify that the error was logged with the correct hook name
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'An error was encountered in "beforeEvaluation" of the "unknown hook" hook: Error: Test error in beforeEvaluation',
+      ),
+    );
+  });
+
   it('should log the correct hook name when an error occurs', () => {
     // Modify the testHook to throw an error in beforeEvaluation
     testHook.beforeEvaluation = jest.fn().mockImplementation(() => {

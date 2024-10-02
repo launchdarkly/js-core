@@ -29,9 +29,9 @@ function tryExecuteStage<TData>(
   }
 }
 
-function getHookName(logger: LDLogger, hook?: Hook): string {
+function getHookName(logger: LDLogger, hook: Hook): string {
   try {
-    return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
+    return hook.getMetadata().name || UNKNOWN_HOOK_NAME;
   } catch {
     logger.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
     return UNKNOWN_HOOK_NAME;
@@ -58,14 +58,14 @@ function executeAfterEvaluation(
   logger: LDLogger,
   hooks: Hook[],
   hookContext: EvaluationSeriesContext,
-  updatedData: (EvaluationSeriesData | undefined)[],
+  updatedData: EvaluationSeriesData[],
   result: LDEvaluationDetail,
 ) {
   // This iterates in reverse, versus reversing a shallow copy of the hooks,
   // for efficiency.
   for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
     const hook = hooks[hookIndex];
-    const data = updatedData[hookIndex] ?? {};
+    const data = updatedData[hookIndex];
     tryExecuteStage(
       logger,
       AFTER_EVALUATION_STAGE_NAME,
@@ -96,14 +96,14 @@ function executeAfterIdentify(
   logger: LDLogger,
   hooks: Hook[],
   hookContext: IdentifySeriesContext,
-  updatedData: (IdentifySeriesData | undefined)[],
+  updatedData: IdentifySeriesData[],
   result: IdentifyResult,
 ) {
   // This iterates in reverse, versus reversing a shallow copy of the hooks,
   // for efficiency.
   for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
     const hook = hooks[hookIndex];
-    const data = updatedData[hookIndex] ?? {};
+    const data = updatedData[hookIndex];
     tryExecuteStage(
       logger,
       AFTER_EVALUATION_STAGE_NAME,

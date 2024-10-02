@@ -1,4 +1,5 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
+
 import { Hook } from './integrations/Hooks';
 
 export interface LDOptions {
