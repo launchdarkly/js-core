@@ -12,8 +12,33 @@ import { Configuration } from '../src/configuration/Configuration';
 import { BaseDataManager, DataManagerFactory } from '../src/DataManager';
 import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDEmitter from '../src/LDEmitter';
+import { DataSourcePaths } from '../src/streaming/DataSourceConfig';
 
 export default class TestDataManager extends BaseDataManager {
+  constructor(
+    platform: Platform,
+    flagManager: FlagManager,
+    credential: string,
+    config: Configuration,
+    getPollingPaths: () => DataSourcePaths,
+    getStreamingPaths: () => DataSourcePaths,
+    baseHeaders: LDHeaders,
+    emitter: LDEmitter,
+    private readonly disableNetwork: boolean,
+    diagnosticsManager?: internal.DiagnosticsManager,
+  ) {
+    super(
+      platform,
+      flagManager,
+      credential,
+      config,
+      getPollingPaths,
+      getStreamingPaths,
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+  }
   override async identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
@@ -32,6 +57,10 @@ export default class TestDataManager extends BaseDataManager {
       this.logger.debug(
         'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
       );
+    }
+    if (this.disableNetwork) {
+      identifyResolve();
+      return;
     }
 
     this.setupConnection(context, identifyResolve, identifyReject);
@@ -52,7 +81,13 @@ export default class TestDataManager extends BaseDataManager {
   }
 }
 
-export function makeTestDataManagerFactory(sdkKey: string, platform: Platform): DataManagerFactory {
+export function makeTestDataManagerFactory(
+  sdkKey: string,
+  platform: Platform,
+  options: {
+    disableNetwork?: boolean;
+  },
+): DataManagerFactory {
   return (
     flagManager: FlagManager,
     configuration: Configuration,
@@ -83,6 +118,7 @@ export function makeTestDataManagerFactory(sdkKey: string, platform: Platform): 
       }),
       baseHeaders,
       emitter,
+      !!options.disableNetwork,
       diagnosticsManager,
     );
 }

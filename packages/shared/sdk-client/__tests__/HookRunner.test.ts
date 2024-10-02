@@ -101,9 +101,37 @@ describe('given a hook runner and test hook', () => {
       expect(method).toHaveBeenCalled();
       expect(logger.error).not.toHaveBeenCalled();
     });
+
+    it('should pass evaluation series data from before to after hooks', () => {
+      const key = 'test-flag';
+      const context: LDContext = { kind: 'user', key: 'user-123' };
+      const defaultValue = false;
+      const evaluationResult: LDEvaluationDetail = {
+        value: true,
+        variationIndex: 1,
+        reason: { kind: 'OFF' },
+      };
+
+      testHook.beforeEvaluation = jest
+        .fn()
+        .mockImplementation((_, series) => ({ ...series, testData: 'before data' }));
+
+      testHook.afterEvaluation = jest.fn();
+
+      const method = jest.fn().mockReturnValue(evaluationResult);
+
+      hookRunner.withEvaluation(key, context, defaultValue, method);
+
+      expect(testHook.beforeEvaluation).toHaveBeenCalled();
+      expect(testHook.afterEvaluation).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ testData: 'before data' }),
+        evaluationResult,
+      );
+    });
   });
 
-  describe('when handling an identifcation', () => {
+  describe('when handling an identification', () => {
     it('should execute identify hooks', () => {
       const context: LDContext = { kind: 'user', key: 'user-123' };
       const timeout = 10;
@@ -148,6 +176,28 @@ describe('given a hook runner and test hook', () => {
         expect.stringContaining(
           'An error was encountered in "beforeEvaluation" of the "Error Hook" hook: Error: Hook error',
         ),
+      );
+    });
+
+    it('should pass identify series data from before to after hooks', () => {
+      const context: LDContext = { kind: 'user', key: 'user-123' };
+      const timeout = 10;
+      const identifyResult: IdentifyResult = 'completed';
+
+      testHook.beforeIdentify = jest
+        .fn()
+        .mockImplementation((_, series) => ({ ...series, testData: 'before identify data' }));
+
+      testHook.afterIdentify = jest.fn();
+
+      const identifyCallback = hookRunner.identify(context, timeout);
+      identifyCallback(identifyResult);
+
+      expect(testHook.beforeIdentify).toHaveBeenCalled();
+      expect(testHook.afterIdentify).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ testData: 'before identify data' }),
+        identifyResult,
       );
     });
   });
