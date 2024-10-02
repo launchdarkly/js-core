@@ -1,8 +1,11 @@
 import common from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
-import resolve from '@rollup/plugin-node-resolve';
-import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+
+// The common library does not have a dependency resolution plugin as it should not have any
+// dependencies.
+
+// This library is not minified as the final SDK package is responsible for minification.
 
 const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
@@ -13,31 +16,26 @@ const getSharedConfig = (format, file) => ({
       file: file,
     },
   ],
-  onwarn: (warning) => {
-    if (warning.code !== 'CIRCULAR_DEPENDENCY') {
-      console.error(`(!) ${warning.message}`);
-    }
-  },
 });
 
 export default [
   {
-    ...getSharedConfig('es', 'dist/index.es.js'),
+    ...getSharedConfig('es', 'dist/index.mjs'),
     plugins: [
       typescript({
         module: 'esnext',
+        tsconfig: './tsconfig.json',
+        outputToFilesystem: true,
       }),
       common({
         transformMixedEsModules: true,
         esmExternals: true,
       }),
-      resolve(),
-      terser(),
       json(),
     ],
   },
   {
-    ...getSharedConfig('cjs', 'dist/index.cjs.js'),
-    plugins: [typescript(), common(), resolve(), terser(), json()],
+    ...getSharedConfig('cjs', 'dist/index.cjs'),
+    plugins: [typescript({ tsconfig: './tsconfig.json' }), common(), json()],
   },
 ];

@@ -1,11 +1,15 @@
 import common from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
-import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+
+// This library is not minified as the final SDK package is responsible for minification.
 
 const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
+  // Intermediate modules don't bundle all dependencies. We leave that to leaf-node
+  // SDK implementations.
+  external: ['@launchdarkly/js-sdk-common'],
   output: [
     {
       format: format,
@@ -13,31 +17,27 @@ const getSharedConfig = (format, file) => ({
       file: file,
     },
   ],
-  onwarn: (warning) => {
-    if (warning.code !== 'CIRCULAR_DEPENDENCY') {
-      console.error(`(!) ${warning.message}`);
-    }
-  },
 });
 
 export default [
   {
-    ...getSharedConfig('es', 'dist/index.es.js'),
+    ...getSharedConfig('es', 'dist/index.mjs'),
     plugins: [
       typescript({
         module: 'esnext',
+        tsconfig: './tsconfig.json',
+        outputToFilesystem: true,
       }),
       common({
         transformMixedEsModules: true,
         esmExternals: true,
       }),
       resolve(),
-      terser(),
       json(),
     ],
   },
   {
-    ...getSharedConfig('cjs', 'dist/index.cjs.js'),
-    plugins: [typescript(), common(), resolve(), terser(), json()],
+    ...getSharedConfig('cjs', 'dist/index.cjs'),
+    plugins: [typescript({ tsconfig: './tsconfig.json' }), common(), resolve(), json()],
   },
 ];

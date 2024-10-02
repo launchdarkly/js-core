@@ -10,10 +10,10 @@ import {
   LDClientImpl,
   LDContext,
   LDEmitter,
+  LDEmitterEventName,
   LDHeaders,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
-import { EventName } from '@launchdarkly/js-client-sdk-common/dist/LDEmitter';
 
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
@@ -233,12 +233,12 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     browserDataManager.setAutomaticStreamingState(!!this.emitter.listenerCount('change'));
   }
 
-  override on(eventName: EventName, listener: Function): void {
+  override on(eventName: LDEmitterEventName, listener: Function): void {
     super.on(eventName, listener);
     this.updateAutomaticStreamingState();
   }
 
-  override off(eventName: EventName, listener: Function): void {
+  override off(eventName: LDEmitterEventName, listener: Function): void {
     super.off(eventName, listener);
     this.updateAutomaticStreamingState();
   }
