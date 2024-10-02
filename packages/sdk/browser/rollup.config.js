@@ -3,7 +3,7 @@ import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
-import { visualizer } from "rollup-plugin-visualizer";
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
@@ -36,7 +36,7 @@ export default [
       terser(),
       json(),
       // The 'sourcemap' option allows using the minified size, not the size before minification.
-      visualizer({sourcemap: true}),
+      visualizer({ sourcemap: true }),
     ],
   },
   {

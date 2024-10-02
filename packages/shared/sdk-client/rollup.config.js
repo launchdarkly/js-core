@@ -2,7 +2,6 @@ import common from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
 import typescript from '@rollup/plugin-typescript';
-import { visualizer } from "rollup-plugin-visualizer";
 
 // This library is not minified as the final SDK package is responsible for minification.
 
@@ -35,8 +34,6 @@ export default [
       }),
       resolve(),
       json(),
-      // The 'sourcemap' option allows using the minified size, not the size before minification.
-      visualizer({ sourcemap: true }),
     ],
   },
   {
