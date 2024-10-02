@@ -8,4 +8,7 @@ export default {
   },
   testPathIgnorePatterns: ['./dist', './src'],
   testMatch: ['**.test.ts'],
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
 };
