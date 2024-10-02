@@ -75,6 +75,7 @@ function makeConfig(
   pollInterval: number,
   withReasons: boolean,
   useReport: boolean,
+  queryParameters?: { key: string; value: string }[],
 ): PollingDataSourceConfig {
   return {
     credential: 'the-sdk-key',
@@ -91,6 +92,7 @@ function makeConfig(
     withReasons,
     useReport,
     pollInterval,
+    queryParameters,
   };
 }
 
@@ -107,6 +109,49 @@ it('makes no requests until it is started', () => {
   );
 
   expect(requests.fetch).toHaveBeenCalledTimes(0);
+});
+
+it('includes custom query parameters when specified', () => {
+  const requests = makeRequests();
+
+  const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(1, true, false, [
+      { key: 'custom', value: 'value' },
+      { key: 'custom2', value: 'value2' },
+    ]),
+    requests,
+    makeEncoding(),
+    (_flags) => {},
+    (_error) => {},
+  );
+  polling.start();
+
+  expect(requests.fetch).toHaveBeenCalledWith(
+    'mockPollingEndpoint/poll/path/get?custom=value&custom2=value2&withReasons=true&filter=testPayloadFilterKey',
+    expect.anything(),
+  );
+  polling.stop();
+});
+
+it('works without any custom query parameters', () => {
+  const requests = makeRequests();
+
+  const polling = new PollingProcessor(
+    'mockContextString',
+    makeConfig(1, true, false),
+    requests,
+    makeEncoding(),
+    (_flags) => {},
+    (_error) => {},
+  );
+  polling.start();
+
+  expect(requests.fetch).toHaveBeenCalledWith(
+    'mockPollingEndpoint/poll/path/get?withReasons=true&filter=testPayloadFilterKey',
+    expect.anything(),
+  );
+  polling.stop();
 });
 
 it('polls immediately when started', () => {
