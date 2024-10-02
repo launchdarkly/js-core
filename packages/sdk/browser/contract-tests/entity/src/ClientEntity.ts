@@ -156,9 +156,7 @@ export class ClientEntity {
         if (!identifyParams) {
           throw malformedCommand;
         }
-        await this.client.identify(identifyParams.user || identifyParams.context, {
-          waitForNetworkResults: true,
-        });
+        await this.client.identify(identifyParams.user || identifyParams.context);
         return undefined;
       }
 
@@ -204,7 +202,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
   let failed = false;
   try {
     await Promise.race([
-      client.identify(initialContext, { waitForNetworkResults: true }),
+      client.identify(initialContext),
       new Promise((_resolve, reject) => {
         setTimeout(reject, timeout);
       }),
