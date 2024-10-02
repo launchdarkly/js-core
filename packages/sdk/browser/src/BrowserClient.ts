@@ -10,13 +10,13 @@ import {
   LDClientImpl,
   LDContext,
   LDEmitter,
+  LDEmitterEventName,
   LDHeaders,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
-import { LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common/dist/api/LDIdentifyOptions';
-import { EventName } from '@launchdarkly/js-client-sdk-common/dist/LDEmitter';
 
 import BrowserDataManager from './BrowserDataManager';
+import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
@@ -195,12 +195,12 @@ export class BrowserClient extends LDClientImpl {
     browserDataManager.setAutomaticStreamingState(!!this.emitter.listenerCount('change'));
   }
 
-  override on(eventName: EventName, listener: Function): void {
+  override on(eventName: LDEmitterEventName, listener: Function): void {
     super.on(eventName, listener);
     this.updateAutomaticStreamingState();
   }
 
-  override off(eventName: EventName, listener: Function): void {
+  override off(eventName: LDEmitterEventName, listener: Function): void {
     super.off(eventName, listener);
     this.updateAutomaticStreamingState();
   }
