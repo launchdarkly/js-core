@@ -85,6 +85,10 @@ export default class BrowserDataManager extends BaseDataManager {
       this.setConnectionParams();
     }
     this.secureModeHash = browserIdentifyOptions?.hash;
+    if (await this.flagManager.loadCached(context)) {
+      this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
+    }
+    this.secureModeHash = browserIdentifyOptions?.hash;
 
     // TODO: Handle wait for network results in a meaningful way. SDK-707
 
