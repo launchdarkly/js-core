@@ -12,7 +12,6 @@ import {
   LDEmitter,
   LDEmitterEventName,
   LDHeaders,
-  LDIdentifyOptions,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
