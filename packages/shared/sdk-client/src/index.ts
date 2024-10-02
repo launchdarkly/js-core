@@ -2,7 +2,7 @@ import { LDClientInternalOptions } from './configuration/Configuration';
 import DataSourceStatus, { DataSourceState } from './datasource/DataSourceStatus';
 import DataSourceStatusErrorInfo from './datasource/DataSourceStatusErrorInfo';
 import LDClientImpl from './LDClientImpl';
-import LDEmitter from './LDEmitter';
+import LDEmitter, { EventName } from './LDEmitter';
 import Requestor from './polling/Requestor';
 
 export * from '@launchdarkly/js-sdk-common';
@@ -38,4 +38,5 @@ export {
   LDClientImpl,
   LDClientInternalOptions,
   DataSourceState,
+  EventName as LDEmitterEventName,
 };

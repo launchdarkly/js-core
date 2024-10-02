@@ -1,18 +1,16 @@
 {
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist/cjs",
+    "outDir": "dist/esm",
     "target": "ES2017",
-    "lib": ["es6"],
-    "module": "commonjs",
+    "lib": ["ES2020"],
+    "module": "ES6",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "noImplicitOverride": true,
     "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true, // enables importers to jump to source
     "stripInternal": true,
-    "composite": true,
-    "declarationDir": "./dist/types"
+    "composite": true
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
 }

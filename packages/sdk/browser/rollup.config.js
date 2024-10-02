@@ -13,11 +13,6 @@ const getSharedConfig = (format, file) => ({
       file: file,
     },
   ],
-  onwarn: (warning) => {
-    if (warning.code !== 'CIRCULAR_DEPENDENCY') {
-      console.error(`(!) ${warning.message}`);
-    }
-  },
 });
 
 export default [

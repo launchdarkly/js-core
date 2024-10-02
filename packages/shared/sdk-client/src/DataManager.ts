@@ -9,7 +9,6 @@ import {
   ProcessStreamResponse,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
-import { LDStreamProcessor } from '@launchdarkly/js-sdk-common/dist/api/subsystem';
 
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration } from './configuration/Configuration';
@@ -194,9 +193,9 @@ export abstract class BaseDataManager implements DataManager {
   }
 
   private decorateProcessorWithStatusReporting(
-    processor: LDStreamProcessor,
+    processor: subsystem.LDStreamProcessor,
     statusManager: DataSourceStatusManager,
-  ): LDStreamProcessor {
+  ): subsystem.LDStreamProcessor {
     return {
       start: () => {
         // update status before starting processor to ensure potential errors are reported after initializing
