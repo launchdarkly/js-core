@@ -29,6 +29,12 @@ it('should use hooks registered during configuration', async () => {
     {
       sendEvents: false,
       hooks: [testHook],
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
     },
     factory,
   );
@@ -74,6 +80,12 @@ it('should execute hooks that are added using addHook', async () => {
     platform,
     {
       sendEvents: false,
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
     },
     factory,
   );

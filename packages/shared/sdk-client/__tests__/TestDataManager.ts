@@ -84,7 +84,7 @@ export default class TestDataManager extends BaseDataManager {
 export function makeTestDataManagerFactory(
   sdkKey: string,
   platform: Platform,
-  options: {
+  options?: {
     disableNetwork?: boolean;
   },
 ): DataManagerFactory {
@@ -118,7 +118,7 @@ export function makeTestDataManagerFactory(
       }),
       baseHeaders,
       emitter,
-      !!options.disableNetwork,
+      !!options?.disableNetwork,
       diagnosticsManager,
     );
 }
