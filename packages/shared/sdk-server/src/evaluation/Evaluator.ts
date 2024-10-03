@@ -146,6 +146,7 @@ export default class Evaluator {
         res.events = state.events;
         cb(res);
       },
+      true,
       eventFactory,
     );
   }
@@ -166,6 +167,7 @@ export default class Evaluator {
     state: EvalState,
     visitedFlags: string[],
     cb: (res: EvalResult) => void,
+    topLevel: boolean,
     eventFactory?: EventFactory,
   ): void {
     if (!flag.on) {
@@ -201,6 +203,7 @@ export default class Evaluator {
           cb(this.variationForContext(flag.fallthrough, context, flag, Reasons.Fallthrough));
         });
       },
+      topLevel,
       eventFactory,
     );
   }
@@ -221,6 +224,7 @@ export default class Evaluator {
     state: EvalState,
     visitedFlags: string[],
     cb: (res: EvalResult | undefined) => void,
+    topLevel: boolean,
     eventFactory?: EventFactory,
   ): void {
     let prereqResult: EvalResult | undefined;
@@ -260,10 +264,12 @@ export default class Evaluator {
             (res) => {
               // eslint-disable-next-line no-param-reassign
               state.events ??= [];
-              // eslint-disable-next-line no-param-reassign
-              state.prerequisites ??= [];
+              if (topLevel) {
+                // eslint-disable-next-line no-param-reassign
+                state.prerequisites ??= [];
 
-              state.prerequisites.push(prereqFlag.key);
+                state.prerequisites.push(prereqFlag.key);
+              }
               if (eventFactory) {
                 state.events.push(
                   eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
@@ -281,6 +287,7 @@ export default class Evaluator {
               }
               return iterCb(true);
             },
+            false,
             eventFactory,
           );
         });
