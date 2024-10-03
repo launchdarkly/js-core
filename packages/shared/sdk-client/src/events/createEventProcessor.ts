@@ -1,6 +1,6 @@
 import { ClientContext, internal, LDHeaders, Platform } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
+import { Configuration } from '../configuration';
 
 const createEventProcessor = (
   clientSideID: string,
@@ -8,7 +8,6 @@ const createEventProcessor = (
   platform: Platform,
   baseHeaders: LDHeaders,
   diagnosticsManager?: internal.DiagnosticsManager,
-  start: boolean = false,
 ): internal.EventProcessor | undefined => {
   if (config.sendEvents) {
     return new internal.EventProcessor(
@@ -17,7 +16,7 @@ const createEventProcessor = (
       baseHeaders,
       undefined,
       diagnosticsManager,
-      start,
+      false,
     );
   }
 

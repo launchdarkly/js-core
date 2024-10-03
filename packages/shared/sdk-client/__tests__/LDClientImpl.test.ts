@@ -1,10 +1,12 @@
-import { AutoEnvAttributes, clone, Encoding, Hasher, LDContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
+import { AutoEnvAttributes, clone, Hasher, LDContext, LDLogger } from '@launchdarkly/js-sdk-common';
 
+import { DataSourceState } from '../src/datasource/DataSourceStatus';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
+import { createBasicPlatform } from './createBasicPlatform';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'org', key: 'Testy Pizza' };
@@ -30,11 +32,29 @@ describe('sdk-client object', () => {
   let simulatedEvents: { data?: any }[] = [];
   let defaultPutResponse: Flags;
   let mockPlatform: ReturnType<typeof createBasicPlatform>;
-  let logger: ReturnType<typeof createLogger>;
+  let logger: LDLogger;
+
+  function onDataSourceChangePromise(numToAwait: number) {
+    let countdown = numToAwait;
+    // eslint-disable-next-line no-new
+    return new Promise<void>((res) => {
+      ldc.on('dataSourceStatus', () => {
+        countdown -= 1;
+        if (countdown === 0) {
+          res();
+        }
+      });
+    });
+  }
 
   beforeEach(() => {
     mockPlatform = createBasicPlatform();
-    logger = createLogger();
+    logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
     defaultPutResponse = clone<Flags>(mockResponseJson);
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
     const hasher = {
@@ -42,15 +62,6 @@ describe('sdk-client object', () => {
       digest: jest.fn(() => 'digested1'),
     };
     mockPlatform.crypto.createHash.mockReturnValue(hasher);
-
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path/get';
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path/report';
-      },
-    });
 
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
     mockPlatform.requests.getEventSourceCapabilities.mockImplementation(() => ({
@@ -66,10 +77,16 @@ describe('sdk-client object', () => {
       },
     );
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
   });
 
   afterEach(async () => {
@@ -137,11 +154,17 @@ describe('sdk-client object', () => {
     });
     mockPlatform.requests.createEventSource = mockCreateEventSource;
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-      withReasons: true,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+        withReasons: true,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
 
     await ldc.identify(carContext);
 
@@ -162,11 +185,17 @@ describe('sdk-client object', () => {
     });
     mockPlatform.requests.createEventSource = mockCreateEventSource;
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-      useReport: true,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+        useReport: true,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
 
     await ldc.identify(carContext);
 
@@ -181,10 +210,16 @@ describe('sdk-client object', () => {
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Disabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
 
     await ldc.identify(carContext);
     const c = ldc.getContext();
@@ -254,7 +289,9 @@ describe('sdk-client object', () => {
     const carContext2: LDContext = { kind: 'car', key: 'test-car-2' };
     await ldc.identify(carContext2);
 
-    expect(emitter.listenerCount('change')).toEqual(1);
+    // No default listeners. This is important for clients to be able to determine if there are
+    // any listeners and act on that information.
+    expect(emitter.listenerCount('change')).toEqual(0);
     expect(emitter.listenerCount('error')).toEqual(1);
   });
 
@@ -298,5 +335,81 @@ describe('sdk-client object', () => {
     await ldc.identify(context, { waitForNetworkResults: true, timeout: 5 });
 
     expect(logger.debug).not.toHaveBeenCalledWith('Identify completing with cached flags');
+  });
+
+  test('data source status emits valid when successful initialization', async () => {
+    const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+
+    // need reference within test to run assertions against
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateEvents('put', [{ data: JSON.stringify(defaultPutResponse) }]);
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
+
+    const spyListener = jest.fn();
+    ldc.on('dataSourceStatus', spyListener);
+    const changePromise = onDataSourceChangePromise(2);
+    await ldc.identify(carContext);
+    await changePromise;
+
+    expect(spyListener).toHaveBeenCalledTimes(2);
+    expect(spyListener).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        state: DataSourceState.Initializing,
+        stateSince: expect.any(Number),
+        lastError: undefined,
+      }),
+    );
+    expect(spyListener).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        state: DataSourceState.Valid,
+        stateSince: expect.any(Number),
+        lastError: undefined,
+      }),
+    );
+  });
+
+  test('data source status emits closed when initialization encounters unrecoverable error', async () => {
+    const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+
+    // need reference within test to run assertions against
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateError({ status: 404, message: 'test-error' }); // unrecoverable error
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
+
+    const spyListener = jest.fn();
+    ldc.on('dataSourceStatus', spyListener);
+    const changePromise = onDataSourceChangePromise(2);
+    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    await changePromise;
+
+    expect(spyListener).toHaveBeenCalledTimes(2);
+    expect(spyListener).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        state: DataSourceState.Initializing,
+        stateSince: expect.any(Number),
+        lastError: undefined,
+      }),
+    );
+    expect(spyListener).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        state: DataSourceState.Closed,
+        stateSince: expect.any(Number),
+        lastError: expect.anything(),
+      }),
+    );
   });
 });

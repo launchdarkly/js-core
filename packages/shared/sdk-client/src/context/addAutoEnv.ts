@@ -11,7 +11,7 @@ import {
   Platform,
 } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
+import { Configuration } from '../configuration';
 import digest from '../crypto/digest';
 import { getOrGenerateKey } from '../storage/getOrGenerateKey';
 import { namespaceForGeneratedContextKey } from '../storage/namespaceUtils';

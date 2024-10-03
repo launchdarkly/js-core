@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.8.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.7.0...js-client-sdk-common-v1.8.0) (2024-09-26)
+
+
+### Features
+
+* Add platform support for async hashing. ([#573](https://github.com/launchdarkly/js-core/issues/573)) ([9248035](https://github.com/launchdarkly/js-core/commit/9248035a88fba1c7375c5df22ef6b4a80a867983))
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+* Add support for js-client-sdk style initialization. ([53f5bb8](https://github.com/launchdarkly/js-core/commit/53f5bb89754ff05405d481a959e75742fbd0d0a9))
+* Add URLs for custom events and URL filtering. ([#587](https://github.com/launchdarkly/js-core/issues/587)) ([7131e69](https://github.com/launchdarkly/js-core/commit/7131e6905f19cc10a1374aae5e74cec66c7fd6de))
+* Adds support for REPORT. ([#575](https://github.com/launchdarkly/js-core/issues/575)) ([916b724](https://github.com/launchdarkly/js-core/commit/916b72409b63abdf350e70cca41331c4204b6e95))
+* Allow using custom user-agent name. ([#580](https://github.com/launchdarkly/js-core/issues/580)) ([ed5a206](https://github.com/launchdarkly/js-core/commit/ed5a206c86f496942664dd73f6f8a7c602a1de28))
+* Implement goals for client-side SDKs. ([#585](https://github.com/launchdarkly/js-core/issues/585)) ([fd38a8f](https://github.com/launchdarkly/js-core/commit/fd38a8fa8560dad0c6721c2eaeed2f3f5c674900))
+* Refactor data source connection handling.  ([53f5bb8](https://github.com/launchdarkly/js-core/commit/53f5bb89754ff05405d481a959e75742fbd0d0a9))
+
+
+### Bug Fixes
+
+* Flag store should not access values from prototype. ([#567](https://github.com/launchdarkly/js-core/issues/567)) ([fca4d92](https://github.com/launchdarkly/js-core/commit/fca4d9293746d023a0a122110849bbf335aa3b62))
+* Use flag value whenever provided even if variaiton is null or undefined. ([#581](https://github.com/launchdarkly/js-core/issues/581)) ([d11224c](https://github.com/launchdarkly/js-core/commit/d11224c64863c007f4f42f4c48683fd170dd2b32))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.8.0 to 2.9.0
+
 ## [1.7.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.6.0...js-client-sdk-common-v1.7.0) (2024-09-03)
 
 

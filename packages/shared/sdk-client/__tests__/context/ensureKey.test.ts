@@ -5,9 +5,9 @@ import type {
   LDMultiKindContext,
   LDUser,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { ensureKey } from '../../src/context/ensureKey';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 

@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-native-client-sdk",
-  "version": "10.6.1",
+  "version": "10.7.0",
   "description": "React Native LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native",
   "repository": {
@@ -41,12 +41,11 @@
     "react-native": "*"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.7.0",
+    "@launchdarkly/js-client-sdk-common": "1.8.0",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "base64-js": "^1.5.1"
   },
   "devDependencies": {
-    "@launchdarkly/private-js-mocks": "0.0.1",
     "@testing-library/react": "^14.1.2",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.11",

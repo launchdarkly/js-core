@@ -416,6 +416,23 @@ describe('when handling mult-kind contexts', () => {
     },
   };
 
+  const multiWithSingleContext = Context.fromLDContext({
+    kind: 'multi',
+    user: {
+      key: 'abc',
+      name: 'alphabet',
+      letters: ['a', 'b', 'c'],
+      order: 3,
+      object: {
+        a: 'a',
+        b: 'b',
+      },
+      _meta: {
+        privateAttributes: ['letters', '/object/b'],
+      },
+    },
+  });
+
   it('it should remove attributes from all contexts when all attributes are private.', () => {
     const uf = new ContextFilter(true, []);
     expect(uf.filter(orgAndUserContext)).toEqual(orgAndUserContextAllPrivate);
@@ -429,5 +446,21 @@ describe('when handling mult-kind contexts', () => {
   it('it should apply global private attributes to all contexts.', () => {
     const uf = new ContextFilter(false, [new AttributeReference('name', true)]);
     expect(uf.filter(orgAndUserContext)).toEqual(orgAndUserGlobalNamePrivate);
+  });
+
+  it('should produce event with valid single context', () => {
+    const uf = new ContextFilter(false, []);
+    expect(uf.filter(multiWithSingleContext)).toEqual({
+      kind: 'user',
+      _meta: {
+        redactedAttributes: ['/object/b', 'letters'],
+      },
+      key: 'abc',
+      name: 'alphabet',
+      object: {
+        a: 'a',
+      },
+      order: 3,
+    });
   });
 });

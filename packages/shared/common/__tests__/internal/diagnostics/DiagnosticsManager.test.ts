@@ -1,6 +1,5 @@
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
-import DiagnosticsManager from './DiagnosticsManager';
+import DiagnosticsManager from '../../../src/internal/diagnostics/DiagnosticsManager';
+import { createBasicPlatform } from '../../createBasicPlatform';
 
 describe('given a diagnostics manager', () => {
   const dateNowString = '2023-08-10';

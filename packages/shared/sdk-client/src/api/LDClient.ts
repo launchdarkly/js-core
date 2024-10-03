@@ -1,6 +1,5 @@
 import { LDContext, LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import ConnectionMode from './ConnectionMode';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
 
@@ -74,14 +73,6 @@ export interface LDClient {
    *   flushing is finished. You can inspect the result of the flush for errors.
    */
   flush(): Promise<{ error?: Error; result: boolean }>;
-
-  /**
-   * Gets the SDK connection mode.
-   *
-   * @remarks
-   * Possible values are offline or streaming. See {@link ConnectionMode} for more information.
-   */
-  getConnectionMode(): ConnectionMode;
 
   /**
    * Returns the client's current context.
@@ -223,6 +214,9 @@ export interface LDClient {
    *   The callback parameters are the context and an Error object. Errors are also output by
    *   the {@link logger} at the error level.
    *
+   * - `"dataSourceStatus"`: Event indicating that there has been a change in the status of the
+   *   data source. This will include the state of the data source as well any error information.
+   *
    * @param key
    *   The name of the event for which to listen.
    * @param callback
@@ -230,13 +224,6 @@ export interface LDClient {
    *   receive parameters, depending on the type of event.
    */
   on(key: string, callback: (...args: any[]) => void): void;
-
-  /**
-   * Sets the SDK connection mode.
-   *
-   * @param mode - One of supported {@link ConnectionMode}. By default, the SDK uses streaming.
-   */
-  setConnectionMode(mode: ConnectionMode): void;
 
   /**
    * Determines the string variation of a feature flag.

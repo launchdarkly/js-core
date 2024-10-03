@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.6.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.4...node-server-sdk-v9.6.0) (2024-09-26)
+
+
+### Features
+
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.6.1 to 2.7.0
+
 ## [9.5.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.3...node-server-sdk-v9.5.4) (2024-09-05)
 
 

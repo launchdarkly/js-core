@@ -1,4 +1,4 @@
-import { LDOptions } from '@launchdarkly/js-client-sdk-common';
+import { ConnectionMode, LDOptions } from '@launchdarkly/js-client-sdk-common';
 
 /**
  * Interface for providing custom storage implementations for react Native.
@@ -95,6 +95,16 @@ export interface RNSpecificOptions {
    * Defaults to @react-native-async-storage/async-storage.
    */
   readonly storage?: RNStorage;
+
+  /**
+   * Sets the mode to use for connections when the SDK is initialized.
+   *
+   * @remarks
+   * Possible values are offline, streaming, or polling. See {@link ConnectionMode} for more information.
+   *
+   * @defaultValue streaming.
+   */
+  initialConnectionMode?: ConnectionMode;
 }
 
 export default interface RNOptions extends LDOptions, RNSpecificOptions {}

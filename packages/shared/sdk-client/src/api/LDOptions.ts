@@ -1,7 +1,5 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import ConnectionMode from './ConnectionMode';
-
 export interface LDOptions {
   /**
    * Whether all context attributes (except the context key) should be marked as private, and
@@ -118,16 +116,6 @@ export interface LDOptions {
    * @defaultValue 30s.
    */
   flushInterval?: number;
-
-  /**
-   * Sets the mode to use for connections when the SDK is initialized.
-   *
-   * @remarks
-   * Possible values are offline or streaming. See {@link ConnectionMode} for more information.
-   *
-   * @defaultValue streaming.
-   */
-  initialConnectionMode?: ConnectionMode;
 
   /**
    * An object that will perform logging for the client.

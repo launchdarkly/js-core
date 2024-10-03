@@ -2,25 +2,31 @@ import {
   Crypto,
   Info,
   type LDContext,
+  LDLogger,
   LDMultiKindContext,
   LDUser,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
-import Configuration from '../../src/configuration';
+import { Configuration, ConfigurationImpl } from '../../src/configuration';
 import {
   addApplicationInfo,
   addAutoEnv,
   addDeviceInfo,
   toMulti,
 } from '../../src/context/addAutoEnv';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 describe('automatic environment attributes', () => {
@@ -31,7 +37,7 @@ describe('automatic environment attributes', () => {
   beforeEach(() => {
     ({ crypto, info } = mockPlatform);
     (crypto.randomUUID as jest.Mock).mockResolvedValue('test-device-key-1');
-    config = new Configuration({ logger });
+    config = new ConfigurationImpl({ logger });
   });
 
   afterEach(() => {
@@ -233,8 +239,8 @@ describe('automatic environment attributes', () => {
 
       await addAutoEnv(context, mockPlatform, config);
 
-      expect(config.logger.warn).toHaveBeenCalledTimes(1);
-      expect(config.logger.warn).toHaveBeenCalledWith(
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.stringMatching(/ld_application.*already exists/),
       );
     });
@@ -251,10 +257,8 @@ describe('automatic environment attributes', () => {
 
       await addAutoEnv(context, mockPlatform, config);
 
-      expect(config.logger.warn).toHaveBeenCalledTimes(1);
-      expect(config.logger.warn).toHaveBeenCalledWith(
-        expect.stringMatching(/ld_device.*already exists/),
-      );
+      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/ld_device.*already exists/));
     });
 
     test('single context with an attribute called ld_application should have auto env attributes', async () => {
@@ -338,7 +342,7 @@ describe('automatic environment attributes', () => {
 
   describe('addApplicationInfo', () => {
     test('add id, version, name, versionName', async () => {
-      config = new Configuration({
+      config = new ConfigurationImpl({
         applicationInfo: {
           id: 'com.from-config.ld',
           version: '2.2.2',
@@ -431,7 +435,7 @@ describe('automatic environment attributes', () => {
       info.platformData = jest
         .fn()
         .mockReturnValueOnce({ ld_application: { version: null, locale: '' } });
-      config = new Configuration({ applicationInfo: { version: '1.2.3' } });
+      config = new ConfigurationImpl({ applicationInfo: { version: '1.2.3' } });
       const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();

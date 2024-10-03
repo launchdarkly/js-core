@@ -1,6 +1,6 @@
 import { secondsToMillis, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
+import { Configuration, DEFAULT_POLLING, DEFAULT_STREAM } from '../configuration';
 
 export type DiagnosticsInitConfig = {
   // client & server common properties
@@ -18,9 +18,9 @@ export type DiagnosticsInitConfig = {
   bootstrapMode: boolean;
 };
 const createDiagnosticsInitConfig = (config: Configuration): DiagnosticsInitConfig => ({
-  customBaseURI: config.baseUri !== Configuration.DEFAULT_POLLING,
-  customStreamURI: config.streamUri !== Configuration.DEFAULT_STREAM,
-  customEventsURI: config.eventsUri !== ServiceEndpoints.DEFAULT_EVENTS,
+  customBaseURI: config.serviceEndpoints.polling !== DEFAULT_POLLING,
+  customStreamURI: config.serviceEndpoints.streaming !== DEFAULT_STREAM,
+  customEventsURI: config.serviceEndpoints.events !== ServiceEndpoints.DEFAULT_EVENTS,
   eventsCapacity: config.capacity,
   eventsFlushIntervalMillis: secondsToMillis(config.flushInterval),
   reconnectTimeMillis: secondsToMillis(config.streamInitialReconnectDelay),

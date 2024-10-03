@@ -1,18 +1,20 @@
 import {
+  DataSourceErrorKind,
   defaultHeaders,
   Encoding,
   EventName,
   Info,
   internal,
+  LDLogger,
   LDStreamingError,
   Platform,
   ProcessStreamResponse,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import { StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
+import { createBasicPlatform } from '../createBasicPlatform';
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 const serviceEndpoints = {
   events: '',
@@ -42,6 +44,7 @@ let basicPlatform: Platform;
 function getStreamingDataSourceConfig(
   withReasons: boolean = false,
   useReport: boolean = false,
+  queryParameters?: [{ key: string; value: string }],
 ): StreamingDataSourceConfig {
   return {
     credential: sdkKey,
@@ -63,12 +66,18 @@ function getStreamingDataSourceConfig(
     initialRetryDelayMillis: 1000,
     withReasons,
     useReport,
+    queryParameters,
   };
 }
 
 beforeEach(() => {
   basicPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
@@ -327,7 +336,7 @@ describe('given a stream processor', () => {
 
       expect(willRetry).toBeFalsy();
       expect(mockErrorHandler).toBeCalledWith(
-        new LDStreamingError(testError.message, testError.status),
+        new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
       );
       expect(logger.error).toBeCalledWith(
         expect.stringMatching(new RegExp(`${status}.*permanently`)),
@@ -341,4 +350,52 @@ describe('given a stream processor', () => {
       expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });
   });
+});
+
+it('includes custom query parameters', () => {
+  const { info } = basicPlatform;
+  const listeners = new Map();
+  const mockListener = {
+    deserializeData: jest.fn((data) => data),
+    processJson: jest.fn(),
+  };
+  listeners.set('put', mockListener);
+  listeners.set('patch', mockListener);
+  const diagnosticsManager = new internal.DiagnosticsManager(sdkKey, basicPlatform, {});
+
+  basicPlatform.requests = {
+    createEventSource: jest.fn((streamUri: string, options: any) => {
+      const mockEventSource = createMockEventSource(streamUri, options);
+      return mockEventSource;
+    }),
+    getEventSourceCapabilities: jest.fn(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: true,
+    })),
+  } as any;
+
+  const streamingProcessor = new StreamingProcessor(
+    'mockContextString',
+    getStreamingDataSourceConfig(undefined, undefined, [{ key: 'custom', value: 'value' }]),
+    listeners,
+    basicPlatform.requests,
+    basicPlatform.encoding!,
+    diagnosticsManager,
+    () => {},
+    logger,
+  );
+
+  streamingProcessor.start();
+
+  expect(basicPlatform.requests.createEventSource).toHaveBeenCalledWith(
+    `${serviceEndpoints.streaming}/stream/path/get?custom=value&filter=testPayloadFilterKey`,
+    {
+      errorFilter: expect.any(Function),
+      headers: defaultHeaders(sdkKey, info, undefined),
+      initialRetryDelayMillis: 1000,
+      readTimeoutMillis: 300000,
+      retryResetIntervalMillis: 60000,
+    },
+  );
 });
