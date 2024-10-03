@@ -135,7 +135,7 @@ describe('given a hook runner and test hook', () => {
     it('should execute identify hooks', () => {
       const context: LDContext = { kind: 'user', key: 'user-123' };
       const timeout = 10;
-      const identifyResult: IdentifyResult = 'completed';
+      const identifyResult: IdentifyResult = { status: 'completed' };
 
       const identifyCallback = hookRunner.identify(context, timeout);
       identifyCallback(identifyResult);
@@ -170,7 +170,7 @@ describe('given a hook runner and test hook', () => {
       const errorHookRunner = new HookRunner(logger, [errorHook]);
 
       const identifyCallback = errorHookRunner.identify({ kind: 'user', key: 'user-123' }, 1000);
-      identifyCallback('error');
+      identifyCallback({ status: 'error' });
 
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -182,7 +182,7 @@ describe('given a hook runner and test hook', () => {
     it('should pass identify series data from before to after hooks', () => {
       const context: LDContext = { kind: 'user', key: 'user-123' };
       const timeout = 10;
-      const identifyResult: IdentifyResult = 'completed';
+      const identifyResult: IdentifyResult = { status: 'completed' };
 
       testHook.beforeIdentify = jest
         .fn()

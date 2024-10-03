@@ -49,7 +49,7 @@ it('should use hooks registered during configuration', async () => {
   expect(testHook.afterIdentify).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, timeout: undefined },
     {},
-    'completed',
+    { status: 'completed' },
   );
   expect(testHook.beforeEvaluation).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, defaultValue: false, flagKey: 'flag-key' },
@@ -114,7 +114,7 @@ it('should execute hooks that are added using addHook', async () => {
   expect(addedHook.afterIdentify).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, timeout: undefined },
     {},
-    'completed',
+    { status: 'completed' },
   );
   expect(addedHook.beforeEvaluation).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, defaultValue: false, flagKey: 'flag-key' },
@@ -158,6 +158,12 @@ it('should execute both initial hooks and hooks added using addHook', async () =
     {
       sendEvents: false,
       hooks: [initialHook],
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
     },
     factory,
   );
@@ -187,7 +193,7 @@ it('should execute both initial hooks and hooks added using addHook', async () =
   expect(initialHook.afterIdentify).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, timeout: undefined },
     {},
-    'completed',
+    { status: 'completed' },
   );
   expect(initialHook.beforeEvaluation).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, defaultValue: false, flagKey: 'flag-key' },
@@ -214,7 +220,7 @@ it('should execute both initial hooks and hooks added using addHook', async () =
   expect(addedHook.afterIdentify).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, timeout: undefined },
     {},
-    'completed',
+    { status: 'completed' },
   );
   expect(addedHook.beforeEvaluation).toHaveBeenCalledWith(
     { context: { key: 'user-key' }, defaultValue: false, flagKey: 'flag-key' },

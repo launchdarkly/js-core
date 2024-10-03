@@ -57,11 +57,18 @@ export interface IdentifySeriesData {
 }
 
 /**
+ * The status an identify operation completed with.
+ */
+export type IdentifyStatus = 'completed' | 'error';
+
+/**
  * The result applies to a single identify operation. An operation may complete
  * with an error and then later complete successfully. Only the first completion
  * will be executed in the evaluation series.
  */
-export type IdentifyResult = 'completed' | 'error';
+export interface IdentifyResult {
+  status: IdentifyStatus;
+}
 
 /**
  * Interface for extending SDK functionality via hooks.

@@ -254,11 +254,11 @@ export default class LDClientImpl implements LDClient {
 
     return identifyPromise.then(
       (res) => {
-        afterIdentify('completed');
+        afterIdentify({ status: 'completed' });
         return res;
       },
       (e) => {
-        afterIdentify('error');
+        afterIdentify({ status: 'error' });
         throw e;
       },
     );
