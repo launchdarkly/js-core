@@ -566,19 +566,6 @@ export default class LDClientImpl implements LDClient {
 
     successDetail.prerequisites?.forEach((prereqKey) => {
       this.variation(prereqKey, undefined);
-      // const prereqFlag = this.flagManager.get(prereqKey);
-      // if (prereqFlag) {
-      //   this.eventProcessor?.sendEvent(
-      //     eventFactory.evalEventClient(
-      //       prereqKey,
-      //       prereqFlag.flag.value,
-      //       undefined,
-      //       prereqFlag.flag,
-      //       evalContext,
-      //       prereqFlag.flag.reason,
-      //     ),
-      //   );
-      // }
     });
     this.eventProcessor?.sendEvent(
       eventFactory.evalEventClient(
