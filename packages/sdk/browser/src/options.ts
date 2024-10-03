@@ -6,6 +6,8 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
+const DEFAULT_FLUSH_INTERVAL_SECONDS = 2;
+
 /**
  * Initialization options for the LaunchDarkly browser SDK.
  */
@@ -66,8 +68,14 @@ export function filterToBaseOptions(opts: BrowserOptions): LDOptionsBase {
   return baseOptions;
 }
 
+function applyBrowserDefaults(opts: BrowserOptions) {
+  // eslint-disable-next-line no-param-reassign
+  opts.flushInterval ??= DEFAULT_FLUSH_INTERVAL_SECONDS;
+}
+
 export default function validateOptions(opts: BrowserOptions, logger: LDLogger): ValidatedOptions {
   const output: ValidatedOptions = { ...optDefaults };
+  applyBrowserDefaults(output);
 
   Object.entries(validators).forEach((entry) => {
     const [key, validator] = entry as [keyof BrowserOptions, TypeValidator];

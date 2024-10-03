@@ -21,6 +21,7 @@ import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
+import { registerStateDetection } from './BrowserStateDetector';
 
 /**
  *
@@ -211,6 +212,8 @@ export class BrowserClient extends LDClientImpl implements LDClient {
       // which emits the event, and assign its promise to a member. The "waitForGoalsReady" function
       // would return that promise.
       this.goalManager.initialize();
+
+      registerStateDetection(() => this.flush());
     }
   }
 

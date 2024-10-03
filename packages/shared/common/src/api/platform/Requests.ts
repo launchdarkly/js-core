@@ -76,6 +76,11 @@ export interface Options {
   method?: string;
   body?: string;
   timeout?: number;
+  /**
+   * For use in browser environments. Platform support will be best effort for this field.
+   * https://developer.mozilla.org/en-US/docs/Web/API/RequestInit#keepalive
+   */
+  keepalive?: boolean;
 }
 
 export interface EventSourceCapabilities {
