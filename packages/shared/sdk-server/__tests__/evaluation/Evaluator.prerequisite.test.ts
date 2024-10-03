@@ -1,5 +1,3 @@
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
 import { Context, deserializePoll } from '../../src';
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
@@ -8,6 +6,7 @@ import Evaluator from '../../src/evaluation/Evaluator';
 import { Queries } from '../../src/evaluation/Queries';
 import EventFactory from '../../src/events/EventFactory';
 import { FlagsAndSegments } from '../../src/store/serialization';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 describe('given a flag payload with prerequisites', () => {
   let evaluator: Evaluator;
