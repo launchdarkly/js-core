@@ -73,7 +73,7 @@ export default class GoalTracker {
     );
 
     const pageviewGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'pageview');
-    const clickGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'click');
+    const clickGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'click') as ClickGoal[];
 
     pageviewGoals.forEach((event) => onEvent(event));
 

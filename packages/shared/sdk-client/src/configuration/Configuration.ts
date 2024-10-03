@@ -3,13 +3,15 @@ import {
   createSafeLogger,
   internal,
   LDFlagSet,
+  LDLogger,
   NumberWithMinimum,
   OptionMessages,
+  SafeLogger,
   ServiceEndpoints,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { ConnectionMode, type LDOptions } from '../api';
+import { type LDOptions } from '../api';
 import validators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
@@ -18,15 +20,59 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   trackEventModifier?: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
 }
 
-export default class Configuration {
-  public static DEFAULT_POLLING = 'https://clientsdk.launchdarkly.com';
-  public static DEFAULT_STREAM = 'https://clientstream.launchdarkly.com';
+export interface Configuration {
+  readonly logger: LDLogger;
+  readonly maxCachedContexts: number;
+  readonly capacity: number;
+  readonly diagnosticRecordingInterval: number;
+  readonly flushInterval: number;
+  readonly streamInitialReconnectDelay: number;
+  readonly allAttributesPrivate: boolean;
+  readonly debug: boolean;
+  readonly diagnosticOptOut: boolean;
+  readonly sendEvents: boolean;
+  readonly sendLDHeaders: boolean;
+  readonly useReport: boolean;
+  readonly withReasons: boolean;
+  readonly privateAttributes: string[];
+  readonly tags: ApplicationTags;
+  readonly applicationInfo?: {
+    id?: string;
+    version?: string;
+    name?: string;
+    versionName?: string;
+  };
+  readonly bootstrap?: LDFlagSet;
+  readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
+  readonly stream?: boolean;
+  readonly hash?: string;
+  readonly wrapperName?: string;
+  readonly wrapperVersion?: string;
+  readonly serviceEndpoints: ServiceEndpoints;
+  readonly pollInterval: number;
+  readonly userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent';
+  readonly trackEventModifier: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
+}
 
-  public readonly logger = createSafeLogger();
+const DEFAULT_POLLING: string = 'https://clientsdk.launchdarkly.com';
+const DEFAULT_STREAM: string = 'https://clientstream.launchdarkly.com';
 
-  public readonly baseUri = Configuration.DEFAULT_POLLING;
-  public readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
-  public readonly streamUri = Configuration.DEFAULT_STREAM;
+export { DEFAULT_POLLING, DEFAULT_STREAM };
+
+function ensureSafeLogger(logger?: LDLogger): LDLogger {
+  if (logger instanceof SafeLogger) {
+    return logger;
+  }
+  // Even if logger is not defined this will produce a valid logger.
+  return createSafeLogger(logger);
+}
+
+export default class ConfigurationImpl implements Configuration {
+  public readonly logger: LDLogger = createSafeLogger();
+
+  private readonly baseUri = DEFAULT_POLLING;
+  private readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
+  private readonly streamUri = DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
 
@@ -45,8 +91,6 @@ export default class Configuration {
   public readonly withReasons: boolean = false;
 
   public readonly privateAttributes: string[] = [];
-
-  public readonly initialConnectionMode: ConnectionMode = 'streaming';
 
   public readonly tags: ApplicationTags;
   public readonly applicationInfo?: {
@@ -78,6 +122,7 @@ export default class Configuration {
   [index: string]: any;
 
   constructor(pristineOptions: LDOptions = {}, internalOptions: LDClientInternalOptions = {}) {
+    this.logger = ensureSafeLogger(pristineOptions.logger);
     const errors = this.validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
 
@@ -97,7 +142,7 @@ export default class Configuration {
     this.trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
   }
 
-  validateTypesAndNames(pristineOptions: LDOptions): string[] {
+  private validateTypesAndNames(pristineOptions: LDOptions): string[] {
     const errors: string[] = [];
 
     Object.entries(pristineOptions).forEach(([k, v]) => {
@@ -123,6 +168,8 @@ export default class Configuration {
           } else {
             errors.push(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
           }
+        } else if (k === 'logger') {
+          // Logger already assigned.
         } else {
           // if an option is explicitly null, coerce to undefined
           this[k] = v ?? undefined;

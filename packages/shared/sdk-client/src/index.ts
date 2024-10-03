@@ -1,5 +1,9 @@
 import { LDClientInternalOptions } from './configuration/Configuration';
+import DataSourceStatus, { DataSourceState } from './datasource/DataSourceStatus';
+import DataSourceStatusErrorInfo from './datasource/DataSourceStatusErrorInfo';
 import LDClientImpl from './LDClientImpl';
+import LDEmitter, { EventName } from './LDEmitter';
+import Requestor from './polling/Requestor';
 
 export * from '@launchdarkly/js-sdk-common';
 
@@ -15,8 +19,24 @@ export type {
   LDClient,
   LDOptions,
   ConnectionMode,
+  LDIdentifyOptions,
 } from './api';
 
-export { DataSourcePaths } from './streaming';
+export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
+export type { FlagManager } from './flag-manager/FlagManager';
+export type { Configuration } from './configuration/Configuration';
 
-export { LDClientImpl, LDClientInternalOptions };
+export type { LDEmitter };
+
+export { DataSourcePaths } from './streaming';
+export { BaseDataManager } from './DataManager';
+export { Requestor };
+
+export {
+  DataSourceStatus,
+  DataSourceStatusErrorInfo,
+  LDClientImpl,
+  LDClientInternalOptions,
+  DataSourceState,
+  EventName as LDEmitterEventName,
+};

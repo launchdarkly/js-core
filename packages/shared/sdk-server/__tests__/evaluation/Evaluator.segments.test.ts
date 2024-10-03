@@ -7,13 +7,13 @@ import {
   Hmac,
   LDContext,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import Evaluator from '../../src/evaluation/Evaluator';
 import { Queries } from '../../src/evaluation/Queries';
+import { createBasicPlatform } from '../createBasicPlatform';
 import {
   makeClauseThatDoesNotMatchUser,
   makeClauseThatMatchesUser,

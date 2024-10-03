@@ -2,22 +2,28 @@ import {
   AutoEnvAttributes,
   clone,
   Context,
-  Encoding,
   LDContext,
+  LDLogger,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
 
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
+import { createBasicPlatform } from './createBasicPlatform';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 const testSdkKey = 'test-sdk-key';
@@ -31,14 +37,6 @@ let defaultPutResponse: Flags;
 describe('sdk-client object', () => {
   beforeEach(() => {
     defaultPutResponse = clone<Flags>(mockResponseJson);
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-    });
 
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
     mockPlatform.requests.createEventSource.mockImplementation(
@@ -49,10 +47,16 @@ describe('sdk-client object', () => {
       },
     );
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Disabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Disabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
   });
 
   afterEach(() => {

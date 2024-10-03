@@ -1,4 +1,5 @@
 import {
+  DataSourceErrorKind,
   Encoding,
   getPollingUri,
   httpErrorMessage,
@@ -41,7 +42,9 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
       : dataSourceConfig.paths.pathGet(encoding, plainContextString);
 
-    const parameters: { key: string; value: string }[] = [];
+    const parameters: { key: string; value: string }[] = [
+      ...(dataSourceConfig.queryParameters ?? []),
+    ];
     if (this.dataSourceConfig.withReasons) {
       parameters.push({ key: 'withReasons', value: 'true' });
     }
@@ -69,7 +72,12 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     const reportJsonError = (data: string) => {
       this.logger?.error('Polling received invalid data');
       this.logger?.debug(`Invalid JSON follows: ${data}`);
-      this.errorHandler?.(new LDPollingError('Malformed JSON data in polling response'));
+      this.errorHandler?.(
+        new LDPollingError(
+          DataSourceErrorKind.InvalidData,
+          'Malformed JSON data in polling response',
+        ),
+      );
     };
 
     this.logger?.debug('Polling LaunchDarkly for feature flag updates');
@@ -91,7 +99,13 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       if (requestError.status !== undefined) {
         if (!isHttpRecoverable(requestError.status)) {
           this.logger?.error(httpErrorMessage(err as HttpErrorResponse, 'polling request'));
-          this.errorHandler?.(new LDPollingError(requestError.message, requestError.status));
+          this.errorHandler?.(
+            new LDPollingError(
+              DataSourceErrorKind.ErrorResponse,
+              requestError.message,
+              requestError.status,
+            ),
+          );
           return;
         }
       }

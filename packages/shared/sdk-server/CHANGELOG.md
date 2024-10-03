@@ -8,6 +8,22 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.7.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.6.1...js-server-sdk-common-v2.7.0) (2024-09-26)
+
+
+### Features
+
+* Add platform support for async hashing. ([#573](https://github.com/launchdarkly/js-core/issues/573)) ([9248035](https://github.com/launchdarkly/js-core/commit/9248035a88fba1c7375c5df22ef6b4a80a867983))
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+* Allow using custom user-agent name. ([#580](https://github.com/launchdarkly/js-core/issues/580)) ([ed5a206](https://github.com/launchdarkly/js-core/commit/ed5a206c86f496942664dd73f6f8a7c602a1de28))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.8.0 to 2.9.0
+
 ## [2.6.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.6.0...js-server-sdk-common-v2.6.1) (2024-09-05)
 
 

@@ -1,18 +1,24 @@
-import { AutoEnvAttributes, clone, Encoding, LDContext } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform, createLogger } from '@launchdarkly/private-js-mocks';
+import { AutoEnvAttributes, clone, LDContext, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { toMulti } from '../src/context/addAutoEnv';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
+import { createBasicPlatform } from './createBasicPlatform';
 import * as mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
+import { makeTestDataManagerFactory } from './TestDataManager';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
   mockPlatform = createBasicPlatform();
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 const testSdkKey = 'test-sdk-key';
@@ -41,18 +47,16 @@ describe('sdk-client identify timeout', () => {
       },
     );
 
-    ldc = new LDClientImpl(testSdkKey, AutoEnvAttributes.Enabled, mockPlatform, {
-      logger,
-      sendEvents: false,
-    });
-    jest.spyOn(LDClientImpl.prototype as any, 'getStreamingPaths').mockReturnValue({
-      pathGet(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
       },
-      pathReport(_encoding: Encoding, _plainContextString: string): string {
-        return '/stream/path';
-      },
-    });
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
   });
 
   afterEach(() => {
@@ -133,6 +137,7 @@ describe('sdk-client identify timeout', () => {
         logger,
         sendEvents: false,
       },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
       { highTimeoutThreshold },
     );
     const customTimeout = 10;

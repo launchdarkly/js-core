@@ -2,6 +2,23 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.9.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.8.0...js-sdk-common-v2.9.0) (2024-09-26)
+
+
+### Features
+
+* Add platform support for async hashing. ([#573](https://github.com/launchdarkly/js-core/issues/573)) ([9248035](https://github.com/launchdarkly/js-core/commit/9248035a88fba1c7375c5df22ef6b4a80a867983))
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+* Add URLs for custom events and URL filtering. ([#587](https://github.com/launchdarkly/js-core/issues/587)) ([7131e69](https://github.com/launchdarkly/js-core/commit/7131e6905f19cc10a1374aae5e74cec66c7fd6de))
+* Adds support for REPORT. ([#575](https://github.com/launchdarkly/js-core/issues/575)) ([916b724](https://github.com/launchdarkly/js-core/commit/916b72409b63abdf350e70cca41331c4204b6e95))
+* Allow using custom user-agent name. ([#580](https://github.com/launchdarkly/js-core/issues/580)) ([ed5a206](https://github.com/launchdarkly/js-core/commit/ed5a206c86f496942664dd73f6f8a7c602a1de28))
+* Implement goals for client-side SDKs. ([#585](https://github.com/launchdarkly/js-core/issues/585)) ([fd38a8f](https://github.com/launchdarkly/js-core/commit/fd38a8fa8560dad0c6721c2eaeed2f3f5c674900))
+
+
+### Bug Fixes
+
+* Multi-kind context containing only 1 kind conveted incorrectly. ([#594](https://github.com/launchdarkly/js-core/issues/594)) ([b6ff2a6](https://github.com/launchdarkly/js-core/commit/b6ff2a67db9f9a24da4a45ad88fa7f2a22fb635d))
+
 ## [2.8.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.7.0...js-sdk-common-v2.8.0) (2024-09-03)
 
 
