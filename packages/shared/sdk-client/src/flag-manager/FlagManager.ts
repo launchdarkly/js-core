@@ -41,6 +41,12 @@ export interface FlagManager {
   loadCached(context: Context): Promise<boolean>;
 
   /**
+   * Update in-memory storage with the specified flags, but do not persistent them to cache
+   * storage.
+   */
+  setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
+
+  /**
    * Register a flag change callback.
    */
   on(callback: FlagsChangeCallback): void;
@@ -106,6 +112,12 @@ export default class DefaultFlagManager implements FlagManager {
 
   getAll(): { [key: string]: ItemDescriptor } {
     return this.flagStore.getAll();
+  }
+
+  setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void {
+    // Bypasses the persistence as we do not want to put these flags into any cache.
+    // Generally speaking persistence likely *SHOULD* be disabled when using bootstrap.
+    this.flagUpdater.init(context, newFlags);
   }
 
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {

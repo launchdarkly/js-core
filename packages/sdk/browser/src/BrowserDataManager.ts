@@ -15,6 +15,7 @@ import {
   Requestor,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { readFlagsFromBootstrap } from './bootstrap';
 import { BrowserIdentifyOptions } from './BrowserIdentifyOptions';
 import { ValidatedOptions } from './options';
 
@@ -84,14 +85,27 @@ export default class BrowserDataManager extends BaseDataManager {
       this.setConnectionParams();
     }
     this.secureModeHash = browserIdentifyOptions?.hash;
-    if (await this.flagManager.loadCached(context)) {
-      this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
+
+    if (browserIdentifyOptions?.bootstrap) {
+      this.finishIdentifyFromBootstrap(context, browserIdentifyOptions.bootstrap, identifyResolve);
+    } else {
+      if (await this.flagManager.loadCached(context)) {
+        this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
+      }
+      const plainContextString = JSON.stringify(Context.toLDContext(context));
+      const requestor = this.getRequestor(plainContextString);
+      await this.finishIdentifyFromPoll(requestor, context, identifyResolve, identifyReject);
     }
-    const plainContextString = JSON.stringify(Context.toLDContext(context));
-    const requestor = this.getRequestor(plainContextString);
 
-    // TODO: Handle wait for network results in a meaningful way. SDK-707
+    this.updateStreamingState();
+  }
 
+  private async finishIdentifyFromPoll(
+    requestor: Requestor,
+    context: Context,
+    identifyResolve: () => void,
+    identifyReject: (err: Error) => void,
+  ) {
     try {
       this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
       const payload = await requestor.requestPayload();
@@ -113,8 +127,16 @@ export default class BrowserDataManager extends BaseDataManager {
       );
       identifyReject(e);
     }
+  }
 
-    this.updateStreamingState();
+  private finishIdentifyFromBootstrap(
+    context: Context,
+    bootstrap: unknown,
+    identifyResolve: () => void,
+  ) {
+    this.flagManager.setBootstrap(context, readFlagsFromBootstrap(this.logger, bootstrap));
+    this.debugLog('Identify - Initialization completed from bootstrap');
+    identifyResolve();
   }
 
   setForcedStreaming(streaming?: boolean) {
