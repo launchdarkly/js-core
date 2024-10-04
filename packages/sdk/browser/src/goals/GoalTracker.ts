@@ -100,8 +100,6 @@ export default class GoalTracker {
    * Close the tracker which stops listening to any events.
    */
   close() {
-    if (this.cleanup) {
-      this.cleanup();
-    }
+    this.cleanup?.();
   }
 }
