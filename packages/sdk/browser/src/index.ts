@@ -1,5 +1,13 @@
 import {
   AutoEnvAttributes,
+  EvaluationSeriesContext,
+  EvaluationSeriesData,
+  Hook,
+  HookMetadata,
+  IdentifySeriesContext,
+  IdentifySeriesData,
+  IdentifySeriesResult,
+  IdentifySeriesStatus,
   LDContext,
   LDContextCommon,
   LDContextMeta,
@@ -19,7 +27,7 @@ import { BrowserClient, LDClient } from './BrowserClient';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { BrowserOptions as LDOptions } from './options';
 
-export {
+export type {
   LDClient,
   LDFlagSet,
   LDContext,
@@ -34,6 +42,14 @@ export {
   LDEvaluationDetailTyped,
   LDEvaluationReason,
   LDIdentifyOptions,
+  Hook,
+  HookMetadata,
+  EvaluationSeriesContext,
+  EvaluationSeriesData,
+  IdentifySeriesContext,
+  IdentifySeriesData,
+  IdentifySeriesResult,
+  IdentifySeriesStatus,
 };
 
 export function init(clientSideId: string, options?: LDOptions): LDClient {

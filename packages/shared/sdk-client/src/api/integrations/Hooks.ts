@@ -59,15 +59,15 @@ export interface IdentifySeriesData {
 /**
  * The status an identify operation completed with.
  */
-export type IdentifyStatus = 'completed' | 'error';
+export type IdentifySeriesStatus = 'completed' | 'error';
 
 /**
  * The result applies to a single identify operation. An operation may complete
  * with an error and then later complete successfully. Only the first completion
  * will be executed in the evaluation series.
  */
-export interface IdentifyResult {
-  status: IdentifyStatus;
+export interface IdentifySeriesResult {
+  status: IdentifySeriesStatus;
 }
 
 /**
@@ -157,6 +157,6 @@ export interface Hook {
   afterIdentify?(
     hookContext: IdentifySeriesContext,
     data: IdentifySeriesData,
-    result: IdentifyResult,
+    result: IdentifySeriesResult,
   ): IdentifySeriesData;
 }

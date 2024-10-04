@@ -1,6 +1,6 @@
 import { LDContext, LDEvaluationDetail, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { Hook, IdentifyResult } from '../src/api/integrations/Hooks';
+import { Hook, IdentifySeriesResult } from '../src/api/integrations/Hooks';
 import HookRunner from '../src/HookRunner';
 
 describe('given a hook runner and test hook', () => {
@@ -135,7 +135,7 @@ describe('given a hook runner and test hook', () => {
     it('should execute identify hooks', () => {
       const context: LDContext = { kind: 'user', key: 'user-123' };
       const timeout = 10;
-      const identifyResult: IdentifyResult = { status: 'completed' };
+      const identifyResult: IdentifySeriesResult = { status: 'completed' };
 
       const identifyCallback = hookRunner.identify(context, timeout);
       identifyCallback(identifyResult);
@@ -182,7 +182,7 @@ describe('given a hook runner and test hook', () => {
     it('should pass identify series data from before to after hooks', () => {
       const context: LDContext = { kind: 'user', key: 'user-123' };
       const timeout = 10;
-      const identifyResult: IdentifyResult = { status: 'completed' };
+      const identifyResult: IdentifySeriesResult = { status: 'completed' };
 
       testHook.beforeIdentify = jest
         .fn()

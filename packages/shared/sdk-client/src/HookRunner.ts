@@ -4,9 +4,9 @@ import {
   EvaluationSeriesContext,
   EvaluationSeriesData,
   Hook,
-  IdentifyResult,
   IdentifySeriesContext,
   IdentifySeriesData,
+  IdentifySeriesResult,
 } from './api/integrations/Hooks';
 import { LDEvaluationDetail } from './api/LDEvaluationDetail';
 
@@ -97,7 +97,7 @@ function executeAfterIdentify(
   hooks: Hook[],
   hookContext: IdentifySeriesContext,
   updatedData: IdentifySeriesData[],
-  result: IdentifyResult,
+  result: IdentifySeriesResult,
 ) {
   // This iterates in reverse, versus reversing a shallow copy of the hooks,
   // for efficiency.
@@ -146,7 +146,10 @@ export default class HookRunner {
     return result;
   }
 
-  identify(context: LDContext, timeout: number | undefined): (result: IdentifyResult) => void {
+  identify(
+    context: LDContext,
+    timeout: number | undefined,
+  ): (result: IdentifySeriesResult) => void {
     const hooks: Hook[] = [...this.hooks];
     const hookContext: IdentifySeriesContext = {
       context,
