@@ -1,9 +1,9 @@
 import { LDUnexpectedResponseError, Requests } from '@launchdarkly/js-client-sdk-common';
 
+import { getHref } from '../BrowserApi';
 import { Goal } from './Goals';
 import GoalTracker from './GoalTracker';
 import { DefaultLocationWatcher, LocationWatcher } from './LocationWatcher';
-import { getHref } from '../BrowserApi';
 
 export default class GoalManager {
   private goals?: Goal[] = [];
