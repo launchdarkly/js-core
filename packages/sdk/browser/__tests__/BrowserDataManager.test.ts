@@ -24,6 +24,7 @@ import BrowserEncoding from '../src/platform/BrowserEncoding';
 import BrowserInfo from '../src/platform/BrowserInfo';
 import LocalStorage from '../src/platform/LocalStorage';
 import { MockHasher } from './MockHasher';
+import { goodBootstrapData } from './testBootstrapData';
 
 global.TextEncoder = TextEncoder;
 
@@ -123,6 +124,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       upsert: jest.fn(),
       on: jest.fn(),
       off: jest.fn(),
+      setBootstrap: jest.fn(),
     } as unknown as jest.Mocked<FlagManager>;
 
     browserConfig = validateOptions({}, logger);
@@ -312,6 +314,36 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       expect.objectContaining({ flagA: { flag: true, version: undefined } }),
     );
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+  });
+
+  it('uses data from bootstrap and does not make an initial poll', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: BrowserIdentifyOptions = {
+      bootstrap: goodBootstrapData,
+    };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    flagManager.loadCached.mockResolvedValue(true);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[BrowserDataManager] Identify - Initialization completed from bootstrap',
+    );
+
+    expect(flagManager.loadCached).not.toHaveBeenCalledWith(context);
+    expect(identifyResolve).toHaveBeenCalled();
+    expect(flagManager.init).not.toHaveBeenCalled();
+    expect(flagManager.setBootstrap).toHaveBeenCalledWith(expect.anything(), {
+      cat: { version: 2, flag: { version: 2, variation: 1, value: false } },
+      json: { version: 3, flag: { version: 3, variation: 1, value: ['a', 'b', 'c', 'd'] } },
+      killswitch: { version: 5, flag: { version: 5, variation: 0, value: true } },
+      'my-boolean-flag': { version: 11, flag: { version: 11, variation: 1, value: false } },
+      'string-flag': { version: 3, flag: { version: 3, variation: 1, value: 'is bob' } },
+    });
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    expect(platform.requests.fetch).not.toHaveBeenCalled();
   });
 
   it('should identify from polling when there are no cached flags', async () => {

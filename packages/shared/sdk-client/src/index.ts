@@ -27,6 +27,8 @@ export type { FlagManager } from './flag-manager/FlagManager';
 export type { Configuration } from './configuration/Configuration';
 
 export type { LDEmitter };
+export type { ItemDescriptor } from './flag-manager/ItemDescriptor';
+export type { Flag } from './types';
 
 export { DataSourcePaths } from './streaming';
 export { BaseDataManager } from './DataManager';
