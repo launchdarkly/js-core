@@ -17,11 +17,12 @@ import {
 
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
+import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
-import { registerStateDetection } from './BrowserStateDetector';
+import { getHref } from './BrowserApi';
 
 /**
  *
@@ -162,7 +163,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
             event.data,
             event.metricValue,
             event.samplingRatio,
-            eventUrlTransformer(window.location.href),
+            eventUrlTransformer(getHref()),
           ),
       },
     );
@@ -213,7 +214,9 @@ export class BrowserClient extends LDClientImpl implements LDClient {
       // would return that promise.
       this.goalManager.initialize();
 
-      registerStateDetection(() => this.flush());
+      if (validatedBrowserOptions.automaticBackgroundHandling) {
+        registerStateDetection(() => this.flush());
+      }
     }
   }
 

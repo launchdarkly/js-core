@@ -3,6 +3,7 @@ import { LDUnexpectedResponseError, Requests } from '@launchdarkly/js-client-sdk
 import { Goal } from './Goals';
 import GoalTracker from './GoalTracker';
 import { DefaultLocationWatcher, LocationWatcher } from './LocationWatcher';
+import { getHref } from '../BrowserApi';
 
 export default class GoalManager {
   private goals?: Goal[] = [];
@@ -47,7 +48,7 @@ export default class GoalManager {
     this.tracker?.close();
     if (this.goals && this.goals.length) {
       this.tracker = new GoalTracker(this.goals, (goal) => {
-        this.reportGoal(window.location.href, goal);
+        this.reportGoal(getHref(), goal);
       });
     }
   }

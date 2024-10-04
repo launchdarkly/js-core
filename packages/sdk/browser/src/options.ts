@@ -37,12 +37,25 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
   streaming?: boolean;
+
+  /**
+   * Determines if the SDK responds to entering different visibility states to handle tasks such as
+   * flushing events.
+   *
+   * This is true by default. Generally speaking the SDK will be able to most reliably delivery
+   * events with this setting on.
+   *
+   * It may be useful to disable for environments where not all window/document objects are
+   * available, such as when running the SDK in a browser extension.
+   */
+  automaticBackgroundHandling?: boolean;
 }
 
 export interface ValidatedOptions {
   fetchGoals: boolean;
   eventUrlTransformer: (url: string) => string;
   streaming?: boolean;
+  automaticBackgroundHandling?: boolean;
 }
 
 const optDefaults = {
