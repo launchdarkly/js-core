@@ -39,7 +39,7 @@ const onChangePromise = () =>
     });
   });
 
-describe('sdk-client storage', () => {
+describe('sdk-client change emitter', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     defaultPutResponse = clone<Flags>(mockResponseJson);
