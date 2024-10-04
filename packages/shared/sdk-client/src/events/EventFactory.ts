@@ -23,7 +23,7 @@ export default class EventFactory extends internal.EventFactoryBase {
       defaultVal,
       flagKey,
       reason,
-      trackEvents,
+      trackEvents: !!trackEvents,
       value,
       variation,
       version,
