@@ -1,10 +1,12 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
+type FlagChangeKey = `change:${string}`;
+
 /**
  * Type for name of emitted events. 'change' is used for all flag changes. 'change:flag-name-here' is used
  * for specific flag changes.
  */
-export type EventName = 'change' | 'dataSourceStatus' | 'error' | string;
+export type EventName = 'change' | FlagChangeKey | 'dataSourceStatus' | 'error';
 
 /**
  * Implementation Note: There should not be any default listeners for change events in a client
