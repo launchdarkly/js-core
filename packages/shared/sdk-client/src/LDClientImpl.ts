@@ -107,8 +107,10 @@ export default class LDClientImpl implements LDClient {
 
     this.flagManager.on((context, flagKeys) => {
       const ldContext = Context.toLDContext(context);
-      this.logger.debug(`change: context: ${JSON.stringify(ldContext)}, flags: ${flagKeys}`);
       this.emitter.emit('change', ldContext, flagKeys);
+      flagKeys.forEach((it) => {
+        this.emitter.emit(`change:${it}`, ldContext);
+      });
     });
 
     this.dataManager = dataManagerFactory(
@@ -249,12 +251,12 @@ export default class LDClientImpl implements LDClient {
     return identifyPromise;
   }
 
-  off(eventName: EventName, listener: Function): void {
-    this.emitter.off(eventName, listener);
-  }
-
   on(eventName: EventName, listener: Function): void {
     this.emitter.on(eventName, listener);
+  }
+
+  off(eventName: EventName, listener: Function): void {
+    this.emitter.off(eventName, listener);
   }
 
   track(key: string, data?: any, metricValue?: number): void {
