@@ -20,6 +20,14 @@ export type {
   LDOptions,
   ConnectionMode,
   LDIdentifyOptions,
+  Hook,
+  HookMetadata,
+  EvaluationSeriesContext,
+  EvaluationSeriesData,
+  IdentifySeriesContext,
+  IdentifySeriesData,
+  IdentifySeriesResult,
+  IdentifySeriesStatus,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
