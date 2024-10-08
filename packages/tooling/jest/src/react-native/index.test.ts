@@ -8,6 +8,10 @@ import {
 } from '.';
 
 describe('react-native', () => {
+  afterEach(() => {
+    resetLDMocks();
+  });
+
   test('reset LD Mocks', () => {
     const current = mockUseLDClient();
 
@@ -47,7 +51,6 @@ describe('react-native', () => {
   });
 
   test('mock ldClient correctly', () => {
-    resetLDMocks();
     const current = mockUseLDClient();
 
     current?.track('event');
