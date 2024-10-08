@@ -318,7 +318,7 @@ export default class LDClientImpl implements LDClient {
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
     }
 
-    const { reason, value, variation } = foundItem.flag;
+    const { reason, value, variation, prerequisites } = foundItem.flag;
 
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
@@ -341,11 +341,15 @@ export default class LDClientImpl implements LDClient {
       }
     }
 
-    const successDetail = createSuccessEvaluationDetail(value, variation, reason);
+    const successDetail = createSuccessEvaluationDetail(value, variation, reason, prerequisites);
     if (value === undefined || value === null) {
       this.logger.debug('Result value is null. Providing default value.');
       successDetail.value = defaultValue;
     }
+
+    successDetail.prerequisites?.forEach((prereqKey) => {
+      this.variation(prereqKey, undefined);
+    });
     this.eventProcessor?.sendEvent(
       eventFactory.evalEventClient(
         flagKey,

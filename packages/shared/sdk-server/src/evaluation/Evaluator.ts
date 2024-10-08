@@ -68,6 +68,7 @@ function computeUpdatedBigSegmentsStatus(
 
 interface EvalState {
   events?: internal.InputEvalEvent[];
+  prerequisites?: string[];
 
   bigSegmentsStatus?: BigSegmentStoreStatusString;
 
@@ -116,24 +117,7 @@ export default class Evaluator {
 
   async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
     return new Promise<EvalResult>((resolve) => {
-      const state: EvalState = {};
-      this.evaluateInternal(
-        flag,
-        context,
-        state,
-        [],
-        (res) => {
-          if (state.bigSegmentsStatus) {
-            res.detail.reason = {
-              ...res.detail.reason,
-              bigSegmentsStatus: state.bigSegmentsStatus,
-            };
-          }
-          res.events = state.events;
-          resolve(res);
-        },
-        eventFactory,
-      );
+      this.evaluateCb(flag, context, resolve, eventFactory);
     });
   }
 
@@ -156,9 +140,13 @@ export default class Evaluator {
             bigSegmentsStatus: state.bigSegmentsStatus,
           };
         }
+        if (state.prerequisites) {
+          res.detail.prerequisites = state.prerequisites;
+        }
         res.events = state.events;
         cb(res);
       },
+      true,
       eventFactory,
     );
   }
@@ -179,6 +167,7 @@ export default class Evaluator {
     state: EvalState,
     visitedFlags: string[],
     cb: (res: EvalResult) => void,
+    topLevel: boolean,
     eventFactory?: EventFactory,
   ): void {
     if (!flag.on) {
@@ -214,6 +203,7 @@ export default class Evaluator {
           cb(this.variationForContext(flag.fallthrough, context, flag, Reasons.Fallthrough));
         });
       },
+      topLevel,
       eventFactory,
     );
   }
@@ -234,6 +224,7 @@ export default class Evaluator {
     state: EvalState,
     visitedFlags: string[],
     cb: (res: EvalResult | undefined) => void,
+    topLevel: boolean,
     eventFactory?: EventFactory,
   ): void {
     let prereqResult: EvalResult | undefined;
@@ -273,7 +264,12 @@ export default class Evaluator {
             (res) => {
               // eslint-disable-next-line no-param-reassign
               state.events ??= [];
+              if (topLevel) {
+                // eslint-disable-next-line no-param-reassign
+                state.prerequisites ??= [];
 
+                state.prerequisites.push(prereqFlag.key);
+              }
               if (eventFactory) {
                 state.events.push(
                   eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
@@ -291,6 +287,7 @@ export default class Evaluator {
               }
               return iterCb(true);
             },
+            false,
             eventFactory,
           );
         });
