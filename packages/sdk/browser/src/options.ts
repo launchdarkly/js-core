@@ -6,6 +6,8 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
+const DEFAULT_FLUSH_INTERVAL_SECONDS = 2;
+
 /**
  * Initialization options for the LaunchDarkly browser SDK.
  */
@@ -35,12 +37,25 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
   streaming?: boolean;
+
+  /**
+   * Determines if the SDK responds to entering different visibility states to handle tasks such as
+   * flushing events.
+   *
+   * This is true by default. Generally speaking the SDK will be able to most reliably delivery
+   * events with this setting on.
+   *
+   * It may be useful to disable for environments where not all window/document objects are
+   * available, such as when running the SDK in a browser extension.
+   */
+  automaticBackgroundHandling?: boolean;
 }
 
 export interface ValidatedOptions {
   fetchGoals: boolean;
   eventUrlTransformer: (url: string) => string;
   streaming?: boolean;
+  automaticBackgroundHandling?: boolean;
 }
 
 const optDefaults = {
@@ -66,8 +81,14 @@ export function filterToBaseOptions(opts: BrowserOptions): LDOptionsBase {
   return baseOptions;
 }
 
+function applyBrowserDefaults(opts: BrowserOptions) {
+  // eslint-disable-next-line no-param-reassign
+  opts.flushInterval ??= DEFAULT_FLUSH_INTERVAL_SECONDS;
+}
+
 export default function validateOptions(opts: BrowserOptions, logger: LDLogger): ValidatedOptions {
   const output: ValidatedOptions = { ...optDefaults };
+  applyBrowserDefaults(output);
 
   Object.entries(validators).forEach((entry) => {
     const [key, validator] = entry as [keyof BrowserOptions, TypeValidator];

@@ -1,5 +1,6 @@
 import { LDUnexpectedResponseError, Requests } from '@launchdarkly/js-client-sdk-common';
 
+import { getHref } from '../BrowserApi';
 import { Goal } from './Goals';
 import GoalTracker from './GoalTracker';
 import { DefaultLocationWatcher, LocationWatcher } from './LocationWatcher';
@@ -47,7 +48,7 @@ export default class GoalManager {
     this.tracker?.close();
     if (this.goals && this.goals.length) {
       this.tracker = new GoalTracker(this.goals, (goal) => {
-        this.reportGoal(window.location.href, goal);
+        this.reportGoal(getHref(), goal);
       });
     }
   }

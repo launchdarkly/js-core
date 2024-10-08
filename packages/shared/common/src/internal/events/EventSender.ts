@@ -65,6 +65,9 @@ export default class EventSender implements LDEventSender {
         headers,
         body: JSON.stringify(events),
         method: 'POST',
+        // When sending events from browser environments the request should be completed even
+        // if the user is navigating away from the page.
+        keepalive: true,
       });
 
       const serverDate = Date.parse(resHeaders.get('date') || '');

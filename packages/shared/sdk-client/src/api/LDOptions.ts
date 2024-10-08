@@ -113,9 +113,9 @@ export interface LDOptions {
   eventsUri?: string;
 
   /**
-   * Controls how often the SDK flushes events.
+   * The interval in between flushes of the analytics events queue, in seconds.
    *
-   * @defaultValue 30s.
+   * @defaultValue 2s for browser implementations 30s for others.
    */
   flushInterval?: number;
 

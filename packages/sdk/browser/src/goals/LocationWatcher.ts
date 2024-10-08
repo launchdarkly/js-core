@@ -1,3 +1,5 @@
+import { addWindowEventListener, getHref } from '../BrowserApi';
+
 export const LOCATION_WATCHER_INTERVAL_MS = 300;
 
 // Using any for the timer handle because the type is not the same for all
@@ -24,9 +26,9 @@ export class DefaultLocationWatcher {
    * @param callback Callback that is executed whenever a URL change is detected.
    */
   constructor(callback: () => void) {
-    this.previousLocation = window.location.href;
+    this.previousLocation = getHref();
     const checkUrl = () => {
-      const currentLocation = window.location.href;
+      const currentLocation = getHref();
 
       if (currentLocation !== this.previousLocation) {
         this.previousLocation = currentLocation;
@@ -41,10 +43,10 @@ export class DefaultLocationWatcher {
      */
     this.watcherHandle = setInterval(checkUrl, LOCATION_WATCHER_INTERVAL_MS);
 
-    window.addEventListener('popstate', checkUrl);
+    const removeListener = addWindowEventListener('popstate', checkUrl);
 
     this.cleanupListeners = () => {
-      window.removeEventListener('popstate', checkUrl);
+      removeListener();
     };
   }
 

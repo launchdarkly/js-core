@@ -15,8 +15,10 @@ import {
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
+import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
@@ -161,7 +163,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
             event.data,
             event.metricValue,
             event.samplingRatio,
-            eventUrlTransformer(window.location.href),
+            eventUrlTransformer(getHref()),
           ),
       },
     );
@@ -211,6 +213,10 @@ export class BrowserClient extends LDClientImpl implements LDClient {
       // which emits the event, and assign its promise to a member. The "waitForGoalsReady" function
       // would return that promise.
       this.goalManager.initialize();
+
+      if (validatedBrowserOptions.automaticBackgroundHandling) {
+        registerStateDetection(() => this.flush());
+      }
     }
   }
 
