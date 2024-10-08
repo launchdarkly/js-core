@@ -14,7 +14,8 @@ export default class EventFactory extends internal.EventFactoryBase {
     context: Context,
     reason?: LDEvaluationReason,
   ): internal.InputEvalEvent {
-    const { trackEvents, debugEventsUntilDate, trackReason, flagVersion, version, variation } = flag;
+    const { trackEvents, debugEventsUntilDate, trackReason, flagVersion, version, variation } =
+      flag;
 
     return super.evalEvent({
       addExperimentData: trackReason,
