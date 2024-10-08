@@ -1,14 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
+import { useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
 
-  //TODO Set my-boolean-flag to a valid boolean flag key in your project/environment.
-  const flagValue = useBoolVariation('my-boolean-flag', false);
-
   const ldClient = useLDClient();
 
-  ldClient.track('test event');
+  const flagValue = ldClient.boolVariation('my-boolean-flag', false);
 
   return (
     <View style={styles.container}>
