@@ -67,10 +67,6 @@ export type {
 /**
  * Creates an instance of the LaunchDarkly client.
  *
- * The client will begin attempting to connect to LaunchDarkly as soon as it is created. To
- * determine when it is ready to use, call [[LDClient.waitForInitialization]], or register an
- * event listener for the `"ready"` event using [[LDClient.on]].
- *
  * Usage:
  * ```
  * import { initialize } from 'launchdarkly-js-client-sdk';
