@@ -31,16 +31,19 @@ import BrowserPlatform from './platform/BrowserPlatform';
  * Applications should configure the client at page load time and reuse the same instance.
  *
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
- *
- * @ignore Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
- * @ignore Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
- * @ignore Implementation Note: The browser SDK has different identify options, so omits the base implementation
- * @ignore from the interface.
  */
 export type LDClient = Omit<
   CommonClient,
   'setConnectionMode' | 'getConnectionMode' | 'getOffline' | 'identify'
 > & {
+  /**
+   * @ignore
+   * Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
+   * Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
+   * Implementation Note: The browser SDK has different identify options, so omits the base implementation
+   * from the interface.
+   */
+
   /**
    * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
