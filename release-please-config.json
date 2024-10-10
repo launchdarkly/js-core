@@ -30,7 +30,6 @@
     "packages/store/node-server-sdk-redis": {},
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
-      "release-as": "0.0.1",
       "bump-minor-pre-major": true
     }
   },
