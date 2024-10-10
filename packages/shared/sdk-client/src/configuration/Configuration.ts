@@ -72,7 +72,7 @@ export default class ConfigurationImpl implements Configuration {
   public readonly logger: LDLogger = createSafeLogger();
 
   // Naming conventions is not followed for these lines because the config validation
-  // accesses members based on the keys of the options. 
+  // accesses members based on the keys of the options. (sdk-763)
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly baseUri = DEFAULT_POLLING;
   // eslint-disable-next-line @typescript-eslint/naming-convention
