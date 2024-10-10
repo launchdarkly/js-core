@@ -78,9 +78,9 @@ describe('EventSource', () => {
 
   test('getNextRetryDelay', () => {
     // @ts-ignore
-    const delay0 = eventSource.getNextRetryDelay();
+    const delay0 = eventSource._getNextRetryDelay();
     // @ts-ignore
-    const delay1 = eventSource.getNextRetryDelay();
+    const delay1 = eventSource._getNextRetryDelay();
 
     // @ts-ignore
     expect(eventSource.retryCount).toEqual(2);
