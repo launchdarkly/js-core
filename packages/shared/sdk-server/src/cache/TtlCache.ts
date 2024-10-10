@@ -30,14 +30,14 @@ interface CacheRecord {
  * @internal
  */
 export default class TtlCache {
-  private storage: Map<string, CacheRecord> = new Map();
+  private _storage: Map<string, CacheRecord> = new Map();
 
-  private checkIntervalHandle: any;
+  private _checkIntervalHandle: any;
 
-  constructor(private readonly options: TtlCacheOptions) {
-    this.checkIntervalHandle = setInterval(() => {
-      this.purgeStale();
-    }, options.checkInterval * 1000);
+  constructor(private readonly _options: TtlCacheOptions) {
+    this._checkIntervalHandle = setInterval(() => {
+      this._purgeStale();
+    }, _options.checkInterval * 1000);
   }
 
   /**
@@ -47,9 +47,9 @@ export default class TtlCache {
    * if the value has expired.
    */
   public get(key: string): any {
-    const record = this.storage.get(key);
+    const record = this._storage.get(key);
     if (record && isStale(record)) {
-      this.storage.delete(key);
+      this._storage.delete(key);
       return undefined;
     }
     return record?.value;
@@ -62,9 +62,9 @@ export default class TtlCache {
    * @param value The value to set.
    */
   public set(key: string, value: any) {
-    this.storage.set(key, {
+    this._storage.set(key, {
       value,
-      expiration: Date.now() + this.options.ttl * 1000,
+      expiration: Date.now() + this._options.ttl * 1000,
     });
   }
 
@@ -74,14 +74,14 @@ export default class TtlCache {
    * @param key The key of the value to delete.
    */
   public delete(key: string) {
-    this.storage.delete(key);
+    this._storage.delete(key);
   }
 
   /**
    * Clear the items that are in the cache.
    */
   public clear() {
-    this.storage.clear();
+    this._storage.clear();
   }
 
   /**
@@ -90,16 +90,16 @@ export default class TtlCache {
    */
   public close() {
     this.clear();
-    if (this.checkIntervalHandle) {
-      clearInterval(this.checkIntervalHandle);
-      this.checkIntervalHandle = null;
+    if (this._checkIntervalHandle) {
+      clearInterval(this._checkIntervalHandle);
+      this._checkIntervalHandle = null;
     }
   }
 
-  private purgeStale() {
-    this.storage.forEach((record, key) => {
+  private _purgeStale() {
+    this._storage.forEach((record, key) => {
       if (isStale(record)) {
-        this.storage.delete(key);
+        this._storage.delete(key);
       }
     });
   }
@@ -109,6 +109,6 @@ export default class TtlCache {
    * @internal
    */
   public get size() {
-    return this.storage.size;
+    return this._storage.size;
   }
 }

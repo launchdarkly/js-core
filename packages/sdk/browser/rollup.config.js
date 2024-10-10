@@ -33,7 +33,13 @@ export default [
         esmExternals: true,
       }),
       resolve(),
-      terser(),
+      terser({
+        mangle: {
+          properties: {
+            regex: /^_/,
+          },
+        },
+      }),
       json(),
       // The 'sourcemap' option allows using the minified size, not the size before minification.
       visualizer({ sourcemap: true }),
@@ -41,6 +47,18 @@ export default [
   },
   {
     ...getSharedConfig('cjs', 'dist/index.cjs.js'),
-    plugins: [typescript(), common(), resolve(), terser(), json()],
+    plugins: [
+      typescript(),
+      common(),
+      resolve(),
+      terser({
+        mangle: {
+          properties: {
+            regex: /^_/,
+          },
+        },
+      }),
+      json(),
+    ],
   },
 ];

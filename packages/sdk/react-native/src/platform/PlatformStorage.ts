@@ -3,7 +3,7 @@ import type { LDLogger, Storage } from '@launchdarkly/js-client-sdk-common';
 import AsyncStorage from './ConditionalAsyncStorage';
 
 export default class PlatformStorage implements Storage {
-  constructor(private readonly logger: LDLogger) {}
+  constructor(private readonly _logger: LDLogger) {}
   async clear(key: string): Promise<void> {
     await AsyncStorage.removeItem(key);
   }
@@ -13,7 +13,7 @@ export default class PlatformStorage implements Storage {
       const value = await AsyncStorage.getItem(key);
       return value ?? null;
     } catch (error) {
-      this.logger.debug(`Error getting AsyncStorage key: ${key}, error: ${error}`);
+      this._logger.debug(`Error getting AsyncStorage key: ${key}, error: ${error}`);
       return null;
     }
   }
@@ -22,7 +22,7 @@ export default class PlatformStorage implements Storage {
     try {
       await AsyncStorage.setItem(key, value);
     } catch (error) {
-      this.logger.debug(`Error saving AsyncStorage key: ${key}, value: ${value}, error: ${error}`);
+      this._logger.debug(`Error saving AsyncStorage key: ${key}, value: ${value}, error: ${error}`);
     }
   }
 }

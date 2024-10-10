@@ -78,12 +78,12 @@ describe('EventSource', () => {
 
   test('getNextRetryDelay', () => {
     // @ts-ignore
-    const delay0 = eventSource.getNextRetryDelay();
+    const delay0 = eventSource._getNextRetryDelay();
     // @ts-ignore
-    const delay1 = eventSource.getNextRetryDelay();
+    const delay1 = eventSource._getNextRetryDelay();
 
     // @ts-ignore
-    expect(eventSource.retryCount).toEqual(2);
+    expect(eventSource._retryCount).toEqual(2);
     expect(delay0).toEqual(556);
     expect(delay1).toEqual(1001);
   });
@@ -102,7 +102,7 @@ describe('EventSource', () => {
     jest.runAllTimers();
     // This forces it to reconnect.
     // @ts-ignore
-    eventSource.tryConnect();
+    eventSource._tryConnect();
     jest.runAllTimers();
 
     expect(logger.debug).toHaveBeenNthCalledWith(

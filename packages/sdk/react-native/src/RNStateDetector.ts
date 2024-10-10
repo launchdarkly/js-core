@@ -21,28 +21,28 @@ function translateAppState(state: AppStateStatus): ApplicationState {
  * @internal
  */
 export default class RNStateDetector implements StateDetector {
-  private applicationStateListener?: (state: ApplicationState) => void;
-  private networkStateListener?: (state: NetworkState) => void;
+  private _applicationStateListener?: (state: ApplicationState) => void;
+  private _networkStateListener?: (state: NetworkState) => void;
 
   constructor() {
     AppState.addEventListener('change', (state: AppStateStatus) => {
-      this.applicationStateListener?.(translateAppState(state));
+      this._applicationStateListener?.(translateAppState(state));
     });
   }
 
   setApplicationStateListener(fn: (state: ApplicationState) => void): void {
-    this.applicationStateListener = fn;
+    this._applicationStateListener = fn;
     // When you listen provide the current state immediately.
-    this.applicationStateListener(translateAppState(AppState.currentState));
+    this._applicationStateListener(translateAppState(AppState.currentState));
   }
 
   setNetworkStateListener(fn: (state: NetworkState) => void): void {
-    this.networkStateListener = fn;
+    this._networkStateListener = fn;
     // Not implemented.
   }
 
   stopListening(): void {
-    this.applicationStateListener = undefined;
-    this.networkStateListener = undefined;
+    this._applicationStateListener = undefined;
+    this._networkStateListener = undefined;
   }
 }

@@ -5,7 +5,7 @@ import { Hasher as LDHasher } from '@launchdarkly/js-server-sdk-common';
 import { SupportedHashAlgorithm, SupportedOutputEncoding } from './types';
 
 export default class CryptoJSHasher implements LDHasher {
-  private cryptoJSHasher;
+  private _cryptoJSHasher;
 
   constructor(algorithm: SupportedHashAlgorithm) {
     let algo;
@@ -21,11 +21,11 @@ export default class CryptoJSHasher implements LDHasher {
         throw new Error('unsupported hash algorithm. Only sha1 and sha256 are supported.');
     }
 
-    this.cryptoJSHasher = algo.create();
+    this._cryptoJSHasher = algo.create();
   }
 
   digest(encoding: SupportedOutputEncoding): string {
-    const result = this.cryptoJSHasher.finalize();
+    const result = this._cryptoJSHasher.finalize();
 
     let enc;
     switch (encoding) {
@@ -43,7 +43,7 @@ export default class CryptoJSHasher implements LDHasher {
   }
 
   update(data: string): this {
-    this.cryptoJSHasher.update(data);
+    this._cryptoJSHasher.update(data);
     return this;
   }
 }

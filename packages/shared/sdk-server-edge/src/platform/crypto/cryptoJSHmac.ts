@@ -5,7 +5,7 @@ import { Hmac as LDHmac } from '@launchdarkly/js-server-sdk-common';
 import { SupportedHashAlgorithm, SupportedOutputEncoding } from './types';
 
 export default class CryptoJSHmac implements LDHmac {
-  private CryptoJSHmac;
+  private _cryptoJSHmac;
 
   constructor(algorithm: SupportedHashAlgorithm, key: string) {
     let algo;
@@ -21,11 +21,11 @@ export default class CryptoJSHmac implements LDHmac {
         throw new Error('unsupported hash algorithm. Only sha1 and sha256 are supported.');
     }
 
-    this.CryptoJSHmac = CryptoJS.algo.HMAC.create(algo, key);
+    this._cryptoJSHmac = CryptoJS.algo.HMAC.create(algo, key);
   }
 
   digest(encoding: SupportedOutputEncoding): string {
-    const result = this.CryptoJSHmac.finalize();
+    const result = this._cryptoJSHmac.finalize();
 
     if (encoding === 'base64') {
       return result.toString(CryptoJS.enc.Base64);
@@ -39,7 +39,7 @@ export default class CryptoJSHmac implements LDHmac {
   }
 
   update(data: string): this {
-    this.CryptoJSHmac.update(data);
+    this._cryptoJSHmac.update(data);
     return this;
   }
 }

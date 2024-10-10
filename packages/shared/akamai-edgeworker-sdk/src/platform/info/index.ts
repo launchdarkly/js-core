@@ -2,21 +2,21 @@ import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-co
 
 class AkamaiPlatformInfo implements Info {
   constructor(
-    private platformName: string,
-    private sdkName: string,
-    private sdkVersion: string,
+    private _platformName: string,
+    private _sdkName: string,
+    private _sdkVersion: string,
   ) {}
 
   platformData(): PlatformData {
     return {
-      name: this.platformName,
+      name: this._platformName,
     };
   }
 
   sdkData(): SdkData {
     return {
-      name: this.sdkName,
-      version: this.sdkVersion,
+      name: this._sdkName,
+      version: this._sdkVersion,
       userAgentBase: 'AkamaiEdgeSDK',
     };
   }

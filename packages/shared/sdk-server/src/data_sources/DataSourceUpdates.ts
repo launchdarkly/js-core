@@ -58,26 +58,26 @@ function computeDependencies(namespace: string, item: LDFeatureStoreItem) {
  * @internal
  */
 export default class DataSourceUpdates implements LDDataSourceUpdates {
-  private readonly dependencyTracker = new DependencyTracker();
+  private readonly _dependencyTracker = new DependencyTracker();
 
   constructor(
-    private readonly featureStore: LDFeatureStore,
-    private readonly hasEventListeners: () => boolean,
-    private readonly onChange: (key: string) => void,
+    private readonly _featureStore: LDFeatureStore,
+    private readonly _hasEventListeners: () => boolean,
+    private readonly _onChange: (key: string) => void,
   ) {}
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    const checkForChanges = this.hasEventListeners();
+    const checkForChanges = this._hasEventListeners();
     const doInit = (oldData?: LDFeatureStoreDataStorage) => {
-      this.featureStore.init(allData, () => {
+      this._featureStore.init(allData, () => {
         // Defer change events so they execute after the callback.
         Promise.resolve().then(() => {
-          this.dependencyTracker.reset();
+          this._dependencyTracker.reset();
 
           Object.entries(allData).forEach(([namespace, items]) => {
             Object.keys(items || {}).forEach((key) => {
               const item = items[key];
-              this.dependencyTracker.updateDependenciesFrom(
+              this._dependencyTracker.updateDependenciesFrom(
                 namespace,
                 key,
                 computeDependencies(namespace, item),
@@ -109,8 +109,8 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
     };
 
     if (checkForChanges) {
-      this.featureStore.all(VersionedDataKinds.Features, (oldFlags) => {
-        this.featureStore.all(VersionedDataKinds.Segments, (oldSegments) => {
+      this._featureStore.all(VersionedDataKinds.Features, (oldFlags) => {
+        this._featureStore.all(VersionedDataKinds.Segments, (oldSegments) => {
           const oldData = {
             [VersionedDataKinds.Features.namespace]: oldFlags,
             [VersionedDataKinds.Segments.namespace]: oldSegments,
@@ -125,12 +125,12 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
     const { key } = data;
-    const checkForChanges = this.hasEventListeners();
+    const checkForChanges = this._hasEventListeners();
     const doUpsert = (oldItem?: LDFeatureStoreItem | null) => {
-      this.featureStore.upsert(kind, data, () => {
+      this._featureStore.upsert(kind, data, () => {
         // Defer change events so they execute after the callback.
         Promise.resolve().then(() => {
-          this.dependencyTracker.updateDependenciesFrom(
+          this._dependencyTracker.updateDependenciesFrom(
             kind.namespace,
             key,
             computeDependencies(kind.namespace, data),
@@ -146,7 +146,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
       });
     };
     if (checkForChanges) {
-      this.featureStore.get(kind, key, doUpsert);
+      this._featureStore.get(kind, key, doUpsert);
     } else {
       doUpsert();
     }
@@ -162,13 +162,13 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
     if (newValue && oldValue && newValue.version <= oldValue.version) {
       return;
     }
-    this.dependencyTracker.updateModifiedItems(toDataSet, namespace, key);
+    this._dependencyTracker.updateModifiedItems(toDataSet, namespace, key);
   }
 
   sendChangeEvents(dataSet: NamespacedDataSet<boolean>) {
     dataSet.enumerate((namespace, key) => {
       if (namespace === VersionedDataKinds.Features.namespace) {
-        this.onChange(key);
+        this._onChange(key);
       }
     });
   }

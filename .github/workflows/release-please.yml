@@ -191,7 +191,6 @@ jobs:
           workspace_path: packages/sdk/browser
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
-
   release-server-node:
     runs-on: ubuntu-latest
     needs: ['release-please', 'release-sdk-server']

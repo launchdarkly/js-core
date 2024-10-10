@@ -28,7 +28,7 @@ interface BuilderData {
  * A builder for feature flag configurations to be used with {@link TestData}.
  */
 export default class TestDataFlagBuilder {
-  private data: BuilderData = {
+  private _data: BuilderData = {
     on: true,
     variations: [],
   };
@@ -37,38 +37,38 @@ export default class TestDataFlagBuilder {
    * @internal
    */
   constructor(
-    private readonly key: string,
+    private readonly _key: string,
     data?: BuilderData,
   ) {
     if (data) {
       // Not the fastest way to deep copy, but this is a testing mechanism.
-      this.data = {
+      this._data = {
         on: data.on,
         variations: [...data.variations],
       };
       if (data.offVariation !== undefined) {
-        this.data.offVariation = data.offVariation;
+        this._data.offVariation = data.offVariation;
       }
       if (data.fallthroughVariation !== undefined) {
-        this.data.fallthroughVariation = data.fallthroughVariation;
+        this._data.fallthroughVariation = data.fallthroughVariation;
       }
       if (data.targetsByVariation) {
-        this.data.targetsByVariation = JSON.parse(JSON.stringify(data.targetsByVariation));
+        this._data.targetsByVariation = JSON.parse(JSON.stringify(data.targetsByVariation));
       }
       if (data.rules) {
-        this.data.rules = [];
+        this._data.rules = [];
         data.rules.forEach((rule) => {
-          this.data.rules?.push(rule.clone());
+          this._data.rules?.push(rule.clone());
         });
       }
     }
   }
 
-  private get isBooleanFlag(): boolean {
+  private get _isBooleanFlag(): boolean {
     return (
-      this.data.variations.length === 2 &&
-      this.data.variations[TRUE_VARIATION_INDEX] === true &&
-      this.data.variations[FALSE_VARIATION_INDEX] === false
+      this._data.variations.length === 2 &&
+      this._data.variations[TRUE_VARIATION_INDEX] === true &&
+      this._data.variations[FALSE_VARIATION_INDEX] === false
     );
   }
 
@@ -83,7 +83,7 @@ export default class TestDataFlagBuilder {
    * @return the flag builder
    */
   booleanFlag(): TestDataFlagBuilder {
-    if (this.isBooleanFlag) {
+    if (this._isBooleanFlag) {
       return this;
     }
     // Change this flag into a boolean flag.
@@ -103,7 +103,7 @@ export default class TestDataFlagBuilder {
    * @return the flag builder
    */
   variations(...values: any[]): TestDataFlagBuilder {
-    this.data.variations = [...values];
+    this._data.variations = [...values];
     return this;
   }
 
@@ -120,7 +120,7 @@ export default class TestDataFlagBuilder {
    * @return the flag builder
    */
   on(targetingOn: boolean): TestDataFlagBuilder {
-    this.data.on = targetingOn;
+    this._data.on = targetingOn;
     return this;
   }
 
@@ -141,7 +141,7 @@ export default class TestDataFlagBuilder {
     if (TypeValidators.Boolean.is(variation)) {
       return this.booleanFlag().fallthroughVariation(variationForBoolean(variation));
     }
-    this.data.fallthroughVariation = variation;
+    this._data.fallthroughVariation = variation;
     return this;
   }
 
@@ -161,7 +161,7 @@ export default class TestDataFlagBuilder {
     if (TypeValidators.Boolean.is(variation)) {
       return this.booleanFlag().offVariation(variationForBoolean(variation));
     }
-    this.data.offVariation = variation;
+    this._data.offVariation = variation;
     return this;
   }
 
@@ -254,14 +254,14 @@ export default class TestDataFlagBuilder {
       );
     }
 
-    if (!this.data.targetsByVariation) {
-      this.data.targetsByVariation = {};
+    if (!this._data.targetsByVariation) {
+      this._data.targetsByVariation = {};
     }
 
-    this.data.variations.forEach((_, i) => {
+    this._data.variations.forEach((_, i) => {
       if (i === variation) {
         // If there is nothing set at the current variation then set it to the empty array
-        const targetsForVariation = this.data.targetsByVariation![i] || {};
+        const targetsForVariation = this._data.targetsByVariation![i] || {};
 
         if (!(contextKind in targetsForVariation)) {
           targetsForVariation[contextKind] = [];
@@ -272,10 +272,10 @@ export default class TestDataFlagBuilder {
           targetsForVariation[contextKind].push(contextKey);
         }
 
-        this.data.targetsByVariation![i] = targetsForVariation;
+        this._data.targetsByVariation![i] = targetsForVariation;
       } else {
         // remove user from other variation set if necessary
-        const targetsForVariation = this.data.targetsByVariation![i];
+        const targetsForVariation = this._data.targetsByVariation![i];
         if (targetsForVariation) {
           const targetsForContextKind = targetsForVariation[contextKind];
           if (targetsForContextKind) {
@@ -288,7 +288,7 @@ export default class TestDataFlagBuilder {
             }
           }
           if (!Object.keys(targetsForVariation).length) {
-            delete this.data.targetsByVariation![i];
+            delete this._data.targetsByVariation![i];
           }
         }
       }
@@ -304,7 +304,7 @@ export default class TestDataFlagBuilder {
    * @return the same flag builder
    */
   clearRules(): TestDataFlagBuilder {
-    delete this.data.rules;
+    delete this._data.rules;
     return this;
   }
 
@@ -315,7 +315,7 @@ export default class TestDataFlagBuilder {
    * @return the same flag builder
    */
   clearAllTargets(): TestDataFlagBuilder {
-    delete this.data.targetsByVariation;
+    delete this._data.targetsByVariation;
     return this;
   }
 
@@ -372,13 +372,13 @@ export default class TestDataFlagBuilder {
   }
 
   checkRatio(ratio: number): TestDataFlagBuilder {
-    this.data.migration = this.data.migration ?? {};
-    this.data.migration.checkRatio = ratio;
+    this._data.migration = this._data.migration ?? {};
+    this._data.migration.checkRatio = ratio;
     return this;
   }
 
   samplingRatio(ratio: number): TestDataFlagBuilder {
-    this.data.samplingRatio = ratio;
+    this._data.samplingRatio = ratio;
     return this;
   }
 
@@ -386,10 +386,10 @@ export default class TestDataFlagBuilder {
    * @internal
    */
   addRule(flagRuleBuilder: TestDataRuleBuilder<TestDataFlagBuilder>) {
-    if (!this.data.rules) {
-      this.data.rules = [];
+    if (!this._data.rules) {
+      this._data.rules = [];
     }
-    this.data.rules.push(flagRuleBuilder as TestDataRuleBuilder<TestDataFlagBuilder>);
+    this._data.rules.push(flagRuleBuilder as TestDataRuleBuilder<TestDataFlagBuilder>);
   }
 
   /**
@@ -397,22 +397,22 @@ export default class TestDataFlagBuilder {
    */
   build(version: number) {
     const baseFlagObject: Flag = {
-      key: this.key,
+      key: this._key,
       version,
-      on: this.data.on,
-      offVariation: this.data.offVariation,
+      on: this._data.on,
+      offVariation: this._data.offVariation,
       fallthrough: {
-        variation: this.data.fallthroughVariation,
+        variation: this._data.fallthroughVariation,
       },
-      variations: [...this.data.variations],
-      migration: this.data.migration,
-      samplingRatio: this.data.samplingRatio,
+      variations: [...this._data.variations],
+      migration: this._data.migration,
+      samplingRatio: this._data.samplingRatio,
     };
 
-    if (this.data.targetsByVariation) {
+    if (this._data.targetsByVariation) {
       const contextTargets: Target[] = [];
       const userTargets: Omit<Target, 'contextKind'>[] = [];
-      Object.entries(this.data.targetsByVariation).forEach(
+      Object.entries(this._data.targetsByVariation).forEach(
         ([variation, contextTargetsForVariation]) => {
           Object.entries(contextTargetsForVariation).forEach(([contextKind, values]) => {
             const numberVariation = parseInt(variation, 10);
@@ -432,8 +432,8 @@ export default class TestDataFlagBuilder {
       baseFlagObject.contextTargets = contextTargets;
     }
 
-    if (this.data.rules) {
-      baseFlagObject.rules = this.data.rules.map((rule, i) =>
+    if (this._data.rules) {
+      baseFlagObject.rules = this._data.rules.map((rule, i) =>
         (rule as TestDataRuleBuilder<TestDataFlagBuilder>).build(String(i)),
       );
     }
@@ -445,13 +445,13 @@ export default class TestDataFlagBuilder {
    * @internal
    */
   clone(): TestDataFlagBuilder {
-    return new TestDataFlagBuilder(this.key, this.data);
+    return new TestDataFlagBuilder(this._key, this._data);
   }
 
   /**
    * @internal
    */
   getKey(): string {
-    return this.key;
+    return this._key;
   }
 }

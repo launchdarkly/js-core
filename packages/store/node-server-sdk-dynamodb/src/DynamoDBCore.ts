@@ -62,13 +62,13 @@ export function calculateSize(item: Record<string, AttributeValue>, logger?: LDL
  */
 export default class DynamoDBCore implements interfaces.PersistentDataStore {
   constructor(
-    private readonly tableName: string,
-    private readonly state: DynamoDBClientState,
-    private readonly logger?: LDLogger,
+    private readonly _tableName: string,
+    private readonly _state: DynamoDBClientState,
+    private readonly _logger?: LDLogger,
   ) {}
 
-  private initializedToken() {
-    const prefixed = stringValue(this.state.prefixedKey('$inited'));
+  private _initializedToken() {
+    const prefixed = stringValue(this._state.prefixedKey('$inited'));
     return { namespace: prefixed, key: prefixed };
   }
 
@@ -77,12 +77,12 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
    * @param allData A set of init data.
    * @returns A list of all data with matching namespaces.
    */
-  private async readExistingItems(
+  private async _readExistingItems(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
   ) {
     const promises = allData.map((kind) => {
       const { namespace } = kind.key;
-      return this.state.query(this.queryParamsForNamespace(namespace));
+      return this._state.query(this._queryParamsForNamespace(namespace));
     });
 
     const records = (await Promise.all(promises)).flat();
@@ -95,12 +95,12 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
    * @param item The item to marshal.
    * @returns The marshalled data.
    */
-  private marshalItem(
+  private _marshalItem(
     kind: interfaces.PersistentStoreDataKind,
     item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>,
   ): Record<string, AttributeValue> {
     const dbItem: Record<string, AttributeValue> = {
-      namespace: stringValue(this.state.prefixedKey(kind.namespace)),
+      namespace: stringValue(this._state.prefixedKey(kind.namespace)),
       key: stringValue(item.key),
       version: numberValue(item.item.version),
     };
@@ -110,7 +110,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     return dbItem;
   }
 
-  private unmarshalItem(
+  private _unmarshalItem(
     dbItem: Record<string, AttributeValue>,
   ): interfaces.SerializedItemDescriptor {
     return {
@@ -126,7 +126,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
     callback: () => void,
   ) {
-    const items = await this.readExistingItems(allData);
+    const items = await this._readExistingItems(allData);
 
     // Make a key from an existing DB item.
     function makeNamespaceKey(item: Record<string, AttributeValue>) {
@@ -137,17 +137,17 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     items.forEach((item) => {
       existingNamespaceKeys[makeNamespaceKey(item)] = true;
     });
-    delete existingNamespaceKeys[makeNamespaceKey(this.initializedToken())];
+    delete existingNamespaceKeys[makeNamespaceKey(this._initializedToken())];
 
     // Generate a list of write operations, and then execute them in a batch.
     const ops: WriteRequest[] = [];
 
     allData.forEach((collection) => {
       collection.item.forEach((item) => {
-        const dbItem = this.marshalItem(collection.key, item);
-        if (this.checkSizeLimit(dbItem)) {
+        const dbItem = this._marshalItem(collection.key, item);
+        if (this._checkSizeLimit(dbItem)) {
           delete existingNamespaceKeys[
-            `${this.state.prefixedKey(collection.key.namespace)}$${item.key}`
+            `${this._state.prefixedKey(collection.key.namespace)}$${item.key}`
           ];
           ops.push({ PutRequest: { Item: dbItem } });
         }
@@ -165,9 +165,9 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     });
 
     // Always write the initialized token when we initialize.
-    ops.push({ PutRequest: { Item: this.initializedToken() } });
+    ops.push({ PutRequest: { Item: this._initializedToken() } });
 
-    await this.state.batchWrite(this.tableName, ops);
+    await this._state.batchWrite(this._tableName, ops);
     callback();
   }
 
@@ -176,12 +176,12 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     key: string,
     callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
   ) {
-    const read = await this.state.get(this.tableName, {
-      namespace: stringValue(this.state.prefixedKey(kind.namespace)),
+    const read = await this._state.get(this._tableName, {
+      namespace: stringValue(this._state.prefixedKey(kind.namespace)),
       key: stringValue(key),
     });
     if (read) {
-      callback(this.unmarshalItem(read));
+      callback(this._unmarshalItem(read));
     } else {
       callback(undefined);
     }
@@ -193,9 +193,11 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined,
     ) => void,
   ) {
-    const params = this.queryParamsForNamespace(kind.namespace);
-    const results = await this.state.query(params);
-    callback(results.map((record) => ({ key: record!.key!.S!, item: this.unmarshalItem(record) })));
+    const params = this._queryParamsForNamespace(kind.namespace);
+    const results = await this._state.query(params);
+    callback(
+      results.map((record) => ({ key: record!.key!.S!, item: this._unmarshalItem(record) })),
+    );
   }
 
   async upsert(
@@ -207,8 +209,8 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
     ) => void,
   ) {
-    const params = this.makeVersionedPutRequest(kind, { key, item: descriptor });
-    if (!this.checkSizeLimit(params.Item)) {
+    const params = this._makeVersionedPutRequest(kind, { key, item: descriptor });
+    if (!this._checkSizeLimit(params.Item)) {
       // We deliberately don't report this back to the SDK as an error, because we don't want to trigger any
       // useless retry behavior. We just won't do the update.
       callback();
@@ -216,7 +218,7 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     }
 
     try {
-      await this.state.put(params);
+      await this._state.put(params);
       this.get(kind, key, (readDescriptor) => {
         callback(undefined, readDescriptor);
       });
@@ -228,11 +230,11 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   async initialized(callback: (isInitialized: boolean) => void) {
     let initialized = false;
     try {
-      const token = this.initializedToken();
-      const data = await this.state.get(this.tableName, token);
+      const token = this._initializedToken();
+      const data = await this._state.get(this._tableName, token);
       initialized = !!(data?.key?.S === token.key.S);
     } catch (err) {
-      this.logger?.error(`Error reading inited: ${err}`);
+      this._logger?.error(`Error reading inited: ${err}`);
       initialized = false;
     }
     // Callback outside the try. In case it raised an exception.
@@ -240,44 +242,44 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   }
 
   close(): void {
-    this.state.close();
+    this._state.close();
   }
 
   getDescription(): string {
     return 'DynamoDB';
   }
 
-  private queryParamsForNamespace(namespace: string): QueryCommandInput {
+  private _queryParamsForNamespace(namespace: string): QueryCommandInput {
     return {
-      TableName: this.tableName,
+      TableName: this._tableName,
       KeyConditionExpression: 'namespace = :namespace',
       FilterExpression: 'attribute_not_exists(deleted) OR deleted = :deleted',
       ExpressionAttributeValues: {
-        ':namespace': stringValue(this.state.prefixedKey(namespace)),
+        ':namespace': stringValue(this._state.prefixedKey(namespace)),
         ':deleted': boolValue(false),
       },
     };
   }
 
-  private makeVersionedPutRequest(
+  private _makeVersionedPutRequest(
     kind: interfaces.PersistentStoreDataKind,
     item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>,
   ) {
     return {
-      TableName: this.tableName,
-      Item: this.marshalItem(kind, item),
+      TableName: this._tableName,
+      Item: this._marshalItem(kind, item),
       ConditionExpression: 'attribute_not_exists(version) OR version < :new_version',
       ExpressionAttributeValues: { ':new_version': numberValue(item.item.version) },
     };
   }
 
-  private checkSizeLimit(item: Record<string, AttributeValue>) {
+  private _checkSizeLimit(item: Record<string, AttributeValue>) {
     const size = calculateSize(item);
 
     if (size <= DYNAMODB_MAX_SIZE) {
       return true;
     }
-    this.logger?.error(
+    this._logger?.error(
       `The item "${item.key.S}" in "${item.namespace.S}" was too large to store in DynamoDB and was dropped`,
     );
     return false;

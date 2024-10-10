@@ -58,9 +58,9 @@ export interface FlagManager {
 }
 
 export default class DefaultFlagManager implements FlagManager {
-  private flagStore = new DefaultFlagStore();
-  private flagUpdater: FlagUpdater;
-  private flagPersistencePromise: Promise<FlagPersistence>;
+  private _flagStore = new DefaultFlagStore();
+  private _flagUpdater: FlagUpdater;
+  private _flagPersistencePromise: Promise<FlagPersistence>;
 
   /**
    * @param platform implementation of various platform provided functionality
@@ -74,10 +74,10 @@ export default class DefaultFlagManager implements FlagManager {
     sdkKey: string,
     maxCachedContexts: number,
     logger: LDLogger,
-    private readonly timeStamper: () => number = () => Date.now(),
+    timeStamper: () => number = () => Date.now(),
   ) {
-    this.flagUpdater = new FlagUpdater(this.flagStore, logger);
-    this.flagPersistencePromise = this.initPersistence(
+    this._flagUpdater = new FlagUpdater(this._flagStore, logger);
+    this._flagPersistencePromise = this._initPersistence(
       platform,
       sdkKey,
       maxCachedContexts,
@@ -86,7 +86,7 @@ export default class DefaultFlagManager implements FlagManager {
     );
   }
 
-  private async initPersistence(
+  private async _initPersistence(
     platform: Platform,
     sdkKey: string,
     maxCachedContexts: number,
@@ -99,44 +99,44 @@ export default class DefaultFlagManager implements FlagManager {
       platform,
       environmentNamespace,
       maxCachedContexts,
-      this.flagStore,
-      this.flagUpdater,
+      this._flagStore,
+      this._flagUpdater,
       logger,
       timeStamper,
     );
   }
 
   get(key: string): ItemDescriptor | undefined {
-    return this.flagStore.get(key);
+    return this._flagStore.get(key);
   }
 
   getAll(): { [key: string]: ItemDescriptor } {
-    return this.flagStore.getAll();
+    return this._flagStore.getAll();
   }
 
   setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void {
     // Bypasses the persistence as we do not want to put these flags into any cache.
     // Generally speaking persistence likely *SHOULD* be disabled when using bootstrap.
-    this.flagUpdater.init(context, newFlags);
+    this._flagUpdater.init(context, newFlags);
   }
 
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
-    return (await this.flagPersistencePromise).init(context, newFlags);
+    return (await this._flagPersistencePromise).init(context, newFlags);
   }
 
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
-    return (await this.flagPersistencePromise).upsert(context, key, item);
+    return (await this._flagPersistencePromise).upsert(context, key, item);
   }
 
   async loadCached(context: Context): Promise<boolean> {
-    return (await this.flagPersistencePromise).loadCached(context);
+    return (await this._flagPersistencePromise).loadCached(context);
   }
 
   on(callback: FlagsChangeCallback): void {
-    this.flagUpdater.on(callback);
+    this._flagUpdater.on(callback);
   }
 
   off(callback: FlagsChangeCallback): void {
-    this.flagUpdater.off(callback);
+    this._flagUpdater.off(callback);
   }
 }

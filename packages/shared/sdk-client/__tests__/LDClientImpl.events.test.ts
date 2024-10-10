@@ -109,7 +109,7 @@ describe('sdk-client object', () => {
       expect.objectContaining<InputIdentifyEvent>({
         kind: 'identify',
         context: expect.objectContaining({
-          contexts: expect.objectContaining({
+          _contexts: expect.objectContaining({
             car: { key: 'test-car' },
           }),
         }),
@@ -130,7 +130,7 @@ describe('sdk-client object', () => {
         kind: 'custom',
         key: 'the-event',
         context: expect.objectContaining({
-          contexts: expect.objectContaining({
+          _contexts: expect.objectContaining({
             car: { key: 'test-car' },
           }),
         }),
@@ -153,7 +153,7 @@ describe('sdk-client object', () => {
         kind: 'custom',
         key: 'the-event',
         context: expect.objectContaining({
-          contexts: expect.objectContaining({
+          _contexts: expect.objectContaining({
             car: { key: 'test-car' },
           }),
         }),
@@ -176,7 +176,7 @@ describe('sdk-client object', () => {
         kind: 'custom',
         key: 'the-event',
         context: expect.objectContaining({
-          contexts: expect.objectContaining({
+          _contexts: expect.objectContaining({
             car: { key: 'test-car' },
           }),
         }),

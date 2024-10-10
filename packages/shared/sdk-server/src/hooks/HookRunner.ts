@@ -7,13 +7,13 @@ const AFTER_EVALUATION_STAGE_NAME = 'afterEvaluation';
 const UNKNOWN_HOOK_NAME = 'unknown hook';
 
 export default class HookRunner {
-  private readonly hooks: Hook[] = [];
+  private readonly _hooks: Hook[] = [];
 
   constructor(
-    private readonly logger: LDLogger | undefined,
+    private readonly _logger: LDLogger | undefined,
     hooks: Hook[],
   ) {
-    this.hooks.push(...hooks);
+    this._hooks.push(...hooks);
   }
 
   public async withEvaluationSeries(
@@ -25,7 +25,7 @@ export default class HookRunner {
   ): Promise<LDEvaluationDetail> {
     // This early return is here to avoid the extra async/await associated with
     // using withHooksDataWithDetail.
-    if (this.hooks.length === 0) {
+    if (this._hooks.length === 0) {
       return method();
     }
 
@@ -52,18 +52,18 @@ export default class HookRunner {
     methodName: string,
     method: () => Promise<{ detail: LDEvaluationDetail; [index: string]: any }>,
   ): Promise<{ detail: LDEvaluationDetail; [index: string]: any }> {
-    if (this.hooks.length === 0) {
+    if (this._hooks.length === 0) {
       return method();
     }
     const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
-      this.prepareHooks(key, context, defaultValue, methodName);
-    const hookData = this.executeBeforeEvaluation(hooks, hookContext);
+      this._prepareHooks(key, context, defaultValue, methodName);
+    const hookData = this._executeBeforeEvaluation(hooks, hookContext);
     const result = await method();
-    this.executeAfterEvaluation(hooks, hookContext, hookData, result.detail);
+    this._executeAfterEvaluation(hooks, hookContext, hookData, result.detail);
     return result;
   }
 
-  private tryExecuteStage(
+  private _tryExecuteStage(
     method: string,
     hookName: string,
     stage: () => EvaluationSeriesData,
@@ -71,23 +71,23 @@ export default class HookRunner {
     try {
       return stage();
     } catch (err) {
-      this.logger?.error(
+      this._logger?.error(
         `An error was encountered in "${method}" of the "${hookName}" hook: ${err}`,
       );
       return {};
     }
   }
 
-  private hookName(hook?: Hook): string {
+  private _hookName(hook?: Hook): string {
     try {
       return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
     } catch {
-      this.logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
+      this._logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
       return UNKNOWN_HOOK_NAME;
     }
   }
 
-  private executeAfterEvaluation(
+  private _executeAfterEvaluation(
     hooks: Hook[],
     hookContext: EvaluationSeriesContext,
     updatedData: (EvaluationSeriesData | undefined)[],
@@ -98,28 +98,28 @@ export default class HookRunner {
     for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
       const hook = hooks[hookIndex];
       const data = updatedData[hookIndex] ?? {};
-      this.tryExecuteStage(
+      this._tryExecuteStage(
         AFTER_EVALUATION_STAGE_NAME,
-        this.hookName(hook),
+        this._hookName(hook),
         () => hook?.afterEvaluation?.(hookContext, data, result) ?? {},
       );
     }
   }
 
-  private executeBeforeEvaluation(
+  private _executeBeforeEvaluation(
     hooks: Hook[],
     hookContext: EvaluationSeriesContext,
   ): EvaluationSeriesData[] {
     return hooks.map((hook) =>
-      this.tryExecuteStage(
+      this._tryExecuteStage(
         BEFORE_EVALUATION_STAGE_NAME,
-        this.hookName(hook),
+        this._hookName(hook),
         () => hook?.beforeEvaluation?.(hookContext, {}) ?? {},
       ),
     );
   }
 
-  private prepareHooks(
+  private _prepareHooks(
     key: string,
     context: LDContext,
     defaultValue: unknown,
@@ -131,7 +131,7 @@ export default class HookRunner {
     // Copy the hooks to use a consistent set during evaluation. Hooks could be added and we want
     // to ensure all correct stages for any give hook execute. Not for instance the afterEvaluation
     // stage without beforeEvaluation having been called on that hook.
-    const hooks: Hook[] = [...this.hooks];
+    const hooks: Hook[] = [...this._hooks];
     const hookContext: EvaluationSeriesContext = {
       flagKey: key,
       context,
@@ -142,6 +142,6 @@ export default class HookRunner {
   }
 
   addHook(hook: Hook): void {
-    this.hooks.push(hook);
+    this._hooks.push(hook);
   }
 }

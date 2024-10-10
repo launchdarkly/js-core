@@ -15,11 +15,11 @@ import Configuration from '../options/Configuration';
  * @internal
  */
 export default class Requestor implements LDFeatureRequestor {
-  private readonly headers: Record<string, string>;
+  private readonly _headers: Record<string, string>;
 
-  private readonly uri: string;
+  private readonly _uri: string;
 
-  private readonly eTagCache: Record<
+  private readonly _eTagCache: Record<
     string,
     {
       etag: string;
@@ -29,25 +29,25 @@ export default class Requestor implements LDFeatureRequestor {
 
   constructor(
     config: Configuration,
-    private readonly requests: Requests,
+    private readonly _requests: Requests,
     baseHeaders: LDHeaders,
   ) {
-    this.headers = { ...baseHeaders };
-    this.uri = getPollingUri(config.serviceEndpoints, '/sdk/latest-all', []);
+    this._headers = { ...baseHeaders };
+    this._uri = getPollingUri(config.serviceEndpoints, '/sdk/latest-all', []);
   }
 
   /**
    * Perform a request and utilize the ETag cache. The ETags are cached in the
    * requestor instance.
    */
-  private async requestWithETagCache(
+  private async _requestWithETagCache(
     requestUrl: string,
     options: Options,
   ): Promise<{
     res: Response;
     body: string;
   }> {
-    const cacheEntry = this.eTagCache[requestUrl];
+    const cacheEntry = this._eTagCache[requestUrl];
     const cachedETag = cacheEntry?.etag;
 
     const updatedOptions = cachedETag
@@ -57,7 +57,7 @@ export default class Requestor implements LDFeatureRequestor {
         }
       : options;
 
-    const res = await this.requests.fetch(requestUrl, updatedOptions);
+    const res = await this._requests.fetch(requestUrl, updatedOptions);
 
     if (res.status === 304 && cacheEntry) {
       return { res, body: cacheEntry.body };
@@ -65,7 +65,7 @@ export default class Requestor implements LDFeatureRequestor {
     const etag = res.headers.get('etag');
     const body = await res.text();
     if (etag) {
-      this.eTagCache[requestUrl] = { etag, body };
+      this._eTagCache[requestUrl] = { etag, body };
     }
     return { res, body };
   }
@@ -73,10 +73,10 @@ export default class Requestor implements LDFeatureRequestor {
   async requestAllData(cb: (err: any, body: any) => void) {
     const options: Options = {
       method: 'GET',
-      headers: this.headers,
+      headers: this._headers,
     };
     try {
-      const { res, body } = await this.requestWithETagCache(this.uri, options);
+      const { res, body } = await this._requestWithETagCache(this._uri, options);
       if (res.status !== 200 && res.status !== 304) {
         const err = new LDPollingError(
           DataSourceErrorKind.ErrorResponse,

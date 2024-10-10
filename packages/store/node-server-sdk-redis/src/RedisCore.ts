@@ -24,25 +24,25 @@ import RedisClientState from './RedisClientState';
  * @internal
  */
 export default class RedisCore implements interfaces.PersistentDataStore {
-  private initedKey: string;
+  private _initedKey: string;
 
   constructor(
-    private readonly state: RedisClientState,
-    private readonly logger?: LDLogger,
+    private readonly _state: RedisClientState,
+    private readonly _logger?: LDLogger,
   ) {
-    this.initedKey = this.state.prefixedKey('$inited');
+    this._initedKey = this._state.prefixedKey('$inited');
   }
 
   init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
     callback: () => void,
   ): void {
-    const multi = this.state.getClient().multi();
+    const multi = this._state.getClient().multi();
     allData.forEach((keyedItems) => {
       const kind = keyedItems.key;
       const items = keyedItems.item;
 
-      const namespaceKey = this.state.prefixedKey(kind.namespace);
+      const namespaceKey = this._state.prefixedKey(kind.namespace);
 
       // Delete the namespace for the kind.
       multi.del(namespaceKey);
@@ -60,11 +60,11 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       }
     });
 
-    multi.set(this.initedKey, '');
+    multi.set(this._initedKey, '');
 
     multi.exec((err) => {
       if (err) {
-        this.logger?.error(`Error initializing Redis store ${err}`);
+        this._logger?.error(`Error initializing Redis store ${err}`);
       }
       callback();
     });
@@ -75,15 +75,15 @@ export default class RedisCore implements interfaces.PersistentDataStore {
     key: string,
     callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
   ): void {
-    if (!this.state.isConnected() && !this.state.isInitialConnection()) {
-      this.logger?.warn(`Attempted to fetch key '${key}' while Redis connection is down`);
+    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+      this._logger?.warn(`Attempted to fetch key '${key}' while Redis connection is down`);
       callback(undefined);
       return;
     }
 
-    this.state.getClient().hget(this.state.prefixedKey(kind.namespace), key, (err, val) => {
+    this._state.getClient().hget(this._state.prefixedKey(kind.namespace), key, (err, val) => {
       if (err) {
-        this.logger?.error(`Error fetching key '${key}' from Redis in '${kind.namespace}' ${err}`);
+        this._logger?.error(`Error fetching key '${key}' from Redis in '${kind.namespace}' ${err}`);
         callback(undefined);
       } else if (val) {
         // When getting we do not populate version and deleted.
@@ -105,15 +105,15 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined,
     ) => void,
   ): void {
-    if (!this.state.isConnected() && !this.state.isInitialConnection()) {
-      this.logger?.warn('Attempted to fetch all keys while Redis connection is down');
+    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+      this._logger?.warn('Attempted to fetch all keys while Redis connection is down');
       callback(undefined);
       return;
     }
 
-    this.state.getClient().hgetall(this.state.prefixedKey(kind.namespace), (err, values) => {
+    this._state.getClient().hgetall(this._state.prefixedKey(kind.namespace), (err, values) => {
       if (err) {
-        this.logger?.error(`Error fetching '${kind.namespace}' from Redis ${err}`);
+        this._logger?.error(`Error fetching '${kind.namespace}' from Redis ${err}`);
       } else if (values) {
         const results: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] = [];
         Object.keys(values).forEach((key) => {
@@ -140,8 +140,8 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   ): void {
     // The persistent store wrapper manages interactions with a queue, so we can use watch like
     // this without concerns for overlapping transactions.
-    this.state.getClient().watch(this.state.prefixedKey(kind.namespace));
-    const multi = this.state.getClient().multi();
+    this._state.getClient().watch(this._state.prefixedKey(kind.namespace));
+    const multi = this._state.getClient().multi();
 
     this.get(kind, key, (old) => {
       if (old?.serializedItem) {
@@ -163,23 +163,23 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       }
       if (descriptor.deleted) {
         multi.hset(
-          this.state.prefixedKey(kind.namespace),
+          this._state.prefixedKey(kind.namespace),
           key,
           JSON.stringify({ version: descriptor.version, deleted: true }),
         );
       } else if (descriptor.serializedItem) {
-        multi.hset(this.state.prefixedKey(kind.namespace), key, descriptor.serializedItem);
+        multi.hset(this._state.prefixedKey(kind.namespace), key, descriptor.serializedItem);
       } else {
         // This call violates the contract.
         multi.discard();
-        this.logger?.error('Attempt to write a non-deleted item without data to Redis.');
+        this._logger?.error('Attempt to write a non-deleted item without data to Redis.');
         callback(undefined, undefined);
         return;
       }
       multi.exec((err, replies) => {
         if (!err && (replies === null || replies === undefined)) {
           // This means the EXEC failed because someone modified the watched key
-          this.logger?.debug('Concurrent modification detected, retrying');
+          this._logger?.debug('Concurrent modification detected, retrying');
           this.upsert(kind, key, descriptor, callback);
         } else {
           callback(err || undefined, descriptor);
@@ -189,7 +189,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {
-    this.state.getClient().exists(this.initedKey, (err, count) => {
+    this._state.getClient().exists(this._initedKey, (err, count) => {
       // Initialized if there is not an error and the key does exists.
       // (A count >= 1)
       callback(!!(!err && count));
@@ -197,7 +197,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   }
 
   close(): void {
-    this.state.close();
+    this._state.close();
   }
 
   getDescription(): string {

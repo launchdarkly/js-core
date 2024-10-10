@@ -43,29 +43,29 @@ export interface SummarizedFlagsEvent {
  * @internal
  */
 export default class EventSummarizer {
-  private startDate = 0;
+  private _startDate = 0;
 
-  private endDate = 0;
+  private _endDate = 0;
 
-  private counters: Record<string, SummaryCounter> = {};
+  private _counters: Record<string, SummaryCounter> = {};
 
-  private contextKinds: Record<string, Set<string>> = {};
+  private _contextKinds: Record<string, Set<string>> = {};
 
   summarizeEvent(event: InputEvent) {
     if (isFeature(event) && !event.excludeFromSummaries) {
       const countKey = counterKey(event);
-      const counter = this.counters[countKey];
-      let kinds = this.contextKinds[event.key];
+      const counter = this._counters[countKey];
+      let kinds = this._contextKinds[event.key];
       if (!kinds) {
         kinds = new Set();
-        this.contextKinds[event.key] = kinds;
+        this._contextKinds[event.key] = kinds;
       }
       event.context.kinds.forEach((kind) => kinds.add(kind));
 
       if (counter) {
         counter.increment();
       } else {
-        this.counters[countKey] = new SummaryCounter(
+        this._counters[countKey] = new SummaryCounter(
           1,
           event.key,
           event.value,
@@ -75,24 +75,24 @@ export default class EventSummarizer {
         );
       }
 
-      if (this.startDate === 0 || event.creationDate < this.startDate) {
-        this.startDate = event.creationDate;
+      if (this._startDate === 0 || event.creationDate < this._startDate) {
+        this._startDate = event.creationDate;
       }
-      if (event.creationDate > this.endDate) {
-        this.endDate = event.creationDate;
+      if (event.creationDate > this._endDate) {
+        this._endDate = event.creationDate;
       }
     }
   }
 
   getSummary(): SummarizedFlagsEvent {
-    const features = Object.values(this.counters).reduce(
+    const features = Object.values(this._counters).reduce(
       (acc: Record<string, FlagSummary>, counter) => {
         let flagSummary = acc[counter.key];
         if (!flagSummary) {
           flagSummary = {
             default: counter.default,
             counters: [],
-            contextKinds: [...this.contextKinds[counter.key]],
+            contextKinds: [...this._contextKinds[counter.key]],
           };
           acc[counter.key] = flagSummary;
         }
@@ -117,17 +117,17 @@ export default class EventSummarizer {
     );
 
     return {
-      startDate: this.startDate,
-      endDate: this.endDate,
+      startDate: this._startDate,
+      endDate: this._endDate,
       features,
       kind: 'summary',
     };
   }
 
   clearSummary() {
-    this.startDate = 0;
-    this.endDate = 0;
-    this.counters = {};
-    this.contextKinds = {};
+    this._startDate = 0;
+    this._endDate = 0;
+    this._counters = {};
+    this._contextKinds = {};
   }
 }

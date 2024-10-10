@@ -1,18 +1,18 @@
 import { Hasher } from '@launchdarkly/js-client-sdk-common';
 
 export default class BrowserHasher implements Hasher {
-  private data: string[] = [];
-  private algorithm: string;
+  private _data: string[] = [];
+  private _algorithm: string;
   constructor(
-    private readonly webcrypto: Crypto,
+    private readonly _webcrypto: Crypto,
     algorithm: string,
   ) {
     switch (algorithm) {
       case 'sha1':
-        this.algorithm = 'SHA-1';
+        this._algorithm = 'SHA-1';
         break;
       case 'sha256':
-        this.algorithm = 'SHA-256';
+        this._algorithm = 'SHA-256';
         break;
       default:
         throw new Error(`Algorithm is not supported ${algorithm}`);
@@ -20,9 +20,9 @@ export default class BrowserHasher implements Hasher {
   }
 
   async asyncDigest(encoding: string): Promise<string> {
-    const combinedData = this.data.join('');
+    const combinedData = this._data.join('');
     const encoded = new TextEncoder().encode(combinedData);
-    const digestedBuffer = await this.webcrypto.subtle.digest(this.algorithm, encoded);
+    const digestedBuffer = await this._webcrypto.subtle.digest(this._algorithm, encoded);
     switch (encoding) {
       case 'base64':
         return btoa(String.fromCharCode(...new Uint8Array(digestedBuffer)));
@@ -38,7 +38,7 @@ export default class BrowserHasher implements Hasher {
   }
 
   update(data: string): Hasher {
-    this.data.push(data);
+    this._data.push(data);
     return this as Hasher;
   }
 }

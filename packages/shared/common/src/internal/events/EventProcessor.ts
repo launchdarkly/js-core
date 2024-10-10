@@ -105,40 +105,40 @@ export interface EventProcessorOptions {
 }
 
 export default class EventProcessor implements LDEventProcessor {
-  private eventSender: EventSender;
-  private summarizer = new EventSummarizer();
-  private queue: OutputEvent[] = [];
-  private lastKnownPastTime = 0;
-  private droppedEvents = 0;
-  private deduplicatedUsers = 0;
-  private exceededCapacity = false;
-  private eventsInLastBatch = 0;
-  private shutdown = false;
-  private capacity: number;
-  private logger?: LDLogger;
-  private contextFilter: ContextFilter;
+  private _eventSender: EventSender;
+  private _summarizer = new EventSummarizer();
+  private _queue: OutputEvent[] = [];
+  private _lastKnownPastTime = 0;
+  private _droppedEvents = 0;
+  private _deduplicatedUsers = 0;
+  private _exceededCapacity = false;
+  private _eventsInLastBatch = 0;
+  private _shutdown = false;
+  private _capacity: number;
+  private _logger?: LDLogger;
+  private _contextFilter: ContextFilter;
 
   // Using any here, because setInterval handles are not the same
   // between node and web.
-  private diagnosticsTimer: any;
-  private flushTimer: any;
-  private flushUsersTimer: any = null;
+  private _diagnosticsTimer: any;
+  private _flushTimer: any;
+  private _flushUsersTimer: any = null;
 
   constructor(
-    private readonly config: EventProcessorOptions,
+    private readonly _config: EventProcessorOptions,
     clientContext: ClientContext,
     baseHeaders: LDHeaders,
-    private readonly contextDeduplicator?: LDContextDeduplicator,
-    private readonly diagnosticsManager?: DiagnosticsManager,
+    private readonly _contextDeduplicator?: LDContextDeduplicator,
+    private readonly _diagnosticsManager?: DiagnosticsManager,
     start: boolean = true,
   ) {
-    this.capacity = config.eventsCapacity;
-    this.logger = clientContext.basicConfiguration.logger;
-    this.eventSender = new EventSender(clientContext, baseHeaders);
+    this._capacity = _config.eventsCapacity;
+    this._logger = clientContext.basicConfiguration.logger;
+    this._eventSender = new EventSender(clientContext, baseHeaders);
 
-    this.contextFilter = new ContextFilter(
-      config.allAttributesPrivate,
-      config.privateAttributes.map((ref) => new AttributeReference(ref)),
+    this._contextFilter = new ContextFilter(
+      _config.allAttributesPrivate,
+      _config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
     if (start) {
@@ -147,58 +147,58 @@ export default class EventProcessor implements LDEventProcessor {
   }
 
   start() {
-    if (this.contextDeduplicator?.flushInterval !== undefined) {
-      this.flushUsersTimer = setInterval(() => {
-        this.contextDeduplicator?.flush();
-      }, this.contextDeduplicator.flushInterval * 1000);
+    if (this._contextDeduplicator?.flushInterval !== undefined) {
+      this._flushUsersTimer = setInterval(() => {
+        this._contextDeduplicator?.flush();
+      }, this._contextDeduplicator.flushInterval * 1000);
     }
 
-    this.flushTimer = setInterval(async () => {
+    this._flushTimer = setInterval(async () => {
       try {
         await this.flush();
       } catch (e) {
         // Log errors and swallow them
-        this.logger?.debug(`Flush failed: ${e}`);
+        this._logger?.debug(`Flush failed: ${e}`);
       }
-    }, this.config.flushInterval * 1000);
+    }, this._config.flushInterval * 1000);
 
-    if (this.diagnosticsManager) {
-      const initEvent = this.diagnosticsManager!.createInitEvent();
-      this.postDiagnosticEvent(initEvent);
+    if (this._diagnosticsManager) {
+      const initEvent = this._diagnosticsManager!.createInitEvent();
+      this._postDiagnosticEvent(initEvent);
 
-      this.diagnosticsTimer = setInterval(() => {
-        const statsEvent = this.diagnosticsManager!.createStatsEventAndReset(
-          this.droppedEvents,
-          this.deduplicatedUsers,
-          this.eventsInLastBatch,
+      this._diagnosticsTimer = setInterval(() => {
+        const statsEvent = this._diagnosticsManager!.createStatsEventAndReset(
+          this._droppedEvents,
+          this._deduplicatedUsers,
+          this._eventsInLastBatch,
         );
 
-        this.droppedEvents = 0;
-        this.deduplicatedUsers = 0;
+        this._droppedEvents = 0;
+        this._deduplicatedUsers = 0;
 
-        this.postDiagnosticEvent(statsEvent);
-      }, this.config.diagnosticRecordingInterval * 1000);
+        this._postDiagnosticEvent(statsEvent);
+      }, this._config.diagnosticRecordingInterval * 1000);
     }
 
-    this.logger?.debug('Started EventProcessor.');
+    this._logger?.debug('Started EventProcessor.');
   }
 
-  private postDiagnosticEvent(event: DiagnosticEvent) {
-    this.eventSender.sendEventData(LDEventType.DiagnosticEvent, event);
+  private _postDiagnosticEvent(event: DiagnosticEvent) {
+    this._eventSender.sendEventData(LDEventType.DiagnosticEvent, event);
   }
 
   close() {
-    clearInterval(this.flushTimer);
-    if (this.flushUsersTimer) {
-      clearInterval(this.flushUsersTimer);
+    clearInterval(this._flushTimer);
+    if (this._flushUsersTimer) {
+      clearInterval(this._flushUsersTimer);
     }
-    if (this.diagnosticsTimer) {
-      clearInterval(this.diagnosticsTimer);
+    if (this._diagnosticsTimer) {
+      clearInterval(this._diagnosticsTimer);
     }
   }
 
   async flush(): Promise<void> {
-    if (this.shutdown) {
+    if (this._shutdown) {
       throw new LDInvalidSDKKeyError(
         'Events cannot be posted because a permanent error has been encountered. ' +
           'This is most likely an invalid SDK key. The specific error information ' +
@@ -206,10 +206,10 @@ export default class EventProcessor implements LDEventProcessor {
       );
     }
 
-    const eventsToFlush = this.queue;
-    this.queue = [];
-    const summary = this.summarizer.getSummary();
-    this.summarizer.clearSummary();
+    const eventsToFlush = this._queue;
+    this._queue = [];
+    const summary = this._summarizer.getSummary();
+    this._summarizer.clearSummary();
 
     if (Object.keys(summary.features).length) {
       eventsToFlush.push(summary);
@@ -219,13 +219,13 @@ export default class EventProcessor implements LDEventProcessor {
       return;
     }
 
-    this.eventsInLastBatch = eventsToFlush.length;
-    this.logger?.debug('Flushing %d events', eventsToFlush.length);
-    await this.tryPostingEvents(eventsToFlush);
+    this._eventsInLastBatch = eventsToFlush.length;
+    this._logger?.debug('Flushing %d events', eventsToFlush.length);
+    await this._tryPostingEvents(eventsToFlush);
   }
 
   sendEvent(inputEvent: InputEvent) {
-    if (this.shutdown) {
+    if (this._shutdown) {
       return;
     }
 
@@ -240,34 +240,34 @@ export default class EventProcessor implements LDEventProcessor {
         if (migrationEvent.samplingRatio === 1) {
           delete migrationEvent.samplingRatio;
         }
-        this.enqueue(migrationEvent);
+        this._enqueue(migrationEvent);
       }
       return;
     }
 
-    this.summarizer.summarizeEvent(inputEvent);
+    this._summarizer.summarizeEvent(inputEvent);
 
     const isFeatureEvent = isFeature(inputEvent);
 
     const addFullEvent = (isFeatureEvent && inputEvent.trackEvents) || !isFeatureEvent;
 
-    const addDebugEvent = this.shouldDebugEvent(inputEvent);
+    const addDebugEvent = this._shouldDebugEvent(inputEvent);
 
     const isIdentifyEvent = isIdentify(inputEvent);
-    const shouldNotDeduplicate = this.contextDeduplicator?.processContext(inputEvent.context);
+    const shouldNotDeduplicate = this._contextDeduplicator?.processContext(inputEvent.context);
 
     // If there is no cache, then it will never be in the cache.
     if (!shouldNotDeduplicate) {
       if (!isIdentifyEvent) {
-        this.deduplicatedUsers += 1;
+        this._deduplicatedUsers += 1;
       }
     }
 
     const addIndexEvent = shouldNotDeduplicate && !isIdentifyEvent;
 
     if (addIndexEvent) {
-      this.enqueue(
-        this.makeOutputEvent(
+      this._enqueue(
+        this._makeOutputEvent(
           {
             kind: 'index',
             creationDate: inputEvent.creationDate,
@@ -279,20 +279,20 @@ export default class EventProcessor implements LDEventProcessor {
       );
     }
     if (addFullEvent && shouldSample(inputEvent.samplingRatio)) {
-      this.enqueue(this.makeOutputEvent(inputEvent, false));
+      this._enqueue(this._makeOutputEvent(inputEvent, false));
     }
     if (addDebugEvent && shouldSample(inputEvent.samplingRatio)) {
-      this.enqueue(this.makeOutputEvent(inputEvent, true));
+      this._enqueue(this._makeOutputEvent(inputEvent, true));
     }
   }
 
-  private makeOutputEvent(event: InputEvent | IndexInputEvent, debug: boolean): OutputEvent {
+  private _makeOutputEvent(event: InputEvent | IndexInputEvent, debug: boolean): OutputEvent {
     switch (event.kind) {
       case 'feature': {
         const out: FeatureOutputEvent = {
           kind: debug ? 'debug' : 'feature',
           creationDate: event.creationDate,
-          context: this.contextFilter.filter(event.context, !debug),
+          context: this._contextFilter.filter(event.context, !debug),
           key: event.key,
           value: event.value,
           default: event.default,
@@ -319,7 +319,7 @@ export default class EventProcessor implements LDEventProcessor {
         const out: IdentifyOutputEvent = {
           kind: event.kind,
           creationDate: event.creationDate,
-          context: this.contextFilter.filter(event.context),
+          context: this._contextFilter.filter(event.context),
         };
         if (event.samplingRatio !== 1) {
           out.samplingRatio = event.samplingRatio;
@@ -378,38 +378,38 @@ export default class EventProcessor implements LDEventProcessor {
     }
   }
 
-  private enqueue(event: OutputEvent) {
-    if (this.queue.length < this.capacity) {
-      this.queue.push(event);
-      this.exceededCapacity = false;
+  private _enqueue(event: OutputEvent) {
+    if (this._queue.length < this._capacity) {
+      this._queue.push(event);
+      this._exceededCapacity = false;
     } else {
-      if (!this.exceededCapacity) {
-        this.exceededCapacity = true;
-        this.logger?.warn(
+      if (!this._exceededCapacity) {
+        this._exceededCapacity = true;
+        this._logger?.warn(
           'Exceeded event queue capacity. Increase capacity to avoid dropping events.',
         );
       }
-      this.droppedEvents += 1;
+      this._droppedEvents += 1;
     }
   }
 
-  private shouldDebugEvent(event: InputEvent) {
+  private _shouldDebugEvent(event: InputEvent) {
     return (
       isFeature(event) &&
       event.debugEventsUntilDate &&
-      event.debugEventsUntilDate > this.lastKnownPastTime &&
+      event.debugEventsUntilDate > this._lastKnownPastTime &&
       event.debugEventsUntilDate > Date.now()
     );
   }
 
-  private async tryPostingEvents(events: OutputEvent[] | OutputEvent): Promise<void> {
-    const res = await this.eventSender.sendEventData(LDEventType.AnalyticsEvents, events);
+  private async _tryPostingEvents(events: OutputEvent[] | OutputEvent): Promise<void> {
+    const res = await this._eventSender.sendEventData(LDEventType.AnalyticsEvents, events);
     if (res.status === LDDeliveryStatus.FailedAndMustShutDown) {
-      this.shutdown = true;
+      this._shutdown = true;
     }
 
     if (res.serverTime) {
-      this.lastKnownPastTime = res.serverTime;
+      this._lastKnownPastTime = res.serverTime;
     }
 
     if (res.error) {

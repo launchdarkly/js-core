@@ -16,143 +16,143 @@ export interface LruCacheOptions {
  * @internal
  */
 export default class LruCache {
-  private values: any[];
+  private _values: any[];
 
-  private keys: Array<string | undefined>;
+  private _keys: Array<string | undefined>;
 
-  private lastUpdated: number[];
+  private _lastUpdated: number[];
 
-  private next: Uint32Array;
+  private _next: Uint32Array;
 
-  private prev: Uint32Array;
+  private _prev: Uint32Array;
 
-  private keyMap: Map<string, number> = new Map();
+  private _keyMap: Map<string, number> = new Map();
 
-  private head: number = 0;
+  private _head: number = 0;
 
-  private tail: number = 0;
+  private _tail: number = 0;
 
-  private max: number;
+  private _max: number;
 
-  private size: number = 0;
+  private _size: number = 0;
 
-  private maxAge: number;
+  private _maxAge: number;
 
   constructor(options: LruCacheOptions) {
     const { max } = options;
-    this.max = max;
+    this._max = max;
     // This is effectively a struct-of-arrays implementation
     // of a linked list. All the nodes exist statically and then
     // the links between them are changed by updating the previous/next
     // arrays.
-    this.values = new Array(max);
-    this.keys = new Array(max);
-    this.next = new Uint32Array(max);
-    this.prev = new Uint32Array(max);
+    this._values = new Array(max);
+    this._keys = new Array(max);
+    this._next = new Uint32Array(max);
+    this._prev = new Uint32Array(max);
 
     if (options.maxAge) {
-      this.lastUpdated = new Array(max).fill(0);
-      this.maxAge = options.maxAge;
+      this._lastUpdated = new Array(max).fill(0);
+      this._maxAge = options.maxAge;
     } else {
       // To please linting.
-      this.lastUpdated = [];
-      this.maxAge = 0;
+      this._lastUpdated = [];
+      this._maxAge = 0;
     }
   }
 
   set(key: string, val: any) {
-    let index = this.keyMap.get(key);
+    let index = this._keyMap.get(key);
     if (index === undefined) {
-      index = this.index();
-      this.keys[index] = key;
-      this.keyMap.set(key, index);
-      this.next[this.tail] = index;
-      this.prev[index] = this.tail;
-      this.tail = index;
-      this.size += 1;
+      index = this._index();
+      this._keys[index] = key;
+      this._keyMap.set(key, index);
+      this._next[this._tail] = index;
+      this._prev[index] = this._tail;
+      this._tail = index;
+      this._size += 1;
     } else {
-      this.setTail(index);
+      this._setTail(index);
     }
 
-    this.values[index] = val;
-    if (this.maxAge) {
-      this.lastUpdated[index] = Date.now();
+    this._values[index] = val;
+    if (this._maxAge) {
+      this._lastUpdated[index] = Date.now();
     }
   }
 
   get(key: string): any {
-    const index = this.keyMap.get(key);
+    const index = this._keyMap.get(key);
     if (index !== undefined) {
-      if (this.maxAge) {
-        const lastUpdated = this.lastUpdated[index];
-        if (Date.now() - lastUpdated > this.maxAge) {
+      if (this._maxAge) {
+        const lastUpdated = this._lastUpdated[index];
+        if (Date.now() - lastUpdated > this._maxAge) {
           // The oldest items are always the head, so they get incrementally
           // replaced. This would not be the case if we supported per item TTL.
           return undefined;
         }
       }
 
-      this.setTail(index);
-      if (this.maxAge) {
-        this.lastUpdated[index] = Date.now();
+      this._setTail(index);
+      if (this._maxAge) {
+        this._lastUpdated[index] = Date.now();
       }
 
-      return this.values[index];
+      return this._values[index];
     }
     return undefined;
   }
 
   clear() {
-    this.head = 0;
-    this.tail = 0;
-    this.size = 0;
-    this.values.fill(undefined);
-    this.keys.fill(undefined);
-    this.next.fill(0);
-    this.prev.fill(0);
-    this.keyMap.clear();
+    this._head = 0;
+    this._tail = 0;
+    this._size = 0;
+    this._values.fill(undefined);
+    this._keys.fill(undefined);
+    this._next.fill(0);
+    this._prev.fill(0);
+    this._keyMap.clear();
   }
 
-  private index() {
-    if (this.size === 0) {
-      return this.tail;
+  private _index() {
+    if (this._size === 0) {
+      return this._tail;
     }
-    if (this.size === this.max) {
-      return this.evict();
+    if (this._size === this._max) {
+      return this._evict();
     }
     // The initial list is being populated, so we can just continue increasing size.
-    return this.size;
+    return this._size;
   }
 
-  private evict(): number {
-    const { head } = this;
-    const k = this.keys[head];
-    this.head = this.next[head];
-    this.keyMap.delete(k!);
-    this.size -= 1;
+  private _evict(): number {
+    const { _head: head } = this;
+    const k = this._keys[head];
+    this._head = this._next[head];
+    this._keyMap.delete(k!);
+    this._size -= 1;
     return head;
   }
 
-  private link(p: number, n: number) {
-    this.prev[n] = p;
-    this.next[p] = n;
+  private _link(p: number, n: number) {
+    this._prev[n] = p;
+    this._next[p] = n;
   }
 
-  private setTail(index: number) {
+  private _setTail(index: number) {
     // If it is already the tail, then there is nothing to do.
-    if (index !== this.tail) {
+    if (index !== this._tail) {
       // If this is the head, then we change the next item
       // to the head.
-      if (index === this.head) {
-        this.head = this.next[index];
+      if (index === this._head) {
+        this._head = this._next[index];
       } else {
         // Link the previous item to the next item, effectively removing
         // the current node.
-        this.link(this.prev[index], this.next[index]);
+        this._link(this._prev[index], this._next[index]);
       }
       // Connect the current tail to this node.
-      this.link(this.tail, index);
-      this.tail = index;
+      this._link(this._tail, index);
+      this._tail = index;
     }
   }
 }

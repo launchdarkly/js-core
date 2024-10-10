@@ -26,23 +26,23 @@ type UpsertResult = {
 };
 
 class AsyncCoreFacade {
-  constructor(private readonly core: RedisCore) {}
+  constructor(private readonly _core: RedisCore) {}
 
   init(allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>): Promise<void> {
-    return promisify((cb) => this.core.init(allData, cb));
+    return promisify((cb) => this._core.init(allData, cb));
   }
 
   get(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
   ): Promise<interfaces.SerializedItemDescriptor | undefined> {
-    return promisify((cb) => this.core.get(kind, key, cb));
+    return promisify((cb) => this._core.get(kind, key, cb));
   }
 
   getAll(
     kind: interfaces.PersistentStoreDataKind,
   ): Promise<interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined> {
-    return promisify((cb) => this.core.getAll(kind, cb));
+    return promisify((cb) => this._core.getAll(kind, cb));
   }
 
   upsert(
@@ -51,22 +51,22 @@ class AsyncCoreFacade {
     descriptor: interfaces.SerializedItemDescriptor,
   ): Promise<UpsertResult> {
     return new Promise<UpsertResult>((resolve) => {
-      this.core.upsert(kind, key, descriptor, (err, updatedDescriptor) => {
+      this._core.upsert(kind, key, descriptor, (err, updatedDescriptor) => {
         resolve({ err, updatedDescriptor });
       });
     });
   }
 
   initialized(): Promise<boolean> {
-    return promisify((cb) => this.core.initialized(cb));
+    return promisify((cb) => this._core.initialized(cb));
   }
 
   close(): void {
-    this.core.close();
+    this._core.close();
   }
 
   getDescription(): string {
-    return this.core.getDescription();
+    return this._core.getDescription();
   }
 }
 

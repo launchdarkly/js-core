@@ -7,14 +7,14 @@ import { platform } from '@launchdarkly/js-server-sdk-common';
  * @internal
  */
 export default class HeaderWrapper implements platform.Headers {
-  private headers: http.IncomingHttpHeaders;
+  private _headers: http.IncomingHttpHeaders;
 
   constructor(headers: http.IncomingHttpHeaders) {
-    this.headers = headers;
+    this._headers = headers;
   }
 
-  private headerVal(name: string) {
-    const val = this.headers[name];
+  private _headerVal(name: string) {
+    const val = this._headers[name];
     if (val === undefined || val === null) {
       return null;
     }
@@ -25,11 +25,11 @@ export default class HeaderWrapper implements platform.Headers {
   }
 
   get(name: string): string | null {
-    return this.headerVal(name);
+    return this._headerVal(name);
   }
 
   keys(): Iterable<string> {
-    return Object.keys(this.headers);
+    return Object.keys(this._headers);
   }
 
   // We want to use generators here for the simplicity of maintaining
@@ -55,6 +55,6 @@ export default class HeaderWrapper implements platform.Headers {
   }
 
   has(name: string): boolean {
-    return Object.prototype.hasOwnProperty.call(this.headers, name);
+    return Object.prototype.hasOwnProperty.call(this._headers, name);
   }
 }

@@ -8,8 +8,8 @@ export default class CacheableStoreProvider implements EdgeProvider {
   cache: string | null | undefined;
 
   constructor(
-    private readonly edgeProvider: EdgeProvider,
-    private readonly rootKey: string,
+    private readonly _edgeProvider: EdgeProvider,
+    private readonly _rootKey: string,
   ) {}
 
   /**
@@ -19,7 +19,7 @@ export default class CacheableStoreProvider implements EdgeProvider {
    */
   async get(rootKey: string): Promise<string | null | undefined> {
     if (!this.cache) {
-      this.cache = await this.edgeProvider.get(rootKey);
+      this.cache = await this._edgeProvider.get(rootKey);
     }
 
     return this.cache;
@@ -34,6 +34,6 @@ export default class CacheableStoreProvider implements EdgeProvider {
    */
   async prefetchPayloadFromOriginStore(rootKey?: string): Promise<string | null | undefined> {
     this.cache = undefined; // clear the cache so that new data can be fetched from the origin
-    return this.get(rootKey || this.rootKey);
+    return this.get(rootKey || this._rootKey);
   }
 }

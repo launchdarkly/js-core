@@ -19,19 +19,16 @@ export const KEY_USER_INCLUDE = 'big_segment_include';
 export const KEY_USER_EXCLUDE = 'big_segment_exclude';
 
 export default class RedisBigSegmentStore implements interfaces.BigSegmentStore {
-  private state: RedisClientState;
+  private _state: RedisClientState;
 
   // Logger is not currently used, but is included to reduce the chance of a
   // compatibility break to add a log.
-  constructor(
-    options?: LDRedisOptions,
-    private readonly logger?: LDLogger,
-  ) {
-    this.state = new RedisClientState(options);
+  constructor(options?: LDRedisOptions, _logger?: LDLogger) {
+    this._state = new RedisClientState(options);
   }
 
   async getMetadata(): Promise<interfaces.BigSegmentStoreMetadata | undefined> {
-    const value = await this.state.getClient().get(this.state.prefixedKey(KEY_LAST_SYNCHRONIZED));
+    const value = await this._state.getClient().get(this._state.prefixedKey(KEY_LAST_SYNCHRONIZED));
     // Value will be true if it is a string containing any characters, which is fine
     // for this check.
     if (value) {
@@ -43,12 +40,12 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
   async getUserMembership(
     userHash: string,
   ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
-    const includedRefs = await this.state
+    const includedRefs = await this._state
       .getClient()
-      .smembers(this.state.prefixedKey(`${KEY_USER_INCLUDE}:${userHash}`));
-    const excludedRefs = await this.state
+      .smembers(this._state.prefixedKey(`${KEY_USER_INCLUDE}:${userHash}`));
+    const excludedRefs = await this._state
       .getClient()
-      .smembers(this.state.prefixedKey(`${KEY_USER_EXCLUDE}:${userHash}`));
+      .smembers(this._state.prefixedKey(`${KEY_USER_EXCLUDE}:${userHash}`));
 
     // If there are no included/excluded refs, the don't return any membership.
     if ((!includedRefs || !includedRefs.length) && (!excludedRefs || !excludedRefs.length)) {
@@ -68,6 +65,6 @@ export default class RedisBigSegmentStore implements interfaces.BigSegmentStore 
   }
 
   close(): void {
-    this.state.close();
+    this._state.close();
   }
 }

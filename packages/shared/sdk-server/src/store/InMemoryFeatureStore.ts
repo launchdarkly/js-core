@@ -8,15 +8,15 @@ import {
 } from '../api/subsystems';
 
 export default class InMemoryFeatureStore implements LDFeatureStore {
-  private allData: LDFeatureStoreDataStorage = {};
+  private _allData: LDFeatureStoreDataStorage = {};
 
-  private initCalled = false;
+  private _initCalled = false;
 
-  private addItem(kind: DataKind, key: string, item: LDFeatureStoreItem) {
-    let items = this.allData[kind.namespace];
+  private _addItem(kind: DataKind, key: string, item: LDFeatureStoreItem) {
+    let items = this._allData[kind.namespace];
     if (!items) {
       items = {};
-      this.allData[kind.namespace] = items;
+      this._allData[kind.namespace] = items;
     }
     if (Object.hasOwnProperty.call(items, key)) {
       const old = items[key];
@@ -29,7 +29,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   }
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
-    const items = this.allData[kind.namespace];
+    const items = this._allData[kind.namespace];
     if (items) {
       if (Object.prototype.hasOwnProperty.call(items, key)) {
         const item = items[key];
@@ -43,7 +43,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
 
   all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void): void {
     const result: LDFeatureStoreKindData = {};
-    const items = this.allData[kind.namespace] ?? {};
+    const items = this._allData[kind.namespace] ?? {};
     Object.entries(items).forEach(([key, item]) => {
       if (item && !item.deleted) {
         result[key] = item;
@@ -53,24 +53,24 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this.initCalled = true;
-    this.allData = allData as LDFeatureStoreDataStorage;
+    this._initCalled = true;
+    this._allData = allData as LDFeatureStoreDataStorage;
     callback?.();
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
     const deletedItem = { version, deleted: true };
-    this.addItem(kind, key, deletedItem);
+    this._addItem(kind, key, deletedItem);
     callback?.();
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    this.addItem(kind, data.key, data);
+    this._addItem(kind, data.key, data);
     callback?.();
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {
-    return callback?.(this.initCalled);
+    return callback?.(this._initCalled);
   }
 
   /* eslint-disable class-methods-use-this */

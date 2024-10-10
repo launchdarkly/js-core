@@ -97,6 +97,7 @@ const escapes: Record<string, (val: any) => string> = {
   f: (val: any) => toFloat(val),
   j: (val: any) => tryStringify(val),
   o: (val: any) => tryStringify(val),
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   O: (val: any) => tryStringify(val),
   c: () => '',
 };

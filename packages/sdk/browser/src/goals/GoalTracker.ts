@@ -71,7 +71,7 @@ function findGoalsForClick(event: Event, clickGoals: ClickGoal[]) {
  * Tracks the goals on an individual "page" (combination of route, query params, and hash).
  */
 export default class GoalTracker {
-  private cleanup?: () => void;
+  private _cleanup?: () => void;
   constructor(goals: Goal[], onEvent: EventHandler) {
     const goalsMatchingUrl = goals.filter((goal) =>
       goal.urls?.some((matcher) =>
@@ -92,7 +92,7 @@ export default class GoalTracker {
           onEvent(clickGoal);
         });
       };
-      this.cleanup = addDocumentEventListener('click', clickHandler);
+      this._cleanup = addDocumentEventListener('click', clickHandler);
     }
   }
 
@@ -100,6 +100,6 @@ export default class GoalTracker {
    * Close the tracker which stops listening to any events.
    */
   close() {
-    this.cleanup?.();
+    this._cleanup?.();
   }
 }

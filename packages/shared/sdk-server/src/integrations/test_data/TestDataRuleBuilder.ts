@@ -18,15 +18,15 @@ import { variationForBoolean } from './booleanVariation';
  */
 
 export default class TestDataRuleBuilder<BuilderType> {
-  private clauses: Clause[] = [];
+  private _clauses: Clause[] = [];
 
-  private variation?: number;
+  private _variation?: number;
 
   /**
    * @internal
    */
   constructor(
-    private readonly flagBuilder: BuilderType & {
+    private readonly _flagBuilder: BuilderType & {
       addRule: (rule: TestDataRuleBuilder<BuilderType>) => void;
       booleanFlag: () => BuilderType;
     },
@@ -34,10 +34,10 @@ export default class TestDataRuleBuilder<BuilderType> {
     variation?: number,
   ) {
     if (clauses) {
-      this.clauses = [...clauses];
+      this._clauses = [...clauses];
     }
     if (variation !== undefined) {
-      this.variation = variation;
+      this._variation = variation;
     }
   }
 
@@ -62,7 +62,7 @@ export default class TestDataRuleBuilder<BuilderType> {
     attribute: string,
     ...values: any
   ): TestDataRuleBuilder<BuilderType> {
-    this.clauses.push({
+    this._clauses.push({
       contextKind,
       attribute,
       attributeReference: new AttributeReference(attribute),
@@ -94,7 +94,7 @@ export default class TestDataRuleBuilder<BuilderType> {
     attribute: string,
     ...values: any
   ): TestDataRuleBuilder<BuilderType> {
-    this.clauses.push({
+    this._clauses.push({
       contextKind,
       attribute,
       attributeReference: new AttributeReference(attribute),
@@ -121,13 +121,13 @@ export default class TestDataRuleBuilder<BuilderType> {
    */
   thenReturn(variation: number | boolean): BuilderType {
     if (TypeValidators.Boolean.is(variation)) {
-      this.flagBuilder.booleanFlag();
+      this._flagBuilder.booleanFlag();
       return this.thenReturn(variationForBoolean(variation));
     }
 
-    this.variation = variation;
-    this.flagBuilder.addRule(this);
-    return this.flagBuilder;
+    this._variation = variation;
+    this._flagBuilder.addRule(this);
+    return this._flagBuilder;
   }
 
   /**
@@ -136,8 +136,8 @@ export default class TestDataRuleBuilder<BuilderType> {
   build(id: string) {
     return {
       id: `rule${id}`,
-      variation: this.variation,
-      clauses: this.clauses,
+      variation: this._variation,
+      clauses: this._clauses,
     };
   }
 
@@ -145,6 +145,6 @@ export default class TestDataRuleBuilder<BuilderType> {
    * @internal
    */
   clone(): TestDataRuleBuilder<BuilderType> {
-    return new TestDataRuleBuilder<BuilderType>(this.flagBuilder, this.clauses, this.variation);
+    return new TestDataRuleBuilder<BuilderType>(this._flagBuilder, this._clauses, this._variation);
   }
 }

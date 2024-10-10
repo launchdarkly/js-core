@@ -38,12 +38,12 @@ export class FactoryOrInstance implements TypeValidator {
  * Validate a basic type.
  */
 export class Type<T> implements TypeValidator {
-  private typeName: string;
+  private _typeName: string;
 
   protected typeOf: string;
 
   constructor(typeName: string, example: T) {
-    this.typeName = typeName;
+    this._typeName = typeName;
     this.typeOf = typeof example;
   }
 
@@ -55,7 +55,7 @@ export class Type<T> implements TypeValidator {
   }
 
   getType(): string {
-    return this.typeName;
+    return this._typeName;
   }
 }
 
@@ -66,12 +66,12 @@ export class Type<T> implements TypeValidator {
  * of classes will simply objects.
  */
 export class TypeArray<T> implements TypeValidator {
-  private typeName: string;
+  private _typeName: string;
 
   protected typeOf: string;
 
   constructor(typeName: string, example: T) {
-    this.typeName = typeName;
+    this._typeName = typeName;
     this.typeOf = typeof example;
   }
 
@@ -86,7 +86,7 @@ export class TypeArray<T> implements TypeValidator {
   }
 
   getType(): string {
-    return this.typeName;
+    return this._typeName;
   }
 }
 

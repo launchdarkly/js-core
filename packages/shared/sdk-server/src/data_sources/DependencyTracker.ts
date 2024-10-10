@@ -4,27 +4,27 @@ import NamespacedDataSet from './NamespacedDataSet';
  * @internal
  */
 export default class DependencyTracker {
-  private readonly dependenciesFrom = new NamespacedDataSet<NamespacedDataSet<boolean>>();
+  private readonly _dependenciesFrom = new NamespacedDataSet<NamespacedDataSet<boolean>>();
 
-  private readonly dependenciesTo = new NamespacedDataSet<NamespacedDataSet<boolean>>();
+  private readonly _dependenciesTo = new NamespacedDataSet<NamespacedDataSet<boolean>>();
 
   updateDependenciesFrom(
     namespace: string,
     key: string,
     newDependencySet: NamespacedDataSet<boolean>,
   ) {
-    const oldDependencySet = this.dependenciesFrom.get(namespace, key);
+    const oldDependencySet = this._dependenciesFrom.get(namespace, key);
     oldDependencySet?.enumerate((depNs, depKey) => {
-      const depsToThisDep = this.dependenciesTo.get(depNs, depKey);
+      const depsToThisDep = this._dependenciesTo.get(depNs, depKey);
       depsToThisDep?.remove(namespace, key);
     });
 
-    this.dependenciesFrom.set(namespace, key, newDependencySet);
+    this._dependenciesFrom.set(namespace, key, newDependencySet);
     newDependencySet?.enumerate((depNs, depKey) => {
-      let depsToThisDep = this.dependenciesTo.get(depNs, depKey);
+      let depsToThisDep = this._dependenciesTo.get(depNs, depKey);
       if (!depsToThisDep) {
         depsToThisDep = new NamespacedDataSet();
-        this.dependenciesTo.set(depNs, depKey, depsToThisDep);
+        this._dependenciesTo.set(depNs, depKey, depsToThisDep);
       }
       depsToThisDep.set(namespace, key, true);
     });
@@ -37,7 +37,7 @@ export default class DependencyTracker {
   ) {
     if (!inDependencySet.get(modifiedNamespace, modifiedKey)) {
       inDependencySet.set(modifiedNamespace, modifiedKey, true);
-      const affectedItems = this.dependenciesTo.get(modifiedNamespace, modifiedKey);
+      const affectedItems = this._dependenciesTo.get(modifiedNamespace, modifiedKey);
       affectedItems?.enumerate((namespace, key) => {
         this.updateModifiedItems(inDependencySet, namespace, key);
       });
@@ -45,7 +45,7 @@ export default class DependencyTracker {
   }
 
   reset() {
-    this.dependenciesFrom.removeAll();
-    this.dependenciesTo.removeAll();
+    this._dependenciesFrom.removeAll();
+    this._dependenciesTo.removeAll();
   }
 }

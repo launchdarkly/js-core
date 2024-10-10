@@ -8,13 +8,13 @@ import DataSourceStatusManager from './DataSourceStatusManager';
 
 export default class DataSourceEventHandler {
   constructor(
-    private readonly flagManager: FlagManager,
-    private readonly statusManager: DataSourceStatusManager,
-    private readonly logger: LDLogger,
+    private readonly _flagManager: FlagManager,
+    private readonly _statusManager: DataSourceStatusManager,
+    private readonly _logger: LDLogger,
   ) {}
 
   async handlePut(context: Context, flags: Flags) {
-    this.logger.debug(`Got PUT: ${Object.keys(flags)}`);
+    this._logger.debug(`Got PUT: ${Object.keys(flags)}`);
 
     // mapping flags to item descriptors
     const descriptors = Object.entries(flags).reduce(
@@ -24,22 +24,22 @@ export default class DataSourceEventHandler {
       },
       {},
     );
-    await this.flagManager.init(context, descriptors);
-    this.statusManager.requestStateUpdate(DataSourceState.Valid);
+    await this._flagManager.init(context, descriptors);
+    this._statusManager.requestStateUpdate(DataSourceState.Valid);
   }
 
   async handlePatch(context: Context, patchFlag: PatchFlag) {
-    this.logger.debug(`Got PATCH ${JSON.stringify(patchFlag, null, 2)}`);
-    this.flagManager.upsert(context, patchFlag.key, {
+    this._logger.debug(`Got PATCH ${JSON.stringify(patchFlag, null, 2)}`);
+    this._flagManager.upsert(context, patchFlag.key, {
       version: patchFlag.version,
       flag: patchFlag,
     });
   }
 
   async handleDelete(context: Context, deleteFlag: DeleteFlag) {
-    this.logger.debug(`Got DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
+    this._logger.debug(`Got DELETE ${JSON.stringify(deleteFlag, null, 2)}`);
 
-    this.flagManager.upsert(context, deleteFlag.key, {
+    this._flagManager.upsert(context, deleteFlag.key, {
       version: deleteFlag.version,
       flag: {
         ...deleteFlag,
@@ -55,10 +55,10 @@ export default class DataSourceEventHandler {
   }
 
   handleStreamingError(error: LDStreamingError) {
-    this.statusManager.reportError(error.kind, error.message, error.code, error.recoverable);
+    this._statusManager.reportError(error.kind, error.message, error.code, error.recoverable);
   }
 
   handlePollingError(error: LDPollingError) {
-    this.statusManager.reportError(error.kind, error.message, error.status, error.recoverable);
+    this._statusManager.reportError(error.kind, error.message, error.status, error.recoverable);
   }
 }

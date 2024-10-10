@@ -9,30 +9,30 @@ import AsyncStoreFacade from '../../store/AsyncStoreFacade';
  * @internal
  */
 export default class TestDataSource implements subsystem.LDStreamProcessor {
-  private readonly flags: Record<string, Flag>;
-  private readonly segments: Record<string, Segment>;
+  private readonly _flags: Record<string, Flag>;
+  private readonly _segments: Record<string, Segment>;
   constructor(
-    private readonly featureStore: AsyncStoreFacade,
+    private readonly _featureStore: AsyncStoreFacade,
     initialFlags: Record<string, Flag>,
     initialSegments: Record<string, Segment>,
-    private readonly onStop: (tfs: TestDataSource) => void,
-    private readonly listeners: Map<EventName, ProcessStreamResponse>,
+    private readonly _onStop: (tfs: TestDataSource) => void,
+    private readonly _listeners: Map<EventName, ProcessStreamResponse>,
   ) {
     // make copies of these objects to decouple them from the originals
     // so updates made to the originals don't affect these internal data.
-    this.flags = { ...initialFlags };
-    this.segments = { ...initialSegments };
+    this._flags = { ...initialFlags };
+    this._segments = { ...initialSegments };
   }
 
   async start() {
-    this.listeners.forEach(({ processJson }) => {
-      const dataJson = { data: { flags: this.flags, segments: this.segments } };
+    this._listeners.forEach(({ processJson }) => {
+      const dataJson = { data: { flags: this._flags, segments: this._segments } };
       processJson(dataJson);
     });
   }
 
   stop() {
-    this.onStop(this);
+    this._onStop(this);
   }
 
   close() {
@@ -40,6 +40,6 @@ export default class TestDataSource implements subsystem.LDStreamProcessor {
   }
 
   async upsert(kind: DataKind, value: LDKeyedFeatureStoreItem) {
-    return this.featureStore.upsert(kind, value);
+    return this._featureStore.upsert(kind, value);
   }
 }

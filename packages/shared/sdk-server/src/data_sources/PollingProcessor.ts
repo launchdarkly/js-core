@@ -20,34 +20,34 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
  * @internal
  */
 export default class PollingProcessor implements subsystem.LDStreamProcessor {
-  private stopped = false;
+  private _stopped = false;
 
-  private logger?: LDLogger;
+  private _logger?: LDLogger;
 
-  private pollInterval: number;
+  private _pollInterval: number;
 
-  private timeoutHandle: any;
+  private _timeoutHandle: any;
 
   constructor(
     config: Configuration,
-    private readonly requestor: Requestor,
-    private readonly featureStore: LDDataSourceUpdates,
-    private readonly initSuccessHandler: VoidFunction = () => {},
-    private readonly errorHandler?: PollingErrorHandler,
+    private readonly _requestor: Requestor,
+    private readonly _featureStore: LDDataSourceUpdates,
+    private readonly _initSuccessHandler: VoidFunction = () => {},
+    private readonly _errorHandler?: PollingErrorHandler,
   ) {
-    this.logger = config.logger;
-    this.pollInterval = config.pollInterval;
+    this._logger = config.logger;
+    this._pollInterval = config.pollInterval;
   }
 
-  private poll() {
-    if (this.stopped) {
+  private _poll() {
+    if (this._stopped) {
       return;
     }
 
     const reportJsonError = (data: string) => {
-      this.logger?.error('Polling received invalid data');
-      this.logger?.debug(`Invalid JSON follows: ${data}`);
-      this.errorHandler?.(
+      this._logger?.error('Polling received invalid data');
+      this._logger?.debug(`Invalid JSON follows: ${data}`);
+      this._errorHandler?.(
         new LDPollingError(
           DataSourceErrorKind.InvalidData,
           'Malformed JSON data in polling response',
@@ -56,25 +56,25 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     };
 
     const startTime = Date.now();
-    this.logger?.debug('Polling LaunchDarkly for feature flag updates');
-    this.requestor.requestAllData((err, body) => {
+    this._logger?.debug('Polling LaunchDarkly for feature flag updates');
+    this._requestor.requestAllData((err, body) => {
       const elapsed = Date.now() - startTime;
-      const sleepFor = Math.max(this.pollInterval * 1000 - elapsed, 0);
+      const sleepFor = Math.max(this._pollInterval * 1000 - elapsed, 0);
 
-      this.logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
+      this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
       if (err) {
         const { status } = err;
         if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
-          this.logger?.error(message);
-          this.errorHandler?.(
+          this._logger?.error(message);
+          this._errorHandler?.(
             new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
           );
           // It is not recoverable, return and do not trigger another
           // poll.
           return;
         }
-        this.logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
+        this._logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
       } else if (body) {
         const parsed = deserializePoll(body);
         if (!parsed) {
@@ -86,11 +86,11 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
             [VersionedDataKinds.Features.namespace]: parsed.flags,
             [VersionedDataKinds.Segments.namespace]: parsed.segments,
           };
-          this.featureStore.init(initData, () => {
-            this.initSuccessHandler();
+          this._featureStore.init(initData, () => {
+            this._initSuccessHandler();
             // Triggering the next poll after the init has completed.
-            this.timeoutHandle = setTimeout(() => {
-              this.poll();
+            this._timeoutHandle = setTimeout(() => {
+              this._poll();
             }, sleepFor);
           });
           // The poll will be triggered by  the feature store initialization
@@ -101,22 +101,22 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
 
       // Falling through, there was some type of error and we need to trigger
       // a new poll.
-      this.timeoutHandle = setTimeout(() => {
-        this.poll();
+      this._timeoutHandle = setTimeout(() => {
+        this._poll();
       }, sleepFor);
     });
   }
 
   start() {
-    this.poll();
+    this._poll();
   }
 
   stop() {
-    if (this.timeoutHandle) {
-      clearTimeout(this.timeoutHandle);
-      this.timeoutHandle = undefined;
+    if (this._timeoutHandle) {
+      clearTimeout(this._timeoutHandle);
+      this._timeoutHandle = undefined;
     }
-    this.stopped = true;
+    this._stopped = true;
   }
 
   close() {

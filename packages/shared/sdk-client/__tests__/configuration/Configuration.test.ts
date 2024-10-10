@@ -23,9 +23,9 @@ describe('Configuration', () => {
       eventsUri: 'https://events.launchdarkly.com',
       flushInterval: 30,
       logger: {
-        destination: console.error,
-        logLevel: 1,
-        name: 'LaunchDarkly',
+        _destination: console.error,
+        _logLevel: 1,
+        _name: 'LaunchDarkly',
       },
       maxCachedContexts: 5,
       privateAttributes: [],
