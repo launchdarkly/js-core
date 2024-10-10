@@ -21,6 +21,15 @@ const getSharedConfig = (format, file) => ({
   },
 });
 
+const terserOpts = {
+  mangle: {
+    properties: {
+      regex: /^_/,
+      reserved: ['_meta']
+    },
+  }
+};
+
 export default [
   {
     ...getSharedConfig('es', 'dist/index.es.js'),
@@ -33,13 +42,7 @@ export default [
         esmExternals: true,
       }),
       resolve(),
-      terser({
-        mangle: {
-          properties: {
-            regex: /^_/,
-          },
-        },
-      }),
+      terser(terserOpts),
       json(),
       // The 'sourcemap' option allows using the minified size, not the size before minification.
       visualizer({ sourcemap: true }),
@@ -51,13 +54,7 @@ export default [
       typescript(),
       common(),
       resolve(),
-      terser({
-        mangle: {
-          properties: {
-            regex: /^_/,
-          },
-        },
-      }),
+      terser(terserOpts),
       json(),
     ],
   },
