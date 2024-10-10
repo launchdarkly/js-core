@@ -17,14 +17,14 @@ function valueForBucketing(value: any): string | null {
 }
 
 export default class Bucketer {
-  private crypto: Crypto;
+  private _crypto: Crypto;
 
   constructor(crypto: Crypto) {
-    this.crypto = crypto;
+    this._crypto = crypto;
   }
 
-  private sha1Hex(value: string) {
-    const hash = this.crypto.createHash('sha1');
+  private _sha1Hex(value: string) {
+    const hash = this._crypto.createHash('sha1');
     hash.update(value);
     if (!hash.digest) {
       // This represents an error in platform implementation.
@@ -69,7 +69,7 @@ export default class Bucketer {
 
     const prefix = seed ? Number(seed) : `${key}.${salt}`;
     const hashKey = `${prefix}.${bucketableValue}`;
-    const hashVal = parseInt(this.sha1Hex(hashKey).substring(0, 15), 16);
+    const hashVal = parseInt(this._sha1Hex(hashKey).substring(0, 15), 16);
 
     // This is how this has worked in previous implementations, but it is not
     // ideal.

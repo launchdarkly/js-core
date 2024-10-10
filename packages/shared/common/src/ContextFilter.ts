@@ -94,14 +94,14 @@ function cloneWithRedactions(target: LDContextCommon, references: AttributeRefer
 
 export default class ContextFilter {
   constructor(
-    private readonly allAttributesPrivate: boolean,
-    private readonly privateAttributes: AttributeReference[],
+    private readonly _allAttributesPrivate: boolean,
+    private readonly _privateAttributes: AttributeReference[],
   ) {}
 
   filter(context: Context, redactAnonymousAttributes: boolean = false): any {
     const contexts = context.getContexts();
     if (contexts.length === 1) {
-      return this.filterSingleKind(
+      return this._filterSingleKind(
         context,
         contexts[0][1],
         contexts[0][0],
@@ -112,12 +112,17 @@ export default class ContextFilter {
       kind: 'multi',
     };
     contexts.forEach(([kind, single]) => {
-      filteredMulti[kind] = this.filterSingleKind(context, single, kind, redactAnonymousAttributes);
+      filteredMulti[kind] = this._filterSingleKind(
+        context,
+        single,
+        kind,
+        redactAnonymousAttributes,
+      );
     });
     return filteredMulti;
   }
 
-  private getAttributesToFilter(
+  private _getAttributesToFilter(
     context: Context,
     single: LDContextCommon,
     kind: string,
@@ -126,21 +131,21 @@ export default class ContextFilter {
     return (
       redactAllAttributes
         ? Object.keys(single).map((k) => new AttributeReference(k, true))
-        : [...this.privateAttributes, ...context.privateAttributes(kind)]
+        : [...this._privateAttributes, ...context.privateAttributes(kind)]
     ).filter((attr) => !protectedAttributes.some((protectedAttr) => protectedAttr.compare(attr)));
   }
 
-  private filterSingleKind(
+  private _filterSingleKind(
     context: Context,
     single: LDContextCommon,
     kind: string,
     redactAnonymousAttributes: boolean,
   ): any {
     const redactAllAttributes =
-      this.allAttributesPrivate || (redactAnonymousAttributes && single.anonymous === true);
+      this._allAttributesPrivate || (redactAnonymousAttributes && single.anonymous === true);
     const { cloned, excluded } = cloneWithRedactions(
       single,
-      this.getAttributesToFilter(context, single, kind, redactAllAttributes),
+      this._getAttributesToFilter(context, single, kind, redactAllAttributes),
     );
 
     if (context.legacy) {

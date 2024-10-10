@@ -8,25 +8,25 @@ import DataSourceStatusErrorInfo from './DataSourceStatusErrorInfo';
  * Tracks the current data source status and emits updates when the status changes.
  */
 export default class DataSourceStatusManager {
-  private state: DataSourceState;
-  private stateSinceMillis: number; // UNIX epoch timestamp in milliseconds
-  private errorInfo?: DataSourceStatusErrorInfo;
-  private timeStamper: () => number;
+  private _state: DataSourceState;
+  private _stateSinceMillis: number; // UNIX epoch timestamp in milliseconds
+  private _errorInfo?: DataSourceStatusErrorInfo;
+  private _timeStamper: () => number;
 
   constructor(
-    private readonly emitter: LDEmitter,
+    private readonly _emitter: LDEmitter,
     timeStamper: () => number = () => Date.now(),
   ) {
-    this.state = DataSourceState.Closed;
-    this.stateSinceMillis = timeStamper();
-    this.timeStamper = timeStamper;
+    this._state = DataSourceState.Closed;
+    this._stateSinceMillis = timeStamper();
+    this._timeStamper = timeStamper;
   }
 
   get status(): DataSourceStatus {
     return {
-      state: this.state,
-      stateSince: this.stateSinceMillis,
-      lastError: this.errorInfo,
+      state: this._state,
+      stateSince: this._stateSinceMillis,
+      lastError: this._errorInfo,
     };
   }
 
@@ -36,20 +36,20 @@ export default class DataSourceStatusManager {
    * @param requestedState to track
    * @param isError to indicate that the state update is a result of an error occurring.
    */
-  private updateState(requestedState: DataSourceState, isError = false) {
+  private _updateState(requestedState: DataSourceState, isError = false) {
     const newState =
-      requestedState === DataSourceState.Interrupted && this.state === DataSourceState.Initializing // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
+      requestedState === DataSourceState.Interrupted && this._state === DataSourceState.Initializing // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
         ? DataSourceState.Initializing
         : requestedState;
 
-    const changedState = this.state !== newState;
+    const changedState = this._state !== newState;
     if (changedState) {
-      this.state = newState;
-      this.stateSinceMillis = this.timeStamper();
+      this._state = newState;
+      this._stateSinceMillis = this._timeStamper();
     }
 
     if (changedState || isError) {
-      this.emitter.emit('dataSourceStatus', this.status);
+      this._emitter.emit('dataSourceStatus', this.status);
     }
   }
 
@@ -59,7 +59,7 @@ export default class DataSourceStatusManager {
    * @param state that is requested
    */
   requestStateUpdate(state: DataSourceState) {
-    this.updateState(state);
+    this._updateState(state);
   }
 
   /**
@@ -82,10 +82,10 @@ export default class DataSourceStatusManager {
       kind,
       message,
       statusCode,
-      time: this.timeStamper(),
+      time: this._timeStamper(),
     };
-    this.errorInfo = errorInfo;
-    this.updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Closed, true);
+    this._errorInfo = errorInfo;
+    this._updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Closed, true);
   }
 
   // TODO: SDK-702 - Implement network availability behaviors

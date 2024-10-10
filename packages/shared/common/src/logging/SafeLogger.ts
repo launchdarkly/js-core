@@ -19,9 +19,9 @@ const loggerRequirements = {
  * checking for the presence of required methods at configuration time.
  */
 export default class SafeLogger implements LDLogger {
-  private logger: LDLogger;
+  private _logger: LDLogger;
 
-  private fallback: LDLogger;
+  private _fallback: LDLogger;
 
   /**
    * Construct a safe logger with the specified logger.
@@ -39,32 +39,32 @@ export default class SafeLogger implements LDLogger {
         // criteria since the SDK calls the logger during nearly all of its operations.
       }
     });
-    this.logger = logger;
-    this.fallback = fallback;
+    this._logger = logger;
+    this._fallback = fallback;
   }
 
-  private log(level: 'error' | 'warn' | 'info' | 'debug', args: any[]) {
+  private _log(level: 'error' | 'warn' | 'info' | 'debug', args: any[]) {
     try {
-      this.logger[level](...args);
+      this._logger[level](...args);
     } catch {
       // If all else fails do not break.
-      this.fallback[level](...args);
+      this._fallback[level](...args);
     }
   }
 
   error(...args: any[]): void {
-    this.log('error', args);
+    this._log('error', args);
   }
 
   warn(...args: any[]): void {
-    this.log('warn', args);
+    this._log('warn', args);
   }
 
   info(...args: any[]): void {
-    this.log('info', args);
+    this._log('info', args);
   }
 
   debug(...args: any[]): void {
-    this.log('debug', args);
+    this._log('debug', args);
   }
 }

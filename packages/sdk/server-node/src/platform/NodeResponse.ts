@@ -57,7 +57,7 @@ export default class NodeResponse implements platform.Response {
     });
   }
 
-  private async wrappedWait(): Promise<string> {
+  private async _wrappedWait(): Promise<string> {
     this.listened = true;
     if (this.rejection) {
       throw this.rejection;
@@ -66,11 +66,11 @@ export default class NodeResponse implements platform.Response {
   }
 
   text(): Promise<string> {
-    return this.wrappedWait();
+    return this._wrappedWait();
   }
 
   async json(): Promise<any> {
-    const stringValue = await this.wrappedWait();
+    const stringValue = await this._wrappedWait();
     return JSON.parse(stringValue);
   }
 }

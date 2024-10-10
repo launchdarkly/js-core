@@ -25,15 +25,15 @@ const flag = {
 };
 
 class TestHasher implements Hasher {
-  private value: string = 'is_hashed:';
+  private _value: string = 'is_hashed:';
 
   update(toAdd: string): Hasher {
-    this.value += toAdd;
+    this._value += toAdd;
     return this;
   }
 
   digest() {
-    return this.value;
+    return this._value;
   }
 }
 

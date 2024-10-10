@@ -30,52 +30,52 @@ const reportJsonError = (
 
 // TODO: SDK-156 - Move to Server SDK specific location
 class StreamingProcessor implements LDStreamProcessor {
-  private readonly headers: { [key: string]: string | string[] };
-  private readonly streamUri: string;
-  private readonly logger?: LDLogger;
+  private readonly _headers: { [key: string]: string | string[] };
+  private readonly _streamUri: string;
+  private readonly _logger?: LDLogger;
 
-  private eventSource?: EventSource;
-  private requests: Requests;
-  private connectionAttemptStartTime?: number;
+  private _eventSource?: EventSource;
+  private _requests: Requests;
+  private _connectionAttemptStartTime?: number;
 
   constructor(
     clientContext: ClientContext,
     streamUriPath: string,
     parameters: { key: string; value: string }[],
-    private readonly listeners: Map<EventName, ProcessStreamResponse>,
+    private readonly _listeners: Map<EventName, ProcessStreamResponse>,
     baseHeaders: LDHeaders,
-    private readonly diagnosticsManager?: DiagnosticsManager,
-    private readonly errorHandler?: StreamingErrorHandler,
-    private readonly streamInitialReconnectDelay = 1,
+    private readonly _diagnosticsManager?: DiagnosticsManager,
+    private readonly _errorHandler?: StreamingErrorHandler,
+    private readonly _streamInitialReconnectDelay = 1,
   ) {
     const { basicConfiguration, platform } = clientContext;
     const { logger } = basicConfiguration;
     const { requests } = platform;
 
-    this.headers = { ...baseHeaders };
-    this.logger = logger;
-    this.requests = requests;
-    this.streamUri = getStreamingUri(
+    this._headers = { ...baseHeaders };
+    this._logger = logger;
+    this._requests = requests;
+    this._streamUri = getStreamingUri(
       basicConfiguration.serviceEndpoints,
       streamUriPath,
       parameters,
     );
   }
 
-  private logConnectionStarted() {
-    this.connectionAttemptStartTime = Date.now();
+  private _logConnectionStarted() {
+    this._connectionAttemptStartTime = Date.now();
   }
 
-  private logConnectionResult(success: boolean) {
-    if (this.connectionAttemptStartTime && this.diagnosticsManager) {
-      this.diagnosticsManager.recordStreamInit(
-        this.connectionAttemptStartTime,
+  private _logConnectionResult(success: boolean) {
+    if (this._connectionAttemptStartTime && this._diagnosticsManager) {
+      this._diagnosticsManager.recordStreamInit(
+        this._connectionAttemptStartTime,
         !success,
-        Date.now() - this.connectionAttemptStartTime,
+        Date.now() - this._connectionAttemptStartTime,
       );
     }
 
-    this.connectionAttemptStartTime = undefined;
+    this._connectionAttemptStartTime = undefined;
   }
 
   /**
@@ -87,37 +87,37 @@ class StreamingProcessor implements LDStreamProcessor {
    *
    * @private
    */
-  private retryAndHandleError(err: HttpErrorResponse) {
+  private _retryAndHandleError(err: HttpErrorResponse) {
     if (!shouldRetry(err)) {
-      this.logConnectionResult(false);
-      this.errorHandler?.(
+      this._logConnectionResult(false);
+      this._errorHandler?.(
         new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
       );
-      this.logger?.error(httpErrorMessage(err, 'streaming request'));
+      this._logger?.error(httpErrorMessage(err, 'streaming request'));
       return false;
     }
 
-    this.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
-    this.logConnectionResult(false);
-    this.logConnectionStarted();
+    this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
+    this._logConnectionResult(false);
+    this._logConnectionStarted();
     return true;
   }
 
   start() {
-    this.logConnectionStarted();
+    this._logConnectionStarted();
 
     // TLS is handled by the platform implementation.
-    const eventSource = this.requests.createEventSource(this.streamUri, {
-      headers: this.headers,
-      errorFilter: (error: HttpErrorResponse) => this.retryAndHandleError(error),
-      initialRetryDelayMillis: 1000 * this.streamInitialReconnectDelay,
+    const eventSource = this._requests.createEventSource(this._streamUri, {
+      headers: this._headers,
+      errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error),
+      initialRetryDelayMillis: 1000 * this._streamInitialReconnectDelay,
       readTimeoutMillis: 5 * 60 * 1000,
       retryResetIntervalMillis: 60 * 1000,
     });
-    this.eventSource = eventSource;
+    this._eventSource = eventSource;
 
     eventSource.onclose = () => {
-      this.logger?.info('Closed LaunchDarkly stream connection');
+      this._logger?.info('Closed LaunchDarkly stream connection');
     };
 
     eventSource.onerror = () => {
@@ -125,29 +125,29 @@ class StreamingProcessor implements LDStreamProcessor {
     };
 
     eventSource.onopen = () => {
-      this.logger?.info('Opened LaunchDarkly stream connection');
+      this._logger?.info('Opened LaunchDarkly stream connection');
     };
 
     eventSource.onretrying = (e) => {
-      this.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
+      this._logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
     };
 
-    this.listeners.forEach(({ deserializeData, processJson }, eventName) => {
+    this._listeners.forEach(({ deserializeData, processJson }, eventName) => {
       eventSource.addEventListener(eventName, (event) => {
-        this.logger?.debug(`Received ${eventName} event`);
+        this._logger?.debug(`Received ${eventName} event`);
 
         if (event?.data) {
-          this.logConnectionResult(true);
+          this._logConnectionResult(true);
           const { data } = event;
           const dataJson = deserializeData(data);
 
           if (!dataJson) {
-            reportJsonError(eventName, data, this.logger, this.errorHandler);
+            reportJsonError(eventName, data, this._logger, this._errorHandler);
             return;
           }
           processJson(dataJson);
         } else {
-          this.errorHandler?.(
+          this._errorHandler?.(
             new LDStreamingError(
               DataSourceErrorKind.Unknown,
               'Unexpected payload from event stream',
@@ -159,8 +159,8 @@ class StreamingProcessor implements LDStreamProcessor {
   }
 
   stop() {
-    this.eventSource?.close();
-    this.eventSource = undefined;
+    this._eventSource?.close();
+    this._eventSource = undefined;
   }
 
   close() {

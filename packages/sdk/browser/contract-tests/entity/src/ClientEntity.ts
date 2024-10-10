@@ -75,17 +75,17 @@ function makeDefaultInitialContext() {
 
 export class ClientEntity {
   constructor(
-    private readonly client: LDClient,
-    private readonly logger: LDLogger,
+    private readonly _client: LDClient,
+    private readonly _logger: LDLogger,
   ) {}
 
   close() {
-    this.client.close();
-    this.logger.info('Test ended');
+    this._client.close();
+    this._logger.info('Test ended');
   }
 
   async doCommand(params: CommandParams) {
-    this.logger.info(`Received command: ${params.command}`);
+    this._logger.info(`Received command: ${params.command}`);
     switch (params.command) {
       case CommandType.EvaluateFlag: {
         const evaluationParams = params.evaluate;
@@ -95,23 +95,23 @@ export class ClientEntity {
         if (evaluationParams.detail) {
           switch (evaluationParams.valueType) {
             case ValueType.Bool:
-              return this.client.boolVariationDetail(
+              return this._client.boolVariationDetail(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as boolean,
               );
             case ValueType.Int: // Intentional fallthrough.
             case ValueType.Double:
-              return this.client.numberVariationDetail(
+              return this._client.numberVariationDetail(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as number,
               );
             case ValueType.String:
-              return this.client.stringVariationDetail(
+              return this._client.stringVariationDetail(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as string,
               );
             default:
-              return this.client.variationDetail(
+              return this._client.variationDetail(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue,
               );
@@ -120,7 +120,7 @@ export class ClientEntity {
         switch (evaluationParams.valueType) {
           case ValueType.Bool:
             return {
-              value: this.client.boolVariation(
+              value: this._client.boolVariation(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as boolean,
               ),
@@ -128,34 +128,37 @@ export class ClientEntity {
           case ValueType.Int: // Intentional fallthrough.
           case ValueType.Double:
             return {
-              value: this.client.numberVariation(
+              value: this._client.numberVariation(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as number,
               ),
             };
           case ValueType.String:
             return {
-              value: this.client.stringVariation(
+              value: this._client.stringVariation(
                 evaluationParams.flagKey,
                 evaluationParams.defaultValue as string,
               ),
             };
           default:
             return {
-              value: this.client.variation(evaluationParams.flagKey, evaluationParams.defaultValue),
+              value: this._client.variation(
+                evaluationParams.flagKey,
+                evaluationParams.defaultValue,
+              ),
             };
         }
       }
 
       case CommandType.EvaluateAllFlags:
-        return { state: this.client.allFlags() };
+        return { state: this._client.allFlags() };
 
       case CommandType.IdentifyEvent: {
         const identifyParams = params.identifyEvent;
         if (!identifyParams) {
           throw malformedCommand;
         }
-        await this.client.identify(identifyParams.user || identifyParams.context);
+        await this._client.identify(identifyParams.user || identifyParams.context);
         return undefined;
       }
 
@@ -164,7 +167,7 @@ export class ClientEntity {
         if (!customEventParams) {
           throw malformedCommand;
         }
-        this.client.track(
+        this._client.track(
           customEventParams.eventKey,
           customEventParams.data,
           customEventParams.metricValue,
@@ -173,7 +176,7 @@ export class ClientEntity {
       }
 
       case CommandType.FlushEvents:
-        this.client.flush();
+        this._client.flush();
         return undefined;
 
       default:

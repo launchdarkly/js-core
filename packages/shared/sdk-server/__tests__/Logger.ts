@@ -18,7 +18,7 @@ function replacer(key: string, value: any) {
 }
 
 export default class TestLogger implements LDLogger {
-  private readonly messages: Record<LDLogLevel, string[]> = {
+  private readonly _messages: Record<LDLogLevel, string[]> = {
     debug: [],
     info: [],
     warn: [],
@@ -27,13 +27,13 @@ export default class TestLogger implements LDLogger {
     none: [],
   };
 
-  private callCount = 0;
+  private _callCount = 0;
 
-  private waiters: Array<() => void> = [];
+  private _waiters: Array<() => void> = [];
 
   timeout(timeoutMs: number): Promise<number> {
     return new Promise<number>((resolve) => {
-      setTimeout(() => resolve(this.callCount), timeoutMs);
+      setTimeout(() => resolve(this._callCount), timeoutMs);
     });
   }
 
@@ -41,12 +41,12 @@ export default class TestLogger implements LDLogger {
     return Promise.race([
       new Promise<number>((resolve) => {
         const waiter = () => {
-          if (this.callCount >= count) {
-            resolve(this.callCount);
+          if (this._callCount >= count) {
+            resolve(this._callCount);
           }
         };
         waiter();
-        this.waiters.push(waiter);
+        this._waiters.push(waiter);
       }),
       this.timeout(timeoutMs),
     ]);
@@ -69,7 +69,7 @@ export default class TestLogger implements LDLogger {
     };
 
     expectedMessages.forEach((expectedMessage) => {
-      const received = this.messages[expectedMessage.level];
+      const received = this._messages[expectedMessage.level];
       const index = received.findIndex((receivedMessage) =>
         receivedMessage.match(expectedMessage.matches),
       );
@@ -78,14 +78,14 @@ export default class TestLogger implements LDLogger {
           `Did not find expected message: ${JSON.stringify(
             expectedMessage,
             replacer,
-          )} received: ${JSON.stringify(this.messages)}`,
+          )} received: ${JSON.stringify(this._messages)}`,
         );
       } else if (matched[expectedMessage.level].indexOf(index) >= 0) {
         throw new Error(
           `Did not find expected message: ${JSON.stringify(
             expectedMessage,
             replacer,
-          )} received: ${JSON.stringify(this.messages)}`,
+          )} received: ${JSON.stringify(this._messages)}`,
         );
       } else {
         matched[expectedMessage.level].push(index);
@@ -95,34 +95,34 @@ export default class TestLogger implements LDLogger {
 
   getCount(level?: LogLevel) {
     if (level === undefined) {
-      return this.callCount;
+      return this._callCount;
     }
-    return this.messages[level].length;
+    return this._messages[level].length;
   }
 
-  private checkResolves() {
-    this.waiters.forEach((waiter) => waiter());
+  private _checkResolves() {
+    this._waiters.forEach((waiter) => waiter());
   }
 
-  private log(level: LDLogLevel, ...args: any[]) {
-    this.messages[level].push(args.join(' '));
-    this.callCount += 1;
-    this.checkResolves();
+  private _log(level: LDLogLevel, ...args: any[]) {
+    this._messages[level].push(args.join(' '));
+    this._callCount += 1;
+    this._checkResolves();
   }
 
   error(...args: any[]): void {
-    this.log('error', args);
+    this._log('error', args);
   }
 
   warn(...args: any[]): void {
-    this.log('warn', args);
+    this._log('warn', args);
   }
 
   info(...args: any[]): void {
-    this.log('info', args);
+    this._log('info', args);
   }
 
   debug(...args: any[]): void {
-    this.log('debug', args);
+    this._log('debug', args);
   }
 }
