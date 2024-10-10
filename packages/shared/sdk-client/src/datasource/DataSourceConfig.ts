@@ -19,6 +19,10 @@ export interface StreamingDataSourceConfig extends DataSourceConfig {
 }
 
 export interface DataSourcePaths {
+  // Returns the path to get flag data via GET request
   pathGet(encoding: Encoding, plainContextString: string): string;
+  // Returns the path to get flag data via REPORT request
   pathReport(encoding: Encoding, plainContextString: string): string;
+  // Returns the path to get ping stream notifications when flag data changes
+  pathPing(encoding: Encoding, plainContextString: string): string;
 }

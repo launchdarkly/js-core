@@ -6,13 +6,12 @@ import {
   DataSourcePaths,
   DataSourceState,
   FlagManager,
-  getPollingUri,
   internal,
   LDEmitter,
   LDHeaders,
   LDIdentifyOptions,
+  makeRequestor,
   Platform,
-  Requestor,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { readFlagsFromBootstrap } from './bootstrap';
@@ -92,22 +91,34 @@ export default class BrowserDataManager extends BaseDataManager {
       if (await this.flagManager.loadCached(context)) {
         this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
       }
-      const plainContextString = JSON.stringify(Context.toLDContext(context));
-      const requestor = this.getRequestor(plainContextString);
-      await this.finishIdentifyFromPoll(requestor, context, identifyResolve, identifyReject);
-    }
 
+      await this.finishIdentifyFromPoll(context, identifyResolve, identifyReject);
+    }
     this.updateStreamingState();
   }
 
   private async finishIdentifyFromPoll(
-    requestor: Requestor,
     context: Context,
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
   ) {
     try {
       this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
+
+      const plainContextString = JSON.stringify(Context.toLDContext(context));
+      const requestor = makeRequestor(
+        plainContextString,
+        this.config.serviceEndpoints,
+        this.getPollingPaths(),
+        this.platform.requests,
+        this.platform.encoding!,
+        this.baseHeaders,
+        [],
+        this.config.withReasons,
+        this.config.useReport,
+        this.secureModeHash,
+      );
+
       const payload = await requestor.requestPayload();
       try {
         const listeners = this.createStreamListeners(context, identifyResolve);
@@ -195,35 +206,23 @@ export default class BrowserDataManager extends BaseDataManager {
     const rawContext = Context.toLDContext(context)!;
 
     this.updateProcessor?.close();
-    this.createStreamingProcessor(rawContext, context, identifyResolve, identifyReject);
+
+    const plainContextString = JSON.stringify(Context.toLDContext(context));
+    const requestor = makeRequestor(
+      plainContextString,
+      this.config.serviceEndpoints,
+      this.getPollingPaths(), // note: this is the polling path because the requestor is only used to make polling requests.
+      this.platform.requests,
+      this.platform.encoding!,
+      this.baseHeaders,
+      [],
+      this.config.withReasons,
+      this.config.useReport,
+      this.secureModeHash,
+    );
+
+    this.createStreamingProcessor(rawContext, context, requestor, identifyResolve, identifyReject);
 
     this.updateProcessor!.start();
-  }
-
-  private getRequestor(plainContextString: string): Requestor {
-    const paths = this.getPollingPaths();
-    const path = this.config.useReport
-      ? paths.pathReport(this.platform.encoding!, plainContextString)
-      : paths.pathGet(this.platform.encoding!, plainContextString);
-
-    const parameters: { key: string; value: string }[] = [];
-    if (this.config.withReasons) {
-      parameters.push({ key: 'withReasons', value: 'true' });
-    }
-    if (this.secureModeHash) {
-      parameters.push({ key: 'h', value: this.secureModeHash });
-    }
-
-    const headers: { [key: string]: string } = { ...this.baseHeaders };
-    let body;
-    let method = 'GET';
-    if (this.config.useReport) {
-      method = 'REPORT';
-      headers['content-type'] = 'application/json';
-      body = plainContextString; // context is in body for REPORT
-    }
-
-    const uri = getPollingUri(this.config.serviceEndpoints, path, parameters);
-    return new Requestor(this.platform.requests, uri, headers, method, body);
   }
 }

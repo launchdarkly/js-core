@@ -5,14 +5,18 @@ import {
   EventName,
   Info,
   internal,
+  LDHeaders,
   LDLogger,
   LDStreamingError,
   Platform,
   ProcessStreamResponse,
+  Requests,
+  ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
 
-import { StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
+import { DataSourcePaths, StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
 import { createBasicPlatform } from '../createBasicPlatform';
+import Requestor, { makeRequestor } from '../../src/datasource/Requestor';
 
 let logger: LDLogger;
 
@@ -57,6 +61,9 @@ function getStreamingDataSourceConfig(
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path/report';
       },
+      pathPing(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path/ping';
+      },
     },
     baseHeaders: {
       authorization: 'my-sdk-key',
@@ -87,6 +94,43 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
   addEventListener: jest.fn(),
   close: jest.fn(),
 });
+
+function makeTestRequestor(options: {
+  requests: Requests;
+  plainContextString?: string;
+  serviceEndpoints?: ServiceEndpoints;
+  paths?: DataSourcePaths;
+  encoding?: Encoding;
+  baseHeaders?: LDHeaders;
+  baseQueryParams?: { key: string; value: string }[];
+  useReport?: boolean;
+  withReasons?: boolean;
+  secureModeHash?: string;
+}): Requestor {
+  return makeRequestor(
+    options.plainContextString ?? 'mockContextString',
+    options.serviceEndpoints ?? serviceEndpoints,
+    options.paths ?? {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path/get';
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path/report';
+      },
+      pathPing(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path/ping';
+      },
+    },
+    options.requests,
+    options.encoding ?? {
+      btoa: jest.fn(),
+    },
+    options.baseHeaders,
+    options.baseQueryParams,
+    options.withReasons ?? true,
+    options.useReport ?? false,
+  );
+}
 
 describe('given a stream processor', () => {
   let info: Info;
@@ -146,6 +190,9 @@ describe('given a stream processor', () => {
       listeners,
       basicPlatform.requests,
       basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
       diagnosticsManager,
       mockErrorHandler,
       logger,
@@ -180,6 +227,9 @@ describe('given a stream processor', () => {
       listeners,
       basicPlatform.requests,
       basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
       diagnosticsManager,
       mockErrorHandler,
     );
@@ -204,6 +254,9 @@ describe('given a stream processor', () => {
       listeners,
       basicPlatform.requests,
       basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
       diagnosticsManager,
       mockErrorHandler,
     );
@@ -230,6 +283,9 @@ describe('given a stream processor', () => {
       listeners,
       basicPlatform.requests,
       basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
       diagnosticsManager,
       mockErrorHandler,
     );
@@ -381,6 +437,9 @@ it('includes custom query parameters', () => {
     listeners,
     basicPlatform.requests,
     basicPlatform.encoding!,
+    makeTestRequestor({
+      requests: basicPlatform.requests,
+    }),
     diagnosticsManager,
     () => {},
     logger,

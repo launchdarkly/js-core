@@ -1,19 +1,15 @@
 import {
   DataSourceErrorKind,
-  Encoding,
-  getPollingUri,
   httpErrorMessage,
   HttpErrorResponse,
   isHttpRecoverable,
   LDLogger,
   LDPollingError,
-  Requests,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { PollingDataSourceConfig } from '../streaming/DataSourceConfig';
+import Requestor, { LDRequestError } from '../datasource/Requestor';
 import { Flags } from '../types';
-import Requestor, { LDRequestError } from './Requestor';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
@@ -23,46 +19,15 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
 export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private stopped = false;
 
-  private pollInterval: number;
-
   private timeoutHandle: any;
 
-  private requestor: Requestor;
-
   constructor(
-    private readonly plainContextString: string,
-    private readonly dataSourceConfig: PollingDataSourceConfig,
-    requests: Requests,
-    encoding: Encoding,
+    private readonly requestor: Requestor,
+    private readonly pollIntervalSeconds: number,
     private readonly dataHandler: (flags: Flags) => void,
     private readonly errorHandler?: PollingErrorHandler,
     private readonly logger?: LDLogger,
-  ) {
-    const path = dataSourceConfig.useReport
-      ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
-      : dataSourceConfig.paths.pathGet(encoding, plainContextString);
-
-    const parameters: { key: string; value: string }[] = [
-      ...(dataSourceConfig.queryParameters ?? []),
-    ];
-    if (this.dataSourceConfig.withReasons) {
-      parameters.push({ key: 'withReasons', value: 'true' });
-    }
-
-    const uri = getPollingUri(dataSourceConfig.serviceEndpoints, path, parameters);
-    this.pollInterval = dataSourceConfig.pollInterval;
-
-    let method = 'GET';
-    const headers: { [key: string]: string } = { ...dataSourceConfig.baseHeaders };
-    let body;
-    if (dataSourceConfig.useReport) {
-      method = 'REPORT';
-      headers['content-type'] = 'application/json';
-      body = plainContextString; // context is in body for REPORT
-    }
-
-    this.requestor = new Requestor(requests, uri, headers, method, body);
-  }
+  ) {}
 
   private async poll() {
     if (this.stopped) {
@@ -115,7 +80,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     }
 
     const elapsed = Date.now() - startTime;
-    const sleepFor = Math.max(this.pollInterval * 1000 - elapsed, 0);
+    const sleepFor = Math.max(this.pollIntervalSeconds * 1000 - elapsed, 0);
 
     this.logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
 

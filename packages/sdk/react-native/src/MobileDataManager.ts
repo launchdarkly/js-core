@@ -9,7 +9,9 @@ import {
   LDEmitter,
   LDHeaders,
   LDIdentifyOptions,
+  makeRequestor,
   Platform,
+  Requestor,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { ValidatedOptions } from './options';
@@ -95,13 +97,38 @@ export default class MobileDataManager extends BaseDataManager {
   ) {
     const rawContext = Context.toLDContext(context)!;
 
+    const plainContextString = JSON.stringify(Context.toLDContext(context));
+    const requestor = makeRequestor(
+      plainContextString,
+      this.config.serviceEndpoints,
+      this.getPollingPaths(), // note: this is the polling path because the requestor is only used to make polling requests.
+      this.platform.requests,
+      this.platform.encoding!,
+      this.baseHeaders,
+      [],
+      this.config.useReport,
+      this.config.withReasons,
+    );
+
     this.updateProcessor?.close();
     switch (this.connectionMode) {
       case 'streaming':
-        this.createStreamingProcessor(rawContext, context, identifyResolve, identifyReject);
+        this.createStreamingProcessor(
+          rawContext,
+          context,
+          requestor,
+          identifyResolve,
+          identifyReject,
+        );
         break;
       case 'polling':
-        this.createPollingProcessor(rawContext, context, identifyResolve, identifyReject);
+        this.createPollingProcessor(
+          rawContext,
+          context,
+          requestor,
+          identifyResolve,
+          identifyReject,
+        );
         break;
       default:
         break;

@@ -1,5 +1,14 @@
 // eslint-disable-next-line max-classes-per-file
-import { HttpErrorResponse, Requests } from '@launchdarkly/js-sdk-common';
+import {
+  Encoding,
+  getPollingUri,
+  HttpErrorResponse,
+  LDHeaders,
+  Requests,
+  ServiceEndpoints,
+} from '@launchdarkly/js-sdk-common';
+
+import { DataSourcePaths } from './DataSourceConfig';
 
 function isOk(status: number) {
   return status >= 200 && status <= 299;
@@ -46,4 +55,42 @@ export default class Requestor {
     }
     throw new LDRequestError(`Unexpected status code: ${status}`, status);
   }
+}
+
+export function makeRequestor(
+  plainContextString: string,
+  serviceEndpoints: ServiceEndpoints,
+  paths: DataSourcePaths,
+  requests: Requests,
+  encoding: Encoding,
+  baseHeaders?: LDHeaders,
+  baseQueryParams?: { key: string; value: string }[],
+  withReasons?: boolean,
+  useReport?: boolean,
+  secureModeHash?: string,
+) {
+  let body;
+  let method = 'GET';
+  const headers: { [key: string]: string } = { ...baseHeaders };
+
+  if (useReport) {
+    method = 'REPORT';
+    headers['content-type'] = 'application/json';
+    body = plainContextString; // context is in body for REPORT
+  }
+
+  const path = useReport
+    ? paths.pathReport(encoding, plainContextString)
+    : paths.pathGet(encoding, plainContextString);
+
+  const parameters: { key: string; value: string }[] = [...(baseQueryParams ?? [])];
+  if (withReasons) {
+    parameters.push({ key: 'withReasons', value: 'true' });
+  }
+  if (secureModeHash) {
+    parameters.push({ key: 'h', value: secureModeHash });
+  }
+
+  const uri = getPollingUri(serviceEndpoints, path, parameters);
+  return new Requestor(requests, uri, headers, method, body);
 }
