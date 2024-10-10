@@ -2,7 +2,7 @@
  * Messages for issues which can be encountered processing client requests.
  */
 export default class ClientMessages {
-  static readonly missingContextKeyNoEvent =
+  static readonly MissingContextKeyNoEvent =
     'Context was unspecified or had no key; event will not be sent';
 
   static invalidMetricValue(badType: string) {

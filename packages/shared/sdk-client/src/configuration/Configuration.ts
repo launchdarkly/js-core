@@ -71,8 +71,13 @@ function ensureSafeLogger(logger?: LDLogger): LDLogger {
 export default class ConfigurationImpl implements Configuration {
   public readonly logger: LDLogger = createSafeLogger();
 
+  // Naming conventions is not followed for these lines because the config validation
+  // accesses members based on the keys of the options. (sdk-763)
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly baseUri = DEFAULT_POLLING;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly streamUri = DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
@@ -126,7 +131,7 @@ export default class ConfigurationImpl implements Configuration {
 
   constructor(pristineOptions: LDOptions = {}, internalOptions: LDClientInternalOptions = {}) {
     this.logger = ensureSafeLogger(pristineOptions.logger);
-    const errors = this.validateTypesAndNames(pristineOptions);
+    const errors = this._validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
 
     this.serviceEndpoints = new ServiceEndpoints(
@@ -145,7 +150,7 @@ export default class ConfigurationImpl implements Configuration {
     this.trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
   }
 
-  private validateTypesAndNames(pristineOptions: LDOptions): string[] {
+  private _validateTypesAndNames(pristineOptions: LDOptions): string[] {
     const errors: string[] = [];
 
     Object.entries(pristineOptions).forEach(([k, v]) => {

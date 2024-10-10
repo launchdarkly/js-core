@@ -21,57 +21,57 @@ function isPopulated(data: number): boolean {
 }
 
 export default class MigrationOpTracker implements LDMigrationTracker {
-  private errors = {
+  private _errors = {
     old: false,
     new: false,
   };
 
-  private wasInvoked = {
+  private _wasInvoked = {
     old: false,
     new: false,
   };
 
-  private consistencyCheck: LDConsistencyCheck = LDConsistencyCheck.NotChecked;
+  private _consistencyCheck: LDConsistencyCheck = LDConsistencyCheck.NotChecked;
 
-  private latencyMeasurement = {
+  private _latencyMeasurement = {
     old: NaN,
     new: NaN,
   };
 
-  private operation?: LDMigrationOp;
+  private _operation?: LDMigrationOp;
 
   constructor(
-    private readonly flagKey: string,
-    private readonly contextKeys: Record<string, string>,
-    private readonly defaultStage: LDMigrationStage,
-    private readonly stage: LDMigrationStage,
-    private readonly reason: LDEvaluationReason,
-    private readonly checkRatio?: number,
-    private readonly variation?: number,
-    private readonly version?: number,
-    private readonly samplingRatio?: number,
-    private readonly logger?: LDLogger,
+    private readonly _flagKey: string,
+    private readonly _contextKeys: Record<string, string>,
+    private readonly _defaultStage: LDMigrationStage,
+    private readonly _stage: LDMigrationStage,
+    private readonly _reason: LDEvaluationReason,
+    private readonly _checkRatio?: number,
+    private readonly _variation?: number,
+    private readonly _version?: number,
+    private readonly _samplingRatio?: number,
+    private readonly _logger?: LDLogger,
   ) {}
 
   op(op: LDMigrationOp) {
-    this.operation = op;
+    this._operation = op;
   }
 
   error(origin: LDMigrationOrigin) {
-    this.errors[origin] = true;
+    this._errors[origin] = true;
   }
 
   consistency(check: () => boolean) {
-    if (internal.shouldSample(this.checkRatio ?? 1)) {
+    if (internal.shouldSample(this._checkRatio ?? 1)) {
       try {
         const res = check();
-        this.consistencyCheck = res
+        this._consistencyCheck = res
           ? LDConsistencyCheck.Consistent
           : LDConsistencyCheck.Inconsistent;
       } catch (exception) {
-        this.logger?.error(
+        this._logger?.error(
           'Exception when executing consistency check function for migration' +
-            ` '${this.flagKey}' the consistency check will not be included in the generated migration` +
+            ` '${this._flagKey}' the consistency check will not be included in the generated migration` +
             ` op event. Exception: ${exception}`,
         );
       }
@@ -79,106 +79,106 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   }
 
   latency(origin: LDMigrationOrigin, value: number) {
-    this.latencyMeasurement[origin] = value;
+    this._latencyMeasurement[origin] = value;
   }
 
   invoked(origin: LDMigrationOrigin) {
-    this.wasInvoked[origin] = true;
+    this._wasInvoked[origin] = true;
   }
 
   createEvent(): LDMigrationOpEvent | undefined {
-    if (!TypeValidators.String.is(this.flagKey) || this.flagKey === '') {
-      this.logger?.error('The flag key for a migration operation must be a non-empty string.');
+    if (!TypeValidators.String.is(this._flagKey) || this._flagKey === '') {
+      this._logger?.error('The flag key for a migration operation must be a non-empty string.');
       return undefined;
     }
 
-    if (!this.operation) {
-      this.logger?.error('The operation must be set using "op" before an event can be created.');
+    if (!this._operation) {
+      this._logger?.error('The operation must be set using "op" before an event can be created.');
       return undefined;
     }
 
-    if (Object.keys(this.contextKeys).length === 0) {
-      this.logger?.error(
+    if (Object.keys(this._contextKeys).length === 0) {
+      this._logger?.error(
         'The migration was not done against a valid context and cannot generate an event.',
       );
       return undefined;
     }
 
-    if (!this.wasInvoked.old && !this.wasInvoked.new) {
-      this.logger?.error(
+    if (!this._wasInvoked.old && !this._wasInvoked.new) {
+      this._logger?.error(
         'The migration invoked neither the "old" or "new" implementation and' +
           'an event cannot be generated',
       );
       return undefined;
     }
 
-    if (!this.measurementConsistencyCheck()) {
+    if (!this._measurementConsistencyCheck()) {
       return undefined;
     }
 
     const measurements: LDMigrationMeasurement[] = [];
 
-    this.populateInvoked(measurements);
-    this.populateConsistency(measurements);
-    this.populateLatency(measurements);
-    this.populateErrors(measurements);
+    this._populateInvoked(measurements);
+    this._populateConsistency(measurements);
+    this._populateLatency(measurements);
+    this._populateErrors(measurements);
 
     return {
       kind: 'migration_op',
-      operation: this.operation,
+      operation: this._operation,
       creationDate: Date.now(),
-      contextKeys: this.contextKeys,
+      contextKeys: this._contextKeys,
       evaluation: {
-        key: this.flagKey,
-        value: this.stage,
-        default: this.defaultStage,
-        reason: this.reason,
-        variation: this.variation,
-        version: this.version,
+        key: this._flagKey,
+        value: this._stage,
+        default: this._defaultStage,
+        reason: this._reason,
+        variation: this._variation,
+        version: this._version,
       },
       measurements,
-      samplingRatio: this.samplingRatio ?? 1,
+      samplingRatio: this._samplingRatio ?? 1,
     };
   }
 
-  private logTag() {
-    return `For migration ${this.operation}-${this.flagKey}:`;
+  private _logTag() {
+    return `For migration ${this._operation}-${this._flagKey}:`;
   }
 
-  private latencyConsistencyMessage(origin: LDMigrationOrigin) {
+  private _latencyConsistencyMessage(origin: LDMigrationOrigin) {
     return `Latency measurement for "${origin}", but "${origin}" was not invoked.`;
   }
 
-  private errorConsistencyMessage(origin: LDMigrationOrigin) {
+  private _errorConsistencyMessage(origin: LDMigrationOrigin) {
     return `Error occurred for "${origin}", but "${origin}" was not invoked.`;
   }
 
-  private consistencyCheckConsistencyMessage(origin: LDMigrationOrigin) {
+  private _consistencyCheckConsistencyMessage(origin: LDMigrationOrigin) {
     return (
       `Consistency check was done, but "${origin}" was not invoked.` +
       'Both "old" and "new" must be invoked to do a consistency check.'
     );
   }
 
-  private checkOriginEventConsistency(origin: LDMigrationOrigin): boolean {
-    if (this.wasInvoked[origin]) {
+  private _checkOriginEventConsistency(origin: LDMigrationOrigin): boolean {
+    if (this._wasInvoked[origin]) {
       return true;
     }
 
     // If the specific origin was not invoked, but it contains measurements, then
     // that is a problem. Check each measurement and log a message if it is present.
-    if (!Number.isNaN(this.latencyMeasurement[origin])) {
-      this.logger?.error(`${this.logTag()} ${this.latencyConsistencyMessage(origin)}`);
+    if (!Number.isNaN(this._latencyMeasurement[origin])) {
+      this._logger?.error(`${this._logTag()} ${this._latencyConsistencyMessage(origin)}`);
       return false;
     }
 
-    if (this.errors[origin]) {
-      this.logger?.error(`${this.logTag()} ${this.errorConsistencyMessage(origin)}`);
+    if (this._errors[origin]) {
+      this._logger?.error(`${this._logTag()} ${this._errorConsistencyMessage(origin)}`);
       return false;
     }
 
-    if (this.consistencyCheck !== LDConsistencyCheck.NotChecked) {
-      this.logger?.error(`${this.logTag()} ${this.consistencyCheckConsistencyMessage(origin)}`);
+    if (this._consistencyCheck !== LDConsistencyCheck.NotChecked) {
+      this._logger?.error(`${this._logTag()} ${this._consistencyCheckConsistencyMessage(origin)}`);
       return false;
     }
     return true;
@@ -187,66 +187,66 @@ export default class MigrationOpTracker implements LDMigrationTracker {
   /**
    * Check that the latency, error, consistency and invoked measurements are self-consistent.
    */
-  private measurementConsistencyCheck(): boolean {
-    return this.checkOriginEventConsistency('old') && this.checkOriginEventConsistency('new');
+  private _measurementConsistencyCheck(): boolean {
+    return this._checkOriginEventConsistency('old') && this._checkOriginEventConsistency('new');
   }
 
-  private populateInvoked(measurements: LDMigrationMeasurement[]) {
+  private _populateInvoked(measurements: LDMigrationMeasurement[]) {
     const measurement: LDMigrationInvokedMeasurement = {
       key: 'invoked',
       values: {},
     };
-    if (!this.wasInvoked.old && !this.wasInvoked.new) {
-      this.logger?.error('Migration op completed without executing any origins (old/new).');
+    if (!this._wasInvoked.old && !this._wasInvoked.new) {
+      this._logger?.error('Migration op completed without executing any origins (old/new).');
     }
-    if (this.wasInvoked.old) {
+    if (this._wasInvoked.old) {
       measurement.values.old = true;
     }
-    if (this.wasInvoked.new) {
+    if (this._wasInvoked.new) {
       measurement.values.new = true;
     }
     measurements.push(measurement);
   }
 
-  private populateConsistency(measurements: LDMigrationMeasurement[]) {
+  private _populateConsistency(measurements: LDMigrationMeasurement[]) {
     if (
-      this.consistencyCheck !== undefined &&
-      this.consistencyCheck !== LDConsistencyCheck.NotChecked
+      this._consistencyCheck !== undefined &&
+      this._consistencyCheck !== LDConsistencyCheck.NotChecked
     ) {
       measurements.push({
         key: 'consistent',
-        value: this.consistencyCheck === LDConsistencyCheck.Consistent,
-        samplingRatio: this.checkRatio ?? 1,
+        value: this._consistencyCheck === LDConsistencyCheck.Consistent,
+        samplingRatio: this._checkRatio ?? 1,
       });
     }
   }
 
-  private populateErrors(measurements: LDMigrationMeasurement[]) {
-    if (this.errors.new || this.errors.old) {
+  private _populateErrors(measurements: LDMigrationMeasurement[]) {
+    if (this._errors.new || this._errors.old) {
       const measurement: LDMigrationErrorMeasurement = {
         key: 'error',
         values: {},
       };
-      if (this.errors.new) {
+      if (this._errors.new) {
         measurement.values.new = true;
       }
-      if (this.errors.old) {
+      if (this._errors.old) {
         measurement.values.old = true;
       }
       measurements.push(measurement);
     }
   }
 
-  private populateLatency(measurements: LDMigrationMeasurement[]) {
-    const newIsPopulated = isPopulated(this.latencyMeasurement.new);
-    const oldIsPopulated = isPopulated(this.latencyMeasurement.old);
+  private _populateLatency(measurements: LDMigrationMeasurement[]) {
+    const newIsPopulated = isPopulated(this._latencyMeasurement.new);
+    const oldIsPopulated = isPopulated(this._latencyMeasurement.old);
     if (newIsPopulated || oldIsPopulated) {
       const values: { old?: number; new?: number } = {};
       if (newIsPopulated) {
-        values.new = this.latencyMeasurement.new;
+        values.new = this._latencyMeasurement.new;
       }
       if (oldIsPopulated) {
-        values.old = this.latencyMeasurement.old;
+        values.old = this._latencyMeasurement.old;
       }
       measurements.push({
         key: 'latency_ms',

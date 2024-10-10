@@ -14,10 +14,10 @@ export default interface FlagStore {
  * In memory flag store.
  */
 export class DefaultFlagStore implements FlagStore {
-  private flags: { [key: string]: ItemDescriptor } = {};
+  private _flags: { [key: string]: ItemDescriptor } = {};
 
   init(newFlags: { [key: string]: ItemDescriptor }) {
-    this.flags = Object.entries(newFlags).reduce(
+    this._flags = Object.entries(newFlags).reduce(
       (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
         acc[key] = flag;
         return acc;
@@ -27,17 +27,17 @@ export class DefaultFlagStore implements FlagStore {
   }
 
   insertOrUpdate(key: string, update: ItemDescriptor) {
-    this.flags[key] = update;
+    this._flags[key] = update;
   }
 
   get(key: string): ItemDescriptor | undefined {
-    if (Object.prototype.hasOwnProperty.call(this.flags, key)) {
-      return this.flags[key];
+    if (Object.prototype.hasOwnProperty.call(this._flags, key)) {
+      return this._flags[key];
     }
     return undefined;
   }
 
   getAll(): { [key: string]: ItemDescriptor } {
-    return this.flags;
+    return this._flags;
   }
 }
