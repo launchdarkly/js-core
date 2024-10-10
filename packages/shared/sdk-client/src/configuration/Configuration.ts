@@ -71,9 +71,14 @@ function ensureSafeLogger(logger?: LDLogger): LDLogger {
 export default class ConfigurationImpl implements Configuration {
   public readonly logger: LDLogger = createSafeLogger();
 
-  private readonly _baseUri = DEFAULT_POLLING;
-  private readonly _eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
-  private readonly _streamUri = DEFAULT_STREAM;
+  // Naming conventions is not followed for these lines because the config validation
+  // accesses members based on the keys of the options. 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private readonly baseUri = DEFAULT_POLLING;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private readonly streamUri = DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
 
@@ -130,9 +135,9 @@ export default class ConfigurationImpl implements Configuration {
     errors.forEach((e: string) => this.logger.warn(e));
 
     this.serviceEndpoints = new ServiceEndpoints(
-      this._streamUri,
-      this._baseUri,
-      this._eventsUri,
+      this.streamUri,
+      this.baseUri,
+      this.eventsUri,
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,

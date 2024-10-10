@@ -102,7 +102,7 @@ describe('EventSource', () => {
     jest.runAllTimers();
     // This forces it to reconnect.
     // @ts-ignore
-    eventSource.tryConnect();
+    eventSource._tryConnect();
     jest.runAllTimers();
 
     expect(logger.debug).toHaveBeenNthCalledWith(
