@@ -81,7 +81,7 @@ export interface LDInspectionFlagDetailChangedHandler {
   name: string;
 
   /**
-   * If `true`, then the inspector will be ran synchronously with flag updates.
+   * @deprecated All inspectors run synchronously. This field will be removed in a future major version.
    */
   synchronous?: boolean;
 
@@ -109,7 +109,7 @@ export interface LDInspectionIdentifyHandler {
   name: string;
 
   /**
-   * If `true`, then the inspector will be ran synchronously with identification.
+   * @deprecated All inspectors run synchronously. This field will be removed in a future major version.
    */
   synchronous?: boolean;
 
