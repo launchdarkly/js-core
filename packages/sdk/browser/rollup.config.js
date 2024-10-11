@@ -21,6 +21,18 @@ const getSharedConfig = (format, file) => ({
   },
 });
 
+const terserOpts = {
+  mangle: {
+    properties: {
+      // Mangle class properties which start with an underscore.
+      regex: /^_/,
+      // Do not mangle '_meta', because this is part of our JSON
+      // data model.
+      reserved: ['_meta']
+    },
+  }
+};
+
 export default [
   {
     ...getSharedConfig('es', 'dist/index.es.js'),
@@ -33,7 +45,7 @@ export default [
         esmExternals: true,
       }),
       resolve(),
-      terser(),
+      terser(terserOpts),
       json(),
       // The 'sourcemap' option allows using the minified size, not the size before minification.
       visualizer({ sourcemap: true }),
@@ -41,6 +53,12 @@ export default [
   },
   {
     ...getSharedConfig('cjs', 'dist/index.cjs.js'),
-    plugins: [typescript(), common(), resolve(), terser(), json()],
+    plugins: [
+      typescript(),
+      common(),
+      resolve(),
+      terser(terserOpts),
+      json(),
+    ],
   },
 ];

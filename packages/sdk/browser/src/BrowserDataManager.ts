@@ -23,9 +23,9 @@ const logTag = '[BrowserDataManager]';
 export default class BrowserDataManager extends BaseDataManager {
   // If streaming is forced on or off, then we follow that setting.
   // Otherwise we automatically manage streaming state.
-  private forcedStreaming?: boolean = undefined;
-  private automaticStreamingState: boolean = false;
-  private secureModeHash?: string;
+  private _forcedStreaming?: boolean = undefined;
+  private _automaticStreamingState: boolean = false;
+  private _secureModeHash?: string;
 
   // +-----------+-----------+---------------+
   // |  forced   | automatic |     state     |
@@ -43,7 +43,7 @@ export default class BrowserDataManager extends BaseDataManager {
     flagManager: FlagManager,
     credential: string,
     config: Configuration,
-    private readonly browserConfig: ValidatedOptions,
+    private readonly _browserConfig: ValidatedOptions,
     getPollingPaths: () => DataSourcePaths,
     getStreamingPaths: () => DataSourcePaths,
     baseHeaders: LDHeaders,
@@ -61,10 +61,10 @@ export default class BrowserDataManager extends BaseDataManager {
       emitter,
       diagnosticsManager,
     );
-    this.forcedStreaming = browserConfig.streaming;
+    this._forcedStreaming = _browserConfig.streaming;
   }
 
-  private debugLog(message: any, ...args: any[]) {
+  private _debugLog(message: any, ...args: any[]) {
     this.logger.debug(`${logTag} ${message}`, ...args);
   }
 
@@ -83,21 +83,21 @@ export default class BrowserDataManager extends BaseDataManager {
     } else {
       this.setConnectionParams();
     }
-    this.secureModeHash = browserIdentifyOptions?.hash;
+    this._secureModeHash = browserIdentifyOptions?.hash;
 
     if (browserIdentifyOptions?.bootstrap) {
-      this.finishIdentifyFromBootstrap(context, browserIdentifyOptions.bootstrap, identifyResolve);
+      this._finishIdentifyFromBootstrap(context, browserIdentifyOptions.bootstrap, identifyResolve);
     } else {
       if (await this.flagManager.loadCached(context)) {
-        this.debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
+        this._debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
       }
 
-      await this.finishIdentifyFromPoll(context, identifyResolve, identifyReject);
+      await this._finishIdentifyFromPoll(context, identifyResolve, identifyReject);
     }
-    this.updateStreamingState();
+    this._updateStreamingState();
   }
 
-  private async finishIdentifyFromPoll(
+  private async _finishIdentifyFromPoll(
     context: Context,
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
@@ -116,7 +116,7 @@ export default class BrowserDataManager extends BaseDataManager {
         [],
         this.config.withReasons,
         this.config.useReport,
-        this.secureModeHash,
+        this._secureModeHash,
       );
 
       const payload = await requestor.requestPayload();
@@ -140,65 +140,66 @@ export default class BrowserDataManager extends BaseDataManager {
     }
   }
 
-  private finishIdentifyFromBootstrap(
+  private _finishIdentifyFromBootstrap(
     context: Context,
     bootstrap: unknown,
     identifyResolve: () => void,
   ) {
     this.flagManager.setBootstrap(context, readFlagsFromBootstrap(this.logger, bootstrap));
-    this.debugLog('Identify - Initialization completed from bootstrap');
+    this._debugLog('Identify - Initialization completed from bootstrap');
     identifyResolve();
   }
 
   setForcedStreaming(streaming?: boolean) {
-    this.forcedStreaming = streaming;
-    this.updateStreamingState();
+    this._forcedStreaming = streaming;
+    this._updateStreamingState();
   }
 
   setAutomaticStreamingState(streaming: boolean) {
-    this.automaticStreamingState = streaming;
-    this.updateStreamingState();
+    this._automaticStreamingState = streaming;
+    this._updateStreamingState();
   }
 
-  private updateStreamingState() {
+  private _updateStreamingState() {
     const shouldBeStreaming =
-      this.forcedStreaming || (this.automaticStreamingState && this.forcedStreaming === undefined);
+      this._forcedStreaming ||
+      (this._automaticStreamingState && this._forcedStreaming === undefined);
 
-    this.debugLog(
-      `Updating streaming state. forced(${this.forcedStreaming}) automatic(${this.automaticStreamingState})`,
+    this._debugLog(
+      `Updating streaming state. forced(${this._forcedStreaming}) automatic(${this._automaticStreamingState})`,
     );
 
     if (shouldBeStreaming) {
-      this.startDataSource();
+      this._startDataSource();
     } else {
-      this.stopDataSource();
+      this._stopDataSource();
     }
   }
 
-  private stopDataSource() {
+  private _stopDataSource() {
     if (this.updateProcessor) {
-      this.debugLog('Stopping update processor.');
+      this._debugLog('Stopping update processor.');
     }
     this.updateProcessor?.close();
     this.updateProcessor = undefined;
   }
 
-  private startDataSource() {
+  private _startDataSource() {
     if (this.updateProcessor) {
-      this.debugLog('Update processor already active. Not changing state.');
+      this._debugLog('Update processor already active. Not changing state.');
       return;
     }
 
     if (!this.context) {
-      this.debugLog('Context not set, not starting update processor.');
+      this._debugLog('Context not set, not starting update processor.');
       return;
     }
 
-    this.debugLog('Starting update processor.');
-    this.setupConnection(this.context);
+    this._debugLog('Starting update processor.');
+    this._setupConnection(this.context);
   }
 
-  private setupConnection(
+  private _setupConnection(
     context: Context,
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
@@ -218,7 +219,7 @@ export default class BrowserDataManager extends BaseDataManager {
       [],
       this.config.withReasons,
       this.config.useReport,
-      this.secureModeHash,
+      this._secureModeHash,
     );
 
     this.createStreamingProcessor(rawContext, context, requestor, identifyResolve, identifyReject);

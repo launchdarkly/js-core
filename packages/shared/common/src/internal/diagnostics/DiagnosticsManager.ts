@@ -2,20 +2,20 @@ import { Platform } from '../../api';
 import { DiagnosticId, DiagnosticInitEvent, DiagnosticStatsEvent, StreamInitData } from './types';
 
 export default class DiagnosticsManager {
-  private readonly startTime: number;
-  private streamInits: StreamInitData[] = [];
-  private readonly id: DiagnosticId;
-  private dataSinceDate: number;
+  private readonly _startTime: number;
+  private _streamInits: StreamInitData[] = [];
+  private readonly _id: DiagnosticId;
+  private _dataSinceDate: number;
 
   constructor(
     sdkKey: string,
-    private readonly platform: Platform,
-    private readonly diagnosticInitConfig: any,
+    private readonly _platform: Platform,
+    private readonly _diagnosticInitConfig: any,
   ) {
-    this.startTime = Date.now();
-    this.dataSinceDate = this.startTime;
-    this.id = {
-      diagnosticId: platform.crypto.randomUUID(),
+    this._startTime = Date.now();
+    this._dataSinceDate = this._startTime;
+    this._id = {
+      diagnosticId: _platform.crypto.randomUUID(),
       sdkKeySuffix: sdkKey.length > 6 ? sdkKey.substring(sdkKey.length - 6) : sdkKey,
     };
   }
@@ -25,15 +25,15 @@ export default class DiagnosticsManager {
    * not be repeated during the lifetime of the SDK client.
    */
   createInitEvent(): DiagnosticInitEvent {
-    const sdkData = this.platform.info.sdkData();
-    const platformData = this.platform.info.platformData();
+    const sdkData = this._platform.info.sdkData();
+    const platformData = this._platform.info.platformData();
 
     return {
       kind: 'diagnostic-init',
-      id: this.id,
-      creationDate: this.startTime,
+      id: this._id,
+      creationDate: this._startTime,
       sdk: sdkData,
-      configuration: this.diagnosticInitConfig,
+      configuration: this._diagnosticInitConfig,
       platform: {
         name: platformData.name,
         osArch: platformData.os?.arch,
@@ -54,7 +54,7 @@ export default class DiagnosticsManager {
    */
   recordStreamInit(timestamp: number, failed: boolean, durationMillis: number) {
     const item = { timestamp, failed, durationMillis };
-    this.streamInits.push(item);
+    this._streamInits.push(item);
   }
 
   /**
@@ -73,17 +73,17 @@ export default class DiagnosticsManager {
     const currentTime = Date.now();
     const evt: DiagnosticStatsEvent = {
       kind: 'diagnostic',
-      id: this.id,
+      id: this._id,
       creationDate: currentTime,
-      dataSinceDate: this.dataSinceDate,
+      dataSinceDate: this._dataSinceDate,
       droppedEvents,
       deduplicatedUsers,
       eventsInLastBatch,
-      streamInits: this.streamInits,
+      streamInits: this._streamInits,
     };
 
-    this.streamInits = [];
-    this.dataSinceDate = currentTime;
+    this._streamInits = [];
+    this._dataSinceDate = currentTime;
     return evt;
   }
 }

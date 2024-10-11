@@ -43,9 +43,9 @@ export default class AttributeReference {
   /**
    * For use as invalid references when deserializing Flag/Segment data.
    */
-  public static readonly invalidReference = new AttributeReference('');
+  public static readonly InvalidReference = new AttributeReference('');
 
-  private readonly components: string[];
+  private readonly _components: string[];
 
   /**
    * Take an attribute reference string, or literal string, and produce
@@ -66,29 +66,29 @@ export default class AttributeReference {
       this.redactionName = refOrLiteral;
       if (refOrLiteral === '' || refOrLiteral === '/' || !validate(refOrLiteral)) {
         this.isValid = false;
-        this.components = [];
+        this._components = [];
         return;
       }
 
       if (isLiteral(refOrLiteral)) {
-        this.components = [refOrLiteral];
+        this._components = [refOrLiteral];
       } else if (refOrLiteral.indexOf('/', 1) < 0) {
-        this.components = [unescape(refOrLiteral.slice(1))];
+        this._components = [unescape(refOrLiteral.slice(1))];
       } else {
-        this.components = getComponents(refOrLiteral);
+        this._components = getComponents(refOrLiteral);
       }
       // The items inside of '_meta' are not intended to be addressable.
       // Excluding it as a valid reference means that we can make it non-addressable
       // without having to copy all the attributes out of the context object
       // provided by the user.
-      if (this.components[0] === '_meta') {
+      if (this._components[0] === '_meta') {
         this.isValid = false;
       } else {
         this.isValid = true;
       }
     } else {
       const literalVal = refOrLiteral;
-      this.components = [literalVal];
+      this._components = [literalVal];
       this.isValid = literalVal !== '';
       // Literals which start with '/' need escaped to prevent ambiguity.
       this.redactionName = literalVal.startsWith('/') ? toRefString(literalVal) : literalVal;
@@ -96,7 +96,7 @@ export default class AttributeReference {
   }
 
   public get(target: LDContextCommon) {
-    const { components, isValid } = this;
+    const { _components: components, isValid } = this;
     if (!isValid) {
       return undefined;
     }
@@ -127,21 +127,21 @@ export default class AttributeReference {
   }
 
   public getComponent(depth: number) {
-    return this.components[depth];
+    return this._components[depth];
   }
 
   public get depth() {
-    return this.components.length;
+    return this._components.length;
   }
 
   public get isKind(): boolean {
-    return this.components.length === 1 && this.components[0] === 'kind';
+    return this._components.length === 1 && this._components[0] === 'kind';
   }
 
   public compare(other: AttributeReference) {
     return (
       this.depth === other.depth &&
-      this.components.every((value, index) => value === other.getComponent(index))
+      this._components.every((value, index) => value === other.getComponent(index))
     );
   }
 }

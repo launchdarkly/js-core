@@ -17,27 +17,27 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
  * @internal
  */
 export default class PollingProcessor implements subsystem.LDStreamProcessor {
-  private stopped = false;
+  private _stopped = false;
 
-  private timeoutHandle: any;
+  private _timeoutHandle: any;
 
   constructor(
-    private readonly requestor: Requestor,
-    private readonly pollIntervalSeconds: number,
-    private readonly dataHandler: (flags: Flags) => void,
-    private readonly errorHandler?: PollingErrorHandler,
-    private readonly logger?: LDLogger,
+    private readonly _requestor: Requestor,
+    private readonly _pollIntervalSeconds: number,
+    private readonly _dataHandler: (flags: Flags) => void,
+    private readonly _errorHandler?: PollingErrorHandler,
+    private readonly _logger?: LDLogger,
   ) {}
 
-  private async poll() {
-    if (this.stopped) {
+  private async _poll() {
+    if (this._stopped) {
       return;
     }
 
     const reportJsonError = (data: string) => {
-      this.logger?.error('Polling received invalid data');
-      this.logger?.debug(`Invalid JSON follows: ${data}`);
-      this.errorHandler?.(
+      this._logger?.error('Polling received invalid data');
+      this._logger?.debug(`Invalid JSON follows: ${data}`);
+      this._errorHandler?.(
         new LDPollingError(
           DataSourceErrorKind.InvalidData,
           'Malformed JSON data in polling response',
@@ -45,16 +45,16 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       );
     };
 
-    this.logger?.debug('Polling LaunchDarkly for feature flag updates');
+    this._logger?.debug('Polling LaunchDarkly for feature flag updates');
     const startTime = Date.now();
     try {
-      const res = await this.requestor.requestPayload();
+      const res = await this._requestor.requestPayload();
       try {
         const flags = JSON.parse(res);
         try {
-          this.dataHandler?.(flags);
+          this._dataHandler?.(flags);
         } catch (err) {
-          this.logger?.error(`Exception from data handler: ${err}`);
+          this._logger?.error(`Exception from data handler: ${err}`);
         }
       } catch {
         reportJsonError(res);
@@ -63,8 +63,8 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       const requestError = err as LDRequestError;
       if (requestError.status !== undefined) {
         if (!isHttpRecoverable(requestError.status)) {
-          this.logger?.error(httpErrorMessage(err as HttpErrorResponse, 'polling request'));
-          this.errorHandler?.(
+          this._logger?.error(httpErrorMessage(err as HttpErrorResponse, 'polling request'));
+          this._errorHandler?.(
             new LDPollingError(
               DataSourceErrorKind.ErrorResponse,
               requestError.message,
@@ -74,31 +74,31 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
           return;
         }
       }
-      this.logger?.error(
+      this._logger?.error(
         httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
       );
     }
 
     const elapsed = Date.now() - startTime;
-    const sleepFor = Math.max(this.pollIntervalSeconds * 1000 - elapsed, 0);
+    const sleepFor = Math.max(this._pollIntervalSeconds * 1000 - elapsed, 0);
 
-    this.logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
+    this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
 
-    this.timeoutHandle = setTimeout(() => {
-      this.poll();
+    this._timeoutHandle = setTimeout(() => {
+      this._poll();
     }, sleepFor);
   }
 
   start() {
-    this.poll();
+    this._poll();
   }
 
   stop() {
-    if (this.timeoutHandle) {
-      clearTimeout(this.timeoutHandle);
-      this.timeoutHandle = undefined;
+    if (this._timeoutHandle) {
+      clearTimeout(this._timeoutHandle);
+      this._timeoutHandle = undefined;
     }
-    this.stopped = true;
+    this._stopped = true;
   }
 
   close() {

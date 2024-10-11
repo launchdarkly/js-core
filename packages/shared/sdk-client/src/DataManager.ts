@@ -67,9 +67,9 @@ export abstract class BaseDataManager implements DataManager {
   protected updateProcessor?: subsystem.LDStreamProcessor;
   protected readonly logger: LDLogger;
   protected context?: Context;
-  private connectionParams?: ConnectionParams;
+  private _connectionParams?: ConnectionParams;
   protected readonly dataSourceStatusManager: DataSourceStatusManager;
-  private readonly dataSourceEventHandler: DataSourceEventHandler;
+  private readonly _dataSourceEventHandler: DataSourceEventHandler;
 
   constructor(
     protected readonly platform: Platform,
@@ -84,7 +84,7 @@ export abstract class BaseDataManager implements DataManager {
   ) {
     this.logger = config.logger;
     this.dataSourceStatusManager = new DataSourceStatusManager(emitter);
-    this.dataSourceEventHandler = new DataSourceEventHandler(
+    this._dataSourceEventHandler = new DataSourceEventHandler(
       flagManager,
       this.dataSourceStatusManager,
       this.config.logger,
@@ -95,7 +95,7 @@ export abstract class BaseDataManager implements DataManager {
    * Set additional connection parameters for requests polling/streaming.
    */
   protected setConnectionParams(connectionParams?: ConnectionParams) {
-    this.connectionParams = connectionParams;
+    this._connectionParams = connectionParams;
   }
 
   abstract identify(
@@ -116,17 +116,17 @@ export abstract class BaseDataManager implements DataManager {
       requestor,
       this.config.pollInterval,
       async (flags) => {
-        await this.dataSourceEventHandler.handlePut(checkedContext, flags);
+        await this._dataSourceEventHandler.handlePut(checkedContext, flags);
         identifyResolve?.();
       },
       (err) => {
         this.emitter.emit('error', context, err);
-        this.dataSourceEventHandler.handlePollingError(err);
+        this._dataSourceEventHandler.handlePollingError(err);
         identifyReject?.(err);
       },
     );
 
-    this.updateProcessor = this.decorateProcessorWithStatusReporting(
+    this.updateProcessor = this._decorateProcessorWithStatusReporting(
       processor,
       this.dataSourceStatusManager,
     );
@@ -149,7 +149,7 @@ export abstract class BaseDataManager implements DataManager {
         initialRetryDelayMillis: this.config.streamInitialReconnectDelay * 1000,
         withReasons: this.config.withReasons,
         useReport: this.config.useReport,
-        queryParameters: this.connectionParams?.queryParameters,
+        queryParameters: this._connectionParams?.queryParameters,
       },
       this.createStreamListeners(checkedContext, identifyResolve),
       this.platform.requests,
@@ -158,12 +158,12 @@ export abstract class BaseDataManager implements DataManager {
       this.diagnosticsManager,
       (e) => {
         this.emitter.emit('error', context, e);
-        this.dataSourceEventHandler.handleStreamingError(e);
+        this._dataSourceEventHandler.handleStreamingError(e);
         identifyReject?.(e);
       },
     );
 
-    this.updateProcessor = this.decorateProcessorWithStatusReporting(
+    this.updateProcessor = this._decorateProcessorWithStatusReporting(
       processor,
       this.dataSourceStatusManager,
     );
@@ -178,7 +178,7 @@ export abstract class BaseDataManager implements DataManager {
     listeners.set('put', {
       deserializeData: JSON.parse,
       processJson: async (flags: Flags) => {
-        await this.dataSourceEventHandler.handlePut(context, flags);
+        await this._dataSourceEventHandler.handlePut(context, flags);
         identifyResolve?.();
       },
     });
@@ -186,21 +186,21 @@ export abstract class BaseDataManager implements DataManager {
     listeners.set('patch', {
       deserializeData: JSON.parse,
       processJson: async (patchFlag: PatchFlag) => {
-        this.dataSourceEventHandler.handlePatch(context, patchFlag);
+        this._dataSourceEventHandler.handlePatch(context, patchFlag);
       },
     });
 
     listeners.set('delete', {
       deserializeData: JSON.parse,
       processJson: async (deleteFlag: DeleteFlag) => {
-        this.dataSourceEventHandler.handleDelete(context, deleteFlag);
+        this._dataSourceEventHandler.handleDelete(context, deleteFlag);
       },
     });
 
     return listeners;
   }
 
-  private decorateProcessorWithStatusReporting(
+  private _decorateProcessorWithStatusReporting(
     processor: LDStreamProcessor,
     statusManager: DataSourceStatusManager,
   ): LDStreamProcessor {

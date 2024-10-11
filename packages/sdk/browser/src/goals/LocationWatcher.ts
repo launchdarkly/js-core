@@ -18,20 +18,20 @@ export interface LocationWatcher {
  * @internal
  */
 export class DefaultLocationWatcher {
-  private previousLocation?: string;
-  private watcherHandle: IntervalHandle;
-  private cleanupListeners?: () => void;
+  private _previousLocation?: string;
+  private _watcherHandle: IntervalHandle;
+  private _cleanupListeners?: () => void;
 
   /**
    * @param callback Callback that is executed whenever a URL change is detected.
    */
   constructor(callback: () => void) {
-    this.previousLocation = getHref();
+    this._previousLocation = getHref();
     const checkUrl = () => {
       const currentLocation = getHref();
 
-      if (currentLocation !== this.previousLocation) {
-        this.previousLocation = currentLocation;
+      if (currentLocation !== this._previousLocation) {
+        this._previousLocation = currentLocation;
         callback();
       }
     };
@@ -41,11 +41,11 @@ export class DefaultLocationWatcher {
      * Details on when popstate is called:
      * https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event#when_popstate_is_sent
      */
-    this.watcherHandle = setInterval(checkUrl, LOCATION_WATCHER_INTERVAL_MS);
+    this._watcherHandle = setInterval(checkUrl, LOCATION_WATCHER_INTERVAL_MS);
 
     const removeListener = addWindowEventListener('popstate', checkUrl);
 
-    this.cleanupListeners = () => {
+    this._cleanupListeners = () => {
       removeListener();
     };
   }
@@ -54,9 +54,9 @@ export class DefaultLocationWatcher {
    * Stop watching for location changes.
    */
   close(): void {
-    if (this.watcherHandle) {
-      clearInterval(this.watcherHandle);
+    if (this._watcherHandle) {
+      clearInterval(this._watcherHandle);
     }
-    this.cleanupListeners?.();
+    this._cleanupListeners?.();
   }
 }

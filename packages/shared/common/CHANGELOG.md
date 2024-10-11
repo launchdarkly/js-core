@@ -2,6 +2,15 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.10.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.9.0...js-sdk-common-v2.10.0) (2024-10-09)
+
+
+### Features
+
+* Add ESM support for common and common-client (rollup) ([#604](https://github.com/launchdarkly/js-core/issues/604)) ([8cd0cdc](https://github.com/launchdarkly/js-core/commit/8cd0cdce988f606b1efdf6bfd19484f6607db2e5))
+* Add visibility handling to allow proactive event flushing. ([#607](https://github.com/launchdarkly/js-core/issues/607)) ([819a311](https://github.com/launchdarkly/js-core/commit/819a311db6f56e323bb84c925789ad4bd19ae4ba))
+* adds datasource status to sdk-client ([#590](https://github.com/launchdarkly/js-core/issues/590)) ([6f26204](https://github.com/launchdarkly/js-core/commit/6f262045b76836e5d2f5ccc2be433094993fcdbb))
+
 ## [2.9.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.8.0...js-sdk-common-v2.9.0) (2024-09-26)
 
 

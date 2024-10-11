@@ -31,16 +31,19 @@ import BrowserPlatform from './platform/BrowserPlatform';
  * Applications should configure the client at page load time and reuse the same instance.
  *
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
- *
- * @ignore Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
- * @ignore Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
- * @ignore Implementation Note: The browser SDK has different identify options, so omits the base implementation
- * @ignore from the interface.
  */
 export type LDClient = Omit<
   CommonClient,
   'setConnectionMode' | 'getConnectionMode' | 'getOffline' | 'identify'
 > & {
+  /**
+   * @ignore
+   * Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
+   * Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
+   * Implementation Note: The browser SDK has different identify options, so omits the base implementation
+   * from the interface.
+   */
+
   /**
    * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
@@ -83,10 +86,10 @@ export type LDClient = Omit<
 };
 
 export class BrowserClient extends LDClientImpl implements LDClient {
-  private readonly goalManager?: GoalManager;
+  private readonly _goalManager?: GoalManager;
 
   constructor(
-    private readonly clientSideId: string,
+    clientSideId: string,
     autoEnvAttributes: AutoEnvAttributes,
     options: BrowserOptions = {},
     overridePlatform?: Platform,
@@ -177,7 +180,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     this.setEventSendingEnabled(true, false);
 
     if (validatedBrowserOptions.fetchGoals) {
-      this.goalManager = new GoalManager(
+      this._goalManager = new GoalManager(
         clientSideId,
         platform.requests,
         baseUrl,
@@ -218,7 +221,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
       // "waitForGoalsReady", then we would make an async immediately invoked function expression
       // which emits the event, and assign its promise to a member. The "waitForGoalsReady" function
       // would return that promise.
-      this.goalManager.initialize();
+      this._goalManager.initialize();
 
       if (validatedBrowserOptions.automaticBackgroundHandling) {
         registerStateDetection(() => this.flush());
@@ -228,7 +231,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
 
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     await super.identify(context, identifyOptions);
-    this.goalManager?.startTracking();
+    this._goalManager?.startTracking();
   }
 
   setStreaming(streaming?: boolean): void {
@@ -238,7 +241,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     browserDataManager.setForcedStreaming(streaming);
   }
 
-  private updateAutomaticStreamingState() {
+  private _updateAutomaticStreamingState() {
     const browserDataManager = this.dataManager as BrowserDataManager;
     // This will need changed if support for listening to individual flag change
     // events it added.
@@ -247,11 +250,11 @@ export class BrowserClient extends LDClientImpl implements LDClient {
 
   override on(eventName: LDEmitterEventName, listener: Function): void {
     super.on(eventName, listener);
-    this.updateAutomaticStreamingState();
+    this._updateAutomaticStreamingState();
   }
 
   override off(eventName: LDEmitterEventName, listener: Function): void {
     super.off(eventName, listener);
-    this.updateAutomaticStreamingState();
+    this._updateAutomaticStreamingState();
   }
 }

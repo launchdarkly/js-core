@@ -88,33 +88,33 @@ function deserialize(
  * create new database integrations by implementing only the database-specific logic.
  */
 export default class PersistentDataStoreWrapper implements LDFeatureStore {
-  private isInitialized = false;
+  private _isInitialized = false;
 
   /**
    * Cache for storing individual items.
    */
-  private itemCache: TtlCache | undefined;
+  private _itemCache: TtlCache | undefined;
 
   /**
    * Cache for storing all items of a type.
    */
-  private allItemsCache: TtlCache | undefined;
+  private _allItemsCache: TtlCache | undefined;
 
   /**
    * Used to preserve order of operations of async requests.
    */
-  private queue: UpdateQueue = new UpdateQueue();
+  private _queue: UpdateQueue = new UpdateQueue();
 
   constructor(
-    private readonly core: PersistentDataStore,
+    private readonly _core: PersistentDataStore,
     ttl: number,
   ) {
     if (ttl) {
-      this.itemCache = new TtlCache({
+      this._itemCache = new TtlCache({
         ttl,
         checkInterval: defaultCheckInterval,
       });
-      this.allItemsCache = new TtlCache({
+      this._allItemsCache = new TtlCache({
         ttl,
         checkInterval: defaultCheckInterval,
       });
@@ -122,17 +122,17 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this.queue.enqueue((cb) => {
+    this._queue.enqueue((cb) => {
       const afterStoreInit = () => {
-        this.isInitialized = true;
-        if (this.itemCache) {
-          this.itemCache.clear();
-          this.allItemsCache!.clear();
+        this._isInitialized = true;
+        if (this._itemCache) {
+          this._itemCache.clear();
+          this._allItemsCache!.clear();
 
           Object.keys(allData).forEach((kindNamespace) => {
             const kind = persistentStoreKinds[kindNamespace];
             const items = allData[kindNamespace];
-            this.allItemsCache!.set(allForKindCacheKey(kind), items);
+            this._allItemsCache!.set(allForKindCacheKey(kind), items);
             Object.keys(items).forEach((key) => {
               const itemForKey = items[key];
 
@@ -140,20 +140,20 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
                 version: itemForKey.version,
                 item: itemForKey,
               };
-              this.itemCache!.set(cacheKey(kind, key), itemDescriptor);
+              this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
             });
           });
         }
         cb();
       };
 
-      this.core.init(sortDataSet(allData), afterStoreInit);
+      this._core.init(sortDataSet(allData), afterStoreInit);
     }, callback);
   }
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
-    if (this.itemCache) {
-      const item = this.itemCache.get(cacheKey(kind, key));
+    if (this._itemCache) {
+      const item = this._itemCache.get(cacheKey(kind, key));
       if (item) {
         callback(itemIfNotDeleted(item));
         return;
@@ -161,10 +161,10 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     }
 
     const persistKind = persistentStoreKinds[kind.namespace];
-    this.core.get(persistKind, key, (descriptor) => {
+    this._core.get(persistKind, key, (descriptor) => {
       if (descriptor && descriptor.serializedItem) {
         const value = deserialize(persistKind, descriptor);
-        this.itemCache?.set(cacheKey(kind, key), value);
+        this._itemCache?.set(cacheKey(kind, key), value);
         callback(itemIfNotDeleted(value));
         return;
       }
@@ -173,30 +173,30 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {
-    if (this.isInitialized) {
+    if (this._isInitialized) {
       callback(true);
-    } else if (this.itemCache?.get(initializationCheckedKey)) {
+    } else if (this._itemCache?.get(initializationCheckedKey)) {
       callback(false);
     } else {
-      this.core.initialized((storeInitialized) => {
-        this.isInitialized = storeInitialized;
-        if (!this.isInitialized) {
-          this.itemCache?.set(initializationCheckedKey, true);
+      this._core.initialized((storeInitialized) => {
+        this._isInitialized = storeInitialized;
+        if (!this._isInitialized) {
+          this._itemCache?.set(initializationCheckedKey, true);
         }
-        callback(this.isInitialized);
+        callback(this._isInitialized);
       });
     }
   }
 
   all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void): void {
-    const items = this.allItemsCache?.get(allForKindCacheKey(kind));
+    const items = this._allItemsCache?.get(allForKindCacheKey(kind));
     if (items) {
       callback(items);
       return;
     }
 
     const persistKind = persistentStoreKinds[kind.namespace];
-    this.core.getAll(persistKind, (storeItems) => {
+    this._core.getAll(persistKind, (storeItems) => {
       if (!storeItems) {
         callback({});
         return;
@@ -211,20 +211,20 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         }
       });
 
-      this.allItemsCache?.set(allForKindCacheKey(kind), filteredItems);
+      this._allItemsCache?.set(allForKindCacheKey(kind), filteredItems);
       callback(filteredItems);
     });
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    this.queue.enqueue((cb) => {
+    this._queue.enqueue((cb) => {
       // Clear the caches which contain all the values of a specific kind.
-      if (this.allItemsCache) {
-        this.allItemsCache.clear();
+      if (this._allItemsCache) {
+        this._allItemsCache.clear();
       }
 
       const persistKind = persistentStoreKinds[kind.namespace];
-      this.core.upsert(
+      this._core.upsert(
         persistKind,
         data.key,
         persistKind.serialize(data),
@@ -232,10 +232,10 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
           if (!err && updatedDescriptor) {
             if (updatedDescriptor.serializedItem) {
               const value = deserialize(persistKind, updatedDescriptor);
-              this.itemCache?.set(cacheKey(kind, data.key), value);
+              this._itemCache?.set(cacheKey(kind, data.key), value);
             } else if (updatedDescriptor.deleted) {
               // Deleted and there was not a serialized representation.
-              this.itemCache?.set(data.key, {
+              this._itemCache?.set(data.key, {
                 key: data.key,
                 version: updatedDescriptor.version,
                 deleted: true,
@@ -253,12 +253,12 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   close(): void {
-    this.itemCache?.close();
-    this.allItemsCache?.close();
-    this.core.close();
+    this._itemCache?.close();
+    this._allItemsCache?.close();
+    this._core.close();
   }
 
   getDescription(): string {
-    return this.core.getDescription();
+    return this._core.getDescription();
   }
 }

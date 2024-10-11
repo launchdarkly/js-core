@@ -318,7 +318,7 @@ describe('given a TestData instance', () => {
             {
               attribute: 'name',
               attributeReference: {
-                components: ['name'],
+                _components: ['name'],
                 isValid: true,
                 redactionName: 'name',
               },

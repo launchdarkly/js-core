@@ -1,3 +1,15 @@
+/**
+ * This is the API reference for the LaunchDarkly Client-Side SDK for JavaScript.
+ *
+ * This SDK is intended for use in browser environments.
+ *
+ * In typical usage, you will call {@link initialize} once at startup time to obtain an instance of
+ * {@link LDClient}, which provides access to all of the SDK's functionality.
+ *
+ * For more information, see the SDK reference guide.
+ *
+ * @packageDocumentation
+ */
 import {
   AutoEnvAttributes,
   EvaluationSeriesContext,
@@ -52,7 +64,23 @@ export type {
   IdentifySeriesStatus,
 };
 
-export function init(clientSideId: string, options?: LDOptions): LDClient {
+/**
+ * Creates an instance of the LaunchDarkly client.
+ *
+ * Usage:
+ * ```
+ * import { initialize } from 'launchdarkly-js-client-sdk';
+ * const client = initialize(envKey, context, options);
+ * ```
+ *
+ * @param clientSideId
+ *   The client-side id, also known as the environment ID.
+ * @param options
+ *   Optional configuration settings.
+ * @return
+ *   The new client instance.
+ */
+export function initialize(clientSideId: string, options?: LDOptions): LDClient {
   // AutoEnvAttributes are not supported yet in the browser SDK.
   return new BrowserClient(clientSideId, AutoEnvAttributes.Disabled, options);
 }

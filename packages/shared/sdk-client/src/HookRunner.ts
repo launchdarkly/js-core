@@ -115,13 +115,13 @@ function executeAfterIdentify(
 }
 
 export default class HookRunner {
-  private readonly hooks: Hook[] = [];
+  private readonly _hooks: Hook[] = [];
 
   constructor(
-    private readonly logger: LDLogger,
+    private readonly _logger: LDLogger,
     initialHooks: Hook[],
   ) {
-    this.hooks.push(...initialHooks);
+    this._hooks.push(...initialHooks);
   }
 
   withEvaluation(
@@ -130,19 +130,19 @@ export default class HookRunner {
     defaultValue: unknown,
     method: () => LDEvaluationDetail,
   ): LDEvaluationDetail {
-    if (this.hooks.length === 0) {
+    if (this._hooks.length === 0) {
       return method();
     }
-    const hooks: Hook[] = [...this.hooks];
+    const hooks: Hook[] = [...this._hooks];
     const hookContext: EvaluationSeriesContext = {
       flagKey: key,
       context,
       defaultValue,
     };
 
-    const hookData = executeBeforeEvaluation(this.logger, hooks, hookContext);
+    const hookData = executeBeforeEvaluation(this._logger, hooks, hookContext);
     const result = method();
-    executeAfterEvaluation(this.logger, hooks, hookContext, hookData, result);
+    executeAfterEvaluation(this._logger, hooks, hookContext, hookData, result);
     return result;
   }
 
@@ -150,18 +150,18 @@ export default class HookRunner {
     context: LDContext,
     timeout: number | undefined,
   ): (result: IdentifySeriesResult) => void {
-    const hooks: Hook[] = [...this.hooks];
+    const hooks: Hook[] = [...this._hooks];
     const hookContext: IdentifySeriesContext = {
       context,
       timeout,
     };
-    const hookData = executeBeforeIdentify(this.logger, hooks, hookContext);
+    const hookData = executeBeforeIdentify(this._logger, hooks, hookContext);
     return (result) => {
-      executeAfterIdentify(this.logger, hooks, hookContext, hookData, result);
+      executeAfterIdentify(this._logger, hooks, hookContext, hookData, result);
     };
   }
 
   addHook(hook: Hook): void {
-    this.hooks.push(hook);
+    this._hooks.push(hook);
   }
 }

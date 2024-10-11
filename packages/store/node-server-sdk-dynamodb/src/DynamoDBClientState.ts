@@ -30,25 +30,25 @@ const WRITE_BATCH_SIZE = 25;
  */
 export default class DynamoDBClientState {
   // This will include the ':' if a prefix is set.
-  private prefix: string;
+  private _prefix: string;
 
-  private client: DynamoDBClient;
+  private _client: DynamoDBClient;
 
-  private owned: boolean;
+  private _owned: boolean;
 
   constructor(options?: LDDynamoDBOptions) {
-    this.prefix = options?.prefix ? `${options!.prefix}:` : DEFAULT_PREFIX;
+    this._prefix = options?.prefix ? `${options!.prefix}:` : DEFAULT_PREFIX;
 
     // We track if we own the client so that we can destroy clients that we own.
     if (options?.dynamoDBClient) {
-      this.client = options.dynamoDBClient;
-      this.owned = false;
+      this._client = options.dynamoDBClient;
+      this._owned = false;
     } else if (options?.clientOptions) {
-      this.client = new DynamoDBClient(options.clientOptions);
-      this.owned = true;
+      this._client = new DynamoDBClient(options.clientOptions);
+      this._owned = true;
     } else {
-      this.client = new DynamoDBClient({});
-      this.owned = true;
+      this._client = new DynamoDBClient({});
+      this._owned = true;
     }
   }
 
@@ -58,14 +58,14 @@ export default class DynamoDBClientState {
    * @returns The prefixed key.
    */
   prefixedKey(key: string): string {
-    return `${this.prefix}${key}`;
+    return `${this._prefix}${key}`;
   }
 
   async query(params: QueryCommandInput): Promise<Record<string, AttributeValue>[]> {
     const records: Record<string, AttributeValue>[] = [];
     // Using a generator here is a substantial ergonomic improvement.
     // eslint-disable-next-line no-restricted-syntax
-    for await (const page of paginateQuery({ client: this.client }, params)) {
+    for await (const page of paginateQuery({ client: this._client }, params)) {
       if (page.Items) {
         records.push(...page.Items);
       }
@@ -83,7 +83,7 @@ export default class DynamoDBClientState {
     // Execute all the batches and wait for them to complete.
     await Promise.all(
       batches.map((batch) =>
-        this.client.send(
+        this._client.send(
           new BatchWriteItemCommand({
             RequestItems: { [table]: batch },
           }),
@@ -96,7 +96,7 @@ export default class DynamoDBClientState {
     table: string,
     key: Record<string, AttributeValue>,
   ): Promise<Record<string, AttributeValue> | undefined> {
-    const res = await this.client.send(
+    const res = await this._client.send(
       new GetItemCommand({
         TableName: table,
         Key: key,
@@ -108,7 +108,7 @@ export default class DynamoDBClientState {
 
   async put(params: PutItemCommandInput): Promise<void> {
     try {
-      await this.client.send(new PutItemCommand(params));
+      await this._client.send(new PutItemCommand(params));
     } catch (err) {
       // If we couldn't upsert because of the version, then that is fine.
       // Otherwise we return failure.
@@ -119,8 +119,8 @@ export default class DynamoDBClientState {
   }
 
   close() {
-    if (this.owned) {
-      this.client.destroy();
+    if (this._owned) {
+      this._client.destroy();
     }
   }
 }

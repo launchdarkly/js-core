@@ -25,7 +25,7 @@ export default class TestDataManager extends BaseDataManager {
     getStreamingPaths: () => DataSourcePaths,
     baseHeaders: LDHeaders,
     emitter: LDEmitter,
-    private readonly disableNetwork: boolean,
+    private readonly _disableNetwork: boolean,
     diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     super(
@@ -59,15 +59,15 @@ export default class TestDataManager extends BaseDataManager {
         'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
       );
     }
-    if (this.disableNetwork) {
+    if (this._disableNetwork) {
       identifyResolve();
       return;
     }
 
-    this.setupConnection(context, identifyResolve, identifyReject);
+    this._setupConnection(context, identifyResolve, identifyReject);
   }
 
-  private setupConnection(
+  private _setupConnection(
     context: Context,
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
