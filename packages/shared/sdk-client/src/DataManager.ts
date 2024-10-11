@@ -124,6 +124,7 @@ export abstract class BaseDataManager implements DataManager {
         this._dataSourceEventHandler.handlePollingError(err);
         identifyReject?.(err);
       },
+      this.logger,
     );
 
     this.updateProcessor = this._decorateProcessorWithStatusReporting(
@@ -161,6 +162,7 @@ export abstract class BaseDataManager implements DataManager {
         this._dataSourceEventHandler.handleStreamingError(e);
         identifyReject?.(e);
       },
+      this.logger,
     );
 
     this.updateProcessor = this._decorateProcessorWithStatusReporting(

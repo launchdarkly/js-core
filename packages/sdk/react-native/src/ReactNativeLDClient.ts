@@ -90,7 +90,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
               return `/msdk/evalx/context`;
             },
             pathPing(_encoding: Encoding, _plainContextString: string): string {
-              return `/mping`; // TODO: test this out
+              throw new Error('Ping for polling unsupported.');
             },
           }),
           () => ({
@@ -101,7 +101,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
               return `/meval`;
             },
             pathPing(_encoding: Encoding, _plainContextString: string): string {
-              throw new Error('Ping for polling unsupported.'); // TODO: come back to think on this case more
+              return `/mping`;
             },
           }),
           baseHeaders,

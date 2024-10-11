@@ -141,7 +141,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
               return `/sdk/evalx/${clientSideId}/context`;
             },
             pathPing(_encoding: Encoding, _plainContextString: string): string {
-              return `/ping/${clientSideId}`;
+              throw new Error('Ping for polling unsupported.');
             },
           }),
           () => ({
@@ -152,7 +152,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
               return `/eval/${clientSideId}`;
             },
             pathPing(_encoding: Encoding, _plainContextString: string): string {
-              throw new Error('Ping for polling unsupported.'); // TODO: come back to think on this case more
+              return `/ping/${clientSideId}`;
             },
           }),
           baseHeaders,

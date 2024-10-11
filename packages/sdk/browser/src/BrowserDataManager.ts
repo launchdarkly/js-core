@@ -106,7 +106,7 @@ export default class BrowserDataManager extends BaseDataManager {
       this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
 
       const plainContextString = JSON.stringify(Context.toLDContext(context));
-      const requestor = makeRequestor(
+      const pollingRequestor = makeRequestor(
         plainContextString,
         this.config.serviceEndpoints,
         this.getPollingPaths(),
@@ -119,7 +119,7 @@ export default class BrowserDataManager extends BaseDataManager {
         this._secureModeHash,
       );
 
-      const payload = await requestor.requestPayload();
+      const payload = await pollingRequestor.requestPayload();
       try {
         const listeners = this.createStreamListeners(context, identifyResolve);
         const putListener = listeners.get('put');
@@ -209,7 +209,7 @@ export default class BrowserDataManager extends BaseDataManager {
     this.updateProcessor?.close();
 
     const plainContextString = JSON.stringify(Context.toLDContext(context));
-    const requestor = makeRequestor(
+    const pollingRequestor = makeRequestor(
       plainContextString,
       this.config.serviceEndpoints,
       this.getPollingPaths(), // note: this is the polling path because the requestor is only used to make polling requests.
@@ -222,7 +222,13 @@ export default class BrowserDataManager extends BaseDataManager {
       this._secureModeHash,
     );
 
-    this.createStreamingProcessor(rawContext, context, requestor, identifyResolve, identifyReject);
+    this.createStreamingProcessor(
+      rawContext,
+      context,
+      pollingRequestor,
+      identifyResolve,
+      identifyReject,
+    );
 
     this.updateProcessor!.start();
   }

@@ -181,7 +181,6 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
 
     // here we set up a listener that will poll when ping is received
     eventSource.addEventListener('ping', async () => {
-      this._pollingRequestor.requestPayload();
       this._logger?.debug('Got PING, going to poll LaunchDarkly for feature flag updates');
       try {
         const res = await this._pollingRequestor.requestPayload();
