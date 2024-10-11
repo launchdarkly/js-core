@@ -1,7 +1,7 @@
 {
   "name": "@launchdarkly/ai",
   "version": "0.1.0",
-  "description": "AI and LLM integration for the LaunchDarkly Server-Side SDK for Node.js",
+  "description": "LaunchDarkly AI SDK for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
