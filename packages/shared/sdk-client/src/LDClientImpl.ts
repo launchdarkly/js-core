@@ -485,6 +485,10 @@ export default class LDClientImpl implements LDClient {
   }
 
   private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {
+    if (!this._inspectorManager.hasInspectors()) {
+      return;
+    }
+
     const details: Record<string, LDEvaluationDetail> = {};
     flagKeys.forEach((flagKey) => {
       const item = this._flagManager.get(flagKey);
