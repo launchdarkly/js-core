@@ -24,7 +24,10 @@ const getSharedConfig = (format, file) => ({
 const terserOpts = {
   mangle: {
     properties: {
+      // Mangle class properties which start with an underscore.
       regex: /^_/,
+      // Do not mangle '_meta', because this is part of our JSON
+      // data model.
       reserved: ['_meta']
     },
   }
