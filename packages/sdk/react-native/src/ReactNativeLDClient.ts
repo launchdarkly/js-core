@@ -89,6 +89,9 @@ export default class ReactNativeLDClient extends LDClientImpl {
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/msdk/evalx/context`;
             },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              return `/mping`; // TODO: test this out
+            },
           }),
           () => ({
             pathGet(encoding: Encoding, _plainContextString: string): string {
@@ -96,6 +99,9 @@ export default class ReactNativeLDClient extends LDClientImpl {
             },
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/meval`;
+            },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              throw new Error('Ping for polling unsupported.'); // TODO: come back to think on this case more
             },
           }),
           baseHeaders,

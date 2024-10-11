@@ -8,6 +8,7 @@ import {
   HttpErrorResponse,
   internal,
   LDLogger,
+  LDPollingError,
   LDStreamingError,
   ProcessStreamResponse,
   Requests,
@@ -15,7 +16,8 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { StreamingDataSourceConfig } from './DataSourceConfig';
+import { StreamingDataSourceConfig } from '../datasource/DataSourceConfig';
+import Requestor, { LDRequestError } from '../datasource/Requestor';
 
 const reportJsonError = (
   type: string,
@@ -43,20 +45,19 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     private readonly listeners: Map<EventName, ProcessStreamResponse>,
     private readonly requests: Requests,
     encoding: Encoding,
+    private readonly pollingRequestor: Requestor,
     private readonly diagnosticsManager?: internal.DiagnosticsManager,
     private readonly errorHandler?: internal.StreamingErrorHandler,
     private readonly logger?: LDLogger,
   ) {
-    // TODO: SC-255969 Implement better REPORT fallback logic
+    let path: string;
     if (dataSourceConfig.useReport && !requests.getEventSourceCapabilities().customMethod) {
-      logger?.error(
-        "Configuration option useReport is true, but platform's EventSource does not support custom HTTP methods. Streaming may not work.",
-      );
+      path = dataSourceConfig.paths.pathPing(encoding, plainContextString);
+    } else {
+      path = dataSourceConfig.useReport
+        ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
+        : dataSourceConfig.paths.pathGet(encoding, plainContextString);
     }
-
-    const path = dataSourceConfig.useReport
-      ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
-      : dataSourceConfig.paths.pathGet(encoding, plainContextString);
 
     const parameters: { key: string; value: string }[] = [
       ...(dataSourceConfig.queryParameters ?? []),
@@ -177,6 +178,42 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
           );
         }
       });
+    });
+
+    // here we set up a listener that will poll when ping is received
+    eventSource.addEventListener('ping', async () => {
+      this.pollingRequestor.requestPayload();
+      this.logger?.debug('Got PING, going to poll LaunchDarkly for feature flag updates');
+      try {
+        const res = await this.pollingRequestor.requestPayload();
+        try {
+          const payload = JSON.parse(res);
+          try {
+            // forward the payload on to the PUT listener
+            this.listeners.get('put')?.processJson(payload);
+          } catch (err) {
+            this.logger?.error(`Exception from data handler: ${err}`);
+          }
+        } catch {
+          this.logger?.error('Polling after ping received invalid data');
+          this.logger?.debug(`Invalid JSON follows: ${res}`);
+          this.errorHandler?.(
+            new LDPollingError(
+              DataSourceErrorKind.InvalidData,
+              'Malformed JSON data in ping polling response',
+            ),
+          );
+        }
+      } catch (err) {
+        const requestError = err as LDRequestError;
+        this.errorHandler?.(
+          new LDPollingError(
+            DataSourceErrorKind.ErrorResponse,
+            requestError.message,
+            requestError.status,
+          ),
+        );
+      }
     });
   }
 

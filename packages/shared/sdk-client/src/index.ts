@@ -1,9 +1,9 @@
 import { LDClientInternalOptions } from './configuration/Configuration';
 import DataSourceStatus, { DataSourceState } from './datasource/DataSourceStatus';
 import DataSourceStatusErrorInfo from './datasource/DataSourceStatusErrorInfo';
+import Requestor, { makeRequestor } from './datasource/Requestor';
 import LDClientImpl from './LDClientImpl';
 import LDEmitter, { EventName } from './LDEmitter';
-import Requestor from './polling/Requestor';
 
 export * from '@launchdarkly/js-sdk-common';
 
@@ -40,7 +40,7 @@ export type { Flag } from './types';
 
 export { DataSourcePaths } from './streaming';
 export { BaseDataManager } from './DataManager';
-export { Requestor };
+export { makeRequestor, Requestor };
 
 export {
   DataSourceStatus,

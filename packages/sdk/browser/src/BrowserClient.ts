@@ -137,6 +137,9 @@ export class BrowserClient extends LDClientImpl implements LDClient {
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/sdk/evalx/${clientSideId}/context`;
             },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              return `/ping/${clientSideId}`;
+            },
           }),
           () => ({
             pathGet(encoding: Encoding, _plainContextString: string): string {
@@ -144,6 +147,9 @@ export class BrowserClient extends LDClientImpl implements LDClient {
             },
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/eval/${clientSideId}`;
+            },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              throw new Error('Ping for polling unsupported.'); // TODO: come back to think on this case more
             },
           }),
           baseHeaders,

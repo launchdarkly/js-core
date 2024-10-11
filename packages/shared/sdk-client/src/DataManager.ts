@@ -16,6 +16,7 @@ import { Configuration } from './configuration/Configuration';
 import DataSourceEventHandler from './datasource/DataSourceEventHandler';
 import { DataSourceState } from './datasource/DataSourceStatus';
 import DataSourceStatusManager from './datasource/DataSourceStatusManager';
+import Requestor from './datasource/Requestor';
 import { FlagManager } from './flag-manager/FlagManager';
 import LDEmitter from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
@@ -107,23 +108,13 @@ export abstract class BaseDataManager implements DataManager {
   protected createPollingProcessor(
     context: LDContext,
     checkedContext: Context,
+    requestor: Requestor,
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
   ) {
     const processor = new PollingProcessor(
-      JSON.stringify(context),
-      {
-        credential: this.credential,
-        serviceEndpoints: this.config.serviceEndpoints,
-        paths: this.getPollingPaths(),
-        baseHeaders: this.baseHeaders,
-        pollInterval: this.config.pollInterval,
-        withReasons: this.config.withReasons,
-        useReport: this.config.useReport,
-        queryParameters: this.connectionParams?.queryParameters,
-      },
-      this.platform.requests,
-      this.platform.encoding!,
+      requestor,
+      this.config.pollInterval,
       async (flags) => {
         await this.dataSourceEventHandler.handlePut(checkedContext, flags);
         identifyResolve?.();
@@ -144,6 +135,7 @@ export abstract class BaseDataManager implements DataManager {
   protected createStreamingProcessor(
     context: LDContext,
     checkedContext: Context,
+    pollingRequestor: Requestor,
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
   ) {
@@ -162,6 +154,7 @@ export abstract class BaseDataManager implements DataManager {
       this.createStreamListeners(checkedContext, identifyResolve),
       this.platform.requests,
       this.platform.encoding!,
+      pollingRequestor,
       this.diagnosticsManager,
       (e) => {
         this.emitter.emit('error', context, e);
