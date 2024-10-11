@@ -139,8 +139,6 @@ export default class LDClientImpl implements LDClient {
     // extracting all flag values
     const result = Object.entries(this._flagManager.getAll()).reduce(
       (acc: LDFlagSet, [key, descriptor]) => {
-        // If this is changed to use _variationInternal, than that function will need updated
-        // to ensure it does not notify inspectors/hooks. (In addition to not sending events).
         if (descriptor.flag !== null && descriptor.flag !== undefined && !descriptor.flag.deleted) {
           acc[key] = descriptor.flag.value;
         }
