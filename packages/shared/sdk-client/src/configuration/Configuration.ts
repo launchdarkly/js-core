@@ -12,6 +12,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
+import { LDInspection } from '../api/LDInspection';
 import validators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
@@ -53,6 +54,7 @@ export interface Configuration {
   readonly userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent';
   readonly trackEventModifier: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
   readonly hooks: Hook[];
+  readonly inspectors: LDInspection[];
 }
 
 const DEFAULT_POLLING: string = 'https://clientsdk.launchdarkly.com';
@@ -121,6 +123,8 @@ export default class ConfigurationImpl implements Configuration {
   public readonly userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent';
 
   public readonly hooks: Hook[] = [];
+
+  public readonly inspectors: LDInspection[] = [];
 
   public readonly trackEventModifier: (
     event: internal.InputCustomEvent,

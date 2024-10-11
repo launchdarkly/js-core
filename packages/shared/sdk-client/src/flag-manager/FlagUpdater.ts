@@ -4,6 +4,8 @@ import calculateChangedKeys from './calculateChangedKeys';
 import FlagStore from './FlagStore';
 import { ItemDescriptor } from './ItemDescriptor';
 
+export type FlagChangeType = 'init' | 'patch';
+
 /**
  * This callback indicates that the details associated with one or more flags
  * have changed.
@@ -17,7 +19,11 @@ import { ItemDescriptor } from './ItemDescriptor';
  * This event does not include the value of the flag. It is expected that you
  * will call a variation method for flag values which you require.
  */
-export type FlagsChangeCallback = (context: Context, flagKeys: Array<string>) => void;
+export type FlagsChangeCallback = (
+  context: Context,
+  flagKeys: Array<string>,
+  type: FlagChangeType,
+) => void;
 
 /**
  * The flag updater handles logic required during the flag update process.
@@ -43,7 +49,7 @@ export default class FlagUpdater {
     if (changed.length > 0) {
       this._changeCallbacks.forEach((callback) => {
         try {
-          callback(context, changed);
+          callback(context, changed, 'init');
         } catch (err) {
           /* intentionally empty */
         }
@@ -74,7 +80,7 @@ export default class FlagUpdater {
     this._flagStore.insertOrUpdate(key, item);
     this._changeCallbacks.forEach((callback) => {
       try {
-        callback(context, [key]);
+        callback(context, [key], 'patch');
       } catch (err) {
         /* intentionally empty */
       }
