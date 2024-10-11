@@ -76,7 +76,12 @@ export class AIClient {
 
     return {
       config: detail.value,
-      tracker: new LDAIConfigTracker(this.ldClient, detail.value.variationId, context),
+      tracker: new LDAIConfigTracker(
+        this.ldClient,
+        key,
+        detail.value.variationId || '1234-1234-1234-1234',
+        context,
+      ),
     };
   }
 }
@@ -84,3 +89,5 @@ export class AIClient {
 export function init(ldClient: LDClient): AIClient {
   return new AIClient(ldClient);
 }
+
+export { LDAIConfigTracker } from './LDAIConfigTracker';
