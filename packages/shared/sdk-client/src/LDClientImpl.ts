@@ -31,7 +31,10 @@ import {
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
+import { FlagChangeType } from './flag-manager/FlagUpdater';
 import HookRunner from './HookRunner';
+import { getInspectorHook } from './inspection/getInspectorHook';
+import InspectorManager from './inspection/InspectorManager';
 import LDEmitter, { EventName } from './LDEmitter';
 
 const { ClientMessages, ErrorKinds } = internal;
@@ -57,6 +60,7 @@ export default class LDClientImpl implements LDClient {
   private _baseHeaders: LDHeaders;
   protected dataManager: DataManager;
   private _hookRunner: HookRunner;
+  private _inspectorManager: InspectorManager;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -107,7 +111,8 @@ export default class LDClientImpl implements LDClient {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
     });
 
-    this._flagManager.on((context, flagKeys) => {
+    this._flagManager.on((context, flagKeys, type) => {
+      this._handleInspectionChanged(flagKeys, type);
       const ldContext = Context.toLDContext(context);
       this.emitter.emit('change', ldContext, flagKeys);
       flagKeys.forEach((it) => {
@@ -124,6 +129,10 @@ export default class LDClientImpl implements LDClient {
     );
 
     this._hookRunner = new HookRunner(this.logger, this._config.hooks);
+    this._inspectorManager = new InspectorManager(this._config.inspectors, this.logger);
+    if (this._inspectorManager.hasInspectors()) {
+      this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
+    }
   }
 
   allFlags(): LDFlagSet {
@@ -473,5 +482,27 @@ export default class LDClientImpl implements LDClient {
 
   protected sendEvent(event: internal.InputEvent): void {
     this._eventProcessor?.sendEvent(event);
+  }
+
+  private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {
+    if (!this._inspectorManager.hasInspectors()) {
+      return;
+    }
+
+    const details: Record<string, LDEvaluationDetail> = {};
+    flagKeys.forEach((flagKey) => {
+      const item = this._flagManager.get(flagKey);
+      if (item?.flag && !item.flag.deleted) {
+        const { reason, value, variation } = item.flag;
+        details[flagKey] = createSuccessEvaluationDetail(value, variation, reason);
+      }
+    });
+    if (type === 'init') {
+      this._inspectorManager.onFlagsChanged(details);
+    } else if (type === 'patch') {
+      Object.entries(details).forEach(([flagKey, detail]) => {
+        this._inspectorManager.onFlagChanged(flagKey, detail);
+      });
+    }
   }
 }

@@ -94,6 +94,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       userAgentHeaderName: 'user-agent',
       trackEventModifier: (event) => event,
       hooks: [],
+      inspectors: [],
     };
     const mockedFetch = mockFetch('{"flagA": true}', 200);
     platform = {
