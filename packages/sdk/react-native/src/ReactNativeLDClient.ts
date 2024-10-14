@@ -90,6 +90,8 @@ export default class ReactNativeLDClient extends LDClientImpl {
               return `/msdk/evalx/context`;
             },
             pathPing(_encoding: Encoding, _plainContextString: string): string {
+              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
+              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
               throw new Error('Ping for polling unsupported.');
             },
           }),
