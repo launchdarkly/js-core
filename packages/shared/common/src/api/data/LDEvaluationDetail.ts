@@ -30,7 +30,8 @@ export interface LDEvaluationDetail {
   reason: LDEvaluationReason;
 
   /**
-   * An ordered list of prerequisite flag keys evaluated while determining the flags value.
+   * An optional ordered list of prerequisite flag keys evaluated while determining the flags value.
+   * This will only include the direct prerequisites of the flag.
    */
   prerequisites?: string[];
 }
