@@ -398,7 +398,6 @@ export default class LDClientImpl implements LDClient {
                 value: res.detail.value as TResult,
                 reason: res.detail.reason,
                 variationIndex: res.detail.variationIndex,
-                prerequisites: res.detail.prerequisites,
               };
               resolve(typedRes);
             },
@@ -668,7 +667,7 @@ export default class LDClientImpl implements LDClient {
                   flag.trackEvents || requireExperimentData,
                   requireExperimentData,
                   detailsOnlyIfTracked,
-                  res.detail.prerequisites,
+                  res.prerequisites,
                 );
                 iterCb(true);
               });

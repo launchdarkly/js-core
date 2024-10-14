@@ -10,6 +10,7 @@ import Reasons from './Reasons';
  */
 export default class EvalResult {
   public events?: internal.InputEvalEvent[];
+  public prerequisites?: string[];
 
   protected constructor(
     public readonly isError: boolean,

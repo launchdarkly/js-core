@@ -141,7 +141,7 @@ export default class Evaluator {
           };
         }
         if (state.prerequisites) {
-          res.detail.prerequisites = state.prerequisites;
+          res.prerequisites = state.prerequisites;
         }
         res.events = state.events;
         cb(res);

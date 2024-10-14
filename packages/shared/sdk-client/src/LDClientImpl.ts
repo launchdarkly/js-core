@@ -350,13 +350,13 @@ export default class LDClientImpl implements LDClient {
       }
     }
 
-    const successDetail = createSuccessEvaluationDetail(value, variation, reason, prerequisites);
+    const successDetail = createSuccessEvaluationDetail(value, variation, reason);
     if (value === undefined || value === null) {
       this.logger.debug('Result value is null. Providing default value.');
       successDetail.value = defaultValue;
     }
 
-    successDetail.prerequisites?.forEach((prereqKey) => {
+    prerequisites?.forEach((prereqKey) => {
       this.variation(prereqKey, undefined);
     });
     this._eventProcessor?.sendEvent(

@@ -138,7 +138,7 @@ describe('given a flag payload with prerequisites', () => {
 
     expect(res.detail.reason.kind).toEqual('FALLTHROUGH');
 
-    expect(res.detail.prerequisites).toEqual(['is-prereq']);
+    expect(res.prerequisites).toEqual(['is-prereq']);
   });
 
   it('can track prerequisites for a prereq of a prereq', async () => {
@@ -150,7 +150,7 @@ describe('given a flag payload with prerequisites', () => {
 
     expect(res.detail.reason.kind).toEqual('FALLTHROUGH');
 
-    expect(res.detail.prerequisites).toEqual(['has-prereq-depth-1']);
+    expect(res.prerequisites).toEqual(['has-prereq-depth-1']);
   });
 
   it('can track prerequisites for a flag with multiple prereqs with and without additional prereqs', async () => {
@@ -162,11 +162,7 @@ describe('given a flag payload with prerequisites', () => {
 
     expect(res.detail.reason.kind).toEqual('FALLTHROUGH');
 
-    expect(res.detail.prerequisites).toEqual([
-      'has-prereq-depth-1',
-      'has-prereq-depth-2',
-      'is-prereq',
-    ]);
+    expect(res.prerequisites).toEqual(['has-prereq-depth-1', 'has-prereq-depth-2', 'is-prereq']);
   });
 
   it('has can handle a prerequisite failure', async () => {
@@ -180,6 +176,6 @@ describe('given a flag payload with prerequisites', () => {
     expect(res.detail.reason.kind).toEqual('PREREQUISITE_FAILED');
     expect(res.detail.reason.prerequisiteKey).toEqual('has-prereq-depth-1');
 
-    expect(res.detail.prerequisites).toEqual(['has-prereq-depth-1']);
+    expect(res.prerequisites).toEqual(['has-prereq-depth-1']);
   });
 });

@@ -17,15 +17,11 @@ export function createSuccessEvaluationDetail(
   value: LDFlagValue,
   variationIndex?: number,
   reason?: LDEvaluationReason,
-  prerequisites?: string[],
 ): LDEvaluationDetail {
   const res: LDEvaluationDetail = {
     value,
     variationIndex: variationIndex ?? null,
     reason: reason ?? null,
   };
-  if (prerequisites) {
-    res.prerequisites = prerequisites;
-  }
   return res;
 }

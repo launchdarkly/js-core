@@ -28,12 +28,6 @@ export interface LDEvaluationDetail {
    * An object describing the main factor that influenced the flag evaluation value.
    */
   reason: LDEvaluationReason;
-
-  /**
-   * An optional ordered list of prerequisite flag keys evaluated while determining the flags value.
-   * This will only include the direct prerequisites of the flag.
-   */
-  prerequisites?: string[];
 }
 
 export interface LDEvaluationDetailTyped<TFlag> {
@@ -53,9 +47,4 @@ export interface LDEvaluationDetailTyped<TFlag> {
    * An object describing the main factor that influenced the flag evaluation value.
    */
   reason: LDEvaluationReason;
-
-  /**
-   * An ordered list of prerequisite flag keys evaluated while determining the flags value.
-   */
-  prerequisites?: string[];
 }
