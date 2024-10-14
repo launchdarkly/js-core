@@ -19,10 +19,13 @@ export function createSuccessEvaluationDetail(
   reason?: LDEvaluationReason,
   prerequisites?: string[],
 ): LDEvaluationDetail {
-  return {
+  const res: LDEvaluationDetail = {
     value,
     variationIndex: variationIndex ?? null,
     reason: reason ?? null,
-    prerequisites,
   };
+  if (prerequisites) {
+    res.prerequisites = prerequisites;
+  }
+  return res;
 }
