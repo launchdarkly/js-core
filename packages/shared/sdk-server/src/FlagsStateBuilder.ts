@@ -14,13 +14,13 @@ interface FlagMeta {
 }
 
 export default class FlagsStateBuilder {
-  private flagValues: LDFlagSet = {};
+  private _flagValues: LDFlagSet = {};
 
-  private flagMetadata: Record<string, FlagMeta> = {};
+  private _flagMetadata: Record<string, FlagMeta> = {};
 
   constructor(
-    private valid: boolean,
-    private withReasons: boolean,
+    private _valid: boolean,
+    private _withReasons: boolean,
   ) {}
 
   addFlag(
@@ -33,7 +33,7 @@ export default class FlagsStateBuilder {
     detailsOnlyIfTracked: boolean,
     prerequisites?: string[],
   ) {
-    this.flagValues[flag.key] = value;
+    this._flagValues[flag.key] = value;
     const meta: FlagMeta = {};
     if (variation !== undefined) {
       meta.variation = variation;
@@ -46,7 +46,7 @@ export default class FlagsStateBuilder {
     if (!omitDetails) {
       meta.version = flag.version;
     }
-    if (reason && (trackReason || (this.withReasons && !omitDetails))) {
+    if (reason && (trackReason || (this._withReasons && !omitDetails))) {
       meta.reason = reason;
     }
     if (trackEvents) {
@@ -61,21 +61,20 @@ export default class FlagsStateBuilder {
     if (prerequisites && prerequisites.length) {
       meta.prerequisites = prerequisites;
     }
-    this.flagMetadata[flag.key] = meta;
+    this._flagMetadata[flag.key] = meta;
   }
 
   build(): LDFlagsState {
-    const state = this;
     return {
-      valid: state.valid,
-      allValues: () => state.flagValues,
-      getFlagValue: (key) => state.flagValues[key],
+      valid: this._valid,
+      allValues: () => this._flagValues,
+      getFlagValue: (key) => this._flagValues[key],
       getFlagReason: (key) =>
-        (state.flagMetadata[key] ? state.flagMetadata[key].reason : null) ?? null,
+        (this._flagMetadata[key] ? this._flagMetadata[key].reason : null) ?? null,
       toJSON: () => ({
-        ...state.flagValues,
-        $flagsState: state.flagMetadata,
-        $valid: state.valid,
+        ...this._flagValues,
+        $flagsState: this._flagMetadata,
+        $valid: this._valid,
       }),
     };
   }

@@ -10,6 +10,7 @@ function canonicalizePath(path: string): string {
  * Specifies the base service URIs used by SDK components.
  */
 export default class ServiceEndpoints {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public static DEFAULT_EVENTS = 'https://events.launchdarkly.com';
 
   public readonly streaming: string;

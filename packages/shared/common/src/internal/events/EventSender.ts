@@ -14,13 +14,13 @@ import { ClientContext, getEventsUri } from '../../options';
 import { httpErrorMessage, LDHeaders, sleep } from '../../utils';
 
 export default class EventSender implements LDEventSender {
-  private crypto: Crypto;
-  private defaultHeaders: {
+  private _crypto: Crypto;
+  private _defaultHeaders: {
     [key: string]: string;
   };
-  private diagnosticEventsUri: string;
-  private eventsUri: string;
-  private requests: Requests;
+  private _diagnosticEventsUri: string;
+  private _eventsUri: string;
+  private _requests: Requests;
 
   constructor(clientContext: ClientContext, baseHeaders: LDHeaders) {
     const { basicConfiguration, platform } = clientContext;
@@ -29,18 +29,18 @@ export default class EventSender implements LDEventSender {
     } = basicConfiguration;
     const { crypto, requests } = platform;
 
-    this.defaultHeaders = { ...baseHeaders };
-    this.eventsUri = getEventsUri(basicConfiguration.serviceEndpoints, analyticsEventPath, []);
-    this.diagnosticEventsUri = getEventsUri(
+    this._defaultHeaders = { ...baseHeaders };
+    this._eventsUri = getEventsUri(basicConfiguration.serviceEndpoints, analyticsEventPath, []);
+    this._diagnosticEventsUri = getEventsUri(
       basicConfiguration.serviceEndpoints,
       diagnosticEventPath,
       [],
     );
-    this.requests = requests;
-    this.crypto = crypto;
+    this._requests = requests;
+    this._crypto = crypto;
   }
 
-  private async tryPostingEvents(
+  private async _tryPostingEvents(
     events: any,
     uri: string,
     payloadId: string | undefined,
@@ -51,7 +51,7 @@ export default class EventSender implements LDEventSender {
     };
 
     const headers: Record<string, string> = {
-      ...this.defaultHeaders,
+      ...this._defaultHeaders,
       'content-type': 'application/json',
     };
 
@@ -61,10 +61,13 @@ export default class EventSender implements LDEventSender {
     }
     let error;
     try {
-      const { status, headers: resHeaders } = await this.requests.fetch(uri, {
+      const { status, headers: resHeaders } = await this._requests.fetch(uri, {
         headers,
         body: JSON.stringify(events),
         method: 'POST',
+        // When sending events from browser environments the request should be completed even
+        // if the user is navigating away from the page.
+        keepalive: true,
       });
 
       const serverDate = Date.parse(resHeaders.get('date') || '');
@@ -107,13 +110,13 @@ export default class EventSender implements LDEventSender {
     // wait 1 second before retrying
     await sleep();
 
-    return this.tryPostingEvents(events, this.eventsUri, payloadId, false);
+    return this._tryPostingEvents(events, this._eventsUri, payloadId, false);
   }
 
   async sendEventData(type: LDEventType, data: any): Promise<LDEventSenderResult> {
-    const payloadId = type === LDEventType.AnalyticsEvents ? this.crypto.randomUUID() : undefined;
-    const uri = type === LDEventType.AnalyticsEvents ? this.eventsUri : this.diagnosticEventsUri;
+    const payloadId = type === LDEventType.AnalyticsEvents ? this._crypto.randomUUID() : undefined;
+    const uri = type === LDEventType.AnalyticsEvents ? this._eventsUri : this._diagnosticEventsUri;
 
-    return this.tryPostingEvents(data, uri, payloadId, true);
+    return this._tryPostingEvents(data, uri, payloadId, true);
   }
 }

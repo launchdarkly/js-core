@@ -4,6 +4,8 @@ import calculateChangedKeys from './calculateChangedKeys';
 import FlagStore from './FlagStore';
 import { ItemDescriptor } from './ItemDescriptor';
 
+export type FlagChangeType = 'init' | 'patch';
+
 /**
  * This callback indicates that the details associated with one or more flags
  * have changed.
@@ -17,7 +19,11 @@ import { ItemDescriptor } from './ItemDescriptor';
  * This event does not include the value of the flag. It is expected that you
  * will call a variation method for flag values which you require.
  */
-export type FlagsChangeCallback = (context: Context, flagKeys: Array<string>) => void;
+export type FlagsChangeCallback = (
+  context: Context,
+  flagKeys: Array<string>,
+  type: FlagChangeType,
+) => void;
 
 /**
  * The flag updater handles logic required during the flag update process.
@@ -25,25 +31,25 @@ export type FlagsChangeCallback = (context: Context, flagKeys: Array<string>) =>
  * also handles flag comparisons for change notification.
  */
 export default class FlagUpdater {
-  private flagStore: FlagStore;
-  private logger: LDLogger;
-  private activeContextKey: string | undefined;
-  private changeCallbacks = new Array<FlagsChangeCallback>();
+  private _flagStore: FlagStore;
+  private _logger: LDLogger;
+  private _activeContextKey: string | undefined;
+  private _changeCallbacks = new Array<FlagsChangeCallback>();
 
   constructor(flagStore: FlagStore, logger: LDLogger) {
-    this.flagStore = flagStore;
-    this.logger = logger;
+    this._flagStore = flagStore;
+    this._logger = logger;
   }
 
   init(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
-    this.activeContextKey = context.canonicalKey;
-    const oldFlags = this.flagStore.getAll();
-    this.flagStore.init(newFlags);
+    this._activeContextKey = context.canonicalKey;
+    const oldFlags = this._flagStore.getAll();
+    this._flagStore.init(newFlags);
     const changed = calculateChangedKeys(oldFlags, newFlags);
     if (changed.length > 0) {
-      this.changeCallbacks.forEach((callback) => {
+      this._changeCallbacks.forEach((callback) => {
         try {
-          callback(context, changed);
+          callback(context, changed, 'init');
         } catch (err) {
           /* intentionally empty */
         }
@@ -52,7 +58,7 @@ export default class FlagUpdater {
   }
 
   initCached(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
-    if (this.activeContextKey === context.canonicalKey) {
+    if (this._activeContextKey === context.canonicalKey) {
       return;
     }
 
@@ -60,21 +66,21 @@ export default class FlagUpdater {
   }
 
   upsert(context: Context, key: string, item: ItemDescriptor): boolean {
-    if (this.activeContextKey !== context.canonicalKey) {
-      this.logger.warn('Received an update for an inactive context.');
+    if (this._activeContextKey !== context.canonicalKey) {
+      this._logger.warn('Received an update for an inactive context.');
       return false;
     }
 
-    const currentValue = this.flagStore.get(key);
+    const currentValue = this._flagStore.get(key);
     if (currentValue !== undefined && currentValue.version >= item.version) {
       // this is an out of order update that can be ignored
       return false;
     }
 
-    this.flagStore.insertOrUpdate(key, item);
-    this.changeCallbacks.forEach((callback) => {
+    this._flagStore.insertOrUpdate(key, item);
+    this._changeCallbacks.forEach((callback) => {
       try {
-        callback(context, [key]);
+        callback(context, [key], 'patch');
       } catch (err) {
         /* intentionally empty */
       }
@@ -83,13 +89,13 @@ export default class FlagUpdater {
   }
 
   on(callback: FlagsChangeCallback): void {
-    this.changeCallbacks.push(callback);
+    this._changeCallbacks.push(callback);
   }
 
   off(callback: FlagsChangeCallback): void {
-    const index = this.changeCallbacks.indexOf(callback);
+    const index = this._changeCallbacks.indexOf(callback);
     if (index > -1) {
-      this.changeCallbacks.splice(index, 1);
+      this._changeCallbacks.splice(index, 1);
     }
   }
 }

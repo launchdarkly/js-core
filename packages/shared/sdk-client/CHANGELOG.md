@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.9.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.8.0...js-client-sdk-common-v1.9.0) (2024-10-09)
+
+
+### Features
+
+* Add basic secure mode support for browser SDK. ([#598](https://github.com/launchdarkly/js-core/issues/598)) ([3389983](https://github.com/launchdarkly/js-core/commit/33899830781affbe986f3bb9df35e5c908884f99))
+* Add bootstrap support. ([#600](https://github.com/launchdarkly/js-core/issues/600)) ([4e5dbee](https://github.com/launchdarkly/js-core/commit/4e5dbee48d6bb236b5febd872c910e809058a012))
+* Add ESM support for common and common-client (rollup) ([#604](https://github.com/launchdarkly/js-core/issues/604)) ([8cd0cdc](https://github.com/launchdarkly/js-core/commit/8cd0cdce988f606b1efdf6bfd19484f6607db2e5))
+* Add support for hooks. ([#605](https://github.com/launchdarkly/js-core/issues/605)) ([04d347b](https://github.com/launchdarkly/js-core/commit/04d347b25e01015134a2545be22bfd8b1d1e85cc))
+* Add visibility handling to allow proactive event flushing. ([#607](https://github.com/launchdarkly/js-core/issues/607)) ([819a311](https://github.com/launchdarkly/js-core/commit/819a311db6f56e323bb84c925789ad4bd19ae4ba))
+* adds datasource status to sdk-client ([#590](https://github.com/launchdarkly/js-core/issues/590)) ([6f26204](https://github.com/launchdarkly/js-core/commit/6f262045b76836e5d2f5ccc2be433094993fcdbb))
+* adds support for individual flag change listeners ([#608](https://github.com/launchdarkly/js-core/issues/608)) ([da31436](https://github.com/launchdarkly/js-core/commit/da3143654331d7d2fd8ba76d9d995855dbf6c7a1))
+* Browser-SDK Automatically start streaming based on event handlers. ([#592](https://github.com/launchdarkly/js-core/issues/592)) ([f2e5cbf](https://github.com/launchdarkly/js-core/commit/f2e5cbf1d0b3ae39a95881fecdcbefc11e9d0363))
+
+
+### Bug Fixes
+
+* Ensure client logger is always wrapped in a safe logger. ([#599](https://github.com/launchdarkly/js-core/issues/599)) ([980e4da](https://github.com/launchdarkly/js-core/commit/980e4daaf32864e18f14b1e5e28e308dff0ae94f))
+* Use flagVersion in analytics events. ([#611](https://github.com/launchdarkly/js-core/issues/611)) ([35fa033](https://github.com/launchdarkly/js-core/commit/35fa0332dc1553c82afd75c9a4770a4833f2dca3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.9.0 to 2.10.0
+
 ## [1.8.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.7.0...js-client-sdk-common-v1.8.0) (2024-09-26)
 
 

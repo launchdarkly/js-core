@@ -20,15 +20,15 @@ export interface EdgeProvider {
 export const buildRootKey = (sdkKey: string) => `LD-Env-${sdkKey}`;
 
 export class EdgeFeatureStore implements LDFeatureStore {
-  private readonly rootKey: string;
+  private readonly _rootKey: string;
 
   constructor(
-    private readonly edgeProvider: EdgeProvider,
-    private readonly sdkKey: string,
-    private readonly description: string,
-    private logger: LDLogger,
+    private readonly _edgeProvider: EdgeProvider,
+    private readonly _sdkKey: string,
+    private readonly _description: string,
+    private _logger: LDLogger,
   ) {
-    this.rootKey = buildRootKey(this.sdkKey);
+    this._rootKey = buildRootKey(this._sdkKey);
   }
 
   async get(
@@ -38,13 +38,13 @@ export class EdgeFeatureStore implements LDFeatureStore {
   ): Promise<void> {
     const { namespace } = kind;
     const kindKey = namespace === 'features' ? 'flags' : namespace;
-    this.logger.debug(`Requesting ${dataKey} from ${this.rootKey}.${kindKey}`);
+    this._logger.debug(`Requesting ${dataKey} from ${this._rootKey}.${kindKey}`);
 
     try {
-      const i = await this.edgeProvider.get(this.rootKey);
+      const i = await this._edgeProvider.get(this._rootKey);
 
       if (!i) {
-        throw new Error(`${this.rootKey}.${kindKey} is not found in KV.`);
+        throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
       }
 
       const item = deserializePoll(i);
@@ -63,7 +63,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
           callback(null);
       }
     } catch (err) {
-      this.logger.error(err);
+      this._logger.error(err);
       callback(null);
     }
   }
@@ -71,11 +71,11 @@ export class EdgeFeatureStore implements LDFeatureStore {
   async all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void = noop): Promise<void> {
     const { namespace } = kind;
     const kindKey = namespace === 'features' ? 'flags' : namespace;
-    this.logger.debug(`Requesting all from ${this.rootKey}.${kindKey}`);
+    this._logger.debug(`Requesting all from ${this._rootKey}.${kindKey}`);
     try {
-      const i = await this.edgeProvider.get(this.rootKey);
+      const i = await this._edgeProvider.get(this._rootKey);
       if (!i) {
-        throw new Error(`${this.rootKey}.${kindKey} is not found in KV.`);
+        throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
       }
 
       const item = deserializePoll(i);
@@ -94,15 +94,15 @@ export class EdgeFeatureStore implements LDFeatureStore {
           throw new Error(`Unsupported DataKind: ${namespace}`);
       }
     } catch (err) {
-      this.logger.error(err);
+      this._logger.error(err);
       callback({});
     }
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
-    const config = await this.edgeProvider.get(this.rootKey);
+    const config = await this._edgeProvider.get(this._rootKey);
     const result = config !== null;
-    this.logger.debug(`Is ${this.rootKey} initialized? ${result}`);
+    this._logger.debug(`Is ${this._rootKey} initialized? ${result}`);
     callback(result);
   }
 
@@ -111,7 +111,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
   }
 
   getDescription(): string {
-    return this.description;
+    return this._description;
   }
 
   // unused

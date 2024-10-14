@@ -1,5 +1,6 @@
 import { LDContext, LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
 
+import { Hook } from './integrations/Hooks';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
 
@@ -318,4 +319,14 @@ export interface LDClient {
    *   An {@link LDEvaluationDetail} object containing the value and explanation.
    */
   variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail;
+
+  /**
+   * Add a hook to the client. In order to register a hook before the client
+   * starts, please use the `hooks` property of {@link LDOptions}.
+   *
+   * Hooks provide entrypoints which allow for observation of SDK functions.
+   *
+   * @param Hook The hook to add.
+   */
+  addHook(hook: Hook): void;
 }

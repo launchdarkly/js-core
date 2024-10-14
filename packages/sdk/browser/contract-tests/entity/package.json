@@ -11,7 +11,7 @@
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "0.0.0"
+    "@launchdarkly/js-client-sdk": "*"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",

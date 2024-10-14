@@ -28,7 +28,10 @@
     },
     "packages/store/node-server-sdk-dynamodb": {},
     "packages/store/node-server-sdk-redis": {},
-    "packages/telemetry/node-server-sdk-otel": {}
+    "packages/telemetry/node-server-sdk-otel": {},
+    "packages/sdk/browser": {
+      "bump-minor-pre-major": true
+    }
   },
   "plugins": [
     {

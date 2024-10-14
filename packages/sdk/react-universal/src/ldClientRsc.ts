@@ -17,33 +17,33 @@ type PartialJSSdk = Omit<Partial<JSSdk>, 'variationDetail'>;
  */
 export class LDClientRsc implements PartialJSSdk {
   constructor(
-    private readonly ldContext: LDContext,
-    private readonly bootstrap: LDFlagSet,
+    private readonly _ldContext: LDContext,
+    private readonly _bootstrap: LDFlagSet,
   ) {}
 
   allFlags(): LDFlagSet {
-    return this.bootstrap;
+    return this._bootstrap;
   }
 
   getContext(): LDContext {
-    return this.ldContext;
+    return this._ldContext;
   }
 
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
     if (isServer) {
       // On the server during ssr, call variation for analytics purposes.
-      global.nodeSdk.variation(key, this.ldContext, defaultValue).then(/* ignore */);
+      global.nodeSdk.variation(key, this._ldContext, defaultValue).then(/* ignore */);
     }
-    return this.bootstrap[key] ?? defaultValue;
+    return this._bootstrap[key] ?? defaultValue;
   }
 
   variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
     if (isServer) {
       // On the server during ssr, call variation for analytics purposes.
-      global.nodeSdk.variationDetail(key, this.ldContext, defaultValue).then(/* ignore */);
+      global.nodeSdk.variationDetail(key, this._ldContext, defaultValue).then(/* ignore */);
     }
 
-    const { reason, variation: variationIndex } = this.bootstrap.$flagsState[key];
-    return { value: this.bootstrap[key], reason, variationIndex };
+    const { reason, variation: variationIndex } = this._bootstrap.$flagsState[key];
+    return { value: this._bootstrap[key], reason, variationIndex };
   }
 }

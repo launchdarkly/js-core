@@ -21,20 +21,20 @@ export class LDRequestError extends Error implements HttpErrorResponse {
  */
 export default class Requestor {
   constructor(
-    private requests: Requests,
-    private readonly uri: string,
-    private readonly headers: { [key: string]: string },
-    private readonly method: string,
-    private readonly body?: string,
+    private _requests: Requests,
+    private readonly _uri: string,
+    private readonly _headers: { [key: string]: string },
+    private readonly _method: string,
+    private readonly _body?: string,
   ) {}
 
   async requestPayload(): Promise<string> {
     let status: number | undefined;
     try {
-      const res = await this.requests.fetch(this.uri, {
-        method: this.method,
-        headers: this.headers,
-        body: this.body,
+      const res = await this._requests.fetch(this._uri, {
+        method: this._method,
+        headers: this._headers,
+        body: this._body,
       });
       if (isOk(res.status)) {
         return await res.text();

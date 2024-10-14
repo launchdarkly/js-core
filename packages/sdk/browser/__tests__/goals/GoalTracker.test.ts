@@ -78,7 +78,7 @@ it('should add click event listener for click goals', () => {
 
   new GoalTracker(goals, mockOnEvent);
 
-  expect(document.addEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+  expect(document.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), undefined);
 });
 
 it('should not add click event listener if no click goals', () => {
@@ -175,7 +175,11 @@ it('should remove click event listener on close', () => {
   const tracker = new GoalTracker(goals, mockOnEvent);
   tracker.close();
 
-  expect(document.removeEventListener).toHaveBeenCalledWith('click', expect.any(Function));
+  expect(document.removeEventListener).toHaveBeenCalledWith(
+    'click',
+    expect.any(Function),
+    undefined,
+  );
 });
 
 it('should trigger the click goal for parent elements which match the selector', () => {

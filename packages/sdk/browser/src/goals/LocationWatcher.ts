@@ -1,3 +1,5 @@
+import { addWindowEventListener, getHref } from '../BrowserApi';
+
 export const LOCATION_WATCHER_INTERVAL_MS = 300;
 
 // Using any for the timer handle because the type is not the same for all
@@ -16,20 +18,20 @@ export interface LocationWatcher {
  * @internal
  */
 export class DefaultLocationWatcher {
-  private previousLocation?: string;
-  private watcherHandle: IntervalHandle;
-  private cleanupListeners?: () => void;
+  private _previousLocation?: string;
+  private _watcherHandle: IntervalHandle;
+  private _cleanupListeners?: () => void;
 
   /**
    * @param callback Callback that is executed whenever a URL change is detected.
    */
   constructor(callback: () => void) {
-    this.previousLocation = window.location.href;
+    this._previousLocation = getHref();
     const checkUrl = () => {
-      const currentLocation = window.location.href;
+      const currentLocation = getHref();
 
-      if (currentLocation !== this.previousLocation) {
-        this.previousLocation = currentLocation;
+      if (currentLocation !== this._previousLocation) {
+        this._previousLocation = currentLocation;
         callback();
       }
     };
@@ -39,12 +41,12 @@ export class DefaultLocationWatcher {
      * Details on when popstate is called:
      * https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event#when_popstate_is_sent
      */
-    this.watcherHandle = setInterval(checkUrl, LOCATION_WATCHER_INTERVAL_MS);
+    this._watcherHandle = setInterval(checkUrl, LOCATION_WATCHER_INTERVAL_MS);
 
-    window.addEventListener('popstate', checkUrl);
+    const removeListener = addWindowEventListener('popstate', checkUrl);
 
-    this.cleanupListeners = () => {
-      window.removeEventListener('popstate', checkUrl);
+    this._cleanupListeners = () => {
+      removeListener();
     };
   }
 
@@ -52,9 +54,9 @@ export class DefaultLocationWatcher {
    * Stop watching for location changes.
    */
   close(): void {
-    if (this.watcherHandle) {
-      clearInterval(this.watcherHandle);
+    if (this._watcherHandle) {
+      clearInterval(this._watcherHandle);
     }
-    this.cleanupListeners?.();
+    this._cleanupListeners?.();
   }
 }

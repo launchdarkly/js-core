@@ -106,13 +106,13 @@ type MatchOrError = Match | MatchError;
  * @internal
  */
 export default class Evaluator {
-  private queries: Queries;
+  private _queries: Queries;
 
-  private bucketer: Bucketer;
+  private _bucketer: Bucketer;
 
   constructor(platform: Platform, queries: Queries) {
-    this.queries = queries;
-    this.bucketer = new Bucketer(platform.crypto);
+    this._queries = queries;
+    this._bucketer = new Bucketer(platform.crypto);
   }
 
   async evaluate(flag: Flag, context: Context, eventFactory?: EventFactory): Promise<EvalResult> {
@@ -128,7 +128,7 @@ export default class Evaluator {
     eventFactory?: EventFactory,
   ) {
     const state: EvalState = {};
-    this.evaluateInternal(
+    this._evaluateInternal(
       flag,
       context,
       state,
@@ -161,7 +161,7 @@ export default class Evaluator {
    * @param visitedFlags The flags that have been visited during this evaluation.
    * This is not part of the state, because it needs to be forked during prerequisite evaluations.
    */
-  private evaluateInternal(
+  private _evaluateInternal(
     flag: Flag,
     context: Context,
     state: EvalState,
@@ -175,7 +175,7 @@ export default class Evaluator {
       return;
     }
 
-    this.checkPrerequisites(
+    this._checkPrerequisites(
       flag,
       context,
       state,
@@ -194,13 +194,13 @@ export default class Evaluator {
           return;
         }
 
-        this.evaluateRules(flag, context, state, (evalRes) => {
+        this._evaluateRules(flag, context, state, (evalRes) => {
           if (evalRes) {
             cb(evalRes);
             return;
           }
 
-          cb(this.variationForContext(flag.fallthrough, context, flag, Reasons.Fallthrough));
+          cb(this._variationForContext(flag.fallthrough, context, flag, Reasons.Fallthrough));
         });
       },
       topLevel,
@@ -218,7 +218,7 @@ export default class Evaluator {
    * an {@link EvalResult} containing an error result or `undefined` if the prerequisites
    * are met.
    */
-  private checkPrerequisites(
+  private _checkPrerequisites(
     flag: Flag,
     context: Context,
     state: EvalState,
@@ -249,14 +249,14 @@ export default class Evaluator {
           return;
         }
         const updatedVisitedFlags = [...visitedFlags, prereq.key];
-        this.queries.getFlag(prereq.key, (prereqFlag) => {
+        this._queries.getFlag(prereq.key, (prereqFlag) => {
           if (!prereqFlag) {
             prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
             iterCb(false);
             return;
           }
 
-          this.evaluateInternal(
+          this._evaluateInternal(
             prereqFlag,
             context,
             state,
@@ -307,7 +307,7 @@ export default class Evaluator {
    * @param cb Callback called when rule evaluation is complete, it will be called with either
    * an {@link EvalResult} or 'undefined'.
    */
-  private evaluateRules(
+  private _evaluateRules(
     flag: Flag,
     context: Context,
     state: EvalState,
@@ -318,7 +318,7 @@ export default class Evaluator {
     firstSeriesAsync(
       flag.rules,
       (rule, ruleIndex, iterCb: (res: boolean) => void) => {
-        this.ruleMatchContext(flag, rule, ruleIndex, context, state, [], (res) => {
+        this._ruleMatchContext(flag, rule, ruleIndex, context, state, [], (res) => {
           ruleResult = res;
           iterCb(!!res);
         });
@@ -327,7 +327,7 @@ export default class Evaluator {
     );
   }
 
-  private clauseMatchContext(
+  private _clauseMatchContext(
     clause: Clause,
     context: Context,
     segmentsVisited: string[],
@@ -339,7 +339,7 @@ export default class Evaluator {
       firstSeriesAsync(
         clause.values,
         (value, _index, iterCb) => {
-          this.queries.getSegment(value, (segment) => {
+          this._queries.getSegment(value, (segment) => {
             if (segment) {
               if (segmentsVisited.includes(segment.key)) {
                 errorResult = EvalResult.forError(
@@ -396,7 +396,7 @@ export default class Evaluator {
    * @param cb Called when matching is complete with an {@link EvalResult} or `undefined` if there
    * are no matches or errors.
    */
-  private ruleMatchContext(
+  private _ruleMatchContext(
     flag: Flag,
     rule: FlagRule,
     ruleIndex: number,
@@ -413,7 +413,7 @@ export default class Evaluator {
     allSeriesAsync(
       rule.clauses,
       (clause, _index, iterCb) => {
-        this.clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
+        this._clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
           errorResult = res.result;
           return iterCb(res.error || res.isMatch);
         });
@@ -425,7 +425,7 @@ export default class Evaluator {
 
         if (match) {
           return cb(
-            this.variationForContext(rule, context, flag, Reasons.ruleMatch(rule.id, ruleIndex)),
+            this._variationForContext(rule, context, flag, Reasons.ruleMatch(rule.id, ruleIndex)),
           );
         }
         return cb(undefined);
@@ -433,7 +433,7 @@ export default class Evaluator {
     );
   }
 
-  private variationForContext(
+  private _variationForContext(
     varOrRollout: VariationOrRollout,
     context: Context,
     flag: Flag,
@@ -464,7 +464,7 @@ export default class Evaluator {
           );
         }
 
-        const [bucket, hadContext] = this.bucketer.bucket(
+        const [bucket, hadContext] = this._bucketer.bucket(
           context,
           flag.key,
           bucketBy,
@@ -519,7 +519,7 @@ export default class Evaluator {
     allSeriesAsync(
       rule.clauses,
       (clause, _index, iterCb) => {
-        this.clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
+        this._clauseMatchContext(clause, context, segmentsVisited, state, (res) => {
           errorResult = res.result;
           iterCb(res.error || res.isMatch);
         });
@@ -545,7 +545,7 @@ export default class Evaluator {
             );
           }
 
-          const [bucket] = this.bucketer.bucket(
+          const [bucket] = this._bucketer.bucket(
             context,
             segment.key,
             bucketBy,
@@ -644,7 +644,7 @@ export default class Evaluator {
       return;
     }
 
-    this.queries.getBigSegmentsMembership(keyForBigSegment).then((result) => {
+    this._queries.getBigSegmentsMembership(keyForBigSegment).then((result) => {
       // eslint-disable-next-line no-param-reassign
       state.bigSegmentsMembership = state.bigSegmentsMembership || {};
       if (result) {

@@ -12,6 +12,7 @@ import {
 
 import { BrowserClient } from '../src/BrowserClient';
 import { MockHasher } from './MockHasher';
+import { goodBootstrapDataWithReasons } from './testBootstrapData';
 
 function mockResponse(value: string, statusCode: number) {
   const response: Response = {
@@ -255,6 +256,33 @@ describe('given a mock platform for a BrowserClient', () => {
         user: 'user-key',
       },
       url: 'http://filtered.com',
+    });
+  });
+
+  it('can use bootstrap data', async () => {
+    const client = new BrowserClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+      },
+      platform,
+    );
+    await client.identify(
+      { kind: 'user', key: 'bob' },
+      {
+        bootstrap: goodBootstrapDataWithReasons,
+      },
+    );
+
+    expect(client.jsonVariationDetail('json', undefined)).toEqual({
+      reason: {
+        kind: 'OFF',
+      },
+      value: ['a', 'b', 'c', 'd'],
+      variationIndex: 1,
     });
   });
 });

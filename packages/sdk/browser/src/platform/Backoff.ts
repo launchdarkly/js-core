@@ -12,33 +12,33 @@ const JITTER_RATIO = 0.5; // Delay should be 50%-100% of calculated time.
  * success, without an intervening faulure, then the backoff is reset to initialRetryDelayMillis.
  */
 export default class Backoff {
-  private retryCount: number = 0;
-  private activeSince?: number;
-  private initialRetryDelayMillis: number;
+  private _retryCount: number = 0;
+  private _activeSince?: number;
+  private _initialRetryDelayMillis: number;
   /**
    * The exponent at which the backoff delay will exceed the maximum.
    * Beyond this limit the backoff can be set to the max.
    */
-  private readonly maxExponent: number;
+  private readonly _maxExponent: number;
 
   constructor(
     initialRetryDelayMillis: number,
-    private readonly retryResetIntervalMillis: number,
-    private readonly random = Math.random,
+    private readonly _retryResetIntervalMillis: number,
+    private readonly _random = Math.random,
   ) {
     // Initial retry delay cannot be 0.
-    this.initialRetryDelayMillis = Math.max(1, initialRetryDelayMillis);
-    this.maxExponent = Math.ceil(Math.log2(MAX_RETRY_DELAY / this.initialRetryDelayMillis));
+    this._initialRetryDelayMillis = Math.max(1, initialRetryDelayMillis);
+    this._maxExponent = Math.ceil(Math.log2(MAX_RETRY_DELAY / this._initialRetryDelayMillis));
   }
 
-  private backoff(): number {
-    const exponent = Math.min(this.retryCount, this.maxExponent);
-    const delay = this.initialRetryDelayMillis * 2 ** exponent;
+  private _backoff(): number {
+    const exponent = Math.min(this._retryCount, this._maxExponent);
+    const delay = this._initialRetryDelayMillis * 2 ** exponent;
     return Math.min(delay, MAX_RETRY_DELAY);
   }
 
-  private jitter(computedDelayMillis: number): number {
-    return computedDelayMillis - Math.trunc(this.random() * JITTER_RATIO * computedDelayMillis);
+  private _jitter(computedDelayMillis: number): number {
+    return computedDelayMillis - Math.trunc(this._random() * JITTER_RATIO * computedDelayMillis);
   }
 
   /**
@@ -48,7 +48,7 @@ export default class Backoff {
    * the current time is used.
    */
   success(timeStampMs: number = Date.now()): void {
-    this.activeSince = timeStampMs;
+    this._activeSince = timeStampMs;
   }
 
   /**
@@ -63,14 +63,14 @@ export default class Backoff {
     // If the last successful connection was active for more than the RESET_INTERVAL, then we
     // return to the initial retry delay.
     if (
-      this.activeSince !== undefined &&
-      timeStampMs - this.activeSince > this.retryResetIntervalMillis
+      this._activeSince !== undefined &&
+      timeStampMs - this._activeSince > this._retryResetIntervalMillis
     ) {
-      this.retryCount = 0;
+      this._retryCount = 0;
     }
-    this.activeSince = undefined;
-    const delay = this.jitter(this.backoff());
-    this.retryCount += 1;
+    this._activeSince = undefined;
+    const delay = this._jitter(this._backoff());
+    this._retryCount += 1;
     return delay;
   }
 }
