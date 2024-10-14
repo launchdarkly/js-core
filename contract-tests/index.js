@@ -38,6 +38,7 @@ app.get('/', (req, res) => {
       'anonymous-redaction',
       'evaluation-hooks',
       'wrapper',
+      'client-prereq-events',
     ],
   });
 });

@@ -41,6 +41,7 @@ export default class TestHarnessWebSocket {
             'inline-context',
             'anonymous-redaction',
             'strongly-typed',
+            'client-prereq-events',
           ];
 
           break;
