@@ -28,9 +28,9 @@ const terserOpts = {
       regex: /^_/,
       // Do not mangle '_meta', because this is part of our JSON
       // data model.
-      reserved: ['_meta']
+      reserved: ['_meta'],
     },
-  }
+  },
 };
 
 export default [
@@ -53,12 +53,6 @@ export default [
   },
   {
     ...getSharedConfig('cjs', 'dist/index.cjs.js'),
-    plugins: [
-      typescript(),
-      common(),
-      resolve(),
-      terser(terserOpts),
-      json(),
-    ],
+    plugins: [typescript(), common(), resolve(), terser(terserOpts), json()],
   },
 ];

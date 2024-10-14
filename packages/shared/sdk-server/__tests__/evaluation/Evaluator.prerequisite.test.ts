@@ -105,15 +105,15 @@ describe('given a flag payload with prerequisites', () => {
   let testPayload: FlagsAndSegments;
 
   class TestQueries implements Queries {
-    constructor(private readonly data: FlagsAndSegments) {}
+    constructor(private readonly _data: FlagsAndSegments) {}
 
     getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
-      const res = this.data.flags[key];
+      const res = this._data.flags[key];
       cb(res);
     }
 
     getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
-      const res = this.data.segments[key];
+      const res = this._data.segments[key];
       cb(res);
     }
 
