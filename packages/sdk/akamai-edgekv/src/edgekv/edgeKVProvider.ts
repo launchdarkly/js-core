@@ -1,16 +1,17 @@
-import { BasicLogger, EdgeProvider } from '@launchdarkly/js-server-sdk-common';
+import { EdgeProvider } from '@launchdarkly/akamai-edgeworker-sdk-common';
+import { BasicLogger, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { EdgeKV } from './edgekv';
 
 type EdgeKVProviderParams = {
   namespace: string;
   group: string;
-  logger: BasicLogger;
+  logger: LDLogger;
 };
 
 export default class EdgeKVProvider implements EdgeProvider {
   private edgeKv: EdgeKV;
-  private logger: BasicLogger;
+  private logger: LDLogger;
 
   constructor({ namespace, group, logger }: EdgeKVProviderParams) {
     this.edgeKv = new EdgeKV({ namespace, group } as any);
