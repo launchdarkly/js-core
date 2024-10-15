@@ -187,5 +187,7 @@ it('calls flag-details-changed inspectors when all flag values change', async ()
     'moonshot-demo': { reason: null, value: true, variationIndex: 0 },
     test1: { reason: null, value: 's1', variationIndex: 0 },
     'this-is-a-test': { reason: null, value: true, variationIndex: 0 },
+    'has-prereq-depth-1': { reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 },
+    'is-prereq': { reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 },
   });
 });

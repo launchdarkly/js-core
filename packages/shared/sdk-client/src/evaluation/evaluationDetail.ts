@@ -18,9 +18,10 @@ export function createSuccessEvaluationDetail(
   variationIndex?: number,
   reason?: LDEvaluationReason,
 ): LDEvaluationDetail {
-  return {
+  const res: LDEvaluationDetail = {
     value,
     variationIndex: variationIndex ?? null,
     reason: reason ?? null,
   };
+  return res;
 }

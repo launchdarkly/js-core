@@ -667,6 +667,7 @@ export default class LDClientImpl implements LDClient {
                   flag.trackEvents || requireExperimentData,
                   requireExperimentData,
                   detailsOnlyIfTracked,
+                  res.prerequisites,
                 );
                 iterCb(true);
               });
