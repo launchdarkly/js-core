@@ -144,18 +144,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       browserConfig,
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -177,18 +183,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       validateOptions({ streaming: true }, logger),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -215,18 +227,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       validateOptions({ streaming: true }, logger),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -242,7 +260,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(platform.requests.createEventSource).toHaveBeenCalledWith(
-      '/meval/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?h=potato&withReasons=true',
+      '/path/get/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?h=potato&withReasons=true',
       expect.anything(),
     );
   });
@@ -256,18 +274,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       validateOptions({ streaming: false }, logger),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -283,7 +307,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(platform.requests.fetch).toHaveBeenCalledWith(
-      '/msdk/evalx/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?withReasons=true&h=potato',
+      '/path/get/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?withReasons=true&h=potato',
       expect.anything(),
     );
   });

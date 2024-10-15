@@ -273,8 +273,9 @@ describe('sdk-client object', () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
-    expect(logger.error).toHaveBeenCalledTimes(1);
-    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/^error:.*test-error/));
+    expect(logger.error).toHaveBeenCalledTimes(2);
+    expect(logger.error).toHaveBeenNthCalledWith(1, expect.stringMatching(/^error:.*test-error/));
+    expect(logger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('Received error 404'));
   });
 
   test('identify change and error listeners', async () => {

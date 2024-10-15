@@ -10,9 +10,10 @@ import {
 import { LDIdentifyOptions } from '../src/api';
 import { Configuration } from '../src/configuration/Configuration';
 import { BaseDataManager, DataManagerFactory } from '../src/DataManager';
+import { DataSourcePaths } from '../src/datasource/DataSourceConfig';
+import { makeRequestor } from '../src/datasource/Requestor';
 import { FlagManager } from '../src/flag-manager/FlagManager';
 import LDEmitter from '../src/LDEmitter';
-import { DataSourcePaths } from '../src/streaming/DataSourceConfig';
 
 export default class TestDataManager extends BaseDataManager {
   constructor(
@@ -75,7 +76,18 @@ export default class TestDataManager extends BaseDataManager {
 
     this.updateProcessor?.close();
 
-    this.createStreamingProcessor(rawContext, context, identifyResolve, identifyReject);
+    const requestor = makeRequestor(
+      JSON.stringify(Context.toLDContext(context)),
+      this.config.serviceEndpoints,
+      this.getPollingPaths(),
+      this.platform.requests,
+      this.platform.encoding!,
+      this.baseHeaders,
+      [],
+      this.config.useReport,
+      this.config.withReasons,
+    );
+    this.createStreamingProcessor(rawContext, context, requestor, identifyResolve, identifyReject);
 
     this.updateProcessor!.start();
   }
@@ -107,6 +119,9 @@ export function makeTestDataManagerFactory(
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/context`;
         },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          return `/mping`;
+        },
       }),
       () => ({
         pathGet(_encoding: Encoding, _plainContextString: string): string {
@@ -114,6 +129,9 @@ export function makeTestDataManagerFactory(
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/stream/path/report';
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          return '/stream/path/ping';
         },
       }),
       baseHeaders,
