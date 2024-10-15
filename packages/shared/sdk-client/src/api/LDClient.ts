@@ -328,5 +328,5 @@ export interface LDClient {
    *
    * @param Hook The hook to add.
    */
-  addHook?(hook: Hook): void;
+  addHook(hook: Hook): void;
 }

@@ -82,6 +82,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
       userAgentHeaderName: 'user-agent',
       trackEventModifier: (event) => event,
       hooks: [],
+      inspectors: [],
     };
     const mockedFetch = mockFetch('{"flagA": true}', 200);
     platform = {

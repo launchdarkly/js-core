@@ -10,6 +10,7 @@ interface FlagMeta {
   trackEvents?: boolean;
   trackReason?: boolean;
   debugEventsUntilDate?: number;
+  prerequisites?: string[];
 }
 
 export default class FlagsStateBuilder {
@@ -30,6 +31,7 @@ export default class FlagsStateBuilder {
     trackEvents: boolean,
     trackReason: boolean,
     detailsOnlyIfTracked: boolean,
+    prerequisites?: string[],
   ) {
     this._flagValues[flag.key] = value;
     const meta: FlagMeta = {};
@@ -55,6 +57,9 @@ export default class FlagsStateBuilder {
     }
     if (flag.debugEventsUntilDate !== undefined) {
       meta.debugEventsUntilDate = flag.debugEventsUntilDate;
+    }
+    if (prerequisites && prerequisites.length) {
+      meta.prerequisites = prerequisites;
     }
     this._flagMetadata[flag.key] = meta;
   }

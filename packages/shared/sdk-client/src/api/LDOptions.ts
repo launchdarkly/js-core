@@ -1,6 +1,7 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { Hook } from './integrations/Hooks';
+import { LDInspection } from './LDInspection';
 
 export interface LDOptions {
   /**
@@ -251,10 +252,20 @@ export interface LDOptions {
    * Example:
    * ```typescript
    * import { init } from '@launchdarkly/node-server-sdk';
-   * import { TracingHook } from '@launchdarkly/node-server-sdk-otel';
+   * import { TheHook } from '@launchdarkly/some-hook';
    *
-   * const client = init('my-sdk-key', { hooks: [new TracingHook()] });
+   * const client = init('my-sdk-key', { hooks: [new TheHook()] });
    * ```
    */
   hooks?: Hook[];
+
+  /**
+   * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
+   *
+   *
+   * @deprecated Hooks should be used instead of inspectors and inspectors will be removed in
+   * a future version. If you need functionality that is not exposed using hooks, then please
+   * let us know through a github issue or support.
+   */
+  inspectors?: LDInspection[];
 }

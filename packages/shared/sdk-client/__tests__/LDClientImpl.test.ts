@@ -103,6 +103,8 @@ describe('sdk-client object', () => {
       'easter-i-tunes-special': false,
       'easter-specials': 'no specials',
       fdsafdsafdsafdsa: true,
+      'has-prereq-depth-1': true,
+      'is-prereq': true,
       'log-level': 'warn',
       'moonshot-demo': true,
       test1: 's1',
