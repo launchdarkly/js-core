@@ -79,7 +79,7 @@ export default class TestDataManager extends BaseDataManager {
     const requestor = makeRequestor(
       JSON.stringify(Context.toLDContext(context)),
       this.config.serviceEndpoints,
-      this.getPollingPaths(), // note: this is the polling path because the requestor is only used to make polling requests.
+      this.getPollingPaths(),
       this.platform.requests,
       this.platform.encoding!,
       this.baseHeaders,
