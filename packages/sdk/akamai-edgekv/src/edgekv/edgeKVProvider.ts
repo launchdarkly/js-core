@@ -1,5 +1,5 @@
 import { EdgeProvider } from '@launchdarkly/akamai-edgeworker-sdk-common';
-import { BasicLogger, LDLogger } from '@launchdarkly/js-server-sdk-common';
+import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { EdgeKV } from './edgekv';
 
