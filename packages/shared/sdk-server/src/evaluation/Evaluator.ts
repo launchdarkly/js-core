@@ -160,6 +160,8 @@ export default class Evaluator {
    * @param state The current evaluation state.
    * @param visitedFlags The flags that have been visited during this evaluation.
    * This is not part of the state, because it needs to be forked during prerequisite evaluations.
+   * @param topLevel True when this function is being called in the direct evaluation of a flag,
+   * versus the evaluataion of a prerequisite.
    */
   private _evaluateInternal(
     flag: Flag,
@@ -217,6 +219,8 @@ export default class Evaluator {
    * @param cb A callback which is executed when prerequisite checks are complete it is called with
    * an {@link EvalResult} containing an error result or `undefined` if the prerequisites
    * are met.
+   * @param topLevel True when this function is being called in the direct evaluation of a flag,
+   * versus the evaluataion of a prerequisite.
    */
   private _checkPrerequisites(
     flag: Flag,
@@ -287,7 +291,7 @@ export default class Evaluator {
               }
               return iterCb(true);
             },
-            false,
+            false, // topLevel false evaluating the prerequisite.
             eventFactory,
           );
         });
