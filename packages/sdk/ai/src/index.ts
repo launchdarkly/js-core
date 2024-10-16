@@ -81,7 +81,7 @@ export class AIClient {
       tracker: new LDAIConfigTracker(
         this.ldClient,
         key,
-        detail.value.variationId || '1234-1234-1234-1234',
+        detail.value["_ldMeta"]["variationId"],
         context,
       ),
     };
