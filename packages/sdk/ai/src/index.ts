@@ -34,30 +34,32 @@ export class AIClient {
    * @returns The processed prompt after all variables have been substituted in the stored prompt template. If the prompt cannot be retrieved or processed, the `defaultValue` is returned.
    *
    * @example
+   * ```
    * const key = "welcome_prompt";
    * const context = new LDContext(...);
    * const variables = new Record<string, string>([["username", "John"]]);
-   * const defaultValue = "Welcome, user!";
+   * const defaultValue = {}};
    *
-   * const result = modelConfig(key, context, variables, defaultValue);
+   * const result = modelConfig(key, context, defaultValue, variables);
    * console.log(result);
    * // Output:
-   * // {
-   * // modelId: "gpt-4o",
-   * // temperature: 0.2,
-   * // maxTokens: 4096,
-   * // userDefinedKey: "myValue",
-   * // prompt: [
-   * // {
-   * // role: "system",
-   * // content: "You are an amazing GPT."
-   * // },
-   * // {
-   * // role: "user",
-   * // content: "Explain how you're an amazing GPT."
-   * // }
-   * // ]
-   * // }
+   * {
+   * modelId: "gpt-4o",
+   * temperature: 0.2,
+   * maxTokens: 4096,
+   * userDefinedKey: "myValue",
+   * prompt: [
+   * {
+   * role: "system",
+   * content: "You are an amazing GPT."
+   * },
+   * {
+   * role: "user",
+   * content: "Explain how you're an amazing GPT."
+   * }
+   * ]
+   * }
+   * ```
    */
   async modelConfig(
     key: string,
