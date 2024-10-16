@@ -2,8 +2,8 @@
   "name": "@launchdarkly/js-sdk-common",
   "version": "2.10.0",
   "type": "module",
-  "main": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/esm/index.mjs",
+  "types": "./dist/esm/index.d.ts",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/common",
   "repository": {
     "type": "git",
@@ -19,13 +19,15 @@
     "client"
   ],
   "exports": {
-    "types": "./dist/index.d.ts",
-    "require": "./dist/index.cjs",
-    "import": "./dist/index.mjs"
+    "require": { "types": "./dist/cjs/index.d.ts", "default": "./dist/cjs/index.cjs"},
+    "import": { "types": "./dist/esm/index.d.ts", "default": "./dist/esm/index.mjs"}
   },
   "scripts": {
     "test": "npx jest --ci",
-    "build": "npx tsc --noEmit && rollup -c rollup.config.js",
+    "make-cjs-package-json": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "make-esm-package-json": "echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "make-package-jsons": "npm run make-cjs-package-json && npm run make-esm-package-json",
+    "build": "npx tsc --noEmit && rollup -c rollup.config.js && npm run make-package-jsons",
     "clean": "rimraf dist",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint --fix",
