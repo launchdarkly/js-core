@@ -1,7 +1,7 @@
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
+import { BedrockTokenUsage, FeedbackKind, TokenUsage, UnderscoreTokenUsage } from './api/metrics';
 import { usageToTokenMetrics } from './trackUtils';
-import { BedrockTokenUsage, FeedbackKind, TokenUsage, UnderscoreTokenUsage } from './types';
 
 export class LDAIConfigTracker {
   private ldClient: LDClient;

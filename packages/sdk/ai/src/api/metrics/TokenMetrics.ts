@@ -1,5 +1,5 @@
 export interface TokenMetrics {
-	total: number;
-	input: number;
-	output: number;
-      }
+  total: number;
+  input: number;
+  output: number;
+}

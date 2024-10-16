@@ -1,5 +1,5 @@
 export interface BedrockTokenUsage {
-	inputTokens: number;
-	outputTokens: number;
-	totalTokens: number;
-      }
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}

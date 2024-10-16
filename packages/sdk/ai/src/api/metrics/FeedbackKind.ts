@@ -1,4 +1,4 @@
 export enum FeedbackKind {
-	Positive = 'positive',
-	Negative = 'negative',
-      }
+  Positive = 'positive',
+  Negative = 'negative',
+}
