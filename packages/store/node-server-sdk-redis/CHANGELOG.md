@@ -90,6 +90,22 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.2.1 to 9.2.2
 
+## [4.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.1.23...node-server-sdk-redis-v4.2.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.6.1 to 9.7.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.0
+
 ## [4.1.23](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.1.22...node-server-sdk-redis-v4.1.23) (2024-10-09)
 
 

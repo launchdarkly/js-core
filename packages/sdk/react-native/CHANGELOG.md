@@ -1,5 +1,21 @@
 # Changelog
 
+## [10.9.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.8.0...react-native-client-sdk-v10.9.0) (2024-10-17)
+
+
+### Features
+
+* Add support for inspectors. ([#625](https://github.com/launchdarkly/js-core/issues/625)) ([a986478](https://github.com/launchdarkly/js-core/commit/a986478ed8e39d0f529ca6adec0a09b484421390))
+* adds ping stream support ([#624](https://github.com/launchdarkly/js-core/issues/624)) ([dee53af](https://github.com/launchdarkly/js-core/commit/dee53af9312b74a70b748d49b2d2911d65333cf3))
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.9.0 to 1.10.0
+
 ## [10.8.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.7.0...react-native-client-sdk-v10.8.0) (2024-10-09)
 
 
