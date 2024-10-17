@@ -21,6 +21,20 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * devDependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [2.6.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.5.15...cloudflare-server-sdk-v2.6.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.4.1 to 2.5.0
+
 ## [2.5.15](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.5.14...cloudflare-server-sdk-v2.5.15) (2024-10-09)
 
 

@@ -96,6 +96,20 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.2.1 to 2.2.2
 
+## [2.5.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.4.1...js-server-sdk-common-edge-v2.5.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.8.0 to 2.9.0
+
 ## [2.4.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.4.0...js-server-sdk-common-edge-v2.4.1) (2024-10-09)
 
 

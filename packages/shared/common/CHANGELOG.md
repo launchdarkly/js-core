@@ -2,6 +2,18 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.10.0...js-sdk-common-v2.11.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Bug Fixes
+
+* Update sdk-client rollup configuration to match common ([#630](https://github.com/launchdarkly/js-core/issues/630)) ([e061811](https://github.com/launchdarkly/js-core/commit/e06181158d29824ff0131a88988c84cd4a32f6c0))
+
 ## [2.10.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.9.0...js-sdk-common-v2.10.0) (2024-10-09)
 
 
