@@ -19,8 +19,14 @@
     "client"
   ],
   "exports": {
-    "require": { "types": "./dist/cjs/index.d.ts", "default": "./dist/cjs/index.cjs"},
-    "import": { "types": "./dist/esm/index.d.ts", "default": "./dist/esm/index.mjs"}
+    "require": {
+      "types": "./dist/cjs/index.d.ts",
+      "default": "./dist/cjs/index.cjs"
+    },
+    "import": {
+      "types": "./dist/esm/index.d.ts",
+      "default": "./dist/esm/index.mjs"
+    }
   },
   "scripts": {
     "test": "npx jest --ci",
