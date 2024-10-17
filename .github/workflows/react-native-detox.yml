@@ -78,7 +78,7 @@ jobs:
           android: false # We need android.
 
       - name: Detox test
-        uses: reactivecircus/android-emulator-runner@f0d1ed2dcad93c7479e8b2f2226c83af54494915
+        uses: reactivecircus/android-emulator-runner@c77bfe7c0bb57698e777375b61762daf9d578400
         with:
           api-level: 31
           arch: x86_64
