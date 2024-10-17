@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk-common",
-  "version": "1.9.0",
+  "version": "1.9.1-beta.1",
   "type": "module",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -35,7 +35,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "2.10.0"
+    "@launchdarkly/js-sdk-common": "2.10.1-beta.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",

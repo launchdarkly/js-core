@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-native-client-sdk",
-  "version": "10.8.0",
+  "version": "10.8.1-beta.1",
   "description": "React Native LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native",
   "repository": {
@@ -41,7 +41,7 @@
     "react-native": "*"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.9.0",
+    "@launchdarkly/js-client-sdk-common": "1.9.1-beta.1",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "base64-js": "^1.5.1"
   },
