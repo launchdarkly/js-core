@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-sdk-common",
-  "version": "2.10.0",
+  "version": "2.10.1-beta.1",
   "type": "module",
   "main": "./dist/esm/index.mjs",
   "types": "./dist/esm/index.d.ts",
@@ -19,8 +19,14 @@
     "client"
   ],
   "exports": {
-    "require": { "types": "./dist/cjs/index.d.ts", "default": "./dist/cjs/index.cjs"},
-    "import": { "types": "./dist/esm/index.d.ts", "default": "./dist/esm/index.mjs"}
+    "require": {
+      "types": "./dist/cjs/index.d.ts",
+      "default": "./dist/cjs/index.cjs"
+    },
+    "import": {
+      "types": "./dist/esm/index.d.ts",
+      "default": "./dist/esm/index.mjs"
+    }
   },
   "scripts": {
     "test": "npx jest --ci",
