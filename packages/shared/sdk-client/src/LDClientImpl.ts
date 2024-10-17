@@ -357,7 +357,7 @@ export default class LDClientImpl implements LDClient {
     }
 
     prerequisites?.forEach((prereqKey) => {
-      this.variation(prereqKey, undefined);
+      this._variationInternal(prereqKey, undefined, this._eventFactoryDefault);
     });
     this._eventProcessor?.sendEvent(
       eventFactory.evalEventClient(
