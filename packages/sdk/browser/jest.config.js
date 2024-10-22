@@ -5,4 +5,5 @@ export default {
   testEnvironment: 'jest-environment-jsdom',
   testPathIgnorePatterns: ['./dist', './src'],
   testMatch: ['**.test.ts'],
+  setupFiles: ['./setup-jest.js'],
 };
