@@ -20,4 +20,17 @@ export interface LDIdentifyOptions {
    * Defaults to false.
    */
   waitForNetworkResults?: boolean;
+
+  /**
+   * When set to true, and timeout is not set, this indicates that the identify operation will
+   * not have any timeout. In typical usage, where an application awaits the promise, a timeout
+   * is important because identify can potentially take indefinite time depending on network
+   * conditions. If your application specifically does not block any operations pending the promise
+   * resolution, then you can use this opton to explicitly indicate that.
+   *
+   * If you set this to true, and you do not set a timeout, and you block aspects of operation of
+   * your application, then those aspects can be blocked indefinitely. Generally this option will
+   * not be required.
+   */
+  noTimeout?: boolean;
 }
