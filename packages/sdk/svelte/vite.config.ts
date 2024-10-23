@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['src/**/*.{test,spec}.{js,ts,svelte}'],
+    include: ['__tests__/**/*.{test,spec}.{js,ts,svelte}'],
     globals: true,
     environment: 'jsdom',
   },

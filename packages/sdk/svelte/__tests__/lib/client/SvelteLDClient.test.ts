@@ -2,7 +2,7 @@ import * as LDClient from 'launchdarkly-js-client-sdk';
 import { get } from 'svelte/store';
 import { afterAll, afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
-import { LD } from '../SvelteLDClient.js';
+import { LD } from '../../../src/lib/client/SvelteLDClient';
 
 vi.mock('launchdarkly-js-client-sdk', async (importActual) => {
   const actual = (await importActual()) as typeof LDClient;
