@@ -1,12 +1,12 @@
-export class UnderscoreTokenUsage {
+export class OpenAITokenUsage {
   total_tokens: number;
   prompt_tokens: number;
   completion_tokens: number;
 
   constructor(data: any) {
-    this.total_tokens = data.total_tokens || 0;
-    this.prompt_tokens = data.prompt_tokens || 0;
-    this.completion_tokens = data.completion_tokens || 0;
+    this.total_tokens = data.total_tokens;
+    this.prompt_tokens = data.prompt_tokens;
+    this.completion_tokens = data.completion_tokens;
   }
 
   toMetrics() {

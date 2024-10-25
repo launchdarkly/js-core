@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "test": "jest",
-    "lint": "eslint . --ext .ts"
+    "build": "npx tsc",
+    "lint": "npx eslint . --ext .ts",
+    "lint:fix": "yarn run lint --fix"
   },
   "keywords": [
     "launchdarkly",

@@ -1,2 +1,2 @@
 export * from './LDAIConfig';
-export * from './LDAIConfigTracker';
+export { LDAIConfigTracker } from './LDAIConfigTracker';

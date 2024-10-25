@@ -1,4 +1,4 @@
-import { BedrockTokenUsage, TokenMetrics, TokenUsage, UnderscoreTokenUsage } from './types';
+import { BedrockTokenUsage, TokenMetrics, TokenUsage, UnderscoreTokenUsage } from './api/metrics';
 
 export function usageToTokenMetrics(
   usage: TokenUsage | UnderscoreTokenUsage | BedrockTokenUsage,

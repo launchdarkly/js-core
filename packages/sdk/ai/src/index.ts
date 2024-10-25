@@ -2,8 +2,8 @@ import Mustache from 'mustache';
 
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
-import { LDAIConfigTracker } from './LDAIConfigTracker';
 import { LDAIConfig } from './api/config';
+import { LDAIConfigTracker } from './api/config/LDAIConfigTracker';
 
 export class AIClient {
   private ldClient: LDClient;
@@ -41,7 +41,6 @@ export class AIClient {
    * const defaultValue = {}};
    *
    * const result = modelConfig(key, context, defaultValue, variables);
-   * console.log(result);
    * // Output:
    * {
    * modelId: "gpt-4o",
@@ -67,7 +66,7 @@ export class AIClient {
     defaultValue: string,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
-    const detail = await this.ldClient.variationDetail(key, context, defaultValue);
+    const detail = await this.ldClient.variation(key, context, defaultValue);
 
     const allVariables = { ldctx: context, ...variables };
 
@@ -81,9 +80,11 @@ export class AIClient {
       tracker: new LDAIConfigTracker(
         this.ldClient,
         key,
-        detail.value["_ldMeta"]["variationId"],
+        // eslint-disable-next-line @typescript-eslint/dot-notation
+        detail.value['_ldMeta'].variationId,
         context,
       ),
+      noConfiguration: Object.keys(detail).length === 0,
     };
   }
 }
@@ -92,4 +93,5 @@ export function init(ldClient: LDClient): AIClient {
   return new AIClient(ldClient);
 }
 
-export { LDAIConfigTracker } from './LDAIConfigTracker';
+export * from './api/config/LDAIConfigTracker';
+export * from './api/metrics';
