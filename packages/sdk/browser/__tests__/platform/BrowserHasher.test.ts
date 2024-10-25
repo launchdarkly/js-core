@@ -1,10 +1,6 @@
-// TextEncoder should be part of jsdom, but it is not. So we can import it from node in the tests.
 import { webcrypto } from 'node:crypto';
-import { TextEncoder } from 'node:util';
 
 import BrowserHasher from '../../src/platform/BrowserHasher';
-
-global.TextEncoder = TextEncoder;
 
 // Crypto is injectable as it is also not correctly available with the combination of node and jsdom.
 

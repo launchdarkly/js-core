@@ -1,9 +1,5 @@
-// TextEncoder should be part of jsdom, but it is not. So we can import it from node in the tests.
-import { TextEncoder } from 'node:util';
-
 import BrowserEncoding from '../../src/platform/BrowserEncoding';
 
-global.TextEncoder = TextEncoder;
 
 it('can base64 a basic ASCII string', () => {
   const encoding = new BrowserEncoding();
