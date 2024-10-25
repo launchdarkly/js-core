@@ -8,17 +8,15 @@ Object.assign(window, { TextDecoder, TextEncoder });
 // Based on:
 // https://stackoverflow.com/a/71750830
 
-Object.defineProperty(global.self, "crypto", {
+Object.defineProperty(global.self, 'crypto', {
   value: {
     getRandomValues: (arr) => crypto.randomBytes(arr.length),
     subtle: {
       digest: (algorithm, data) => {
         return new Promise((resolve) =>
           resolve(
-            crypto.createHash(algorithm.toLowerCase().replace("-", ""))
-              .update(data)
-              .digest()
-          )
+            crypto.createHash(algorithm.toLowerCase().replace('-', '')).update(data).digest(),
+          ),
         );
       },
     },

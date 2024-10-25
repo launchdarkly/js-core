@@ -1,6 +1,5 @@
 import BrowserEncoding from '../../src/platform/BrowserEncoding';
 
-
 it('can base64 a basic ASCII string', () => {
   const encoding = new BrowserEncoding();
   expect(encoding.btoa('toaster')).toEqual('dG9hc3Rlcg==');
