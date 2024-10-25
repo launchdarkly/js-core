@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-import { TextEncoder } from 'node:util';
 
 import {
   ApplicationTags,
@@ -25,8 +24,6 @@ import BrowserInfo from '../src/platform/BrowserInfo';
 import LocalStorage from '../src/platform/LocalStorage';
 import { MockHasher } from './MockHasher';
 import { goodBootstrapData } from './testBootstrapData';
-
-global.TextEncoder = TextEncoder;
 
 function mockResponse(value: string, statusCode: number) {
   const response: Response = {

@@ -1,21 +1,22 @@
-import { TextEncoder, TextDecoder } from 'node:util';
-import * as crypto from 'crypto';
+const { TextEncoder, TextDecoder } = require('node:util');
+const crypto = require('node:crypto');
 
 global.TextEncoder = TextEncoder;
 
 Object.assign(window, { TextDecoder, TextEncoder });
 
-Object.defineProperty(global.self, "crypto", {
+// Based on:
+// https://stackoverflow.com/a/71750830
+
+Object.defineProperty(global.self, 'crypto', {
   value: {
     getRandomValues: (arr) => crypto.randomBytes(arr.length),
     subtle: {
       digest: (algorithm, data) => {
-        return new Promise((resolve, reject) =>
+        return new Promise((resolve) =>
           resolve(
-            crypto.createHash(algorithm.toLowerCase().replace("-", ""))
-              .update(data)
-              .digest()
-          )
+            crypto.createHash(algorithm.toLowerCase().replace('-', '')).update(data).digest(),
+          ),
         );
       },
     },
