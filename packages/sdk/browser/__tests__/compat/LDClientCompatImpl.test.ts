@@ -1,61 +1,98 @@
 import { jest } from '@jest/globals';
 
-import { LDContext, LDFlagSet, LDLogger } from '@launchdarkly/js-client-sdk-common';
+import { LDContext, LDFlagSet } from '@launchdarkly/js-client-sdk-common';
 
-const mockBrowserClient = {
+import { BrowserClient } from '../../src/BrowserClient';
+import LDClientCompatImpl from '../../src/compat/LDClientCompatImpl';
+import { LDOptions } from '../../src/compat/LDCompatOptions';
+
+// @ts-ignore
+const mockBrowserClient: jest.MockedObject<BrowserClient> = {
   identify: jest.fn(),
   allFlags: jest.fn(),
   close: jest.fn(),
   flush: jest.fn(),
-  _emitter: jest.fn(() => ({
-    emit: jest.fn(),
-    on: jest.fn(),
-    off: jest.fn(),
-  })),
+  setStreaming: jest.fn(),
+  on: jest.fn(),
+  off: jest.fn(),
+  sdkKey: 'test-sdk-key',
+  variation: jest.fn(),
+  variationDetail: jest.fn(),
+  boolVariation: jest.fn(),
+  boolVariationDetail: jest.fn(),
+  numberVariation: jest.fn(),
+  numberVariationDetail: jest.fn(),
+  stringVariation: jest.fn(),
+  stringVariationDetail: jest.fn(),
+  jsonVariation: jest.fn(),
+  jsonVariationDetail: jest.fn(),
+  track: jest.fn(),
+  addHook: jest.fn(),
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+  getContext: jest.fn(),
 };
 
-jest.unstable_mockModule('../../src/BrowserClient', () => ({
+jest.mock('../../src/BrowserClient', () => ({
   __esModule: true,
-  BrowserClient: jest.fn(),
+  BrowserClient: jest.fn(() => mockBrowserClient),
 }));
 
-const { default: LDClientCompatImpl } = await import('../../src/compat/LDClientCompatImpl');
+afterEach(() => {
+  jest.resetAllMocks();
+});
 
-describe('given a LDClientCompatImpl client with mocked browser client', () => {
+beforeEach(() => {
+  // TypesScript doesn't understand that the BrowserClient is a mock.
   // @ts-ignore
+  BrowserClient.mockImplementation(() => mockBrowserClient);
+});
+
+describe('given a LDClientCompatImpl client with mocked browser client that is immediately ready', () => {
   let client: LDClientCompatImpl;
-  // let mockBrowserClient: jest.Mocked<BrowserClient>;
-  let mockLogger: LDLogger;
 
   beforeEach(() => {
-    // mockBrowserClient = {
-    //   identify: jest.fn(),
-    //   allFlags: jest.fn(),
-    //   close: jest.fn(),
-    //   flush: jest.fn(),
-    // } as unknown as jest.Mocked<BrowserClient>;
+    jest.useFakeTimers();
+    mockBrowserClient.identify.mockImplementation(() => Promise.resolve());
+    client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });
+  });
 
-    // (BrowserClient as jest.MockedClass<typeof BrowserClient>).mockImplementation(
-    //   () => mockBrowserClient,
-    // );
-    mockLogger = {
-      error: jest.fn(),
-      warn: jest.fn(),
-      info: jest.fn(),
-      debug: jest.fn(),
-    };
-    client = new LDClientCompatImpl(
-      'env-key',
+  it('should resolve waitForInitialization when the client is already initialized', async () => {
+    jest.advanceTimersToNextTimer();
+    mockBrowserClient.identify.mockResolvedValue(undefined);
+
+    await expect(client.waitForInitialization()).resolves.toBeUndefined();
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { logger: mockLogger },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
     );
+  });
+});
+
+describe('given a LDClientCompatImpl client with mocked browser client that initializes after a delay', () => {
+  let client: LDClientCompatImpl;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    mockBrowserClient.identify.mockImplementation(
+      () =>
+        new Promise((r) => {
+          setTimeout(r, 100);
+        }),
+    );
+    client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });
   });
 
   it('should return a promise from identify when no callback is provided', async () => {
+    jest.advanceTimersToNextTimer();
     const context: LDContext = { kind: 'user', key: 'new-user' };
     const mockFlags: LDFlagSet = { flag1: true, flag2: false };
-    // @ts-ignore
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+
+    mockBrowserClient.identify.mockResolvedValue();
     mockBrowserClient.allFlags.mockReturnValue(mockFlags);
 
     const result = await client.identify(context);
@@ -65,13 +102,16 @@ describe('given a LDClientCompatImpl client with mocked browser client', () => {
   });
 
   it('should call the callback when provided to identify', (done) => {
+    jest.advanceTimersToNextTimer();
     const context: LDContext = { kind: 'user', key: 'new-user' };
     const mockFlags: LDFlagSet = { flag1: true, flag2: false };
-    // @ts-ignore
-    mockBrowserClient.identify.mockResolvedValue(undefined);
-    mockBrowserClient.allFlags.mockReturnValue(mockFlags);
 
-    // @ts-ignore
+    mockBrowserClient.allFlags.mockReturnValue(mockFlags);
+    mockBrowserClient.identify.mockImplementation(() => Promise.resolve());
+    // Starting advancing the timers for the nest call. The wrapped promises
+    // do not resolve sychronously.
+    jest.advanceTimersToNextTimerAsync();
+
     client.identify(context, undefined, (err, flags) => {
       expect(err).toBeNull();
       expect(flags).toEqual(mockFlags);
@@ -80,7 +120,7 @@ describe('given a LDClientCompatImpl client with mocked browser client', () => {
   });
 
   it('should return a promise from close when no callback is provided', async () => {
-    // @ts-ignore
+    jest.advanceTimersToNextTimer();
     mockBrowserClient.close.mockResolvedValue();
 
     await expect(client.close()).resolves.toBeUndefined();
@@ -88,7 +128,7 @@ describe('given a LDClientCompatImpl client with mocked browser client', () => {
   });
 
   it('should call the callback when provided to close', (done) => {
-    // @ts-ignore
+    jest.advanceTimersToNextTimer();
     mockBrowserClient.close.mockResolvedValue();
 
     client.close(() => {
@@ -98,7 +138,7 @@ describe('given a LDClientCompatImpl client with mocked browser client', () => {
   });
 
   it('should return a promise from flush when no callback is provided', async () => {
-    // @ts-ignore
+    jest.advanceTimersToNextTimer();
     mockBrowserClient.flush.mockResolvedValue({ result: true });
 
     await expect(client.flush()).resolves.toBeUndefined();
@@ -106,44 +146,379 @@ describe('given a LDClientCompatImpl client with mocked browser client', () => {
   });
 
   it('should call the callback when provided to flush', (done) => {
-    // @ts-ignore
+    jest.advanceTimersToNextTimer();
     mockBrowserClient.flush.mockResolvedValue({ result: true });
 
+    // Starting advancing the timers for the nest call. The wrapped promises
+    // do not resolve sychronously.
+    jest.advanceTimersToNextTimerAsync();
+    jest.advanceTimersToNextTimerAsync();
     client.flush(() => {
       expect(mockBrowserClient.flush).toHaveBeenCalled();
       done();
     });
   });
 
-  // it('should resolve immediately if the client is already initialized', async () => {
-  //   mockBrowserClient.waitForInitialization.mockResolvedValue(undefined);
+  it('should resolve waitForInitialization when the client is initialized', async () => {
+    jest.advanceTimersToNextTimer();
+    mockBrowserClient.identify.mockResolvedValue(undefined);
 
-  //   await expect(client.waitForInitialization()).resolves.toBeUndefined();
-  //   expect(mockBrowserClient.waitForInitialization).toHaveBeenCalledWith({ noTimeout: true });
-  // });
+    await expect(client.waitForInitialization()).resolves.toBeUndefined();
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
+      { kind: 'user', key: 'user-key' },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
+    );
+  });
 
-  // it('should log a warning when no timeout is specified for waitForInitialization', async () => {
-  //   mockBrowserClient.waitForInitialization.mockResolvedValue(undefined);
+  it('should resolve second waitForInitialization immediately', async () => {
+    jest.advanceTimersToNextTimer();
+    mockBrowserClient.identify.mockResolvedValue(undefined);
 
-  //   await client.waitForInitialization();
+    await expect(client.waitForInitialization()).resolves.toBeUndefined();
+    await expect(client.waitForInitialization()).resolves.toBeUndefined();
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
+      { kind: 'user', key: 'user-key' },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
+    );
+  });
 
-  //   expect(mockLogger.warn).toHaveBeenCalledWith(
-  //     expect.stringContaining('The waitForInitialization function was called without a timeout specified.')
-  //   );
-  // });
+  it('should resolve waitUntilReady immediately if the client is already initialized', async () => {
+    jest.advanceTimersToNextTimer();
+    mockBrowserClient.identify.mockResolvedValue(undefined);
 
-  // it('should apply a timeout when specified for waitForInitialization', async () => {
-  //   mockBrowserClient.waitForInitialization.mockResolvedValue(undefined);
+    await expect(client.waitUntilReady()).resolves.toBeUndefined();
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
+      { kind: 'user', key: 'user-key' },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
+    );
+  });
 
-  //   await client.waitForInitialization(5);
+  it('should log a warning when no timeout is specified for waitForInitialization', async () => {
+    jest.advanceTimersToNextTimerAsync();
+    await client.waitForInitialization();
 
-  //   expect(mockBrowserClient.waitForInitialization).toHaveBeenCalledWith({ timeout: 5 });
-  // });
+    expect(mockBrowserClient.logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'The waitForInitialization function was called without a timeout specified.',
+      ),
+    );
+  });
 
-  // it('should reject with a timeout error when initialization takes too long', async () => {
-  //   mockBrowserClient.waitForInitialization.mockRejectedValue(new Error('Timeout'));
+  it('should apply a timeout when specified for waitForInitialization', async () => {
+    jest.useRealTimers();
+    await expect(async () => client.waitForInitialization(0.25)).rejects.toThrow();
+  });
 
-  //   await expect(client.waitForInitialization(1)).rejects.toThrow('Timeout');
-  //   expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('waitForInitialization timed out'));
-  // });
+  it('should pass through allFlags call', () => {
+    const mockFlags = { flag1: true, flag2: false };
+    mockBrowserClient.allFlags.mockReturnValue(mockFlags);
+
+    const result = client.allFlags();
+
+    expect(result).toEqual(mockFlags);
+    expect(mockBrowserClient.allFlags).toHaveBeenCalled();
+  });
+
+  it('should pass through variation call', () => {
+    const flagKey = 'test-flag';
+    const defaultValue = false;
+    mockBrowserClient.variation.mockReturnValue(true);
+
+    const result = client.variation(flagKey, defaultValue);
+
+    expect(result).toBe(true);
+    expect(mockBrowserClient.variation).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through variationDetail call', () => {
+    const flagKey = 'test-flag';
+    const defaultValue = 'default';
+    const mockDetail = { value: 'test', variationIndex: 1, reason: { kind: 'OFF' } };
+    mockBrowserClient.variationDetail.mockReturnValue(mockDetail);
+
+    const result = client.variationDetail(flagKey, defaultValue);
+
+    expect(result).toEqual(mockDetail);
+    expect(mockBrowserClient.variationDetail).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through boolVariation call', () => {
+    const flagKey = 'bool-flag';
+    const defaultValue = false;
+    mockBrowserClient.boolVariation.mockReturnValue(true);
+
+    const result = client.boolVariation(flagKey, defaultValue);
+
+    expect(result).toBe(true);
+    expect(mockBrowserClient.boolVariation).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through boolVariationDetail call', () => {
+    const flagKey = 'bool-flag';
+    const defaultValue = false;
+    const mockDetail = { value: true, variationIndex: 1, reason: { kind: 'OFF' } };
+    mockBrowserClient.boolVariationDetail.mockReturnValue(mockDetail);
+
+    const result = client.boolVariationDetail(flagKey, defaultValue);
+
+    expect(result).toEqual(mockDetail);
+    expect(mockBrowserClient.boolVariationDetail).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through stringVariation call', () => {
+    const flagKey = 'string-flag';
+    const defaultValue = 'default';
+    mockBrowserClient.stringVariation.mockReturnValue('test');
+
+    const result = client.stringVariation(flagKey, defaultValue);
+
+    expect(result).toBe('test');
+    expect(mockBrowserClient.stringVariation).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through stringVariationDetail call', () => {
+    const flagKey = 'string-flag';
+    const defaultValue = 'default';
+    const mockDetail = { value: 'test', variationIndex: 1, reason: { kind: 'OFF' } };
+    mockBrowserClient.stringVariationDetail.mockReturnValue(mockDetail);
+
+    const result = client.stringVariationDetail(flagKey, defaultValue);
+
+    expect(result).toEqual(mockDetail);
+    expect(mockBrowserClient.stringVariationDetail).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through numberVariation call', () => {
+    const flagKey = 'number-flag';
+    const defaultValue = 0;
+    mockBrowserClient.numberVariation.mockReturnValue(42);
+
+    const result = client.numberVariation(flagKey, defaultValue);
+
+    expect(result).toBe(42);
+    expect(mockBrowserClient.numberVariation).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through numberVariationDetail call', () => {
+    const flagKey = 'number-flag';
+    const defaultValue = 0;
+    const mockDetail = { value: 42, variationIndex: 1, reason: { kind: 'OFF' } };
+    mockBrowserClient.numberVariationDetail.mockReturnValue(mockDetail);
+
+    const result = client.numberVariationDetail(flagKey, defaultValue);
+
+    expect(result).toEqual(mockDetail);
+    expect(mockBrowserClient.numberVariationDetail).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through jsonVariation call', () => {
+    const flagKey = 'json-flag';
+    const defaultValue = { default: true };
+    const mockJson = { test: 'value' };
+    mockBrowserClient.jsonVariation.mockReturnValue(mockJson);
+
+    const result = client.jsonVariation(flagKey, defaultValue);
+
+    expect(result).toEqual(mockJson);
+    expect(mockBrowserClient.jsonVariation).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through jsonVariationDetail call', () => {
+    const flagKey = 'json-flag';
+    const defaultValue = { default: true };
+    const mockDetail = { value: { test: 'value' }, variationIndex: 1, reason: { kind: 'OFF' } };
+    mockBrowserClient.jsonVariationDetail.mockReturnValue(mockDetail);
+
+    const result = client.jsonVariationDetail(flagKey, defaultValue);
+
+    expect(result).toEqual(mockDetail);
+    expect(mockBrowserClient.jsonVariationDetail).toHaveBeenCalledWith(flagKey, defaultValue);
+  });
+
+  it('should pass through track call', () => {
+    const eventName = 'test-event';
+    const data = { key: 'value' };
+    const metricValue = 1.5;
+
+    client.track(eventName, data, metricValue);
+
+    expect(mockBrowserClient.track).toHaveBeenCalledWith(eventName, data, metricValue);
+  });
+
+  it('should pass through getContext call', () => {
+    const mockContext = { kind: 'user', key: 'user-key' };
+    mockBrowserClient.getContext.mockReturnValue(mockContext);
+
+    const result = client.getContext();
+
+    expect(result).toEqual(mockContext);
+    expect(mockBrowserClient.getContext).toHaveBeenCalled();
+  });
+
+  it('should pass through setStreaming call', () => {
+    const streamingEnabled = true;
+
+    client.setStreaming(streamingEnabled);
+
+    expect(mockBrowserClient.setStreaming).toHaveBeenCalledWith(streamingEnabled);
+  });
+
+  it('should emit ready and initialized events', async () => {
+    const readyListener = jest.fn();
+    const initializedListener = jest.fn();
+
+    client.on('ready', readyListener);
+    client.on('initialized', initializedListener);
+
+    jest.advanceTimersToNextTimerAsync();
+    await client.waitForInitialization();
+
+    expect(readyListener).toHaveBeenCalledTimes(1);
+    expect(initializedListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('it unregisters ready andinitialized handlers handlers', async () => {
+    const readyListener = jest.fn();
+    const initializedListener = jest.fn();
+
+    client.on('ready', readyListener);
+    client.on('initialized', initializedListener);
+
+    client.off('ready', readyListener);
+    client.off('initialized', initializedListener);
+
+    jest.advanceTimersToNextTimerAsync();
+    await client.waitForInitialization();
+
+    expect(readyListener).not.toHaveBeenCalled();
+    expect(initializedListener).not.toHaveBeenCalled();
+  });
+
+  it('forwards addHook calls to BrowserClient', () => {
+    const testHook = {
+      getMetadata: () => ({ name: 'Test Hook' }),
+    };
+
+    client.addHook(testHook);
+
+    expect(mockBrowserClient.addHook).toHaveBeenCalledWith(testHook);
+  });
+});
+
+it('forwards bootstrap and hash to BrowserClient identify call', async () => {
+  mockBrowserClient.identify.mockImplementation(
+    () =>
+      new Promise((r) => {
+        setTimeout(r, 100);
+      }),
+  );
+  const bootstrapData = { flagKey: { version: 1, variation: 0, value: true } };
+  const options: LDOptions = {
+    bootstrap: bootstrapData,
+    hash: 'someHash',
+  };
+  const context: LDContext = { kind: 'user', key: 'user-key' };
+
+  // We are testing side-effects, ignore we are not assigning the client.
+  // eslint-disable-next-line no-new
+  new LDClientCompatImpl('env-key', context, options);
+
+  expect(mockBrowserClient.identify).toHaveBeenCalledWith(context, {
+    bootstrap: bootstrapData,
+    hash: 'someHash',
+    noTimeout: true,
+  });
+});
+
+describe('given a LDClientCompatImpl client with mocked browser client which fails to initialize', () => {
+  let client: LDClientCompatImpl;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    mockBrowserClient.identify.mockImplementation(
+      () =>
+        new Promise((r, reject) => {
+          setTimeout(() => reject(new Error('Identify failed')), 100);
+        }),
+    );
+    client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });
+  });
+
+  it('should handle rejection of initial identification before waitForInitialization is called', async () => {
+    await jest.advanceTimersToNextTimer();
+
+    await expect(client.waitForInitialization()).rejects.toThrow('Identify failed');
+
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
+      { kind: 'user', key: 'user-key' },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
+    );
+  });
+
+  it('should handle rejection of initial identification after waitForInitialization is called', async () => {
+    const makeAssertion = () =>
+      expect(client.waitForInitialization()).rejects.toThrow('Identify failed');
+    const promise = makeAssertion();
+    jest.advanceTimersToNextTimer();
+    await promise;
+
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
+      { kind: 'user', key: 'user-key' },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
+    );
+  });
+
+  it('should handle rejection of initial identification before waitUntilReady is called', async () => {
+    await jest.advanceTimersToNextTimer();
+
+    await expect(client.waitUntilReady()).resolves.toBeUndefined();
+
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
+      { kind: 'user', key: 'user-key' },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
+    );
+  });
+
+  it('should handle rejection of initial identification after waitUntilReady is called', async () => {
+    const makeAssertion = () => expect(client.waitUntilReady()).resolves.toBeUndefined();
+    const promise = makeAssertion();
+    jest.advanceTimersToNextTimer();
+    await promise;
+
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(
+      { kind: 'user', key: 'user-key' },
+      { bootstrap: undefined, hash: undefined, noTimeout: true },
+    );
+  });
+
+  it('should emit failed and ready events', async () => {
+    const readyListener = jest.fn();
+    const failedListener = jest.fn();
+
+    client.on('ready', readyListener);
+    client.on('failed', failedListener);
+
+    jest.advanceTimersToNextTimerAsync();
+    await expect(client.waitForInitialization()).rejects.toThrow('Identify failed');
+
+    expect(readyListener).toHaveBeenCalledTimes(1);
+    expect(failedListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('it unregisters failed handlers', async () => {
+    const readyListener = jest.fn();
+    const failedListener = jest.fn();
+
+    client.on('ready', readyListener);
+    client.on('failed', failedListener);
+
+    client.off('ready', readyListener);
+    client.off('failed', failedListener);
+
+    jest.advanceTimersToNextTimerAsync();
+    await expect(client.waitForInitialization()).rejects.toThrow('Identify failed');
+
+    expect(readyListener).not.toHaveBeenCalled();
+    expect(failedListener).not.toHaveBeenCalled();
+  });
 });

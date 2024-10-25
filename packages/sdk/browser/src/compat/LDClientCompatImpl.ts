@@ -4,7 +4,6 @@ import {
   cancelableTimedPromise,
   Hook,
   LDContext,
-  LDEmitterEventName,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDFlagSet,
@@ -16,7 +15,7 @@ import {
 import { BrowserClient } from '../BrowserClient';
 import { LDClient } from './LDClientCompat';
 import { LDOptions } from './LDCompatOptions';
-import LDEmitterCompat from './LDEmitterCompat';
+import LDEmitterCompat, { CompatEventName } from './LDEmitterCompat';
 import { wrapPromiseCallback } from './wrapPromiseCallback';
 
 export default class LDClientCompatImpl implements LDClient {
@@ -96,11 +95,11 @@ export default class LDClientCompatImpl implements LDClient {
     return this._client.numberVariationDetail(key, defaultValue);
   }
 
-  off(key: LDEmitterEventName, callback: (...args: any[]) => void): void {
+  off(key: CompatEventName, callback: (...args: any[]) => void): void {
     this._emitter.off(key, callback);
   }
 
-  on(key: LDEmitterEventName, callback: (...args: any[]) => void): void {
+  on(key: CompatEventName, callback: (...args: any[]) => void): void {
     this._emitter.on(key, callback);
   }
 
@@ -152,7 +151,10 @@ export default class LDClientCompatImpl implements LDClient {
 
   flush(onDone?: () => void): Promise<void> | undefined {
     // The .then() is to strip the return value making a void promise.
-    return wrapPromiseCallback(this._client.flush().then(), onDone);
+    return wrapPromiseCallback(
+      this._client.flush().then(() => undefined),
+      onDone,
+    );
   }
 
   getContext(): LDContext | undefined {
@@ -200,6 +202,14 @@ export default class LDClientCompatImpl implements LDClient {
     }
 
     return this._promiseWithTimeout(this._initializedPromise, timeout);
+  }
+
+  async waitUntilReady(): Promise<void> {
+    try {
+      await this.waitForInitialization();
+    } catch {
+      // We do not care about the error.
+    }
   }
 
   /**

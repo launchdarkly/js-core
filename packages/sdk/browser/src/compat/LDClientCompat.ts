@@ -1,4 +1,5 @@
 import { LDContext, LDFlagSet } from '@launchdarkly/js-client-sdk-common';
+
 import { LDClient as LDCLientBrowser } from '../BrowserClient';
 
 /**
@@ -13,34 +14,34 @@ import { LDClient as LDCLientBrowser } from '../BrowserClient';
  */
 export interface LDClient extends Omit<LDCLientBrowser, 'close' | 'flush' | 'identify'> {
   /**
- * Identifies a context to LaunchDarkly.
- *
- * Unlike the server-side SDKs, the client-side JavaScript SDKs maintain a current context state,
- * which is set at initialization time. You only need to call `identify()` if the context has changed
- * since then.
- *
- * Changing the current context also causes all feature flag values to be reloaded. Until that has
- * finished, calls to {@link variation} will still return flag values for the previous context. You can
- * use a callback or a Promise to determine when the new flag values are available.
- *
- * @param context
- *   The context properties. Must contain at least the `key` property.
- * @param hash
- *   The signed context key if you are using [Secure Mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
- * @param onDone
- *   A function which will be called as soon as the flag values for the new context are available,
- *   with two parameters: an error value (if any), and an {@link LDFlagSet} containing the new values
- *   (which can also be obtained by calling {@link variation}). If the callback is omitted, you will
- *   receive a Promise instead.
- * @returns
- *   If you provided a callback, then nothing. Otherwise, a Promise which resolve once the flag
- *   values for the new context are available, providing an {@link LDFlagSet} containing the new values
- *   (which can also be obtained by calling {@link variation}).
- */
+   * Identifies a context to LaunchDarkly.
+   *
+   * Unlike the server-side SDKs, the client-side JavaScript SDKs maintain a current context state,
+   * which is set at initialization time. You only need to call `identify()` if the context has changed
+   * since then.
+   *
+   * Changing the current context also causes all feature flag values to be reloaded. Until that has
+   * finished, calls to {@link variation} will still return flag values for the previous context. You can
+   * use a callback or a Promise to determine when the new flag values are available.
+   *
+   * @param context
+   *   The context properties. Must contain at least the `key` property.
+   * @param hash
+   *   The signed context key if you are using [Secure Mode](https://docs.launchdarkly.com/sdk/features/secure-mode#configuring-secure-mode-in-the-javascript-client-side-sdk).
+   * @param onDone
+   *   A function which will be called as soon as the flag values for the new context are available,
+   *   with two parameters: an error value (if any), and an {@link LDFlagSet} containing the new values
+   *   (which can also be obtained by calling {@link variation}). If the callback is omitted, you will
+   *   receive a Promise instead.
+   * @returns
+   *   If you provided a callback, then nothing. Otherwise, a Promise which resolve once the flag
+   *   values for the new context are available, providing an {@link LDFlagSet} containing the new values
+   *   (which can also be obtained by calling {@link variation}).
+   */
   identify(
     context: LDContext,
     hash?: string,
-    onDone?: (err: Error | null, flags: LDFlagSet | null) => void
+    onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> | undefined;
 
   /**
@@ -50,13 +51,6 @@ export interface LDClient extends Omit<LDCLientBrowser, 'close' | 'flush' | 'ide
    * initialization has irrevocably failed (for instance, if it detects that the SDK key is invalid).
    *
    * ```
-   *     // using Promise then() and catch() handlers
-   *     client.waitForInitialization(5).then(() => {
-   *         doSomethingWithSuccessfullyInitializedClient();
-   *     }).catch(err => {
-   *         doSomethingForFailedStartup(err);
-   *     });
-   *
    *     // using async/await
    *     try {
    *         await client.waitForInitialization(5);
@@ -88,6 +82,32 @@ export interface LDClient extends Omit<LDCLientBrowser, 'close' | 'flush' | 'ide
    *   fails or the specified timeout elapses.
    */
   waitForInitialization(timeout?: number): Promise<void>;
+
+  /**
+   * Returns a Promise that tracks the client's initialization state.
+   *
+   * The returned Promise will be resolved once the client has either successfully initialized
+   * or failed to initialize (e.g. due to an invalid environment key or a server error). It will
+   * never be rejected.
+   *
+   * ```
+   *     // using async/await
+   *     await client.waitUntilReady();
+   *     doSomethingWithClient();
+   * ```
+   *
+   * If you want to distinguish between these success and failure conditions, use
+   * {@link waitForInitialization} instead.
+   *
+   * If you prefer to use event listeners ({@link on}) rather than Promises, you can listen on the
+   * client for a `"ready"` event, which will be fired in either case.
+   *
+   * @returns
+   *   A Promise that will be resolved once the client is no longer trying to initialize.
+   * @deprecated Please use {@link waitForInitialization} instead. This method will always
+   * cause a warning to be logged because it is implemented via waitForInitialization.
+   */
+  waitUntilReady(): Promise<void>;
 
   /**
    * Shuts down the client and releases its resources, after delivering any pending analytics

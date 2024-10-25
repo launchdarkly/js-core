@@ -1,5 +1,5 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
 import { LDEmitterEventName } from '@launchdarkly/js-client-sdk-common';
+
 import { LDClient } from '../BrowserClient';
 
 type CompatOnlyEvents = 'ready' | 'failed' | 'initialized';
@@ -10,7 +10,7 @@ const COMPAT_EVENTS: string[] = ['ready', 'failed', 'initialized'];
 export default class LDEmitterCompat {
   private _listeners: Map<CompatEventName, Function[]> = new Map();
 
-  constructor(private readonly _client: LDClient) { }
+  constructor(private readonly _client: LDClient) {}
 
   on(name: CompatEventName, listener: Function) {
     if (COMPAT_EVENTS.includes(name)) {
@@ -20,7 +20,7 @@ export default class LDEmitterCompat {
         this._listeners.get(name)?.push(listener);
       }
     } else {
-      this._client.on(name, listener as (...args: any[]) => void)
+      this._client.on(name, listener as (...args: any[]) => void);
     }
   }
 
@@ -50,7 +50,7 @@ export default class LDEmitterCompat {
       // listener was not specified, so remove them all for that event
       this._listeners.delete(name);
     } else {
-      this._client.off(name, listener as (...args: any[]) => void)
+      this._client.off(name, listener as (...args: any[]) => void);
     }
   }
 
@@ -58,7 +58,9 @@ export default class LDEmitterCompat {
     try {
       listener(...detail);
     } catch (err) {
-      this._client.logger.error(`Encountered error invoking handler for "${name}", detail: "${err}"`);
+      this._client.logger.error(
+        `Encountered error invoking handler for "${name}", detail: "${err}"`,
+      );
     }
   }
 

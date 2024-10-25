@@ -5,7 +5,6 @@
  * Some code changes may still be required, for example {@link LDOptions} removes
  * support for some previously available options.
  */
-import { AutoEnvAttributes } from '@launchdarkly/js-client-sdk-common';
 import { LDContext, LDOptions } from '..';
 import { LDClient } from './LDClientCompat';
 import LDClientCompatImpl from './LDClientCompatImpl';
