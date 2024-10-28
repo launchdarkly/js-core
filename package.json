@@ -26,7 +26,6 @@
     "packages/sdk/browser",
     "packages/sdk/browser/contract-tests/entity",
     "packages/sdk/browser/contract-tests/adapter"
-
   ],
   "private": true,
   "scripts": {
