@@ -7,6 +7,7 @@ import { HttpsProxyAgentOptions } from 'https-proxy-agent';
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 
 import {
+  EventSourceCapabilities,
   LDLogger,
   LDProxyOptions,
   LDTLSOptions,
@@ -92,18 +93,18 @@ function createAgent(
 }
 
 export default class NodeRequests implements platform.Requests {
-  private agent: https.Agent | http.Agent | undefined;
+  private _agent: https.Agent | http.Agent | undefined;
 
-  private tlsOptions: LDTLSOptions | undefined;
+  private _tlsOptions: LDTLSOptions | undefined;
 
-  private hasProxy: boolean = false;
+  private _hasProxy: boolean = false;
 
-  private hasProxyAuth: boolean = false;
+  private _hasProxyAuth: boolean = false;
 
   constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions, logger?: LDLogger) {
-    this.agent = createAgent(tlsOptions, proxyOptions, logger);
-    this.hasProxy = !!proxyOptions;
-    this.hasProxyAuth = !!proxyOptions?.auth;
+    this._agent = createAgent(tlsOptions, proxyOptions, logger);
+    this._hasProxy = !!proxyOptions;
+    this._hasProxyAuth = !!proxyOptions?.auth;
   }
 
   fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
@@ -127,7 +128,7 @@ export default class NodeRequests implements platform.Requests {
           timeout: options.timeout,
           headers,
           method: options.method,
-          agent: this.agent,
+          agent: this._agent,
         },
         (res) => resolve(new NodeResponse(res)),
       );
@@ -150,19 +151,27 @@ export default class NodeRequests implements platform.Requests {
   ): platform.EventSource {
     const expandedOptions = {
       ...eventSourceInitDict,
-      agent: this.agent,
-      tlsParams: this.tlsOptions,
+      agent: this._agent,
+      tlsParams: this._tlsOptions,
       maxBackoffMillis: 30 * 1000,
       jitterRatio: 0.5,
     };
     return new LDEventSource(url, expandedOptions);
   }
 
+  getEventSourceCapabilities(): EventSourceCapabilities {
+    return {
+      readTimeout: true,
+      headers: true,
+      customMethod: true,
+    };
+  }
+
   usingProxy(): boolean {
-    return this.hasProxy;
+    return this._hasProxy;
   }
 
   usingProxyAuth(): boolean {
-    return this.hasProxyAuth;
+    return this._hasProxyAuth;
   }
 }

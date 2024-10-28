@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-native-client-sdk",
-  "version": "10.6.0",
+  "version": "10.9.0",
   "description": "React Native LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native",
   "repository": {
@@ -34,21 +34,18 @@
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "jest",
     "coverage": "yarn test --coverage",
-    "check": "yarn prettier && yarn lint && yarn build && yarn test",
-    "android": "yarn && yarn ./example && yarn build && (cd example/ && yarn android-release)",
-    "ios": "yarn && yarn ./example && yarn build && (cd example/ && yarn ios-go)"
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.6.0",
+    "@launchdarkly/js-client-sdk-common": "1.10.0",
     "@react-native-async-storage/async-storage": "^1.21.0",
     "base64-js": "^1.5.1"
   },
   "devDependencies": {
-    "@launchdarkly/private-js-mocks": "0.0.1",
     "@testing-library/react": "^14.1.2",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.11",

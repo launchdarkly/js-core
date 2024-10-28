@@ -1,0 +1,31 @@
+{
+  "name": "browser-contract-test-service",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Contract test service implementation for @launchdarkly/js-client-sdk",
+  "scripts": {
+    "start": "tsc --noEmit && vite --open=true",
+    "build": "tsc --noEmit && vite build",
+    "lint": "eslint ./src",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "*"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  }
+}

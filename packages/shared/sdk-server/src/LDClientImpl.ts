@@ -3,6 +3,7 @@ import {
   cancelableTimedPromise,
   ClientContext,
   Context,
+  defaultHeaders,
   internal,
   LDClientError,
   LDContext,
@@ -89,43 +90,43 @@ const VARIATION_METHOD_DETAIL_NAME = 'LDClient.variationDetail';
  * @ignore
  */
 export default class LDClientImpl implements LDClient {
-  private initState: InitState = InitState.Initializing;
+  private _initState: InitState = InitState.Initializing;
 
-  private featureStore: LDFeatureStore;
+  private _featureStore: LDFeatureStore;
 
-  private updateProcessor?: subsystem.LDStreamProcessor;
+  private _updateProcessor?: subsystem.LDStreamProcessor;
 
-  private eventFactoryDefault = new EventFactory(false);
+  private _eventFactoryDefault = new EventFactory(false);
 
-  private eventFactoryWithReasons = new EventFactory(true);
+  private _eventFactoryWithReasons = new EventFactory(true);
 
-  private eventProcessor: subsystem.LDEventProcessor;
+  private _eventProcessor: subsystem.LDEventProcessor;
 
-  private evaluator: Evaluator;
+  private _evaluator: Evaluator;
 
-  private initResolve?: (value: LDClient | PromiseLike<LDClient>) => void;
+  private _initResolve?: (value: LDClient | PromiseLike<LDClient>) => void;
 
-  private initReject?: (err: Error) => void;
+  private _initReject?: (err: Error) => void;
 
-  private rejectionReason: Error | undefined;
+  private _rejectionReason: Error | undefined;
 
-  private initializedPromise?: Promise<LDClient>;
+  private _initializedPromise?: Promise<LDClient>;
 
-  private logger?: LDLogger;
+  private _logger?: LDLogger;
 
-  private config: Configuration;
+  private _config: Configuration;
 
-  private bigSegmentsManager: BigSegmentsManager;
+  private _bigSegmentsManager: BigSegmentsManager;
 
-  private onError: (err: Error) => void;
+  private _onError: (err: Error) => void;
 
-  private onFailed: (err: Error) => void;
+  private _onFailed: (err: Error) => void;
 
-  private onReady: () => void;
+  private _onReady: () => void;
 
-  private diagnosticsManager?: internal.DiagnosticsManager;
+  private _diagnosticsManager?: internal.DiagnosticsManager;
 
-  private hookRunner: HookRunner;
+  private _hookRunner: HookRunner;
 
   /**
    * Intended for use by platform specific client implementations.
@@ -137,60 +138,62 @@ export default class LDClientImpl implements LDClient {
   protected bigSegmentStatusProviderInternal: BigSegmentStoreStatusProvider;
 
   constructor(
-    private sdkKey: string,
-    private platform: Platform,
+    private _sdkKey: string,
+    private _platform: Platform,
     options: LDOptions,
     callbacks: LDClientCallbacks,
     internalOptions?: internal.LDInternalOptions,
   ) {
-    this.onError = callbacks.onError;
-    this.onFailed = callbacks.onFailed;
-    this.onReady = callbacks.onReady;
+    this._onError = callbacks.onError;
+    this._onFailed = callbacks.onFailed;
+    this._onReady = callbacks.onReady;
 
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options, internalOptions);
 
-    this.hookRunner = new HookRunner(config.logger, config.hooks || []);
+    this._hookRunner = new HookRunner(config.logger, config.hooks || []);
 
-    if (!sdkKey && !config.offline) {
+    if (!_sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
     }
-    this.config = config;
-    this.logger = config.logger;
+    this._config = config;
+    this._logger = config.logger;
+    const baseHeaders = defaultHeaders(_sdkKey, _platform.info, config.tags);
 
-    const clientContext = new ClientContext(sdkKey, config, platform);
+    const clientContext = new ClientContext(_sdkKey, config, _platform);
     const featureStore = config.featureStoreFactory(clientContext);
 
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
     if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
-      this.diagnosticsManager = new internal.DiagnosticsManager(
-        sdkKey,
-        platform,
-        createDiagnosticsInitConfig(config, platform, featureStore),
+      this._diagnosticsManager = new internal.DiagnosticsManager(
+        _sdkKey,
+        _platform,
+        createDiagnosticsInitConfig(config, _platform, featureStore),
       );
     }
 
     if (!config.sendEvents || config.offline) {
-      this.eventProcessor = new NullEventProcessor();
+      this._eventProcessor = new NullEventProcessor();
     } else {
-      this.eventProcessor = new internal.EventProcessor(
+      this._eventProcessor = new internal.EventProcessor(
         config,
         clientContext,
+        baseHeaders,
         new ContextDeduplicator(config),
-        this.diagnosticsManager,
+        this._diagnosticsManager,
       );
     }
 
-    this.featureStore = featureStore;
+    this._featureStore = featureStore;
 
     const manager = new BigSegmentsManager(
       config.bigSegments?.store?.(clientContext),
       config.bigSegments ?? {},
       config.logger,
-      this.platform.crypto,
+      this._platform.crypto,
     );
-    this.bigSegmentsManager = manager;
+    this._bigSegmentsManager = manager;
     this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
 
     const queries: Queries = {
@@ -206,51 +209,52 @@ export default class LDClientImpl implements LDClient {
         return manager.getUserMembership(userKey);
       },
     };
-    this.evaluator = new Evaluator(this.platform, queries);
+    this._evaluator = new Evaluator(this._platform, queries);
 
-    const listeners = createStreamListeners(dataSourceUpdates, this.logger, {
-      put: () => this.initSuccess(),
+    const listeners = createStreamListeners(dataSourceUpdates, this._logger, {
+      put: () => this._initSuccess(),
     });
     const makeDefaultProcessor = () =>
       config.stream
         ? new internal.StreamingProcessor(
-            sdkKey,
             clientContext,
             '/all',
+            [],
             listeners,
-            this.diagnosticsManager,
-            (e) => this.dataSourceErrorHandler(e),
-            this.config.streamInitialReconnectDelay,
+            baseHeaders,
+            this._diagnosticsManager,
+            (e) => this._dataSourceErrorHandler(e),
+            this._config.streamInitialReconnectDelay,
           )
         : new PollingProcessor(
             config,
-            new Requestor(sdkKey, config, this.platform.info, this.platform.requests),
+            new Requestor(config, this._platform.requests, baseHeaders),
             dataSourceUpdates,
-            () => this.initSuccess(),
-            (e) => this.dataSourceErrorHandler(e),
+            () => this._initSuccess(),
+            (e) => this._dataSourceErrorHandler(e),
           );
 
     if (!(config.offline || config.useLdd)) {
-      this.updateProcessor =
+      this._updateProcessor =
         config.updateProcessorFactory?.(
           clientContext,
           dataSourceUpdates,
-          () => this.initSuccess(),
-          (e) => this.dataSourceErrorHandler(e),
+          () => this._initSuccess(),
+          (e) => this._dataSourceErrorHandler(e),
         ) ?? makeDefaultProcessor();
     }
 
-    if (this.updateProcessor) {
-      this.updateProcessor.start();
+    if (this._updateProcessor) {
+      this._updateProcessor.start();
     } else {
       // Deferring the start callback should allow client construction to complete before we start
       // emitting events. Allowing the client an opportunity to register events.
-      setTimeout(() => this.initSuccess(), 0);
+      setTimeout(() => this._initSuccess(), 0);
     }
   }
 
   initialized(): boolean {
-    return this.initState === InitState.Initialized;
+    return this._initState === InitState.Initialized;
   }
 
   waitForInitialization(options?: LDWaitForInitializationOptions): Promise<LDClient> {
@@ -262,8 +266,8 @@ export default class LDClientImpl implements LDClient {
     // If there is no update processor, then there is functionally no initialization
     // so it is fine not to wait.
 
-    if (options?.timeout === undefined && this.updateProcessor !== undefined) {
-      this.logger?.warn(
+    if (options?.timeout === undefined && this._updateProcessor !== undefined) {
+      this._logger?.warn(
         'The waitForInitialization function was called without a timeout specified.' +
           ' In a future version a default timeout will be applied.',
       );
@@ -271,9 +275,9 @@ export default class LDClientImpl implements LDClient {
     if (
       options?.timeout !== undefined &&
       options?.timeout > HIGH_TIMEOUT_THRESHOLD &&
-      this.updateProcessor !== undefined
+      this._updateProcessor !== undefined
     ) {
-      this.logger?.warn(
+      this._logger?.warn(
         'The waitForInitialization function was called with a timeout greater than ' +
           `${HIGH_TIMEOUT_THRESHOLD} seconds. We recommend a timeout of less than ` +
           `${HIGH_TIMEOUT_THRESHOLD} seconds.`,
@@ -281,34 +285,34 @@ export default class LDClientImpl implements LDClient {
     }
 
     // Initialization promise was created by a previous call to waitForInitialization.
-    if (this.initializedPromise) {
+    if (this._initializedPromise) {
       // This promise may already be resolved/rejected, but it doesn't hurt to wrap it in a timeout.
-      return this.clientWithTimeout(this.initializedPromise, options?.timeout, this.logger);
+      return this._clientWithTimeout(this._initializedPromise, options?.timeout, this._logger);
     }
 
     // Initialization completed before waitForInitialization was called, so we have completed
     // and there was no promise. So we make a resolved promise and return it.
-    if (this.initState === InitState.Initialized) {
-      this.initializedPromise = Promise.resolve(this);
+    if (this._initState === InitState.Initialized) {
+      this._initializedPromise = Promise.resolve(this);
       // Already initialized, no need to timeout.
-      return this.initializedPromise;
+      return this._initializedPromise;
     }
 
     // Initialization failed before waitForInitialization was called, so we have completed
     // and there was no promise. So we make a rejected promise and return it.
-    if (this.initState === InitState.Failed) {
+    if (this._initState === InitState.Failed) {
       // Already failed, no need to timeout.
-      this.initializedPromise = Promise.reject(this.rejectionReason);
-      return this.initializedPromise;
+      this._initializedPromise = Promise.reject(this._rejectionReason);
+      return this._initializedPromise;
     }
 
-    if (!this.initializedPromise) {
-      this.initializedPromise = new Promise((resolve, reject) => {
-        this.initResolve = resolve;
-        this.initReject = reject;
+    if (!this._initializedPromise) {
+      this._initializedPromise = new Promise((resolve, reject) => {
+        this._initResolve = resolve;
+        this._initReject = reject;
       });
     }
-    return this.clientWithTimeout(this.initializedPromise, options?.timeout, this.logger);
+    return this._clientWithTimeout(this._initializedPromise, options?.timeout, this._logger);
   }
 
   variation(
@@ -317,7 +321,7 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: any) => void,
   ): Promise<any> {
-    return this.hookRunner
+    return this._hookRunner
       .withEvaluationSeries(
         key,
         context,
@@ -325,9 +329,15 @@ export default class LDClientImpl implements LDClient {
         VARIATION_METHOD_NAME,
         () =>
           new Promise<LDEvaluationDetail>((resolve) => {
-            this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
-              resolve(res.detail);
-            });
+            this._evaluateIfPossible(
+              key,
+              context,
+              defaultValue,
+              this._eventFactoryDefault,
+              (res) => {
+                resolve(res.detail);
+              },
+            );
           }),
       )
       .then((detail) => {
@@ -342,18 +352,18 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    return this.hookRunner.withEvaluationSeries(
+    return this._hookRunner.withEvaluationSeries(
       key,
       context,
       defaultValue,
       VARIATION_METHOD_DETAIL_NAME,
       () =>
         new Promise<LDEvaluationDetail>((resolve) => {
-          this.evaluateIfPossible(
+          this._evaluateIfPossible(
             key,
             context,
             defaultValue,
-            this.eventFactoryWithReasons,
+            this._eventFactoryWithReasons,
             (res) => {
               resolve(res.detail);
               callback?.(null, res.detail);
@@ -363,7 +373,7 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  private typedEval<TResult>(
+  private _typedEval<TResult>(
     key: string,
     context: LDContext,
     defaultValue: TResult,
@@ -371,14 +381,14 @@ export default class LDClientImpl implements LDClient {
     methodName: string,
     typeChecker: (value: unknown) => [boolean, string],
   ): Promise<LDEvaluationDetail> {
-    return this.hookRunner.withEvaluationSeries(
+    return this._hookRunner.withEvaluationSeries(
       key,
       context,
       defaultValue,
       methodName,
       () =>
         new Promise<LDEvaluationDetailTyped<TResult>>((resolve) => {
-          this.evaluateIfPossible(
+          this._evaluateIfPossible(
             key,
             context,
             defaultValue,
@@ -399,11 +409,11 @@ export default class LDClientImpl implements LDClient {
 
   async boolVariation(key: string, context: LDContext, defaultValue: boolean): Promise<boolean> {
     return (
-      await this.typedEval(
+      await this._typedEval(
         key,
         context,
         defaultValue,
-        this.eventFactoryDefault,
+        this._eventFactoryDefault,
         BOOL_VARIATION_METHOD_NAME,
         (value) => [TypeValidators.Boolean.is(value), TypeValidators.Boolean.getType()],
       )
@@ -412,11 +422,11 @@ export default class LDClientImpl implements LDClient {
 
   async numberVariation(key: string, context: LDContext, defaultValue: number): Promise<number> {
     return (
-      await this.typedEval(
+      await this._typedEval(
         key,
         context,
         defaultValue,
-        this.eventFactoryDefault,
+        this._eventFactoryDefault,
         NUMBER_VARIATION_METHOD_NAME,
         (value) => [TypeValidators.Number.is(value), TypeValidators.Number.getType()],
       )
@@ -425,11 +435,11 @@ export default class LDClientImpl implements LDClient {
 
   async stringVariation(key: string, context: LDContext, defaultValue: string): Promise<string> {
     return (
-      await this.typedEval(
+      await this._typedEval(
         key,
         context,
         defaultValue,
-        this.eventFactoryDefault,
+        this._eventFactoryDefault,
         STRING_VARIATION_METHOD_NAME,
         (value) => [TypeValidators.String.is(value), TypeValidators.String.getType()],
       )
@@ -437,7 +447,7 @@ export default class LDClientImpl implements LDClient {
   }
 
   jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown> {
-    return this.hookRunner
+    return this._hookRunner
       .withEvaluationSeries(
         key,
         context,
@@ -445,9 +455,15 @@ export default class LDClientImpl implements LDClient {
         JSON_VARIATION_METHOD_NAME,
         () =>
           new Promise<LDEvaluationDetail>((resolve) => {
-            this.evaluateIfPossible(key, context, defaultValue, this.eventFactoryDefault, (res) => {
-              resolve(res.detail);
-            });
+            this._evaluateIfPossible(
+              key,
+              context,
+              defaultValue,
+              this._eventFactoryDefault,
+              (res) => {
+                resolve(res.detail);
+              },
+            );
           }),
       )
       .then((detail) => detail.value);
@@ -458,11 +474,11 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: boolean,
   ): Promise<LDEvaluationDetailTyped<boolean>> {
-    return this.typedEval(
+    return this._typedEval(
       key,
       context,
       defaultValue,
-      this.eventFactoryWithReasons,
+      this._eventFactoryWithReasons,
       BOOL_VARIATION_DETAIL_METHOD_NAME,
       (value) => [TypeValidators.Boolean.is(value), TypeValidators.Boolean.getType()],
     );
@@ -473,11 +489,11 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: number,
   ): Promise<LDEvaluationDetailTyped<number>> {
-    return this.typedEval(
+    return this._typedEval(
       key,
       context,
       defaultValue,
-      this.eventFactoryWithReasons,
+      this._eventFactoryWithReasons,
       NUMBER_VARIATION_DETAIL_METHOD_NAME,
       (value) => [TypeValidators.Number.is(value), TypeValidators.Number.getType()],
     );
@@ -488,11 +504,11 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: string,
   ): Promise<LDEvaluationDetailTyped<string>> {
-    return this.typedEval(
+    return this._typedEval(
       key,
       context,
       defaultValue,
-      this.eventFactoryWithReasons,
+      this._eventFactoryWithReasons,
       STRING_VARIATION_DETAIL_METHOD_NAME,
       (value) => [TypeValidators.String.is(value), TypeValidators.String.getType()],
     );
@@ -503,18 +519,18 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: unknown,
   ): Promise<LDEvaluationDetailTyped<unknown>> {
-    return this.hookRunner.withEvaluationSeries(
+    return this._hookRunner.withEvaluationSeries(
       key,
       context,
       defaultValue,
       JSON_VARIATION_DETAIL_METHOD_NAME,
       () =>
         new Promise<LDEvaluationDetail>((resolve) => {
-          this.evaluateIfPossible(
+          this._evaluateIfPossible(
             key,
             context,
             defaultValue,
-            this.eventFactoryWithReasons,
+            this._eventFactoryWithReasons,
             (res) => {
               resolve(res.detail);
             },
@@ -523,24 +539,24 @@ export default class LDClientImpl implements LDClient {
     );
   }
 
-  private async migrationVariationInternal(
+  private async _migrationVariationInternal(
     key: string,
     context: LDContext,
     defaultValue: LDMigrationStage,
   ): Promise<{ detail: LDEvaluationDetail; migration: LDMigrationVariation }> {
     const convertedContext = Context.fromLDContext(context);
     const res = await new Promise<{ detail: LDEvaluationDetail; flag?: Flag }>((resolve) => {
-      this.evaluateIfPossible(
+      this._evaluateIfPossible(
         key,
         context,
         defaultValue,
-        this.eventFactoryWithReasons,
+        this._eventFactoryWithReasons,
         ({ detail }, flag) => {
           if (!IsMigrationStage(detail.value)) {
             const error = new Error(
               `Unrecognized MigrationState for "${key}"; returning default value.`,
             );
-            this.onError(error);
+            this._onError(error);
             const reason = {
               kind: 'ERROR',
               errorKind: ErrorKinds.WrongType,
@@ -579,7 +595,7 @@ export default class LDClientImpl implements LDClient {
           detail.variationIndex === null ? undefined : detail.variationIndex,
           flag?.version,
           samplingRatio,
-          this.logger,
+          this._logger,
         ),
       },
     };
@@ -590,12 +606,12 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: LDMigrationStage,
   ): Promise<LDMigrationVariation> {
-    const res = await this.hookRunner.withEvaluationSeriesExtraDetail(
+    const res = await this._hookRunner.withEvaluationSeriesExtraDetail(
       key,
       context,
       defaultValue,
       MIGRATION_VARIATION_METHOD_NAME,
-      () => this.migrationVariationInternal(key, context, defaultValue),
+      () => this._migrationVariationInternal(key, context, defaultValue),
     );
 
     return res.migration;
@@ -606,8 +622,8 @@ export default class LDClientImpl implements LDClient {
     options?: LDFlagsStateOptions,
     callback?: (err: Error | null, res: LDFlagsState) => void,
   ): Promise<LDFlagsState> {
-    if (this.config.offline) {
-      this.logger?.info('allFlagsState() called in offline mode. Returning empty state.');
+    if (this._config.offline) {
+      this._logger?.info('allFlagsState() called in offline mode. Returning empty state.');
       const allFlagState = new FlagsStateBuilder(false, false).build();
       callback?.(null, allFlagState);
       return Promise.resolve(allFlagState);
@@ -615,13 +631,13 @@ export default class LDClientImpl implements LDClient {
 
     const evalContext = Context.fromLDContext(context);
     if (!evalContext.valid) {
-      this.logger?.info(`${evalContext.message ?? 'Invalid context.'}. Returning empty state.`);
+      this._logger?.info(`${evalContext.message ?? 'Invalid context.'}. Returning empty state.`);
       return Promise.resolve(new FlagsStateBuilder(false, false).build());
     }
 
     return new Promise<LDFlagsState>((resolve) => {
       const doEval = (valid: boolean) =>
-        this.featureStore.all(VersionedDataKinds.Features, (allFlags) => {
+        this._featureStore.all(VersionedDataKinds.Features, (allFlags) => {
           const builder = new FlagsStateBuilder(valid, !!options?.withReasons);
           const clientOnly = !!options?.clientSideOnly;
           const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
@@ -634,9 +650,9 @@ export default class LDClientImpl implements LDClient {
                 iterCb(true);
                 return;
               }
-              this.evaluator.evaluateCb(flag, evalContext, (res) => {
+              this._evaluator.evaluateCb(flag, evalContext, (res) => {
                 if (res.isError) {
-                  this.onError(
+                  this._onError(
                     new Error(
                       `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
                     ),
@@ -651,6 +667,7 @@ export default class LDClientImpl implements LDClient {
                   flag.trackEvents || requireExperimentData,
                   requireExperimentData,
                   detailsOnlyIfTracked,
+                  res.prerequisites,
                 );
                 iterCb(true);
               });
@@ -663,15 +680,15 @@ export default class LDClientImpl implements LDClient {
           );
         });
       if (!this.initialized()) {
-        this.featureStore.initialized((storeInitialized) => {
+        this._featureStore.initialized((storeInitialized) => {
           let valid = true;
           if (storeInitialized) {
-            this.logger?.warn(
+            this._logger?.warn(
               'Called allFlagsState before client initialization; using last known' +
                 ' values from data store',
             );
           } else {
-            this.logger?.warn(
+            this._logger?.warn(
               'Called allFlagsState before client initialization. Data store not available; ' +
                 'returning empty state',
             );
@@ -688,7 +705,12 @@ export default class LDClientImpl implements LDClient {
   secureModeHash(context: LDContext): string {
     const checkedContext = Context.fromLDContext(context);
     const key = checkedContext.valid ? checkedContext.canonicalKey : undefined;
-    const hmac = this.platform.crypto.createHmac('sha256', this.sdkKey);
+    if (!this._platform.crypto.createHmac) {
+      // This represents an error in platform implementation.
+      throw new Error('Platform must implement createHmac');
+    }
+    const hmac = this._platform.crypto.createHmac('sha256', this._sdkKey);
+
     if (key === undefined) {
       throw new LDClientError('Could not generate secure mode hash for invalid context');
     }
@@ -697,30 +719,30 @@ export default class LDClientImpl implements LDClient {
   }
 
   close(): void {
-    this.eventProcessor.close();
-    this.updateProcessor?.close();
-    this.featureStore.close();
-    this.bigSegmentsManager.close();
+    this._eventProcessor.close();
+    this._updateProcessor?.close();
+    this._featureStore.close();
+    this._bigSegmentsManager.close();
   }
 
   isOffline(): boolean {
-    return this.config.offline;
+    return this._config.offline;
   }
 
   track(key: string, context: LDContext, data?: any, metricValue?: number): void {
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
-      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      this._logger?.warn(ClientMessages.MissingContextKeyNoEvent);
       return;
     }
 
     // 0 is valid, so do not truthy check the metric value
     if (metricValue !== undefined && !TypeValidators.Number.is(metricValue)) {
-      this.logger?.warn(ClientMessages.invalidMetricValue(typeof metricValue));
+      this._logger?.warn(ClientMessages.invalidMetricValue(typeof metricValue));
     }
 
-    this.eventProcessor.sendEvent(
-      this.eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
+    this._eventProcessor.sendEvent(
+      this._eventFactoryDefault.customEvent(key, checkedContext!, data, metricValue),
     );
   }
 
@@ -730,21 +752,21 @@ export default class LDClientImpl implements LDClient {
       return;
     }
 
-    this.eventProcessor.sendEvent(converted);
+    this._eventProcessor.sendEvent(converted);
   }
 
   identify(context: LDContext): void {
     const checkedContext = Context.fromLDContext(context);
     if (!checkedContext.valid) {
-      this.logger?.warn(ClientMessages.missingContextKeyNoEvent);
+      this._logger?.warn(ClientMessages.MissingContextKeyNoEvent);
       return;
     }
-    this.eventProcessor.sendEvent(this.eventFactoryDefault.identifyEvent(checkedContext!));
+    this._eventProcessor.sendEvent(this._eventFactoryDefault.identifyEvent(checkedContext!));
   }
 
   async flush(callback?: (err: Error | null, res: boolean) => void): Promise<void> {
     try {
-      await this.eventProcessor.flush();
+      await this._eventProcessor.flush();
     } catch (err) {
       callback?.(err as Error, false);
     }
@@ -752,10 +774,10 @@ export default class LDClientImpl implements LDClient {
   }
 
   addHook(hook: Hook): void {
-    this.hookRunner.addHook(hook);
+    this._hookRunner.addHook(hook);
   }
 
-  private variationInternal(
+  private _variationInternal(
     flagKey: string,
     context: LDContext,
     defaultValue: any,
@@ -763,14 +785,14 @@ export default class LDClientImpl implements LDClient {
     cb: (res: EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
-    if (this.config.offline) {
-      this.logger?.info('Variation called in offline mode. Returning default value.');
+    if (this._config.offline) {
+      this._logger?.info('Variation called in offline mode. Returning default value.');
       cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
       return;
     }
     const evalContext = Context.fromLDContext(context);
     if (!evalContext.valid) {
-      this.onError(
+      this._onError(
         new LDClientError(
           `${evalContext.message ?? 'Context not valid;'} returning default value.`,
         ),
@@ -779,21 +801,21 @@ export default class LDClientImpl implements LDClient {
       return;
     }
 
-    this.featureStore.get(VersionedDataKinds.Features, flagKey, (item) => {
+    this._featureStore.get(VersionedDataKinds.Features, flagKey, (item) => {
       const flag = item as Flag;
       if (!flag) {
         const error = new LDClientError(
           `Unknown feature flag "${flagKey}"; returning default value`,
         );
-        this.onError(error);
+        this._onError(error);
         const result = EvalResult.forError(ErrorKinds.FlagNotFound, undefined, defaultValue);
-        this.eventProcessor.sendEvent(
-          this.eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue, evalContext),
+        this._eventProcessor.sendEvent(
+          this._eventFactoryDefault.unknownFlagEvent(flagKey, defaultValue, evalContext),
         );
         cb(result);
         return;
       }
-      this.evaluator.evaluateCb(
+      this._evaluator.evaluateCb(
         flag,
         evalContext,
         (evalRes) => {
@@ -801,7 +823,7 @@ export default class LDClientImpl implements LDClient {
             evalRes.detail.variationIndex === undefined ||
             evalRes.detail.variationIndex === null
           ) {
-            this.logger?.debug('Result value is null in variation');
+            this._logger?.debug('Result value is null in variation');
             evalRes.setDefault(defaultValue);
           }
 
@@ -813,13 +835,13 @@ export default class LDClientImpl implements LDClient {
                 `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
                 defaultValue,
               );
-              this.sendEvalEvent(errorRes, eventFactory, flag, evalContext, defaultValue);
+              this._sendEvalEvent(errorRes, eventFactory, flag, evalContext, defaultValue);
               cb(errorRes, flag);
               return;
             }
           }
 
-          this.sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
+          this._sendEvalEvent(evalRes, eventFactory, flag, evalContext, defaultValue);
           cb(evalRes, flag);
         },
         eventFactory,
@@ -827,7 +849,7 @@ export default class LDClientImpl implements LDClient {
     });
   }
 
-  private sendEvalEvent(
+  private _sendEvalEvent(
     evalRes: EvalResult,
     eventFactory: EventFactory,
     flag: Flag,
@@ -835,14 +857,14 @@ export default class LDClientImpl implements LDClient {
     defaultValue: any,
   ) {
     evalRes.events?.forEach((event) => {
-      this.eventProcessor.sendEvent({ ...event });
+      this._eventProcessor.sendEvent({ ...event });
     });
-    this.eventProcessor.sendEvent(
+    this._eventProcessor.sendEvent(
       eventFactory.evalEventServer(flag, evalContext, evalRes.detail, defaultValue, undefined),
     );
   }
 
-  private evaluateIfPossible(
+  private _evaluateIfPossible(
     flagKey: string,
     context: LDContext,
     defaultValue: any,
@@ -851,16 +873,16 @@ export default class LDClientImpl implements LDClient {
     typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (!this.initialized()) {
-      this.featureStore.initialized((storeInitialized) => {
+      this._featureStore.initialized((storeInitialized) => {
         if (storeInitialized) {
-          this.logger?.warn(
+          this._logger?.warn(
             'Variation called before LaunchDarkly client initialization completed' +
               " (did you wait for the 'ready' event?) - using last known values from feature store",
           );
-          this.variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+          this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
           return;
         }
-        this.logger?.warn(
+        this._logger?.warn(
           'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
             "'ready' event?) - using default value",
         );
@@ -868,28 +890,28 @@ export default class LDClientImpl implements LDClient {
       });
       return;
     }
-    this.variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+    this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
   }
 
-  private dataSourceErrorHandler(e: any) {
+  private _dataSourceErrorHandler(e: any) {
     const error =
       e.code === 401 ? new Error('Authentication failed. Double check your SDK key.') : e;
 
-    this.onError(error);
-    this.onFailed(error);
+    this._onError(error);
+    this._onFailed(error);
 
     if (!this.initialized()) {
-      this.initState = InitState.Failed;
-      this.rejectionReason = error;
-      this.initReject?.(error);
+      this._initState = InitState.Failed;
+      this._rejectionReason = error;
+      this._initReject?.(error);
     }
   }
 
-  private initSuccess() {
+  private _initSuccess() {
     if (!this.initialized()) {
-      this.initState = InitState.Initialized;
-      this.initResolve?.(this);
-      this.onReady();
+      this._initState = InitState.Initialized;
+      this._initResolve?.(this);
+      this._onReady();
     }
   }
 
@@ -905,7 +927,7 @@ export default class LDClientImpl implements LDClient {
    * @param logger A logger to log when the timeout expires.
    * @returns
    */
-  private clientWithTimeout(
+  private _clientWithTimeout(
     basePromise: Promise<LDClient>,
     timeout?: number,
     logger?: LDLogger,

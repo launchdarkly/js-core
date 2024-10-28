@@ -7,13 +7,13 @@ import {
   Hmac,
   LDContext,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { BigSegmentStoreMembership } from '../../src/api/interfaces';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import Evaluator from '../../src/evaluation/Evaluator';
 import { Queries } from '../../src/evaluation/Queries';
+import { createBasicPlatform } from '../createBasicPlatform';
 import {
   makeClauseThatDoesNotMatchUser,
   makeClauseThatMatchesUser,
@@ -32,19 +32,19 @@ const basicMultiKindUser: LDContext = { kind: 'multi', user: { key: 'userkey' } 
 
 class TestQueries implements Queries {
   constructor(
-    private readonly data: {
+    private readonly _data: {
       flags?: Flag[];
       segments?: Segment[];
     },
   ) {}
 
   getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
-    const res = this.data.flags?.find((flag) => flag.key === key);
+    const res = this._data.flags?.find((flag) => flag.key === key);
     cb(res);
   }
 
   getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
-    const res = this.data.segments?.find((segment) => segment.key === key);
+    const res = this._data.segments?.find((segment) => segment.key === key);
     cb(res);
   }
 

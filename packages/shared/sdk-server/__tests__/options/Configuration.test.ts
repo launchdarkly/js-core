@@ -41,6 +41,7 @@ describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without opti
     expect(config.wrapperName).toBeUndefined();
     expect(config.wrapperVersion).toBeUndefined();
     expect(config.hooks).toBeUndefined();
+    expect(config.payloadFilterKey).toBeUndefined();
   });
 });
 
@@ -326,6 +327,34 @@ describe('when setting different options', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ diagnosticRecordingInterval: value }));
     expect(config.diagnosticRecordingInterval).toEqual(expected);
+    logger(config).expectMessages(logs);
+  });
+
+  it.each([
+    ['1', '1', []],
+    ['camelCaseWorks', 'camelCaseWorks', []],
+    ['PascalCaseWorks', 'PascalCaseWorks', []],
+    ['kebab-case-works', 'kebab-case-works', []],
+    ['snake_case_works', 'snake_case_works', []],
+    [
+      'invalid-@-filter',
+      undefined,
+      [{ level: LogLevel.Warn, matches: /Config option "payloadFilterKey" should be of type/ }],
+    ],
+    [
+      '_invalid-filter',
+      undefined,
+      [{ level: LogLevel.Warn, matches: /Config option "payloadFilterKey" should be of type/ }],
+    ],
+    [
+      '-invalid-filter',
+      undefined,
+      [{ level: LogLevel.Warn, matches: /Config option "payloadFilterKey" should be of type/ }],
+    ],
+  ])('allow setting and validates payloadFilterKey', (filter, expected, logs) => {
+    // @ts-ignore
+    const config = new Configuration(withLogger({ payloadFilterKey: filter }));
+    expect(config.payloadFilterKey).toEqual(expected);
     logger(config).expectMessages(logs);
   });
 

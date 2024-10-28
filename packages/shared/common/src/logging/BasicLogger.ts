@@ -23,13 +23,13 @@ const LevelNames = ['debug', 'info', 'warn', 'error', 'none'];
  * as well for performance.
  */
 export default class BasicLogger implements LDLogger {
-  private logLevel: number;
+  private _logLevel: number;
 
-  private name: string;
+  private _name: string;
 
-  private destination?: (line: string) => void;
+  private _destination?: (line: string) => void;
 
-  private formatter?: (...args: any[]) => string;
+  private _formatter?: (...args: any[]) => string;
 
   /**
    * This should only be used as a default fallback and not as a convenient
@@ -41,18 +41,18 @@ export default class BasicLogger implements LDLogger {
   }
 
   constructor(options: BasicLoggerOptions) {
-    this.logLevel = LogPriority[options.level ?? 'info'] ?? LogPriority.info;
-    this.name = options.name ?? 'LaunchDarkly';
+    this._logLevel = LogPriority[options.level ?? 'info'] ?? LogPriority.info;
+    this._name = options.name ?? 'LaunchDarkly';
     // eslint-disable-next-line no-console
-    this.destination = options.destination;
-    this.formatter = options.formatter;
+    this._destination = options.destination;
+    this._formatter = options.formatter;
   }
 
-  private tryFormat(...args: any[]): string {
+  private _tryFormat(...args: any[]): string {
     try {
-      if (this.formatter) {
+      if (this._formatter) {
         // In case the provided formatter fails.
-        return this.formatter?.(...args);
+        return this._formatter?.(...args);
       }
       return format(...args);
     } catch {
@@ -60,21 +60,21 @@ export default class BasicLogger implements LDLogger {
     }
   }
 
-  private tryWrite(msg: string) {
+  private _tryWrite(msg: string) {
     try {
-      this.destination!(msg);
+      this._destination!(msg);
     } catch {
       // eslint-disable-next-line no-console
       console.error(msg);
     }
   }
 
-  private log(level: number, args: any[]) {
-    if (level >= this.logLevel) {
-      const prefix = `${LevelNames[level]}: [${this.name}]`;
+  private _log(level: number, args: any[]) {
+    if (level >= this._logLevel) {
+      const prefix = `${LevelNames[level]}: [${this._name}]`;
       try {
-        if (this.destination) {
-          this.tryWrite(`${prefix} ${this.tryFormat(...args)}`);
+        if (this._destination) {
+          this._tryWrite(`${prefix} ${this._tryFormat(...args)}`);
         } else {
           // `console.error` has its own formatter.
           // So we don't need to do anything.
@@ -90,18 +90,18 @@ export default class BasicLogger implements LDLogger {
   }
 
   error(...args: any[]): void {
-    this.log(LogPriority.error, args);
+    this._log(LogPriority.error, args);
   }
 
   warn(...args: any[]): void {
-    this.log(LogPriority.warn, args);
+    this._log(LogPriority.warn, args);
   }
 
   info(...args: any[]): void {
-    this.log(LogPriority.info, args);
+    this._log(LogPriority.info, args);
   }
 
   debug(...args: any[]): void {
-    this.log(LogPriority.debug, args);
+    this._log(LogPriority.debug, args);
   }
 }

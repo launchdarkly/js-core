@@ -26,11 +26,17 @@ export function makeSdkConfig(options, tag) {
   if (options.streaming) {
     cf.streamUri = options.streaming.baseUri;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+    if (options.streaming.filter) {
+      cf.payloadFilterKey = options.streaming.filter;
+    }
   }
   if (options.polling) {
     cf.stream = false;
     cf.baseUri = options.polling.baseUri;
     cf.pollInterface = options.polling.pollIntervalMs / 1000;
+    if (options.polling.filter) {
+      cf.payloadFilterKey = options.polling.filter;
+    }
   }
   if (options.events) {
     cf.allAttributesPrivate = options.events.allAttributesPrivate;

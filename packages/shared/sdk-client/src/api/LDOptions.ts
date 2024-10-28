@@ -1,6 +1,7 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import ConnectionMode from './ConnectionMode';
+import { Hook } from './integrations/Hooks';
+import { LDInspection } from './LDInspection';
 
 export interface LDOptions {
   /**
@@ -113,21 +114,11 @@ export interface LDOptions {
   eventsUri?: string;
 
   /**
-   * Controls how often the SDK flushes events.
+   * The interval in between flushes of the analytics events queue, in seconds.
    *
-   * @defaultValue 30s.
+   * @defaultValue 2s for browser implementations 30s for others.
    */
   flushInterval?: number;
-
-  /**
-   * Sets the mode to use for connections when the SDK is initialized.
-   *
-   * @remarks
-   * Possible values are offline or streaming. See {@link ConnectionMode} for more information.
-   *
-   * @defaultValue streaming.
-   */
-  initialConnectionMode?: ConnectionMode;
 
   /**
    * An object that will perform logging for the client.
@@ -199,6 +190,14 @@ export interface LDOptions {
   pollInterval?: number;
 
   /**
+   * Directs the SDK to use the REPORT method for HTTP requests instead of GET. (Default: `false`)
+   *
+   * This setting applies both to requests to the streaming service, as well as flag requests when the SDK is in polling
+   * mode.
+   */
+  useReport?: boolean;
+
+  /**
    * Whether LaunchDarkly should provide additional information about how flag values were
    * calculated.
    *
@@ -224,4 +223,49 @@ export interface LDOptions {
    * If `wrapperName` is unset, this field will be ignored.
    */
   wrapperVersion?: string;
+
+  /**
+   * LaunchDarkly Server SDKs historically downloaded all flag configuration and segments for a particular environment
+   * during initialization.
+   *
+   * For some customers, this is an unacceptably large amount of data, and has contributed to performance issues
+   * within their products.
+   *
+   * Filtered environments aim to solve this problem. By allowing customers to specify subsets of an environment's
+   * flags using a filter key, SDKs will initialize faster and use less memory.
+   *
+   * This payload filter key only applies to the default streaming and polling data sources. It will not affect
+   * TestData or FileData data sources, nor will it be applied to any data source provided through the featureStore
+   * config property.
+   */
+  payloadFilterKey?: string;
+
+  /**
+   * Initial set of hooks for the client.
+   *
+   * Hooks provide entrypoints which allow for observation of SDK functions.
+   *
+   * LaunchDarkly provides integration packages, and most applications will not
+   * need to implement their own hooks. Refer to the `@launchdarkly/node-server-sdk-otel`
+   * for instrumentation for the `@launchdarkly/node-server-sdk`.
+   *
+   * Example:
+   * ```typescript
+   * import { init } from '@launchdarkly/node-server-sdk';
+   * import { TheHook } from '@launchdarkly/some-hook';
+   *
+   * const client = init('my-sdk-key', { hooks: [new TheHook()] });
+   * ```
+   */
+  hooks?: Hook[];
+
+  /**
+   * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
+   *
+   *
+   * @deprecated Hooks should be used instead of inspectors and inspectors will be removed in
+   * a future version. If you need functionality that is not exposed using hooks, then please
+   * let us know through a github issue or support.
+   */
+  inspectors?: LDInspection[];
 }

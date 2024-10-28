@@ -18,8 +18,10 @@ export interface EventSource {
 }
 
 export interface EventSourceInitDict {
-  errorFilter: (err: HttpErrorResponse) => boolean;
+  method?: string;
   headers: { [key: string]: string | string[] };
+  body?: string;
+  errorFilter: (err: HttpErrorResponse) => boolean;
   initialRetryDelayMillis: number;
   readTimeoutMillis: number;
   retryResetIntervalMillis: number;

@@ -158,17 +158,17 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
  * the type system.
  */
 export default class Context {
-  private context?: LDContextCommon;
+  private _context?: LDContextCommon;
 
-  private isMulti: boolean = false;
+  private _isMulti: boolean = false;
 
-  private isUser: boolean = false;
+  private _isUser: boolean = false;
 
-  private wasLegacy: boolean = false;
+  private _wasLegacy: boolean = false;
 
-  private contexts: Record<string, LDContextCommon> = {};
+  private _contexts: Record<string, LDContextCommon> = {};
 
-  private privateAttributeReferences?: Record<string, AttributeReference[]>;
+  private _privateAttributeReferences?: Record<string, AttributeReference[]>;
 
   public readonly kind: string;
 
@@ -180,7 +180,7 @@ export default class Context {
 
   public readonly message?: string;
 
-  static readonly userKind: string = DEFAULT_KIND;
+  static readonly UserKind: string = DEFAULT_KIND;
 
   /**
    * Contexts should be created using the static factory method {@link Context.fromLDContext}.
@@ -195,11 +195,11 @@ export default class Context {
     this.message = message;
   }
 
-  private static contextForError(kind: string, message: string) {
+  private static _contextForError(kind: string, message: string) {
     return new Context(false, kind, message);
   }
 
-  private static getValueFromContext(
+  private static _getValueFromContext(
     reference: AttributeReference,
     context?: LDContextCommon,
   ): any {
@@ -213,29 +213,29 @@ export default class Context {
     return reference.get(context);
   }
 
-  private contextForKind(kind: string): LDContextCommon | undefined {
-    if (this.isMulti) {
-      return this.contexts[kind];
+  private _contextForKind(kind: string): LDContextCommon | undefined {
+    if (this._isMulti) {
+      return this._contexts[kind];
     }
     if (this.kind === kind) {
-      return this.context;
+      return this._context;
     }
     return undefined;
   }
 
-  private static fromMultiKindContext(context: LDMultiKindContext): Context {
+  private static _fromMultiKindContext(context: LDMultiKindContext): Context {
     const kinds = Object.keys(context).filter((key) => key !== 'kind');
     const kindsValid = kinds.every(validKind);
 
     if (!kinds.length) {
-      return Context.contextForError(
+      return Context._contextForError(
         'multi',
         'A multi-kind context must contain at least one kind',
       );
     }
 
     if (!kindsValid) {
-      return Context.contextForError('multi', 'Context contains invalid kinds');
+      return Context._contextForError('multi', 'Context contains invalid kinds');
     }
 
     const privateAttributes: Record<string, AttributeReference[]> = {};
@@ -253,11 +253,11 @@ export default class Context {
     }, {});
 
     if (!contextsAreObjects) {
-      return Context.contextForError('multi', 'Context contained contexts that were not objects');
+      return Context._contextForError('multi', 'Context contained contexts that were not objects');
     }
 
     if (!Object.values(contexts).every((part) => validKey(part.key))) {
-      return Context.contextForError('multi', 'Context contained invalid keys');
+      return Context._contextForError('multi', 'Context contained invalid keys');
     }
 
     // There was only a single kind in the multi-kind context.
@@ -265,56 +265,56 @@ export default class Context {
     if (kinds.length === 1) {
       const kind = kinds[0];
       const created = new Context(true, kind);
-      created.context = contexts[kind];
-      created.privateAttributeReferences = privateAttributes;
-      created.isUser = kind === 'user';
+      created._context = { ...contexts[kind], kind };
+      created._privateAttributeReferences = privateAttributes;
+      created._isUser = kind === 'user';
       return created;
     }
 
     const created = new Context(true, context.kind);
-    created.contexts = contexts;
-    created.privateAttributeReferences = privateAttributes;
+    created._contexts = contexts;
+    created._privateAttributeReferences = privateAttributes;
 
-    created.isMulti = true;
+    created._isMulti = true;
     return created;
   }
 
-  private static fromSingleKindContext(context: LDSingleKindContext): Context {
+  private static _fromSingleKindContext(context: LDSingleKindContext): Context {
     const { key, kind } = context;
     const kindValid = validKind(kind);
     const keyValid = validKey(key);
 
     if (!kindValid) {
-      return Context.contextForError(kind ?? 'unknown', 'The kind was not valid for the context');
+      return Context._contextForError(kind ?? 'unknown', 'The kind was not valid for the context');
     }
 
     if (!keyValid) {
-      return Context.contextForError(kind, 'The key for the context was not valid');
+      return Context._contextForError(kind, 'The key for the context was not valid');
     }
 
     // The JSON interfaces uses dangling _.
     // eslint-disable-next-line no-underscore-dangle
     const privateAttributeReferences = processPrivateAttributes(context._meta?.privateAttributes);
     const created = new Context(true, kind);
-    created.isUser = kind === 'user';
-    created.context = context;
-    created.privateAttributeReferences = {
+    created._isUser = kind === 'user';
+    created._context = context;
+    created._privateAttributeReferences = {
       [kind]: privateAttributeReferences,
     };
     return created;
   }
 
-  private static fromLegacyUser(context: LDUser): Context {
+  private static _fromLegacyUser(context: LDUser): Context {
     const keyValid = context.key !== undefined && context.key !== null;
     // For legacy users we allow empty keys.
     if (!keyValid) {
-      return Context.contextForError('user', 'The key for the context was not valid');
+      return Context._contextForError('user', 'The key for the context was not valid');
     }
     const created = new Context(true, 'user');
-    created.isUser = true;
-    created.wasLegacy = true;
-    created.context = legacyToSingleKind(context);
-    created.privateAttributeReferences = {
+    created._isUser = true;
+    created._wasLegacy = true;
+    created._context = legacyToSingleKind(context);
+    created._privateAttributeReferences = {
       user: processPrivateAttributes(context.privateAttributeNames, true),
     };
     return created;
@@ -328,19 +328,19 @@ export default class Context {
    */
   public static fromLDContext(context: LDContext): Context {
     if (!context) {
-      return Context.contextForError('unknown', 'No context specified. Returning default value');
+      return Context._contextForError('unknown', 'No context specified. Returning default value');
     }
     if (isSingleKind(context)) {
-      return Context.fromSingleKindContext(context);
+      return Context._fromSingleKindContext(context);
     }
     if (isMultiKind(context)) {
-      return Context.fromMultiKindContext(context);
+      return Context._fromMultiKindContext(context);
     }
     if (isLegacyUser(context)) {
-      return Context.fromLegacyUser(context);
+      return Context._fromLegacyUser(context);
     }
 
-    return Context.contextForError('unknown', 'Context was not of a valid kind');
+    return Context._contextForError('unknown', 'Context was not of a valid kind');
   }
 
   /**
@@ -354,7 +354,7 @@ export default class Context {
     }
 
     const contexts = context.getContexts();
-    if (!context.isMulti) {
+    if (!context._isMulti) {
       return contexts[0][1];
     }
     const result: LDMultiKindContext = {
@@ -378,7 +378,7 @@ export default class Context {
     if (reference.isKind) {
       return this.kinds;
     }
-    return Context.getValueFromContext(reference, this.contextForKind(kind));
+    return Context._getValueFromContext(reference, this._contextForKind(kind));
   }
 
   /**
@@ -387,38 +387,38 @@ export default class Context {
    * @returns The key for the specified kind, or undefined.
    */
   public key(kind: string = DEFAULT_KIND): string | undefined {
-    return this.contextForKind(kind)?.key;
+    return this._contextForKind(kind)?.key;
   }
 
   /**
    * True if this is a multi-kind context.
    */
   public get isMultiKind(): boolean {
-    return this.isMulti;
+    return this._isMulti;
   }
 
   /**
    * Get the canonical key for this context.
    */
   public get canonicalKey(): string {
-    if (this.isUser) {
-      return this.context!.key;
+    if (this._isUser) {
+      return this._context!.key;
     }
-    if (this.isMulti) {
-      return Object.keys(this.contexts)
+    if (this._isMulti) {
+      return Object.keys(this._contexts)
         .sort()
-        .map((key) => `${key}:${encodeKey(this.contexts[key].key)}`)
+        .map((key) => `${key}:${encodeKey(this._contexts[key].key)}`)
         .join(':');
     }
-    return `${this.kind}:${encodeKey(this.context!.key)}`;
+    return `${this.kind}:${encodeKey(this._context!.key)}`;
   }
 
   /**
    * Get the kinds of this context.
    */
   public get kinds(): string[] {
-    if (this.isMulti) {
-      return Object.keys(this.contexts);
+    if (this._isMulti) {
+      return Object.keys(this._contexts);
     }
     return [this.kind];
   }
@@ -427,8 +427,8 @@ export default class Context {
    * Get the kinds, and their keys, for this context.
    */
   public get kindsAndKeys(): Record<string, string> {
-    if (this.isMulti) {
-      return Object.entries(this.contexts).reduce(
+    if (this._isMulti) {
+      return Object.entries(this._contexts).reduce(
         (acc: Record<string, string>, [kind, context]) => {
           acc[kind] = context.key;
           return acc;
@@ -436,7 +436,7 @@ export default class Context {
         {},
       );
     }
-    return { [this.kind]: this.context!.key };
+    return { [this.kind]: this._context!.key };
   }
 
   /**
@@ -445,7 +445,7 @@ export default class Context {
    * @param kind
    */
   public privateAttributes(kind: string): AttributeReference[] {
-    return this.privateAttributeReferences?.[kind] || [];
+    return this._privateAttributeReferences?.[kind] || [];
   }
 
   /**
@@ -456,13 +456,13 @@ export default class Context {
    * The returned objects should not be modified.
    */
   public getContexts(): [string, LDContextCommon][] {
-    if (this.isMulti) {
-      return Object.entries(this.contexts);
+    if (this._isMulti) {
+      return Object.entries(this._contexts);
     }
-    return [[this.kind, this.context!]];
+    return [[this.kind, this._context!]];
   }
 
   public get legacy(): boolean {
-    return this.wasLegacy;
+    return this._wasLegacy;
   }
 }

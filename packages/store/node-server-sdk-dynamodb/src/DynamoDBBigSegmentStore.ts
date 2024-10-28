@@ -35,21 +35,21 @@ export const ATTR_INCLUDED = 'included';
 export const ATTR_EXCLUDED = 'excluded';
 
 export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentStore {
-  private state: DynamoDBClientState;
+  private _state: DynamoDBClientState;
 
   // Logger is not currently used, but is included to reduce the chance of a
   // compatibility break to add a log.
   constructor(
-    private readonly tableName: string,
+    private readonly _tableName: string,
     options?: LDDynamoDBOptions,
-    private readonly logger?: LDLogger,
+    _logger?: LDLogger,
   ) {
-    this.state = new DynamoDBClientState(options);
+    this._state = new DynamoDBClientState(options);
   }
 
   async getMetadata(): Promise<interfaces.BigSegmentStoreMetadata | undefined> {
-    const key = this.state.prefixedKey(KEY_METADATA);
-    const data = await this.state.get(this.tableName, {
+    const key = this._state.prefixedKey(KEY_METADATA);
+    const data = await this._state.get(this._tableName, {
       namespace: stringValue(key),
       key: stringValue(key),
     });
@@ -65,8 +65,8 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
   async getUserMembership(
     userHash: string,
   ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
-    const data = await this.state.get(this.tableName, {
-      namespace: stringValue(this.state.prefixedKey(KEY_USER_DATA)),
+    const data = await this._state.get(this._tableName, {
+      namespace: stringValue(this._state.prefixedKey(KEY_USER_DATA)),
       key: stringValue(userHash),
     });
     if (data) {
@@ -87,6 +87,6 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
   }
 
   close(): void {
-    this.state.close();
+    this._state.close();
   }
 }

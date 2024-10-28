@@ -1,0 +1,94 @@
+name: sdk/react-native/example
+
+# The example builds independently of react-native because of the duration of the build.
+# We limit it to only build under specific circumstances.
+# Additionally this does allow for scheduled builds of just the example, to handle changes in expo,
+# should they be desired.
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main, 'feat/**']
+    paths:
+      - 'packages/shared/common/**'
+      - 'packages/shared/sdk-client/**'
+      - 'packages/sdk/react-native/**'
+
+jobs:
+  detox-android:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: packages/sdk/react-native/example
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install deps
+        run: yarn workspaces focus
+      - name: Build
+        run: yarn workspaces foreach -pR --topological-dev --from 'react-native-example' run build
+
+      - uses: ./actions/release-secrets
+        name: 'Get mobile key'
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
+          ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = MOBILE_KEY,
+            /sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
+
+      - name: Create .env file.
+        run: echo "MOBILE_KEY=$MOBILE_KEY" > .env
+
+      - name: Enable KVM group perms (for performance)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Expo Prebuild
+        run: npx expo prebuild
+
+      # Java setup is after checkout and expo prebuild so that it can locate the
+      # gradle configuration.
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: 'gradle'
+
+      - name: Detox build
+        run: yarn detox build --configuration android.emu.release
+
+      - name: Get android emulator device name
+        id: device
+        run: node -e "console.log('AVD_NAME=' + require('./.detoxrc').devices.emulator.device.avdName)" >> $GITHUB_OUTPUT
+
+      - name: Make space for the emulator.
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          android: false # We need android.
+
+      - name: Detox test
+        uses: reactivecircus/android-emulator-runner@f0d1ed2dcad93c7479e8b2f2226c83af54494915
+        with:
+          api-level: 31
+          arch: x86_64
+          avd-name: ${{ steps.device.outputs.AVD_NAME }}
+          working-directory: packages/sdk/react-native/example
+          script: yarn detox test --configuration android.emu.release --headless --record-logs all
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detox-artifacts
+          path: packages/sdk/react-native/example/artifacts

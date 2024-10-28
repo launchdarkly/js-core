@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ES2017", "dom"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    // Uses "." so it can load package.json.
+    "rootDir": ".",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    // enables importers to jump to source
+    "sourceMap": true,
+    "strict": true,
+    "stripInternal": true,
+    "target": "ES2017",
+    "types": ["node", "jest"],
+    "allowJs": true
+  },
+  "exclude": [
+    "vite.config.ts",
+    "__tests__",
+    "dist",
+    "docs",
+    "example",
+    "node_modules",
+    "contract-tests",
+    "babel.config.js",
+    "jestSetupFile.ts",
+    "**/*.test.ts*"
+  ]
+}
