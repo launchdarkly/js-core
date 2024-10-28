@@ -3,6 +3,10 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
+  entry: {
+    index: 'src/index.ts',
+    compat: 'src/compat/index.ts'
+  },
   minify: 'terser',
   terserOptions: {
     mangle: {
@@ -16,7 +20,6 @@ export default defineConfig({
     },
   },
   format: ['esm', 'cjs'],
-  entry: ['src/index.ts'],
   splitting: false,
   sourcemap: false,
   clean: true,

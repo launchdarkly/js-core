@@ -21,13 +21,25 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    "import": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "require": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
     },
-    "require": {
-      "types": "./dist/index.d.cts",
-      "require": "./dist/index.cjs"
+    "./compat": {
+      "require": {
+        "types": "./dist/compat.d.cts",
+        "require": "./dist/compat.cjs"
+      },
+      "import": {
+        "types": "./dist/compat.d.ts",
+        "import": "./dist/compat.js"
+      }
     }
   },
   "files": [
