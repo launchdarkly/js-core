@@ -10,7 +10,7 @@
     "clean": "rm -rf node_modules && rm -rf package-lock.json && rm -rf yarn.lock"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "workspace:^",
+    "@launchdarkly/react-native-client-sdk": "^10.9.0",
     "expo": "^51.0.26",
     "expo-status-bar": "~1.12.1",
     "find-yarn-workspace-root": "^2.0.0",
