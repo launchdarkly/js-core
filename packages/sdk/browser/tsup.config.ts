@@ -15,7 +15,6 @@ export default defineConfig({
   noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   dts: true,
   metafile: true,
-  minifyIdentifiers: true,
   esbuildOptions(opts) {
     // This would normally be `^_(?!meta|_)`, but go doesn't support negative look-ahead assertions,
     // so we need to craft something that works without it.
