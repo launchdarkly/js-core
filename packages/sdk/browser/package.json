@@ -16,17 +16,20 @@
     "feature management",
     "sdk"
   ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "require": {
       "types": "./dist/index.d.cts",
-      "default": "./dist/index.cjs"
-    },
-    "import": {
-      "types": "./dist/esm/index.d.ts",
-      "default": "./dist/esm/index.js"
+      "require": "./dist/index.cjs"
     }
   },
-  "type": "module",
   "files": [
     "dist"
   ],
@@ -39,8 +42,10 @@
     "coverage": "yarn test --coverage",
     "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk-common": "1.10.0"
+  },
   "devDependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.10.0",
     "@jest/globals": "^29.7.0",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.11",

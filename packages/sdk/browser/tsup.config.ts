@@ -20,6 +20,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: false,
   clean: true,
-  dts: true,
+  noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   treeshake: true,
+  dts: true,
 });
