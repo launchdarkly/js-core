@@ -33,7 +33,7 @@ jobs:
           workspace_path: packages/sdk/browser
       - name: Install Brotli
         if: github.event_name == 'pull_request'
-        run: sudo apt-get update && sudo apt-install brotli
+        run: sudo apt-get update && sudo apt-get install brotli
       - name: Check Package Size
         if: github.event_name == 'pull_request'
         env:
