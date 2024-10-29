@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.10.0...js-client-sdk-common-v1.11.0) (2024-10-29)
+
+
+### Features
+
+* Add a module for increased backward compatibility. ([#637](https://github.com/launchdarkly/js-core/issues/637)) ([44a2237](https://github.com/launchdarkly/js-core/commit/44a223730fed10fbd75e8de7c87c63570774fe96))
+
 ## [1.10.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.9.0...js-client-sdk-common-v1.10.0) (2024-10-17)
 
 
