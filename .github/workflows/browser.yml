@@ -37,12 +37,12 @@ jobs:
         if: github.event_name == 'pull_request'
         run: sudo apt-get update && sudo apt-get install brotli
       - name: Check Package Size
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && matrix.version == '21'
         env:
           PR_NUMBER: ${{ github.event.number }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           brotli packages/sdk/browser/dist/index.js
           export PR_SIZE=$(stat -c %s packages/sdk/browser/dist/index.js.br)
-          gh pr comment $PR_NUMBER -b "`@launchdarkly/js-client-sdk` size: $PR_SIZE"
+          gh pr comment --edit-last $PR_NUMBER -b "@launchdarkly/js-client-sdk: $PR_SIZE"
           [ $PR_SIZE -le 25000 ] || exit 1
