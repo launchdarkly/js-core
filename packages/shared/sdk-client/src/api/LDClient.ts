@@ -58,8 +58,7 @@ export interface LDClient {
 
   /**
    * Shuts down the client and releases its resources, after delivering any pending analytics
-   * events. After the client is closed, all calls to {@link variation} will return default values,
-   * and it will not make any requests to LaunchDarkly.
+   * events.
    */
   close(): Promise<void>;
 

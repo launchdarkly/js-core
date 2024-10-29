@@ -5,19 +5,17 @@ import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-const getSharedConfig = (format, file) => ({
-  input: 'src/index.ts',
-  output: [
-    {
-      format: format,
-      sourcemap: true,
-      file: file,
-    },
-  ],
-  onwarn: (warning) => {
-    if (warning.code !== 'CIRCULAR_DEPENDENCY') {
-      console.error(`(!) ${warning.message}`);
-    }
+const getSharedConfig = (format, extension) => ({
+  input: {
+    index: 'src/index.ts',
+    compat: 'src/compat/index.ts'
+  },
+  output:
+  {
+    format: format,
+    sourcemap: true,
+    dir: 'dist',
+    entryFileNames: '[name]' + extension
   },
 });
 
@@ -35,7 +33,7 @@ const terserOpts = {
 
 export default [
   {
-    ...getSharedConfig('es', 'dist/index.es.js'),
+    ...getSharedConfig('es', '.es.js'),
     plugins: [
       typescript({
         module: 'esnext',
@@ -52,7 +50,7 @@ export default [
     ],
   },
   {
-    ...getSharedConfig('cjs', 'dist/index.cjs.js'),
+    ...getSharedConfig('cjs', '.cjs.js'),
     plugins: [typescript(), common(), resolve(), terser(terserOpts), json()],
   },
 ];

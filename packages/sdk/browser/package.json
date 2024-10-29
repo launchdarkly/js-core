@@ -17,9 +17,16 @@
     "sdk"
   ],
   "exports": {
-    "types": "./dist/src/index.d.ts",
-    "require": "./dist/index.cjs.js",
-    "import": "./dist/index.es.js"
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "require": "./dist/index.cjs.js",
+      "import": "./dist/index.es.js"
+    },
+    "./compat": {
+      "types": "./dist/src/compat/index.d.ts",
+      "require": "./dist/compat.cjs.js",
+      "import": "./dist/compat.es.js"
+    }
   },
   "type": "module",
   "files": [
