@@ -12,6 +12,8 @@ on:
 
 jobs:
   build-test-browser:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
 
     strategy:
@@ -38,6 +40,7 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           PR_NUMBER: ${{ github.event.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           brotli packages/sdk/browser/dist/index.js
           export PR_SIZE=$(stat -c %s packages/sdk/browser/dist/index.js.br)
