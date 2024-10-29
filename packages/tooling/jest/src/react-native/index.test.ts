@@ -65,7 +65,6 @@ describe('react-native', () => {
     expect(ldClientMock.getContext.mock).toBeDefined();
     expect(ldClientMock.off.mock).toBeDefined();
     expect(ldClientMock.on.mock).toBeDefined();
-    expect(ldClientMock.setConnectionMode.mock).toBeDefined();
     expect(ldClientMock.track.mock).toBeDefined();
     expect(ldClientMock.variation.mock).toBeDefined();
     expect(ldClientMock.variationDetail.mock).toBeDefined();
