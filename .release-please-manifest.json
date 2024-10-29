@@ -10,8 +10,8 @@
   "packages/shared/akamai-edgeworker-sdk": "1.3.0",
   "packages/store/node-server-sdk-dynamodb": "6.2.0",
   "packages/store/node-server-sdk-redis": "4.2.0",
-  "packages/shared/sdk-client": "1.10.0",
-  "packages/sdk/react-native": "10.9.0",
+  "packages/shared/sdk-client": "1.11.0",
+  "packages/sdk/react-native": "10.9.1",
   "packages/telemetry/node-server-sdk-otel": "1.1.0",
-  "packages/sdk/browser": "0.1.0"
+  "packages/sdk/browser": "0.2.0"
 }
