@@ -5,7 +5,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    compat: 'src/compat/index.ts'
+    compat: 'src/compat/index.ts',
   },
   minify: true,
   format: ['esm', 'cjs'],
