@@ -31,3 +31,8 @@ jobs:
         with:
           workspace_name: '@launchdarkly/js-client-sdk'
           workspace_path: packages/sdk/browser
+  package-size:
+    uses: launchdarkly/js-core/.github/workflows/package-size.yml@rlamb/sdk-167/bundle-size-report
+    with:
+      workspace_name: '@launchdarkly/js-client-sdk'
+      workspace_path: 'packages/sdk/browser'
