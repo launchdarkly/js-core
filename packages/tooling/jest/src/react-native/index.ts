@@ -3,9 +3,9 @@ import {
   LDFlagSet,
   LDProvider,
   ReactNativeLDClient,
-  useLDClient,
   useBoolVariation,
   useJsonVariation,
+  useLDClient,
   useNumberVariation,
   useStringVariation,
 } from '@launchdarkly/react-native-client-sdk';
