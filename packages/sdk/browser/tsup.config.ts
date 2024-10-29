@@ -21,6 +21,7 @@ export default defineConfig({
     // So start of line followed by a character that isn't followed by m or underscore, but we
     // want other things that do start with m, so we need to progressively handle more characters
     // of meta with exclusions.
+    // eslint-disable-next-line no-param-reassign
     opts.mangleProps = /^_([^m|_]|m[^e]|me[^t]|met[^a])/;
   },
 });
