@@ -18,7 +18,7 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   const cf: LDOptions = {
     withReasons: options.clientSide.evaluationReasons,
     logger: makeLogger(`${tag}.sdk`),
-    // useReport: options.clientSide.useReport,
+    useReport: options.clientSide.useReport,
   };
 
   if (options.serviceEndpoints) {
