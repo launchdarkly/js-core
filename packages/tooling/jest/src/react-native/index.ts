@@ -1,11 +1,11 @@
 import {
+  LDClient,
   LDFlagSet,
   LDProvider,
   ReactNativeLDClient,
   useLDClient,
   useBoolVariation,
   useJsonVariation,
-  LDClient,
   useNumberVariation,
   useStringVariation,
 } from '@launchdarkly/react-native-client-sdk';
@@ -33,7 +33,7 @@ export const ldClientMock: jest.Mocked<LDClient> = {
   boolVariationDetail: jest.fn(),
   close: jest.fn(),
   flush: jest.fn(() => Promise.resolve({ result: true })),
-  getConnectionMode: jest.fn(),
+  // getConnectionMode: jest.fn(),
   getContext: jest.fn(),
   identify: jest.fn().mockResolvedValue(undefined),
   jsonVariation: jest.fn(),
@@ -48,12 +48,13 @@ export const ldClientMock: jest.Mocked<LDClient> = {
   numberVariationDetail: jest.fn(),
   off: jest.fn(),
   on: jest.fn(),
-  setConnectionMode: jest.fn(),
+  // setConnectionMode: jest.fn(),
   stringVariation: jest.fn(),
   stringVariationDetail: jest.fn(),
   track: jest.fn(),
   variation: jest.fn(),
   variationDetail: jest.fn(),
+  addHook: jest.fn(),
 };
 
 export const mockLDProvider = LDProvider as jest.Mock;
