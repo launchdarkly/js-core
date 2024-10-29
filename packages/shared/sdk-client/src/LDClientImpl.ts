@@ -39,13 +39,14 @@ import LDEmitter, { EventName } from './LDEmitter';
 
 const { ClientMessages, ErrorKinds } = internal;
 
+const DEFAULT_IDENIFY_TIMEOUT_SECONDS = 5;
+
 export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
   private _uncheckedContext?: LDContext;
   private _checkedContext?: Context;
   private readonly _diagnosticsManager?: internal.DiagnosticsManager;
   private _eventProcessor?: internal.EventProcessor;
-  private _identifyTimeout: number = 5;
   readonly logger: LDLogger;
   private _updateProcessor?: subsystem.LDStreamProcessor;
 
@@ -181,7 +182,10 @@ export default class LDClientImpl implements LDClient {
     return this._checkedContext;
   }
 
-  private _createIdentifyPromise(timeout: number): {
+  private _createIdentifyPromise(
+    timeout: number,
+    noTimeout: boolean,
+  ): {
     identifyPromise: Promise<void>;
     identifyResolve: () => void;
     identifyReject: (err: Error) => void;
@@ -189,13 +193,17 @@ export default class LDClientImpl implements LDClient {
     let res: any;
     let rej: any;
 
-    const slow = new Promise<void>((resolve, reject) => {
+    const basePromise = new Promise<void>((resolve, reject) => {
       res = resolve;
       rej = reject;
     });
 
+    if (noTimeout) {
+      return { identifyPromise: basePromise, identifyResolve: res, identifyReject: rej };
+    }
+
     const timed = timedPromise(timeout, 'identify');
-    const raced = Promise.race([timed, slow]).catch((e) => {
+    const raced = Promise.race([timed, basePromise]).catch((e) => {
       if (e.message.includes('timed out')) {
         this.logger.error(`identify error: ${e}`);
       }
@@ -221,11 +229,12 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    if (identifyOptions?.timeout) {
-      this._identifyTimeout = identifyOptions.timeout;
-    }
+    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENIFY_TIMEOUT_SECONDS;
+    const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
 
-    if (this._identifyTimeout > this._highTimeoutThreshold) {
+    // When noTimeout is specified, and a timeout is not secified, then this condition cannot
+    // be encountered. (Our default would need to be greater)
+    if (identifyTimeout > this._highTimeoutThreshold) {
       this.logger.warn(
         'The identify function was called with a timeout greater than ' +
           `${this._highTimeoutThreshold} seconds. We recommend a timeout of less than ` +
@@ -250,7 +259,8 @@ export default class LDClientImpl implements LDClient {
 
     this._eventProcessor?.sendEvent(this._eventFactoryDefault.identifyEvent(this._checkedContext));
     const { identifyPromise, identifyResolve, identifyReject } = this._createIdentifyPromise(
-      this._identifyTimeout,
+      identifyTimeout,
+      noTimeout,
     );
     this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
 
