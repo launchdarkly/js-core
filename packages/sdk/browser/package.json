@@ -48,7 +48,6 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsup",
-    "build-with-deps": "yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build",
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "npx jest --runInBand",

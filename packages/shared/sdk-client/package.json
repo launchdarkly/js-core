@@ -35,7 +35,6 @@
     "make-esm-package-json": "echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "make-package-jsons": "npm run make-cjs-package-json && npm run make-esm-package-json",
     "build": "npx tsc --noEmit && rollup -c rollup.config.js && npm run make-package-jsons",
-    "build-with-deps": "yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk-common' run build",
     "clean": "rimraf dist",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint -- --fix",
