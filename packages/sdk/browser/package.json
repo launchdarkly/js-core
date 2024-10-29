@@ -48,6 +48,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsup",
+    "build-with-deps": "yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build",
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "npx jest --runInBand",
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
+    "@size-limit/preset-big-lib": "^11.1.6",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.11",
     "@typescript-eslint/eslint-plugin": "^6.20.0",

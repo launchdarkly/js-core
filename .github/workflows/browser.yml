@@ -31,3 +31,15 @@ jobs:
         with:
           workspace_name: '@launchdarkly/js-client-sdk'
           workspace_path: packages/sdk/browser
+      - name: Install Brotli
+        if: github.event_name == 'pull_request'
+        run: apt-get update && apt-install brotli
+      - name: Check Package Size
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          brotli packages/sdk/browser/dist/index.js
+          export PR_SIZE=$(stat -c %s packages/sdk/browser/dist/index.js.br)
+          gh pr comment $PR_NUMBER -b "`@launchdarkly/js-client-sdk` size: $PR_SIZE"
+          [ $PR_SIZE -le 25000 ] || exit 1
