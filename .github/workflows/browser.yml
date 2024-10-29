@@ -44,5 +44,5 @@ jobs:
         run: |
           brotli packages/sdk/browser/dist/index.js
           export PR_SIZE=$(stat -c %s packages/sdk/browser/dist/index.js.br)
-          gh pr comment --edit-last $PR_NUMBER -b "@launchdarkly/js-client-sdk: $PR_SIZE"
+          gh pr comment --edit-last $PR_NUMBER -b "@launchdarkly/js-client-sdk: $PR_SIZE" || gh pr comment $PR_NUMBER -b "@launchdarkly/js-client-sdk: $PR_SIZE"
           [ $PR_SIZE -le 25000 ] || exit 1
