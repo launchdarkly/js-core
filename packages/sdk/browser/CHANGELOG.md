@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.1.0...js-client-sdk-v0.2.0) (2024-10-29)
+
+
+### Features
+
+* Add a module for increased backward compatibility. ([#637](https://github.com/launchdarkly/js-core/issues/637)) ([44a2237](https://github.com/launchdarkly/js-core/commit/44a223730fed10fbd75e8de7c87c63570774fe96))
+* Refine CJS/ESM build configuration for browser SDK. ([#640](https://github.com/launchdarkly/js-core/issues/640)) ([ec4377c](https://github.com/launchdarkly/js-core/commit/ec4377cc2afc62455aba769c20f3831cccd50250))
+* Vendor escapeStringRegexp to simplify builds. ([48cac54](https://github.com/launchdarkly/js-core/commit/48cac546f6d36a6b70f3b1f7cb72d1dcff2b50ba))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.10.0 to 1.11.0
+
 ## [0.1.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.0.1...js-client-sdk-v0.1.0) (2024-10-17)
 
 
