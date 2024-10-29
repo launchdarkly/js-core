@@ -8,7 +8,7 @@
     "moduleResolution": "node",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
     "skipLibCheck": true,
     "sourceMap": false,
