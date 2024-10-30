@@ -36,13 +36,42 @@ jobs:
       - name: Install Brotli
         if: github.event_name == 'pull_request'
         run: sudo apt-get update && sudo apt-get install brotli
-      - name: Check Package Size
+      - name: Get package size
         if: github.event_name == 'pull_request' && matrix.version == '21'
         env:
           PR_NUMBER: ${{ github.event.number }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           brotli packages/sdk/browser/dist/index.js
-          export PR_SIZE=$(stat -c %s packages/sdk/browser/dist/index.js.br)
-          gh pr comment --edit-last $PR_NUMBER -b "@launchdarkly/js-client-sdk: $PR_SIZE" || gh pr comment $PR_NUMBER -b "@launchdarkly/js-client-sdk: $PR_SIZE"
-          [ $PR_SIZE -le 25000 ] || exit 1
+          export PACK_SIZE=$(stat -c %s packages/sdk/browser/dist/index.js.br)
+          echo "PACK_SIZE=$PACK_SIZE" >> $GITHUB_ENV
+
+      - name: Find Size Comment
+        if: github.event_name == 'pull_request' && matrix.version == '21'
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          comment-author: 'github-actions[bot]'
+          body-includes: '@launchdarkly/js-client-sdk size report'
+
+      - name: Create comment
+        if: steps.fc.outputs.comment-id == '' && github.event_name == 'pull_request' && matrix.version == '21'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          body: |
+            @launchdarkly/js-client-sdk size report
+            Size: ${{ env.PACK_SIZE }} bytes
+
+      - name: Update comment
+        if: steps.fc.outputs.comment-id != '' && github.event_name == 'pull_request' && matrix.version == '21'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body: |
+            @launchdarkly/js-client-sdk size report
+            Size: ${{ env.PACK_SIZE }} bytes
+
+      - name: Check package size limit
+        if: github.event_name == 'pull_request' && matrix.version == '21'
+        run: |
+          [ $PACK_SIZE -le 25000 ] || exit 1
