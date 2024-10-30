@@ -33,7 +33,7 @@ runs:
       with:
         issue-number: ${{ inputs.pr_number }}
         comment-author: 'github-actions[bot]'
-        body-includes: '${{ inputs.package_name }} report'
+        body-includes: '${{ inputs.package_name }} size report'
 
     - name: Create comment
       if: steps.fc.outputs.comment-id == '' && github.event_name == 'pull_request' && matrix.version == '21'
@@ -41,7 +41,7 @@ runs:
       with:
         issue-number: ${{ inputs.pr_number }}
         body: |
-          ${{ inputs.package_name }} report
+          ${{ inputs.package_name }} size report
           This is the brotli compressed size of the ESM build.
           Size: ${{ env.PACK_SIZE }} bytes
 
@@ -52,7 +52,7 @@ runs:
         comment-id: ${{ steps.fc.outputs.comment-id }}
         edit-mode: replace
         body: |
-          ${{ inputs.package_name }} report
+          ${{ inputs.package_name }} size report
           This is the brotli compressed size of the ESM build.
           Size: ${{ env.PACK_SIZE }} bytes
 
