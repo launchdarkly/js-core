@@ -62,6 +62,7 @@ jobs:
           issue-number: ${{ github.event.number }}
           body: |
             @launchdarkly/js-client-sdk size report
+            This is the brotli compressed size of the ESM build.
             Size: ${{ env.PACK_SIZE }} bytes
 
       - name: Update comment
@@ -71,6 +72,7 @@ jobs:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           body: |
             @launchdarkly/js-client-sdk size report
+            This is the brotli compressed size of the ESM build.
             Size: ${{ env.PACK_SIZE }} bytes
 
       - name: Check package size limit
