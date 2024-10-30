@@ -23,7 +23,7 @@ jobs:
           workspace_name: '@launchdarkly/js-client-sdk-common'
           workspace_path: packages/shared/sdk-client
       - name: Check package size
-        if: github.event_name == 'pull_request' && matrix.version == '21'
+        if: github.event_name == 'pull_request'
         uses: ./actions/package-size
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
