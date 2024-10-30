@@ -12,6 +12,8 @@ on:
 
 jobs:
   build-test-browser:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
 
     strategy:
@@ -31,3 +33,12 @@ jobs:
         with:
           workspace_name: '@launchdarkly/js-client-sdk'
           workspace_path: packages/sdk/browser
+      - name: Check package size
+        if: github.event_name == 'pull_request' && matrix.version == '21'
+        uses: ./actions/package-size
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          target_file: 'packages/sdk/browser/dist/index.js'
+          package_name: '@launchdarkly/js-client-sdk'
+          pr_number: ${{ github.event.number }}
+          size_limit: 21000
