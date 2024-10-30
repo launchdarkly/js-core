@@ -36,7 +36,7 @@ runs:
         body-includes: '${{ inputs.package_name }} size report'
 
     - name: Create comment
-      if: steps.fc.outputs.comment-id == '' && github.event_name == 'pull_request' && matrix.version == '21'
+      if: steps.fc.outputs.comment-id == ''
       uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
       with:
         issue-number: ${{ inputs.pr_number }}
@@ -46,7 +46,7 @@ runs:
           Size: ${{ env.PACK_SIZE }} bytes
 
     - name: Update comment
-      if: steps.fc.outputs.comment-id != '' && github.event_name == 'pull_request' && matrix.version == '21'
+      if: steps.fc.outputs.comment-id != ''
       uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
@@ -58,6 +58,5 @@ runs:
 
     - name: Check package size limit
       shell: bash
-      if: github.event_name == 'pull_request' && matrix.version == '21'
       run: |
         [ $PACK_SIZE -le 25000 ] || exit 1
