@@ -11,7 +11,10 @@ inputs:
     description: 'The name of the package'
     required: true
   pr_number:
-    description: 'Th PR number'
+    description: 'The PR number'
+    required: true
+  size_limit:
+    description: 'The maximum size of the library'
     required: true
 runs:
   using: composite
@@ -44,6 +47,7 @@ runs:
           ${{ inputs.package_name }} size report
           This is the brotli compressed size of the ESM build.
           Size: ${{ env.PACK_SIZE }} bytes
+          Size limit: ${{ inputs.size_limit }}
 
     - name: Update comment
       if: steps.fc.outputs.comment-id != ''
@@ -55,8 +59,9 @@ runs:
           ${{ inputs.package_name }} size report
           This is the brotli compressed size of the ESM build.
           Size: ${{ env.PACK_SIZE }} bytes
+          Size limit: ${{ inputs.size_limit }}
 
     - name: Check package size limit
       shell: bash
       run: |
-        [ $PACK_SIZE -le 25000 ] || exit 1
+        [ $PACK_SIZE -le ${{ inputs.size_limit }} ] || exit 1
