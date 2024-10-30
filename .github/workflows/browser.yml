@@ -40,4 +40,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           target_file: 'packages/sdk/browser/dist/index.js'
           package_name: '@launchdarkly/js-client-sdk'
-          pr_numer: ${{ github.event.number }}
+          pr_number: ${{ github.event.number }}

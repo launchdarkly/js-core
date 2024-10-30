@@ -10,7 +10,7 @@ inputs:
   package_name:
     description: 'The name of the package'
     required: true
-  pr_numer:
+  pr_number:
     description: 'Th PR number'
     required: true
 runs:
