@@ -33,50 +33,11 @@ jobs:
         with:
           workspace_name: '@launchdarkly/js-client-sdk'
           workspace_path: packages/sdk/browser
-      - name: Install Brotli
-        if: github.event_name == 'pull_request'
-        run: sudo apt-get update && sudo apt-get install brotli
-      - name: Get package size
+      - name: Check package size
         if: github.event_name == 'pull_request' && matrix.version == '21'
-        env:
-          PR_NUMBER: ${{ github.event.number }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          brotli packages/sdk/browser/dist/index.js
-          export PACK_SIZE=$(stat -c %s packages/sdk/browser/dist/index.js.br)
-          echo "PACK_SIZE=$PACK_SIZE" >> $GITHUB_ENV
-
-      - name: Find Size Comment
-        if: github.event_name == 'pull_request' && matrix.version == '21'
-        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e
-        id: fc
+        uses: ./actions/package-size
         with:
-          issue-number: ${{ github.event.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: '@launchdarkly/js-client-sdk size report'
-
-      - name: Create comment
-        if: steps.fc.outputs.comment-id == '' && github.event_name == 'pull_request' && matrix.version == '21'
-        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
-        with:
-          issue-number: ${{ github.event.number }}
-          body: |
-            @launchdarkly/js-client-sdk size report
-            This is the brotli compressed size of the ESM build.
-            Size: ${{ env.PACK_SIZE }} bytes
-
-      - name: Update comment
-        if: steps.fc.outputs.comment-id != '' && github.event_name == 'pull_request' && matrix.version == '21'
-        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          edit-mode: replace
-          body: |
-            @launchdarkly/js-client-sdk size report
-            This is the brotli compressed size of the ESM build.
-            Size: ${{ env.PACK_SIZE }} bytes
-
-      - name: Check package size limit
-        if: github.event_name == 'pull_request' && matrix.version == '21'
-        run: |
-          [ $PACK_SIZE -le 25000 ] || exit 1
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          target_file: 'packages/sdk/browser/dist/index.js'
+          package_name: '@launchdarkly/js-client-sdk'
+          pr_numer: ${{ github.event.number }}
