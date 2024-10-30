@@ -31,7 +31,7 @@ runs:
         echo "PACK_SIZE=$PACK_SIZE" >> $GITHUB_ENV
 
     - name: Find Size Comment
-      uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e
+      uses: peter-evans/find-comment@90e9b82d6319a7ae3f32bc0b434db48d6c376e55
       id: fc
       with:
         issue-number: ${{ inputs.pr_number }}
