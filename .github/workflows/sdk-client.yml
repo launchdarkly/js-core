@@ -22,3 +22,11 @@ jobs:
         with:
           workspace_name: '@launchdarkly/js-client-sdk-common'
           workspace_path: packages/shared/sdk-client
+      - name: Check package size
+        if: github.event_name == 'pull_request' && matrix.version == '21'
+        uses: ./actions/package-size
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          target_file: 'packages/shared/sdk-client/dist/esm/index.mjs'
+          package_name: '@launchdarkly/js-client-sdk-common'
+          pr_number: ${{ github.event.number }}
