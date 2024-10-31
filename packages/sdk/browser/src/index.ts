@@ -115,7 +115,7 @@ export function initialize(clientSideId: string, options?: LDOptions): LDClient 
  * log output to go to `console.log`
  * ```javascript
  *   const ldOptions = {
- *     logger: ld.basicLogger({ destination: console.log }),
+ *     logger: basicLogger({ destination: console.log }),
  *   };
  * ```
  *
@@ -123,7 +123,7 @@ export function initialize(clientSideId: string, options?: LDOptions): LDClient 
  * The configuration also allows you to control the destination for each log level.
  * ```javascript
  *   const ldOptions = {
- *     logger: ld.basicLogger({
+ *     logger: basicLogger({
  *       destination: {
  *         debug: console.debug,
  *         info: console.info,
