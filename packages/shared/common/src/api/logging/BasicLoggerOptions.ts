@@ -21,18 +21,23 @@ export interface BasicLoggerOptions {
   name?: string;
 
   /**
-   * An optional function to use to print each log line.
+   * An optional function, or collection of functions to use to print each log line.
    *
-   * If this is specified, `basicLogger` calls it to write each line of output. The
+   * If not specified, the default is `console.error`.
+   *
+   * If a function is specified, `basicLogger` calls it to write each line of output. The
    * argument is a fully formatted log line, not including a linefeed. The function
    * is only called for log levels that are enabled.
    *
-   * If not specified, the default is `console.error`.
+   * If a map is specified, then each entry will be used as the destination for the corresponding
+   * log level. Any level that is not specified will use the default of `console.error`.
    *
    * Setting this property to anything other than a function will cause SDK
    * initialization to fail.
    */
-  destination?: (line: string) => void;
+  destination?:
+    | ((line: string) => void)
+    | Record<'debug' | 'info' | 'warn' | 'error', (line: string) => void>;
 
   /**
    * An optional formatter to use. The formatter should be compatible
