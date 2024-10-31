@@ -50,11 +50,11 @@ export function Emits<TBase extends Eventable>(Base: TBase) {
       return this.emitter.getMaxListeners();
     }
 
-    listeners(eventName: string | symbol): Array<() => void> {
+    listeners(eventName: string | symbol): Function[] {
       return this.emitter.listeners(eventName);
     }
 
-    rawListeners(eventName: string | symbol): Array<() => void> {
+    rawListeners(eventName: string | symbol): Function[] {
       return this.emitter.rawListeners(eventName);
     }
 
