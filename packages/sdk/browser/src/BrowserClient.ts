@@ -4,7 +4,6 @@ import {
   BasicLogger,
   LDClient as CommonClient,
   Configuration,
-  createSafeLogger,
   Encoding,
   FlagManager,
   internal,
