@@ -1,5 +1,11 @@
 import { EventEmitter } from 'events';
 
+type Listener =
+  | ((...args: never) => void)
+  | ((...args: never) => void)
+  | ((...args: any) => void)
+  | ((...args: any[]) => void);
+
 export type EventableConstructor<T = {}> = new (...args: any[]) => T;
 export type Eventable = EventableConstructor<{ emitter: EventEmitter }>;
 
@@ -50,11 +56,11 @@ export function Emits<TBase extends Eventable>(Base: TBase) {
       return this.emitter.getMaxListeners();
     }
 
-    listeners(eventName: string | symbol): Array<() => void> {
+    listeners(eventName: string | symbol): Listener[] {
       return this.emitter.listeners(eventName);
     }
 
-    rawListeners(eventName: string | symbol): Array<() => void> {
+    rawListeners(eventName: string | symbol): Listener[] {
       return this.emitter.rawListeners(eventName);
     }
 
