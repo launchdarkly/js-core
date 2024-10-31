@@ -21,7 +21,7 @@ export interface BasicLoggerOptions {
   name?: string;
 
   /**
-   * An optional function, or collection of functions to use to print each log line.
+   * An optional function, or map of levels to functions, to use to print each log line.
    *
    * If not specified, the default is `console.error`.
    *
