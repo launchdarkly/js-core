@@ -5,9 +5,56 @@
  * Some code changes may still be required, for example {@link LDOptions} removes
  * support for some previously available options.
  */
-import { LDContext, LDOptions } from '..';
+import {
+  EvaluationSeriesContext,
+  EvaluationSeriesData,
+  Hook,
+  HookMetadata,
+  IdentifySeriesContext,
+  IdentifySeriesData,
+  IdentifySeriesResult,
+  IdentifySeriesStatus,
+  LDContext,
+  LDContextCommon,
+  LDContextMeta,
+  LDEvaluationDetail,
+  LDEvaluationDetailTyped,
+  LDEvaluationReason,
+  LDFlagSet,
+  LDIdentifyOptions,
+  LDLogger,
+  LDLogLevel,
+  LDMultiKindContext,
+  LDOptions,
+  LDSingleKindContext,
+} from '..';
 import { LDClient } from './LDClientCompat';
 import LDClientCompatImpl from './LDClientCompatImpl';
+
+export type {
+  LDClient,
+  LDFlagSet,
+  LDContext,
+  LDContextCommon,
+  LDContextMeta,
+  LDMultiKindContext,
+  LDSingleKindContext,
+  LDLogLevel,
+  LDLogger,
+  LDOptions,
+  LDEvaluationDetail,
+  LDEvaluationDetailTyped,
+  LDEvaluationReason,
+  LDIdentifyOptions,
+  Hook,
+  HookMetadata,
+  EvaluationSeriesContext,
+  EvaluationSeriesData,
+  IdentifySeriesContext,
+  IdentifySeriesData,
+  IdentifySeriesResult,
+  IdentifySeriesStatus,
+};
 
 /**
  * Creates an instance of the LaunchDarkly client. This version of initialization is for
