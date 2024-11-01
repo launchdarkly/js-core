@@ -2,6 +2,7 @@ import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
 import {
   BedrockTokenUsage,
+  createBedrockTokenUsage,
   FeedbackKind,
   OpenAITokenUsage,
   TokenUsage,
@@ -66,17 +67,25 @@ export class LDAIConfigTracker {
     return result;
   }
 
-  async trackBedrockConverse(res: any): Promise<any> {
+  async trackBedrockConverse(res: {
+    $metadata?: { httpStatusCode: number };
+    metrics?: { latencyMs: number };
+    usage?: {
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+  }): Promise<any> {
     if (res.$metadata?.httpStatusCode === 200) {
       this.trackGeneration(1);
-    } else if (res.$metadata?.httpStatusCode >= 400) {
+    } else if (res.$metadata?.httpStatusCode && res.$metadata.httpStatusCode >= 400) {
       this.trackError(res.$metadata.httpStatusCode);
     }
     if (res.metrics) {
       this.trackDuration(res.metrics.latencyMs);
     }
     if (res.usage) {
-      this.trackTokens(new BedrockTokenUsage(res.usage));
+      this.trackTokens(createBedrockTokenUsage(res.usage));
     }
     return res;
   }
