@@ -6,6 +6,7 @@
  * support for some previously available options.
  */
 import {
+  basicLogger,
   EvaluationSeriesContext,
   EvaluationSeriesData,
   Hook,
@@ -54,6 +55,7 @@ export type {
   IdentifySeriesData,
   IdentifySeriesResult,
   IdentifySeriesStatus,
+  basicLogger,
 };
 
 /**
