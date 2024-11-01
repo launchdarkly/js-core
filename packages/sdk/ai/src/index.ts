@@ -77,13 +77,8 @@ export class AIClient {
 
     return {
       config: detail.value,
-      tracker: new LDAIConfigTracker(
-        this.ldClient,
-        key,
-        // eslint-disable-next-line @typescript-eslint/dot-notation
-        detail.value['_ldMeta'].variationId,
-        context,
-      ),
+      // eslint-disable-next-line no-underscore-dangle
+      tracker: new LDAIConfigTracker(this.ldClient, key, detail.value._ldMeta.variationId, context),
       noConfiguration: Object.keys(detail).length === 0,
     };
   }
