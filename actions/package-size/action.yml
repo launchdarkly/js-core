@@ -31,6 +31,8 @@ runs:
         echo "PACK_SIZE=$PACK_SIZE" >> $GITHUB_ENV
 
     - name: Find Size Comment
+      # Only do commenting on non-forks. A fork does not have permissions for comments.
+      if: github.event.pull_request.head.repo.full_name == github.repository
       uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e
       id: fc
       with:
@@ -39,7 +41,7 @@ runs:
         body-includes: '${{ inputs.package_name }} size report'
 
     - name: Create comment
-      if: steps.fc.outputs.comment-id == ''
+      if: steps.fc.outputs.comment-id == '' && github.event.pull_request.head.repo.full_name == github.repository
       uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
       with:
         issue-number: ${{ inputs.pr_number }}
@@ -50,7 +52,7 @@ runs:
           Size limit: ${{ inputs.size_limit }}
 
     - name: Update comment
-      if: steps.fc.outputs.comment-id != ''
+      if: steps.fc.outputs.comment-id != '' && github.event.pull_request.head.repo.full_name == github.repository
       uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
