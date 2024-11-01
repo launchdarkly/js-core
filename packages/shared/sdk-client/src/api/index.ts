@@ -7,3 +7,4 @@ export * from './integrations';
 
 export { ConnectionMode };
 export * from './LDIdentifyOptions';
+export * from './LDInspection';
