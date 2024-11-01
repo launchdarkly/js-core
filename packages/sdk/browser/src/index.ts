@@ -29,6 +29,7 @@ import {
   LDEvaluationDetailTyped,
   LDEvaluationReason,
   LDFlagSet,
+  LDInspection,
   LDLogger,
   LDLogLevel,
   LDMultiKindContext,
@@ -64,6 +65,7 @@ export type {
   IdentifySeriesData,
   IdentifySeriesResult,
   IdentifySeriesStatus,
+  LDInspection,
 };
 
 /**
