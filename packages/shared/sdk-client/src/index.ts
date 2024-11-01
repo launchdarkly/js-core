@@ -28,6 +28,7 @@ export type {
   IdentifySeriesData,
   IdentifySeriesResult,
   IdentifySeriesStatus,
+  LDInspection,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
