@@ -1,6 +1,6 @@
-import { TokenUsage } from './TokenUsage';
+import { LDTokenUsage } from './LDTokenUsage';
 
-export function createUnderscoreTokenUsage(data: any): TokenUsage {
+export function createUnderscoreTokenUsage(data: any): LDTokenUsage {
   return {
     total: data.total_tokens || 0,
     input: data.prompt_tokens || 0,

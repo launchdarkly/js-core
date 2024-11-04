@@ -1,25 +1,25 @@
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
 import { LDAIConfigTracker } from './api/config';
-import { createBedrockTokenUsage, FeedbackKind, TokenUsage } from './api/metrics';
+import { createBedrockTokenUsage, LDFeedbackKind, LDTokenUsage } from './api/metrics';
 import { createOpenAiUsage } from './api/metrics/OpenAiUsage';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   private _ldClient: LDClient;
-  private _variationId: string;
+  private _versionId: string;
   private _configKey: string;
   private _context: LDContext;
 
   constructor(ldClient: LDClient, configKey: string, versionId: string, context: LDContext) {
     this._ldClient = ldClient;
-    this._variationId = versionId;
+    this._versionId = versionId;
     this._configKey = configKey;
     this._context = context;
   }
 
-  private _getTrackData(): { variationId: string; configKey: string } {
+  private _getTrackData(): { versionId: string; configKey: string } {
     return {
-      variationId: this._variationId,
+      versionId: this._versionId,
       configKey: this._configKey,
     };
   }
@@ -37,44 +37,42 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     return result;
   }
 
-  trackError(error: number): void {
-    this._ldClient.track('$ld:ai:error', this._context, this._getTrackData(), error);
-  }
-
-  trackFeedback(feedback: { kind: FeedbackKind }): void {
-    if (feedback.kind === FeedbackKind.Positive) {
+  trackFeedback(feedback: { kind: LDFeedbackKind }): void {
+    if (feedback.kind === LDFeedbackKind.Positive) {
       this._ldClient.track('$ld:ai:feedback:user:positive', this._context, this._getTrackData(), 1);
-    } else if (feedback.kind === FeedbackKind.Negative) {
+    } else if (feedback.kind === LDFeedbackKind.Negative) {
       this._ldClient.track('$ld:ai:feedback:user:negative', this._context, this._getTrackData(), 1);
     }
   }
 
-  trackGeneration(generation: number): void {
-    this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), generation);
+  trackSuccess(): void {
+    this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
   }
 
-  async trackOpenAI(func: (...args: any[]) => Promise<any>, ...args: any[]): Promise<any> {
+  async trackOpenAI<TRes>(func: (...args: any[]) => Promise<TRes>, ...args: any[]): Promise<TRes> {
     const result = await this.trackDurationOf(func, ...args);
-    this.trackGeneration(1);
+    this.trackSuccess();
     if (result.usage) {
       this.trackTokens(createOpenAiUsage(result.usage));
     }
     return result;
   }
 
-  async trackBedrockConverse(res: {
-    $metadata?: { httpStatusCode: number };
-    metrics?: { latencyMs: number };
-    usage?: {
-      inputTokens: number;
-      outputTokens: number;
-      totalTokens: number;
-    };
-  }): Promise<any> {
+  trackBedrockConverse<
+    TRes extends {
+      $metadata?: { httpStatusCode: number };
+      metrics?: { latencyMs: number };
+      usage?: {
+        inputTokens: number;
+        outputTokens: number;
+        totalTokens: number;
+      };
+    },
+  >(res: TRes): TRes {
     if (res.$metadata?.httpStatusCode === 200) {
-      this.trackGeneration(1);
+      this.trackSuccess();
     } else if (res.$metadata?.httpStatusCode && res.$metadata.httpStatusCode >= 400) {
-      this.trackError(res.$metadata.httpStatusCode);
+      // this.trackError(res.$metadata.httpStatusCode);
     }
     if (res.metrics) {
       this.trackDuration(res.metrics.latencyMs);
@@ -85,7 +83,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     return res;
   }
 
-  trackTokens(tokens: TokenUsage): void {
+  trackTokens(tokens: LDTokenUsage): void {
     const trackData = this._getTrackData();
     if (tokens.total > 0) {
       this._ldClient.track('$ld:ai:tokens:total', this._context, trackData, tokens.total);

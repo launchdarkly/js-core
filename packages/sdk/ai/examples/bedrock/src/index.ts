@@ -29,11 +29,6 @@ const context = {
 
 console.log('*** SDK successfully initialized');
 
-interface MyModelConfig {
-  modelId: string;
-  prompt: { role: ConversationRole; content: string }[];
-}
-
 function mapPromptToConversation(prompt: { role: ConversationRole; content: string }[]): Message[] {
   return prompt.map((item) => ({
     role: item.role,
@@ -64,12 +59,11 @@ async function main() {
   }
 
   if (tracker) {
-    const modelConfig = configValue.config as MyModelConfig;
     const completion = await tracker.trackBedrockConverse(
       await awsClient.send(
         new ConverseCommand({
-          modelId: modelConfig.modelId,
-          messages: mapPromptToConversation(modelConfig.prompt),
+          modelId: configValue.config?.model?.modelId ?? 'default model',
+          messages: mapPromptToConversation(modelConfig?.prompt ?? 'default prompt'),
         }),
       ),
     );

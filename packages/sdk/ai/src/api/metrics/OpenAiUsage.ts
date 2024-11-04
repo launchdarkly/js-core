@@ -1,6 +1,6 @@
-import { TokenUsage } from './TokenUsage';
+import { LDTokenUsage } from './LDTokenUsage';
 
-export function createOpenAiUsage(data: any): TokenUsage {
+export function createOpenAiUsage(data: any): LDTokenUsage {
   return {
     total: data.total_tokens ?? 0,
     input: data.prompt_token ?? 0,
