@@ -3,15 +3,12 @@ import Mustache from 'mustache';
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
 import { LDAIConfig } from './api/config';
-import { LDAIConfigTracker } from './LDAIConfigTracker';
+import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 
-export class AIClient {
-  private ldClient: LDClient;
-
-  constructor(ldClient: LDClient) {
-    this.ldClient = ldClient;
-  }
-
+/**
+ * Interface for performing AI operations using LaunchDarkly.
+ */
+export interface AIClient {
   /**
    * Parses and interpolates a template string with the provided variables.
    *
@@ -19,9 +16,7 @@ export class AIClient {
    * @param variables - An object containing the variables to be used for interpolation.
    * @returns The interpolated string.
    */
-  interpolateTemplate(template: string, variables: Record<string, unknown>): string {
-    return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
-  }
+  interpolateTemplate(template: string, variables: Record<string, unknown>): string;
 
   /**
    * Retrieves and processes a prompt template based on the provided key, LaunchDarkly context, and variables.
@@ -60,13 +55,32 @@ export class AIClient {
    * }
    * ```
    */
+  modelConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: string,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIConfig>;
+}
+
+export class AIClientImpl implements AIClient {
+  private _ldClient: LDClient;
+
+  constructor(ldClient: LDClient) {
+    this._ldClient = ldClient;
+  }
+
+  interpolateTemplate(template: string, variables: Record<string, unknown>): string {
+    return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
+  }
+
   async modelConfig(
     key: string,
     context: LDContext,
     defaultValue: string,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
-    const detail = await this.ldClient.variation(key, context, defaultValue);
+    const detail = await this._ldClient.variation(key, context, defaultValue);
 
     const allVariables = { ldctx: context, ...variables };
 
@@ -78,15 +92,25 @@ export class AIClient {
     return {
       config: detail.value,
       // eslint-disable-next-line no-underscore-dangle
-      tracker: new LDAIConfigTracker(this.ldClient, key, detail.value._ldMeta.variationId, context),
+      tracker: new LDAIConfigTrackerImpl(
+        this._ldClient,
+        key,
+        // eslint-disable-next-line no-underscore-dangle
+        detail.value._ldMeta.variationId,
+        context,
+      ),
       noConfiguration: Object.keys(detail).length === 0,
     };
   }
 }
 
+/**
+ * Initialize a new AI client. This client will be used to perform any AI operations.
+ * @param ldClient The base LaunchDarkly client.
+ * @returns A new AI client.
+ */
 export function init(ldClient: LDClient): AIClient {
-  return new AIClient(ldClient);
+  return new AIClientImpl(ldClient);
 }
 
-export * from './api/config/LDAIConfigTracker';
-export * from './api/metrics';
+export * from './api';
