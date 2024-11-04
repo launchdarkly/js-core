@@ -1,0 +1,35 @@
+name: telemetry/node-server-sdk-otel
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-node-server-otel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/ai'
+          workspace_path: packages/sdk/ai
+      - name: Build bedrock example
+        run: |
+          cd packages/sdk/ai/examples/bedrock
+          yarn build
+      - name: Build OpenAI example
+        run: |
+          cd packages/sdk/ai/examples/opanai
+          yarn build

@@ -61,5 +61,8 @@
     {
       "path": "./packages/sdk/browser/contract-tests/entity/tsconfig.ref.json"
     }
+    {
+      "path": "./packages/sdk/ai/tsconfig.ref.json"
+    }
   ]
 }
