@@ -6,11 +6,17 @@ import { LDEvaluationDetail } from '../LDEvaluationDetail';
  * Contextual information provided to evaluation stages.
  */
 export interface EvaluationSeriesContext {
+  /**
+   * The flag key the evaluation is for.
+   */
   readonly flagKey: string;
   /**
    * Optional in case evaluations are performed before a context is set.
    */
   readonly context?: LDContext;
+  /**
+   * The default value that was provided.
+   */
   readonly defaultValue: unknown;
 
   /**
@@ -33,13 +39,19 @@ export interface EvaluationSeriesData {
  * Meta-data about a hook implementation.
  */
 export interface HookMetadata {
+  /**
+   * Name of the hook.
+   */
   readonly name: string;
 }
 
 /**
- * Contextual information provided to evaluation stages.
+ * Contextual information provided to identify stages.
  */
 export interface IdentifySeriesContext {
+  /**
+   * The context associated with the identify operation.
+   */
   readonly context: LDContext;
   /**
    * The timeout, in seconds, associated with the identify operation.
@@ -48,7 +60,7 @@ export interface IdentifySeriesContext {
 }
 
 /**
- * Implementation specific hook data for evaluation stages.
+ * Implementation specific hook data for identify stages.
  *
  * Hook implementations can use this to store data needed between stages.
  */
@@ -58,13 +70,20 @@ export interface IdentifySeriesData {
 
 /**
  * The status an identify operation completed with.
+ *
+ * An example in which an error may occur is lack of network connectivity
+ * preventing the SDK from functioning.
  */
 export type IdentifySeriesStatus = 'completed' | 'error';
 
 /**
  * The result applies to a single identify operation. An operation may complete
  * with an error and then later complete successfully. Only the first completion
- * will be executed in the evaluation series.
+ * will be executed in the identify series.
+ *
+ * For example, a network issue may cause an identify to error since the SDK
+ * can't refresh its cached data from the cloud at that moment, but then later
+ * the when the network issue is resolved, the SDK will refresh cached data.
  */
 export interface IdentifySeriesResult {
   status: IdentifySeriesStatus;

@@ -6,7 +6,7 @@
  * In typical usage, you will call {@link initialize} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
  *
- * For more information, see the SDK reference guide.
+ * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
  *
  * @packageDocumentation
  */
@@ -72,11 +72,11 @@ export type {
  * Usage:
  * ```
  * import { initialize } from 'launchdarkly-js-client-sdk';
- * const client = initialize(envKey, context, options);
+ * const client = initialize(clientSideId, context, options);
  * ```
  *
  * @param clientSideId
- *   The client-side id, also known as the environment ID.
+ *   The client-side ID, also known as the environment ID.
  * @param options
  *   Optional configuration settings.
  * @return
@@ -88,10 +88,11 @@ export function initialize(clientSideId: string, options?: LDOptions): LDClient 
 }
 
 /**
- * Provides a simple {@link LDLogger} implementation.
+ * Provides a basic {@link LDLogger} implementation.
  *
- * This logging implementation uses a simple format that includes only the log level
- * and the message text. By default the output is written to `console.error`.
+ * This logging implementation uses a basic format that includes only the log level
+ * and the message text. By default this uses log level 'info' and the output is
+ * written to `console.error`.
  *
  * To use the logger created by this function, put it into {@link LDOptions.logger}. If
  * you do not set {@link LDOptions.logger} to anything, the SDK uses a default logger
