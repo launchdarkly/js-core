@@ -41,6 +41,8 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
     const value: VariationContent = await this._ldClient.variation(key, context, defaultValue);
+    // We are going to modify the contents before returning them, so we make a copy.
+    // This isn't a deep copy and the application developer should not modify the returned content.
     const config: LDGenerationConfig = { ...value };
     const allVariables = { ldctx: context, ...variables };
 
