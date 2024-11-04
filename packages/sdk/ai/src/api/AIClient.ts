@@ -5,7 +5,7 @@ import { LDAIConfig, LDGenerationConfig } from './config/LDAIConfig';
  * Interface for performing AI operations using LaunchDarkly.
  */
 
-export interface AIClient {
+export interface LDAIClient {
   /**
    * Parses and interpolates a template string with the provided variables.
    *
