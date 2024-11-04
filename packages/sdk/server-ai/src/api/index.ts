@@ -1,3 +1,3 @@
 export * from './config';
 export * from './metrics';
-export * from './AIClient';
+export * from './LDAIClient';

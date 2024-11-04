@@ -2,7 +2,7 @@ import Mustache from 'mustache';
 
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
-import { LDAIClient } from './api/AIClient';
+import { LDAIClient } from './api/LDAIClient';
 import { LDAIConfig, LDGenerationConfig, LDModelConfig, LDPrompt } from './api/config';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 

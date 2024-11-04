@@ -1,6 +1,6 @@
 import { LDClient } from '@launchdarkly/node-server-sdk';
 
-import { LDAIClient } from './api/AIClient';
+import { LDAIClient } from './api/LDAIClient';
 import { LDAIClientImpl } from './LDAIClientImpl';
 
 /**
