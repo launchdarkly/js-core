@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import { OpenAI } from 'openai';
 
-import { initAi } from '@launchdarkly/node-server-sdk-ai';
 import { init, LDContext } from '@launchdarkly/node-server-sdk';
+import { initAi } from '@launchdarkly/node-server-sdk-ai';
 
 // Environment variables
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;

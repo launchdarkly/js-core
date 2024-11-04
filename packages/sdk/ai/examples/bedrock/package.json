@@ -7,7 +7,10 @@
   "type": "commonjs",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint . --ext .ts"
+    "lint": "npx eslint . --ext .ts",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "lint:fix": "yarn run lint --fix",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "keywords": [
     "launchdarkly",
