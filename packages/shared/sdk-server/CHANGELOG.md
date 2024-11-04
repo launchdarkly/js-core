@@ -8,6 +8,15 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.9.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.9.0...js-server-sdk-common-v2.9.1) (2024-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.11.0 to 2.12.0
+
 ## [2.9.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.8.0...js-server-sdk-common-v2.9.0) (2024-10-17)
 
 

@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.12.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.11.0...js-sdk-common-v2.12.0) (2024-11-04)
+
+
+### Features
+
+* Enhance basic logger destination support. ([#650](https://github.com/launchdarkly/js-core/issues/650)) ([21670c4](https://github.com/launchdarkly/js-core/commit/21670c4acd629f7ccfeb7abbe94fe89723533600))
+
 ## [2.11.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.10.0...js-sdk-common-v2.11.0) (2024-10-17)
 
 
