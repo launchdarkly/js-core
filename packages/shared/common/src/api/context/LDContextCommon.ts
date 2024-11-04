@@ -1,5 +1,8 @@
 import { LDContextMeta } from './LDContextMeta';
 
+/**
+ * Common attributes shared by the various context types.
+ */
 export interface LDContextCommon {
   /**
    * A unique string identifying a context.
