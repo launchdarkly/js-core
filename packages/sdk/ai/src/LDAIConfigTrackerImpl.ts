@@ -60,21 +60,21 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
 
   trackBedrockConverse<
     TRes extends {
-      $metadata?: { httpStatusCode: number };
-      metrics?: { latencyMs: number };
+      $metadata: { httpStatusCode?: number };
+      metrics?: { latencyMs?: number };
       usage?: {
-        inputTokens: number;
-        outputTokens: number;
-        totalTokens: number;
+        inputTokens?: number;
+        outputTokens?: number;
+        totalTokens?: number;
       };
     },
   >(res: TRes): TRes {
     if (res.$metadata?.httpStatusCode === 200) {
       this.trackSuccess();
     } else if (res.$metadata?.httpStatusCode && res.$metadata.httpStatusCode >= 400) {
-      // this.trackError(res.$metadata.httpStatusCode);
+      // Potentially add error tracking in the future.
     }
-    if (res.metrics) {
+    if (res.metrics && res.metrics.latencyMs) {
       this.trackDuration(res.metrics.latencyMs);
     }
     if (res.usage) {

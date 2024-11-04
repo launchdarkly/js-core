@@ -57,12 +57,12 @@ export interface LDAIConfigTracker {
    */
   trackBedrockConverse<
     TRes extends {
-      $metadata?: { httpStatusCode: number };
-      metrics?: { latencyMs: number };
+      $metadata: { httpStatusCode?: number };
+      metrics?: { latencyMs?: number };
       usage?: {
-        inputTokens: number;
-        outputTokens: number;
-        totalTokens: number;
+        inputTokens?: number;
+        outputTokens?: number;
+        totalTokens?: number;
       };
     },
   >(

@@ -1,10 +1,5 @@
 /* eslint-disable no-console */
-import {
-  BedrockRuntimeClient,
-  ConversationRole,
-  ConverseCommand,
-  Message,
-} from '@aws-sdk/client-bedrock-runtime';
+import { BedrockRuntimeClient, ConverseCommand, Message } from '@aws-sdk/client-bedrock-runtime';
 
 import { initAi, LDAIConfig } from '@launchdarkly/ai';
 import { init } from '@launchdarkly/node-server-sdk';
@@ -29,9 +24,12 @@ const context = {
 
 console.log('*** SDK successfully initialized');
 
-function mapPromptToConversation(prompt: { role: ConversationRole; content: string }[]): Message[] {
+function mapPromptToConversation(
+  prompt: { role: 'user' | 'assistant' | 'system'; content: string }[],
+): Message[] {
   return prompt.map((item) => ({
-    role: item.role,
+    // Bedrock doesn't support systems in the converse command.
+    role: item.role !== 'system' ? item.role : 'user',
     content: [{ text: item.content }],
   }));
 }
@@ -44,31 +42,35 @@ async function main() {
     await ldClient.waitForInitialization({ timeout: 10 });
     const aiClient = initAi(ldClient);
 
-    configValue = await aiClient.modelConfig(aiConfigKey, context, false, {
-      myVariable: 'My User Defined Variable',
-    });
-    if (configValue === false) {
-      console.log('got default value for config');
-      process.exit(1);
-    } else {
-      tracker = configValue.tracker;
-    }
+    configValue = await aiClient.modelConfig(
+      aiConfigKey,
+      context,
+      {
+        model: {
+          modelId: 'my-default-model',
+        },
+      },
+      {
+        myVariable: 'My User Defined Variable',
+      },
+    );
+    tracker = configValue.tracker;
   } catch (error) {
     console.log(`*** SDK failed to initialize: ${error}`);
     process.exit(1);
   }
 
   if (tracker) {
-    const completion = await tracker.trackBedrockConverse(
+    const completion = tracker.trackBedrockConverse(
       await awsClient.send(
         new ConverseCommand({
-          modelId: configValue.config?.model?.modelId ?? 'default model',
-          messages: mapPromptToConversation(modelConfig?.prompt ?? 'default prompt'),
+          modelId: configValue.config?.model?.modelId ?? 'no-model',
+          messages: mapPromptToConversation(configValue.config?.prompt ?? []),
         }),
       ),
     );
 
-    console.log('AI Response:', completion.output.message.content[0].text);
+    console.log('AI Response:', completion.output?.message?.content?.[0]?.text ?? 'no-response');
     console.log('Success.');
   }
 }
