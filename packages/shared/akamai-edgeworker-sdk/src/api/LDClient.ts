@@ -20,7 +20,7 @@ export interface CustomLDOptions extends LDOptions {}
  * The LaunchDarkly Akamai SDK edge client object.
  */
 class LDClient extends LDClientImpl {
-  private cacheableStoreProvider!: CacheableStoreProvider;
+  private _cacheableStoreProvider!: CacheableStoreProvider;
 
   // sdkKey is only used to query featureStore, not to initialize with LD servers
   constructor(
@@ -31,7 +31,7 @@ class LDClient extends LDClientImpl {
   ) {
     const finalOptions = createOptions(options);
     super(sdkKey, platform, finalOptions, createCallbacks(finalOptions.logger));
-    this.cacheableStoreProvider = storeProvider;
+    this._cacheableStoreProvider = storeProvider;
   }
 
   override waitForInitialization(): Promise<LDClientType> {
@@ -46,7 +46,7 @@ class LDClient extends LDClientImpl {
     defaultValue: LDFlagValue,
     callback?: (err: any, res: LDFlagValue) => void,
   ): Promise<LDFlagValue> {
-    await this.cacheableStoreProvider.prefetchPayloadFromOriginStore();
+    await this._cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.variation(key, context, defaultValue, callback);
   }
 
@@ -56,7 +56,7 @@ class LDClient extends LDClientImpl {
     defaultValue: LDFlagValue,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
-    await this.cacheableStoreProvider.prefetchPayloadFromOriginStore();
+    await this._cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.variationDetail(key, context, defaultValue, callback);
   }
 
@@ -65,7 +65,7 @@ class LDClient extends LDClientImpl {
     options?: LDFlagsStateOptions,
     callback?: (err: Error | null, res: LDFlagsState) => void,
   ): Promise<LDFlagsState> {
-    await this.cacheableStoreProvider.prefetchPayloadFromOriginStore();
+    await this._cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.allFlagsState(context, options, callback);
   }
 }

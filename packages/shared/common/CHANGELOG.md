@@ -2,6 +2,51 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.11.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.10.0...js-sdk-common-v2.11.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Bug Fixes
+
+* Update sdk-client rollup configuration to match common ([#630](https://github.com/launchdarkly/js-core/issues/630)) ([e061811](https://github.com/launchdarkly/js-core/commit/e06181158d29824ff0131a88988c84cd4a32f6c0))
+
+## [2.10.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.9.0...js-sdk-common-v2.10.0) (2024-10-09)
+
+
+### Features
+
+* Add ESM support for common and common-client (rollup) ([#604](https://github.com/launchdarkly/js-core/issues/604)) ([8cd0cdc](https://github.com/launchdarkly/js-core/commit/8cd0cdce988f606b1efdf6bfd19484f6607db2e5))
+* Add visibility handling to allow proactive event flushing. ([#607](https://github.com/launchdarkly/js-core/issues/607)) ([819a311](https://github.com/launchdarkly/js-core/commit/819a311db6f56e323bb84c925789ad4bd19ae4ba))
+* adds datasource status to sdk-client ([#590](https://github.com/launchdarkly/js-core/issues/590)) ([6f26204](https://github.com/launchdarkly/js-core/commit/6f262045b76836e5d2f5ccc2be433094993fcdbb))
+
+## [2.9.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.8.0...js-sdk-common-v2.9.0) (2024-09-26)
+
+
+### Features
+
+* Add platform support for async hashing. ([#573](https://github.com/launchdarkly/js-core/issues/573)) ([9248035](https://github.com/launchdarkly/js-core/commit/9248035a88fba1c7375c5df22ef6b4a80a867983))
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+* Add URLs for custom events and URL filtering. ([#587](https://github.com/launchdarkly/js-core/issues/587)) ([7131e69](https://github.com/launchdarkly/js-core/commit/7131e6905f19cc10a1374aae5e74cec66c7fd6de))
+* Adds support for REPORT. ([#575](https://github.com/launchdarkly/js-core/issues/575)) ([916b724](https://github.com/launchdarkly/js-core/commit/916b72409b63abdf350e70cca41331c4204b6e95))
+* Allow using custom user-agent name. ([#580](https://github.com/launchdarkly/js-core/issues/580)) ([ed5a206](https://github.com/launchdarkly/js-core/commit/ed5a206c86f496942664dd73f6f8a7c602a1de28))
+* Implement goals for client-side SDKs. ([#585](https://github.com/launchdarkly/js-core/issues/585)) ([fd38a8f](https://github.com/launchdarkly/js-core/commit/fd38a8fa8560dad0c6721c2eaeed2f3f5c674900))
+
+
+### Bug Fixes
+
+* Multi-kind context containing only 1 kind conveted incorrectly. ([#594](https://github.com/launchdarkly/js-core/issues/594)) ([b6ff2a6](https://github.com/launchdarkly/js-core/commit/b6ff2a67db9f9a24da4a45ad88fa7f2a22fb635d))
+
+## [2.8.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.7.0...js-sdk-common-v2.8.0) (2024-09-03)
+
+
+### Features
+
+* Add support for Payload Filtering ([#551](https://github.com/launchdarkly/js-core/issues/551)) ([6f44383](https://github.com/launchdarkly/js-core/commit/6f4438323baed802d8f951ac82494e6cfa9932c5))
+
 ## [2.7.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.6.0...js-sdk-common-v2.7.0) (2024-08-28)
 
 

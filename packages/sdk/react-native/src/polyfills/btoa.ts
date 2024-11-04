@@ -1,15 +1,10 @@
+/* eslint-disable no-bitwise */
 import { fromByteArray } from 'base64-js';
 
-function convertToByteArray(s: string) {
-  const b = [];
-  for (let i = 0; i < s.length; i += 1) {
-    b.push(s.charCodeAt(i));
-  }
-  return Uint8Array.from(b);
-}
+import toUtf8Array from './toUtf8Array';
 
 export function btoa(s: string) {
-  return fromByteArray(convertToByteArray(s));
+  return fromByteArray(toUtf8Array(s));
 }
 
 export function base64FromByteArray(a: Uint8Array) {

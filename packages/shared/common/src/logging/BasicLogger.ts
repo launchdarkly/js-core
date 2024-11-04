@@ -1,15 +1,15 @@
-import { BasicLoggerOptions, LDLogger } from '../api';
+import { BasicLoggerOptions, LDLogger, LDLogLevel } from '../api';
 import format from './format';
 
-const LogPriority = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
-  none: 4,
-};
+enum LogPriority {
+  debug = 0,
+  info = 1,
+  warn = 2,
+  error = 3,
+  none = 4,
+}
 
-const LevelNames = ['debug', 'info', 'warn', 'error', 'none'];
+const LEVEL_NAMES: LDLogLevel[] = ['debug', 'info', 'warn', 'error', 'none'];
 
 /**
  * A basic logger which handles filtering by level.
@@ -23,13 +23,13 @@ const LevelNames = ['debug', 'info', 'warn', 'error', 'none'];
  * as well for performance.
  */
 export default class BasicLogger implements LDLogger {
-  private logLevel: number;
+  private _logLevel: number;
 
-  private name: string;
+  private _name: string;
 
-  private destination?: (line: string) => void;
+  private _destinations?: Record<number, (line: string) => void>;
 
-  private formatter?: (...args: any[]) => string;
+  private _formatter?: (...args: any[]) => string;
 
   /**
    * This should only be used as a default fallback and not as a convenient
@@ -41,18 +41,32 @@ export default class BasicLogger implements LDLogger {
   }
 
   constructor(options: BasicLoggerOptions) {
-    this.logLevel = LogPriority[options.level ?? 'info'] ?? LogPriority.info;
-    this.name = options.name ?? 'LaunchDarkly';
-    // eslint-disable-next-line no-console
-    this.destination = options.destination;
-    this.formatter = options.formatter;
+    this._logLevel = LogPriority[options.level ?? 'info'] ?? LogPriority.info;
+    this._name = options.name ?? 'LaunchDarkly';
+    this._formatter = options.formatter;
+    if (typeof options.destination === 'object') {
+      this._destinations = {
+        [LogPriority.debug]: options.destination.debug,
+        [LogPriority.info]: options.destination.info,
+        [LogPriority.warn]: options.destination.warn,
+        [LogPriority.error]: options.destination.error,
+      };
+    } else if (typeof options.destination === 'function') {
+      const { destination } = options;
+      this._destinations = {
+        [LogPriority.debug]: destination,
+        [LogPriority.info]: destination,
+        [LogPriority.warn]: destination,
+        [LogPriority.error]: destination,
+      };
+    }
   }
 
-  private tryFormat(...args: any[]): string {
+  private _tryFormat(...args: any[]): string {
     try {
-      if (this.formatter) {
+      if (this._formatter) {
         // In case the provided formatter fails.
-        return this.formatter?.(...args);
+        return this._formatter?.(...args);
       }
       return format(...args);
     } catch {
@@ -60,21 +74,22 @@ export default class BasicLogger implements LDLogger {
     }
   }
 
-  private tryWrite(msg: string) {
+  private _tryWrite(destination: (msg: string) => void, msg: string) {
     try {
-      this.destination!(msg);
+      destination(msg);
     } catch {
       // eslint-disable-next-line no-console
       console.error(msg);
     }
   }
 
-  private log(level: number, args: any[]) {
-    if (level >= this.logLevel) {
-      const prefix = `${LevelNames[level]}: [${this.name}]`;
+  private _log(level: number, args: any[]) {
+    if (level >= this._logLevel) {
+      const prefix = `${LEVEL_NAMES[level]}: [${this._name}]`;
       try {
-        if (this.destination) {
-          this.tryWrite(`${prefix} ${this.tryFormat(...args)}`);
+        const destination = this._destinations?.[level];
+        if (destination) {
+          this._tryWrite(destination, `${prefix} ${this._tryFormat(...args)}`);
         } else {
           // `console.error` has its own formatter.
           // So we don't need to do anything.
@@ -90,18 +105,18 @@ export default class BasicLogger implements LDLogger {
   }
 
   error(...args: any[]): void {
-    this.log(LogPriority.error, args);
+    this._log(LogPriority.error, args);
   }
 
   warn(...args: any[]): void {
-    this.log(LogPriority.warn, args);
+    this._log(LogPriority.warn, args);
   }
 
   info(...args: any[]): void {
-    this.log(LogPriority.info, args);
+    this._log(LogPriority.info, args);
   }
 
   debug(...args: any[]): void {
-    this.log(LogPriority.debug, args);
+    this._log(LogPriority.debug, args);
   }
 }

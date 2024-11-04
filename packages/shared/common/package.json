@@ -1,9 +1,9 @@
 {
   "name": "@launchdarkly/js-sdk-common",
-  "version": "2.7.0",
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "version": "2.11.0",
+  "type": "module",
+  "main": "./dist/esm/index.mjs",
+  "types": "./dist/esm/index.d.ts",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/common",
   "repository": {
     "type": "git",
@@ -18,11 +18,23 @@
     "analytics",
     "client"
   ],
+  "exports": {
+    "require": {
+      "types": "./dist/cjs/index.d.ts",
+      "default": "./dist/cjs/index.cjs"
+    },
+    "import": {
+      "types": "./dist/esm/index.d.ts",
+      "default": "./dist/esm/index.mjs"
+    }
+  },
   "scripts": {
     "test": "npx jest --ci",
-    "build-types": "npx tsc --declaration true --emitDeclarationOnly true --declarationDir dist",
-    "build": "npx tsc",
-    "clean": "npx tsc --build --clean",
+    "make-cjs-package-json": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "make-esm-package-json": "echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "make-package-jsons": "npm run make-cjs-package-json && npm run make-esm-package-json",
+    "build": "npx tsc --noEmit && rollup -c rollup.config.js && npm run make-package-jsons",
+    "clean": "rimraf dist",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint --fix",
     "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'",
@@ -30,7 +42,11 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
-    "@launchdarkly/private-js-mocks": "0.0.1",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-typescript": "^11.1.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
@@ -45,7 +61,10 @@
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
+    "rimraf": "6.0.1",
+    "rollup": "^3.23.0",
     "ts-jest": "^29.0.5",
+    "tslib": "^2.7.0",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   }

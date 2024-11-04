@@ -99,58 +99,70 @@ class Migration<
 > implements
     LDMigration<TMigrationRead, TMigrationWrite, TMigrationReadInput, TMigrationWriteInput>
 {
-  private readonly execution: LDSerialExecution | LDConcurrentExecution;
+  private readonly _execution: LDSerialExecution | LDConcurrentExecution;
 
-  private readonly errorTracking: boolean;
+  private readonly _errorTracking: boolean;
 
-  private readonly latencyTracking: boolean;
+  private readonly _latencyTracking: boolean;
 
-  private readonly readTable: {
+  private readonly _readTable: {
     [index: string]: (
       context: MigrationContext<TMigrationReadInput>,
     ) => Promise<LDMigrationReadResult<TMigrationRead>>;
   } = {
     [LDMigrationStage.Off]: async (context) =>
-      this.doSingleOp(context, 'old', this.config.readOld.bind(this.config)),
+      this._doSingleOp(context, 'old', this._config.readOld.bind(this._config)),
     [LDMigrationStage.DualWrite]: async (context) =>
-      this.doSingleOp(context, 'old', this.config.readOld.bind(this.config)),
+      this._doSingleOp(context, 'old', this._config.readOld.bind(this._config)),
     [LDMigrationStage.Shadow]: async (context) => {
-      const { fromOld, fromNew } = await this.doRead(context);
+      const { fromOld, fromNew } = await this._doRead(context);
 
-      this.trackConsistency(context, fromOld, fromNew);
+      this._trackConsistency(context, fromOld, fromNew);
 
       return fromOld;
     },
     [LDMigrationStage.Live]: async (context) => {
-      const { fromNew, fromOld } = await this.doRead(context);
+      const { fromNew, fromOld } = await this._doRead(context);
 
-      this.trackConsistency(context, fromOld, fromNew);
+      this._trackConsistency(context, fromOld, fromNew);
 
       return fromNew;
     },
     [LDMigrationStage.RampDown]: async (context) =>
-      this.doSingleOp(context, 'new', this.config.readNew.bind(this.config)),
+      this._doSingleOp(context, 'new', this._config.readNew.bind(this._config)),
     [LDMigrationStage.Complete]: async (context) =>
-      this.doSingleOp(context, 'new', this.config.readNew.bind(this.config)),
+      this._doSingleOp(context, 'new', this._config.readNew.bind(this._config)),
   };
 
-  private readonly writeTable: {
+  private readonly _writeTable: {
     [index: string]: (
       context: MigrationContext<TMigrationWriteInput>,
     ) => Promise<LDMigrationWriteResult<TMigrationWrite>>;
   } = {
     [LDMigrationStage.Off]: async (context) => ({
-      authoritative: await this.doSingleOp(context, 'old', this.config.writeOld.bind(this.config)),
+      authoritative: await this._doSingleOp(
+        context,
+        'old',
+        this._config.writeOld.bind(this._config),
+      ),
     }),
     [LDMigrationStage.DualWrite]: async (context) => {
-      const fromOld = await this.doSingleOp(context, 'old', this.config.writeOld.bind(this.config));
+      const fromOld = await this._doSingleOp(
+        context,
+        'old',
+        this._config.writeOld.bind(this._config),
+      );
       if (!fromOld.success) {
         return {
           authoritative: fromOld,
         };
       }
 
-      const fromNew = await this.doSingleOp(context, 'new', this.config.writeNew.bind(this.config));
+      const fromNew = await this._doSingleOp(
+        context,
+        'new',
+        this._config.writeNew.bind(this._config),
+      );
 
       return {
         authoritative: fromOld,
@@ -158,14 +170,22 @@ class Migration<
       };
     },
     [LDMigrationStage.Shadow]: async (context) => {
-      const fromOld = await this.doSingleOp(context, 'old', this.config.writeOld.bind(this.config));
+      const fromOld = await this._doSingleOp(
+        context,
+        'old',
+        this._config.writeOld.bind(this._config),
+      );
       if (!fromOld.success) {
         return {
           authoritative: fromOld,
         };
       }
 
-      const fromNew = await this.doSingleOp(context, 'new', this.config.writeNew.bind(this.config));
+      const fromNew = await this._doSingleOp(
+        context,
+        'new',
+        this._config.writeNew.bind(this._config),
+      );
 
       return {
         authoritative: fromOld,
@@ -173,14 +193,22 @@ class Migration<
       };
     },
     [LDMigrationStage.Live]: async (context) => {
-      const fromNew = await this.doSingleOp(context, 'new', this.config.writeNew.bind(this.config));
+      const fromNew = await this._doSingleOp(
+        context,
+        'new',
+        this._config.writeNew.bind(this._config),
+      );
       if (!fromNew.success) {
         return {
           authoritative: fromNew,
         };
       }
 
-      const fromOld = await this.doSingleOp(context, 'old', this.config.writeOld.bind(this.config));
+      const fromOld = await this._doSingleOp(
+        context,
+        'old',
+        this._config.writeOld.bind(this._config),
+      );
 
       return {
         authoritative: fromNew,
@@ -188,14 +216,22 @@ class Migration<
       };
     },
     [LDMigrationStage.RampDown]: async (context) => {
-      const fromNew = await this.doSingleOp(context, 'new', this.config.writeNew.bind(this.config));
+      const fromNew = await this._doSingleOp(
+        context,
+        'new',
+        this._config.writeNew.bind(this._config),
+      );
       if (!fromNew.success) {
         return {
           authoritative: fromNew,
         };
       }
 
-      const fromOld = await this.doSingleOp(context, 'old', this.config.writeOld.bind(this.config));
+      const fromOld = await this._doSingleOp(
+        context,
+        'old',
+        this._config.writeOld.bind(this._config),
+      );
 
       return {
         authoritative: fromNew,
@@ -203,27 +239,31 @@ class Migration<
       };
     },
     [LDMigrationStage.Complete]: async (context) => ({
-      authoritative: await this.doSingleOp(context, 'new', this.config.writeNew.bind(this.config)),
+      authoritative: await this._doSingleOp(
+        context,
+        'new',
+        this._config.writeNew.bind(this._config),
+      ),
     }),
   };
 
   constructor(
-    private readonly client: LDClient,
-    private readonly config: LDMigrationOptions<
+    private readonly _client: LDClient,
+    private readonly _config: LDMigrationOptions<
       TMigrationRead,
       TMigrationWrite,
       TMigrationReadInput,
       TMigrationWriteInput
     >,
   ) {
-    if (this.config.execution) {
-      this.execution = this.config.execution;
+    if (this._config.execution) {
+      this._execution = this._config.execution;
     } else {
-      this.execution = new LDConcurrentExecution();
+      this._execution = new LDConcurrentExecution();
     }
 
-    this.latencyTracking = this.config.latencyTracking ?? true;
-    this.errorTracking = this.config.errorTracking ?? true;
+    this._latencyTracking = this._config.latencyTracking ?? true;
+    this._errorTracking = this._config.errorTracking ?? true;
   }
 
   async read(
@@ -232,13 +272,13 @@ class Migration<
     defaultStage: LDMigrationStage,
     payload?: TMigrationReadInput,
   ): Promise<LDMigrationReadResult<TMigrationRead>> {
-    const stage = await this.client.migrationVariation(key, context, defaultStage);
-    const res = await this.readTable[stage.value]({
+    const stage = await this._client.migrationVariation(key, context, defaultStage);
+    const res = await this._readTable[stage.value]({
       payload,
       tracker: stage.tracker,
     });
     stage.tracker.op('read');
-    this.sendEvent(stage.tracker);
+    this._sendEvent(stage.tracker);
     return res;
   }
 
@@ -248,57 +288,65 @@ class Migration<
     defaultStage: LDMigrationStage,
     payload?: TMigrationWriteInput,
   ): Promise<LDMigrationWriteResult<TMigrationWrite>> {
-    const stage = await this.client.migrationVariation(key, context, defaultStage);
-    const res = await this.writeTable[stage.value]({
+    const stage = await this._client.migrationVariation(key, context, defaultStage);
+    const res = await this._writeTable[stage.value]({
       payload,
       tracker: stage.tracker,
     });
     stage.tracker.op('write');
-    this.sendEvent(stage.tracker);
+    this._sendEvent(stage.tracker);
     return res;
   }
 
-  private sendEvent(tracker: LDMigrationTracker) {
+  private _sendEvent(tracker: LDMigrationTracker) {
     const event = tracker.createEvent();
     if (event) {
-      this.client.trackMigration(event);
+      this._client.trackMigration(event);
     }
   }
 
-  private trackConsistency(
+  private _trackConsistency(
     context: MigrationContext<TMigrationReadInput>,
     oldValue: LDMethodResult<TMigrationRead>,
     newValue: LDMethodResult<TMigrationRead>,
   ) {
-    if (!this.config.check) {
+    if (!this._config.check) {
       return;
     }
 
     if (oldValue.success && newValue.success) {
       // Check is validated before this point, so it is force unwrapped.
-      context.tracker.consistency(() => this.config.check!(oldValue.result, newValue.result));
+      context.tracker.consistency(() => this._config.check!(oldValue.result, newValue.result));
     }
   }
 
-  private async readSequentialFixed(
+  private async _readSequentialFixed(
     context: MigrationContext<TMigrationReadInput>,
   ): Promise<MultipleReadResult<TMigrationRead>> {
-    const fromOld = await this.doSingleOp(context, 'old', this.config.readOld.bind(this.config));
-    const fromNew = await this.doSingleOp(context, 'new', this.config.readNew.bind(this.config));
+    const fromOld = await this._doSingleOp(context, 'old', this._config.readOld.bind(this._config));
+    const fromNew = await this._doSingleOp(context, 'new', this._config.readNew.bind(this._config));
     return { fromOld, fromNew };
   }
 
-  private async readConcurrent(
+  private async _readConcurrent(
     context: MigrationContext<TMigrationReadInput>,
   ): Promise<MultipleReadResult<TMigrationRead>> {
-    const fromOldPromise = this.doSingleOp(context, 'old', this.config.readOld.bind(this.config));
-    const fromNewPromise = this.doSingleOp(context, 'new', this.config.readNew.bind(this.config));
+    const fromOldPromise = this._doSingleOp(
+      context,
+      'old',
+      this._config.readOld.bind(this._config),
+    );
+    const fromNewPromise = this._doSingleOp(
+      context,
+      'new',
+      this._config.readNew.bind(this._config),
+    );
     const [fromOld, fromNew] = await Promise.all([fromOldPromise, fromNewPromise]);
 
     return { fromOld, fromNew };
   }
 
-  private async readSequentialRandom(
+  private async _readSequentialRandom(
     context: MigrationContext<TMigrationReadInput>,
   ): Promise<MultipleReadResult<TMigrationRead>> {
     // This number is not used for a purpose requiring cryptographic security.
@@ -306,49 +354,57 @@ class Migration<
 
     // Effectively flip a coin and do it on one order or the other.
     if (randomIndex === 0) {
-      const fromOld = await this.doSingleOp(context, 'old', this.config.readOld.bind(this.config));
-      const fromNew = await this.doSingleOp(context, 'new', this.config.readNew.bind(this.config));
+      const fromOld = await this._doSingleOp(
+        context,
+        'old',
+        this._config.readOld.bind(this._config),
+      );
+      const fromNew = await this._doSingleOp(
+        context,
+        'new',
+        this._config.readNew.bind(this._config),
+      );
       return { fromOld, fromNew };
     }
-    const fromNew = await this.doSingleOp(context, 'new', this.config.readNew.bind(this.config));
-    const fromOld = await this.doSingleOp(context, 'old', this.config.readOld.bind(this.config));
+    const fromNew = await this._doSingleOp(context, 'new', this._config.readNew.bind(this._config));
+    const fromOld = await this._doSingleOp(context, 'old', this._config.readOld.bind(this._config));
     return { fromOld, fromNew };
   }
 
-  private async doRead(
+  private async _doRead(
     context: MigrationContext<TMigrationReadInput>,
   ): Promise<MultipleReadResult<TMigrationRead>> {
-    if (this.execution?.type === LDExecution.Serial) {
-      const serial = this.execution as LDSerialExecution;
+    if (this._execution?.type === LDExecution.Serial) {
+      const serial = this._execution as LDSerialExecution;
       if (serial.ordering === LDExecutionOrdering.Fixed) {
-        return this.readSequentialFixed(context);
+        return this._readSequentialFixed(context);
       }
-      return this.readSequentialRandom(context);
+      return this._readSequentialRandom(context);
     }
-    return this.readConcurrent(context);
+    return this._readConcurrent(context);
   }
 
-  private async doSingleOp<TInput, TOutput>(
+  private async _doSingleOp<TInput, TOutput>(
     context: MigrationContext<TInput>,
     origin: LDMigrationOrigin,
     method: (payload?: TInput) => Promise<LDMethodResult<TOutput>>,
   ): Promise<LDMigrationResult<TOutput>> {
     context.tracker.invoked(origin);
-    const res = await this.trackLatency(context.tracker, origin, () =>
+    const res = await this._trackLatency(context.tracker, origin, () =>
       safeCall(() => method(context.payload)),
     );
-    if (!res.success && this.errorTracking) {
+    if (!res.success && this._errorTracking) {
       context.tracker.error(origin);
     }
     return { origin, ...res };
   }
 
-  private async trackLatency<TResult>(
+  private async _trackLatency<TResult>(
     tracker: LDMigrationTracker,
     origin: LDMigrationOrigin,
     method: () => Promise<TResult>,
   ): Promise<TResult> {
-    if (!this.latencyTracking) {
+    if (!this._latencyTracking) {
       return method();
     }
     let start;

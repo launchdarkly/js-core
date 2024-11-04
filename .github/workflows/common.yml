@@ -25,3 +25,12 @@ jobs:
         with:
           workspace_name: '@launchdarkly/js-sdk-common'
           workspace_path: packages/shared/common
+      - name: Check package size
+        if: github.event_name == 'pull_request'
+        uses: ./actions/package-size
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          target_file: 'packages/shared/common/dist/esm/index.mjs'
+          package_name: '@launchdarkly/js-sdk-common'
+          pr_number: ${{ github.event.number }}
+          size_limit: 21000

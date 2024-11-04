@@ -1,7 +1,6 @@
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
-
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
+import { createBasicPlatform } from './createBasicPlatform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
 
@@ -16,7 +15,7 @@ describe('given an LDClient with test data', () => {
     logger = new TestLogger();
     td = new TestData();
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-all-flags-test-data',
       createBasicPlatform(),
       {
         updateProcessor: td.getFactory(),
@@ -269,6 +268,60 @@ describe('given an LDClient with test data', () => {
       done();
     });
   });
+
+  it('includes prerequisites in flag meta', async () => {
+    await td.update(td.flag('is-prereq').valueForAll(true));
+    await td.usePreconfiguredFlag({
+      key: 'has-prereq-depth-1',
+      on: true,
+      prerequisites: [
+        {
+          key: 'is-prereq',
+          variation: 0,
+        },
+      ],
+      fallthrough: {
+        variation: 0,
+      },
+      offVariation: 1,
+      variations: [true, false],
+      clientSideAvailability: {
+        usingMobileKey: true,
+        usingEnvironmentId: true,
+      },
+      clientSide: true,
+      version: 4,
+    });
+
+    const state = await client.allFlagsState(defaultUser, {
+      withReasons: true,
+      detailsOnlyForTrackedFlags: false,
+    });
+    expect(state.valid).toEqual(true);
+    expect(state.allValues()).toEqual({ 'is-prereq': true, 'has-prereq-depth-1': true });
+    expect(state.toJSON()).toEqual({
+      'is-prereq': true,
+      'has-prereq-depth-1': true,
+      $flagsState: {
+        'is-prereq': {
+          variation: 0,
+          reason: {
+            kind: 'FALLTHROUGH',
+          },
+          version: 1,
+        },
+        'has-prereq-depth-1': {
+          variation: 0,
+          prerequisites: ['is-prereq'],
+          reason: {
+            kind: 'FALLTHROUGH',
+          },
+          version: 4,
+        },
+      },
+      $valid: true,
+    });
+  });
 });
 
 describe('given an offline client', () => {
@@ -280,7 +333,7 @@ describe('given an offline client', () => {
     logger = new TestLogger();
     td = new TestData();
     client = new LDClientImpl(
-      'sdk-key',
+      'sdk-key-all-flags-offline',
       createBasicPlatform(),
       {
         offline: true,

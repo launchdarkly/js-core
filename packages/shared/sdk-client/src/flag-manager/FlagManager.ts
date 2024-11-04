@@ -8,14 +8,59 @@ import { ItemDescriptor } from './ItemDescriptor';
 
 /**
  * Top level manager of flags for the client. LDClient should be using this
- * class and not any of the specific instances managed by it. Updates from
+ * interface and not any of the specific instances managed by it. Updates from
  * data sources should be directed to the [init] and [upsert] methods of this
- * class.
+ * interface.
  */
-export default class FlagManager {
-  private flagStore = new DefaultFlagStore();
-  private flagUpdater: FlagUpdater;
-  private flagPersistence: FlagPersistence;
+export interface FlagManager {
+  /**
+   * Attempts to get a flag by key from the current flags.
+   */
+  get(key: string): ItemDescriptor | undefined;
+
+  /**
+   * Gets all the current flags.
+   */
+  getAll(): { [key: string]: ItemDescriptor };
+
+  /**
+   * Initializes the flag manager with data from a data source.
+   * Persistence initialization is handled by {@link FlagPersistence}
+   */
+  init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void>;
+
+  /**
+   * Attempt to update a flag. If the flag is for the wrong context, or
+   * it is of an older version, then an update will not be performed.
+   */
+  upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean>;
+
+  /**
+   * Asynchronously load cached values from persistence.
+   */
+  loadCached(context: Context): Promise<boolean>;
+
+  /**
+   * Update in-memory storage with the specified flags, but do not persistent them to cache
+   * storage.
+   */
+  setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
+
+  /**
+   * Register a flag change callback.
+   */
+  on(callback: FlagsChangeCallback): void;
+
+  /**
+   * Unregister a flag change callback.
+   */
+  off(callback: FlagsChangeCallback): void;
+}
+
+export default class DefaultFlagManager implements FlagManager {
+  private _flagStore = new DefaultFlagStore();
+  private _flagUpdater: FlagUpdater;
+  private _flagPersistencePromise: Promise<FlagPersistence>;
 
   /**
    * @param platform implementation of various platform provided functionality
@@ -29,70 +74,69 @@ export default class FlagManager {
     sdkKey: string,
     maxCachedContexts: number,
     logger: LDLogger,
-    private readonly timeStamper: () => number = () => Date.now(),
+    timeStamper: () => number = () => Date.now(),
   ) {
-    const environmentNamespace = namespaceForEnvironment(platform.crypto, sdkKey);
-
-    this.flagUpdater = new FlagUpdater(this.flagStore, logger);
-    this.flagPersistence = new FlagPersistence(
+    this._flagUpdater = new FlagUpdater(this._flagStore, logger);
+    this._flagPersistencePromise = this._initPersistence(
       platform,
-      environmentNamespace,
+      sdkKey,
       maxCachedContexts,
-      this.flagStore,
-      this.flagUpdater,
       logger,
       timeStamper,
     );
   }
 
-  /**
-   * Attempts to get a flag by key from the current flags.
-   */
+  private async _initPersistence(
+    platform: Platform,
+    sdkKey: string,
+    maxCachedContexts: number,
+    logger: LDLogger,
+    timeStamper: () => number = () => Date.now(),
+  ): Promise<FlagPersistence> {
+    const environmentNamespace = await namespaceForEnvironment(platform.crypto, sdkKey);
+
+    return new FlagPersistence(
+      platform,
+      environmentNamespace,
+      maxCachedContexts,
+      this._flagStore,
+      this._flagUpdater,
+      logger,
+      timeStamper,
+    );
+  }
+
   get(key: string): ItemDescriptor | undefined {
-    return this.flagStore.get(key);
+    return this._flagStore.get(key);
   }
 
-  /**
-   * Gets all the current flags.
-   */
   getAll(): { [key: string]: ItemDescriptor } {
-    return this.flagStore.getAll();
+    return this._flagStore.getAll();
   }
 
-  /**
-   * Initializes the flag manager with data from a data source.
-   * Persistence initialization is handled by {@link FlagPersistence}
-   */
+  setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void {
+    // Bypasses the persistence as we do not want to put these flags into any cache.
+    // Generally speaking persistence likely *SHOULD* be disabled when using bootstrap.
+    this._flagUpdater.init(context, newFlags);
+  }
+
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
-    return this.flagPersistence.init(context, newFlags);
+    return (await this._flagPersistencePromise).init(context, newFlags);
   }
 
-  /**
-   * Attempt to update a flag. If the flag is for the wrong context, or
-   * it is of an older version, then an update will not be performed.
-   */
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
-    return this.flagPersistence.upsert(context, key, item);
+    return (await this._flagPersistencePromise).upsert(context, key, item);
   }
 
-  /**
-   * Asynchronously load cached values from persistence.
-   */
   async loadCached(context: Context): Promise<boolean> {
-    return this.flagPersistence.loadCached(context);
+    return (await this._flagPersistencePromise).loadCached(context);
   }
 
-  /**
-   * Register a flag change callback.
-   */
   on(callback: FlagsChangeCallback): void {
-    this.flagUpdater.on(callback);
+    this._flagUpdater.on(callback);
   }
 
-  /**
-   * Unregister a flag change callback.
-   */
   off(callback: FlagsChangeCallback): void {
-    this.flagUpdater.off(callback);
+    this._flagUpdater.off(callback);
   }
 }

@@ -76,61 +76,61 @@ export interface ConnectionManagerConfig {
  * @internal
  */
 export class ConnectionManager {
-  private applicationState: ApplicationState = ApplicationState.Foreground;
-  private networkState: NetworkState = NetworkState.Available;
-  private offline: boolean = false;
-  private currentConnectionMode: ConnectionMode;
+  private _applicationState: ApplicationState = ApplicationState.Foreground;
+  private _networkState: NetworkState = NetworkState.Available;
+  private _offline: boolean = false;
+  private _currentConnectionMode: ConnectionMode;
 
   constructor(
-    private readonly logger: LDLogger,
-    private readonly config: ConnectionManagerConfig,
-    private readonly destination: ConnectionDestination,
-    private readonly detector: StateDetector,
+    private readonly _logger: LDLogger,
+    private readonly _config: ConnectionManagerConfig,
+    private readonly _destination: ConnectionDestination,
+    private readonly _detector: StateDetector,
   ) {
-    this.currentConnectionMode = config.initialConnectionMode;
-    if (config.automaticBackgroundHandling) {
-      detector.setApplicationStateListener((state) => {
-        this.applicationState = state;
-        this.handleState();
+    this._currentConnectionMode = _config.initialConnectionMode;
+    if (_config.automaticBackgroundHandling) {
+      _detector.setApplicationStateListener((state) => {
+        this._applicationState = state;
+        this._handleState();
       });
     }
-    if (config.automaticNetworkHandling) {
-      detector.setNetworkStateListener((state) => {
-        this.networkState = state;
-        this.handleState();
+    if (_config.automaticNetworkHandling) {
+      _detector.setNetworkStateListener((state) => {
+        this._networkState = state;
+        this._handleState();
       });
     }
   }
 
   public setOffline(offline: boolean): void {
-    this.offline = offline;
-    this.handleState();
+    this._offline = offline;
+    this._handleState();
   }
 
   public setConnectionMode(mode: ConnectionMode) {
-    this.currentConnectionMode = mode;
-    this.handleState();
+    this._currentConnectionMode = mode;
+    this._handleState();
   }
 
   public close() {
-    this.detector.stopListening();
+    this._detector.stopListening();
   }
 
-  private handleState(): void {
-    this.logger.debug(`Handling state: ${this.applicationState}:${this.networkState}`);
+  private _handleState(): void {
+    this._logger.debug(`Handling state: ${this._applicationState}:${this._networkState}`);
 
-    switch (this.networkState) {
+    switch (this._networkState) {
       case NetworkState.Unavailable:
-        this.destination.setNetworkAvailability(false);
+        this._destination.setNetworkAvailability(false);
         break;
       case NetworkState.Available:
-        this.destination.setNetworkAvailability(true);
-        switch (this.applicationState) {
+        this._destination.setNetworkAvailability(true);
+        switch (this._applicationState) {
           case ApplicationState.Foreground:
-            this.setForegroundAvailable();
+            this._setForegroundAvailable();
             break;
           case ApplicationState.Background:
-            this.setBackgroundAvailable();
+            this._setBackgroundAvailable();
             break;
           default:
             break;
@@ -141,25 +141,25 @@ export class ConnectionManager {
     }
   }
 
-  private setForegroundAvailable(): void {
-    if (this.offline) {
-      this.destination.setConnectionMode('offline');
+  private _setForegroundAvailable(): void {
+    if (this._offline) {
+      this._destination.setConnectionMode('offline');
       // Don't attempt to flush. If the user wants to flush when entering offline
       // mode, then they can do that directly.
-      this.destination.setEventSendingEnabled(false, false);
+      this._destination.setEventSendingEnabled(false, false);
       return;
     }
 
     // Currently the foreground mode will always be whatever the last active
     // connection mode was.
-    this.destination.setConnectionMode(this.currentConnectionMode);
-    this.destination.setEventSendingEnabled(true, false);
+    this._destination.setConnectionMode(this._currentConnectionMode);
+    this._destination.setEventSendingEnabled(true, false);
   }
 
-  private setBackgroundAvailable(): void {
-    if (!this.config.runInBackground) {
-      this.destination.setConnectionMode('offline');
-      this.destination.setEventSendingEnabled(false, true);
+  private _setBackgroundAvailable(): void {
+    if (!this._config.runInBackground) {
+      this._destination.setConnectionMode('offline');
+      this._destination.setEventSendingEnabled(false, true);
       return;
     }
 
@@ -167,6 +167,6 @@ export class ConnectionManager {
 
     // If connections in the background are allowed, then use the same mode
     // as is configured for the foreground.
-    this.setForegroundAvailable();
+    this._setForegroundAvailable();
   }
 }

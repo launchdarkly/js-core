@@ -9,9 +9,9 @@ import {
   Hasher,
   LDContext,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import Bucketer from '../../src/evaluation/Bucketer';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 

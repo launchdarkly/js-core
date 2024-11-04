@@ -18,7 +18,7 @@ export interface FileDataSourceFactoryConfig {
  */
 
 export default class FileDataSourceFactory {
-  constructor(private readonly options: FileDataSourceOptions) {}
+  constructor(private readonly _options: FileDataSourceOptions) {}
 
   /**
    * Method for creating instances of the file data source. This method is intended to be used
@@ -37,10 +37,10 @@ export default class FileDataSourceFactory {
     errorHandler?: FileDataSourceErrorHandler,
   ) {
     const updatedOptions: FileDataSourceOptions = {
-      paths: this.options.paths,
-      autoUpdate: this.options.autoUpdate,
-      logger: this.options.logger || ldClientContext.basicConfiguration.logger,
-      yamlParser: this.options.yamlParser,
+      paths: this._options.paths,
+      autoUpdate: this._options.autoUpdate,
+      logger: this._options.logger || ldClientContext.basicConfiguration.logger,
+      yamlParser: this._options.yamlParser,
     };
     return new FileDataSource(
       updatedOptions,

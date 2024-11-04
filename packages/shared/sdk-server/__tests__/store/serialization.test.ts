@@ -1,11 +1,14 @@
+import { AttributeReference } from '@launchdarkly/js-sdk-common';
+
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import {
   deserializeAll,
   deserializeDelete,
   deserializePatch,
+  nullReplacer,
   replacer,
-  reviver,
+  serializeFlag,
   serializeSegment,
 } from '../../src/store/serialization';
 
@@ -152,6 +155,38 @@ const segmentWithBucketBy = {
   deleted: false,
 };
 
+const flagWithNullInJsonVariation = {
+  key: 'flagName',
+  on: true,
+  fallthrough: { variation: 1 },
+  variations: [[true, null, 'potato'], [null, null], { null: null }, { arr: [null] }],
+  version: 1,
+};
+
+const flagWithManyNulls = {
+  key: 'test-after-value1',
+  on: true,
+  rules: [
+    {
+      variation: 0,
+      id: 'ruleid',
+      clauses: [
+        {
+          attribute: 'attrname',
+          op: 'after',
+          values: ['not valid'],
+          negate: null,
+        },
+      ],
+      trackEvents: null,
+    },
+  ],
+  offVariation: null,
+  fallthrough: { variation: 1 },
+  variations: [true, false],
+  version: 1,
+};
+
 function makeAllData(flag?: any, segment?: any): any {
   const allData: any = {
     data: {
@@ -239,6 +274,42 @@ describe('when deserializing all data', () => {
     const ref = parsed?.data.flags.flagName.rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
+
+  it('does not replace null in Objects or array JSON variations', () => {
+    const jsonString = makeSerializedAllData(flagWithNullInJsonVariation);
+    const parsed = deserializeAll(jsonString);
+
+    expect(parsed?.data.flags.flagName.variations).toStrictEqual(
+      flagWithNullInJsonVariation.variations,
+    );
+  });
+
+  it('removes null values outside variations', () => {
+    const jsonString = makeSerializedAllData(flagWithManyNulls);
+    const parsed = deserializeAll(jsonString);
+
+    expect(parsed?.data.flags.flagName).toStrictEqual({
+      key: 'test-after-value1',
+      on: true,
+      rules: [
+        {
+          variation: 0,
+          id: 'ruleid',
+          clauses: [
+            {
+              attribute: 'attrname',
+              attributeReference: new AttributeReference('attrname'),
+              op: 'after',
+              values: ['not valid'],
+            },
+          ],
+        },
+      ],
+      fallthrough: { variation: 1 },
+      variations: [true, false],
+      version: 1,
+    });
+  });
 });
 
 describe('when deserializing patch data', () => {
@@ -290,9 +361,45 @@ describe('when deserializing patch data', () => {
     const ref = (parsed?.data as Flag).rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
+
+  it('does not replace null in Objects or array JSON variations', () => {
+    const jsonString = makeSerializedPatchData(flagWithNullInJsonVariation);
+    const parsed = deserializePatch(jsonString);
+
+    expect((parsed?.data as Flag)?.variations).toStrictEqual(
+      flagWithNullInJsonVariation.variations,
+    );
+  });
+
+  it('removes null values outside variations', () => {
+    const jsonString = makeSerializedPatchData(flagWithManyNulls);
+    const parsed = deserializePatch(jsonString);
+
+    expect(parsed?.data as Flag).toStrictEqual({
+      key: 'test-after-value1',
+      on: true,
+      rules: [
+        {
+          variation: 0,
+          id: 'ruleid',
+          clauses: [
+            {
+              attribute: 'attrname',
+              attributeReference: new AttributeReference('attrname'),
+              op: 'after',
+              values: ['not valid'],
+            },
+          ],
+        },
+      ],
+      fallthrough: { variation: 1 },
+      variations: [true, false],
+      version: 1,
+    });
+  });
 });
 
-it('removes null elements', () => {
+it('removes null elements that are not part of arrays', () => {
   const baseData = {
     a: 'b',
     b: 'c',
@@ -306,8 +413,47 @@ it('removes null elements', () => {
   polluted.c.f = null;
 
   const stringPolluted = JSON.stringify(polluted);
-  const parsed = JSON.parse(stringPolluted, reviver);
+  const parsed = JSON.parse(stringPolluted);
+  nullReplacer(parsed);
   expect(parsed).toStrictEqual(baseData);
+});
+
+it('does not remove null in arrays', () => {
+  const data = {
+    a: ['b', null, { arr: [null] }],
+    c: {
+      d: ['e', null, { arr: [null] }],
+    },
+  };
+
+  const parsed = JSON.parse(JSON.stringify(data));
+  nullReplacer(parsed);
+  expect(parsed).toStrictEqual(data);
+});
+
+it('does remove null from objects that are inside of arrays', () => {
+  const data = {
+    a: ['b', null, { null: null, notNull: true }],
+    c: {
+      d: ['e', null, { null: null, notNull: true }],
+    },
+  };
+
+  const parsed = JSON.parse(JSON.stringify(data));
+  nullReplacer(parsed);
+  expect(parsed).toStrictEqual({
+    a: ['b', null, { notNull: true }],
+    c: {
+      d: ['e', null, { notNull: true }],
+    },
+  });
+});
+
+it('can handle attempting to replace nulls for an undefined or null value', () => {
+  expect(() => {
+    nullReplacer(null);
+    nullReplacer(undefined);
+  }).not.toThrow();
 });
 
 it.each([
@@ -449,4 +595,12 @@ it('serialization converts sets back to arrays for includedContexts/excludedCont
   expect(jsonDeserialized.excludedContexts[0].values).toEqual(excluded);
   expect(jsonDeserialized.includedContexts[0].generated_valuesSet).toBeUndefined();
   expect(jsonDeserialized.excludedContexts[0].generated_valuesSet).toBeUndefined();
+});
+
+it('serializes null values without issue', () => {
+  const jsonString = makeSerializedAllData(flagWithNullInJsonVariation);
+  const parsed = deserializeAll(jsonString);
+  const serialized = serializeFlag(parsed!.data.flags.flagName);
+  // After serialization nulls should still be there, and any memo generated items should be gone.
+  expect(JSON.parse(serialized)).toEqual(flagWithNullInJsonVariation);
 });

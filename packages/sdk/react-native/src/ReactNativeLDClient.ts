@@ -3,12 +3,17 @@ import {
   AutoEnvAttributes,
   base64UrlEncode,
   BasicLogger,
+  type Configuration,
   ConnectionMode,
+  Encoding,
+  FlagManager,
   internal,
   LDClientImpl,
-  type LDContext,
+  LDEmitter,
+  LDHeaders,
 } from '@launchdarkly/js-client-sdk-common';
 
+import MobileDataManager from './MobileDataManager';
 import validateOptions, { filterToBaseOptions } from './options';
 import createPlatform from './platform';
 import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
@@ -29,7 +34,7 @@ import RNStateDetector from './RNStateDetector';
  * ```
  */
 export default class ReactNativeLDClient extends LDClientImpl {
-  private connectionManager: ConnectionManager;
+  private _connectionManager: ConnectionManager;
   /**
    * Creates an instance of the LaunchDarkly client.
    *
@@ -57,18 +62,63 @@ export default class ReactNativeLDClient extends LDClientImpl {
     };
 
     const validatedRnOptions = validateOptions(options, logger);
+    const platform = createPlatform(logger, validatedRnOptions.storage);
 
     super(
       sdkKey,
       autoEnvAttributes,
-      createPlatform(logger, validatedRnOptions.storage),
+      platform,
       { ...filterToBaseOptions(options), logger },
+      (
+        flagManager: FlagManager,
+        configuration: Configuration,
+        baseHeaders: LDHeaders,
+        emitter: LDEmitter,
+        diagnosticsManager?: internal.DiagnosticsManager,
+      ) =>
+        new MobileDataManager(
+          platform,
+          flagManager,
+          sdkKey,
+          configuration,
+          validatedRnOptions,
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/msdk/evalx/context`;
+            },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
+              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
+              throw new Error('Ping for polling unsupported.');
+            },
+          }),
+          () => ({
+            pathGet(encoding: Encoding, _plainContextString: string): string {
+              return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+            },
+            pathReport(_encoding: Encoding, _plainContextString: string): string {
+              return `/meval`;
+            },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              return `/mping`;
+            },
+          }),
+          baseHeaders,
+          emitter,
+          diagnosticsManager,
+        ),
       internalOptions,
     );
 
+    this.setEventSendingEnabled(!this.isOffline(), false);
+
+    const dataManager = this.dataManager as MobileDataManager;
     const destination: ConnectionDestination = {
       setNetworkAvailability: (available: boolean) => {
-        this.setNetworkAvailability(available);
+        dataManager.setNetworkAvailability(available);
       },
       setEventSendingEnabled: (enabled: boolean, flush: boolean) => {
         this.setEventSendingEnabled(enabled, flush);
@@ -76,12 +126,12 @@ export default class ReactNativeLDClient extends LDClientImpl {
       setConnectionMode: async (mode: ConnectionMode) => {
         // Pass the connection mode to the base implementation.
         // The RN implementation will pass the connection mode through the connection manager.
-        this.baseSetConnectionMode(mode);
+        dataManager.setConnectionMode(mode);
       },
     };
 
     const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
-    this.connectionManager = new ConnectionManager(
+    this._connectionManager = new ConnectionManager(
       logger,
       {
         initialConnectionMode,
@@ -94,28 +144,24 @@ export default class ReactNativeLDClient extends LDClientImpl {
     );
   }
 
-  private baseSetConnectionMode(mode: ConnectionMode) {
-    // Jest had problems with calls to super from nested arrow functions, so this method proxies the call.
-    super.setConnectionMode(mode);
-  }
-
-  private encodeContext(context: LDContext) {
-    return base64UrlEncode(JSON.stringify(context), this.platform.encoding!);
-  }
-
-  override createStreamUriPath(context: LDContext) {
-    return `/meval/${this.encodeContext(context)}`;
-  }
-
-  override createPollUriPath(context: LDContext): string {
-    return `/msdk/evalx/contexts/${this.encodeContext(context)}`;
-  }
-
-  override async setConnectionMode(mode: ConnectionMode): Promise<void> {
+  async setConnectionMode(mode: ConnectionMode): Promise<void> {
     // Set the connection mode before setting offline, in case there is any mode transition work
     // such as flushing on entering the background.
-    this.connectionManager.setConnectionMode(mode);
+    this._connectionManager.setConnectionMode(mode);
     // For now the data source connection and the event processing state are connected.
-    this.connectionManager.setOffline(mode === 'offline');
+    this._connectionManager.setOffline(mode === 'offline');
+  }
+
+  /**
+   * Gets the SDK connection mode.
+   */
+  getConnectionMode(): ConnectionMode {
+    const dataManager = this.dataManager as MobileDataManager;
+    return dataManager.getConnectionMode();
+  }
+
+  isOffline() {
+    const dataManager = this.dataManager as MobileDataManager;
+    return dataManager.getConnectionMode() === 'offline';
   }
 }

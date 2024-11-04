@@ -86,6 +86,61 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from ^2.2.1 to ^2.2.2
 
+## [1.3.0](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.2.1...akamai-edgeworker-sdk-common-v1.3.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.8.0 to ^2.9.0
+
+## [1.2.1](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.2.0...akamai-edgeworker-sdk-common-v1.2.1) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.7.0 to ^2.8.0
+
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.1.15...akamai-edgeworker-sdk-common-v1.2.0) (2024-09-26)
+
+
+### Features
+
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.6.1 to ^2.7.0
+
+## [1.1.15](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.1.14...akamai-edgeworker-sdk-common-v1.1.15) (2024-09-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.6.0 to ^2.6.1
+
+## [1.1.14](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.1.13...akamai-edgeworker-sdk-common-v1.1.14) (2024-09-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.5.0 to ^2.6.0
+
 ## [1.1.13](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.1.12...akamai-edgeworker-sdk-common-v1.1.13) (2024-08-28)
 
 

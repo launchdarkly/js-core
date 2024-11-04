@@ -14,17 +14,17 @@ const DEFAULT_PREFIX = 'launchdarkly';
  * @internal
  */
 export default class RedisClientState {
-  private connected: boolean = false;
+  private _connected: boolean = false;
 
-  private attempt: number = 0;
+  private _attempt: number = 0;
 
-  private initialConnection: boolean = true;
+  private _initialConnection: boolean = true;
 
-  private readonly client: Redis;
+  private readonly _client: Redis;
 
-  private readonly owned: boolean;
+  private readonly _owned: boolean;
 
-  private readonly base_prefix: string;
+  private readonly _basePrefix: string;
 
   /**
    * Construct a state with the given client.
@@ -35,52 +35,52 @@ export default class RedisClientState {
    */
   constructor(
     options?: LDRedisOptions,
-    private readonly logger?: LDLogger,
+    private readonly _logger?: LDLogger,
   ) {
     if (options?.client) {
-      this.client = options.client;
-      this.owned = false;
+      this._client = options.client;
+      this._owned = false;
     } else if (options?.redisOpts) {
-      this.client = new Redis(options.redisOpts);
-      this.owned = true;
+      this._client = new Redis(options.redisOpts);
+      this._owned = true;
     } else {
-      this.client = new Redis();
-      this.owned = true;
+      this._client = new Redis();
+      this._owned = true;
     }
 
-    this.base_prefix = options?.prefix || DEFAULT_PREFIX;
+    this._basePrefix = options?.prefix || DEFAULT_PREFIX;
 
     // If the client is not owned, then it should already be connected.
-    this.connected = !this.owned;
+    this._connected = !this._owned;
     // We don't want to log a message on the first connection, only when reconnecting.
-    this.initialConnection = !this.connected;
+    this._initialConnection = !this._connected;
 
-    const { client } = this;
+    const { _client: client } = this;
 
     client.on('error', (err) => {
-      logger?.error(`Redis error - ${err}`);
+      _logger?.error(`Redis error - ${err}`);
     });
 
     client.on('reconnecting', (delay: number) => {
-      this.attempt += 1;
-      logger?.info(
-        `Attempting to reconnect to redis (attempt # ${this.attempt}, delay: ${delay}ms)`,
+      this._attempt += 1;
+      _logger?.info(
+        `Attempting to reconnect to redis (attempt # ${this._attempt}, delay: ${delay}ms)`,
       );
     });
 
     client.on('connect', () => {
-      this.attempt = 0;
+      this._attempt = 0;
 
-      if (!this.initialConnection) {
-        this?.logger?.warn('Reconnecting to Redis');
+      if (!this._initialConnection) {
+        this?._logger?.warn('Reconnecting to Redis');
       }
 
-      this.initialConnection = false;
-      this.connected = true;
+      this._initialConnection = false;
+      this._connected = true;
     });
 
     client.on('end', () => {
-      this.connected = false;
+      this._connected = false;
     });
   }
 
@@ -90,7 +90,7 @@ export default class RedisClientState {
    * @returns True if currently connected.
    */
   isConnected(): boolean {
-    return this.connected;
+    return this._connected;
   }
 
   /**
@@ -99,7 +99,7 @@ export default class RedisClientState {
    * @returns True if using the initial connection.
    */
   isInitialConnection(): boolean {
-    return this.initialConnection;
+    return this._initialConnection;
   }
 
   /**
@@ -108,17 +108,17 @@ export default class RedisClientState {
    * @returns The redis client.
    */
   getClient(): Redis {
-    return this.client;
+    return this._client;
   }
 
   /**
    * If the client is owned, then this will 'quit' the client.
    */
   close() {
-    if (this.owned) {
-      this.client.quit().catch((err) => {
+    if (this._owned) {
+      this._client.quit().catch((err) => {
         // Not any action that can be taken for an error on quit.
-        this.logger?.debug('Error closing ioredis client:', err);
+        this._logger?.debug('Error closing ioredis client:', err);
       });
     }
   }
@@ -129,6 +129,6 @@ export default class RedisClientState {
    * @returns The prefixed key.
    */
   prefixedKey(key: string): string {
-    return `${this.base_prefix}:${key}`;
+    return `${this._basePrefix}:${key}`;
   }
 }
