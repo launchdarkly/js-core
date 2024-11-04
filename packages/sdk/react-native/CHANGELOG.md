@@ -1,5 +1,76 @@
 # Changelog
 
+## [10.9.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.0...react-native-client-sdk-v10.9.1) (2024-10-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.10.0 to 1.11.0
+
+## [10.9.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.8.0...react-native-client-sdk-v10.9.0) (2024-10-17)
+
+
+### Features
+
+* Add support for inspectors. ([#625](https://github.com/launchdarkly/js-core/issues/625)) ([a986478](https://github.com/launchdarkly/js-core/commit/a986478ed8e39d0f529ca6adec0a09b484421390))
+* adds ping stream support ([#624](https://github.com/launchdarkly/js-core/issues/624)) ([dee53af](https://github.com/launchdarkly/js-core/commit/dee53af9312b74a70b748d49b2d2911d65333cf3))
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.9.0 to 1.10.0
+
+## [10.8.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.7.0...react-native-client-sdk-v10.8.0) (2024-10-09)
+
+
+### Features
+
+* Add support for hooks. ([#605](https://github.com/launchdarkly/js-core/issues/605)) ([04d347b](https://github.com/launchdarkly/js-core/commit/04d347b25e01015134a2545be22bfd8b1d1e85cc))
+
+
+### Bug Fixes
+
+* Ensure client logger is always wrapped in a safe logger. ([#599](https://github.com/launchdarkly/js-core/issues/599)) ([980e4da](https://github.com/launchdarkly/js-core/commit/980e4daaf32864e18f14b1e5e28e308dff0ae94f))
+* Fix base64 encoding of unicode characters. ([#613](https://github.com/launchdarkly/js-core/issues/613)) ([35ec8d1](https://github.com/launchdarkly/js-core/commit/35ec8d1ecc07ddb68f4d02b19e1f238f7ff14df7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.8.0 to 1.9.0
+
+## [10.7.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.6.1...react-native-client-sdk-v10.7.0) (2024-09-26)
+
+
+### Features
+
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+* Add support for js-client-sdk style initialization. ([53f5bb8](https://github.com/launchdarkly/js-core/commit/53f5bb89754ff05405d481a959e75742fbd0d0a9))
+* Adds support for REPORT. ([#575](https://github.com/launchdarkly/js-core/issues/575)) ([916b724](https://github.com/launchdarkly/js-core/commit/916b72409b63abdf350e70cca41331c4204b6e95))
+* Refactor data source connection handling.  ([53f5bb8](https://github.com/launchdarkly/js-core/commit/53f5bb89754ff05405d481a959e75742fbd0d0a9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.7.0 to 1.8.0
+
+## [10.6.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.6.0...react-native-client-sdk-v10.6.1) (2024-09-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.6.0 to 1.7.0
+
 ## [10.6.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.5.1...react-native-client-sdk-v10.6.0) (2024-08-28)
 
 

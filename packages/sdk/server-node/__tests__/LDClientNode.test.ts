@@ -1,12 +1,16 @@
-import { LDContext } from '@launchdarkly/js-server-sdk-common';
-import { createLogger } from '@launchdarkly/private-js-mocks';
+import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { init } from '../src';
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 it('fires ready event in offline mode', (done) => {

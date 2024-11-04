@@ -3,18 +3,7 @@ import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { type LDOptions } from '../api';
 
-class ConnectionModeValidator implements TypeValidator {
-  is(u: unknown): boolean {
-    return u === 'offline' || u === 'streaming' || u === 'polling';
-  }
-
-  getType(): string {
-    return `offline | streaming | polling`;
-  }
-}
-
 const validators: Record<keyof LDOptions, TypeValidator> = {
-  initialConnectionMode: new ConnectionModeValidator(),
   logger: TypeValidators.Object,
   maxCachedContexts: TypeValidators.numberWithMin(0),
 
@@ -35,12 +24,16 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
 
   pollInterval: TypeValidators.numberWithMin(30),
 
+  useReport: TypeValidators.Boolean,
+
   privateAttributes: TypeValidators.StringArray,
 
   applicationInfo: TypeValidators.Object,
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
   payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
+  hooks: TypeValidators.createTypeArray('Hook[]', {}),
+  inspectors: TypeValidators.createTypeArray('LDInspection', {}),
 };
 
 export default validators;

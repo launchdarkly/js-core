@@ -8,8 +8,12 @@
 [![NPM][browser-sdk-dt-badge]][browser-sdk-npm-link]
 -->
 
+# ⛔️⛔️⛔️⛔️
+
 > [!CAUTION]
-> This library is a beta version and should not be considered ready for production use while this message is visible.
+> This library is a alpha version and should not be considered ready for production use while this message is visible.
+
+# ☝️☝️☝️☝️☝️☝️
 
 <!--
 ## Install

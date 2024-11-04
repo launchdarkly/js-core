@@ -1,15 +1,18 @@
-import { integrations } from '@launchdarkly/js-server-sdk-common';
-import { createLogger } from '@launchdarkly/private-js-mocks';
+import { integrations, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { Context, LDClient } from '../src';
 import LDClientNode from '../src/LDClientNode';
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
-
 describe('given an LDClient with test data', () => {
   let client: LDClient;
   let td: integrations.TestData;

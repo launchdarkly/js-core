@@ -2,6 +2,61 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.7.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.6.1...node-server-sdk-v9.7.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.8.0 to 2.9.0
+
+## [9.6.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.6.0...node-server-sdk-v9.6.1) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.7.0 to 2.8.0
+
+## [9.6.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.4...node-server-sdk-v9.6.0) (2024-09-26)
+
+
+### Features
+
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.6.1 to 2.7.0
+
+## [9.5.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.3...node-server-sdk-v9.5.4) (2024-09-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.6.0 to 2.6.1
+
+## [9.5.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.2...node-server-sdk-v9.5.3) (2024-09-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.5.0 to 2.6.0
+
 ## [9.5.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.1...node-server-sdk-v9.5.2) (2024-08-28)
 
 

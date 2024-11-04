@@ -47,6 +47,38 @@ module.exports = {
     'jest/no-focused-tests': 'error',
     'jest/no-identical-title': 'error',
     'jest/valid-expect': 'error',
+    'no-underscore-dangle': ['error', { allowAfterThis: true }],
+    '@typescript-eslint/naming-convention': [
+      'error',
+      {
+        selector: ['method'],
+        format: ['camelCase'],
+        leadingUnderscore: 'forbid',
+      },
+      {
+        selector: ['method'],
+        format: ['camelCase'],
+        modifiers: ['private'],
+        leadingUnderscore: 'require',
+      },
+      {
+        selector: ['classProperty', 'parameterProperty'],
+        format: ['camelCase'],
+        leadingUnderscore: 'forbid',
+      },
+      {
+        selector: ['classProperty', 'parameterProperty'],
+        modifiers: ['static'],
+        format: ['PascalCase'],
+        leadingUnderscore: 'forbid',
+      },
+      {
+        selector: ['classProperty', 'parameterProperty'],
+        modifiers: ['private'],
+        format: ['camelCase'],
+        leadingUnderscore: 'require',
+      },
+    ],
   },
   globals: {
     BigInt: 'readonly',

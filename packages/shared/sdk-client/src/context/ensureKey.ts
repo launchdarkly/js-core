@@ -31,7 +31,7 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
   const { anonymous, key } = c;
 
   if (anonymous && !key) {
-    const storageKey = namespaceForAnonymousGeneratedContextKey(kind);
+    const storageKey = await namespaceForAnonymousGeneratedContextKey(kind);
     // This mutates a cloned copy of the original context from ensureyKey so this is safe.
     // eslint-disable-next-line no-param-reassign
     c.key = await getOrGenerateKey(storageKey, platform);
@@ -63,7 +63,7 @@ const ensureKeyLegacy = async (c: LDUser, platform: Platform) => {
  * @param context
  * @param platform
  */
-export const ensureKey = async (context: LDContext, platform: Platform) => {
+export const ensureKey = async (context: LDContext, platform: Platform): Promise<LDContext> => {
   const cloned = clone<LDContext>(context);
 
   if (isSingleKind(cloned)) {

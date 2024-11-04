@@ -13,69 +13,69 @@ import { Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
  * @internal
  */
 export default class FileLoader {
-  private watchers: WatchHandle[] = [];
+  private _watchers: WatchHandle[] = [];
 
-  private fileData: Record<string, string> = {};
+  private _fileData: Record<string, string> = {};
 
-  private fileTimestamps: Record<string, number> = {};
+  private _fileTimestamps: Record<string, number> = {};
 
-  private debounceHandle: any;
+  private _debounceHandle: any;
 
   constructor(
-    private readonly filesystem: Filesystem,
-    private readonly paths: string[],
-    private readonly watch: boolean,
-    private readonly callback: (results: { path: string; data: string }[]) => void,
+    private readonly _filesystem: Filesystem,
+    private readonly _paths: string[],
+    private readonly _watch: boolean,
+    private readonly _callback: (results: { path: string; data: string }[]) => void,
   ) {}
 
   /**
    * Load all the files and start watching them if watching is enabled.
    */
   async loadAndWatch() {
-    const promises = this.paths.map(async (path) => {
-      const data = await this.filesystem.readFile(path);
-      const timeStamp = await this.filesystem.getFileTimestamp(path);
+    const promises = this._paths.map(async (path) => {
+      const data = await this._filesystem.readFile(path);
+      const timeStamp = await this._filesystem.getFileTimestamp(path);
       return { data, path, timeStamp };
     });
     // This promise could be rejected, let the caller handle it.
     const results = await Promise.all(promises);
     results.forEach((res) => {
-      this.fileData[res.path] = res.data;
-      this.fileTimestamps[res.path] = res.timeStamp;
+      this._fileData[res.path] = res.data;
+      this._fileTimestamps[res.path] = res.timeStamp;
     });
-    this.callback(results);
+    this._callback(results);
 
     // If we are watching, then setup watchers and notify of any changes.
-    if (this.watch) {
-      this.paths.forEach((path) => {
-        const watcher = this.filesystem.watch(path, async (_: string, updatePath: string) => {
-          const timeStamp = await this.filesystem.getFileTimestamp(updatePath);
+    if (this._watch) {
+      this._paths.forEach((path) => {
+        const watcher = this._filesystem.watch(path, async (_: string, updatePath: string) => {
+          const timeStamp = await this._filesystem.getFileTimestamp(updatePath);
           // The modification time is the same, so we are going to ignore this update.
           // In some implementations watch might be triggered multiple times for a single update.
-          if (timeStamp === this.fileTimestamps[updatePath]) {
+          if (timeStamp === this._fileTimestamps[updatePath]) {
             return;
           }
-          this.fileTimestamps[updatePath] = timeStamp;
-          const data = await this.filesystem.readFile(updatePath);
-          this.fileData[updatePath] = data;
-          this.debounceCallback();
+          this._fileTimestamps[updatePath] = timeStamp;
+          const data = await this._filesystem.readFile(updatePath);
+          this._fileData[updatePath] = data;
+          this._debounceCallback();
         });
-        this.watchers.push(watcher);
+        this._watchers.push(watcher);
       });
     }
   }
 
   close() {
-    this.watchers.forEach((watcher) => watcher.close());
+    this._watchers.forEach((watcher) => watcher.close());
   }
 
-  private debounceCallback() {
+  private _debounceCallback() {
     // If there is a handle, then we have already started the debounce process.
-    if (!this.debounceHandle) {
-      this.debounceHandle = setTimeout(() => {
-        this.debounceHandle = undefined;
-        this.callback(
-          Object.entries(this.fileData).reduce(
+    if (!this._debounceHandle) {
+      this._debounceHandle = setTimeout(() => {
+        this._debounceHandle = undefined;
+        this._callback(
+          Object.entries(this._fileData).reduce(
             (acc: { path: string; data: string }[], [path, data]) => {
               acc.push({ path, data });
               return acc;

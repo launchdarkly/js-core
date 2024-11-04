@@ -43,13 +43,13 @@ import TestDataSource from './TestDataSource';
  * any changes made to the data will propagate to all of the `LDClient`s.
  */
 export default class TestData {
-  private currentFlags: Record<string, Flag> = {};
+  private _currentFlags: Record<string, Flag> = {};
 
-  private currentSegments: Record<string, Segment> = {};
+  private _currentSegments: Record<string, Segment> = {};
 
-  private dataSources: TestDataSource[] = [];
+  private _dataSources: TestDataSource[] = [];
 
-  private flagBuilders: Record<string, TestDataFlagBuilder> = {};
+  private _flagBuilders: Record<string, TestDataFlagBuilder> = {};
 
   /**
    * Get a factory for update processors that will be attached to this TestData instance.
@@ -78,15 +78,15 @@ export default class TestData {
       );
       const newSource = new TestDataSource(
         new AsyncStoreFacade(featureStore),
-        this.currentFlags,
-        this.currentSegments,
+        this._currentFlags,
+        this._currentSegments,
         (tds) => {
-          this.dataSources.splice(this.dataSources.indexOf(tds));
+          this._dataSources.splice(this._dataSources.indexOf(tds));
         },
         listeners,
       );
 
-      this.dataSources.push(newSource);
+      this._dataSources.push(newSource);
       return newSource;
     };
   }
@@ -112,8 +112,8 @@ export default class TestData {
    *
    */
   flag(key: string): TestDataFlagBuilder {
-    if (this.flagBuilders[key]) {
-      return this.flagBuilders[key].clone();
+    if (this._flagBuilders[key]) {
+      return this._flagBuilders[key].clone();
     }
     return new TestDataFlagBuilder(key).booleanFlag();
   }
@@ -136,14 +136,14 @@ export default class TestData {
    */
   update(flagBuilder: TestDataFlagBuilder): Promise<any> {
     const flagKey = flagBuilder.getKey();
-    const oldItem = this.currentFlags[flagKey];
+    const oldItem = this._currentFlags[flagKey];
     const oldVersion = oldItem ? oldItem.version : 0;
     const newFlag = flagBuilder.build(oldVersion + 1);
-    this.currentFlags[flagKey] = newFlag;
-    this.flagBuilders[flagKey] = flagBuilder.clone();
+    this._currentFlags[flagKey] = newFlag;
+    this._flagBuilders[flagKey] = flagBuilder.clone();
 
     return Promise.all(
-      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newFlag)),
+      this._dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newFlag)),
     );
   }
 
@@ -169,13 +169,13 @@ export default class TestData {
     // We need to do things like process attribute reference, and
     // we do not want to modify the passed in value.
     const flagConfig = JSON.parse(JSON.stringify(inConfig));
-    const oldItem = this.currentFlags[flagConfig.key];
+    const oldItem = this._currentFlags[flagConfig.key];
     const newItem = { ...flagConfig, version: oldItem ? oldItem.version + 1 : flagConfig.version };
     processFlag(newItem);
-    this.currentFlags[flagConfig.key] = newItem;
+    this._currentFlags[flagConfig.key] = newItem;
 
     return Promise.all(
-      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newItem)),
+      this._dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newItem)),
     );
   }
 
@@ -198,16 +198,16 @@ export default class TestData {
   usePreconfiguredSegment(inConfig: any): Promise<any> {
     const segmentConfig = JSON.parse(JSON.stringify(inConfig));
 
-    const oldItem = this.currentSegments[segmentConfig.key];
+    const oldItem = this._currentSegments[segmentConfig.key];
     const newItem = {
       ...segmentConfig,
       version: oldItem ? oldItem.version + 1 : segmentConfig.version,
     };
     processSegment(newItem);
-    this.currentSegments[segmentConfig.key] = newItem;
+    this._currentSegments[segmentConfig.key] = newItem;
 
     return Promise.all(
-      this.dataSources.map((impl) => impl.upsert(VersionedDataKinds.Segments, newItem)),
+      this._dataSources.map((impl) => impl.upsert(VersionedDataKinds.Segments, newItem)),
     );
   }
 }

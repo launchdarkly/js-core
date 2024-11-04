@@ -4,7 +4,8 @@ import { ApplicationTags } from '../options';
 
 export type LDHeaders = {
   authorization?: string;
-  'user-agent': string;
+  'user-agent'?: string;
+  'x-launchdarkly-user-agent'?: string;
   'x-launchdarkly-wrapper'?: string;
   'x-launchdarkly-tags'?: string;
 };
@@ -14,11 +15,12 @@ export function defaultHeaders(
   info: Info,
   tags?: ApplicationTags,
   includeAuthorizationHeader: boolean = true,
+  userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent' = 'user-agent',
 ): LDHeaders {
   const { userAgentBase, version, wrapperName, wrapperVersion } = info.sdkData();
 
   const headers: LDHeaders = {
-    'user-agent': `${userAgentBase ?? 'NodeJSClient'}/${version}`,
+    [userAgentHeaderName]: `${userAgentBase ?? 'NodeJSClient'}/${version}`,
   };
 
   // edge sdks sets this to false because they use the clientSideID

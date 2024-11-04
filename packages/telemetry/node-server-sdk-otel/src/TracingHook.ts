@@ -106,8 +106,8 @@ function validateOptions(options?: TracingHookOptions): ValidatedHookOptions {
  * (LaunchDarkly), and the key of the flag being evaluated.
  */
 export default class TracingHook implements integrations.Hook {
-  private readonly options: ValidatedHookOptions;
-  private readonly tracer = trace.getTracer('launchdarkly-client');
+  private readonly _options: ValidatedHookOptions;
+  private readonly _tracer = trace.getTracer('launchdarkly-client');
 
   /**
    * Construct a TracingHook with the given options.
@@ -115,7 +115,7 @@ export default class TracingHook implements integrations.Hook {
    * @param options Options to customize tracing behavior.
    */
   constructor(options?: TracingHookOptions) {
-    this.options = validateOptions(options);
+    this._options = validateOptions(options);
   }
 
   /**
@@ -134,10 +134,10 @@ export default class TracingHook implements integrations.Hook {
     hookContext: integrations.EvaluationSeriesContext,
     data: integrations.EvaluationSeriesData,
   ): integrations.EvaluationSeriesData {
-    if (this.options.spans) {
+    if (this._options.spans) {
       const { canonicalKey } = Context.fromLDContext(hookContext.context);
 
-      const span = this.tracer.startSpan(hookContext.method, undefined, context.active());
+      const span = this._tracer.startSpan(hookContext.method, undefined, context.active());
       span.setAttribute('feature_flag.context.key', canonicalKey);
       span.setAttribute('feature_flag.key', hookContext.flagKey);
 
@@ -163,7 +163,7 @@ export default class TracingHook implements integrations.Hook {
         [FEATURE_FLAG_PROVIDER_ATTR]: 'LaunchDarkly',
         [FEATURE_FLAG_CONTEXT_KEY_ATTR]: Context.fromLDContext(hookContext.context).canonicalKey,
       };
-      if (this.options.includeVariant) {
+      if (this._options.includeVariant) {
         eventAttributes[FEATURE_FLAG_VARIANT_ATTR] = JSON.stringify(detail.value);
       }
       currentTrace.addEvent(FEATURE_FLAG_SCOPE, eventAttributes);

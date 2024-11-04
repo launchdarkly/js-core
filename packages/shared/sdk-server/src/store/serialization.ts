@@ -13,19 +13,6 @@ import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
 // The max size where we use an array instead of a set.
 const TARGET_LIST_ARRAY_CUTOFF = 100;
 
-/**
- * @internal
- */
-export function reviver(this: any, key: string, value: any): any {
-  // Whenever a null is included we want to remove the field.
-  // In this way validation checks do not have to consider null, only undefined.
-  if (value === null) {
-    return undefined;
-  }
-
-  return value;
-}
-
 export interface FlagsAndSegments {
   flags: { [name: string]: Flag };
   segments: { [name: string]: Segment };
@@ -33,6 +20,60 @@ export interface FlagsAndSegments {
 
 export interface AllData {
   data: FlagsAndSegments;
+}
+
+/**
+ * Performs deep removal of null values.
+ *
+ * Does not remove null values from arrays.
+ *
+ * Note: This is a non-recursive implementation for performance and to avoid
+ * potential stack overflows.
+ *
+ * @param target The target to remove null values from.
+ * @param excludeKeys A list of top-level keys to exclude from null removal.
+ */
+export function nullReplacer(target: any, excludeKeys?: string[]): void {
+  const stack: {
+    key: string;
+    value: any;
+    parent: any;
+  }[] = [];
+
+  if (target === null || target === undefined) {
+    return;
+  }
+
+  const filteredEntries = Object.entries(target).filter(
+    ([key, _value]) => !excludeKeys?.includes(key),
+  );
+
+  stack.push(
+    ...filteredEntries.map(([key, value]) => ({
+      key,
+      value,
+      parent: target,
+    })),
+  );
+
+  while (stack.length) {
+    const item = stack.pop()!;
+    // Do not remove items from arrays.
+    if (item.value === null && !Array.isArray(item.parent)) {
+      delete item.parent[item.key];
+    } else if (typeof item.value === 'object' && item.value !== null) {
+      // Add all the children to the stack. This includes array children.
+      // The items in the array could themselves be objects which need nulls
+      // removed from them.
+      stack.push(
+        ...Object.entries(item.value).map(([key, value]) => ({
+          key,
+          value,
+          parent: item.value,
+        })),
+      );
+    }
+  }
 }
 
 /**
@@ -53,6 +94,10 @@ export function replacer(this: any, key: string, value: any): any {
     if (value[0] && value[0] instanceof AttributeReference) {
       return undefined;
     }
+  }
+  // Allow null/undefined values to pass through without modification.
+  if (value === null || value === undefined) {
+    return value;
   }
   if (value.generated_includedSet) {
     value.included = [...value.generated_includedSet];
@@ -108,6 +153,8 @@ function processRollout(rollout?: Rollout) {
  * @internal
  */
 export function processFlag(flag: Flag) {
+  nullReplacer(flag, ['variations']);
+
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
     processRollout(rollout);
@@ -121,7 +168,7 @@ export function processFlag(flag: Flag) {
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
       } else if (clause) {
-        clause.attributeReference = AttributeReference.invalidReference;
+        clause.attributeReference = AttributeReference.InvalidReference;
       }
     });
   });
@@ -131,6 +178,7 @@ export function processFlag(flag: Flag) {
  * @internal
  */
 export function processSegment(segment: Segment) {
+  nullReplacer(segment);
   if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
     segment.generated_includedSet = new Set(segment.included);
     delete segment.included;
@@ -175,7 +223,7 @@ export function processSegment(segment: Segment) {
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
       } else if (clause) {
-        clause.attributeReference = AttributeReference.invalidReference;
+        clause.attributeReference = AttributeReference.InvalidReference;
       }
     });
   });
@@ -183,7 +231,7 @@ export function processSegment(segment: Segment) {
 
 function tryParse(data: string): any {
   try {
-    return JSON.parse(data, reviver);
+    return JSON.parse(data);
   } catch {
     return undefined;
   }

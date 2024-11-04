@@ -1,6 +1,6 @@
 import { internal, Platform } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
+import { Configuration } from '../configuration';
 import createDiagnosticsInitConfig from './createDiagnosticsInitConfig';
 
 const createDiagnosticsManager = (

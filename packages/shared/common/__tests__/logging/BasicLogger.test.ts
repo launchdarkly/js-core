@@ -2,6 +2,10 @@ import { BasicLogger, LDLogLevel } from '../../src';
 
 const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe.each<[LDLogLevel, string[]]>([
   [
     'debug',
@@ -64,10 +68,6 @@ describe('given a logger with a custom name', () => {
 describe('given a default logger', () => {
   const logger = new BasicLogger({});
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('logs to the console', () => {
     logger.warn('potato', 'bacon');
     expect(spy).toHaveBeenCalledWith('potato', 'bacon');
@@ -81,10 +81,6 @@ describe('given a logger with a destination that throws', () => {
     },
   });
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('logs to the console instead of throwing', () => {
     logger.error('a');
     expect(spy).toHaveBeenCalledWith('error: [LaunchDarkly] a');
@@ -93,10 +89,6 @@ describe('given a logger with a destination that throws', () => {
 
 describe('given a logger with a formatter that throws', () => {
   const strings: string[] = [];
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
 
   const logger = new BasicLogger({
     destination: (...args: any) => {
@@ -111,4 +103,103 @@ describe('given a logger with a formatter that throws', () => {
     logger.error('a');
     expect(spy).toHaveBeenCalledTimes(0);
   });
+});
+
+it('dispatches logs correctly with multiple destinations', () => {
+  const debug = jest.fn();
+  const info = jest.fn();
+  const warn = jest.fn();
+  const error = jest.fn();
+
+  const logger = new BasicLogger({
+    destination: {
+      debug,
+      info,
+      warn,
+      error,
+    },
+    level: 'debug',
+  });
+
+  logger.debug('toDebug');
+  logger.info('toInfo');
+  logger.warn('toWarn');
+  logger.error('toError');
+
+  expect(debug).toHaveBeenCalledTimes(1);
+  expect(debug).toHaveBeenCalledWith('debug: [LaunchDarkly] toDebug');
+
+  expect(info).toHaveBeenCalledTimes(1);
+  expect(info).toHaveBeenCalledWith('info: [LaunchDarkly] toInfo');
+
+  expect(warn).toHaveBeenCalledTimes(1);
+  expect(warn).toHaveBeenCalledWith('warn: [LaunchDarkly] toWarn');
+
+  expect(error).toHaveBeenCalledTimes(1);
+  expect(error).toHaveBeenCalledWith('error: [LaunchDarkly] toError');
+});
+
+it('handles destinations which throw', () => {
+  const debug = jest.fn(() => {
+    throw new Error('bad');
+  });
+  const info = jest.fn(() => {
+    throw new Error('bad');
+  });
+  const warn = jest.fn(() => {
+    throw new Error('bad');
+  });
+  const error = jest.fn(() => {
+    throw new Error('bad');
+  });
+
+  const logger = new BasicLogger({
+    destination: {
+      debug,
+      info,
+      warn,
+      error,
+    },
+    level: 'debug',
+  });
+
+  logger.debug('toDebug');
+  logger.info('toInfo');
+  logger.warn('toWarn');
+  logger.error('toError');
+
+  expect(spy).toHaveBeenCalledTimes(4);
+  expect(spy).toHaveBeenCalledWith('debug: [LaunchDarkly] toDebug');
+  expect(spy).toHaveBeenCalledWith('info: [LaunchDarkly] toInfo');
+  expect(spy).toHaveBeenCalledWith('warn: [LaunchDarkly] toWarn');
+  expect(spy).toHaveBeenCalledWith('error: [LaunchDarkly] toError');
+});
+
+it('handles destinations which are not defined', () => {
+  const debug = jest.fn();
+  const info = jest.fn();
+  const logger = new BasicLogger({
+    // @ts-ignore
+    destination: {
+      debug,
+      info,
+    },
+    level: 'debug',
+  });
+
+  logger.debug('toDebug');
+  logger.info('toInfo');
+  logger.warn('toWarn');
+  logger.error('toError');
+
+  expect(debug).toHaveBeenCalledTimes(1);
+  expect(debug).toHaveBeenCalledWith('debug: [LaunchDarkly] toDebug');
+
+  expect(info).toHaveBeenCalledTimes(1);
+  expect(info).toHaveBeenCalledWith('info: [LaunchDarkly] toInfo');
+
+  expect(spy).toHaveBeenCalledTimes(2);
+
+  expect(spy).toHaveBeenCalledWith('toWarn');
+  expect(spy).toHaveBeenCalledWith('toError');
 });

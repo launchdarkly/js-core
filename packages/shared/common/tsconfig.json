@@ -2,9 +2,10 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "target": "ES2017",
+    "target": "ES2020",
     "lib": ["es6"],
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "strict": true,
     "noImplicitOverride": true,
     // Needed for CommonJS modules: markdown-it, fs-extra
@@ -12,8 +13,8 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true, // enables importers to jump to source
-    "stripInternal": true,
-    "composite": true
+    "stripInternal": true
   },
+  "include": ["src"],
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
 }

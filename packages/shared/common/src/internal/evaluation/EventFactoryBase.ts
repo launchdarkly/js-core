@@ -19,11 +19,11 @@ export type EvalEventArgs = {
 };
 
 export default class EventFactoryBase {
-  constructor(private readonly withReasons: boolean) {}
+  constructor(private readonly _withReasons: boolean) {}
 
   evalEvent(e: EvalEventArgs): InputEvalEvent {
     return new InputEvalEvent(
-      this.withReasons,
+      this._withReasons,
       e.context,
       e.flagKey,
       e.value,
@@ -33,7 +33,7 @@ export default class EventFactoryBase {
       e.variation ?? undefined,
       e.trackEvents || e.addExperimentData,
       e.prereqOfFlagKey,
-      this.withReasons || e.addExperimentData ? e.reason : undefined,
+      this._withReasons || e.addExperimentData ? e.reason : undefined,
       e.debugEventsUntilDate,
       e.excludeFromSummaries,
       e.samplingRatio,
@@ -42,7 +42,7 @@ export default class EventFactoryBase {
 
   unknownFlagEvent(key: string, defVal: LDFlagValue, context: Context) {
     return new InputEvalEvent(
-      this.withReasons,
+      this._withReasons,
       context,
       key,
       defVal,

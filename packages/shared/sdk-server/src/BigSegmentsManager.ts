@@ -15,27 +15,27 @@ interface MembershipCacheItem {
 }
 
 export default class BigSegmentsManager {
-  private cache: LruCache | undefined;
+  private _cache: LruCache | undefined;
 
-  private pollHandle: any;
+  private _pollHandle: any;
 
-  private staleTimeMs: number;
+  private _staleTimeMs: number;
 
   public readonly statusProvider: BigSegmentStoreStatusProviderImpl;
 
   constructor(
-    private store: BigSegmentStore | undefined,
+    private _store: BigSegmentStore | undefined,
     // The store will have been created before the manager is instantiated, so we do not need
     // it in the options at this stage.
     config: Omit<LDBigSegmentsOptions, 'store'>,
-    private readonly logger: LDLogger | undefined,
-    private readonly crypto: Crypto,
+    private readonly _logger: LDLogger | undefined,
+    private readonly _crypto: Crypto,
   ) {
     this.statusProvider = new BigSegmentStoreStatusProviderImpl(async () =>
-      this.pollStoreAndUpdateStatus(),
+      this._pollStoreAndUpdateStatus(),
     );
 
-    this.staleTimeMs =
+    this._staleTimeMs =
       (TypeValidators.Number.is(config.staleAfter) && config.staleAfter > 0
         ? config.staleAfter
         : DEFAULT_STALE_AFTER_SECONDS) * 1000;
@@ -45,12 +45,12 @@ export default class BigSegmentsManager {
         ? config.statusPollInterval
         : DEFAULT_STATUS_POLL_INTERVAL_SECONDS) * 1000;
 
-    this.pollHandle = store
-      ? setInterval(() => this.pollStoreAndUpdateStatus(), pollIntervalMs)
+    this._pollHandle = _store
+      ? setInterval(() => this._pollStoreAndUpdateStatus(), pollIntervalMs)
       : null;
 
-    if (store) {
-      this.cache = new LruCache({
+    if (_store) {
+      this._cache = new LruCache({
         max: config.userCacheSize || DEFAULT_USER_CACHE_SIZE,
         maxAge: (config.userCacheTime || DEFAULT_USER_CACHE_TIME_SECONDS) * 1000,
       });
@@ -58,31 +58,31 @@ export default class BigSegmentsManager {
   }
 
   public close() {
-    if (this.pollHandle) {
-      clearInterval(this.pollHandle);
-      this.pollHandle = undefined;
+    if (this._pollHandle) {
+      clearInterval(this._pollHandle);
+      this._pollHandle = undefined;
     }
-    if (this.store) {
-      this.store.close();
+    if (this._store) {
+      this._store.close();
     }
   }
 
   public async getUserMembership(
     userKey: string,
   ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
-    if (!this.store) {
+    if (!this._store) {
       return undefined;
     }
-    const memberCache: MembershipCacheItem | undefined = this.cache?.get(userKey);
+    const memberCache: MembershipCacheItem | undefined = this._cache?.get(userKey);
     let membership: BigSegmentStoreMembership | undefined;
 
     if (!memberCache) {
       try {
-        membership = await this.store.getUserMembership(this.hashForUserKey(userKey));
+        membership = await this._store.getUserMembership(this._hashForUserKey(userKey));
         const cacheItem: MembershipCacheItem = { membership };
-        this.cache?.set(userKey, cacheItem);
+        this._cache?.set(userKey, cacheItem);
       } catch (err) {
-        this.logger?.error(`Big Segment store membership query returned error: ${err}`);
+        this._logger?.error(`Big Segment store membership query returned error: ${err}`);
         return [null, 'STORE_ERROR'];
       }
     } else {
@@ -90,7 +90,7 @@ export default class BigSegmentsManager {
     }
 
     if (!this.statusProvider.getStatus()) {
-      await this.pollStoreAndUpdateStatus();
+      await this._pollStoreAndUpdateStatus();
     }
 
     // Status will be present, because polling is done earlier in this method if it is not.
@@ -103,24 +103,24 @@ export default class BigSegmentsManager {
     return [membership || null, lastStatus.stale ? 'STALE' : 'HEALTHY'];
   }
 
-  private async pollStoreAndUpdateStatus() {
-    if (!this.store) {
+  private async _pollStoreAndUpdateStatus() {
+    if (!this._store) {
       this.statusProvider.setStatus({ available: false, stale: false });
       return;
     }
 
-    this.logger?.debug('Querying Big Segment store status');
+    this._logger?.debug('Querying Big Segment store status');
 
     let newStatus;
 
     try {
-      const metadata = await this.store.getMetadata();
+      const metadata = await this._store.getMetadata();
       newStatus = {
         available: true,
-        stale: !metadata || !metadata.lastUpToDate || this.isStale(metadata.lastUpToDate),
+        stale: !metadata || !metadata.lastUpToDate || this._isStale(metadata.lastUpToDate),
       };
     } catch (err) {
-      this.logger?.error(`Big Segment store status query returned error: ${err}`);
+      this._logger?.error(`Big Segment store status query returned error: ${err}`);
       newStatus = { available: false, stale: false };
     }
 
@@ -131,7 +131,7 @@ export default class BigSegmentsManager {
       lastStatus.available !== newStatus.available ||
       lastStatus.stale !== newStatus.stale
     ) {
-      this.logger?.debug(
+      this._logger?.debug(
         'Big Segment store status changed from %s to %s',
         JSON.stringify(lastStatus),
         JSON.stringify(newStatus),
@@ -141,13 +141,17 @@ export default class BigSegmentsManager {
     }
   }
 
-  private hashForUserKey(userKey: string): string {
-    const hasher = this.crypto.createHash('sha256');
+  private _hashForUserKey(userKey: string): string {
+    const hasher = this._crypto.createHash('sha256');
     hasher.update(userKey);
+    if (!hasher.digest) {
+      // This represents an error in platform implementation.
+      throw new Error('Platform must implement digest or asyncDigest');
+    }
     return hasher.digest('base64');
   }
 
-  private isStale(timestamp: number) {
-    return Date.now() - timestamp >= this.staleTimeMs;
+  private _isStale(timestamp: number) {
+    return Date.now() - timestamp >= this._staleTimeMs;
   }
 }
