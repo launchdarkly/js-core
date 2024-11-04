@@ -17,6 +17,6 @@
     "module": "CommonJS",
     "moduleResolution": "Node"
   },
-  "include": ["src", "test"],
+  "include": ["src"],
   "exclude": ["dist", "node_modules"]
 }

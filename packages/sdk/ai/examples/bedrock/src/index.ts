@@ -29,6 +29,11 @@ const context = {
 
 console.log('*** SDK successfully initialized');
 
+interface MyModelConfig {
+  modelId: string;
+  prompt: { role: ConversationRole; content: string }[];
+}
+
 function mapPromptToConversation(prompt: { role: ConversationRole; content: string }[]): Message[] {
   return prompt.map((item) => ({
     role: item.role,
@@ -47,23 +52,31 @@ async function main() {
     configValue = await aiClient.modelConfig(aiConfigKey, context, false, {
       myVariable: 'My User Defined Variable',
     });
-    tracker = configValue.tracker;
+    if (configValue === false) {
+      console.log('got default value for config');
+      process.exit(1);
+    } else {
+      tracker = configValue.tracker;
+    }
   } catch (error) {
     console.log(`*** SDK failed to initialize: ${error}`);
     process.exit(1);
   }
 
-  const completion = await tracker.trackBedrockConverse(
-    await awsClient.send(
-      new ConverseCommand({
-        modelId: configValue.config.config.modelId,
-        messages: mapPromptToConversation(configValue.config.prompt),
-      }),
-    ),
-  );
+  if (tracker) {
+    const modelConfig = configValue.config as MyModelConfig;
+    const completion = await tracker.trackBedrockConverse(
+      await awsClient.send(
+        new ConverseCommand({
+          modelId: modelConfig.modelId,
+          messages: mapPromptToConversation(modelConfig.prompt),
+        }),
+      ),
+    );
 
-  console.log('AI Response:', completion.output.message.content[0].text);
-  console.log('Success.');
+    console.log('AI Response:', completion.output.message.content[0].text);
+    console.log('Success.');
+  }
 }
 
 main();

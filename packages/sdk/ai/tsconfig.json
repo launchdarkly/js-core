@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
-    // Uses "." so it can load package.json.
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "dist",
     "target": "es2017",
     "lib": ["es6"],
     "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
-    // Needed for CommonJS modules: markdown-it, fs-extra
+    // Needed for CommonJS modules.
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "declaration": true,
