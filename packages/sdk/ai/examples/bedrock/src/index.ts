@@ -5,11 +5,16 @@ import { initAi, LDAIConfig } from '@launchdarkly/ai';
 import { init } from '@launchdarkly/node-server-sdk';
 
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
-const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
+const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY;
 const awsClient = new BedrockRuntimeClient({ region: 'us-east-1' });
 
 if (!sdkKey) {
   console.error('*** Please set the LAUNCHDARKLY_SDK_KEY env first');
+  process.exit(1);
+}
+
+if (!aiConfigKey) {
+  console.error('*** Please set the LAUNCHDARKLY_AI_CONFIG_KEY env first');
   process.exit(1);
 }
 
@@ -21,8 +26,6 @@ const context = {
   key: 'example-user-key',
   name: 'Sandy',
 };
-
-console.log('*** SDK successfully initialized');
 
 function mapPromptToConversation(
   prompt: { role: 'user' | 'assistant' | 'system'; content: string }[],
@@ -40,10 +43,11 @@ async function main() {
 
   try {
     await ldClient.waitForInitialization({ timeout: 10 });
+    console.log('*** SDK successfully initialized');
     const aiClient = initAi(ldClient);
 
     configValue = await aiClient.modelConfig(
-      aiConfigKey,
+      aiConfigKey!,
       context,
       {
         model: {
@@ -64,8 +68,8 @@ async function main() {
     const completion = tracker.trackBedrockConverse(
       await awsClient.send(
         new ConverseCommand({
-          modelId: configValue.config?.model?.modelId ?? 'no-model',
-          messages: mapPromptToConversation(configValue.config?.prompt ?? []),
+          modelId: configValue.config.model?.modelId ?? 'no-model',
+          messages: mapPromptToConversation(configValue.config.prompt ?? []),
         }),
       ),
     );

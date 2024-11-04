@@ -7,7 +7,6 @@
 	"type": "commonjs",
 	"scripts": {
 		"build": "tsc",
-		"test": "jest",
 		"lint": "eslint . --ext .ts"
 	},
 	"keywords": [
