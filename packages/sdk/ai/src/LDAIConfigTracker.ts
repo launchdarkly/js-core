@@ -1,10 +1,10 @@
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
 import {
-  BedrockTokenUsage,
   createBedrockTokenUsage,
   FeedbackKind,
   OpenAITokenUsage,
+  TokenMetrics,
   TokenUsage,
   UnderscoreTokenUsage,
 } from './api/metrics';
@@ -33,7 +33,7 @@ export class LDAIConfigTracker {
     this.ldClient.track('$ld:ai:duration:total', this.context, this.getTrackData(), duration);
   }
 
-  async trackDurationOf(func: Function, ...args: any[]): Promise<any> {
+  async trackDurationOf(func: (...args: any[]) => Promise<any>, ...args: any[]): Promise<any> {
     const startTime = Date.now();
     const result = await func(...args);
     const endTime = Date.now();
@@ -58,7 +58,7 @@ export class LDAIConfigTracker {
     this.ldClient.track('$ld:ai:generation', this.context, this.getTrackData(), generation);
   }
 
-  async trackOpenAI(func: Function, ...args: any[]): Promise<any> {
+  async trackOpenAI(func: (...args: any[]) => Promise<any>, ...args: any[]): Promise<any> {
     const result = await this.trackDurationOf(func, ...args);
     this.trackGeneration(1);
     if (result.usage) {
@@ -90,8 +90,8 @@ export class LDAIConfigTracker {
     return res;
   }
 
-  trackTokens(tokens: TokenUsage | UnderscoreTokenUsage | BedrockTokenUsage): void {
-    const tokenMetrics = tokens.toMetrics();
+  trackTokens(tokens: TokenUsage | UnderscoreTokenUsage | { totalTokens: number; inputTokens: number; outputTokens: number }): void {
+    const tokenMetrics = toMetrics(tokens);
     if (tokenMetrics.total > 0) {
       this.ldClient.track(
         '$ld:ai:tokens:total',
@@ -117,4 +117,28 @@ export class LDAIConfigTracker {
       );
     }
   }
+}
+
+function toMetrics(
+  usage: TokenUsage | UnderscoreTokenUsage | { totalTokens: number; inputTokens: number; outputTokens: number },
+): TokenMetrics {
+  if ('inputTokens' in usage && 'outputTokens' in usage) {
+    // Bedrock usage
+    return {
+      total: usage.totalTokens,
+      input: usage.inputTokens,
+      output: usage.outputTokens,
+    };
+  }
+
+  // OpenAI usage (both camelCase and snake_case)
+  return {
+    total: 'total_tokens' in usage ? usage.total_tokens! : (usage as TokenUsage).totalTokens ?? 0,
+    input:
+      'prompt_tokens' in usage ? usage.prompt_tokens! : (usage as TokenUsage).promptTokens ?? 0,
+    output:
+      'completion_tokens' in usage
+        ? usage.completion_tokens!
+        : (usage as TokenUsage).completionTokens ?? 0,
+  };
 }
