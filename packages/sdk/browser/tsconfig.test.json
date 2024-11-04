@@ -1,14 +1,27 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "lib": ["es6", "dom"],
-    "module": "ES6",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "rootDir": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "lib": ["es6", "DOM"],
+    "module": "CommonJS",
     "strict": true,
-    "types": ["jest", "node"]
+    "noImplicitOverride": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "stripInternal": true
   },
-  "exclude": ["dist", "node_modules", "__tests__", "example"]
+  "exclude": [
+    "vite.config.ts",
+    "__tests__",
+    "dist",
+    "docs",
+    "example",
+    "node_modules",
+    "contract-tests",
+    "babel.config.js",
+    "jest.config.js",
+    "jestSetupFile.ts",
+    "**/*.test.ts*"
+  ]
 }

@@ -3,23 +3,22 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
-    "jsx": "react-jsx",
-    "lib": ["es6", "dom"],
-    "module": "ES6",
+    "lib": ["ES2017", "dom"],
+    "module": "ESNext",
     "moduleResolution": "node",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
-    // Uses "." so it can load package.json.
     "rootDir": ".",
+    "outDir": "dist",
     "skipLibCheck": true,
-    // enables importers to jump to source
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "stripInternal": true,
     "target": "ES2017",
     "types": ["node", "jest"],
     "allowJs": true
   },
+  "include": ["src"],
   "exclude": [
     "vite.config.ts",
     "__tests__",
@@ -28,8 +27,8 @@
     "example",
     "node_modules",
     "babel.config.js",
-    "jest.config.ts",
-    "jestSetupFile.ts",
+    "setup-jest.js",
+    "rollup.config.js",
     "**/*.test.ts*"
   ]
 }

@@ -34,7 +34,7 @@ export default function evalTargets(flag: Flag, context: Context): EvalResult | 
   }
 
   return firstResult(flag.contextTargets, (target) => {
-    if (!target.contextKind || target.contextKind === Context.userKind) {
+    if (!target.contextKind || target.contextKind === Context.UserKind) {
       // When a context target is for a user, then use a user target with the same variation.
       const userTarget = (flag.targets || []).find((ut) => ut.variation === target.variation);
       if (userTarget) {

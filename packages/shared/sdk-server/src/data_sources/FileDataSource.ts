@@ -27,13 +27,13 @@ function makeFlagWithValue(key: string, value: any, version: number): Flag {
 }
 
 export default class FileDataSource implements subsystem.LDStreamProcessor {
-  private logger?: LDLogger;
+  private _logger?: LDLogger;
 
-  private yamlParser?: (data: string) => any;
+  private _yamlParser?: (data: string) => any;
 
-  private fileLoader: FileLoader;
+  private _fileLoader: FileLoader;
 
-  private allData: LDFeatureStoreDataStorage = {};
+  private _allData: LDFeatureStoreDataStorage = {};
 
   /**
    * This is internal because we want instances to only be created with the
@@ -43,11 +43,11 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
   constructor(
     options: FileDataSourceOptions,
     filesystem: Filesystem,
-    private readonly featureStore: LDDataSourceUpdates,
-    private initSuccessHandler: VoidFunction = () => {},
-    private readonly errorHandler?: FileDataSourceErrorHandler,
+    private readonly _featureStore: LDDataSourceUpdates,
+    private _initSuccessHandler: VoidFunction = () => {},
+    private readonly _errorHandler?: FileDataSourceErrorHandler,
   ) {
-    this.fileLoader = new FileLoader(
+    this._fileLoader = new FileLoader(
       filesystem,
       options.paths,
       options.autoUpdate ?? false,
@@ -55,17 +55,17 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
         // Whenever changes are detected we re-process all of the data.
         // The FileLoader will have handled debouncing for us.
         try {
-          this.processFileData(results);
+          this._processFileData(results);
         } catch (err) {
           // If this was during start, then the initCallback will be present.
-          this.errorHandler?.(err as LDFileDataSourceError);
-          this.logger?.error(`Error processing files: ${err}`);
+          this._errorHandler?.(err as LDFileDataSourceError);
+          this._logger?.error(`Error processing files: ${err}`);
         }
       },
     );
 
-    this.logger = options.logger;
-    this.yamlParser = options.yamlParser;
+    this._logger = options.logger;
+    this._yamlParser = options.yamlParser;
   }
 
   start(): void {
@@ -73,45 +73,45 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
     // async loading without making start async itself.
     (async () => {
       try {
-        await this.fileLoader.loadAndWatch();
+        await this._fileLoader.loadAndWatch();
       } catch (err) {
         // There was an issue loading/watching the files.
         // Report back to the caller.
-        this.errorHandler?.(err as LDFileDataSourceError);
+        this._errorHandler?.(err as LDFileDataSourceError);
       }
     })();
   }
 
   stop(): void {
-    this.fileLoader.close();
+    this._fileLoader.close();
   }
 
   close(): void {
     this.stop();
   }
 
-  private addItem(kind: DataKind, item: any) {
-    if (!this.allData[kind.namespace]) {
-      this.allData[kind.namespace] = {};
+  private _addItem(kind: DataKind, item: any) {
+    if (!this._allData[kind.namespace]) {
+      this._allData[kind.namespace] = {};
     }
-    if (this.allData[kind.namespace][item.key]) {
+    if (this._allData[kind.namespace][item.key]) {
       throw new Error(`found duplicate key: "${item.key}"`);
     } else {
-      this.allData[kind.namespace][item.key] = item;
+      this._allData[kind.namespace][item.key] = item;
     }
   }
 
-  private processFileData(fileData: { path: string; data: string }[]) {
+  private _processFileData(fileData: { path: string; data: string }[]) {
     // Clear any existing data before re-populating it.
-    const oldData = this.allData;
-    this.allData = {};
+    const oldData = this._allData;
+    this._allData = {};
 
     // We let the parsers throw, and the caller can handle the rejection.
     fileData.forEach((fd) => {
       let parsed: any;
       if (fd.path.endsWith('.yml') || fd.path.endsWith('.yaml')) {
-        if (this.yamlParser) {
-          parsed = this.yamlParser(fd.data);
+        if (this._yamlParser) {
+          parsed = this._yamlParser(fd.data);
         } else {
           throw new Error(`Attempted to parse yaml file (${fd.path}) without parser.`);
         }
@@ -119,21 +119,21 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
         parsed = JSON.parse(fd.data);
       }
 
-      this.processParsedData(parsed, oldData);
+      this._processParsedData(parsed, oldData);
     });
 
-    this.featureStore.init(this.allData, () => {
+    this._featureStore.init(this._allData, () => {
       // Call the init callback if present.
       // Then clear the callback so we cannot call it again.
-      this.initSuccessHandler();
-      this.initSuccessHandler = () => {};
+      this._initSuccessHandler();
+      this._initSuccessHandler = () => {};
     });
   }
 
-  private processParsedData(parsed: any, oldData: LDFeatureStoreDataStorage) {
+  private _processParsedData(parsed: any, oldData: LDFeatureStoreDataStorage) {
     Object.keys(parsed.flags || {}).forEach((key) => {
       processFlag(parsed.flags[key]);
-      this.addItem(VersionedDataKinds.Features, parsed.flags[key]);
+      this._addItem(VersionedDataKinds.Features, parsed.flags[key]);
     });
     Object.keys(parsed.flagValues || {}).forEach((key) => {
       const previousInstance = oldData[VersionedDataKinds.Features.namespace]?.[key];
@@ -147,11 +147,11 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
       }
       const flag = makeFlagWithValue(key, parsed.flagValues[key], version);
       processFlag(flag);
-      this.addItem(VersionedDataKinds.Features, flag);
+      this._addItem(VersionedDataKinds.Features, flag);
     });
     Object.keys(parsed.segments || {}).forEach((key) => {
       processSegment(parsed.segments[key]);
-      this.addItem(VersionedDataKinds.Segments, parsed.segments[key]);
+      this._addItem(VersionedDataKinds.Segments, parsed.segments[key]);
     });
   }
 }

@@ -2,14 +2,15 @@ import { LDEvaluationReason, LDFlagValue } from '@launchdarkly/js-sdk-common';
 
 export interface Flag {
   version: number;
-  flagVersion: number;
+  flagVersion?: number;
   value: LDFlagValue;
-  variation: number;
-  trackEvents: boolean;
+  variation?: number;
+  trackEvents?: boolean;
   trackReason?: boolean;
   reason?: LDEvaluationReason;
   debugEventsUntilDate?: number;
   deleted?: boolean;
+  prerequisites?: string[];
 }
 
 export interface PatchFlag extends Flag {

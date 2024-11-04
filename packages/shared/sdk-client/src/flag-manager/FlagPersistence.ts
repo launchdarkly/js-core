@@ -13,19 +13,20 @@ import { ItemDescriptor } from './ItemDescriptor';
  * then persists changes after the updater has completed.
  */
 export default class FlagPersistence {
-  private contextIndex: ContextIndex | undefined;
-  private indexKey: string;
+  private _contextIndex: ContextIndex | undefined;
+  private _indexKey?: string;
+  private _indexKeyPromise: Promise<string>;
 
   constructor(
-    private readonly platform: Platform,
-    private readonly environmentNamespace: string,
-    private readonly maxCachedContexts: number,
-    private readonly flagStore: FlagStore,
-    private readonly flagUpdater: FlagUpdater,
-    private readonly logger: LDLogger,
-    private readonly timeStamper: () => number = () => Date.now(),
+    private readonly _platform: Platform,
+    private readonly _environmentNamespace: string,
+    private readonly _maxCachedContexts: number,
+    private readonly _flagStore: FlagStore,
+    private readonly _flagUpdater: FlagUpdater,
+    private readonly _logger: LDLogger,
+    private readonly _timeStamper: () => number = () => Date.now(),
   ) {
-    this.indexKey = namespaceForContextIndex(this.environmentNamespace);
+    this._indexKeyPromise = namespaceForContextIndex(this._environmentNamespace);
   }
 
   /**
@@ -33,8 +34,8 @@ export default class FlagPersistence {
    * in the underlying {@link FlagUpdater} switching its active context.
    */
   async init(context: Context, newFlags: { [key: string]: ItemDescriptor }): Promise<void> {
-    this.flagUpdater.init(context, newFlags);
-    await this.storeCache(context);
+    this._flagUpdater.init(context, newFlags);
+    await this._storeCache(context);
   }
 
   /**
@@ -43,8 +44,8 @@ export default class FlagPersistence {
    * the active context.
    */
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
-    if (this.flagUpdater.upsert(context, key, item)) {
-      await this.storeCache(context);
+    if (this._flagUpdater.upsert(context, key, item)) {
+      await this._storeCache(context);
       return true;
     }
     return false;
@@ -55,24 +56,24 @@ export default class FlagPersistence {
    * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
    */
   async loadCached(context: Context): Promise<boolean> {
-    const storageKey = namespaceForContextData(
-      this.platform.crypto,
-      this.environmentNamespace,
+    const storageKey = await namespaceForContextData(
+      this._platform.crypto,
+      this._environmentNamespace,
       context,
     );
-    let flagsJson = await this.platform.storage?.get(storageKey);
+    let flagsJson = await this._platform.storage?.get(storageKey);
     if (flagsJson === null || flagsJson === undefined) {
       // Fallback: in version <10.3.1 flag data was stored under the canonical key, check
       // to see if data is present and migrate the data if present.
-      flagsJson = await this.platform.storage?.get(context.canonicalKey);
+      flagsJson = await this._platform.storage?.get(context.canonicalKey);
       if (flagsJson === null || flagsJson === undefined) {
         // return false indicating cache did not load if flag json is still absent
         return false;
       }
 
       // migrate data from version <10.3.1 and cleanup data that was under canonical key
-      await this.platform.storage?.set(storageKey, flagsJson);
-      await this.platform.storage?.clear(context.canonicalKey);
+      await this._platform.storage?.set(storageKey, flagsJson);
+      await this._platform.storage?.clear(context.canonicalKey);
     }
 
     try {
@@ -87,53 +88,53 @@ export default class FlagPersistence {
         {},
       );
 
-      this.flagUpdater.initCached(context, descriptors);
-      this.logger.debug('Loaded cached flag evaluations from persistent storage');
+      this._flagUpdater.initCached(context, descriptors);
+      this._logger.debug('Loaded cached flag evaluations from persistent storage');
       return true;
     } catch (e: any) {
-      this.logger.warn(
+      this._logger.warn(
         `Could not load cached flag evaluations from persistent storage: ${e.message}`,
       );
       return false;
     }
   }
 
-  private async loadIndex(): Promise<ContextIndex> {
-    if (this.contextIndex !== undefined) {
-      return this.contextIndex;
+  private async _loadIndex(): Promise<ContextIndex> {
+    if (this._contextIndex !== undefined) {
+      return this._contextIndex;
     }
 
-    const json = await this.platform.storage?.get(this.indexKey);
+    const json = await this._platform.storage?.get(await this._indexKeyPromise);
     if (!json) {
-      this.contextIndex = new ContextIndex();
-      return this.contextIndex;
+      this._contextIndex = new ContextIndex();
+      return this._contextIndex;
     }
 
     try {
-      this.contextIndex = ContextIndex.fromJson(json);
-      this.logger.debug('Loaded context index from persistent storage');
+      this._contextIndex = ContextIndex.fromJson(json);
+      this._logger.debug('Loaded context index from persistent storage');
     } catch (e: any) {
-      this.logger.warn(`Could not load index from persistent storage: ${e.message}`);
-      this.contextIndex = new ContextIndex();
+      this._logger.warn(`Could not load index from persistent storage: ${e.message}`);
+      this._contextIndex = new ContextIndex();
     }
-    return this.contextIndex;
+    return this._contextIndex;
   }
 
-  private async storeCache(context: Context): Promise<void> {
-    const index = await this.loadIndex();
-    const storageKey = namespaceForContextData(
-      this.platform.crypto,
-      this.environmentNamespace,
+  private async _storeCache(context: Context): Promise<void> {
+    const index = await this._loadIndex();
+    const storageKey = await namespaceForContextData(
+      this._platform.crypto,
+      this._environmentNamespace,
       context,
     );
-    index.notice(storageKey, this.timeStamper());
+    index.notice(storageKey, this._timeStamper());
 
-    const pruned = index.prune(this.maxCachedContexts);
-    await Promise.all(pruned.map(async (it) => this.platform.storage?.clear(it.id)));
+    const pruned = index.prune(this._maxCachedContexts);
+    await Promise.all(pruned.map(async (it) => this._platform.storage?.clear(it.id)));
 
     // store index
-    await this.platform.storage?.set(this.indexKey, index.toJson());
-    const allFlags = this.flagStore.getAll();
+    await this._platform.storage?.set(await this._indexKeyPromise, index.toJson());
+    const allFlags = this._flagStore.getAll();
 
     // mapping item descriptors to flags
     const flags = Object.entries(allFlags).reduce((acc: Flags, [key, descriptor]) => {
@@ -145,6 +146,6 @@ export default class FlagPersistence {
 
     const jsonAll = JSON.stringify(flags);
     // store flag data
-    await this.platform.storage?.set(storageKey, jsonAll);
+    await this._platform.storage?.set(storageKey, jsonAll);
   }
 }

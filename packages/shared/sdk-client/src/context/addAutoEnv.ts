@@ -11,7 +11,8 @@ import {
   Platform,
 } from '@launchdarkly/js-sdk-common';
 
-import Configuration from '../configuration';
+import { Configuration } from '../configuration';
+import digest from '../crypto/digest';
 import { getOrGenerateKey } from '../storage/getOrGenerateKey';
 import { namespaceForGeneratedContextKey } from '../storage/namespaceUtils';
 
@@ -36,10 +37,10 @@ export const toMulti = (c: LDSingleKindContext) => {
  * @param config
  * @return An LDApplication object with populated key, envAttributesVersion, id and version.
  */
-export const addApplicationInfo = (
+export const addApplicationInfo = async (
   { crypto, info }: Platform,
   { applicationInfo }: Configuration,
-): LDApplication | undefined => {
+): Promise<LDApplication | undefined> => {
   const { ld_application } = info.platformData();
   let app = deepCompact<LDApplication>(ld_application) ?? ({} as LDApplication);
   const id = applicationInfo?.id || app?.id;
@@ -58,9 +59,7 @@ export const addApplicationInfo = (
       ...(versionName ? { versionName } : {}),
     };
 
-    const hasher = crypto.createHash('sha256');
-    hasher.update(id);
-    app.key = hasher.digest('base64');
+    app.key = await digest(crypto.createHash('sha256').update(id), 'base64');
     app.envAttributesVersion = app.envAttributesVersion || defaultAutoEnvSchemaVersion;
 
     return app;
@@ -95,7 +94,7 @@ export const addDeviceInfo = async (platform: Platform) => {
 
   // Check if device has any meaningful data before we return it.
   if (Object.keys(device).filter((k) => k !== 'key' && k !== 'envAttributesVersion').length) {
-    const ldDeviceNamespace = namespaceForGeneratedContextKey('ld_device');
+    const ldDeviceNamespace = await namespaceForGeneratedContextKey('ld_device');
     device.key = await getOrGenerateKey(ldDeviceNamespace, platform);
     device.envAttributesVersion = device.envAttributesVersion || defaultAutoEnvSchemaVersion;
     return device;
@@ -104,7 +103,11 @@ export const addDeviceInfo = async (platform: Platform) => {
   return undefined;
 };
 
-export const addAutoEnv = async (context: LDContext, platform: Platform, config: Configuration) => {
+export const addAutoEnv = async (
+  context: LDContext,
+  platform: Platform,
+  config: Configuration,
+): Promise<LDContext> => {
   // LDUser is not supported for auto env reporting
   if (isLegacyUser(context)) {
     return context as LDUser;
@@ -118,7 +121,7 @@ export const addAutoEnv = async (context: LDContext, platform: Platform, config:
     (isSingleKind(context) && context.kind !== 'ld_application') ||
     (isMultiKind(context) && !context.ld_application)
   ) {
-    ld_application = addApplicationInfo(platform, config);
+    ld_application = await addApplicationInfo(platform, config);
   } else {
     config.logger.warn(
       'Not adding ld_application environment attributes because it already exists.',

@@ -6,7 +6,6 @@ import {
   Requests,
   Response,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import promisify from '../../src/async/promisify';
 import Requestor from '../../src/data_sources/Requestor';
@@ -75,14 +74,14 @@ describe('given a requestor', () => {
       createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
         throw new Error('Function not implemented.');
       },
+      getEventSourceCapabilities() {
+        throw new Error('Function not implemented.');
+      },
     };
 
-    requestor = new Requestor(
-      'sdkKey',
-      new Configuration({}),
-      createBasicPlatform().info,
-      requests,
-    );
+    requestor = new Requestor(new Configuration({}), requests, {
+      authorization: 'sdkKey',
+    });
   });
 
   it('gets data', (done) => {

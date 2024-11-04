@@ -39,29 +39,29 @@ export default class EventSource<E extends string = never> {
   OPEN = 1;
   CLOSED = 2;
 
-  private lastEventId: undefined | string;
-  private lastIndexProcessed = 0;
-  private eventType: undefined | EventType<E>;
-  private status = this.CONNECTING;
-  private eventHandlers: any = {
+  private _lastEventId: undefined | string;
+  private _lastIndexProcessed = 0;
+  private _eventType: undefined | EventType<E>;
+  private _status = this.CONNECTING;
+  private _eventHandlers: any = {
     open: [],
     message: [],
     error: [],
     close: [],
   };
 
-  private method: string;
-  private timeout: number;
-  private withCredentials: boolean;
-  private headers: Record<string, any>;
-  private body: any;
-  private url: string;
-  private xhr: XMLHttpRequest = new XMLHttpRequest();
-  private connectTimer: any;
-  private retryAndHandleError?: (err: any) => boolean;
-  private initialRetryDelayMillis: number = 1000;
-  private retryCount: number = 0;
-  private logger?: any;
+  private _method: string;
+  private _timeout: number;
+  private _withCredentials: boolean;
+  private _headers: Record<string, any>;
+  private _body: any;
+  private _url: string;
+  private _xhr: XMLHttpRequest = new XMLHttpRequest();
+  private _connectTimer: any;
+  private _retryAndHandleError?: (err: any) => boolean;
+  private _initialRetryDelayMillis: number = 1000;
+  private _retryCount: number = 0;
+  private _logger?: any;
 
   constructor(url: string, options?: EventSourceOptions) {
     const opts = {
@@ -69,163 +69,163 @@ export default class EventSource<E extends string = never> {
       ...options,
     };
 
-    this.url = url;
-    this.method = opts.method!;
-    this.timeout = opts.timeout!;
-    this.withCredentials = opts.withCredentials!;
-    this.headers = opts.headers!;
-    this.body = opts.body;
-    this.retryAndHandleError = opts.retryAndHandleError;
-    this.initialRetryDelayMillis = opts.initialRetryDelayMillis!;
-    this.logger = opts.logger;
+    this._url = url;
+    this._method = opts.method!;
+    this._timeout = opts.timeout!;
+    this._withCredentials = opts.withCredentials!;
+    this._headers = opts.headers!;
+    this._body = opts.body;
+    this._retryAndHandleError = opts.retryAndHandleError;
+    this._initialRetryDelayMillis = opts.initialRetryDelayMillis!;
+    this._logger = opts.logger;
 
-    this.tryConnect(true);
+    this._tryConnect(true);
   }
 
-  private getNextRetryDelay() {
-    const delay = jitter(backoff(this.initialRetryDelayMillis, this.retryCount));
-    this.retryCount += 1;
+  private _getNextRetryDelay() {
+    const delay = jitter(backoff(this._initialRetryDelayMillis, this._retryCount));
+    this._retryCount += 1;
     return delay;
   }
 
-  private tryConnect(initialConnection: boolean = false) {
-    let delay = initialConnection ? 0 : this.getNextRetryDelay();
+  private _tryConnect(initialConnection: boolean = false) {
+    let delay = initialConnection ? 0 : this._getNextRetryDelay();
     if (initialConnection) {
-      this.logger?.debug(`[EventSource] opening new connection.`);
+      this._logger?.debug(`[EventSource] opening new connection.`);
     } else {
-      this.logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
+      this._logger?.debug(`[EventSource] Will open new connection in ${delay} ms.`);
       this.dispatch('retry', { type: 'retry', delayMillis: delay });
     }
 
-    this.connectTimer = setTimeout(() => {
+    this._connectTimer = setTimeout(() => {
       if (!initialConnection) {
         this.close();
       }
 
-      this.open();
+      this._open();
     }, delay);
   }
 
-  private open() {
+  private _open() {
     try {
-      this.lastIndexProcessed = 0;
-      this.status = this.CONNECTING;
-      this.xhr.open(this.method, this.url, true);
+      this._lastIndexProcessed = 0;
+      this._status = this.CONNECTING;
+      this._xhr.open(this._method, this._url, true);
 
-      if (this.withCredentials) {
-        this.xhr.withCredentials = true;
+      if (this._withCredentials) {
+        this._xhr.withCredentials = true;
       }
 
-      this.xhr.setRequestHeader('Accept', 'text/event-stream');
-      this.xhr.setRequestHeader('Cache-Control', 'no-cache');
-      this.xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      this._xhr.setRequestHeader('Accept', 'text/event-stream');
+      this._xhr.setRequestHeader('Cache-Control', 'no-cache');
+      this._xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-      if (this.headers) {
-        Object.entries(this.headers).forEach(([key, value]) => {
-          this.xhr.setRequestHeader(key, value);
+      if (this._headers) {
+        Object.entries(this._headers).forEach(([key, value]) => {
+          this._xhr.setRequestHeader(key, value);
         });
       }
 
-      if (typeof this.lastEventId !== 'undefined') {
-        this.xhr.setRequestHeader('Last-Event-ID', this.lastEventId);
+      if (typeof this._lastEventId !== 'undefined') {
+        this._xhr.setRequestHeader('Last-Event-ID', this._lastEventId);
       }
 
-      this.xhr.timeout = this.timeout;
+      this._xhr.timeout = this._timeout;
 
-      this.xhr.onreadystatechange = () => {
-        if (this.status === this.CLOSED) {
+      this._xhr.onreadystatechange = () => {
+        if (this._status === this.CLOSED) {
           return;
         }
 
-        this.logger?.debug(
+        this._logger?.debug(
           `[EventSource][onreadystatechange] ReadyState: ${
-            XMLReadyStateMap[this.xhr.readyState] || 'Unknown'
-          }(${this.xhr.readyState}), status: ${this.xhr.status}`,
+            XMLReadyStateMap[this._xhr.readyState] || 'Unknown'
+          }(${this._xhr.readyState}), status: ${this._xhr.status}`,
         );
 
         if (
-          this.xhr.readyState !== XMLHttpRequest.DONE &&
-          this.xhr.readyState !== XMLHttpRequest.LOADING
+          this._xhr.readyState !== XMLHttpRequest.DONE &&
+          this._xhr.readyState !== XMLHttpRequest.LOADING
         ) {
           return;
         }
 
-        if (this.xhr.status >= 200 && this.xhr.status < 400) {
-          if (this.status === this.CONNECTING) {
-            this.retryCount = 0;
-            this.status = this.OPEN;
+        if (this._xhr.status >= 200 && this._xhr.status < 400) {
+          if (this._status === this.CONNECTING) {
+            this._retryCount = 0;
+            this._status = this.OPEN;
             this.dispatch('open', { type: 'open' });
-            this.logger?.debug('[EventSource][onreadystatechange][OPEN] Connection opened.');
+            this._logger?.debug('[EventSource][onreadystatechange][OPEN] Connection opened.');
           }
 
           // retry from server gets set here
-          this.handleEvent(this.xhr.responseText || '');
+          this._handleEvent(this._xhr.responseText || '');
 
-          if (this.xhr.readyState === XMLHttpRequest.DONE) {
-            this.logger?.debug('[EventSource][onreadystatechange][DONE] Operation done.');
-            this.tryConnect();
+          if (this._xhr.readyState === XMLHttpRequest.DONE) {
+            this._logger?.debug('[EventSource][onreadystatechange][DONE] Operation done.');
+            this._tryConnect();
           }
         } else {
-          this.status = this.ERROR;
+          this._status = this.ERROR;
 
           this.dispatch('error', {
             type: 'error',
-            message: this.xhr.responseText,
-            xhrStatus: this.xhr.status,
-            xhrState: this.xhr.readyState,
+            message: this._xhr.responseText,
+            xhrStatus: this._xhr.status,
+            xhrState: this._xhr.readyState,
           });
 
-          if (this.xhr.readyState === XMLHttpRequest.DONE) {
-            this.logger?.debug('[EventSource][onreadystatechange][ERROR] Response status error.');
+          if (this._xhr.readyState === XMLHttpRequest.DONE) {
+            this._logger?.debug('[EventSource][onreadystatechange][ERROR] Response status error.');
 
-            if (!this.retryAndHandleError) {
+            if (!this._retryAndHandleError) {
               // by default just try and reconnect if there's an error.
-              this.tryConnect();
+              this._tryConnect();
             } else {
               // custom retry logic taking into account status codes.
-              const shouldRetry = this.retryAndHandleError({
-                status: this.xhr.status,
-                message: this.xhr.responseText,
+              const shouldRetry = this._retryAndHandleError({
+                status: this._xhr.status,
+                message: this._xhr.responseText,
               });
 
               if (shouldRetry) {
-                this.tryConnect();
+                this._tryConnect();
               }
             }
           }
         }
       };
 
-      this.xhr.onerror = () => {
-        if (this.status === this.CLOSED) {
+      this._xhr.onerror = () => {
+        if (this._status === this.CLOSED) {
           return;
         }
 
-        this.status = this.ERROR;
+        this._status = this.ERROR;
         this.dispatch('error', {
           type: 'error',
-          message: this.xhr.responseText,
-          xhrStatus: this.xhr.status,
-          xhrState: this.xhr.readyState,
+          message: this._xhr.responseText,
+          xhrStatus: this._xhr.status,
+          xhrState: this._xhr.readyState,
         });
       };
 
-      if (this.body) {
-        this.xhr.send(this.body);
+      if (this._body) {
+        this._xhr.send(this._body);
       } else {
-        this.xhr.send();
+        this._xhr.send();
       }
 
-      if (this.timeout > 0) {
+      if (this._timeout > 0) {
         setTimeout(() => {
-          if (this.xhr.readyState === XMLHttpRequest.LOADING) {
+          if (this._xhr.readyState === XMLHttpRequest.LOADING) {
             this.dispatch('error', { type: 'timeout' });
             this.close();
           }
-        }, this.timeout);
+        }, this._timeout);
       }
     } catch (e: any) {
-      this.status = this.ERROR;
+      this._status = this.ERROR;
       this.dispatch('error', {
         type: 'exception',
         message: e.message,
@@ -234,12 +234,12 @@ export default class EventSource<E extends string = never> {
     }
   }
 
-  private handleEvent(response: string) {
-    const parts = response.slice(this.lastIndexProcessed).split('\n');
+  private _handleEvent(response: string) {
+    const parts = response.slice(this._lastIndexProcessed).split('\n');
 
     const indexOfDoubleNewline = response.lastIndexOf('\n\n');
     if (indexOfDoubleNewline !== -1) {
-      this.lastIndexProcessed = indexOfDoubleNewline + 2;
+      this._lastIndexProcessed = indexOfDoubleNewline + 2;
     }
 
     let data = [];
@@ -250,7 +250,7 @@ export default class EventSource<E extends string = never> {
     for (let i = 0; i < parts.length; i++) {
       line = parts[i].replace(/^(\s|\u00A0)+|(\s|\u00A0)+$/g, '');
       if (line.indexOf('event') === 0) {
-        this.eventType = line.replace(/event:?\s*/, '') as EventType<E>;
+        this._eventType = line.replace(/event:?\s*/, '') as EventType<E>;
       } else if (line.indexOf('retry') === 0) {
         retry = parseInt(line.replace(/retry:?\s*/, ''), 10);
         if (!Number.isNaN(retry)) {
@@ -260,62 +260,62 @@ export default class EventSource<E extends string = never> {
       } else if (line.indexOf('data') === 0) {
         data.push(line.replace(/data:?\s*/, ''));
       } else if (line.indexOf('id:') === 0) {
-        this.lastEventId = line.replace(/id:?\s*/, '');
+        this._lastEventId = line.replace(/id:?\s*/, '');
       } else if (line.indexOf('id') === 0) {
-        this.lastEventId = undefined;
+        this._lastEventId = undefined;
       } else if (line === '') {
         if (data.length > 0) {
-          const eventType = this.eventType || 'message';
+          const eventType = this._eventType || 'message';
           const event: any = {
             type: eventType,
             data: data.join('\n'),
-            url: this.url,
-            lastEventId: this.lastEventId,
+            url: this._url,
+            lastEventId: this._lastEventId,
           };
 
           this.dispatch(eventType, event);
 
           data = [];
-          this.eventType = undefined;
+          this._eventType = undefined;
         }
       }
     }
   }
 
   addEventListener<T extends EventType<E>>(type: T, listener: EventSourceListener<E, T>): void {
-    if (this.eventHandlers[type] === undefined) {
-      this.eventHandlers[type] = [];
+    if (this._eventHandlers[type] === undefined) {
+      this._eventHandlers[type] = [];
     }
 
-    this.eventHandlers[type].push(listener);
+    this._eventHandlers[type].push(listener);
   }
 
   removeEventListener<T extends EventType<E>>(type: T, listener: EventSourceListener<E, T>): void {
-    if (this.eventHandlers[type] !== undefined) {
-      this.eventHandlers[type] = this.eventHandlers[type].filter(
+    if (this._eventHandlers[type] !== undefined) {
+      this._eventHandlers[type] = this._eventHandlers[type].filter(
         (handler: EventSourceListener<E, T>) => handler !== listener,
       );
     }
   }
 
   removeAllEventListeners<T extends EventType<E>>(type?: T) {
-    const availableTypes = Object.keys(this.eventHandlers);
+    const availableTypes = Object.keys(this._eventHandlers);
 
     if (type === undefined) {
       availableTypes.forEach((eventType) => {
-        this.eventHandlers[eventType] = [];
+        this._eventHandlers[eventType] = [];
       });
     } else {
       if (!availableTypes.includes(type)) {
         throw Error(`[EventSource] '${type}' type is not supported event type.`);
       }
 
-      this.eventHandlers[type] = [];
+      this._eventHandlers[type] = [];
     }
   }
 
   dispatch<T extends EventType<E>>(type: T, data: EventSourceEvent<T>) {
-    this.eventHandlers[type]?.forEach((handler: EventSourceListener<E, T>) => handler(data));
+    this._eventHandlers[type]?.forEach((handler: EventSourceListener<E, T>) => handler(data));
 
     switch (type) {
       case 'open':
@@ -325,7 +325,7 @@ export default class EventSource<E extends string = never> {
         this.onclose();
         break;
       case 'error':
-        this.logger?.debug(`[EventSource][dispatch][ERROR]: ${JSON.stringify(data)}`);
+        this._logger?.debug(`[EventSource][dispatch][ERROR]: ${JSON.stringify(data)}`);
         this.onerror(data);
         break;
       case 'retry':
@@ -337,17 +337,17 @@ export default class EventSource<E extends string = never> {
   }
 
   close() {
-    this.status = this.CLOSED;
-    clearTimeout(this.connectTimer);
-    if (this.xhr) {
-      this.xhr.abort();
+    this._status = this.CLOSED;
+    clearTimeout(this._connectTimer);
+    if (this._xhr) {
+      this._xhr.abort();
     }
 
     this.dispatch('close', { type: 'close' });
   }
 
   getStatus() {
-    return this.status;
+    return this._status;
   }
 
   onopen() {}

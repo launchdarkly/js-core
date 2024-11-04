@@ -6,15 +6,18 @@ import {
   TestHttpServer,
 } from 'launchdarkly-js-test-helpers';
 
-import { createLogger } from '@launchdarkly/private-js-mocks';
-
-import { LDClient } from '../src';
+import { LDClient, LDLogger } from '../src';
 import LDClientNode from '../src/LDClientNode';
 
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
 });
 
 describe('When using a TLS connection', () => {

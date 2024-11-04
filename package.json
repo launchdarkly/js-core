@@ -2,7 +2,6 @@
   "name": "@launchdarkly/js-core",
   "workspaces": [
     "packages/shared/common",
-    "packages/shared/mocks",
     "packages/shared/sdk-client",
     "packages/shared/sdk-server",
     "packages/shared/sdk-server-edge",
@@ -23,7 +22,10 @@
     "packages/store/node-server-sdk-dynamodb",
     "packages/telemetry/node-server-sdk-otel",
     "packages/tooling/jest",
+    "packages/tooling/jest/example/react-native-example",
     "packages/sdk/browser",
+    "packages/sdk/browser/contract-tests/entity",
+    "packages/sdk/browser/contract-tests/adapter",
     "packages/sdk/ai"
   ],
   "private": true,

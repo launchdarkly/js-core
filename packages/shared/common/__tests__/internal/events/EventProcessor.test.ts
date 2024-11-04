@@ -1,10 +1,5 @@
-import {
-  ContextDeduplicator,
-  createBasicPlatform,
-  createLogger,
-} from '@launchdarkly/private-js-mocks';
-
 import { LDContextCommon, LDMultiKindContext } from '../../../src/api/context';
+import { LDLogger } from '../../../src/api/logging/LDLogger';
 import { LDContextDeduplicator, LDDeliveryStatus, LDEventType } from '../../../src/api/subsystem';
 import Context from '../../../src/Context';
 import { EventProcessor, InputIdentifyEvent } from '../../../src/internal';
@@ -13,13 +8,20 @@ import shouldSample from '../../../src/internal/events/sampling';
 import BasicLogger from '../../../src/logging/BasicLogger';
 import format from '../../../src/logging/format';
 import ClientContext from '../../../src/options/ClientContext';
+import ContextDeduplicator from '../../contextDeduplicator';
+import { createBasicPlatform } from '../../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 let clientContext: ClientContext;
-let logger: ReturnType<typeof createLogger>;
+let logger: LDLogger;
 
 beforeEach(() => {
-  logger = createLogger();
+  logger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
   mockPlatform = createBasicPlatform();
   clientContext = {
     basicConfiguration: {
@@ -131,7 +133,12 @@ describe('given an event processor', () => {
       }),
     );
     contextDeduplicator = new ContextDeduplicator();
-    eventProcessor = new EventProcessor(eventProcessorConfig, clientContext, contextDeduplicator);
+    eventProcessor = new EventProcessor(
+      eventProcessorConfig,
+      clientContext,
+      {},
+      contextDeduplicator,
+    );
   });
 
   afterEach(() => {
@@ -788,6 +795,7 @@ describe('given an event processor', () => {
     eventProcessor = new EventProcessor(
       eventProcessorConfig,
       clientContextWithDebug,
+      {},
       contextDeduplicator,
     );
 
