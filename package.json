@@ -26,7 +26,9 @@
     "packages/sdk/browser",
     "packages/sdk/browser/contract-tests/entity",
     "packages/sdk/browser/contract-tests/adapter",
-    "packages/sdk/ai"
+    "packages/sdk/ai",
+    "packages/sdk/ai/examples/bedrock",
+    "packages/sdk/ai/examples/openai"
   ],
   "private": true,
   "scripts": {

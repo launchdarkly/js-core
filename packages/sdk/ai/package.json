@@ -4,6 +4,7 @@
   "description": "LaunchDarkly AI SDK for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "commonjs",
   "scripts": {
     "build": "npx tsc",
     "lint": "npx eslint . --ext .ts",

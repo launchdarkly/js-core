@@ -109,7 +109,7 @@ export class AIClientImpl implements AIClient {
  * @param ldClient The base LaunchDarkly client.
  * @returns A new AI client.
  */
-export function init(ldClient: LDClient): AIClient {
+export function initAi(ldClient: LDClient): AIClient {
   return new AIClientImpl(ldClient);
 }
 

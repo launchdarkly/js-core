@@ -5,29 +5,29 @@
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"scripts": {
-	  "build": "tsc",
-	  "test": "jest",
-	  "lint": "eslint . --ext .ts"
+		"build": "tsc",
+		"test": "jest",
+		"lint": "eslint . --ext .ts"
 	},
 	"keywords": [
-	  "launchdarkly",
-	  "ai",
-	  "llm"
+		"launchdarkly",
+		"ai",
+		"llm"
 	],
 	"author": "LaunchDarkly",
 	"license": "Apache-2.0",
 	"dependencies": {
-	  "@launchdarkly/ai": "0.1.0",
-	  "openai": "^4.58.1"
+		"@launchdarkly/ai": "0.1.0",
+		"openai": "^4.58.1"
 	},
 	"devDependencies": {
-	  "eslint": "^8.45.0"
+		"eslint": "^8.45.0"
 	},
 	"directories": {
-	  "example": "example"
+		"example": "example"
 	},
 	"repository": {
-	  "type": "git",
-	  "url": "github.com/launchdarkly/js-core"
+		"type": "git",
+		"url": "github.com/launchdarkly/js-core"
 	}
-      }
+}
