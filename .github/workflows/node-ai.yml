@@ -27,9 +27,11 @@ jobs:
           workspace_path: packages/sdk/ai
       - name: Build bedrock example
         run: |
-          cd packages/sdk/ai/examples/bedrock
-          yarn && yarn build
+          yarn workspaces focus @launchdarkly/hello-ai-bedrock
+          yarn workspace @launchdarkly/hello-ai-bedrock lint
+          yarn workspace @launchdarkly/hello-ai-bedrock build
       - name: Build OpenAI example
         run: |
-          cd packages/sdk/ai/examples/opanai
-          yarn && yarn build
+          yarn workspaces focus @launchdarkly/hello-openai
+          yarn workspace @launchdarkly/hello-openai lint
+          yarn workspace @launchdarkly/hello-openai build
