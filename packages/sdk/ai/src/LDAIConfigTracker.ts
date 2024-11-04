@@ -6,7 +6,6 @@ import {
   OpenAITokenUsage,
   TokenMetrics,
   TokenUsage,
-  UnderScoreTokenUsage,
 } from './api/metrics';
 
 export class LDAIConfigTracker {
