@@ -31,36 +31,36 @@ export interface AIClient {
    * @example
    * ```
    * const key = "welcome_prompt";
-   * const context = new LDContext(...);
-   * const variables = new Record<string, string>([["username", "John"]]);
-   * const defaultValue = {}};
+   * const context = {...};
+   * const variables = {username: 'john};
+   * const defaultValue = {};
    *
    * const result = modelConfig(key, context, defaultValue, variables);
    * // Output:
    * {
-   * modelId: "gpt-4o",
-   * temperature: 0.2,
-   * maxTokens: 4096,
-   * userDefinedKey: "myValue",
-   * prompt: [
-   * {
-   * role: "system",
-   * content: "You are an amazing GPT."
-   * },
-   * {
-   * role: "user",
-   * content: "Explain how you're an amazing GPT."
-   * }
-   * ]
+   *   modelId: "gpt-4o",
+   *   temperature: 0.2,
+   *   maxTokens: 4096,
+   *   userDefinedKey: "myValue",
+   *   prompt: [
+   *     {
+   *       role: "system",
+   *       content: "You are an amazing GPT."
+   *     },
+   *     {
+   *       role: "user",
+   *       content: "Explain how you're an amazing GPT."
+   *     }
+   *   ]
    * }
    * ```
    */
-  modelConfig(
+  modelConfig<T>(
     key: string,
     context: LDContext,
-    defaultValue: string,
+    defaultValue: T,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConfig>;
+  ): Promise<LDAIConfig | T>;
 }
 
 export class AIClientImpl implements AIClient {
@@ -74,12 +74,12 @@ export class AIClientImpl implements AIClient {
     return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
   }
 
-  async modelConfig(
+  async modelConfig<T>(
     key: string,
     context: LDContext,
-    defaultValue: string,
+    defaultValue: T,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConfig> {
+  ): Promise<LDAIConfig | T> {
     const detail = await this._ldClient.variation(key, context, defaultValue);
 
     const allVariables = { ldctx: context, ...variables };
