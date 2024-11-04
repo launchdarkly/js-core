@@ -1,5 +1,5 @@
 {
-  "name": "@launchdarkly/ai",
+  "name": "@launchdarkly/node-server-sdk-ai",
   "version": "0.1.0",
   "description": "LaunchDarkly AI SDK for Node.js",
   "main": "dist/index.js",

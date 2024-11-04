@@ -1,4 +1,4 @@
-name: telemetry/node-server-sdk-otel
+name: sdk/node-server-sdk-ai
 
 on:
   push:
@@ -23,13 +23,13 @@ jobs:
         name: Shared CI Steps
         uses: ./actions/ci
         with:
-          workspace_name: '@launchdarkly/ai'
+          workspace_name: '@launchdarkly/node-server-sdk-ai'
           workspace_path: packages/sdk/ai
       - name: Build bedrock example
         run: |
           cd packages/sdk/ai/examples/bedrock
-          yarn build
+          yarn && yarn build
       - name: Build OpenAI example
         run: |
           cd packages/sdk/ai/examples/opanai
-          yarn build
+          yarn && yarn build

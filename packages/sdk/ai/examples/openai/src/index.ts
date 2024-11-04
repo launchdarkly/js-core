@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { OpenAI } from 'openai';
 
-import { initAi } from '@launchdarkly/ai';
+import { initAi } from '@launchdarkly/node-server-sdk-ai';
 import { init, LDContext } from '@launchdarkly/node-server-sdk';
 
 // Environment variables

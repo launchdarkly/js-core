@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { BedrockRuntimeClient, ConverseCommand, Message } from '@aws-sdk/client-bedrock-runtime';
 
-import { initAi, LDAIConfig } from '@launchdarkly/ai';
+import { initAi, LDAIConfig } from '@launchdarkly/node-server-sdk-ai';
 import { init } from '@launchdarkly/node-server-sdk';
 
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
