@@ -1,7 +1,7 @@
 import { LDContextMeta } from './LDContextMeta';
 
 /**
- * Common attributes shared by the various derived context types.
+ * Common attributes shared by the various context types.
  */
 export interface LDContextCommon {
   /**
