@@ -1,5 +1,65 @@
 # Changelog
 
+## [1.1.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.15...node-server-sdk-otel-v1.1.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.6.1 to 9.7.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.0
+
+## [1.0.15](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.14...node-server-sdk-otel-v1.0.15) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.6.0 to 9.6.1
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.6.1
+
+## [1.0.14](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.13...node-server-sdk-otel-v1.0.14) (2024-09-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.5.4 to 9.6.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.6.0
+
+## [1.0.13](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.12...node-server-sdk-otel-v1.0.13) (2024-09-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.5.3 to 9.5.4
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.4
+
+## [1.0.12](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.11...node-server-sdk-otel-v1.0.12) (2024-09-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.5.2 to 9.5.3
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.3
+
 ## [1.0.11](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.10...node-server-sdk-otel-v1.0.11) (2024-08-28)
 
 

@@ -27,13 +27,19 @@ To install project dependencies, from the project root directory:
 yarn
 ```
 
+### Build
+
+To build all projects, from the root directory:
+
+```
+yarn build
+```
+
 ### Testing
 
-To run all unit tests:
+Unit tests should be implemented in a `__tests__` folder in the root of the package. The directory structure inside of `__tests__` should mirror that of the source directory.
 
-```
-yarn test
-```
+Each package has its own testing requirements and tests should be only ran for single projects.
 
 To run the SDK contract test suite (see [`contract-tests/README.md`](./contract-tests/README.md)):
 The SDK contract test suite will run the Node.js Server version of the SDK.

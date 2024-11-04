@@ -1,11 +1,11 @@
 import { Crypto, Hasher, Hmac } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import { LDBigSegmentsOptions } from '../src';
 import { BigSegmentStore } from '../src/api/interfaces';
 import makeBigSegmentRef from '../src/evaluation/makeBigSegmentRef';
 import TestData from '../src/integrations/test_data/TestData';
 import LDClientImpl from '../src/LDClientImpl';
+import { createBasicPlatform } from './createBasicPlatform';
 import { makeSegmentMatchClause } from './evaluation/flags';
 import makeCallbacks from './makeCallbacks';
 
@@ -25,15 +25,15 @@ const flag = {
 };
 
 class TestHasher implements Hasher {
-  private value: string = 'is_hashed:';
+  private _value: string = 'is_hashed:';
 
   update(toAdd: string): Hasher {
-    this.value += toAdd;
+    this._value += toAdd;
     return this;
   }
 
   digest() {
-    return this.value;
+    return this._value;
   }
 }
 
@@ -75,7 +75,7 @@ describe('given test data with big segments', () => {
       };
 
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-test-data',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
@@ -114,7 +114,7 @@ describe('given test data with big segments', () => {
       };
 
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-with-user',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
@@ -153,7 +153,7 @@ describe('given test data with big segments', () => {
       };
 
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-store-error',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),
@@ -180,7 +180,7 @@ describe('given test data with big segments', () => {
   describe('given a client without big segment support.', () => {
     beforeEach(async () => {
       client = new LDClientImpl(
-        'sdk-key',
+        'sdk-key-big-segments-no-store',
         { ...createBasicPlatform(), crypto },
         {
           updateProcessor: td.getFactory(),

@@ -14,11 +14,11 @@ import {
   Response,
   SdkData,
 } from '@launchdarkly/js-sdk-common';
-import { createBasicPlatform } from '@launchdarkly/private-js-mocks';
 
 import ContextDeduplicator from '../../src/events/ContextDeduplicator';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let mockPlatform: ReturnType<typeof createBasicPlatform>;
 
@@ -111,6 +111,9 @@ function makePlatform(requestState: RequestState) {
     createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
       throw new Error('Function not implemented.');
     },
+    getEventSourceCapabilities() {
+      throw new Error('Function not implemented.');
+    },
   };
   return {
     info,
@@ -196,6 +199,7 @@ describe('given an event processor with diagnostics manager', () => {
     eventProcessor = new internal.EventProcessor(
       testConfig,
       clientContext,
+      {},
       new ContextDeduplicator(config),
       diagnosticsManager,
     );

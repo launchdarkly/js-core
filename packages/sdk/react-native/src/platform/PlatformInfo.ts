@@ -4,7 +4,7 @@ import { name, version } from '../../package.json';
 import { ldApplication, ldDevice } from './autoEnv';
 
 export default class PlatformInfo implements Info {
-  constructor(private readonly logger: LDLogger) {}
+  constructor(private readonly _logger: LDLogger) {}
 
   platformData(): PlatformData {
     const data = {
@@ -13,7 +13,7 @@ export default class PlatformInfo implements Info {
       ld_device: ldDevice,
     };
 
-    this.logger.debug(`platformData: ${JSON.stringify(data, null, 2)}`);
+    this._logger.debug(`platformData: ${JSON.stringify(data, null, 2)}`);
     return data;
   }
 
@@ -24,7 +24,7 @@ export default class PlatformInfo implements Info {
       userAgentBase: 'ReactNativeClient',
     };
 
-    this.logger.debug(`sdkData: ${JSON.stringify(data, null, 2)}`);
+    this._logger.debug(`sdkData: ${JSON.stringify(data, null, 2)}`);
     return data;
   }
 }

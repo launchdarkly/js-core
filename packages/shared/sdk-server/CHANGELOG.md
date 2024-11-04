@@ -8,6 +8,74 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.9.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.8.0...js-server-sdk-common-v2.9.0) (2024-10-17)
+
+
+### Features
+
+* Add prerequisite information to server-side allFlagsState. ([8c84e01](https://github.com/launchdarkly/js-core/commit/8c84e0149a5621c6fcb95f2cfdbd6112f3540191))
+* Add support for client-side prerequisite events. ([8c84e01](https://github.com/launchdarkly/js-core/commit/8c84e0149a5621c6fcb95f2cfdbd6112f3540191))
+* Add support for prerequisite details to evaluation detail. ([8c84e01](https://github.com/launchdarkly/js-core/commit/8c84e0149a5621c6fcb95f2cfdbd6112f3540191))
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.10.0 to 2.11.0
+
+## [2.8.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.7.0...js-server-sdk-common-v2.8.0) (2024-10-09)
+
+
+### Features
+
+* adds datasource status to sdk-client ([#590](https://github.com/launchdarkly/js-core/issues/590)) ([6f26204](https://github.com/launchdarkly/js-core/commit/6f262045b76836e5d2f5ccc2be433094993fcdbb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.9.0 to 2.10.0
+
+## [2.7.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.6.1...js-server-sdk-common-v2.7.0) (2024-09-26)
+
+
+### Features
+
+* Add platform support for async hashing. ([#573](https://github.com/launchdarkly/js-core/issues/573)) ([9248035](https://github.com/launchdarkly/js-core/commit/9248035a88fba1c7375c5df22ef6b4a80a867983))
+* Add support for conditional event source capabilities. ([#577](https://github.com/launchdarkly/js-core/issues/577)) ([fe82500](https://github.com/launchdarkly/js-core/commit/fe82500f28cf8d8311502098aa6cc2e73932064e))
+* Allow using custom user-agent name. ([#580](https://github.com/launchdarkly/js-core/issues/580)) ([ed5a206](https://github.com/launchdarkly/js-core/commit/ed5a206c86f496942664dd73f6f8a7c602a1de28))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.8.0 to 2.9.0
+
+## [2.6.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.6.0...js-server-sdk-common-v2.6.1) (2024-09-05)
+
+
+### Bug Fixes
+
+* Correctly handle null values in JSON variations. ([#569](https://github.com/launchdarkly/js-core/issues/569)) ([907d08b](https://github.com/launchdarkly/js-core/commit/907d08b730ce9745c1b221f2f539f7c56c3a0234)), closes [#568](https://github.com/launchdarkly/js-core/issues/568)
+
+## [2.6.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.5.0...js-server-sdk-common-v2.6.0) (2024-09-03)
+
+
+### Features
+
+* Add support for Payload Filtering ([#551](https://github.com/launchdarkly/js-core/issues/551)) ([6f44383](https://github.com/launchdarkly/js-core/commit/6f4438323baed802d8f951ac82494e6cfa9932c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.7.0 to 2.8.0
+
 ## [2.5.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.4.5...js-server-sdk-common-v2.5.0) (2024-08-28)
 
 

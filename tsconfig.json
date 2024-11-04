@@ -8,9 +8,6 @@
       "path": "./packages/shared/common/tsconfig.ref.json"
     },
     {
-      "path": "./packages/shared/mocks/tsconfig.ref.json"
-    },
-    {
       "path": "./packages/shared/sdk-client/tsconfig.ref.json"
     },
     {
@@ -57,6 +54,12 @@
     },
     {
       "path": "./packages/sdk/browser/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/browser/contract-tests/adapter/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/browser/contract-tests/entity/tsconfig.ref.json"
     }
   ]
 }
