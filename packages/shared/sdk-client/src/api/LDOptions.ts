@@ -126,7 +126,10 @@ export interface LDOptions {
    * @remarks
    * Set a custom {@link LDLogger} if you want full control of logging behavior.
    *
-   * @defaultValue A {@link BasicLogger} which outputs to the console at `info` level.
+   * @defaultValue The default logging implementation will varybased on platform. For the browser
+   * the default logger will log "info" level and higher priorty messages and it will log messages to
+   * console.info, console.warn, and console.error. Other platforms may use a `BasicLogger` instance
+   * also defaulted to the "info" level.
    */
   logger?: LDLogger;
 
