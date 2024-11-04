@@ -1,4 +1,4 @@
-export class UnderscoreTokenUsage {
+export class UnderScoreTokenUsage {
   total_tokens: number;
   prompt_tokens: number;
   completion_tokens: number;

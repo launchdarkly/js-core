@@ -6,7 +6,7 @@ import {
   OpenAITokenUsage,
   TokenMetrics,
   TokenUsage,
-  UnderscoreTokenUsage,
+  UnderScoreTokenUsage,
 } from './api/metrics';
 
 export class LDAIConfigTracker {
@@ -15,14 +15,14 @@ export class LDAIConfigTracker {
   private configKey: string;
   private context: LDContext;
 
-  constructor(ldClient: LDClient, configKey: string, variationId: string, context: LDContext) {
+  constructor(ldClient: LDClient, configKey: string, versionId: string, context: LDContext) {
     this.ldClient = ldClient;
-    this.variationId = variationId;
+    this.variationId = versionId;
     this.configKey = configKey;
     this.context = context;
   }
 
-  private getTrackData() {
+  private _getTrackData(): { variationId: string; configKey: string } {
     return {
       variationId: this.variationId,
       configKey: this.configKey,
@@ -30,7 +30,7 @@ export class LDAIConfigTracker {
   }
 
   trackDuration(duration: number): void {
-    this.ldClient.track('$ld:ai:duration:total', this.context, this.getTrackData(), duration);
+    this.ldClient.track('$ld:ai:duration:total', this.context, this._getTrackData(), duration);
   }
 
   async trackDurationOf(func: (...args: any[]) => Promise<any>, ...args: any[]): Promise<any> {
@@ -43,19 +43,19 @@ export class LDAIConfigTracker {
   }
 
   trackError(error: number): void {
-    this.ldClient.track('$ld:ai:error', this.context, this.getTrackData(), error);
+    this.ldClient.track('$ld:ai:error', this.context, this._getTrackData(), error);
   }
 
   trackFeedback(feedback: { kind: FeedbackKind }): void {
     if (feedback.kind === FeedbackKind.Positive) {
-      this.ldClient.track('$ld:ai:feedback:user:positive', this.context, this.getTrackData(), 1);
+      this.ldClient.track('$ld:ai:feedback:user:positive', this.context, this._getTrackData(), 1);
     } else if (feedback.kind === FeedbackKind.Negative) {
-      this.ldClient.track('$ld:ai:feedback:user:negative', this.context, this.getTrackData(), 1);
+      this.ldClient.track('$ld:ai:feedback:user:negative', this.context, this._getTrackData(), 1);
     }
   }
 
   trackGeneration(generation: number): void {
-    this.ldClient.track('$ld:ai:generation', this.context, this.getTrackData(), generation);
+    this.ldClient.track('$ld:ai:generation', this.context, this._getTrackData(), generation);
   }
 
   async trackOpenAI(func: (...args: any[]) => Promise<any>, ...args: any[]): Promise<any> {
@@ -90,13 +90,18 @@ export class LDAIConfigTracker {
     return res;
   }
 
-  trackTokens(tokens: TokenUsage | UnderscoreTokenUsage | { totalTokens: number; inputTokens: number; outputTokens: number }): void {
+  trackTokens(
+    tokens:
+      | TokenUsage
+      | UnderScoreTokenUsage
+      | { totalTokens: number; inputTokens: number; outputTokens: number },
+  ): void {
     const tokenMetrics = toMetrics(tokens);
     if (tokenMetrics.total > 0) {
       this.ldClient.track(
         '$ld:ai:tokens:total',
         this.context,
-        this.getTrackData(),
+        this._getTrackData(),
         tokenMetrics.total,
       );
     }
@@ -104,7 +109,7 @@ export class LDAIConfigTracker {
       this.ldClient.track(
         '$ld:ai:tokens:input',
         this.context,
-        this.getTrackData(),
+        this._getTrackData(),
         tokenMetrics.input,
       );
     }
@@ -112,7 +117,7 @@ export class LDAIConfigTracker {
       this.ldClient.track(
         '$ld:ai:tokens:output',
         this.context,
-        this.getTrackData(),
+        this._getTrackData(),
         tokenMetrics.output,
       );
     }
@@ -120,7 +125,10 @@ export class LDAIConfigTracker {
 }
 
 function toMetrics(
-  usage: TokenUsage | UnderscoreTokenUsage | { totalTokens: number; inputTokens: number; outputTokens: number },
+  usage:
+    | TokenUsage
+    | UnderScoreTokenUsage
+    | { totalTokens: number; inputTokens: number; outputTokens: number },
 ): TokenMetrics {
   if ('inputTokens' in usage && 'outputTokens' in usage) {
     // Bedrock usage
@@ -133,12 +141,12 @@ function toMetrics(
 
   // OpenAI usage (both camelCase and snake_case)
   return {
-    total: 'total_tokens' in usage ? usage.total_tokens! : (usage as TokenUsage).totalTokens ?? 0,
+    total: 'total_tokens' in usage ? usage.total_tokens! : ((usage as TokenUsage).totalTokens ?? 0),
     input:
-      'prompt_tokens' in usage ? usage.prompt_tokens! : (usage as TokenUsage).promptTokens ?? 0,
+      'prompt_tokens' in usage ? usage.prompt_tokens! : ((usage as TokenUsage).promptTokens ?? 0),
     output:
       'completion_tokens' in usage
         ? usage.completion_tokens!
-        : (usage as TokenUsage).completionTokens ?? 0,
+        : ((usage as TokenUsage).completionTokens ?? 0),
   };
 }

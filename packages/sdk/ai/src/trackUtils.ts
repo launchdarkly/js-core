@@ -1,7 +1,7 @@
-import { BedrockTokenUsage, TokenMetrics, TokenUsage, UnderscoreTokenUsage } from './api/metrics';
+import { BedrockTokenUsage, TokenMetrics, TokenUsage, UnderScoreTokenUsage } from './api/metrics';
 
 export function usageToTokenMetrics(
-  usage: TokenUsage | UnderscoreTokenUsage | BedrockTokenUsage,
+  usage: TokenUsage | UnderScoreTokenUsage | BedrockTokenUsage,
 ): TokenMetrics {
   if ('inputTokens' in usage && 'outputTokens' in usage) {
     // Bedrock usage

@@ -1,11 +1,11 @@
-import { FeedbackKind, TokenUsage, UnderscoreTokenUsage } from '../metrics';
+import { FeedbackKind, TokenUsage, UnderScoreTokenUsage } from '../metrics';
 
 export interface LDAIConfigTracker {
   trackDuration: (duration: number) => void;
   trackTokens: (
     tokens:
       | TokenUsage
-      | UnderscoreTokenUsage
+      | UnderScoreTokenUsage
       | { totalTokens: number; inputTokens: number; outputTokens: number },
   ) => void;
   trackError: (error: number) => void;
