@@ -23,7 +23,7 @@ interface VariationContent {
   _ldMeta?: LDMeta;
 }
 
-export class AIClientImpl implements LDAIClient {
+export class LDAIClientImpl implements LDAIClient {
   private _ldClient: LDClient;
 
   constructor(ldClient: LDClient) {

@@ -1,7 +1,7 @@
 import { LDClient } from '@launchdarkly/node-server-sdk';
 
 import { LDAIClient } from './api/AIClient';
-import { AIClientImpl } from './LDAIClientImpl';
+import { LDAIClientImpl } from './LDAIClientImpl';
 
 /**
  * Initialize a new AI client. This client will be used to perform any AI operations.
@@ -9,7 +9,7 @@ import { AIClientImpl } from './LDAIClientImpl';
  * @returns A new AI client.
  */
 export function initAi(ldClient: LDClient): LDAIClient {
-  return new AIClientImpl(ldClient);
+  return new LDAIClientImpl(ldClient);
 }
 
 export * from './api';
