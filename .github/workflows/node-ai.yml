@@ -24,7 +24,7 @@ jobs:
         uses: ./actions/ci
         with:
           workspace_name: '@launchdarkly/node-server-sdk-ai'
-          workspace_path: packages/sdk/ai
+          workspace_path: packages/sdk/server-ai
       - name: Build bedrock example
         run: |
           yarn workspaces focus @launchdarkly/hello-ai-bedrock
