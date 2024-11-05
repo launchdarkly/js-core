@@ -20,7 +20,7 @@ runs:
         audience: https://github.com/launchdarkly
         role-to-assume: ${{ inputs.aws_assume_role }}
         aws-region: us-east-1
-    - uses: dkershner6/aws-ssm-getparameters-action@4fcb4872421f387a6c43058473acc1b22443fe13
+    - uses: dkershner6/aws-ssm-getparameters-action@7d9b886c53d80ccd3c56fae27e5855e3be91aab4
       with:
         parameterPairs: ${{ inputs.ssm_parameter_pairs }}
         withDecryption: 'true'
