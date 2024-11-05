@@ -32,7 +32,7 @@ const aiClient = initAi(ldClient);
 ```
 
 3. Evaluate a model configuration:
-```
+```typescript
   const config = await aiClient.modelConfig(
     aiConfigKey!,
     context,
