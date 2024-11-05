@@ -39,7 +39,7 @@ function mapPromptToConversation(
 
 async function main() {
   let tracker;
-  let configValue: LDAIConfig | false;
+  let configValue: LDAIConfig;
 
   try {
     await ldClient.waitForInitialization({ timeout: 10 });
@@ -53,6 +53,7 @@ async function main() {
         model: {
           modelId: 'my-default-model',
         },
+        enabled: true,
       },
       {
         myVariable: 'My User Defined Variable',
@@ -73,7 +74,6 @@ async function main() {
         }),
       ),
     );
-
     console.log('AI Response:', completion.output?.message?.content?.[0]?.text ?? 'no-response');
     console.log('Success.');
   }

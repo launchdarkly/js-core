@@ -2,7 +2,7 @@ import * as Mustache from 'mustache';
 
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIConfig, LDGenerationConfig, LDModelConfig, LDPrompt } from './api/config';
+import { LDAIConfig, LDGenerationConfig, LDMessage, LDModelConfig } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
@@ -12,6 +12,7 @@ import { LDClientMin } from './LDClientMin';
  */
 interface LDMeta {
   versionId: string;
+  enabled: boolean;
 }
 
 /**
@@ -20,7 +21,7 @@ interface LDMeta {
  */
 interface VariationContent {
   model?: LDModelConfig;
-  prompt?: LDPrompt[];
+  prompt?: LDMessage[];
   _ldMeta?: LDMeta;
 }
 
@@ -41,7 +42,7 @@ export class LDAIClientImpl implements LDAIClient {
     // We are going to modify the contents before returning them, so we make a copy.
     // This isn't a deep copy and the application developer should not modify the returned content.
     const config: LDGenerationConfig = { ...value };
-    const allVariables = { ldctx: context, ...variables };
+    const allVariables = { ...variables, ldctx: context };
 
     if (value.prompt) {
       config.prompt = value.prompt.map((entry: any) => ({
@@ -60,7 +61,8 @@ export class LDAIClientImpl implements LDAIClient {
         value._ldMeta?.versionId ?? '',
         context,
       ),
-      noConfiguration: Object.keys(value).length === 0,
+      // eslint-disable-next-line no-underscore-dangle
+      enabled: !!value._ldMeta?.enabled,
     };
   }
 }

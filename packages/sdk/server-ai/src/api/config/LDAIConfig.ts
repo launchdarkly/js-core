@@ -18,7 +18,7 @@ export interface LDModelConfig {
 /**
  * Information about prompts.
  */
-export interface LDPrompt {
+export interface LDMessage {
   /**
    * The role of the prompt.
    */
@@ -40,7 +40,7 @@ export interface LDGenerationConfig {
   /**
    * Optional prompt data.
    */
-  prompt?: LDPrompt[];
+  prompt?: LDMessage[];
 }
 
 /**
@@ -58,7 +58,7 @@ export interface LDAIConfig {
   tracker: LDAIConfigTracker;
 
   /**
-   * Whether the configuration is not found.
+   * Whether the configuration is enabled.
    */
-  noConfiguration: boolean;
+  enabled: boolean;
 }
