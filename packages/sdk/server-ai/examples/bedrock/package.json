@@ -2,6 +2,7 @@
   "name": "@launchdarkly/hello-ai-bedrock",
   "version": "0.1.0",
   "description": "LaunchDarkly AI SDK for Node.js",
+  "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "commonjs",
