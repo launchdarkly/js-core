@@ -1,21 +1,17 @@
-import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
+import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from './api/config';
 import { createBedrockTokenUsage, LDFeedbackKind, LDTokenUsage } from './api/metrics';
 import { createOpenAiUsage } from './api/metrics/OpenAiUsage';
+import { LDClientMin } from './LDClientMin';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
-  private _ldClient: LDClient;
-  private _versionId: string;
-  private _configKey: string;
-  private _context: LDContext;
-
-  constructor(ldClient: LDClient, configKey: string, versionId: string, context: LDContext) {
-    this._ldClient = ldClient;
-    this._versionId = versionId;
-    this._configKey = configKey;
-    this._context = context;
-  }
+  constructor(
+    private _ldClient: LDClientMin,
+    private _configKey: string,
+    private _versionId: string,
+    private _context: LDContext,
+  ) {}
 
   private _getTrackData(): { versionId: string; configKey: string } {
     return {

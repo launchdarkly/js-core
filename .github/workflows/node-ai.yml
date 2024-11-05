@@ -23,7 +23,7 @@ jobs:
         name: Shared CI Steps
         uses: ./actions/ci
         with:
-          workspace_name: '@launchdarkly/node-server-sdk-ai'
+          workspace_name: '@launchdarkly/server-sdk-ai'
           workspace_path: packages/sdk/server-ai
       - name: Build bedrock example
         run: |

@@ -2,7 +2,7 @@
 import { BedrockRuntimeClient, ConverseCommand, Message } from '@aws-sdk/client-bedrock-runtime';
 
 import { init } from '@launchdarkly/node-server-sdk';
-import { initAi, LDAIConfig } from '@launchdarkly/node-server-sdk-ai';
+import { initAi, LDAIConfig } from '@launchdarkly/server-sdk-ai';
 
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
 const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';

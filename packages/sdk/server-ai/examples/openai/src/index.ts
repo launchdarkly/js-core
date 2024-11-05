@@ -2,7 +2,7 @@
 import { OpenAI } from 'openai';
 
 import { init, LDContext } from '@launchdarkly/node-server-sdk';
-import { initAi } from '@launchdarkly/node-server-sdk-ai';
+import { initAi } from '@launchdarkly/server-sdk-ai';
 
 // Environment variables
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;

@@ -1,7 +1,7 @@
 {
-  "name": "@launchdarkly/node-server-sdk-ai",
+  "name": "@launchdarkly/server-sdk-ai",
   "version": "0.1.0",
-  "description": "LaunchDarkly AI SDK for Node.js",
+  "description": "LaunchDarkly AI SDK for Server-Side JavaScript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "commonjs",
@@ -21,10 +21,10 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "^9.5.2",
     "mustache": "^4.2.0"
   },
   "devDependencies": {
+    "@launchdarkly/js-server-sdk-common": "2.9.0",
     "@types/jest": "^29.5.3",
     "@types/mustache": "^4.2.5",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
@@ -36,6 +36,6 @@
     "typescript": "5.1.6"
   },
   "peerDependencies": {
-    "@launchdarkly/node-server-sdk": ">=9.4.3"
+    "@launchdarkly/js-server-sdk-common": "2.x"
   }
 }

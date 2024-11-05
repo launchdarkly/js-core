@@ -1,10 +1,11 @@
 import * as Mustache from 'mustache';
 
-import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
+import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfig, LDGenerationConfig, LDModelConfig, LDPrompt } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
+import { LDClientMin } from './LDClientMin';
 
 /**
  * Metadata assorted with a model configuration variation.
@@ -24,11 +25,7 @@ interface VariationContent {
 }
 
 export class LDAIClientImpl implements LDAIClient {
-  private _ldClient: LDClient;
-
-  constructor(ldClient: LDClient) {
-    this._ldClient = ldClient;
-  }
+  constructor(private _ldClient: LDClientMin) {}
 
   interpolateTemplate(template: string, variables: Record<string, unknown>): string {
     return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
