@@ -35,19 +35,27 @@ export interface LDAIConfigTracker {
   /**
    * Track the duration of execution of the provided function.
    * @param func The function to track the duration of.
-   * @param args Arguments for the function.
    * @returns The result of the function.
    */
-  trackDurationOf(func: (...args: any[]) => Promise<any>, ...args: any[]): Promise<any>;
+  trackDurationOf(func: () => Promise<any>): Promise<any>;
 
   /**
    * Track an OpenAI operation.
    *
    * @param func Function which executes the operation.
-   * @param args Arguments for the operation.
    * @returns The result of the operation.
    */
-  trackOpenAI<TRes>(func: (...args: any[]) => Promise<TRes>, ...args: any[]): Promise<TRes>;
+  trackOpenAI<
+    TRes extends {
+      usage?: {
+        total_tokens?: number;
+        prompt_token?: number;
+        completion_token?: number;
+      };
+    },
+  >(
+    func: () => Promise<TRes>,
+  ): Promise<TRes>;
 
   /**
    * Track an operation which uses Bedrock.

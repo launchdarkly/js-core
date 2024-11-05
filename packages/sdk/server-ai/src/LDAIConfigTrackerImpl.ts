@@ -28,9 +28,9 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     this._ldClient.track('$ld:ai:duration:total', this._context, this._getTrackData(), duration);
   }
 
-  async trackDurationOf(func: (...args: any[]) => Promise<any>, ...args: any[]): Promise<any> {
+  async trackDurationOf<TRes>(func: () => Promise<TRes>): Promise<TRes> {
     const startTime = Date.now();
-    const result = await func(...args);
+    const result = await func();
     const endTime = Date.now();
     const duration = endTime - startTime; // duration in milliseconds
     this.trackDuration(duration);
@@ -49,8 +49,16 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
   }
 
-  async trackOpenAI<TRes>(func: (...args: any[]) => Promise<TRes>, ...args: any[]): Promise<TRes> {
-    const result = await this.trackDurationOf(func, ...args);
+  async trackOpenAI<
+    TRes extends {
+      usage?: {
+        total_tokens?: number;
+        prompt_token?: number;
+        completion_token?: number;
+      };
+    },
+  >(func: () => Promise<TRes>): Promise<TRes> {
+    const result = await this.trackDurationOf(func);
     this.trackSuccess();
     if (result.usage) {
       this.trackTokens(createOpenAiUsage(result.usage));
