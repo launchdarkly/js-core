@@ -39,33 +39,34 @@ async function main(): Promise<void> {
   try {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
-    const aiClient = initAi(ldClient);
-
-    const configValue = await aiClient.modelConfig(
-      aiConfigKey,
-      context,
-      {
-        model: {
-          modelId: 'gpt-4',
-        },
-      },
-      { myVariable: 'My User Defined Variable' },
-    );
-
-    const { tracker } = configValue;
-    const completion = await tracker.trackOpenAI(async () =>
-      client.chat.completions.create({
-        messages: configValue.config.prompt || [],
-        model: configValue.config.model?.modelId || 'gpt-4',
-      }),
-    );
-
-    console.log('AI Response:', completion.choices[0]?.message.content);
-    console.log('Success.');
   } catch (error) {
     console.log(`*** SDK failed to initialize: ${error}`);
     process.exit(1);
   }
+
+  const aiClient = initAi(ldClient);
+
+  const aiConfig = await aiClient.modelConfig(
+    aiConfigKey,
+    context,
+    {
+      model: {
+        modelId: 'gpt-4',
+      },
+    },
+    { myVariable: 'My User Defined Variable' },
+  );
+
+  const { tracker } = aiConfig;
+  const completion = await tracker.trackOpenAI(async () =>
+    client.chat.completions.create({
+      messages: aiConfig.config.prompt || [],
+      model: aiConfig.config.model?.modelId || 'gpt-4',
+    }),
+  );
+
+  console.log('AI Response:', completion.choices[0]?.message.content);
+  console.log('Success.');
 }
 
 main();

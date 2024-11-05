@@ -2,7 +2,7 @@
 import { BedrockRuntimeClient, ConverseCommand, Message } from '@aws-sdk/client-bedrock-runtime';
 
 import { init } from '@launchdarkly/node-server-sdk';
-import { initAi, LDAIConfig } from '@launchdarkly/server-sdk-ai';
+import { initAi } from '@launchdarkly/server-sdk-ai';
 
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
 const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
@@ -38,45 +38,41 @@ function mapPromptToConversation(
 }
 
 async function main() {
-  let tracker;
-  let configValue: LDAIConfig;
-
   try {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
-    const aiClient = initAi(ldClient);
-
-    configValue = await aiClient.modelConfig(
-      aiConfigKey!,
-      context,
-      {
-        model: {
-          modelId: 'my-default-model',
-        },
-        enabled: true,
-      },
-      {
-        myVariable: 'My User Defined Variable',
-      },
-    );
-    tracker = configValue.tracker;
   } catch (error) {
     console.log(`*** SDK failed to initialize: ${error}`);
     process.exit(1);
   }
 
-  if (tracker) {
-    const completion = tracker.trackBedrockConverse(
-      await awsClient.send(
-        new ConverseCommand({
-          modelId: configValue.config.model?.modelId ?? 'no-model',
-          messages: mapPromptToConversation(configValue.config.prompt ?? []),
-        }),
-      ),
-    );
-    console.log('AI Response:', completion.output?.message?.content?.[0]?.text ?? 'no-response');
-    console.log('Success.');
-  }
+  const aiClient = initAi(ldClient);
+
+  const aiConfig = await aiClient.modelConfig(
+    aiConfigKey!,
+    context,
+    {
+      model: {
+        modelId: 'my-default-model',
+      },
+      enabled: true,
+    },
+    {
+      myVariable: 'My User Defined Variable',
+    },
+  );
+  const { tracker } = aiConfig;
+
+  const completion = tracker.trackBedrockConverse(
+    await awsClient.send(
+      new ConverseCommand({
+        modelId: aiConfig.config.model?.modelId ?? 'no-model',
+        messages: mapPromptToConversation(aiConfig.config.prompt ?? []),
+      }),
+    ),
+  );
+  console.log('AI Response:', completion.output?.message?.content?.[0]?.text ?? 'no-response');
+  console.log('Success.');
 }
 
 main();
