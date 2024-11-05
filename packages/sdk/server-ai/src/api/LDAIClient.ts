@@ -1,4 +1,4 @@
-import { LDContext } from '@launchdarkly/node-server-sdk';
+import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfig, LDGenerationConfig } from './config/LDAIConfig';
 
