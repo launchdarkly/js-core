@@ -31,6 +31,10 @@
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
       "bump-minor-pre-major": true
+    },
+    "packages/sdk/server-ai": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
     }
   },
   "plugins": [

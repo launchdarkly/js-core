@@ -13,5 +13,6 @@
   "packages/shared/sdk-client": "1.11.0",
   "packages/sdk/react-native": "10.9.1",
   "packages/telemetry/node-server-sdk-otel": "1.1.0",
-  "packages/sdk/browser": "0.2.0"
+  "packages/sdk/browser": "0.2.0",
+  "packages/sdk/server-ai": "0.0.0"
 }
