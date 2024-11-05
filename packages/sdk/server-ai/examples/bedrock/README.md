@@ -4,16 +4,19 @@ This package demonstrates the integration of LaunchDarkly's AI SDK with AWS Bedr
 
 ## Installation and Build
 
-To install the package and its dependencies, run:
+When running as part of the js-core mono-repo the project will use local dependencies.
+As such those dependencies need built.
+
+In the root of the repository run:
 
 ```bash
-npm install
+yarn
 ```
 
-Then build the project:
+And then
 
 ```bash
-npm run build
+yarn build
 ```
 
 ## Configuration
@@ -36,8 +39,8 @@ The main script (`index.js`) demonstrates how to:
 5. Send a prompt to AWS Bedrock
 6. Track token usage
 
-To run the example:
+To run the example (in the bedrock directory):
 
 ```bash
-node dist/index.js
+yarn start
 ```

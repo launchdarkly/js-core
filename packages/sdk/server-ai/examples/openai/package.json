@@ -6,6 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "start": "yarn build && node ./dist/index.js",
     "lint": "npx eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "lint:fix": "yarn run lint --fix",
