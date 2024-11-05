@@ -49,8 +49,8 @@ export interface LDAIConfigTracker {
     TRes extends {
       usage?: {
         total_tokens?: number;
-        prompt_token?: number;
-        completion_token?: number;
+        prompt_tokens?: number;
+        completion_tokens?: number;
       };
     },
   >(
