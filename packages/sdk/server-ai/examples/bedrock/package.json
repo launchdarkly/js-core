@@ -22,7 +22,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.679.0",
-    "@launchdarkly/node-server-sdk": "9.7.0",
+    "@launchdarkly/node-server-sdk": "^9.7.0",
     "@launchdarkly/server-sdk-ai": "0.1.0"
   },
   "devDependencies": {

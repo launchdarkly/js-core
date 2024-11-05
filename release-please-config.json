@@ -34,7 +34,16 @@
     },
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.0",
+      "extra-files": [{
+        "type": "json",
+        "path": "examples/bedrock/package.json",
+        "jsonpath": "$.dependencies.@launchdarkly/server-sdk-ai"
+      },{
+        "type": "json",
+        "path": "examples/openai/package.json",
+        "jsonpath": "$.dependencies.@launchdarkly/server-sdk-ai"
+      }]
     }
   },
   "plugins": [
