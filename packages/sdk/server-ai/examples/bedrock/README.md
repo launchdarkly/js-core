@@ -2,12 +2,18 @@
 
 This package demonstrates the integration of LaunchDarkly's AI SDK with AWS Bedrock, allowing you to leverage LaunchDarkly's AI Config capabilities in AI-powered applications using AWS Bedrock.
 
-## Installation
+## Installation and Build
 
 To install the package and its dependencies, run:
 
 ```bash
 npm install
+```
+
+Then build the project:
+
+```bash
+npm run build
 ```
 
 ## Configuration
@@ -33,5 +39,5 @@ The main script (`index.js`) demonstrates how to:
 To run the example:
 
 ```bash
-node index.js
+node dist/index.js
 ```

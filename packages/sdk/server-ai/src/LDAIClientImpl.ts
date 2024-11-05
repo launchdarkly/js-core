@@ -1,4 +1,4 @@
-import Mustache from 'mustache';
+import * as Mustache from 'mustache';
 
 import { LDClient, LDContext } from '@launchdarkly/node-server-sdk';
 
