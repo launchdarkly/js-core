@@ -1,6 +1,11 @@
-# LaunchDarkly AI SDK for Node.js
+# LaunchDarkly AI SDK for Server-Side JavaScript
 
-This package provides the LaunchDarkly AI SDK for Node.js.
+# ⛔️⛔️⛔️⛔️
+
+> [!CAUTION]
+> This library is a alpha version and should not be considered ready for production use while this message is visible.
+
+# ☝️☝️☝️☝️☝️☝️
 
 ## LaunchDarkly overview
 
