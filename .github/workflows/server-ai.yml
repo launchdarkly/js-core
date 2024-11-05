@@ -1,4 +1,4 @@
-name: sdk/node-server-sdk-ai
+name: sdk/server-ai
 
 on:
   push:
@@ -29,9 +29,9 @@ jobs:
         run: |
           yarn workspaces focus @launchdarkly/hello-ai-bedrock
           yarn workspace @launchdarkly/hello-ai-bedrock lint
-          yarn workspace @launchdarkly/hello-ai-bedrock build
+          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-ai-bedrock' run build
       - name: Build OpenAI example
         run: |
           yarn workspaces focus @launchdarkly/hello-openai
           yarn workspace @launchdarkly/hello-openai lint
-          yarn workspace @launchdarkly/hello-openai build
+          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-openai' run build
