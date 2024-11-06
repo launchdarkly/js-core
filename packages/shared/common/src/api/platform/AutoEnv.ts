@@ -6,8 +6,6 @@
  * model, operating system, locale, and so on. We recommend enabling this when you configure the SDK. To learn more,
  * read [Automatic environment attributes](https://docs.launchdarkly.com/sdk/features/environment-attributes).
  * for more documentation.
- *
- * The default is disabled.
  */
 export enum AutoEnvAttributes {
   Disabled,

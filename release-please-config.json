@@ -31,6 +31,18 @@
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
       "bump-minor-pre-major": true
+    },
+    "packages/sdk/server-ai": {
+      "bump-minor-pre-major": true,
+      "extra-files": [{
+        "type": "json",
+        "path": "examples/bedrock/package.json",
+        "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+      },{
+        "type": "json",
+        "path": "examples/openai/package.json",
+        "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+      }]
     }
   },
   "plugins": [

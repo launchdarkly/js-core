@@ -24,6 +24,9 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * A function which, if present, can change the URL in analytics events to something other
    * than the actual browser URL. It will be called with the current browser URL as a parameter,
    * and returns the value that should be stored in the event's `url` property.
+   *
+   * It may be useful to customize the `url` to provide specific meaning, incorporate
+   * client-side routing concerns, or redact tokens or other info.
    */
   eventUrlTransformer?: (url: string) => string;
 
@@ -39,10 +42,10 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
   streaming?: boolean;
 
   /**
-   * Determines if the SDK responds to entering different visibility states to handle tasks such as
-   * flushing events.
+   * Determines if the SDK responds to entering different visibility states, such as foreground and background.
+   * An example is flushing buffered events when going to the background.
    *
-   * This is true by default. Generally speaking the SDK will be able to most reliably delivery
+   * This is true by default. Generally speaking the SDK will be able to most reliably deliver
    * events with this setting on.
    *
    * It may be useful to disable for environments where not all window/document objects are
