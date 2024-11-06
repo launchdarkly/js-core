@@ -1,23 +1,20 @@
-import { initialize } from 'launchdarkly-js-client-sdk';
-import type {
-  LDClient,
-  LDFlagSet,
-  LDFlagValue,
-  LDContext as NodeLDContext,
-} from 'launchdarkly-js-client-sdk';
 import { derived, get, type Readable, readonly, writable, type Writable } from 'svelte/store';
+
+import {
+  initialize,
+  type LDClient,
+  type LDContext,
+  type LDFlagSet,
+} from '@launchdarkly/js-client-sdk';
 
 /** Client ID for LaunchDarkly */
 export type LDClientID = string;
 
-/** Context for LaunchDarkly */
-export type LDContext = NodeLDContext;
-
-/** Value of LaunchDarkly flags */
-export type LDFlagsValue = LDFlagValue;
-
 /** Flags for LaunchDarkly */
 export type LDFlags = LDFlagSet;
+
+/** Value of LaunchDarkly flags */
+export type LDFlagsValue = LDFlagSet[string];
 
 /**
  * Checks if the LaunchDarkly client is initialized.
@@ -42,19 +39,20 @@ function createLD() {
   /**
    * Initializes the LaunchDarkly client.
    * @param {LDClientID} clientId - The client ID.
-   * @param {LDContext} context - The context.
    * @returns {Writable<boolean>} An object with the initialization status store.
    */
-  function LDInitialize(clientId: LDClientID, context: LDContext) {
-    jsSdk = initialize(clientId, context);
 
-    jsSdk.waitUntilReady().then(() => {
+  function LDInitialize(clientId: LDClientID) {
+    jsSdk = initialize(clientId);
+    jsSdk!.on('ready', () => {
       loading.set(false);
-      flagsWritable.set(jsSdk!.allFlags());
+      const allFlags = jsSdk!.allFlags();
+      flagsWritable.set(allFlags);
     });
 
-    jsSdk.on('change', () => {
-      flagsWritable.set(jsSdk!.allFlags());
+    jsSdk!.on('change', () => {
+      const allFlags = jsSdk!.allFlags();
+      flagsWritable.set(allFlags);
     });
 
     return {
