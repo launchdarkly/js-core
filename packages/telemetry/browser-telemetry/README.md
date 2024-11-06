@@ -39,8 +39,3 @@ We encourage pull requests and other contributions from the community. Check out
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
-
-[node-otel-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-otel.yml/badge.svg
-[node-otel-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-otel.yml
-[node-otel-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk-otel.svg?style=flat-square
-[node-otel-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk-otel
