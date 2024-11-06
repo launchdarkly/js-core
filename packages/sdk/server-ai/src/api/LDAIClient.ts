@@ -10,8 +10,8 @@ export interface LDAIClient {
   /**
    * Parses and interpolates a template string with the provided variables.
    *
-   * @param template - The template string to be parsed and interpolated.
-   * @param variables - An object containing the variables to be used for interpolation.
+   * @param template The template string to be parsed and interpolated.
+   * @param variables An object containing the variables to be used for interpolation.
    * @returns The interpolated string.
    */
   interpolateTemplate(template: string, variables: Record<string, unknown>): string;
