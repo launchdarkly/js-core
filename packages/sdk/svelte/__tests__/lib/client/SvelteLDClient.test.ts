@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { get } from 'svelte/store';
-import { afterAll, afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 
 import { initialize, LDClient } from '@launchdarkly/js-client-sdk';
 
@@ -62,7 +62,7 @@ describe('launchDarkly', () => {
 
       it('should set the loading status to false when the client is ready', async () => {
         const { initializing } = ld;
-        ld.initialize('clientId');
+        ld.initialize(clientSideID);
 
         expect(get(initializing)).toBe(true); // should be true before the ready event is emitted
         mockLDEventEmitter.emit('ready');
@@ -71,16 +71,16 @@ describe('launchDarkly', () => {
       });
 
       it('should initialize the LaunchDarkly SDK instance', () => {
-        ld.initialize('clientId');
+        ld.initialize(clientSideID);
 
-        expect(initialize).toHaveBeenCalledWith('clientId');
+        expect(initialize).toHaveBeenCalledWith('test-client-side-id');
       });
 
       it('should register function that gets flag values when client is ready', () => {
         const newFlags = { ...rawFlags, 'new-flag': true };
         const allFlagsSpy = vi.spyOn(mockLDClient, 'allFlags').mockReturnValue(newFlags);
 
-        ld.initialize('clientId');
+        ld.initialize(clientSideID);
         mockLDEventEmitter.emit('ready');
 
         expect(allFlagsSpy).toHaveBeenCalledOnce();
@@ -91,7 +91,7 @@ describe('launchDarkly', () => {
         const changedFlags = { ...rawFlags, 'changed-flag': true };
         const allFlagsSpy = vi.spyOn(mockLDClient, 'allFlags').mockReturnValue(changedFlags);
 
-        ld.initialize('clientId');
+        ld.initialize(clientSideID);
         mockLDEventEmitter.emit('change');
 
         expect(allFlagsSpy).toHaveBeenCalledOnce();
@@ -161,21 +161,29 @@ describe('launchDarkly', () => {
     // TODO: fix these tests
     // describe('isOn function', () => {
     //   const ld = LD;
-    //   // beforeEach(() => {
-    //   //   mockInitialize.mockImplementation(() => mockLDClient);
-    //   //   mockAllFlags.mockImplementation(() => rawFlags);
-    //   // });
+
+    //   beforeEach(() => {
+    //     // mocks the initialize function to return the mockLDClient
+    //     (initialize as Mock<typeof initialize>).mockReturnValue(
+    //       mockLDClient as unknown as LDClient,
+    //     );
+    //   });
+
+    //   afterEach(() => {
+    //     vi.clearAllMocks();
+    //     mockLDEventEmitter.removeAllListeners();
+    //   });
 
     //   it('should return true if the flag is on', () => {
     //     const flagKey = 'test-flag';
-    //     ld.initialize(clientSideID, { key: 'user1' });
+    //     ld.initialize(clientSideID);
 
     //     expect(ld.isOn(flagKey)).toBe(true);
     //   });
 
     //   it('should return false if the flag is off', () => {
     //     const flagKey = 'test-flag';
-    //     ld.initialize(clientSideID, { key: 'user1' });
+    //     ld.initialize(clientSideID);
 
     //     mockAllFlags.mockReturnValue({ ...rawFlags, 'test-flag': false });
 
