@@ -1,3 +1,11 @@
+/**
+ * This is the API reference for the LaunchDarkly AI SDK for Server-Side JavaScript.
+ *
+ * In typical usage, you will call {@link initAi} once at startup time to obtain an instance of
+ * {@link LDAIClient}, which provides access to all of the SDK's functionality.
+ *
+ * @packageDocumentation
+ */
 import { LDAIClient } from './api/LDAIClient';
 import { LDAIClientImpl } from './LDAIClientImpl';
 import { LDClientMin } from './LDClientMin';
