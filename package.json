@@ -25,7 +25,10 @@
     "packages/tooling/jest/example/react-native-example",
     "packages/sdk/browser",
     "packages/sdk/browser/contract-tests/entity",
-    "packages/sdk/browser/contract-tests/adapter"
+    "packages/sdk/browser/contract-tests/adapter",
+    "packages/sdk/server-ai",
+    "packages/sdk/server-ai/examples/bedrock",
+    "packages/sdk/server-ai/examples/openai"
   ],
   "private": true,
   "scripts": {
