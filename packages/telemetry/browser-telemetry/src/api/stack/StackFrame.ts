@@ -1,7 +1,7 @@
 /**
  * Represents a frame in a stack.
  */
-export interface StackFrame {
+export default interface StackFrame {
   /**
    * The fileName, relative to the project root, of the stack frame.
    */
