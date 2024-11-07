@@ -1,5 +1,5 @@
 import { Breadcrumb } from './Breadcrumb';
-import StackTrace from './stack/StackTrace';
+import { StackTrace } from './stack/StackTrace';
 
 /**
  * Interface representing error data.
