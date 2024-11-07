@@ -28,8 +28,9 @@ export function processFetchArgs(
   // `instanceof` was not added to Edge until 2015.
   if (typeof Request !== 'undefined' && input instanceof Request) {
     url = input.url;
+    method = input.method;
   }
-  if (input instanceof URL) {
+  if (typeof URL !== 'undefined' && input instanceof URL) {
     url = input.toString();
   }
 

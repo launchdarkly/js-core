@@ -38,6 +38,41 @@ Object.defineProperty(global, 'Response', {
   configurable: true,
 });
 
+// We need a global request to validate the fetch argument processing.
+Object.defineProperty(global, 'Request', {
+  value: class Request {
+    constructor(input, init = {}) {
+      this.url = typeof input === 'string' ? input : input.url;
+      this.method = (init.method || 'GET').toUpperCase();
+      this.headers = new Map(Object.entries(init.headers || {}));
+      this.body = init.body || null;
+      this.mode = init.mode || 'cors';
+      this.credentials = init.credentials || 'same-origin';
+      this.cache = init.cache || 'default';
+      this.redirect = init.redirect || 'follow';
+      this.referrer = init.referrer || 'about:client';
+      this.integrity = init.integrity || '';
+    }
+
+    clone() {
+      return new Request(this.url, {
+        method: this.method,
+        headers: Object.fromEntries(this.headers),
+        body: this.body,
+        mode: this.mode,
+        credentials: this.credentials,
+        cache: this.cache,
+        redirect: this.redirect,
+        referrer: this.referrer,
+        integrity: this.integrity
+      });
+    }
+  },
+  writable: true,
+  configurable: true,
+});
+
+
 // Based on:
 // https://stackoverflow.com/a/71750830
 

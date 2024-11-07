@@ -48,82 +48,95 @@ describe('given a FetchCollector with a mock recorder', () => {
     );
   });
 
-  // it('stops adding breadcrumbs after unregistering', async () => {
-  //   collector.register(mockRecorder, 'test-session');
-  //   collector.unregister();
+  it('stops adding breadcrumbs after unregistering', async () => {
+    collector.register(mockRecorder, 'test-session');
+    collector.unregister();
 
-  //   const mockResponse = new Response('test response', { status: 200 });
-  //   window.fetch = jest.fn().mockResolvedValue(mockResponse);
+    const mockResponse = new Response('test response', { status: 200, statusText: 'OK' });
+    (initialFetch as jest.Mock).mockResolvedValue(mockResponse);
 
-  //   await fetch('https://api.example.com/data');
+    await fetch('https://api.example.com/data');
 
-  //   expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
-  // });
+    expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
+  });
 
-  // it('filters URLs based on provided options', async () => {
-  //   const options = {
-  //     urlFilter: (url: string) => url.replace(/token=.*/, 'token=REDACTED'),
-  //   };
+  it('filters URLs based on provided options', async () => {
+    collector = new FetchCollector({
+      urlFilters: [(url: string) => url.replace(/token=.*/, 'token=REDACTED')], // Convert urlFilter to urlFilters array
+    });
+    collector.register(mockRecorder, 'test-session');
 
-  //   collector = new FetchCollector(options);
-  //   collector.register(mockRecorder, 'test-session');
+    const mockResponse = new Response('test response', { status: 200, statusText: 'OK' });
+    (initialFetch as jest.Mock).mockResolvedValue(mockResponse);
 
-  //   const mockResponse = new Response('test response', { status: 200 });
-  //   window.fetch = jest.fn().mockResolvedValue(mockResponse);
+    await fetch('https://api.example.com/data?token=secret123');
 
-  //   await fetch('https://api.example.com/data?token=secret123');
+    expect(mockRecorder.addBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining<HttpBreadcrumb>({
+        data: {
+          method: 'GET',
+          url: 'https://api.example.com/data?token=REDACTED',
+          statusCode: 200,
+          statusText: 'OK',
+        },
+        class: 'http',
+        timestamp: expect.any(Number),
+        level: 'info',
+        type: 'fetch',
+      }),
+    );
+  });
 
-  //   expect(mockRecorder.addBreadcrumb).toHaveBeenCalledWith(
-  //     expect.objectContaining<HttpBreadcrumb>({
-  //       data: {
-  //         method: 'GET',
-  //         url: 'https://api.example.com/data?token=REDACTED',
-  //       },
-  //     }),
-  //   );
-  // });
+  it('handles fetch calls with Request objects', async () => {
+    collector.register(mockRecorder, 'test-session');
 
-  // it('handles fetch calls with Request objects', async () => {
-  //   collector.register(mockRecorder, 'test-session');
+    const mockResponse = new Response('test response', { status: 200, statusText: 'OK' });
+    (initialFetch as jest.Mock).mockResolvedValue(mockResponse);
 
-  //   const mockResponse = new Response('test response', { status: 200 });
-  //   window.fetch = jest.fn().mockResolvedValue(mockResponse);
+    const request = new Request('https://api.example.com/data', {
+      method: 'PUT',
+      body: JSON.stringify({ test: true }),
+    });
+    await fetch(request);
 
-  //   const request = new Request('https://api.example.com/data', {
-  //     method: 'PUT',
-  //     body: JSON.stringify({ test: true }),
-  //   });
+    expect(mockRecorder.addBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining<HttpBreadcrumb>({
+        data: {
+          method: 'PUT',
+          url: 'https://api.example.com/data',
+          statusCode: 200,
+          statusText: 'OK',
+        },
+        class: 'http',
+        timestamp: expect.any(Number),
+        level: 'info',
+        type: 'fetch',
+      }),
+    );
+  });
 
-  //   await fetch(request);
+  it('handles fetch calls with URL objects', async () => {
+    collector.register(mockRecorder, 'test-session');
 
-  //   expect(mockRecorder.addBreadcrumb).toHaveBeenCalledWith(
-  //     expect.objectContaining<HttpBreadcrumb>({
-  //       message: 'PUT https://api.example.com/data',
-  //       data: {
-  //         method: 'PUT',
-  //         url: 'https://api.example.com/data',
-  //       },
-  //     }),
-  //   );
-  // });
+    const mockResponse = new Response('test response', { status: 200, statusText: 'OK' });
+    (initialFetch as jest.Mock).mockResolvedValue(mockResponse);
 
-  // it('handles fetch calls with URL objects', async () => {
-  //   collector.register(mockRecorder, 'test-session');
+    const url = new URL('https://api.example.com/data');
+    await fetch(url);
 
-  //   const mockResponse = new Response('test response', { status: 200 });
-  //   window.fetch = jest.fn().mockResolvedValue(mockResponse);
-
-  //   const url = new URL('https://api.example.com/data');
-  //   await fetch(url);
-
-  //   expect(mockRecorder.addBreadcrumb).toHaveBeenCalledWith(
-  //     expect.objectContaining<HttpBreadcrumb>({
-  //       message: 'GET https://api.example.com/data',
-  //       data: {
-  //         method: 'GET',
-  //         url: 'https://api.example.com/data',
-  //       },
-  //     }),
-  //   );
-  // });
+    expect(mockRecorder.addBreadcrumb).toHaveBeenCalledWith(
+      expect.objectContaining<HttpBreadcrumb>({
+        data: {
+          method: 'GET',
+          url: 'https://api.example.com/data',
+          statusCode: 200,
+          statusText: 'OK',
+        },
+        class: 'http',
+        timestamp: expect.any(Number),
+        level: 'info',
+        type: 'fetch',
+      }),
+    );
+  });
 });
