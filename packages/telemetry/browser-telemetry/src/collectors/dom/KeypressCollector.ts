@@ -16,6 +16,10 @@ export default class KeypressCollector implements Collector {
   private _lastEvent?: UiBreadcrumb;
 
   constructor() {
+    // Currently we use the keypress event, but it is technically deprecated.
+    // It is the simplest way to currently get the most broad coverage.
+    // In the future we may want to consider some check to attempt to selectively use a more
+    // targetted event.
     window.addEventListener(
       'keypress',
       (event: KeyboardEvent) => {
