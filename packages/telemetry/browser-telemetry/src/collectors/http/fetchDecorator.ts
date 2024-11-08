@@ -46,10 +46,10 @@ export function processFetchArgs(
  * @param callback Function which handles a breadcrumb.
  */
 export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => void) {
-  // TODO: Check if already wrapped?
-  // TODO: Centralized mechanism to wrapping?
+  // TODO (SDK-884): Check if already wrapped?
+  // TODO (SDK-884): Centralized mechanism to wrapping?
 
-  // In this function we add type annotations for `this`. In this case we are telling teh compiler
+  // In this function we add type annotations for `this`. In this case we are telling the compiler
   // we don't care about the typing.
 
   // This is a function instead of an arrow function in order to preserve the original `this`.
