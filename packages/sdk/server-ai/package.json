@@ -16,7 +16,7 @@
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "lint:fix": "yarn run lint --fix",
     "check": "yarn prettier && yarn lint && yarn build && yarn test",
-    "test": "echo No tests added yet."
+    "test": "jest"
   },
   "keywords": [
     "launchdarkly",
