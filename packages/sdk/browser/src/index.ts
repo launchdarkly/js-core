@@ -13,10 +13,10 @@
 import { AutoEnvAttributes } from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserClient, LDClient } from './BrowserClient';
-import { LDOptions } from './common';
+import { BrowserOptions as LDOptions } from './options';
 
 export * from './common';
-export type { LDClient };
+export type { LDClient, LDOptions };
 
 /**
  * Creates an instance of the LaunchDarkly client.
