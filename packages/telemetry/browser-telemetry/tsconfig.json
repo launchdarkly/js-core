@@ -3,7 +3,7 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
-    "lib": ["ES2017", "dom"],
+    "lib": ["ES6", "dom"],
     "module": "ESNext",
     "moduleResolution": "node",
     "noImplicitOverride": true,
@@ -14,7 +14,7 @@
     "sourceMap": false,
     "strict": true,
     "stripInternal": true,
-    "target": "ES2017",
+    "target": "ES2018",
     "types": ["node", "jest"],
     "allowJs": true
   },

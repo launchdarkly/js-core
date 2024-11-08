@@ -2,14 +2,15 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
-    "lib": ["es6", "DOM"],
+    "lib": ["ES6", "DOM"],
     "module": "CommonJS",
     "strict": true,
     "noImplicitOverride": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "stripInternal": true
+    "stripInternal": true,
+    "target": "ES2018"
   },
   "exclude": [
     "vite.config.ts",

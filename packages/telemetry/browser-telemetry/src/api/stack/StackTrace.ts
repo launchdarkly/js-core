@@ -1,9 +1,9 @@
-import StackFrame from './StackFrame';
+import { StackFrame } from './StackFrame';
 
 /**
  * Represents a stack trace.
  */
-export default interface StackTrace {
+export interface StackTrace {
   /**
    * Frames associated with the stack. If no frames can be collected, then this
    * will be an empty array.

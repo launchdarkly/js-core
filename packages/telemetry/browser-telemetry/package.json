@@ -24,7 +24,7 @@
   "description": "Telemetry integration for LaunchDarkly browser SDKs.",
   "scripts": {
     "test": "npx jest --runInBand",
-    "build": "tsup",
+    "build": "tsc --noEmit && tsup",
     "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'",
     "check": "yarn && yarn prettier && yarn lint && tsc && yarn test",
     "lint": "npx eslint . --ext .ts"
