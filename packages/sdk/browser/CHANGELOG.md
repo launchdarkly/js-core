@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.0...js-client-sdk-v0.3.1) (2024-11-08)
+
+
+### Bug Fixes
+
+* Consolidate common exports between base package and compat package. ([#674](https://github.com/launchdarkly/js-core/issues/674)) ([f692050](https://github.com/launchdarkly/js-core/commit/f69205082d83318e2772d027d6ea533de3ce5eb1))
+
 ## [0.3.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.2.0...js-client-sdk-v0.3.0) (2024-11-04)
 
 
