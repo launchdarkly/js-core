@@ -9,7 +9,7 @@ const THROTTLE_TIME_MS = 1000;
 const INPUT_TAG_NAMES = ['INPUT', 'TEXTAREA'];
 
 /**
- * Collects mouse click events and adds them as breadcrumbs.
+ * Collects key press events and adds them as breadcrumbs.
  */
 export default class KeypressCollector implements Collector {
   private _destination?: Recorder;
@@ -53,10 +53,12 @@ export default class KeypressCollector implements Collector {
   }
 
   private _shouldDeduplicate(crumb: Breadcrumb): boolean {
-    // TODO: Consider de-duplication at the dom level.
+    // If this code every is demonstrably a performance issue, then we may be able to implement
+    // some scheme to de-duplicate these via some DOM mechanism. Like adding a debounce annotation
+    // of some kind.
     if (this._lastEvent) {
       const timeDiff = Math.abs(crumb.timestamp - this._lastEvent.timestamp);
-      return this._lastEvent.message === crumb.message && timeDiff <= THROTTLE_TIME_MS;
+      return timeDiff <= THROTTLE_TIME_MS && this._lastEvent.message === crumb.message;
     }
     return false;
   }
