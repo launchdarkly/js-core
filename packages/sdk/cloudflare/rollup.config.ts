@@ -13,9 +13,7 @@ const typingsPath = 'dist/index.d.ts';
 
 const plugins = [resolve(), commonjs(), esbuild(), json(), terser(), filesize()];
 
-// the second array item is a function to include all js-core packages in the bundle so they
-// are not imported or required as separate npm packages
-const external = [/node_modules/, (id: string) => !id.includes('js-core')];
+const external = ['@cloudflare/workers-types', 'crypto-js', 'semver', '@types/semver'];
 
 export default [
   {
@@ -44,10 +42,11 @@ export default [
   },
   {
     input: inputPath,
-    plugins: [dts(), json()],
+    plugins: [dts({ respectExternal: true }), json()],
     output: {
       file: typingsPath,
       format: 'esm',
     },
+    external,
   },
 ];

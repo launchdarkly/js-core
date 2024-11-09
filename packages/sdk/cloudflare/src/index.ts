@@ -47,7 +47,7 @@ export type { LDClient };
  */
 export const init = (
   clientSideID: string,
-  kvNamespace: KVNamespace,
+  kvNamespace: KVNamespace<string>,
   options: LDOptions = {},
 ): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
