@@ -10,6 +10,16 @@ export interface LDModelConfig {
   modelId?: string;
 
   /**
+   * The temperature of the model.
+   */
+  temperature?: number;
+
+  /**
+   * The maximum number of tokens to generate.
+   */
+  maxTokens?: number;
+
+  /**
    * And additional model specific information.
    */
   [index: string]: unknown;
