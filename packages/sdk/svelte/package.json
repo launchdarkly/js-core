@@ -43,13 +43,14 @@
     "test:unit-ui": "vitest --ui"
   },
   "peerDependencies": {
-    "@launchdarkly/js-client-sdk-common": "^1.1.4",
+    "@launchdarkly/js-client-sdk": "workspace:^",
+    "@launchdarkly/js-client-sdk-common": "^1.10.0",
     "@launchdarkly/node-server-sdk": "^9.4.6",
-    "launchdarkly-js-client-sdk": "^3.4.0",
     "svelte": "^4.0.0"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.1.4",
+    "@launchdarkly/js-client-sdk": "workspace:^",
+    "@launchdarkly/js-client-sdk-common": "1.10.0",
     "esm-env": "^1.0.0"
   },
   "devDependencies": {
@@ -84,6 +85,6 @@
     "typedoc": "0.25.0",
     "typescript": "5.1.6",
     "vite": "^5.2.6",
-    "vitest": "^1.6.0"
+    "vitest": "^2.1.4"
   }
 }
