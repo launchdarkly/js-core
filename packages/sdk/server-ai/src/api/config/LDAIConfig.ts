@@ -10,6 +10,17 @@ export interface LDModelConfig {
   modelId?: string;
 
   /**
+   * Tuning parameter for randomness versus determinism. Exact effect will be determined by the
+   * model.
+   */
+  temperature?: number;
+
+  /**
+   * The maximum number of tokens.
+   */
+  maxTokens?: number;
+
+  /**
    * And additional model specific information.
    */
   [index: string]: unknown;
