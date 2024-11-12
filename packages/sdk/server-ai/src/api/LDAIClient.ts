@@ -2,6 +2,9 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfig, LDGenerationConfig } from './config/LDAIConfig';
 
+/**
+ * Interface for default model configuration.
+ */
 export interface LDAIDefaults extends LDGenerationConfig {
   /**
    * Whether the configuration is enabled.
