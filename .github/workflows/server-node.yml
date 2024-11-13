@@ -33,7 +33,7 @@ jobs:
           workspace_path: packages/sdk/server-node
       - name: Launch the test service in the background
         run: yarn run contract-test-service 2>&1 &
-      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.2
+      - uses: launchdarkly/gh-actions/actions/contract-tests@rlamb/retry-support
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
