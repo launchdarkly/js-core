@@ -128,6 +128,10 @@ export default class LDClientImpl implements LDClient {
 
   private _hookRunner: HookRunner;
 
+  public get logger(): LDLogger | undefined {
+    return this._logger;
+  }
+
   /**
    * Intended for use by platform specific client implementations.
    *
