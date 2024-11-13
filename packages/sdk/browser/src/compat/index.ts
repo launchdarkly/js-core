@@ -5,13 +5,14 @@
  * Some code changes may still be required, for example {@link LDOptions} removes
  * support for some previously available options.
  */
-import { LDContext, LDOptions } from '@launchdarkly/js-client-sdk-common';
+import { LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import { LDClient } from './LDClientCompat';
 import LDClientCompatImpl from './LDClientCompatImpl';
+import { LDOptions } from './LDCompatOptions';
 
 export * from '../common';
-export type { LDClient };
+export type { LDClient, LDOptions };
 
 /**
  * Creates an instance of the LaunchDarkly client. This version of initialization is for

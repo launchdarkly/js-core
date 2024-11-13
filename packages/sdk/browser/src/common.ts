@@ -1,11 +1,10 @@
 import { BasicLogger, BasicLoggerOptions, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
-import { BrowserOptions as LDOptions } from './options';
 
 // The exported LDIdentifyOptions and LDOptions are the browser specific implementations.
 // These shadow the common implementations.
-export type { LDIdentifyOptions, LDOptions };
+export type { LDIdentifyOptions };
 
 export type {
   AutoEnvAttributes,
