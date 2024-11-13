@@ -1,15 +1,17 @@
 import { StyleSheet } from 'react-native';
+
 import {
   AutoEnvAttributes,
+  LDOptions,
   LDProvider,
   ReactNativeLDClient,
-  LDOptions,
 } from '@launchdarkly/react-native-client-sdk';
+
 import Welcome from './src/welcome';
 
 const options: LDOptions = {
   debug: true,
-}
+};
 //TODO Set MOBILE_KEY in .env file to a mobile key in your project/environment.
 const MOBILE_KEY = 'YOUR_MOBILE_KEY';
 const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enabled, options);

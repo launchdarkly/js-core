@@ -38,13 +38,14 @@ const aiClient = initAi(ldClient);
 ```
 
 3. Evaluate a model configuration:
+
 ```typescript
-  const config = await aiClient.modelConfig(
-    aiConfigKey!,
-    context,
-    { enabled: false },
-    { myVariable: 'My User Defined Variable' },
-  );
+const config = await aiClient.modelConfig(
+  aiConfigKey!,
+  context,
+  { enabled: false },
+  { myVariable: 'My User Defined Variable' },
+);
 ```
 
 For an example of how to use the config please refer to the examples folder.

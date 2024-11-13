@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
+
 import { useLDClient } from '@launchdarkly/react-native-client-sdk';
 
 export default function Welcome() {
-
   const ldClient = useLDClient();
 
   const flagValue = ldClient.boolVariation('my-boolean-flag', false);
