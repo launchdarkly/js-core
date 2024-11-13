@@ -259,4 +259,17 @@ describe('LDClientImpl', () => {
     await client.waitForInitialization({ timeout: Number.MAX_SAFE_INTEGER });
     expect(logger.getCount(LogLevel.Warn)).toBe(0);
   });
+
+  it('provides access to the underlying logger', async () => {
+    const logger = new TestLogger();
+    client = createClient({ logger, offline: true });
+    client.logger?.error('this is an error');
+    expect(logger.getCount(LogLevel.Error)).toBe(1);
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches: /this is an error/,
+      },
+    ]);
+  });
 });
