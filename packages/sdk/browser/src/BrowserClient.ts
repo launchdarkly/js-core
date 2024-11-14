@@ -1,9 +1,9 @@
 import {
   AutoEnvAttributes,
   base64UrlEncode,
+  BasicLogger,
   LDClient as CommonClient,
   Configuration,
-  createSafeLogger,
   Encoding,
   FlagManager,
   internal,
@@ -15,8 +15,10 @@ import {
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
+import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
@@ -29,16 +31,19 @@ import BrowserPlatform from './platform/BrowserPlatform';
  * Applications should configure the client at page load time and reuse the same instance.
  *
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
- *
- * @ignore Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
- * @ignore Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
- * @ignore Implementation Note: The browser SDK has different identify options, so omits the base implementation
- * @ignore from the interface.
  */
 export type LDClient = Omit<
   CommonClient,
   'setConnectionMode' | 'getConnectionMode' | 'getOffline' | 'identify'
 > & {
+  /**
+   * @ignore
+   * Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
+   * Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
+   * Implementation Note: The browser SDK has different identify options, so omits the base implementation
+   * from the interface.
+   */
+
   /**
    * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
@@ -81,10 +86,10 @@ export type LDClient = Omit<
 };
 
 export class BrowserClient extends LDClientImpl implements LDClient {
-  private readonly goalManager?: GoalManager;
+  private readonly _goalManager?: GoalManager;
 
   constructor(
-    private readonly clientSideId: string,
+    clientSideId: string,
     autoEnvAttributes: AutoEnvAttributes,
     options: BrowserOptions = {},
     overridePlatform?: Platform,
@@ -93,15 +98,18 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     // Overrides the default logger from the common implementation.
     const logger =
       customLogger ??
-      createSafeLogger({
-        // eslint-disable-next-line no-console
-        debug: debug ? console.debug : () => {},
-        // eslint-disable-next-line no-console
-        info: console.info,
-        // eslint-disable-next-line no-console
-        warn: console.warn,
-        // eslint-disable-next-line no-console
-        error: console.error,
+      new BasicLogger({
+        destination: {
+          // eslint-disable-next-line no-console
+          debug: console.debug,
+          // eslint-disable-next-line no-console
+          info: console.info,
+          // eslint-disable-next-line no-console
+          warn: console.warn,
+          // eslint-disable-next-line no-console
+          error: console.error,
+        },
+        level: debug ? 'debug' : 'info',
       });
 
     // TODO: Use the already-configured baseUri from the SDK config. SDK-560
@@ -135,6 +143,11 @@ export class BrowserClient extends LDClientImpl implements LDClient {
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/sdk/evalx/${clientSideId}/context`;
             },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
+              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
+              throw new Error('Ping for polling unsupported.');
+            },
           }),
           () => ({
             pathGet(encoding: Encoding, _plainContextString: string): string {
@@ -142,6 +155,9 @@ export class BrowserClient extends LDClientImpl implements LDClient {
             },
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/eval/${clientSideId}`;
+            },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              return `/ping/${clientSideId}`;
             },
           }),
           baseHeaders,
@@ -161,7 +177,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
             event.data,
             event.metricValue,
             event.samplingRatio,
-            eventUrlTransformer(window.location.href),
+            eventUrlTransformer(getHref()),
           ),
       },
     );
@@ -169,7 +185,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     this.setEventSendingEnabled(true, false);
 
     if (validatedBrowserOptions.fetchGoals) {
-      this.goalManager = new GoalManager(
+      this._goalManager = new GoalManager(
         clientSideId,
         platform.requests,
         baseUrl,
@@ -210,13 +226,17 @@ export class BrowserClient extends LDClientImpl implements LDClient {
       // "waitForGoalsReady", then we would make an async immediately invoked function expression
       // which emits the event, and assign its promise to a member. The "waitForGoalsReady" function
       // would return that promise.
-      this.goalManager.initialize();
+      this._goalManager.initialize();
+
+      if (validatedBrowserOptions.automaticBackgroundHandling) {
+        registerStateDetection(() => this.flush());
+      }
     }
   }
 
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     await super.identify(context, identifyOptions);
-    this.goalManager?.startTracking();
+    this._goalManager?.startTracking();
   }
 
   setStreaming(streaming?: boolean): void {
@@ -226,7 +246,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     browserDataManager.setForcedStreaming(streaming);
   }
 
-  private updateAutomaticStreamingState() {
+  private _updateAutomaticStreamingState() {
     const browserDataManager = this.dataManager as BrowserDataManager;
     // This will need changed if support for listening to individual flag change
     // events it added.
@@ -235,11 +255,11 @@ export class BrowserClient extends LDClientImpl implements LDClient {
 
   override on(eventName: LDEmitterEventName, listener: Function): void {
     super.on(eventName, listener);
-    this.updateAutomaticStreamingState();
+    this._updateAutomaticStreamingState();
   }
 
   override off(eventName: LDEmitterEventName, listener: Function): void {
     super.off(eventName, listener);
-    this.updateAutomaticStreamingState();
+    this._updateAutomaticStreamingState();
   }
 }

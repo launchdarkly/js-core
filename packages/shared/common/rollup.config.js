@@ -20,7 +20,7 @@ const getSharedConfig = (format, file) => ({
 
 export default [
   {
-    ...getSharedConfig('es', 'dist/index.mjs'),
+    ...getSharedConfig('es', 'dist/esm/index.mjs'),
     plugins: [
       typescript({
         module: 'esnext',
@@ -35,7 +35,11 @@ export default [
     ],
   },
   {
-    ...getSharedConfig('cjs', 'dist/index.cjs'),
-    plugins: [typescript({ tsconfig: './tsconfig.json' }), common(), json()],
+    ...getSharedConfig('cjs', 'dist/cjs/index.cjs'),
+    plugins: [
+      typescript({ tsconfig: './tsconfig.json', outputToFilesystem: true }),
+      common(),
+      json(),
+    ],
   },
 ];

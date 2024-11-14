@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-import { TextEncoder } from 'node:util';
 
 import {
   ApplicationTags,
@@ -25,8 +24,6 @@ import BrowserInfo from '../src/platform/BrowserInfo';
 import LocalStorage from '../src/platform/LocalStorage';
 import { MockHasher } from './MockHasher';
 import { goodBootstrapData } from './testBootstrapData';
-
-global.TextEncoder = TextEncoder;
 
 function mockResponse(value: string, statusCode: number) {
   const response: Response = {
@@ -93,6 +90,8 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       pollInterval: 1000,
       userAgentHeaderName: 'user-agent',
       trackEventModifier: (event) => event,
+      hooks: [],
+      inspectors: [],
     };
     const mockedFetch = mockFetch('{"flagA": true}', 200);
     platform = {
@@ -142,18 +141,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       browserConfig,
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -175,18 +180,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       validateOptions({ streaming: true }, logger),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -213,18 +224,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       validateOptions({ streaming: true }, logger),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -240,7 +257,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(platform.requests.createEventSource).toHaveBeenCalledWith(
-      '/meval/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?h=potato&withReasons=true',
+      '/path/get/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?h=potato&withReasons=true',
       expect.anything(),
     );
   });
@@ -254,18 +271,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       validateOptions({ streaming: false }, logger),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       () => ({
         pathGet(encoding: Encoding, _plainContextString: string): string {
-          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+          return `/path/get/${base64UrlEncode(_plainContextString, encoding)}`;
         },
-        pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+        pathReport(encoding: Encoding, _plainContextString: string): string {
+          return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPing(encoding: Encoding, _plainContextString: string): string {
+          return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
       }),
       baseHeaders,
@@ -281,7 +304,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(platform.requests.fetch).toHaveBeenCalledWith(
-      '/msdk/evalx/contexts/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?withReasons=true&h=potato',
+      '/path/get/eyJraW5kIjoidXNlciIsImtleSI6InRlc3QtdXNlciJ9?withReasons=true&h=potato',
       expect.anything(),
     );
   });

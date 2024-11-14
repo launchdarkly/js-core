@@ -1,5 +1,11 @@
-import escapeStringRegexp from 'escape-string-regexp';
-
+import {
+  addDocumentEventListener,
+  getHref,
+  getLocationHash,
+  getLocationSearch,
+  querySelectorAll,
+} from '../BrowserApi';
+import escapeStringRegexp from '../vendor/escapeStringRegexp';
 import { ClickGoal, Goal, Matcher } from './Goals';
 
 type EventHandler = (goal: Goal) => void;
@@ -37,11 +43,11 @@ function findGoalsForClick(event: Event, clickGoals: ClickGoal[]) {
   clickGoals.forEach((goal) => {
     let target: Node | null = event.target as Node;
     const { selector } = goal;
-    const elements = document.querySelectorAll(selector);
+    const elements = querySelectorAll(selector);
 
     // Traverse from the target of the event up the page hierarchy.
     // If there are no element that match the selector, then no need to check anything.
-    while (target && elements.length) {
+    while (target && elements?.length) {
       // The elements are a NodeList, so it doesn't have the array functions. For performance we
       // do not convert it to an array.
       for (let elementIndex = 0; elementIndex < elements.length; elementIndex += 1) {
@@ -64,11 +70,11 @@ function findGoalsForClick(event: Event, clickGoals: ClickGoal[]) {
  * Tracks the goals on an individual "page" (combination of route, query params, and hash).
  */
 export default class GoalTracker {
-  private clickHandler?: (event: Event) => void;
+  private _cleanup?: () => void;
   constructor(goals: Goal[], onEvent: EventHandler) {
     const goalsMatchingUrl = goals.filter((goal) =>
       goal.urls?.some((matcher) =>
-        matchesUrl(matcher, window.location.href, window.location.search, window.location.hash),
+        matchesUrl(matcher, getHref(), getLocationSearch(), getLocationHash()),
       ),
     );
 
@@ -80,12 +86,12 @@ export default class GoalTracker {
     if (clickGoals.length) {
       // Click handler is not a member function in order to avoid having to bind it for the event
       // handler and then track a reference to that bound handler.
-      this.clickHandler = (event: Event) => {
+      const clickHandler = (event: Event) => {
         findGoalsForClick(event, clickGoals).forEach((clickGoal) => {
           onEvent(clickGoal);
         });
       };
-      document.addEventListener('click', this.clickHandler);
+      this._cleanup = addDocumentEventListener('click', clickHandler);
     }
   }
 
@@ -93,8 +99,6 @@ export default class GoalTracker {
    * Close the tracker which stops listening to any events.
    */
   close() {
-    if (this.clickHandler) {
-      document.removeEventListener('click', this.clickHandler);
-    }
+    this._cleanup?.();
   }
 }

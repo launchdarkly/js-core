@@ -22,11 +22,7 @@ describe('Configuration', () => {
       withReasons: false,
       eventsUri: 'https://events.launchdarkly.com',
       flushInterval: 30,
-      logger: {
-        destination: console.error,
-        logLevel: 1,
-        name: 'LaunchDarkly',
-      },
+      logger: expect.anything(),
       maxCachedContexts: 5,
       privateAttributes: [],
       sendEvents: true,

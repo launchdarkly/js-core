@@ -1,5 +1,59 @@
 # Changelog
 
+## [10.9.2](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.1...react-native-client-sdk-v10.9.2) (2024-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.11.0 to 1.12.0
+
+## [10.9.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.0...react-native-client-sdk-v10.9.1) (2024-10-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.10.0 to 1.11.0
+
+## [10.9.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.8.0...react-native-client-sdk-v10.9.0) (2024-10-17)
+
+
+### Features
+
+* Add support for inspectors. ([#625](https://github.com/launchdarkly/js-core/issues/625)) ([a986478](https://github.com/launchdarkly/js-core/commit/a986478ed8e39d0f529ca6adec0a09b484421390))
+* adds ping stream support ([#624](https://github.com/launchdarkly/js-core/issues/624)) ([dee53af](https://github.com/launchdarkly/js-core/commit/dee53af9312b74a70b748d49b2d2911d65333cf3))
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.9.0 to 1.10.0
+
+## [10.8.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.7.0...react-native-client-sdk-v10.8.0) (2024-10-09)
+
+
+### Features
+
+* Add support for hooks. ([#605](https://github.com/launchdarkly/js-core/issues/605)) ([04d347b](https://github.com/launchdarkly/js-core/commit/04d347b25e01015134a2545be22bfd8b1d1e85cc))
+
+
+### Bug Fixes
+
+* Ensure client logger is always wrapped in a safe logger. ([#599](https://github.com/launchdarkly/js-core/issues/599)) ([980e4da](https://github.com/launchdarkly/js-core/commit/980e4daaf32864e18f14b1e5e28e308dff0ae94f))
+* Fix base64 encoding of unicode characters. ([#613](https://github.com/launchdarkly/js-core/issues/613)) ([35ec8d1](https://github.com/launchdarkly/js-core/commit/35ec8d1ecc07ddb68f4d02b19e1f238f7ff14df7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.8.0 to 1.9.0
+
 ## [10.7.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.6.1...react-native-client-sdk-v10.7.0) (2024-09-26)
 
 

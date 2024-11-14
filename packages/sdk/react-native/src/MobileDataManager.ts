@@ -9,6 +9,7 @@ import {
   LDEmitter,
   LDHeaders,
   LDIdentifyOptions,
+  makeRequestor,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -26,7 +27,7 @@ export default class MobileDataManager extends BaseDataManager {
     flagManager: FlagManager,
     credential: string,
     config: Configuration,
-    private readonly rnConfig: ValidatedOptions,
+    private readonly _rnConfig: ValidatedOptions,
     getPollingPaths: () => DataSourcePaths,
     getStreamingPaths: () => DataSourcePaths,
     baseHeaders: LDHeaders,
@@ -44,10 +45,10 @@ export default class MobileDataManager extends BaseDataManager {
       emitter,
       diagnosticsManager,
     );
-    this.connectionMode = rnConfig.initialConnectionMode;
+    this.connectionMode = _rnConfig.initialConnectionMode;
   }
 
-  private debugLog(message: any, ...args: any[]) {
+  private _debugLog(message: any, ...args: any[]) {
     this.logger.debug(`${logTag} ${message}`, ...args);
   }
 
@@ -64,44 +65,69 @@ export default class MobileDataManager extends BaseDataManager {
 
     const loadedFromCache = await this.flagManager.loadCached(context);
     if (loadedFromCache && !waitForNetworkResults) {
-      this.debugLog('Identify completing with cached flags');
+      this._debugLog('Identify completing with cached flags');
       identifyResolve();
     }
     if (loadedFromCache && waitForNetworkResults) {
-      this.debugLog(
+      this._debugLog(
         'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
       );
     }
 
     if (this.connectionMode === 'offline') {
       if (loadedFromCache) {
-        this.debugLog('Offline identify - using cached flags.');
+        this._debugLog('Offline identify - using cached flags.');
       } else {
-        this.debugLog(
+        this._debugLog(
           'Offline identify - no cached flags, using defaults or already loaded flags.',
         );
         identifyResolve();
       }
     } else {
       // Context has been validated in LDClientImpl.identify
-      this.setupConnection(context, identifyResolve, identifyReject);
+      this._setupConnection(context, identifyResolve, identifyReject);
     }
   }
 
-  private setupConnection(
+  private _setupConnection(
     context: Context,
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
   ) {
     const rawContext = Context.toLDContext(context)!;
 
+    const plainContextString = JSON.stringify(Context.toLDContext(context));
+    const requestor = makeRequestor(
+      plainContextString,
+      this.config.serviceEndpoints,
+      this.getPollingPaths(),
+      this.platform.requests,
+      this.platform.encoding!,
+      this.baseHeaders,
+      [],
+      this.config.useReport,
+      this.config.withReasons,
+    );
+
     this.updateProcessor?.close();
     switch (this.connectionMode) {
       case 'streaming':
-        this.createStreamingProcessor(rawContext, context, identifyResolve, identifyReject);
+        this.createStreamingProcessor(
+          rawContext,
+          context,
+          requestor,
+          identifyResolve,
+          identifyReject,
+        );
         break;
       case 'polling':
-        this.createPollingProcessor(rawContext, context, identifyResolve, identifyReject);
+        this.createPollingProcessor(
+          rawContext,
+          context,
+          requestor,
+          identifyResolve,
+          identifyReject,
+        );
         break;
       default:
         break;
@@ -115,12 +141,12 @@ export default class MobileDataManager extends BaseDataManager {
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
     if (this.connectionMode === mode) {
-      this.debugLog(`setConnectionMode ignored. Mode is already '${mode}'.`);
+      this._debugLog(`setConnectionMode ignored. Mode is already '${mode}'.`);
       return;
     }
 
     this.connectionMode = mode;
-    this.debugLog(`setConnectionMode ${mode}.`);
+    this._debugLog(`setConnectionMode ${mode}.`);
 
     switch (mode) {
       case 'offline':
@@ -130,7 +156,7 @@ export default class MobileDataManager extends BaseDataManager {
       case 'streaming':
         if (this.context) {
           // identify will start the update processor
-          this.setupConnection(this.context);
+          this._setupConnection(this.context);
         }
 
         break;

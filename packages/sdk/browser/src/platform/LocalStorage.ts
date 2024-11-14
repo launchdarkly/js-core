@@ -13,12 +13,12 @@ export function isLocalStorageSupported() {
  * and none of the methods need to internally await their operations.
  */
 export default class PlatformStorage implements Storage {
-  constructor(private readonly logger?: LDLogger) {}
+  constructor(private readonly _logger?: LDLogger) {}
   async clear(key: string): Promise<void> {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      this.logger?.error(`Error clearing key from localStorage: ${key}, reason: ${error}`);
+      this._logger?.error(`Error clearing key from localStorage: ${key}, reason: ${error}`);
     }
   }
 
@@ -27,7 +27,7 @@ export default class PlatformStorage implements Storage {
       const value = localStorage.getItem(key);
       return value ?? null;
     } catch (error) {
-      this.logger?.error(`Error getting key from localStorage: ${key}, reason: ${error}`);
+      this._logger?.error(`Error getting key from localStorage: ${key}, reason: ${error}`);
       return null;
     }
   }
@@ -36,7 +36,7 @@ export default class PlatformStorage implements Storage {
     try {
       localStorage.setItem(key, value);
     } catch (error) {
-      this.logger?.error(`Error setting key in localStorage: ${key}, reason: ${error}`);
+      this._logger?.error(`Error setting key in localStorage: ${key}, reason: ${error}`);
     }
   }
 }

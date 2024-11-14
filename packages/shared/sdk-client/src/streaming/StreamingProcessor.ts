@@ -8,6 +8,7 @@ import {
   HttpErrorResponse,
   internal,
   LDLogger,
+  LDPollingError,
   LDStreamingError,
   ProcessStreamResponse,
   Requests,
@@ -15,7 +16,8 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import { StreamingDataSourceConfig } from './DataSourceConfig';
+import { StreamingDataSourceConfig } from '../datasource/DataSourceConfig';
+import Requestor, { LDRequestError } from '../datasource/Requestor';
 
 const reportJsonError = (
   type: string,
@@ -31,60 +33,58 @@ const reportJsonError = (
 };
 
 class StreamingProcessor implements subsystem.LDStreamProcessor {
-  private readonly headers: { [key: string]: string | string[] };
-  private readonly streamUri: string;
+  private readonly _headers: { [key: string]: string | string[] };
+  private readonly _streamUri: string;
 
-  private eventSource?: EventSource;
-  private connectionAttemptStartTime?: number;
+  private _eventSource?: EventSource;
+  private _connectionAttemptStartTime?: number;
 
   constructor(
-    private readonly plainContextString: string,
-    private readonly dataSourceConfig: StreamingDataSourceConfig,
-    private readonly listeners: Map<EventName, ProcessStreamResponse>,
-    private readonly requests: Requests,
+    private readonly _plainContextString: string,
+    private readonly _dataSourceConfig: StreamingDataSourceConfig,
+    private readonly _listeners: Map<EventName, ProcessStreamResponse>,
+    private readonly _requests: Requests,
     encoding: Encoding,
-    private readonly diagnosticsManager?: internal.DiagnosticsManager,
-    private readonly errorHandler?: internal.StreamingErrorHandler,
-    private readonly logger?: LDLogger,
+    private readonly _pollingRequestor: Requestor,
+    private readonly _diagnosticsManager?: internal.DiagnosticsManager,
+    private readonly _errorHandler?: internal.StreamingErrorHandler,
+    private readonly _logger?: LDLogger,
   ) {
-    // TODO: SC-255969 Implement better REPORT fallback logic
-    if (dataSourceConfig.useReport && !requests.getEventSourceCapabilities().customMethod) {
-      logger?.error(
-        "Configuration option useReport is true, but platform's EventSource does not support custom HTTP methods. Streaming may not work.",
-      );
+    let path: string;
+    if (_dataSourceConfig.useReport && !_requests.getEventSourceCapabilities().customMethod) {
+      path = _dataSourceConfig.paths.pathPing(encoding, _plainContextString);
+    } else {
+      path = _dataSourceConfig.useReport
+        ? _dataSourceConfig.paths.pathReport(encoding, _plainContextString)
+        : _dataSourceConfig.paths.pathGet(encoding, _plainContextString);
     }
-
-    const path = dataSourceConfig.useReport
-      ? dataSourceConfig.paths.pathReport(encoding, plainContextString)
-      : dataSourceConfig.paths.pathGet(encoding, plainContextString);
-
     const parameters: { key: string; value: string }[] = [
-      ...(dataSourceConfig.queryParameters ?? []),
+      ...(_dataSourceConfig.queryParameters ?? []),
     ];
-    if (this.dataSourceConfig.withReasons) {
+    if (this._dataSourceConfig.withReasons) {
       parameters.push({ key: 'withReasons', value: 'true' });
     }
 
-    this.requests = requests;
-    this.headers = { ...dataSourceConfig.baseHeaders };
-    this.logger = logger;
-    this.streamUri = getStreamingUri(dataSourceConfig.serviceEndpoints, path, parameters);
+    this._requests = _requests;
+    this._headers = { ..._dataSourceConfig.baseHeaders };
+    this._logger = _logger;
+    this._streamUri = getStreamingUri(_dataSourceConfig.serviceEndpoints, path, parameters);
   }
 
-  private logConnectionStarted() {
-    this.connectionAttemptStartTime = Date.now();
+  private _logConnectionStarted() {
+    this._connectionAttemptStartTime = Date.now();
   }
 
-  private logConnectionResult(success: boolean) {
-    if (this.connectionAttemptStartTime && this.diagnosticsManager) {
-      this.diagnosticsManager.recordStreamInit(
-        this.connectionAttemptStartTime,
+  private _logConnectionResult(success: boolean) {
+    if (this._connectionAttemptStartTime && this._diagnosticsManager) {
+      this._diagnosticsManager.recordStreamInit(
+        this._connectionAttemptStartTime,
         !success,
-        Date.now() - this.connectionAttemptStartTime,
+        Date.now() - this._connectionAttemptStartTime,
       );
     }
 
-    this.connectionAttemptStartTime = undefined;
+    this._connectionAttemptStartTime = undefined;
   }
 
   /**
@@ -96,50 +96,50 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
    *
    * @private
    */
-  private retryAndHandleError(err: HttpErrorResponse) {
+  private _retryAndHandleError(err: HttpErrorResponse) {
     if (!shouldRetry(err)) {
-      this.logConnectionResult(false);
-      this.errorHandler?.(
+      this._logConnectionResult(false);
+      this._errorHandler?.(
         new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status, false),
       );
-      this.logger?.error(httpErrorMessage(err, 'streaming request'));
+      this._logger?.error(httpErrorMessage(err, 'streaming request'));
       return false;
     }
 
-    this.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
-    this.logConnectionResult(false);
-    this.logConnectionStarted();
+    this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
+    this._logConnectionResult(false);
+    this._logConnectionStarted();
     return true;
   }
 
   start() {
-    this.logConnectionStarted();
+    this._logConnectionStarted();
 
     let methodAndBodyOverrides;
-    if (this.dataSourceConfig.useReport) {
+    if (this._dataSourceConfig.useReport) {
       // REPORT will include a body, so content type is required.
-      this.headers['content-type'] = 'application/json';
+      this._headers['content-type'] = 'application/json';
 
       // orverrides default method with REPORT and adds body.
-      methodAndBodyOverrides = { method: 'REPORT', body: this.plainContextString };
+      methodAndBodyOverrides = { method: 'REPORT', body: this._plainContextString };
     } else {
       // no method or body override
       methodAndBodyOverrides = {};
     }
 
     // TLS is handled by the platform implementation.
-    const eventSource = this.requests.createEventSource(this.streamUri, {
-      headers: this.headers, // adds content-type header required when body will be present
+    const eventSource = this._requests.createEventSource(this._streamUri, {
+      headers: this._headers, // adds content-type header required when body will be present
       ...methodAndBodyOverrides,
-      errorFilter: (error: HttpErrorResponse) => this.retryAndHandleError(error),
-      initialRetryDelayMillis: this.dataSourceConfig.initialRetryDelayMillis,
+      errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error),
+      initialRetryDelayMillis: this._dataSourceConfig.initialRetryDelayMillis,
       readTimeoutMillis: 5 * 60 * 1000,
       retryResetIntervalMillis: 60 * 1000,
     });
-    this.eventSource = eventSource;
+    this._eventSource = eventSource;
 
     eventSource.onclose = () => {
-      this.logger?.info('Closed LaunchDarkly stream connection');
+      this._logger?.info('Closed LaunchDarkly stream connection');
     };
 
     eventSource.onerror = () => {
@@ -147,29 +147,29 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     };
 
     eventSource.onopen = () => {
-      this.logger?.info('Opened LaunchDarkly stream connection');
+      this._logger?.info('Opened LaunchDarkly stream connection');
     };
 
     eventSource.onretrying = (e) => {
-      this.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
+      this._logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
     };
 
-    this.listeners.forEach(({ deserializeData, processJson }, eventName) => {
+    this._listeners.forEach(({ deserializeData, processJson }, eventName) => {
       eventSource.addEventListener(eventName, (event) => {
-        this.logger?.debug(`Received ${eventName} event`);
+        this._logger?.debug(`Received ${eventName} event`);
 
         if (event?.data) {
-          this.logConnectionResult(true);
+          this._logConnectionResult(true);
           const { data } = event;
           const dataJson = deserializeData(data);
 
           if (!dataJson) {
-            reportJsonError(eventName, data, this.logger, this.errorHandler);
+            reportJsonError(eventName, data, this._logger, this._errorHandler);
             return;
           }
           processJson(dataJson);
         } else {
-          this.errorHandler?.(
+          this._errorHandler?.(
             new LDStreamingError(
               DataSourceErrorKind.InvalidData,
               'Unexpected payload from event stream',
@@ -178,11 +178,46 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
         }
       });
     });
+
+    // here we set up a listener that will poll when ping is received
+    eventSource.addEventListener('ping', async () => {
+      this._logger?.debug('Got PING, going to poll LaunchDarkly for feature flag updates');
+      try {
+        const res = await this._pollingRequestor.requestPayload();
+        try {
+          const payload = JSON.parse(res);
+          try {
+            // forward the payload on to the PUT listener
+            this._listeners.get('put')?.processJson(payload);
+          } catch (err) {
+            this._logger?.error(`Exception from data handler: ${err}`);
+          }
+        } catch {
+          this._logger?.error('Polling after ping received invalid data');
+          this._logger?.debug(`Invalid JSON follows: ${res}`);
+          this._errorHandler?.(
+            new LDPollingError(
+              DataSourceErrorKind.InvalidData,
+              'Malformed JSON data in ping polling response',
+            ),
+          );
+        }
+      } catch (err) {
+        const requestError = err as LDRequestError;
+        this._errorHandler?.(
+          new LDPollingError(
+            DataSourceErrorKind.ErrorResponse,
+            requestError.message,
+            requestError.status,
+          ),
+        );
+      }
+    });
   }
 
   stop() {
-    this.eventSource?.close();
-    this.eventSource = undefined;
+    this._eventSource?.close();
+    this._eventSource = undefined;
   }
 
   close() {

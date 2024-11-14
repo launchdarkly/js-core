@@ -31,6 +31,41 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
     * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.1.1 to ^1.1.2
     * @launchdarkly/js-server-sdk-common bumped from ^2.2.1 to ^2.2.2
 
+## [1.2.1](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.2.0...akamai-server-edgekv-sdk-v1.2.1) (2024-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.3.0 to ^1.3.1
+    * @launchdarkly/js-server-sdk-common bumped from ^2.9.0 to ^2.9.1
+
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.1.17...akamai-server-edgekv-sdk-v1.2.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.2.1 to ^1.3.0
+    * @launchdarkly/js-server-sdk-common bumped from ^2.8.0 to ^2.9.0
+
+## [1.1.17](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.1.16...akamai-server-edgekv-sdk-v1.1.17) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.2.0 to ^1.2.1
+    * @launchdarkly/js-server-sdk-common bumped from ^2.7.0 to ^2.8.0
+
 ## [1.1.16](https://github.com/launchdarkly/js-core/compare/akamai-server-edgekv-sdk-v1.1.15...akamai-server-edgekv-sdk-v1.1.16) (2024-09-26)
 
 

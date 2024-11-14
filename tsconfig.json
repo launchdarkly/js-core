@@ -60,6 +60,12 @@
     },
     {
       "path": "./packages/sdk/browser/contract-tests/entity/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/server-ai/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/telemetry/browser-telemetry/tsconfig.ref.json"
     }
   ]
 }

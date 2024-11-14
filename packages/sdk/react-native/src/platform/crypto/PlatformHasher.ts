@@ -5,12 +5,12 @@ import { base64FromByteArray } from '../../polyfills';
 import { SupportedHashAlgorithm, SupportedOutputEncoding } from './types';
 
 export default class PlatformHasher implements LDHasher {
-  private hasher: Hasher;
+  private _hasher: Hasher;
 
   constructor(algorithm: SupportedHashAlgorithm, hmacKey?: string) {
     switch (algorithm) {
       case 'sha256':
-        this.hasher = hmacKey ? sha256.hmac.create(hmacKey) : sha256.create();
+        this._hasher = hmacKey ? sha256.hmac.create(hmacKey) : sha256.create();
         break;
       default:
         throw new Error(`Unsupported hash algorithm: ${algorithm}. Only sha256 is supported.`);
@@ -20,9 +20,9 @@ export default class PlatformHasher implements LDHasher {
   digest(encoding: SupportedOutputEncoding): string {
     switch (encoding) {
       case 'base64':
-        return base64FromByteArray(new Uint8Array(this.hasher.arrayBuffer()));
+        return base64FromByteArray(new Uint8Array(this._hasher.arrayBuffer()));
       case 'hex':
-        return this.hasher.hex();
+        return this._hasher.hex();
       default:
         throw new Error(
           `unsupported output encoding: ${encoding}. Only base64 and hex are supported.`,
@@ -31,7 +31,7 @@ export default class PlatformHasher implements LDHasher {
   }
 
   update(data: string): this {
-    this.hasher.update(data);
+    this._hasher.update(data);
     return this;
   }
 }

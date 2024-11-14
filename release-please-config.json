@@ -12,6 +12,11 @@
           "path": "jsr.json",
           "jsonpath": "$.version"
         },
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/cloudflare-server-sdk']"
+        },
         "src/createPlatformInfo.ts"
       ]
     },
@@ -21,14 +26,46 @@
       "extra-files": ["src/createPlatformInfo.ts"]
     },
     "packages/sdk/akamai-base": {
-      "extra-files": ["src/index.ts"]
+      "extra-files": [
+        "src/index.ts",
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/akamai-server-base-sdk']"
+        }
+      ]
     },
     "packages/sdk/akamai-edgekv": {
-      "extra-files": ["src/index.ts"]
+      "extra-files": [
+        "src/index.ts",
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/akamai-server-edgekv-sdk']"
+        }
+      ]
     },
     "packages/store/node-server-sdk-dynamodb": {},
     "packages/store/node-server-sdk-redis": {},
-    "packages/telemetry/node-server-sdk-otel": {}
+    "packages/telemetry/node-server-sdk-otel": {},
+    "packages/sdk/browser": {
+      "bump-minor-pre-major": true
+    },
+    "packages/sdk/server-ai": {
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "examples/bedrock/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/openai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        }
+      ]
+    }
   },
   "plugins": [
     {

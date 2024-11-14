@@ -5,12 +5,15 @@ import {
   EventSource,
   EventSourceCapabilities,
   EventSourceInitDict,
+  LDHeaders,
   Requests,
   Response,
+  ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
 
+import Requestor, { makeRequestor } from '../../src/datasource/Requestor';
 import PollingProcessor from '../../src/polling/PollingProcessor';
-import { PollingDataSourceConfig } from '../../src/streaming';
+import { DataSourcePaths } from '../../src/streaming';
 
 function mockResponse(value: string, statusCode: number) {
   const response: Response = {
@@ -55,12 +58,6 @@ function makeRequests(): Requests {
   };
 }
 
-function makeEncoding(): Encoding {
-  return {
-    btoa: jest.fn(),
-  };
-}
-
 const serviceEndpoints = {
   events: 'mockEventsEndpoint',
   polling: 'mockPollingEndpoint',
@@ -71,39 +68,51 @@ const serviceEndpoints = {
   payloadFilterKey: 'testPayloadFilterKey',
 };
 
-function makeConfig(
-  pollInterval: number,
-  withReasons: boolean,
-  useReport: boolean,
-  queryParameters?: { key: string; value: string }[],
-): PollingDataSourceConfig {
-  return {
-    credential: 'the-sdk-key',
-    serviceEndpoints,
-    paths: {
+function makeTestRequestor(options: {
+  requests: Requests;
+  plainContextString?: string;
+  serviceEndpoints?: ServiceEndpoints;
+  paths?: DataSourcePaths;
+  encoding?: Encoding;
+  baseHeaders?: LDHeaders;
+  baseQueryParams?: { key: string; value: string }[];
+  useReport?: boolean;
+  withReasons?: boolean;
+  secureModeHash?: string;
+}): Requestor {
+  return makeRequestor(
+    options.plainContextString ?? 'mockContextString',
+    options.serviceEndpoints ?? serviceEndpoints,
+    options.paths ?? {
       pathGet(_encoding: Encoding, _plainContextString: string): string {
         return '/poll/path/get';
       },
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/poll/path/report';
       },
+      pathPing(_encoding: Encoding, _plainContextString: string): string {
+        return '/poll/path/ping';
+      },
     },
-    baseHeaders: {},
-    withReasons,
-    useReport,
-    pollInterval,
-    queryParameters,
-  };
+    options.requests,
+    options.encoding ?? {
+      btoa: jest.fn(),
+    },
+    options.baseHeaders,
+    options.baseQueryParams,
+    options.withReasons ?? true,
+    options.useReport ?? false,
+  );
 }
 
 it('makes no requests until it is started', () => {
   const requests = makeRequests();
   // eslint-disable-next-line no-new
   new PollingProcessor(
-    'mockContextString',
-    makeConfig(1, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    1,
     (_flags) => {},
     (_error) => {},
   );
@@ -115,13 +124,14 @@ it('includes custom query parameters when specified', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(1, true, false, [
-      { key: 'custom', value: 'value' },
-      { key: 'custom2', value: 'value2' },
-    ]),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+      baseQueryParams: [
+        { key: 'custom', value: 'value' },
+        { key: 'custom2', value: 'value2' },
+      ],
+    }),
+    1,
     (_flags) => {},
     (_error) => {},
   );
@@ -138,10 +148,10 @@ it('works without any custom query parameters', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(1, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    1,
     (_flags) => {},
     (_error) => {},
   );
@@ -158,10 +168,10 @@ it('polls immediately when started', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(1, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    1,
     (_flags) => {},
     (_error) => {},
   );
@@ -177,10 +187,10 @@ it('calls callback on success', async () => {
   const errorCallback = jest.fn();
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(1000, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    1000,
     dataCallback,
     errorCallback,
   );
@@ -197,10 +207,10 @@ it('polls repeatedly', async () => {
 
   requests.fetch = mockFetch('{ "flagA": true }', 200);
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(0.1, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    0.1,
     dataCallback,
     errorCallback,
   );
@@ -234,10 +244,10 @@ it('stops polling when stopped', (done) => {
   const errorCallback = jest.fn();
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(0.01, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    0.01,
     dataCallback,
     errorCallback,
   );
@@ -253,18 +263,15 @@ it('stops polling when stopped', (done) => {
 
 it('includes the correct headers on requests', () => {
   const requests = makeRequests();
-
-  const config = makeConfig(1, true, false);
-  config.baseHeaders = {
-    authorization: 'the-sdk-key',
-    'user-agent': 'AnSDK/42',
-  };
-
   const polling = new PollingProcessor(
-    'mockContextString',
-    config,
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+      baseHeaders: {
+        authorization: 'the-sdk-key',
+        'user-agent': 'AnSDK/42',
+      },
+    }),
+    1,
     (_flags) => {},
     (_error) => {},
   );
@@ -286,10 +293,10 @@ it('defaults to using the "GET" method', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(1000, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    1000,
     (_flags) => {},
     (_error) => {},
   );
@@ -309,10 +316,11 @@ it('can be configured to use the "REPORT" method', () => {
   const requests = makeRequests();
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(1000, true, true),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+      useReport: true,
+    }),
+    1000,
     (_flags) => {},
     (_error) => {},
   );
@@ -343,10 +351,10 @@ it('continues polling after receiving bad JSON', async () => {
   };
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(0.1, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    0.1,
     dataCallback,
     errorCallback,
     logger,
@@ -376,10 +384,10 @@ it('continues polling after an exception thrown during a request', async () => {
   };
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(0.1, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    0.1,
     dataCallback,
     errorCallback,
     logger,
@@ -412,10 +420,10 @@ it('can handle recoverable http errors', async () => {
   };
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(0.1, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    0.1,
     dataCallback,
     errorCallback,
     logger,
@@ -444,10 +452,10 @@ it('stops polling on unrecoverable error codes', (done) => {
   };
 
   const polling = new PollingProcessor(
-    'mockContextString',
-    makeConfig(0.01, true, false),
-    requests,
-    makeEncoding(),
+    makeTestRequestor({
+      requests,
+    }),
+    0.01,
     dataCallback,
     errorCallback,
     logger,

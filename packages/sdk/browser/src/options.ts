@@ -6,6 +6,8 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
+const DEFAULT_FLUSH_INTERVAL_SECONDS = 2;
+
 /**
  * Initialization options for the LaunchDarkly browser SDK.
  */
@@ -22,6 +24,9 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * A function which, if present, can change the URL in analytics events to something other
    * than the actual browser URL. It will be called with the current browser URL as a parameter,
    * and returns the value that should be stored in the event's `url` property.
+   *
+   * It may be useful to customize the `url` to provide specific meaning, incorporate
+   * client-side routing concerns, or redact tokens or other info.
    */
   eventUrlTransformer?: (url: string) => string;
 
@@ -35,12 +40,25 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * This is equivalent to calling `client.setStreaming()` with the same value.
    */
   streaming?: boolean;
+
+  /**
+   * Determines if the SDK responds to entering different visibility states, such as foreground and background.
+   * An example is flushing buffered events when going to the background.
+   *
+   * This is true by default. Generally speaking the SDK will be able to most reliably deliver
+   * events with this setting on.
+   *
+   * It may be useful to disable for environments where not all window/document objects are
+   * available, such as when running the SDK in a browser extension.
+   */
+  automaticBackgroundHandling?: boolean;
 }
 
 export interface ValidatedOptions {
   fetchGoals: boolean;
   eventUrlTransformer: (url: string) => string;
   streaming?: boolean;
+  automaticBackgroundHandling?: boolean;
 }
 
 const optDefaults = {
@@ -66,8 +84,14 @@ export function filterToBaseOptions(opts: BrowserOptions): LDOptionsBase {
   return baseOptions;
 }
 
+function applyBrowserDefaults(opts: BrowserOptions) {
+  // eslint-disable-next-line no-param-reassign
+  opts.flushInterval ??= DEFAULT_FLUSH_INTERVAL_SECONDS;
+}
+
 export default function validateOptions(opts: BrowserOptions, logger: LDLogger): ValidatedOptions {
   const output: ValidatedOptions = { ...optDefaults };
+  applyBrowserDefaults(output);
 
   Object.entries(validators).forEach((entry) => {
     const [key, validator] = entry as [keyof BrowserOptions, TypeValidator];

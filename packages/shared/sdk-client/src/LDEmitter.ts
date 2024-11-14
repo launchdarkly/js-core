@@ -15,15 +15,15 @@ export type EventName = 'change' | FlagChangeKey | 'dataSourceStatus' | 'error';
  * a system to allow listeners which have counts independent of the primary listener counts.
  */
 export default class LDEmitter {
-  private listeners: Map<EventName, Function[]> = new Map();
+  private _listeners: Map<EventName, Function[]> = new Map();
 
-  constructor(private logger?: LDLogger) {}
+  constructor(private _logger?: LDLogger) {}
 
   on(name: EventName, listener: Function) {
-    if (!this.listeners.has(name)) {
-      this.listeners.set(name, [listener]);
+    if (!this._listeners.has(name)) {
+      this._listeners.set(name, [listener]);
     } else {
-      this.listeners.get(name)?.push(listener);
+      this._listeners.get(name)?.push(listener);
     }
   }
 
@@ -34,7 +34,7 @@ export default class LDEmitter {
    * @param listener Optional. If unspecified, all listeners for the event will be removed.
    */
   off(name: EventName, listener?: Function) {
-    const existingListeners = this.listeners.get(name);
+    const existingListeners = this._listeners.get(name);
     if (!existingListeners) {
       return;
     }
@@ -43,35 +43,35 @@ export default class LDEmitter {
       // remove from internal cache
       const updated = existingListeners.filter((fn) => fn !== listener);
       if (updated.length === 0) {
-        this.listeners.delete(name);
+        this._listeners.delete(name);
       } else {
-        this.listeners.set(name, updated);
+        this._listeners.set(name, updated);
       }
       return;
     }
 
     // listener was not specified, so remove them all for that event
-    this.listeners.delete(name);
+    this._listeners.delete(name);
   }
 
-  private invokeListener(listener: Function, name: EventName, ...detail: any[]) {
+  private _invokeListener(listener: Function, name: EventName, ...detail: any[]) {
     try {
       listener(...detail);
     } catch (err) {
-      this.logger?.error(`Encountered error invoking handler for "${name}", detail: "${err}"`);
+      this._logger?.error(`Encountered error invoking handler for "${name}", detail: "${err}"`);
     }
   }
 
   emit(name: EventName, ...detail: any[]) {
-    const listeners = this.listeners.get(name);
-    listeners?.forEach((listener) => this.invokeListener(listener, name, ...detail));
+    const listeners = this._listeners.get(name);
+    listeners?.forEach((listener) => this._invokeListener(listener, name, ...detail));
   }
 
   eventNames(): string[] {
-    return [...this.listeners.keys()];
+    return [...this._listeners.keys()];
   }
 
   listenerCount(name: EventName): number {
-    return this.listeners.get(name)?.length ?? 0;
+    return this._listeners.get(name)?.length ?? 0;
   }
 }

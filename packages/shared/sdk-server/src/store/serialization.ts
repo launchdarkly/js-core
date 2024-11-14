@@ -168,7 +168,7 @@ export function processFlag(flag: Flag) {
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
       } else if (clause) {
-        clause.attributeReference = AttributeReference.invalidReference;
+        clause.attributeReference = AttributeReference.InvalidReference;
       }
     });
   });
@@ -223,7 +223,7 @@ export function processSegment(segment: Segment) {
         // So use the contextKind to indicate if this is new or old data.
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
       } else if (clause) {
-        clause.attributeReference = AttributeReference.invalidReference;
+        clause.attributeReference = AttributeReference.InvalidReference;
       }
     });
   });

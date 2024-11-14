@@ -34,7 +34,7 @@ import RNStateDetector from './RNStateDetector';
  * ```
  */
 export default class ReactNativeLDClient extends LDClientImpl {
-  private connectionManager: ConnectionManager;
+  private _connectionManager: ConnectionManager;
   /**
    * Creates an instance of the LaunchDarkly client.
    *
@@ -89,6 +89,11 @@ export default class ReactNativeLDClient extends LDClientImpl {
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/msdk/evalx/context`;
             },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
+              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
+              throw new Error('Ping for polling unsupported.');
+            },
           }),
           () => ({
             pathGet(encoding: Encoding, _plainContextString: string): string {
@@ -96,6 +101,9 @@ export default class ReactNativeLDClient extends LDClientImpl {
             },
             pathReport(_encoding: Encoding, _plainContextString: string): string {
               return `/meval`;
+            },
+            pathPing(_encoding: Encoding, _plainContextString: string): string {
+              return `/mping`;
             },
           }),
           baseHeaders,
@@ -123,7 +131,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
     };
 
     const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
-    this.connectionManager = new ConnectionManager(
+    this._connectionManager = new ConnectionManager(
       logger,
       {
         initialConnectionMode,
@@ -139,9 +147,9 @@ export default class ReactNativeLDClient extends LDClientImpl {
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
     // Set the connection mode before setting offline, in case there is any mode transition work
     // such as flushing on entering the background.
-    this.connectionManager.setConnectionMode(mode);
+    this._connectionManager.setConnectionMode(mode);
     // For now the data source connection and the event processing state are connected.
-    this.connectionManager.setOffline(mode === 'offline');
+    this._connectionManager.setOffline(mode === 'offline');
   }
 
   /**

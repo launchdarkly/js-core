@@ -16,7 +16,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDClient, type LDOptions } from './api';
+import { Hook, LDClient, type LDOptions } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
@@ -31,30 +31,37 @@ import {
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
+import { FlagChangeType } from './flag-manager/FlagUpdater';
+import HookRunner from './HookRunner';
+import { getInspectorHook } from './inspection/getInspectorHook';
+import InspectorManager from './inspection/InspectorManager';
 import LDEmitter, { EventName } from './LDEmitter';
 
 const { ClientMessages, ErrorKinds } = internal;
 
+const DEFAULT_IDENIFY_TIMEOUT_SECONDS = 5;
+
 export default class LDClientImpl implements LDClient {
-  private readonly config: Configuration;
-  private uncheckedContext?: LDContext;
-  private checkedContext?: Context;
-  private readonly diagnosticsManager?: internal.DiagnosticsManager;
-  private eventProcessor?: internal.EventProcessor;
-  private identifyTimeout: number = 5;
+  private readonly _config: Configuration;
+  private _uncheckedContext?: LDContext;
+  private _checkedContext?: Context;
+  private readonly _diagnosticsManager?: internal.DiagnosticsManager;
+  private _eventProcessor?: internal.EventProcessor;
   readonly logger: LDLogger;
-  private updateProcessor?: subsystem.LDStreamProcessor;
+  private _updateProcessor?: subsystem.LDStreamProcessor;
 
-  private readonly highTimeoutThreshold: number = 15;
+  private readonly _highTimeoutThreshold: number = 15;
 
-  private eventFactoryDefault = new EventFactory(false);
-  private eventFactoryWithReasons = new EventFactory(true);
+  private _eventFactoryDefault = new EventFactory(false);
+  private _eventFactoryWithReasons = new EventFactory(true);
   protected emitter: LDEmitter;
-  private flagManager: FlagManager;
+  private _flagManager: FlagManager;
 
-  private eventSendingEnabled: boolean = false;
-  private baseHeaders: LDHeaders;
+  private _eventSendingEnabled: boolean = false;
+  private _baseHeaders: LDHeaders;
   protected dataManager: DataManager;
+  private _hookRunner: HookRunner;
+  private _inspectorManager: InspectorManager;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -75,37 +82,38 @@ export default class LDClientImpl implements LDClient {
       throw new Error('Platform must implement Encoding because btoa is required.');
     }
 
-    this.config = new ConfigurationImpl(options, internalOptions);
-    this.logger = this.config.logger;
+    this._config = new ConfigurationImpl(options, internalOptions);
+    this.logger = this._config.logger;
 
-    this.baseHeaders = defaultHeaders(
+    this._baseHeaders = defaultHeaders(
       this.sdkKey,
       this.platform.info,
-      this.config.tags,
-      this.config.serviceEndpoints.includeAuthorizationHeader,
-      this.config.userAgentHeaderName,
+      this._config.tags,
+      this._config.serviceEndpoints.includeAuthorizationHeader,
+      this._config.userAgentHeaderName,
     );
 
-    this.flagManager = new DefaultFlagManager(
+    this._flagManager = new DefaultFlagManager(
       this.platform,
       sdkKey,
-      this.config.maxCachedContexts,
-      this.config.logger,
+      this._config.maxCachedContexts,
+      this._config.logger,
     );
-    this.diagnosticsManager = createDiagnosticsManager(sdkKey, this.config, platform);
-    this.eventProcessor = createEventProcessor(
+    this._diagnosticsManager = createDiagnosticsManager(sdkKey, this._config, platform);
+    this._eventProcessor = createEventProcessor(
       sdkKey,
-      this.config,
+      this._config,
       platform,
-      this.baseHeaders,
-      this.diagnosticsManager,
+      this._baseHeaders,
+      this._diagnosticsManager,
     );
     this.emitter = new LDEmitter();
     this.emitter.on('error', (c: LDContext, err: any) => {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
     });
 
-    this.flagManager.on((context, flagKeys) => {
+    this._flagManager.on((context, flagKeys, type) => {
+      this._handleInspectionChanged(flagKeys, type);
       const ldContext = Context.toLDContext(context);
       this.emitter.emit('change', ldContext, flagKeys);
       flagKeys.forEach((it) => {
@@ -114,17 +122,23 @@ export default class LDClientImpl implements LDClient {
     });
 
     this.dataManager = dataManagerFactory(
-      this.flagManager,
-      this.config,
-      this.baseHeaders,
+      this._flagManager,
+      this._config,
+      this._baseHeaders,
       this.emitter,
-      this.diagnosticsManager,
+      this._diagnosticsManager,
     );
+
+    this._hookRunner = new HookRunner(this.logger, this._config.hooks);
+    this._inspectorManager = new InspectorManager(this._config.inspectors, this.logger);
+    if (this._inspectorManager.hasInspectors()) {
+      this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
+    }
   }
 
   allFlags(): LDFlagSet {
     // extracting all flag values
-    const result = Object.entries(this.flagManager.getAll()).reduce(
+    const result = Object.entries(this._flagManager.getAll()).reduce(
       (acc: LDFlagSet, [key, descriptor]) => {
         if (descriptor.flag !== null && descriptor.flag !== undefined && !descriptor.flag.deleted) {
           acc[key] = descriptor.flag.value;
@@ -138,14 +152,14 @@ export default class LDClientImpl implements LDClient {
 
   async close(): Promise<void> {
     await this.flush();
-    this.eventProcessor?.close();
-    this.updateProcessor?.close();
+    this._eventProcessor?.close();
+    this._updateProcessor?.close();
     this.logger.debug('Closed event processor and data source.');
   }
 
   async flush(): Promise<{ error?: Error; result: boolean }> {
     try {
-      await this.eventProcessor?.flush();
+      await this._eventProcessor?.flush();
       this.logger.debug('Successfully flushed event processor.');
     } catch (e) {
       this.logger.error(`Error flushing event processor: ${e}.`);
@@ -161,14 +175,17 @@ export default class LDClientImpl implements LDClient {
     // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
-    return this.uncheckedContext ? clone<LDContext>(this.uncheckedContext) : undefined;
+    return this._uncheckedContext ? clone<LDContext>(this._uncheckedContext) : undefined;
   }
 
   protected getInternalContext(): Context | undefined {
-    return this.checkedContext;
+    return this._checkedContext;
   }
 
-  private createIdentifyPromise(timeout: number): {
+  private _createIdentifyPromise(
+    timeout: number,
+    noTimeout: boolean,
+  ): {
     identifyPromise: Promise<void>;
     identifyResolve: () => void;
     identifyReject: (err: Error) => void;
@@ -176,13 +193,17 @@ export default class LDClientImpl implements LDClient {
     let res: any;
     let rej: any;
 
-    const slow = new Promise<void>((resolve, reject) => {
+    const basePromise = new Promise<void>((resolve, reject) => {
       res = resolve;
       rej = reject;
     });
 
+    if (noTimeout) {
+      return { identifyPromise: basePromise, identifyResolve: res, identifyReject: rej };
+    }
+
     const timed = timedPromise(timeout, 'identify');
-    const raced = Promise.race([timed, slow]).catch((e) => {
+    const raced = Promise.race([timed, basePromise]).catch((e) => {
       if (e.message.includes('timed out')) {
         this.logger.error(`identify error: ${e}`);
       }
@@ -208,22 +229,23 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    if (identifyOptions?.timeout) {
-      this.identifyTimeout = identifyOptions.timeout;
-    }
+    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENIFY_TIMEOUT_SECONDS;
+    const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
 
-    if (this.identifyTimeout > this.highTimeoutThreshold) {
+    // When noTimeout is specified, and a timeout is not secified, then this condition cannot
+    // be encountered. (Our default would need to be greater)
+    if (identifyTimeout > this._highTimeoutThreshold) {
       this.logger.warn(
         'The identify function was called with a timeout greater than ' +
-          `${this.highTimeoutThreshold} seconds. We recommend a timeout of less than ` +
-          `${this.highTimeoutThreshold} seconds.`,
+          `${this._highTimeoutThreshold} seconds. We recommend a timeout of less than ` +
+          `${this._highTimeoutThreshold} seconds.`,
       );
     }
 
     let context = await ensureKey(pristineContext, this.platform);
 
     if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
-      context = await addAutoEnv(context, this.platform, this.config);
+      context = await addAutoEnv(context, this.platform, this._config);
     }
 
     const checkedContext = Context.fromLDContext(context);
@@ -232,14 +254,17 @@ export default class LDClientImpl implements LDClient {
       this.emitter.emit('error', context, error);
       return Promise.reject(error);
     }
-    this.uncheckedContext = context;
-    this.checkedContext = checkedContext;
+    this._uncheckedContext = context;
+    this._checkedContext = checkedContext;
 
-    this.eventProcessor?.sendEvent(this.eventFactoryDefault.identifyEvent(this.checkedContext));
-    const { identifyPromise, identifyResolve, identifyReject } = this.createIdentifyPromise(
-      this.identifyTimeout,
+    this._eventProcessor?.sendEvent(this._eventFactoryDefault.identifyEvent(this._checkedContext));
+    const { identifyPromise, identifyResolve, identifyReject } = this._createIdentifyPromise(
+      identifyTimeout,
+      noTimeout,
     );
-    this.logger.debug(`Identifying ${JSON.stringify(this.checkedContext)}`);
+    this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
+
+    const afterIdentify = this._hookRunner.identify(context, identifyOptions?.timeout);
 
     await this.dataManager.identify(
       identifyResolve,
@@ -248,7 +273,16 @@ export default class LDClientImpl implements LDClient {
       identifyOptions,
     );
 
-    return identifyPromise;
+    return identifyPromise.then(
+      (res) => {
+        afterIdentify({ status: 'completed' });
+        return res;
+      },
+      (e) => {
+        afterIdentify({ status: 'error' });
+        throw e;
+      },
+    );
   }
 
   on(eventName: EventName, listener: Function): void {
@@ -260,8 +294,8 @@ export default class LDClientImpl implements LDClient {
   }
 
   track(key: string, data?: any, metricValue?: number): void {
-    if (!this.checkedContext || !this.checkedContext.valid) {
-      this.logger.warn(ClientMessages.missingContextKeyNoEvent);
+    if (!this._checkedContext || !this._checkedContext.valid) {
+      this.logger.warn(ClientMessages.MissingContextKeyNoEvent);
       return;
     }
 
@@ -270,45 +304,45 @@ export default class LDClientImpl implements LDClient {
       this.logger?.warn(ClientMessages.invalidMetricValue(typeof metricValue));
     }
 
-    this.eventProcessor?.sendEvent(
-      this.config.trackEventModifier(
-        this.eventFactoryDefault.customEvent(key, this.checkedContext!, data, metricValue),
+    this._eventProcessor?.sendEvent(
+      this._config.trackEventModifier(
+        this._eventFactoryDefault.customEvent(key, this._checkedContext!, data, metricValue),
       ),
     );
   }
 
-  private variationInternal(
+  private _variationInternal(
     flagKey: string,
     defaultValue: any,
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
   ): LDEvaluationDetail {
-    if (!this.uncheckedContext) {
-      this.logger.debug(ClientMessages.missingContextKeyNoEvent);
+    if (!this._uncheckedContext) {
+      this.logger.debug(ClientMessages.MissingContextKeyNoEvent);
       return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
     }
 
-    const evalContext = Context.fromLDContext(this.uncheckedContext);
-    const foundItem = this.flagManager.get(flagKey);
+    const evalContext = Context.fromLDContext(this._uncheckedContext);
+    const foundItem = this._flagManager.get(flagKey);
 
     if (foundItem === undefined || foundItem.flag.deleted) {
       const defVal = defaultValue ?? null;
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
-      this.emitter.emit('error', this.uncheckedContext, error);
-      this.eventProcessor?.sendEvent(
-        this.eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
+      this.emitter.emit('error', this._uncheckedContext, error);
+      this._eventProcessor?.sendEvent(
+        this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
       );
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
     }
 
-    const { reason, value, variation } = foundItem.flag;
+    const { reason, value, variation, prerequisites } = foundItem.flag;
 
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
       if (!matched) {
-        this.eventProcessor?.sendEvent(
+        this._eventProcessor?.sendEvent(
           eventFactory.evalEventClient(
             flagKey,
             defaultValue, // track default value on type errors
@@ -321,7 +355,7 @@ export default class LDClientImpl implements LDClient {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.emitter.emit('error', this.uncheckedContext, error);
+        this.emitter.emit('error', this._uncheckedContext, error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -331,7 +365,11 @@ export default class LDClientImpl implements LDClient {
       this.logger.debug('Result value is null. Providing default value.');
       successDetail.value = defaultValue;
     }
-    this.eventProcessor?.sendEvent(
+
+    prerequisites?.forEach((prereqKey) => {
+      this._variationInternal(prereqKey, undefined, this._eventFactoryDefault);
+    });
+    this._eventProcessor?.sendEvent(
       eventFactory.evalEventClient(
         flagKey,
         value,
@@ -345,24 +383,33 @@ export default class LDClientImpl implements LDClient {
   }
 
   variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
-    const { value } = this.variationInternal(flagKey, defaultValue, this.eventFactoryDefault);
+    const { value } = this._hookRunner.withEvaluation(
+      flagKey,
+      this._uncheckedContext,
+      defaultValue,
+      () => this._variationInternal(flagKey, defaultValue, this._eventFactoryDefault),
+    );
     return value;
   }
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
-    return this.variationInternal(flagKey, defaultValue, this.eventFactoryWithReasons);
+    return this._hookRunner.withEvaluation(flagKey, this._uncheckedContext, defaultValue, () =>
+      this._variationInternal(flagKey, defaultValue, this._eventFactoryWithReasons),
+    );
   }
 
-  private typedEval<T>(
+  private _typedEval<T>(
     key: string,
     defaultValue: T,
     eventFactory: EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): LDEvaluationDetailTyped<T> {
-    return this.variationInternal(key, defaultValue, eventFactory, typeChecker);
+    return this._hookRunner.withEvaluation(key, this._uncheckedContext, defaultValue, () =>
+      this._variationInternal(key, defaultValue, eventFactory, typeChecker),
+    );
   }
 
   boolVariation(key: string, defaultValue: boolean): boolean {
-    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+    return this._typedEval(key, defaultValue, this._eventFactoryDefault, (value) => [
       TypeValidators.Boolean.is(value),
       TypeValidators.Boolean.getType(),
     ]).value;
@@ -373,35 +420,35 @@ export default class LDClientImpl implements LDClient {
   }
 
   numberVariation(key: string, defaultValue: number): number {
-    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+    return this._typedEval(key, defaultValue, this._eventFactoryDefault, (value) => [
       TypeValidators.Number.is(value),
       TypeValidators.Number.getType(),
     ]).value;
   }
 
   stringVariation(key: string, defaultValue: string): string {
-    return this.typedEval(key, defaultValue, this.eventFactoryDefault, (value) => [
+    return this._typedEval(key, defaultValue, this._eventFactoryDefault, (value) => [
       TypeValidators.String.is(value),
       TypeValidators.String.getType(),
     ]).value;
   }
 
   boolVariationDetail(key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean> {
-    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+    return this._typedEval(key, defaultValue, this._eventFactoryWithReasons, (value) => [
       TypeValidators.Boolean.is(value),
       TypeValidators.Boolean.getType(),
     ]);
   }
 
   numberVariationDetail(key: string, defaultValue: number): LDEvaluationDetailTyped<number> {
-    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+    return this._typedEval(key, defaultValue, this._eventFactoryWithReasons, (value) => [
       TypeValidators.Number.is(value),
       TypeValidators.Number.getType(),
     ]);
   }
 
   stringVariationDetail(key: string, defaultValue: string): LDEvaluationDetailTyped<string> {
-    return this.typedEval(key, defaultValue, this.eventFactoryWithReasons, (value) => [
+    return this._typedEval(key, defaultValue, this._eventFactoryWithReasons, (value) => [
       TypeValidators.String.is(value),
       TypeValidators.String.getType(),
     ]);
@@ -411,39 +458,65 @@ export default class LDClientImpl implements LDClient {
     return this.variationDetail(key, defaultValue);
   }
 
+  addHook(hook: Hook): void {
+    this._hookRunner.addHook(hook);
+  }
+
   /**
    * Enable/Disable event sending.
    * @param enabled True to enable event processing, false to disable.
    * @param flush True to flush while disabling. Useful to flush on certain state transitions.
    */
   protected setEventSendingEnabled(enabled: boolean, flush: boolean): void {
-    if (this.eventSendingEnabled === enabled) {
+    if (this._eventSendingEnabled === enabled) {
       return;
     }
-    this.eventSendingEnabled = enabled;
+    this._eventSendingEnabled = enabled;
 
     if (enabled) {
       this.logger.debug('Starting event processor');
-      this.eventProcessor?.start();
+      this._eventProcessor?.start();
     } else if (flush) {
       this.logger?.debug('Flushing event processor before disabling.');
       // Disable and flush.
       this.flush().then(() => {
         // While waiting for the flush event sending could be re-enabled, in which case
         // we do not want to close the event processor.
-        if (!this.eventSendingEnabled) {
+        if (!this._eventSendingEnabled) {
           this.logger?.debug('Stopping event processor.');
-          this.eventProcessor?.close();
+          this._eventProcessor?.close();
         }
       });
     } else {
       // Just disabled.
       this.logger?.debug('Stopping event processor.');
-      this.eventProcessor?.close();
+      this._eventProcessor?.close();
     }
   }
 
   protected sendEvent(event: internal.InputEvent): void {
-    this.eventProcessor?.sendEvent(event);
+    this._eventProcessor?.sendEvent(event);
+  }
+
+  private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {
+    if (!this._inspectorManager.hasInspectors()) {
+      return;
+    }
+
+    const details: Record<string, LDEvaluationDetail> = {};
+    flagKeys.forEach((flagKey) => {
+      const item = this._flagManager.get(flagKey);
+      if (item?.flag && !item.flag.deleted) {
+        const { reason, value, variation } = item.flag;
+        details[flagKey] = createSuccessEvaluationDetail(value, variation, reason);
+      }
+    });
+    if (type === 'init') {
+      this._inspectorManager.onFlagsChanged(details);
+    } else if (type === 'patch') {
+      Object.entries(details).forEach(([flagKey, detail]) => {
+        this._inspectorManager.onFlagChanged(flagKey, detail);
+      });
+    }
   }
 }

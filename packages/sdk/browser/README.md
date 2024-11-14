@@ -1,15 +1,17 @@
 # LaunchDarkly JavaScript SDK for Browsers
 
-<!--
 [![NPM][browser-sdk-npm-badge]][browser-sdk-npm-link]
 [![Actions Status][browser-sdk-ci-badge]][browser-sdk-ci]
 [![Documentation][browser-sdk-ghp-badge]][browser-sdk-ghp-link]
 [![NPM][browser-sdk-dm-badge]][browser-sdk-npm-link]
 [![NPM][browser-sdk-dt-badge]][browser-sdk-npm-link]
--->
+
+# ⛔️⛔️⛔️⛔️
 
 > [!CAUTION]
-> This library is a beta version and should not be considered ready for production use while this message is visible.
+> This library is a alpha version and should not be considered ready for production use while this message is visible.
+
+# ☝️☝️☝️☝️☝️☝️
 
 <!--
 ## Install

@@ -1,5 +1,8 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
+import { Hook } from './integrations/Hooks';
+import { LDInspection } from './LDInspection';
+
 export interface LDOptions {
   /**
    * Whether all context attributes (except the context key) should be marked as private, and
@@ -111,9 +114,9 @@ export interface LDOptions {
   eventsUri?: string;
 
   /**
-   * Controls how often the SDK flushes events.
+   * The interval in between flushes of the analytics events queue, in seconds.
    *
-   * @defaultValue 30s.
+   * @defaultValue 2s for browser implementations 30s for others.
    */
   flushInterval?: number;
 
@@ -123,7 +126,10 @@ export interface LDOptions {
    * @remarks
    * Set a custom {@link LDLogger} if you want full control of logging behavior.
    *
-   * @defaultValue A {@link BasicLogger} which outputs to the console at `info` level.
+   * @defaultValue The default logging implementation will varybased on platform. For the browser
+   * the default logger will log "info" level and higher priorty messages and it will log messages to
+   * console.info, console.warn, and console.error. Other platforms may use a `BasicLogger` instance
+   * also defaulted to the "info" level.
    */
   logger?: LDLogger;
 
@@ -236,4 +242,33 @@ export interface LDOptions {
    * config property.
    */
   payloadFilterKey?: string;
+
+  /**
+   * Initial set of hooks for the client.
+   *
+   * Hooks provide entrypoints which allow for observation of SDK functions.
+   *
+   * LaunchDarkly provides integration packages, and most applications will not
+   * need to implement their own hooks. Refer to the `@launchdarkly/node-server-sdk-otel`
+   * for instrumentation for the `@launchdarkly/node-server-sdk`.
+   *
+   * Example:
+   * ```typescript
+   * import { init } from '@launchdarkly/node-server-sdk';
+   * import { TheHook } from '@launchdarkly/some-hook';
+   *
+   * const client = init('my-sdk-key', { hooks: [new TheHook()] });
+   * ```
+   */
+  hooks?: Hook[];
+
+  /**
+   * Inspectors can be used for collecting information for monitoring, analytics, and debugging.
+   *
+   *
+   * @deprecated Hooks should be used instead of inspectors and inspectors will be removed in
+   * a future version. If you need functionality that is not exposed using hooks, then please
+   * let us know through a github issue or support.
+   */
+  inspectors?: LDInspection[];
 }

@@ -32,19 +32,19 @@ const basicMultiKindUser: LDContext = { kind: 'multi', user: { key: 'userkey' } 
 
 class TestQueries implements Queries {
   constructor(
-    private readonly data: {
+    private readonly _data: {
       flags?: Flag[];
       segments?: Segment[];
     },
   ) {}
 
   getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
-    const res = this.data.flags?.find((flag) => flag.key === key);
+    const res = this._data.flags?.find((flag) => flag.key === key);
     cb(res);
   }
 
   getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
-    const res = this.data.segments?.find((segment) => segment.key === key);
+    const res = this._data.segments?.find((segment) => segment.key === key);
     cb(res);
   }
 

@@ -2,6 +2,38 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.7.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.0...node-server-sdk-v9.7.1) (2024-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.9.0 to 2.9.1
+
+## [9.7.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.6.1...node-server-sdk-v9.7.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.8.0 to 2.9.0
+
+## [9.6.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.6.0...node-server-sdk-v9.6.1) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.7.0 to 2.8.0
+
 ## [9.6.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.5.4...node-server-sdk-v9.6.0) (2024-09-26)
 
 

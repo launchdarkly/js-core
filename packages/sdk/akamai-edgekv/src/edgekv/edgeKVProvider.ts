@@ -10,19 +10,19 @@ type EdgeKVProviderParams = {
 };
 
 export default class EdgeKVProvider implements EdgeProvider {
-  private edgeKv: EdgeKV;
-  private logger: LDLogger;
+  private _edgeKv: EdgeKV;
+  private _logger: LDLogger;
 
   constructor({ namespace, group, logger }: EdgeKVProviderParams) {
-    this.edgeKv = new EdgeKV({ namespace, group } as any);
-    this.logger = logger;
+    this._edgeKv = new EdgeKV({ namespace, group } as any);
+    this._logger = logger;
   }
 
   async get(rootKey: string): Promise<string | null | undefined> {
     try {
-      return await this.edgeKv.getText({ item: rootKey } as any);
+      return await this._edgeKv.getText({ item: rootKey } as any);
     } catch (e) {
-      this.logger?.error(`Error getting value from EdgeKV: ${e}`);
+      this._logger?.error(`Error getting value from EdgeKV: ${e}`);
     }
     return undefined;
   }

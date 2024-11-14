@@ -5,13 +5,21 @@ import {
   EventName,
   Info,
   internal,
+  LDHeaders,
   LDLogger,
   LDStreamingError,
   Platform,
   ProcessStreamResponse,
+  Requests,
+  ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
 
-import { StreamingDataSourceConfig, StreamingProcessor } from '../../src/streaming';
+import Requestor, { makeRequestor } from '../../src/datasource/Requestor';
+import {
+  DataSourcePaths,
+  StreamingDataSourceConfig,
+  StreamingProcessor,
+} from '../../src/streaming';
 import { createBasicPlatform } from '../createBasicPlatform';
 
 let logger: LDLogger;
@@ -28,15 +36,17 @@ const serviceEndpoints = {
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
-const event = {
-  data: {
-    flags: {
-      flagkey: { key: 'flagkey', version: 1 },
-    },
-    segments: {
-      segkey: { key: 'segkey', version: 2 },
-    },
+
+const flagData = {
+  flags: {
+    flagkey: { key: 'flagkey', version: 1 },
   },
+  segments: {
+    segkey: { key: 'segkey', version: 2 },
+  },
+};
+const event = {
+  data: flagData,
 };
 
 let basicPlatform: Platform;
@@ -56,6 +66,9 @@ function getStreamingDataSourceConfig(
       },
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path/report';
+      },
+      pathPing(_encoding: Encoding, _plainContextString: string): string {
+        return '/stream/path/ping';
       },
     },
     baseHeaders: {
@@ -88,6 +101,43 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
   close: jest.fn(),
 });
 
+function makeTestRequestor(options: {
+  requests: Requests;
+  plainContextString?: string;
+  serviceEndpoints?: ServiceEndpoints;
+  paths?: DataSourcePaths;
+  encoding?: Encoding;
+  baseHeaders?: LDHeaders;
+  baseQueryParams?: { key: string; value: string }[];
+  useReport?: boolean;
+  withReasons?: boolean;
+  secureModeHash?: string;
+}): Requestor {
+  return makeRequestor(
+    options.plainContextString ?? 'mockContextString',
+    options.serviceEndpoints ?? serviceEndpoints,
+    options.paths ?? {
+      pathGet(_encoding: Encoding, _plainContextString: string): string {
+        return '/polling/path/get';
+      },
+      pathReport(_encoding: Encoding, _plainContextString: string): string {
+        return '/polling/path/report';
+      },
+      pathPing(_encoding: Encoding, _plainContextString: string): string {
+        return '/polling/path/ping';
+      },
+    },
+    options.requests,
+    options.encoding ?? {
+      btoa: jest.fn(),
+    },
+    options.baseHeaders,
+    options.baseQueryParams,
+    options.withReasons ?? true,
+    options.useReport ?? false,
+  );
+}
+
 describe('given a stream processor', () => {
   let info: Info;
   let streamingProcessor: StreamingProcessor;
@@ -97,6 +147,7 @@ describe('given a stream processor', () => {
   let mockListener: ProcessStreamResponse;
   let mockErrorHandler: jest.Mock;
   let simulatePutEvent: (e?: any) => void;
+  let simulatePingEvent: () => void;
   let simulateError: (e: { status: number; message: string }) => boolean;
 
   beforeAll(() => {
@@ -123,9 +174,13 @@ describe('given a stream processor', () => {
         headers: true,
         customMethod: true,
       })),
+      fetch: jest.fn(),
     } as any;
     simulatePutEvent = (e: any = event) => {
-      mockEventSource.addEventListener.mock.calls[0][1](e);
+      mockEventSource.addEventListener.mock.calls[0][1](e); // put listener is at position 0
+    };
+    simulatePingEvent = () => {
+      mockEventSource.addEventListener.mock.calls[2][1](); // ping listener is at position 2
     };
     simulateError = (e: { status: number; message: string }): boolean =>
       mockEventSource.options.errorFilter(e);
@@ -139,20 +194,6 @@ describe('given a stream processor', () => {
     listeners.set('patch', mockListener);
 
     diagnosticsManager = new internal.DiagnosticsManager(sdkKey, basicPlatform, {});
-
-    streamingProcessor = new StreamingProcessor(
-      'mockContextString',
-      getStreamingDataSourceConfig(),
-      listeners,
-      basicPlatform.requests,
-      basicPlatform.encoding!,
-      diagnosticsManager,
-      mockErrorHandler,
-      logger,
-    );
-
-    jest.spyOn(streamingProcessor, 'stop');
-    streamingProcessor.start();
   });
 
   afterEach(() => {
@@ -161,6 +202,21 @@ describe('given a stream processor', () => {
   });
 
   it('uses expected uri and eventSource init args', () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+
     expect(basicPlatform.requests.createEventSource).toBeCalledWith(
       `${serviceEndpoints.streaming}/stream/path/get?filter=testPayloadFilterKey`,
       {
@@ -180,6 +236,9 @@ describe('given a stream processor', () => {
       listeners,
       basicPlatform.requests,
       basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
       diagnosticsManager,
       mockErrorHandler,
     );
@@ -204,6 +263,9 @@ describe('given a stream processor', () => {
       listeners,
       basicPlatform.requests,
       basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
       diagnosticsManager,
       mockErrorHandler,
     );
@@ -230,6 +292,9 @@ describe('given a stream processor', () => {
       listeners,
       basicPlatform.requests,
       basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
       diagnosticsManager,
       mockErrorHandler,
     );
@@ -248,6 +313,21 @@ describe('given a stream processor', () => {
   });
 
   it('adds listeners', () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+
     expect(mockEventSource.addEventListener).toHaveBeenNthCalledWith(
       1,
       'put',
@@ -261,6 +341,21 @@ describe('given a stream processor', () => {
   });
 
   it('executes listeners', () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+
     simulatePutEvent();
     const patchHandler = mockEventSource.addEventListener.mock.calls[1][1];
     patchHandler(event);
@@ -270,6 +365,21 @@ describe('given a stream processor', () => {
   });
 
   it('passes error to callback if json data is malformed', async () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+
     (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
     simulatePutEvent();
 
@@ -279,6 +389,21 @@ describe('given a stream processor', () => {
   });
 
   it('calls error handler if event.data prop is missing', async () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+
     simulatePutEvent({ flags: {} });
 
     expect(mockListener.deserializeData).not.toBeCalled();
@@ -287,6 +412,22 @@ describe('given a stream processor', () => {
   });
 
   it('closes and stops', async () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+
+    jest.spyOn(streamingProcessor, 'stop');
+    streamingProcessor.start();
     streamingProcessor.close();
 
     expect(streamingProcessor.stop).toBeCalled();
@@ -296,6 +437,21 @@ describe('given a stream processor', () => {
   });
 
   it('creates a stream init event', async () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+
     const startTime = Date.now();
     simulatePutEvent();
 
@@ -309,6 +465,21 @@ describe('given a stream processor', () => {
 
   describe.each([400, 408, 429, 500, 503])('given recoverable http errors', (status) => {
     it(`continues retrying after error: ${status}`, () => {
+      streamingProcessor = new StreamingProcessor(
+        'mockContextString',
+        getStreamingDataSourceConfig(),
+        listeners,
+        basicPlatform.requests,
+        basicPlatform.encoding!,
+        makeTestRequestor({
+          requests: basicPlatform.requests,
+        }),
+        diagnosticsManager,
+        mockErrorHandler,
+        logger,
+      );
+      streamingProcessor.start();
+
       const startTime = Date.now();
       const testError = { status, message: 'retry. recoverable.' };
       const willRetry = simulateError(testError);
@@ -330,6 +501,21 @@ describe('given a stream processor', () => {
 
   describe.each([401, 403])('given irrecoverable http errors', (status) => {
     it(`stops retrying after error: ${status}`, () => {
+      streamingProcessor = new StreamingProcessor(
+        'mockContextString',
+        getStreamingDataSourceConfig(),
+        listeners,
+        basicPlatform.requests,
+        basicPlatform.encoding!,
+        makeTestRequestor({
+          requests: basicPlatform.requests,
+        }),
+        diagnosticsManager,
+        mockErrorHandler,
+        logger,
+      );
+      streamingProcessor.start();
+
       const startTime = Date.now();
       const testError = { status, message: 'stopping. irrecoverable.' };
       const willRetry = simulateError(testError);
@@ -349,6 +535,50 @@ describe('given a stream processor', () => {
       expect(si.failed).toBeTruthy();
       expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });
+  });
+
+  it('it uses ping stream and polling when use REPORT and eventsource lacks custom method support', async () => {
+    basicPlatform.requests.getEventSourceCapabilities = jest.fn(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: false, // simulating event source does not support REPORT
+    }));
+
+    basicPlatform.requests.fetch = jest.fn().mockResolvedValue({
+      headers: jest.doMock,
+      status: 200,
+      text: jest.fn().mockResolvedValue(JSON.stringify(flagData)),
+    });
+
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(true, true), // use report to true
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+        useReport: true,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+    );
+    streamingProcessor.start();
+
+    simulatePingEvent();
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/stream/path/ping?withReasons=true&filter=testPayloadFilterKey`,
+      expect.anything(),
+    );
+
+    expect(basicPlatform.requests.fetch).toHaveBeenCalledWith(
+      '/polling/path/report?withReasons=true&filter=testPayloadFilterKey',
+      expect.objectContaining({
+        method: 'REPORT',
+        body: 'mockContextString',
+      }),
+    );
   });
 });
 
@@ -381,6 +611,9 @@ it('includes custom query parameters', () => {
     listeners,
     basicPlatform.requests,
     basicPlatform.encoding!,
+    makeTestRequestor({
+      requests: basicPlatform.requests,
+    }),
     diagnosticsManager,
     () => {},
     logger,

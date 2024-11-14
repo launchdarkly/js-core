@@ -100,7 +100,8 @@ describe('sdk-client object', () => {
     const checkedContext = Context.fromLDContext(context);
 
     // @ts-ignore
-    await ldc.flagManager.upsert(checkedContext, 'dev-test-flag', {
+    // eslint-disable-next-line no-underscore-dangle
+    await ldc._flagManager.upsert(checkedContext, 'dev-test-flag', {
       version: 999,
       flag: {
         deleted: true,

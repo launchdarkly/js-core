@@ -135,6 +135,7 @@ describe('given an event sender', () => {
       body: JSON.stringify(testEventData1),
       headers: analyticsHeaders(uuid),
       method: 'POST',
+      keepalive: true,
     });
   });
 
@@ -151,6 +152,7 @@ describe('given an event sender', () => {
       body: JSON.stringify(testEventData1),
       headers: analyticsHeaders(uuid),
       method: 'POST',
+      keepalive: true,
     });
     expect(mockFetch).toHaveBeenNthCalledWith(
       2,
@@ -159,6 +161,7 @@ describe('given an event sender', () => {
         body: JSON.stringify(testEventData2),
         headers: diagnosticHeaders,
         method: 'POST',
+        keepalive: true,
       },
     );
   });

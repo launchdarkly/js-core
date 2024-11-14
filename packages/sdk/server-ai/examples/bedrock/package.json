@@ -1,0 +1,54 @@
+{
+  "name": "@launchdarkly/hello-ai-bedrock",
+  "version": "0.1.0",
+  "description": "LaunchDarkly AI SDK for Node.js",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/index.js",
+    "lint": "npx eslint . --ext .ts",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "lint:fix": "yarn run lint --fix",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+  },
+  "keywords": [
+    "launchdarkly",
+    "ai",
+    "llm"
+  ],
+  "author": "LaunchDarkly",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.679.0",
+    "@launchdarkly/node-server-sdk": "^9.7.1",
+    "@launchdarkly/server-sdk-ai": "0.2.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@tsconfig/node20": "20.1.4",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.5",
+    "typedoc": "0.25.0",
+    "typescript": "^5.5.3"
+  },
+  "directories": {
+    "example": "example"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/launchdarkly/js-core"
+  }
+}

@@ -90,6 +90,44 @@
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.2.1 to 9.2.2
 
+## [6.2.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.2.0...node-server-sdk-dynamodb-v6.2.1) (2024-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.7.0 to 9.7.1
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.1
+
+## [6.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.1.23...node-server-sdk-dynamodb-v6.2.0) (2024-10-17)
+
+
+### Features
+
+* Apply private property naming standard. Mangle browser private properties. ([#620](https://github.com/launchdarkly/js-core/issues/620)) ([3e6d404](https://github.com/launchdarkly/js-core/commit/3e6d404ae665c5cc7e5a1394a59c8f2c9d5d682a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.6.1 to 9.7.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.0
+
+## [6.1.23](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.1.22...node-server-sdk-dynamodb-v6.1.23) (2024-10-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.6.0 to 9.6.1
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.6.1
+
 ## [6.1.22](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.1.21...node-server-sdk-dynamodb-v6.1.22) (2024-09-26)
 
 
