@@ -152,6 +152,13 @@ export function getSrcLines(
   // method.
 
   // Trimmer for non-origin lines. Starts at column 0.
+  // Non-origin lines are lines which are not the line for a specific stack
+  // frame, but instead the lines before or after that frame.
+  // ```
+  // console.log("before origin"); // non-origin line
+  // throw new Error("this is the origin"); // origin line
+  // console.log("after origin); // non-origin line
+  // ```
   const trimmer = (input: string) =>
     trimSourceLine(
       {
@@ -164,6 +171,7 @@ export function getSrcLines(
 
   const origin = Math.floor(context.length / 2);
   return {
+    // The lines immediately preceeding the origin line.
     srcBefore: getLines(origin - options.source.beforeLines, origin, context, trimmer),
     srcLine: trimSourceLine(
       {
@@ -173,6 +181,7 @@ export function getSrcLines(
       context[origin],
       inFrame.column || 0,
     ),
+    // The lines immediately following the origin line.
     srcAfter: getLines(origin + 1, origin + 1 + options.source.afterLines, context, trimmer),
   };
 }
