@@ -1,4 +1,3 @@
-
 /* eslint-disable no-console */
 import { OpenAI } from 'openai';
 
