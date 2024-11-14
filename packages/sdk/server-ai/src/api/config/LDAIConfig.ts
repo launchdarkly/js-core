@@ -41,20 +41,6 @@ export interface LDMessage {
 }
 
 /**
- * Configuration which affects generation.
- */
-export interface LDGenerationConfig {
-  /**
-   * Optional model configuration.
-   */
-  model?: LDModelConfig;
-  /**
-   * Optional prompt data.
-   */
-  prompt?: LDMessage[];
-}
-
-/**
  * AI configuration and tracker.
  */
 export interface LDAIConfig {

@@ -1,6 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIDefaults, LDGenerationConfig } from '../src/api/config';
+import { LDAIDefaults } from '../src/api/config';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
 
@@ -56,13 +56,11 @@ it('returns model config with interpolated prompts', async () => {
   const result = await client.modelConfig(key, testContext, defaultValue, variables);
 
   expect(result).toEqual({
-    config: {
-      model: { modelId: 'example-provider', name: 'imagination' },
-      prompt: [
-        { role: 'system', content: 'Hello John' },
-        { role: 'user', content: 'Score: 42' },
-      ],
-    },
+    model: { modelId: 'example-provider', name: 'imagination' },
+    prompt: [
+      { role: 'system', content: 'Hello John' },
+      { role: 'user', content: 'Score: 42' },
+    ],
     tracker: expect.any(Object),
     enabled: true,
   });
@@ -71,7 +69,7 @@ it('returns model config with interpolated prompts', async () => {
 it('includes context in variables for prompt interpolation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDGenerationConfig = {
+  const defaultValue: LDAIDefaults = {
     model: { modelId: 'test', name: 'test-model' },
     prompt: [],
   };
@@ -85,13 +83,13 @@ it('includes context in variables for prompt interpolation', async () => {
 
   const result = await client.modelConfig(key, testContext, defaultValue);
 
-  expect(result.config.prompt?.[0].content).toBe('User key: test-user');
+  expect(result.prompt?.[0].content).toBe('User key: test-user');
 });
 
 it('handles missing metadata in variation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDGenerationConfig = {
+  const defaultValue: LDAIDefaults = {
     model: { modelId: 'test', name: 'test-model' },
     prompt: [],
   };
@@ -106,10 +104,8 @@ it('handles missing metadata in variation', async () => {
   const result = await client.modelConfig(key, testContext, defaultValue);
 
   expect(result).toEqual({
-    config: {
-      model: { modelId: 'example-provider', name: 'imagination' },
-      prompt: [{ role: 'system', content: 'Hello' }],
-    },
+    model: { modelId: 'example-provider', name: 'imagination' },
+    prompt: [{ role: 'system', content: 'Hello' }],
     tracker: expect.any(Object),
     enabled: false,
   });
@@ -118,9 +114,10 @@ it('handles missing metadata in variation', async () => {
 it('passes the default value to the underlying client', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'non-existent-flag';
-  const defaultValue: LDGenerationConfig = {
+  const defaultValue: LDAIDefaults = {
     model: { modelId: 'default-model', name: 'default' },
     prompt: [{ role: 'system', content: 'Default prompt' }],
+    enabled: true,
   };
 
   mockLdClient.variation.mockResolvedValue(defaultValue);
@@ -128,7 +125,8 @@ it('passes the default value to the underlying client', async () => {
   const result = await client.modelConfig(key, testContext, defaultValue);
 
   expect(result).toEqual({
-    config: defaultValue,
+    model: defaultValue.model,
+    prompt: defaultValue.prompt,
     tracker: expect.any(Object),
     enabled: false,
   });
