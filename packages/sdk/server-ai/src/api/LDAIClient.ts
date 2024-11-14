@@ -3,9 +3,18 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 import { LDAIConfig, LDGenerationConfig } from './config/LDAIConfig';
 
 /**
+ * Interface for default model configuration.
+ */
+export interface LDAIDefaults extends LDGenerationConfig {
+  /**
+   * Whether the configuration is enabled.
+   */
+  enabled?: boolean;
+}
+
+/**
  * Interface for performing AI operations using LaunchDarkly.
  */
-
 export interface LDAIClient {
   /**
    * Parses and interpolates a template string with the provided variables.
@@ -68,7 +77,7 @@ export interface LDAIClient {
    * }
    * ```
    */
-  modelConfig<TDefault extends LDGenerationConfig>(
+  modelConfig<TDefault extends LDAIDefaults>(
     key: string,
     context: LDContext,
     defaultValue: TDefault,

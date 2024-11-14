@@ -5,58 +5,14 @@
  * Some code changes may still be required, for example {@link LDOptions} removes
  * support for some previously available options.
  */
-import {
-  basicLogger,
-  EvaluationSeriesContext,
-  EvaluationSeriesData,
-  Hook,
-  HookMetadata,
-  IdentifySeriesContext,
-  IdentifySeriesData,
-  IdentifySeriesResult,
-  IdentifySeriesStatus,
-  LDContext,
-  LDContextCommon,
-  LDContextMeta,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDEvaluationReason,
-  LDFlagSet,
-  LDIdentifyOptions,
-  LDLogger,
-  LDLogLevel,
-  LDMultiKindContext,
-  LDOptions,
-  LDSingleKindContext,
-} from '..';
+import { LDContext } from '@launchdarkly/js-client-sdk-common';
+
 import { LDClient } from './LDClientCompat';
 import LDClientCompatImpl from './LDClientCompatImpl';
+import { LDOptions } from './LDCompatOptions';
 
-export type {
-  LDClient,
-  LDFlagSet,
-  LDContext,
-  LDContextCommon,
-  LDContextMeta,
-  LDMultiKindContext,
-  LDSingleKindContext,
-  LDLogLevel,
-  LDLogger,
-  LDOptions,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDEvaluationReason,
-  LDIdentifyOptions,
-  Hook,
-  HookMetadata,
-  EvaluationSeriesContext,
-  EvaluationSeriesData,
-  IdentifySeriesContext,
-  IdentifySeriesData,
-  IdentifySeriesResult,
-  IdentifySeriesStatus,
-  basicLogger,
-};
+export * from '../common';
+export type { LDClient, LDOptions };
 
 /**
  * Creates an instance of the LaunchDarkly client. This version of initialization is for
