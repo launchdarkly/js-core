@@ -64,14 +64,13 @@ Object.defineProperty(global, 'Request', {
         cache: this.cache,
         redirect: this.redirect,
         referrer: this.referrer,
-        integrity: this.integrity
+        integrity: this.integrity,
       });
     }
   },
   writable: true,
   configurable: true,
 });
-
 
 // Based on:
 // https://stackoverflow.com/a/71750830
