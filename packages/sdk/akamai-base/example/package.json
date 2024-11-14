@@ -32,6 +32,6 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/akamai-server-base-sdk": "2.1.19"
+    "@launchdarkly/akamai-server-base-sdk": "2.1.20"
   }
 }

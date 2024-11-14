@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.10.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.9.1...js-server-sdk-common-v2.10.0) (2024-11-14)
+
+
+### Features
+
+* Add support for getting the logger from server-side SDKs. ([#684](https://github.com/launchdarkly/js-core/issues/684)) ([1c411a1](https://github.com/launchdarkly/js-core/commit/1c411a15e308520dc7a0f20af76045f84d53e8a4))
+
 ## [2.9.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.9.0...js-server-sdk-common-v2.9.1) (2024-11-04)
 
 
