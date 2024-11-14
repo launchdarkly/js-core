@@ -38,6 +38,11 @@ export default [
   },
   {
     ...getSharedConfig('cjs', 'dist/cjs/index.cjs'),
-    plugins: [typescript({ tsconfig: './tsconfig.json', outputToFilesystem: true, }), common(), resolve(), json()],
+    plugins: [
+      typescript({ tsconfig: './tsconfig.json', outputToFilesystem: true }),
+      common(),
+      resolve(),
+      json(),
+    ],
   },
 ];

@@ -4,7 +4,6 @@ This package demonstrates the integration of LaunchDarkly's AI SDK with OpenAI, 
 
 ## Installation and Build
 
-
 When running as part of the js-core mono-repo the project will use local dependencies.
 As such those dependencies need built.
 
