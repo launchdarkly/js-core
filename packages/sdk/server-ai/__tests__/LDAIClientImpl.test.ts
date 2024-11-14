@@ -39,7 +39,7 @@ it('returns model config with interpolated prompts', async () => {
   };
 
   const mockVariation = {
-    model: { modelId: 'example-provider', name: 'imagination' },
+    model: { modelId: 'example-provider', name: 'imagination', temperature: 0.7, maxTokens: 4096 },
     prompt: [
       { role: 'system', content: 'Hello {{name}}' },
       { role: 'user', content: 'Score: {{score}}' },
@@ -56,7 +56,7 @@ it('returns model config with interpolated prompts', async () => {
   const result = await client.modelConfig(key, testContext, defaultValue, variables);
 
   expect(result).toEqual({
-    model: { modelId: 'example-provider', name: 'imagination' },
+    model: { modelId: 'example-provider', name: 'imagination', temperature: 0.7, maxTokens: 4096 },
     prompt: [
       { role: 'system', content: 'Hello John' },
       { role: 'user', content: 'Score: 42' },
