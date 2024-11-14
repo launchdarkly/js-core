@@ -80,6 +80,13 @@ export interface LDAIConfig {
 
 /**
  * Default value for a `modelConfig`. This is the same as the LDAIConfig, but it does not include
- * a tracker.
+ * a tracker and `enabled` is optional.
  */
-export type LDAIDefaults = Omit<LDAIConfig, 'tracker'>
+export type LDAIDefaults = Omit<LDAIConfig, 'tracker' | 'enabled'> & {
+  /**
+   * Whether the configuration is enabled.
+   *
+   * defaults to false
+   */
+  enabled?: boolean;
+};

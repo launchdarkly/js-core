@@ -2,13 +2,7 @@ import * as Mustache from 'mustache';
 
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import {
-  LDAIConfig,
-  LDAIDefaults,
-  LDGenerationConfig,
-  LDMessage,
-  LDModelConfig,
-} from './api/config';
+import { LDAIConfig, LDAIDefaults, LDMessage, LDModelConfig } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
