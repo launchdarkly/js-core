@@ -7,7 +7,7 @@ export interface LDModelConfig {
   /**
    * The ID of the model.
    */
-  modelId?: string;
+  modelId: string;
 
   /**
    * Tuning parameter for randomness versus determinism. Exact effect will be determined by the
@@ -55,13 +55,17 @@ export interface LDGenerationConfig {
 }
 
 /**
- * AI Config value and tracker.
+ * AI configuration and tracker.
  */
 export interface LDAIConfig {
   /**
-   * The result of the AI Config customization.
+   * Optional model configuration.
    */
-  config: LDGenerationConfig;
+  model?: LDModelConfig;
+  /**
+   * Optional prompt data.
+   */
+  prompt?: LDMessage[];
 
   /**
    * A tracker which can be used to generate analytics.
@@ -73,3 +77,9 @@ export interface LDAIConfig {
    */
   enabled: boolean;
 }
+
+/**
+ * Default value for a `modelConfig`. This is the same as the LDAIConfig, but it does not include
+ * a tracker.
+ */
+export type LDAIDefaults = Omit<LDAIConfig, 'tracker'>

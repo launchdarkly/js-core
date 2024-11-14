@@ -1,6 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDGenerationConfig } from '../src/api/config';
+import { LDAIDefaults, LDGenerationConfig } from '../src/api/config';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
 
@@ -32,9 +32,10 @@ it('handles empty variables in template interpolation', () => {
 it('returns model config with interpolated prompts', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDGenerationConfig = {
+  const defaultValue: LDAIDefaults = {
     model: { modelId: 'test', name: 'test-model' },
     prompt: [],
+    enabled: true,
   };
 
   const mockVariation = {

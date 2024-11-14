@@ -2,7 +2,13 @@ import * as Mustache from 'mustache';
 
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIConfig, LDGenerationConfig, LDMessage, LDModelConfig } from './api/config';
+import {
+  LDAIConfig,
+  LDAIDefaults,
+  LDGenerationConfig,
+  LDMessage,
+  LDModelConfig,
+} from './api/config';
 import { LDAIClient } from './api/LDAIClient';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
@@ -32,16 +38,28 @@ export class LDAIClientImpl implements LDAIClient {
     return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
   }
 
-  async modelConfig<TDefault extends LDGenerationConfig>(
+  async modelConfig(
     key: string,
     context: LDContext,
-    defaultValue: TDefault,
+    defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
     const value: VariationContent = await this._ldClient.variation(key, context, defaultValue);
+    const tracker = new LDAIConfigTrackerImpl(
+      this._ldClient,
+      key,
+      // eslint-disable-next-line no-underscore-dangle
+      value._ldMeta?.versionKey ?? '',
+      context,
+    );
+    // eslint-disable-next-line no-underscore-dangle
+    const enabled = !!value._ldMeta?.enabled;
+    const config: LDAIConfig = {
+      tracker,
+      enabled,
+    };
     // We are going to modify the contents before returning them, so we make a copy.
     // This isn't a deep copy and the application developer should not modify the returned content.
-    const config: LDGenerationConfig = {};
     if (value.model) {
       config.model = { ...value.model };
     }
@@ -54,18 +72,6 @@ export class LDAIClientImpl implements LDAIClient {
       }));
     }
 
-    return {
-      config,
-      // eslint-disable-next-line no-underscore-dangle
-      tracker: new LDAIConfigTrackerImpl(
-        this._ldClient,
-        key,
-        // eslint-disable-next-line no-underscore-dangle
-        value._ldMeta?.versionKey ?? '',
-        context,
-      ),
-      // eslint-disable-next-line no-underscore-dangle
-      enabled: !!value._ldMeta?.enabled,
-    };
+    return config;
   }
 }
