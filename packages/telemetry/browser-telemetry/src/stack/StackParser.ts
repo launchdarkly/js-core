@@ -38,7 +38,7 @@ export interface TrimOptions {
   maxLength: number;
 
   /**
-   * If the line needs trimmed, then this is the number of character to retain before the
+   * If the line needs to be trimmed, then this is the number of character to retain before the
    * originating character of the frame.
    */
   beforeColumnCharacters: number;
