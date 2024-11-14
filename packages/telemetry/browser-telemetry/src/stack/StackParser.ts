@@ -148,6 +148,8 @@ export function getSrcLines(
 
   // The before and after lines will not be precise while we use TraceKit.
   // By forking it we should be able to achieve a more optimal result.
+  // We only need to do this if we are not getting sufficient quality using this
+  // method.
 
   // Trimmer for non-origin lines. Starts at column 0.
   const trimmer = (input: string) =>
