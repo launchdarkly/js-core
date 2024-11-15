@@ -23,7 +23,7 @@ export interface BrowserTelemetry {
    * Captures an Error object for telemetry purposes.
    *
    * Use this method to manually capture errors during application operation.
-   * Unhandled errors are automatically captures, but this method can be used
+   * Unhandled errors are automatically captured, but this method can be used
    * to capture errors which were hanled, but are still useful for telemetry.
    *
    * @param exception The Error object to capture
