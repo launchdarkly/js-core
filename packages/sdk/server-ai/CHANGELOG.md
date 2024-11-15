@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.2.1...server-sdk-ai-v0.3.0) (2024-11-15)
+
+
+### Features
+
+* Change the typing for the LDAIConfig. ([#688](https://github.com/launchdarkly/js-core/issues/688)) ([1f3f54a](https://github.com/launchdarkly/js-core/commit/1f3f54abef144cccc7ac5b9bfef8392b9d7f2618))
+
 ## [0.2.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.2.0...server-sdk-ai-v0.2.1) (2024-11-14)
 
 

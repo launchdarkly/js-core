@@ -14,5 +14,5 @@
   "packages/sdk/react-native": "10.9.2",
   "packages/telemetry/node-server-sdk-otel": "1.1.2",
   "packages/sdk/browser": "0.3.2",
-  "packages/sdk/server-ai": "0.2.1"
+  "packages/sdk/server-ai": "0.3.0"
 }
