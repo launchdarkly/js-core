@@ -66,8 +66,12 @@ async function main() {
   const completion = tracker.trackBedrockConverse(
     await awsClient.send(
       new ConverseCommand({
-        modelId: aiConfig.config.model?.modelId ?? 'no-model',
-        messages: mapPromptToConversation(aiConfig.config.prompt ?? []),
+        modelId: aiConfig.model?.modelId ?? 'no-model',
+        messages: mapPromptToConversation(aiConfig.prompt ?? []),
+        inferenceConfig: {
+          temperature: aiConfig.model?.temperature ?? 0.5,
+          maxTokens: aiConfig.model?.maxTokens ?? 4096,
+        },
       }),
     ),
   );
