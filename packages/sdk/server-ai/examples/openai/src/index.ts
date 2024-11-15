@@ -60,8 +60,10 @@ async function main(): Promise<void> {
   const { tracker } = aiConfig;
   const completion = await tracker.trackOpenAI(async () =>
     client.chat.completions.create({
-      messages: aiConfig.config.prompt || [],
-      model: aiConfig.config.model?.modelId || 'gpt-4',
+      messages: aiConfig.prompt || [],
+      model: aiConfig.model?.modelId || 'gpt-4',
+      temperature: aiConfig.model?.temperature ?? 0.5,
+      max_tokens: aiConfig.model?.maxTokens ?? 4096,
     }),
   );
 
