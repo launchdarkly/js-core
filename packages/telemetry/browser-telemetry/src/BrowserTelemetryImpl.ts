@@ -7,8 +7,13 @@ import * as TraceKit from 'tracekit';
  */
 import type { LDContext, LDEvaluationDetail, LDInspection } from '@launchdarkly/js-client-sdk';
 
-import { LDClientTracking } from './api';
-import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
+import {
+  Breadcrumb,
+  FeatureManagementBreadcrumb,
+  LDClientTracking,
+  Recorder,
+  SessionData,
+} from './api';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
 import { ErrorData } from './api/ErrorData';
@@ -115,9 +120,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       this._collectors.push(new KeypressCollector());
     }
 
-    this._collectors.forEach((collector) =>
-      collector.register(this as BrowserTelemetry, this._sessionId),
-    );
+    this._collectors.forEach((collector) => collector.register(this as Recorder, this._sessionId));
 
     const impl = this;
     const inspectors: LDInspection[] = [];
@@ -181,7 +184,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.captureError(errorEvent.error);
   }
 
-  captureSession(sessionEvent: EventData): void {
+  captureSession(sessionEvent: SessionData): void {
     this._capture(SESSION_CAPTURE_KEY, { ...sessionEvent, breadcrumbs: [...this._breadcrumbs] });
   }
 

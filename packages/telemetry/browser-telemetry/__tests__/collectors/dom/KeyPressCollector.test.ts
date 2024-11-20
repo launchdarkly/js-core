@@ -41,6 +41,7 @@ describe('given a KeypressCollector with a mock recorder', () => {
       addBreadcrumb: jest.fn(),
       captureError: jest.fn(),
       captureErrorEvent: jest.fn(),
+      captureSession: jest.fn(),
     };
 
     // Create collector
