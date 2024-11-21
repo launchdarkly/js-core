@@ -71,6 +71,8 @@ export interface LDInspectionFlagDetailsChangedHandler {
  *
  * This interface should not be used by the application to access flags for the purpose of controlling application
  * flow. It is intended for monitoring, analytics, or debugging purposes.
+ *
+ * When a flag is deleted the `value` in the {@link LDEvaluationDetail} will be `undefined`.
  */
 export interface LDInspectionFlagDetailChangedHandler {
   type: 'flag-detail-changed';
