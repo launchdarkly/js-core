@@ -7,23 +7,24 @@ export interface LDModelConfig {
   /**
    * The ID of the model.
    */
-  modelId: string;
+  id: string;
 
   /**
-   * Tuning parameter for randomness versus determinism. Exact effect will be determined by the
-   * model.
+   * Model specific parameters.
    */
-  temperature?: number;
+  parameters?: { [index: string]: unknown };
 
   /**
-   * The maximum number of tokens.
+   * Additional user-specified parameters.
    */
-  maxTokens?: number;
+  custom?: { [index: string]: unknown };
+}
 
+export interface LDProviderConfig {
   /**
-   * And additional model specific information.
+   * The ID of the provider.
    */
-  [index: string]: unknown;
+  id: string;
 }
 
 /**
@@ -51,7 +52,12 @@ export interface LDAIConfig {
   /**
    * Optional prompt data.
    */
-  prompt?: LDMessage[];
+  messages?: LDMessage[];
+
+  /**
+   * Optional configuration for the provider.
+   */
+  provider?: LDProviderConfig;
 
   /**
    * A tracker which can be used to generate analytics.

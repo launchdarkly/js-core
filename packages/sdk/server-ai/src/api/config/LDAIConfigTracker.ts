@@ -45,7 +45,7 @@ export interface LDAIConfigTracker {
    * @param func Function which executes the operation.
    * @returns The result of the operation.
    */
-  trackOpenAI<
+  trackOpenAIMetrics<
     TRes extends {
       usage?: {
         total_tokens?: number;
@@ -63,7 +63,7 @@ export interface LDAIConfigTracker {
    * @param res The result of the Bedrock operation.
    * @returns The input operation.
    */
-  trackBedrockConverse<
+  trackBedrockConverseMetrics<
     TRes extends {
       $metadata: { httpStatusCode?: number };
       metrics?: { latencyMs?: number };
