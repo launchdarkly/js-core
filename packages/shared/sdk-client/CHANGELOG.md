@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.12.0...js-client-sdk-common-v1.12.1) (2024-11-22)
+
+
+### Bug Fixes
+
+* Ensure flag-detail-changed is called for deleted flags. ([#695](https://github.com/launchdarkly/js-core/issues/695)) ([6524030](https://github.com/launchdarkly/js-core/commit/6524030b41263a584b22211fcbbad10919582f1b))
+
 ## [1.12.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.11.0...js-client-sdk-common-v1.12.0) (2024-11-04)
 
 
