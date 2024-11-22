@@ -45,7 +45,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
   }
 
-  async trackOpenAI<
+  async trackOpenAIMetrics<
     TRes extends {
       usage?: {
         total_tokens?: number;
@@ -62,7 +62,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     return result;
   }
 
-  trackBedrockConverse<
+  trackBedrockConverseMetrics<
     TRes extends {
       $metadata: { httpStatusCode?: number };
       metrics?: { latencyMs?: number };

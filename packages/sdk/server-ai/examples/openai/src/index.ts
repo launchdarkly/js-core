@@ -46,24 +46,24 @@ async function main(): Promise<void> {
 
   const aiClient = initAi(ldClient);
 
-  const aiConfig = await aiClient.modelConfig(
+  const aiConfig = await aiClient.config(
     aiConfigKey,
     context,
     {
       model: {
-        modelId: 'gpt-4',
+        id: 'gpt-4',
       },
     },
     { myVariable: 'My User Defined Variable' },
   );
 
   const { tracker } = aiConfig;
-  const completion = await tracker.trackOpenAI(async () =>
+  const completion = await tracker.trackOpenAIMetrics(async () =>
     client.chat.completions.create({
-      messages: aiConfig.prompt || [],
-      model: aiConfig.model?.modelId || 'gpt-4',
-      temperature: aiConfig.model?.temperature ?? 0.5,
-      max_tokens: aiConfig.model?.maxTokens ?? 4096,
+      messages: aiConfig.messages || [],
+      model: aiConfig.model?.id || 'gpt-4',
+      temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
+      max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
     }),
   );
 
