@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.3.0...server-sdk-ai-v0.4.0) (2024-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697))
+
+### Features
+
+* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697)) ([cd72ea8](https://github.com/launchdarkly/js-core/commit/cd72ea8193888b0635b5beffa0a877b18294777e))
+
 ## [0.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.2.1...server-sdk-ai-v0.3.0) (2024-11-15)
 
 

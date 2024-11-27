@@ -142,6 +142,60 @@ it('calls flag-detail-changed inspector for individial flag changes on patch', a
   });
 });
 
+it('calls flag-detail-changed inspector when a flag is deleted', async () => {
+  const eventQueue = new AsyncQueue();
+  const flagDetailChangedInspector: LDInspection = {
+    type: 'flag-detail-changed',
+    name: 'test flag detail changed inspector',
+    method: jest.fn(() => eventQueue.add({})),
+  };
+  const platform = createBasicPlatform();
+  const factory = makeTestDataManagerFactory('sdk-key', platform);
+  const client = new LDClientImpl(
+    'sdk-key',
+    AutoEnvAttributes.Disabled,
+    platform,
+    {
+      sendEvents: false,
+      inspectors: [flagDetailChangedInspector],
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
+    },
+    factory,
+  );
+  let mockEventSource: MockEventSource;
+
+  const putResponse = clone<Flags>(mockResponseJson);
+  const putEvents = [{ data: JSON.stringify(putResponse) }];
+  const deleteResponse = {
+    key: 'dev-test-flag',
+    version: putResponse['dev-test-flag'].version + 1,
+  };
+  const deleteEvents = [{ data: JSON.stringify(deleteResponse) }];
+
+  platform.requests.createEventSource.mockImplementation(
+    (streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateEvents('put', putEvents);
+      mockEventSource.simulateEvents('delete', deleteEvents);
+      return mockEventSource;
+    },
+  );
+
+  await client.identify({ key: 'user-key' }, { waitForNetworkResults: true });
+
+  await eventQueue.take();
+  expect(flagDetailChangedInspector.method).toHaveBeenCalledWith('dev-test-flag', {
+    reason: null,
+    value: undefined,
+    variationIndex: null,
+  });
+});
+
 it('calls flag-details-changed inspectors when all flag values change', async () => {
   const flagDetailsChangedInspector: LDInspection = {
     type: 'flag-details-changed',

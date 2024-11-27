@@ -7,15 +7,6 @@ import { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
  */
 export interface LDAIClient {
   /**
-   * Parses and interpolates a template string with the provided variables.
-   *
-   * @param template The template string to be parsed and interpolated.
-   * @param variables An object containing the variables to be used for interpolation.
-   * @returns The interpolated string.
-   */
-  interpolateTemplate(template: string, variables: Record<string, unknown>): string;
-
-  /**
    * Retrieves and processes an AI configuration based on the provided key, LaunchDarkly context,
    * and variables. This includes the model configuration and the processed prompts.
    *
@@ -67,7 +58,7 @@ export interface LDAIClient {
    * }
    * ```
    */
-  modelConfig(
+  config(
     key: string,
     context: LDContext,
     defaultValue: LDAIDefaults,

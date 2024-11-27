@@ -2,7 +2,7 @@ import * as Mustache from 'mustache';
 
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIConfig, LDAIDefaults, LDMessage, LDModelConfig } from './api/config';
+import { LDAIConfig, LDAIDefaults, LDMessage, LDModelConfig, LDProviderConfig } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
@@ -21,18 +21,19 @@ interface LDMeta {
  */
 interface VariationContent {
   model?: LDModelConfig;
-  prompt?: LDMessage[];
+  messages?: LDMessage[];
+  provider?: LDProviderConfig;
   _ldMeta?: LDMeta;
 }
 
 export class LDAIClientImpl implements LDAIClient {
   constructor(private _ldClient: LDClientMin) {}
 
-  interpolateTemplate(template: string, variables: Record<string, unknown>): string {
+  private _interpolateTemplate(template: string, variables: Record<string, unknown>): string {
     return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
   }
 
-  async modelConfig(
+  async config(
     key: string,
     context: LDContext,
     defaultValue: LDAIDefaults,
@@ -57,12 +58,15 @@ export class LDAIClientImpl implements LDAIClient {
     if (value.model) {
       config.model = { ...value.model };
     }
+    if (value.provider) {
+      config.provider = { ...value.provider };
+    }
     const allVariables = { ...variables, ldctx: context };
 
-    if (value.prompt) {
-      config.prompt = value.prompt.map((entry: any) => ({
+    if (value.messages) {
+      config.messages = value.messages.map((entry: any) => ({
         ...entry,
-        content: this.interpolateTemplate(entry.content, allVariables),
+        content: this._interpolateTemplate(entry.content, allVariables),
       }));
     }
 

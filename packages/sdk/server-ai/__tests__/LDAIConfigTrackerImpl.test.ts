@@ -90,7 +90,7 @@ it('tracks OpenAI usage', async () => {
   const PROMPT_TOKENS = 49;
   const COMPLETION_TOKENS = 51;
 
-  await tracker.trackOpenAI(async () => ({
+  await tracker.trackOpenAIMetrics(async () => ({
     usage: {
       total_tokens: TOTAL_TOKENS,
       prompt_tokens: PROMPT_TOKENS,
@@ -151,7 +151,7 @@ it('tracks Bedrock conversation with successful response', () => {
     },
   };
 
-  tracker.trackBedrockConverse(response);
+  tracker.trackBedrockConverseMetrics(response);
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation',
@@ -198,7 +198,7 @@ it('tracks Bedrock conversation with error response', () => {
 
   // TODO: We may want a track failure.
 
-  tracker.trackBedrockConverse(response);
+  tracker.trackBedrockConverseMetrics(response);
 
   expect(mockTrack).not.toHaveBeenCalled();
 });
