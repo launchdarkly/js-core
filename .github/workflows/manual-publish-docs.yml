@@ -20,6 +20,7 @@ on:
           - packages/store/node-server-sdk-dynamodb
           - packages/telemetry/node-server-sdk-otel
           - packages/sdk/browser
+          - packages/sdk/server-ai
 name: Publish Documentation
 jobs:
   build-publish:

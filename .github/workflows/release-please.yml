@@ -25,6 +25,7 @@ jobs:
       package-tooling-jest-release: ${{ steps.release.outputs['packages/tooling/jest--release_created'] }}
       package-react-universal-release: ${{ steps.release.outputs['packages/sdk/react-universal--release_created'] }}
       package-browser-released: ${{ steps.release.outputs['packages/sdk/browser--release_created'] }}
+      package-server-ai-released: ${{ steps.release.outputs['packages/sdk/server-ai--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -376,4 +377,24 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/react-universal
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-server-ai:
+    runs-on: ubuntu-latest
+    needs: ['release-please', 'release-sdk-server']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-released == 'true'}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: release-react-native
+        name: Full release of packages/sdk/server-ai
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/sdk/server-ai
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}

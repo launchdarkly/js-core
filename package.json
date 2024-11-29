@@ -23,9 +23,14 @@
     "packages/store/node-server-sdk-dynamodb",
     "packages/telemetry/node-server-sdk-otel",
     "packages/tooling/jest",
+    "packages/tooling/jest/example/react-native-example",
     "packages/sdk/browser",
     "packages/sdk/browser/contract-tests/entity",
-    "packages/sdk/browser/contract-tests/adapter"
+    "packages/sdk/browser/contract-tests/adapter",
+    "packages/sdk/server-ai",
+    "packages/sdk/server-ai/examples/bedrock",
+    "packages/sdk/server-ai/examples/openai",
+    "packages/telemetry/browser-telemetry"
   ],
   "private": true,
   "scripts": {

@@ -6,63 +6,17 @@
  * In typical usage, you will call {@link initialize} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
  *
- * For more information, see the SDK reference guide.
+ * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
  *
  * @packageDocumentation
  */
-import {
-  AutoEnvAttributes,
-  EvaluationSeriesContext,
-  EvaluationSeriesData,
-  Hook,
-  HookMetadata,
-  IdentifySeriesContext,
-  IdentifySeriesData,
-  IdentifySeriesResult,
-  IdentifySeriesStatus,
-  LDContext,
-  LDContextCommon,
-  LDContextMeta,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDEvaluationReason,
-  LDFlagSet,
-  LDLogger,
-  LDLogLevel,
-  LDMultiKindContext,
-  LDSingleKindContext,
-} from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes } from '@launchdarkly/js-client-sdk-common';
 
-// The exported LDClient and LDOptions are the browser specific implementations.
-// These shadow the common implementations.
 import { BrowserClient, LDClient } from './BrowserClient';
-import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { BrowserOptions as LDOptions } from './options';
 
-export type {
-  LDClient,
-  LDFlagSet,
-  LDContext,
-  LDContextCommon,
-  LDContextMeta,
-  LDMultiKindContext,
-  LDSingleKindContext,
-  LDLogLevel,
-  LDLogger,
-  LDOptions,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDEvaluationReason,
-  LDIdentifyOptions,
-  Hook,
-  HookMetadata,
-  EvaluationSeriesContext,
-  EvaluationSeriesData,
-  IdentifySeriesContext,
-  IdentifySeriesData,
-  IdentifySeriesResult,
-  IdentifySeriesStatus,
-};
+export * from './common';
+export type { LDClient, LDOptions };
 
 /**
  * Creates an instance of the LaunchDarkly client.
@@ -70,11 +24,11 @@ export type {
  * Usage:
  * ```
  * import { initialize } from 'launchdarkly-js-client-sdk';
- * const client = initialize(envKey, context, options);
+ * const client = initialize(clientSideId, context, options);
  * ```
  *
  * @param clientSideId
- *   The client-side id, also known as the environment ID.
+ *   The client-side ID, also known as the environment ID.
  * @param options
  *   Optional configuration settings.
  * @return

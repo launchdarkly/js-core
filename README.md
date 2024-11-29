@@ -13,11 +13,8 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/node-server-sdk](packages/sdk/server-node/README.md)            | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link]     | [Node.js Server][package-sdk-server-node-issues]  | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci]     |
 | [@launchdarkly/vercel-server-sdk](packages/sdk/vercel/README.md)               | [![NPM][sdk-vercel-npm-badge]][sdk-vercel-npm-link]               | [Vercel][package-sdk-vercel-issues]               | [![Actions Status][sdk-vercel-ci-badge]][sdk-vercel-ci]               |
 | [@launchdarkly/react-native-client-sdk](packages/sdk/react-native/README.md)   | [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]   | [React-Native][package-sdk-react-native-issues]   | [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]   |
-
-<!--
-TODO: Add row once @launchdarkly/js-client-sdk has been published.
-| [@launchdarkly/js-client-sdk](packages/sdk/browser/README.md)   | [![NPM][sdk-browser-npm-badge]][sdk-browser-npm-link]   | [Browser][package-sdk-browser-issues]   | [![Actions Status][sdk-browser-ci-badge]][sdk-browser-ci]   |
--->
+| [@launchdarkly/js-client-sdk](packages/sdk/browser/README.md)                  | [![NPM][sdk-browser-npm-badge]][sdk-browser-npm-link]             | [Browser][package-sdk-browser-issues]             | [![Actions Status][sdk-browser-ci-badge]][sdk-browser-ci]             |
+| [@launchdarkly/server-sdk-ai](packages/sdk/server-ai/README.md)                | [![NPM][sdk-server-ai-npm-badge]][sdk-server-ai-npm-link]         | [server-ai][package-sdk-server-ai-issues]         | [![Actions Status][sdk-server-ai-ci-badge]][sdk-server-ai-ci]         |
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -184,3 +181,13 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/js-client-sdk.svg?style=flat-square
 [sdk-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/js-client-sdk.svg?style=flat-square
 [package-sdk-browser-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fbrowser%22+
+[//]: # 'sdk/server-ai'
+[sdk-server-ai-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai.yml/badge.svg
+[sdk-server-ai-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai.yml
+[sdk-server-ai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/server-sdk-ai.svg?style=flat-square
+[sdk-server-ai-npm-link]: https://www.npmjs.com/package/@launchdarkly/server-sdk-ai
+[sdk-server-ai-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-server-ai-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/server-ai/docs/
+[sdk-server-ai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/server-sdk-ai.svg?style=flat-square
+[sdk-server-ai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/server-sdk-ai.svg?style=flat-square
+[package-sdk-server-ai-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fserver-ai%22+

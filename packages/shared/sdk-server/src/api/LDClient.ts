@@ -3,6 +3,7 @@ import {
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDFlagValue,
+  LDLogger,
 } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationOpEvent, LDMigrationVariation } from './data';
@@ -461,4 +462,11 @@ export interface LDClient {
    * @param Hook The hook to add.
    */
   addHook?(hook: Hook): void;
+
+  /**
+   * Get the logger used by this LDClient instance.
+   *
+   * For all platforms that support logging the logger should be present.
+   */
+  get logger(): LDLogger | undefined;
 }

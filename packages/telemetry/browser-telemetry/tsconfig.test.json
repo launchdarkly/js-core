@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "lib": ["ES6", "DOM"],
+    "module": "CommonJS",
+    "strict": true,
+    "noImplicitOverride": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "stripInternal": true,
+    "target": "ES2018"
+  },
+  "exclude": [
+    "vite.config.ts",
+    "__tests__",
+    "dist",
+    "docs",
+    "example",
+    "node_modules",
+    "contract-tests",
+    "babel.config.js",
+    "jest.config.js",
+    "jestSetupFile.ts",
+    "**/*.test.ts*"
+  ]
+}

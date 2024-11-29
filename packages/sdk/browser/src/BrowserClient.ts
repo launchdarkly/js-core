@@ -1,9 +1,9 @@
 import {
   AutoEnvAttributes,
   base64UrlEncode,
+  BasicLogger,
   LDClient as CommonClient,
   Configuration,
-  createSafeLogger,
   Encoding,
   FlagManager,
   internal,
@@ -98,15 +98,18 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     // Overrides the default logger from the common implementation.
     const logger =
       customLogger ??
-      createSafeLogger({
-        // eslint-disable-next-line no-console
-        debug: debug ? console.debug : () => {},
-        // eslint-disable-next-line no-console
-        info: console.info,
-        // eslint-disable-next-line no-console
-        warn: console.warn,
-        // eslint-disable-next-line no-console
-        error: console.error,
+      new BasicLogger({
+        destination: {
+          // eslint-disable-next-line no-console
+          debug: console.debug,
+          // eslint-disable-next-line no-console
+          info: console.info,
+          // eslint-disable-next-line no-console
+          warn: console.warn,
+          // eslint-disable-next-line no-console
+          error: console.error,
+        },
+        level: debug ? 'debug' : 'info',
       });
 
     // TODO: Use the already-configured baseUri from the SDK config. SDK-560

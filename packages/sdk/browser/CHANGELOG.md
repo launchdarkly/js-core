@@ -1,5 +1,64 @@
 # Changelog
 
+## [0.3.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.2...js-client-sdk-v0.3.3) (2024-11-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.0 to 1.12.1
+
+## [0.3.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.1...js-client-sdk-v0.3.2) (2024-11-13)
+
+
+### Bug Fixes
+
+* Export correct options for compat. ([#678](https://github.com/launchdarkly/js-core/issues/678)) ([8d8250c](https://github.com/launchdarkly/js-core/commit/8d8250cafb20b60e45ac3661fd8b079cb62fb83e))
+
+## [0.3.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.0...js-client-sdk-v0.3.1) (2024-11-08)
+
+
+### Bug Fixes
+
+* Consolidate common exports between base package and compat package. ([#674](https://github.com/launchdarkly/js-core/issues/674)) ([f692050](https://github.com/launchdarkly/js-core/commit/f69205082d83318e2772d027d6ea533de3ce5eb1))
+
+## [0.3.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.2.0...js-client-sdk-v0.3.0) (2024-11-04)
+
+
+### Features
+
+* Enhance basic logger destination support. ([#650](https://github.com/launchdarkly/js-core/issues/650)) ([21670c4](https://github.com/launchdarkly/js-core/commit/21670c4acd629f7ccfeb7abbe94fe89723533600))
+
+
+### Bug Fixes
+
+* Export LDInspection interface. ([#653](https://github.com/launchdarkly/js-core/issues/653)) ([7f58b2a](https://github.com/launchdarkly/js-core/commit/7f58b2aa947f85c5b3c2462882ccb52a9dbb8ce5))
+* Export required types from compat. ([#645](https://github.com/launchdarkly/js-core/issues/645)) ([008dcf0](https://github.com/launchdarkly/js-core/commit/008dcf0e7693b47d2079badad5ba038c0f9e82fe))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.11.0 to 1.12.0
+
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.1.0...js-client-sdk-v0.2.0) (2024-10-29)
+
+
+### Features
+
+* Add a module for increased backward compatibility. ([#637](https://github.com/launchdarkly/js-core/issues/637)) ([44a2237](https://github.com/launchdarkly/js-core/commit/44a223730fed10fbd75e8de7c87c63570774fe96))
+* Refine CJS/ESM build configuration for browser SDK. ([#640](https://github.com/launchdarkly/js-core/issues/640)) ([ec4377c](https://github.com/launchdarkly/js-core/commit/ec4377cc2afc62455aba769c20f3831cccd50250))
+* Vendor escapeStringRegexp to simplify builds. ([48cac54](https://github.com/launchdarkly/js-core/commit/48cac546f6d36a6b70f3b1f7cb72d1dcff2b50ba))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.10.0 to 1.11.0
+
 ## [0.1.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.0.1...js-client-sdk-v0.1.0) (2024-10-17)
 
 

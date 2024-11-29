@@ -1,5 +1,3 @@
-import escapeStringRegexp from 'escape-string-regexp';
-
 import {
   addDocumentEventListener,
   getHref,
@@ -7,6 +5,7 @@ import {
   getLocationSearch,
   querySelectorAll,
 } from '../BrowserApi';
+import escapeStringRegexp from '../vendor/escapeStringRegexp';
 import { ClickGoal, Goal, Matcher } from './Goals';
 
 type EventHandler = (goal: Goal) => void;

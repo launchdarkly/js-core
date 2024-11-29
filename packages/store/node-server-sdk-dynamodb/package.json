@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk-dynamodb",
-  "version": "6.2.0",
+  "version": "6.2.2",
   "description": "DynamoDB-backed feature store for the LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/store/node-server-sdk-dynamodb",
   "repository": {
@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "3.348.0",
-    "@launchdarkly/node-server-sdk": "9.7.0",
+    "@launchdarkly/node-server-sdk": "9.7.2",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",

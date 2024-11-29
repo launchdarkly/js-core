@@ -1,0 +1,69 @@
+name: Package Size Action
+description: Checks that a compressed package is less than a certain size and also comments on the PR.
+inputs:
+  github_token:
+    description: 'Github token with permission to write PR comments'
+    required: true
+  target_file:
+    description: 'Path to the JavaScript file to check'
+    required: true
+  package_name:
+    description: 'The name of the package'
+    required: true
+  pr_number:
+    description: 'The PR number'
+    required: true
+  size_limit:
+    description: 'The maximum size of the library'
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install Brotli
+      shell: bash
+      if: github.event_name == 'pull_request'
+      run: sudo apt-get update && sudo apt-get install brotli
+    - name: Get package size
+      shell: bash
+      run: |
+        brotli ${{ inputs.target_file }}
+        export PACK_SIZE=$(stat -c %s ${{ inputs.target_file }}.br)
+        echo "PACK_SIZE=$PACK_SIZE" >> $GITHUB_ENV
+
+    - name: Find Size Comment
+      # Only do commenting on non-forks. A fork does not have permissions for comments.
+      if: github.event.pull_request.head.repo.full_name == github.repository
+      uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e
+      id: fc
+      with:
+        issue-number: ${{ inputs.pr_number }}
+        comment-author: 'github-actions[bot]'
+        body-includes: '${{ inputs.package_name }} size report'
+
+    - name: Create comment
+      if: steps.fc.outputs.comment-id == '' && github.event.pull_request.head.repo.full_name == github.repository
+      uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
+      with:
+        issue-number: ${{ inputs.pr_number }}
+        body: |
+          ${{ inputs.package_name }} size report
+          This is the brotli compressed size of the ESM build.
+          Size: ${{ env.PACK_SIZE }} bytes
+          Size limit: ${{ inputs.size_limit }}
+
+    - name: Update comment
+      if: steps.fc.outputs.comment-id != '' && github.event.pull_request.head.repo.full_name == github.repository
+      uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
+      with:
+        comment-id: ${{ steps.fc.outputs.comment-id }}
+        edit-mode: replace
+        body: |
+          ${{ inputs.package_name }} size report
+          This is the brotli compressed size of the ESM build.
+          Size: ${{ env.PACK_SIZE }} bytes
+          Size limit: ${{ inputs.size_limit }}
+
+    - name: Check package size limit
+      shell: bash
+      run: |
+        [ $PACK_SIZE -le ${{ inputs.size_limit }} ] || exit 1
