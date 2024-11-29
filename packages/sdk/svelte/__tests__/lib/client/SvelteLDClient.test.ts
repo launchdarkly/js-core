@@ -18,7 +18,7 @@ const mockLDClient = {
   on: (e: string, cb: () => void) => mockLDEventEmitter.on(e, cb),
   off: vi.fn(),
   allFlags: vi.fn().mockReturnValue(rawFlags),
-  variation: vi.fn(),
+  variation: vi.fn((_, defaultValue) => defaultValue),
   identify: vi.fn(),
 };
 
@@ -129,6 +129,9 @@ describe('launchDarkly', () => {
         ld.initialize(clientSideID);
         const flagStore = ld.watch(booleanFlagKey);
         const flagStore2 = ld.watch(stringFlagKey);
+
+        // emit ready event to set initial flag values
+        mockLDEventEmitter.emit('ready');
 
         // 'test-flag' initial value is true according to `rawFlags`
         expect(get(flagStore)).toBe(true);
