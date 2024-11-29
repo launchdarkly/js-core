@@ -44,13 +44,11 @@
   },
   "peerDependencies": {
     "@launchdarkly/js-client-sdk": "workspace:^",
-    "@launchdarkly/js-client-sdk-common": "^1.10.0",
     "@launchdarkly/node-server-sdk": "^9.4.6",
     "svelte": "^4.0.0"
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk": "workspace:^",
-    "@launchdarkly/js-client-sdk-common": "1.10.0",
     "esm-env": "^1.0.0"
   },
   "devDependencies": {

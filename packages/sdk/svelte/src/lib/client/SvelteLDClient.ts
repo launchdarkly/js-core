@@ -28,11 +28,42 @@ function isClientInitialized(client: LDClient | undefined): asserts client is LD
 }
 
 /**
+ * Creates a proxy for the given flags object that intercepts access to flag values.
+ * When a flag value is accessed, it checks if the flag key exists in the target object.
+ * If the flag key exists, it returns the variation of the flag from the client.
+ * Otherwise, it returns the current value of the flag.
+ *
+ * @param client - The LaunchDarkly client instance used to get flag variations.
+ * @param flags - The initial flags object to be proxied.
+ * @returns A proxy object that intercepts access to flag values and returns the appropriate variation.
+ */
+function toFlagsProxy(client: LDClient, flags: LDFlags): LDFlags {
+  return new Proxy(flags, {
+    get(target, prop, receiver) {
+      const currentValue = Reflect.get(target, prop, receiver);
+      // only process flag keys and ignore symbols and native Object functions
+      if (typeof prop === 'symbol') {
+        return currentValue;
+      }
+
+      // check if flag key exists
+      const validFlagKey = Object.hasOwn(target, prop);
+
+      if (!validFlagKey) {
+        return currentValue;
+      }
+
+      return client.variation(prop, currentValue);
+    },
+  });
+}
+
+/**
  * Creates a LaunchDarkly instance.
  * @returns {Object} The LaunchDarkly instance object.
  */
 function createLD() {
-  let jsSdk: LDClient | undefined;
+  let coreLdClient: LDClient | undefined;
   const loading = writable(true);
   const flagsWritable = writable<LDFlags>({});
 
@@ -43,15 +74,17 @@ function createLD() {
    */
 
   function LDInitialize(clientId: LDClientID) {
-    jsSdk = initialize(clientId);
-    jsSdk!.on('ready', () => {
+    coreLdClient = initialize(clientId);
+    coreLdClient!.on('ready', () => {
       loading.set(false);
-      const allFlags = jsSdk!.allFlags();
+      const rawFlags = coreLdClient!.allFlags();
+      const allFlags = toFlagsProxy(coreLdClient, rawFlags);
       flagsWritable.set(allFlags);
     });
 
-    jsSdk!.on('change', () => {
-      const allFlags = jsSdk!.allFlags();
+    coreLdClient!.on('change', () => {
+      const rawFlags = coreLdClient!.allFlags();
+      const allFlags = toFlagsProxy(coreLdClient, rawFlags);
       flagsWritable.set(allFlags);
     });
 
@@ -66,8 +99,8 @@ function createLD() {
    * @returns {Promise} A promise that resolves when the user is identified.
    */
   async function identify(context: LDContext) {
-    isClientInitialized(jsSdk);
-    return jsSdk.identify(context);
+    isClientInitialized(coreLdClient);
+    return coreLdClient.identify(context);
   }
 
   /**
@@ -84,7 +117,7 @@ function createLD() {
    * @returns {boolean} True if the flag is on, false otherwise.
    */
   const isOn = (flagKey: string): boolean => {
-    isClientInitialized(jsSdk);
+    isClientInitialized(coreLdClient);
     const currentFlags = get(flagsWritable);
     return !!currentFlags[flagKey];
   };
