@@ -36,6 +36,7 @@ import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
+import StreamingProcessor from './data_sources/StreamingProcessor';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
@@ -220,7 +221,7 @@ export default class LDClientImpl implements LDClient {
     });
     const makeDefaultProcessor = () =>
       config.stream
-        ? new internal.StreamingProcessor(
+        ? new StreamingProcessor(
             clientContext,
             '/all',
             [],
