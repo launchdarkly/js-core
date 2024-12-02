@@ -13,6 +13,7 @@ import {
   ProcessStreamResponse,
   Requests,
   shouldRetry,
+  StreamingErrorHandler,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -23,7 +24,7 @@ const reportJsonError = (
   type: string,
   data: string,
   logger?: LDLogger,
-  errorHandler?: internal.StreamingErrorHandler,
+  errorHandler?: StreamingErrorHandler,
 ) => {
   logger?.error(`Stream received invalid data in "${type}" message`);
   logger?.debug(`Invalid JSON follows: ${data}`);
@@ -47,7 +48,7 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     encoding: Encoding,
     private readonly _pollingRequestor: Requestor,
     private readonly _diagnosticsManager?: internal.DiagnosticsManager,
-    private readonly _errorHandler?: internal.StreamingErrorHandler,
+    private readonly _errorHandler?: StreamingErrorHandler,
     private readonly _logger?: LDLogger,
   ) {
     let path: string;
