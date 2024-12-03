@@ -2,14 +2,15 @@ import { EventEmitter } from 'node:events';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 
-import { initialize, LDClient } from '@launchdarkly/js-client-sdk';
+import { initialize, LDClient } from '@launchdarkly/js-client-sdk/compat';
 
 import { LD } from '../../../src/lib/client/SvelteLDClient';
 
-vi.mock('@launchdarkly/js-client-sdk', { spy: true });
+vi.mock('@launchdarkly/js-client-sdk/compat', { spy: true });
 
 const clientSideID = 'test-client-side-id';
 const rawFlags = { 'test-flag': true, 'another-test-flag': 'flag-value' };
+const mockContext = { key: 'user1' };
 
 // used to mock ready and change events on the LDClient
 const mockLDEventEmitter = new EventEmitter();
@@ -62,7 +63,7 @@ describe('launchDarkly', () => {
 
       it('should set the loading status to false when the client is ready', async () => {
         const { initializing } = ld;
-        ld.initialize(clientSideID);
+        ld.initialize(clientSideID, mockContext);
 
         expect(get(initializing)).toBe(true); // should be true before the ready event is emitted
         mockLDEventEmitter.emit('ready');
@@ -71,16 +72,16 @@ describe('launchDarkly', () => {
       });
 
       it('should initialize the LaunchDarkly SDK instance', () => {
-        ld.initialize(clientSideID);
+        ld.initialize(clientSideID, mockContext);
 
-        expect(initialize).toHaveBeenCalledWith('test-client-side-id');
+        expect(initialize).toHaveBeenCalledWith('test-client-side-id', mockContext);
       });
 
       it('should register function that gets flag values when client is ready', () => {
         const newFlags = { ...rawFlags, 'new-flag': true };
         const allFlagsSpy = vi.spyOn(mockLDClient, 'allFlags').mockReturnValue(newFlags);
 
-        ld.initialize(clientSideID);
+        ld.initialize(clientSideID, mockContext);
         mockLDEventEmitter.emit('ready');
 
         expect(allFlagsSpy).toHaveBeenCalledOnce();
@@ -91,7 +92,7 @@ describe('launchDarkly', () => {
         const changedFlags = { ...rawFlags, 'changed-flag': true };
         const allFlagsSpy = vi.spyOn(mockLDClient, 'allFlags').mockReturnValue(changedFlags);
 
-        ld.initialize(clientSideID);
+        ld.initialize(clientSideID, mockContext);
         mockLDEventEmitter.emit('change');
 
         expect(allFlagsSpy).toHaveBeenCalledOnce();
@@ -116,7 +117,7 @@ describe('launchDarkly', () => {
 
       it('should return a derived store that reflects the value of the specified flag', () => {
         const flagKey = 'test-flag';
-        ld.initialize(clientSideID);
+        ld.initialize(clientSideID, mockContext);
 
         const flagStore = ld.watch(flagKey);
 
@@ -126,7 +127,7 @@ describe('launchDarkly', () => {
       it('should update the flag store when the flag value changes', () => {
         const booleanFlagKey = 'test-flag';
         const stringFlagKey = 'another-test-flag';
-        ld.initialize(clientSideID);
+        ld.initialize(clientSideID, mockContext);
         const flagStore = ld.watch(booleanFlagKey);
         const flagStore2 = ld.watch(stringFlagKey);
 
@@ -153,7 +154,7 @@ describe('launchDarkly', () => {
 
       it('should return undefined if the flag is not found', () => {
         const flagKey = 'non-existent-flag';
-        ld.initialize(clientSideID);
+        ld.initialize(clientSideID, mockContext);
 
         const flagStore = ld.watch(flagKey);
 

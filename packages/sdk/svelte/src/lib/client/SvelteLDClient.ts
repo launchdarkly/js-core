@@ -1,20 +1,20 @@
 import { derived, get, type Readable, readonly, writable, type Writable } from 'svelte/store';
 
+import type { LDFlagSet } from '@launchdarkly/js-client-sdk';
 import {
   initialize,
   type LDClient,
   type LDContext,
-  type LDFlagSet,
-} from '@launchdarkly/js-client-sdk';
+  type LDFlagValue,
+} from '@launchdarkly/js-client-sdk/compat';
+
+export type { LDContext };
 
 /** Client ID for LaunchDarkly */
 export type LDClientID = string;
 
 /** Flags for LaunchDarkly */
 export type LDFlags = LDFlagSet;
-
-/** Value of LaunchDarkly flags */
-export type LDFlagsValue = LDFlagSet[string];
 
 /**
  * Checks if the LaunchDarkly client is initialized.
@@ -70,21 +70,21 @@ function createLD() {
   /**
    * Initializes the LaunchDarkly client.
    * @param {LDClientID} clientId - The client ID.
-   * @returns {Writable<boolean>} An object with the initialization status store.
+   * @param {LDContext} context - The user context.
+   * @returns {Object} An object with the initialization status store.
    */
-
-  function LDInitialize(clientId: LDClientID) {
-    coreLdClient = initialize(clientId);
+  function LDInitialize(clientId: LDClientID, context: LDContext) {
+    coreLdClient = initialize(clientId, context);
     coreLdClient!.on('ready', () => {
       loading.set(false);
       const rawFlags = coreLdClient!.allFlags();
-      const allFlags = toFlagsProxy(coreLdClient, rawFlags);
+      const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
       flagsWritable.set(allFlags);
     });
 
     coreLdClient!.on('change', () => {
       const rawFlags = coreLdClient!.allFlags();
-      const allFlags = toFlagsProxy(coreLdClient, rawFlags);
+      const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
       flagsWritable.set(allFlags);
     });
 
@@ -108,8 +108,8 @@ function createLD() {
    * @param {string} flagKey - The key of the flag to watch.
    * @returns {Readable<LDFlagsValue>} A readable store of the flag value.
    */
-  const watch = (flagKey: string): Readable<LDFlagsValue> =>
-    derived<Writable<LDFlags>, LDFlagsValue>(flagsWritable, ($flags) => $flags[flagKey]);
+  const watch = (flagKey: string): Readable<LDFlagValue> =>
+    derived<Writable<LDFlags>, LDFlagValue>(flagsWritable, ($flags) => $flags[flagKey]);
 
   /**
    * Checks if a flag is on.
