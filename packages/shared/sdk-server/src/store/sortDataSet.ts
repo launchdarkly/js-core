@@ -51,7 +51,7 @@ function topologicalSort(
 
   while (unvisitedItems.size > 0) {
     // Visit the next item, the order we visit doesn't matter.
-    const key = unvisitedItems.values().next().value;
+    const key = unvisitedItems.values().next().value!;
     visit(key);
   }
   return sortedItems;
