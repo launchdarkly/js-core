@@ -5,6 +5,7 @@ import type {
   LDHeaders,
   LDStreamingError,
   ProcessStreamResponse,
+  StreamingErrorHandler,
 } from '@launchdarkly/js-sdk-common';
 
 export const MockStreamingProcessor = jest.fn();
@@ -29,7 +30,7 @@ export const setupMockStreamingProcessor = (
       listeners: Map<EventName, ProcessStreamResponse>,
       baseHeaders: LDHeaders,
       diagnosticsManager: internal.DiagnosticsManager,
-      errorHandler: internal.StreamingErrorHandler,
+      errorHandler: StreamingErrorHandler,
       _streamInitialReconnectDelay: number,
     ) => ({
       start: jest.fn(async () => {
