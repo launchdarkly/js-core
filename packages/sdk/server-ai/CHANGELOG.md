@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.4.0...server-sdk-ai-v0.5.0) (2024-12-05)
+
+
+### Features
+
+* Add getSummary method to the tracker. ([#698](https://github.com/launchdarkly/js-core/issues/698)) ([4df902d](https://github.com/launchdarkly/js-core/commit/4df902d98584c88b072d6dab5f32a6ea8c4fcdf5))
+
 ## [0.4.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.3.0...server-sdk-ai-v0.4.0) (2024-11-22)
 
 
