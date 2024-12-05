@@ -29,7 +29,7 @@
     "rollup-plugin-copy-assets": "^2.0.3",
     "rollup-plugin-node-polyfills": "^0.2.1",
     "tslib": "^2.5.2",
-    "typescript": "5.1.6"
+    "typescript": "5.6.3"
   },
   "dependencies": {
     "@launchdarkly/akamai-server-base-sdk": "2.1.20"
