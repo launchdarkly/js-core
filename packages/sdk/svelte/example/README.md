@@ -1,131 +1,36 @@
-# Launch Darkly Svelte SDK
+# LaunchDarkly Svelte SDK Example
 
-This is a Svelte library for Launch Darkly. It is a wrapper around the official Launch Darkly JavaScript SDK but with a Svelte-friendly API.
+This project demonstrates the usage of the `@launchdarkly/svelte-client-sdk`. It showcases how to conditionally render content based on feature flags using the `LDFlag` component.
 
-## Table of Contents
+## Installing Dependencies and Setting Environment Variables
 
-- [Getting Started](#getting-started)
-- [Advanced Usage](#advanced-usage)
-  - [Changing user context](#changing-user-context)
-  - [Getting feature flag values](#getting-feature-flag-values)
-    - [Getting immediate flag value](#getting-immediate-flag-value)
-    - [Watching flag value changes](#watching-flag-value-changes)
-    - [Getting all flag values](#getting-all-flag-values)
-
-## Getting started
-
-First, install the package:
+First, install the project dependencies:
 
 ```bash
-npm install launchdarkly-svelte-client-sdk # or use yarn or pnpm
+yarn install
 ```
 
-Then, initialize the SDK with your client-side ID using the `LDProvider` component:
+Next, create a `.env` file in the root of the project and add your LaunchDarkly client-side ID and flag key. You can obtain these from any LaunchDarkly project/environment you choose.
 
-```svelte
-<script>
-  import { LDProvider } from 'launchdarkly-svelte-client-sdk';
-  import App from './App.svelte';
-</script>
-
-// Use context relevant to your application
-const context = {
-  user: {
-    key: 'user-key',
-    },
-};
-
-<LDProvider clientSideID="your-client-side-id" {context}>
-  <App />
-</LDProvider>
+```bash
+PUBLIC_LD_CLIENT_SIDE_ID=your-client-side-id
+PUBLIC_LD_FLAG_KEY=your-flag-key
 ```
 
-Now you can use the `LDFlag` component to conditionally render content based on feature flags:
+Note: The flag specified by `PUBLIC_LD_FLAG_KEY` must be a boolean flag.
 
-```svelte
-<script>
-	import { LDFlag } from 'launchdarkly-svelte-client-sdk';
-</script>
+## Running the Project
 
-<LDFlag flag={'my-feature-flag'}>
-	<div slot="on">
-		<p>this will render if the feature flag is on</p>
-	</div>
-	<div slot="off">
-		<p>this will render if the feature flag is off</p>
-	</div>
-</LDFlag>
+To run the project, use the following command:
+
+```bash
+yarn dev
 ```
 
-## Advanced usage
+This will start the development server. Open your browser and navigate to the provided URL to see the example in action. The box will change its background color based on the value of the feature flag specified by `PUBLIC_LD_FLAG_KEY`.
 
-### Changing user context
+### Role of `LDProvider`
 
-You can change the user context by using the `identify` function from the `LD` object:
+The `LDProvider` component is used to initialize the LaunchDarkly client and provide the feature flag context to the rest of the application. It requires a `clientID` and a `context` object. The `context` object typically contains information about the user or environment, which LaunchDarkly uses to determine the state of feature flags.
 
-```svelte
-<script>
-	import { LD } from 'launchdarkly-svelte-client-sdk';
-
-    function handleLogin() {
-        LD.identify({ key: 'new-user-key' });
-    }
-</script>
-
-<button on:click={handleLogin}>Login</button>
-```
-
-### Getting feature flag values
-
-#### Getting immediate flag value
-
-If you need to get the value of a flag at time of evaluation you can use the `isOn` function:
-
-```svelte
-<script>
-	import { LD } from 'launchdarkly-svelte-client-sdk';
-
-	function handleClick() {
-		const isFeatureFlagOn = LD.isOn('my-feature-flag');
-		console.log(isFeatureFlagOn);
-	}
-</script>
-
-<button on:click={handleClick}>Check flag value</button>
-```
-
-**Note:** Please note that `isOn` function will return the current value of the flag at the time of evaluation, which means you won't get notified if the flag value changes. This is useful for cases where you need to get the value of a flag at a specific time like a function call. If you need to get notified when the flag value changes, you should use the `LDFlag` component, the `watch` function or the `flags` object depending on you use case.
-
-#### Watching flag value changes
-
-If you need to get notified when a flag value changes you can use the `watch` function. The `watch` function is an instance of [Svelte Store](https://svelte.dev/docs/svelte-store), which means you can use it with the `$` store subscriber syntax or the `subscribe` method. Here is an example of how to use the `watch` function:
-
-```svelte
-<script>
-	import { LD } from 'launchdarkly-svelte-client-sdk';
-
-	$: flagValue = LD.watch('my-feature-flag');
-</script>
-
-<p>{$flagValue}</p>
-```
-
-#### Getting all flag values
-
-If you need to get all flag values you can use the `flags` object. The `flags` object is an instance of [Svelte Store](https://svelte.dev/docs/svelte-store), which means you can use it with the `$` store subscriber syntax or the `subscribe` method. Here is an example of how to use the `flags` object:
-
-```svelte
-<script>
-	import { LD } from 'launchdarkly-svelte-client-sdk';
-
-	$: allFlags = LD.flags;
-</script>
-
-{#each Object.keys($allFlags) as flagName}
-	<p>{flagName}: {$allFlags[flagName]}</p>
-{/each}
-```
-
-## Credits
-
-- Original code by [Robinson Marquez](https://github.com/nosnibor89)
+In this example, the `LDProvider` wraps the entire application, ensuring that all child components have access to the feature flag data. The `slot="initializing"` is used to display a loading message while the flags are being fetched.
