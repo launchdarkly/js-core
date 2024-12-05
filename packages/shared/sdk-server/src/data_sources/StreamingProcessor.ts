@@ -117,9 +117,7 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
     });
     this._eventSource = eventSource;
 
-    this._payloadReader = new internal.PayloadReader(eventSource, (payload: internal.Payload) => {
-      p
-    });
+    this._payloadReader = new internal.PayloadReader(eventSource, createPay);
 
     eventSource.onclose = () => {
       this._logger?.info('Closed LaunchDarkly stream connection');
@@ -141,12 +139,14 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
       eventSource.addEventListener(eventName, (event) => {
         this._logger?.debug(`Received ${eventName} event`);
 
+        // TODO: this deserialization logic has to live somewhere.  I'm missing it right now.
         if (event?.data) {
           this._logConnectionResult(true);
           const { data } = event;
           const dataJson = deserializeData(data);
 
           if (!dataJson) {
+            // TODO: figure out JSON error handling
             reportJsonError(eventName, data, this._logger, this._errorHandler);
             return;
           }

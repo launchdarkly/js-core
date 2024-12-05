@@ -1,3 +1,3 @@
-import { ItemDescriptor, Payload, PayloadListener, PayloadReader, Update } from './payloadReader';
+import { Payload, PayloadListener, PayloadReader, Update } from './payloadReader';
 
-export { ItemDescriptor, Payload, PayloadListener, PayloadReader, Update };
+export { Payload, PayloadListener, PayloadReader, Update };

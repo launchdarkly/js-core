@@ -6,22 +6,15 @@ export interface EventStream {
   addEventListener(type: EventName, listener: EventListener): void;
 }
 
-export interface ItemDescriptor {
-  item: any;
-  version: number;
+export interface Update extends DataObject {
   deleted?: boolean;
-}
-
-export interface Update {
-  kind: string;
-  key: string;
-  item: ItemDescriptor;
 }
 
 export interface Payload {
   id: string;
   version: number;
   state: string;
+  basis: boolean;
   updates: Update[];
 }
 
@@ -33,6 +26,7 @@ export class PayloadReader {
   tempId?: string = undefined;
   tempVersion?: number = undefined;
   tempState?: string = undefined;
+  tempBasis?: boolean = undefined;
   tempUpdates: Update[] = [];
 
   constructor(eventSource: EventStream, listeners: PayloadListener[]) {
@@ -57,60 +51,68 @@ export class PayloadReader {
 
   // TODO: add valid state/reset handling if an invalid message is received part way through processing and to avoid starting prcessing put/deletes before server intent is received
   private _processServerIntent = (event?: { data?: ServerIntentData }) => {
-    // TODO: length check and error log if 0 payloads
+    // clear state in prep for handling data
+    this._resetState();
 
-    // TODO: if intent is none, ignore and return
-
-    // TODO: logic for ignoring invalid message formats?  Probably not worth validating except when finally emitting the payload
-
-    // at the time of writing this, it was agreed upon that SDKs could assume exactly 1 element in this list
+    // if there's no payloads, return
+    if ((event?.data?.payloads.length ?? 0) <= 0) {
+      return;
+    }
+    // at the time of writing this, it was agreed upon that SDKs could assume exactly 1 element in this list.  In the future, a negotiation of protocol version will be required to remove this assumption.
     const payload = event?.data?.payloads[0];
+
+    switch (payload?.intentCode) {
+      case 'xfer-full':
+        this.tempBasis = true;
+        break;
+      case 'xfer-changes':
+      case 'none':
+        this.tempBasis = false;
+        break;
+      default:
+        // unrecognized intent code, return
+        return;
+    }
+
     this.tempId = payload?.id;
   };
 
   private _processPutObject = (event?: { data?: DataObject }) => {
-    if (event?.data?.kind && event.data.key && event.data.version && event.data.object) {
-      if (!event?.data?.kind || !event.data.key || !event.data.version || !event.data.object) {
-        this._resetState();
-        return;
-      }
-
-      const item: ItemDescriptor = {
-        item: event.data.object,
-        version: event.data.version,
-        // intentionally omit deleted for this put
-      };
-
-      this.tempUpdates.push({
-        kind: event.data.kind,
-        key: event.data.key,
-        item,
-      });
-    }
-  };
-
-  // TODO: consider merging put and delete and having param for delete logic
-  private _processDeleteObject = (event?: { data?: DataObject }) => {
+    // if the following properties haven't been provided by now, we're in an invalid state
     if (!event?.data?.kind || !event.data.key || !event.data.version || !event.data.object) {
       this._resetState();
       return;
     }
 
-    const item: ItemDescriptor = {
-      item: event.data.object,
+    this.tempUpdates.push({
+      kind: event.data.kind,
+      key: event.data.key,
+      object: event.data.object,
       version: event.data.version,
-      deleted: true,
-    };
+      // intentionally omit deleted for this put
+    });
+  };
+
+  // TODO: consider merging put and delete and having param for delete logic
+  private _processDeleteObject = (event?: { data?: DataObject }) => {
+    // if the following properties haven't been provided by now, we're in an invalid state
+    if (!event?.data?.kind || !event.data.key || !event.data.version || !event.data.object) {
+      this._resetState();
+      return;
+    }
 
     this.tempUpdates.push({
       kind: event.data.kind,
       key: event.data.key,
-      item,
+      object: event.data.object,
+      version: event.data.version,
+      deleted: true,
     });
   };
 
   private _processPayloadTransferred = (event?: { data?: PayloadTransferred }) => {
-    if (!event?.data?.state || !event.data.version) {
+    // if the following properties haven't been provided by now, we're in an invalid state
+    if (!event?.data?.state || !event.data.version || !this.tempBasis) {
       this._resetState();
       return;
     }
@@ -119,6 +121,7 @@ export class PayloadReader {
       id: this.tempId!,
       version: event.data.version,
       state: event.data.state,
+      basis: this.tempBasis,
       updates: this.tempUpdates,
     };
 
