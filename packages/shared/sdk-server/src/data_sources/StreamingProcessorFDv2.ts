@@ -30,6 +30,7 @@ const reportJsonError = (
   );
 };
 
+// TODO: consider naming this StreamingDatasource
 export default class StreamingProcessor implements subsystem.LDStreamProcessor {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
@@ -116,10 +117,6 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
       retryResetIntervalMillis: 60 * 1000,
     });
     this._eventSource = eventSource;
-
-    this._payloadReader = new internal.PayloadReader(eventSource, (payload: internal.Payload) => {
-      p
-    });
 
     eventSource.onclose = () => {
       this._logger?.info('Closed LaunchDarkly stream connection');

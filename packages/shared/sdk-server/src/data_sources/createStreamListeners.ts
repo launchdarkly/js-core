@@ -1,11 +1,7 @@
-import {
-  EventName,
-  LDLogger,
-  ProcessStreamResponse,
-  VoidFunction,
-} from '@launchdarkly/js-sdk-common';
+import { internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { Payload } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
-import { LDDataSourceUpdates } from '../api/subsystems';
+import { LDDataSourceUpdates, LDFeatureStoreDataStorage } from '../api/subsystems';
 import {
   AllData,
   DeleteData,
@@ -93,3 +89,44 @@ export const createStreamListeners = (
   );
   return listeners;
 };
+
+export const createPayloadListener =
+  (
+    dataSourceUpdates: LDDataSourceUpdates,
+    logger?: LDLogger,
+    onCompleteHandlers?: {
+      basisReceived?: VoidFunction;
+    },
+  ) =>
+  (payload: Payload) => {
+    if (payload.basis) {
+      // convert basis to init param structure
+      let converted: LDFeatureStoreDataStorage= {};
+      payload.data.forEach((it: internal.Update) => {
+        const namespaced = converted[it.kind];
+        if (namespaced) {
+          namespaced[it.key] = it.;
+        } else {
+          this.tempData[event.data.kind] = {
+            [event.data.key]: item,
+          };
+        }
+      });
+      // merge new data into temp data
+      
+
+      logger?.debug('Initializing all data');
+      dataSourceUpdates.init(convertedData, onCompleteHandlers?.basisReceived);
+    } else {
+      // convert data to upsert param
+    }
+  };
+
+// const listeners = new Map<EventName, ProcessStreamResponse>();
+// listeners.set('put', createPutListener(dataSourceUpdates, logger, onCompleteHandlers?.put));
+// listeners.set('patch', createPatchListener(dataSourceUpdates, logger, onCompleteHandlers?.patch));
+// listeners.set(
+//   'delete',
+//   createDeleteListener(dataSourceUpdates, logger, onCompleteHandlers?.delete),
+// );
+// return listeners;
