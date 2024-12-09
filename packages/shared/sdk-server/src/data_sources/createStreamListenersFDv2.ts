@@ -7,7 +7,6 @@ import {
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 
-// TODO: discuss if there is a better setup for this
 const namespaceForKind = (kind: string) => {
   switch (kind) {
     case 'feature':
@@ -30,6 +29,7 @@ export const createPayloadListener =
     // DataSourceUpdates will support update(...) taking in the list of updates.
     if (payload.basis) {
       // convert basis to init param structure
+      // TODO: remove conversion as part of FDv2 Persistence work
       const converted: LDFeatureStoreDataStorage = {};
       payload.updates.forEach((it: internal.Update) => {
         const namespace = namespaceForKind(it.kind);
@@ -55,9 +55,8 @@ export const createPayloadListener =
       logger?.debug('Initializing all data');
       dataSourceUpdates.init(converted, basisReceived);
     } else {
-      // TODO: is topo sort required here?
-
       // convert data to upsert param
+      // TODO: remove conversion as part of FDv2 Persistence work
       payload.updates.forEach((it: internal.Update) => {
         const converted: LDKeyedFeatureStoreItem = {
           key: it.key,

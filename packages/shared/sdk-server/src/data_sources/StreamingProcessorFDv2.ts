@@ -96,7 +96,6 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
   start() {
     this._logConnectionStarted();
 
-    // TLS is handled by the platform implementation.
     const eventSource = this._requests.createEventSource(this._streamUri, {
       headers: this._headers,
       errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error),

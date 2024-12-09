@@ -74,7 +74,7 @@ export class PayloadReader {
           );
         }
       } else {
-        this._errorHandler?.(DataSourceErrorKind.Unknown, 'Unexpected payload from event stream');
+        this._errorHandler?.(DataSourceErrorKind.Unknown, 'Unexpected message from event stream');
       }
     });
   }
