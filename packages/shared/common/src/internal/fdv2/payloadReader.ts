@@ -36,15 +36,15 @@ export class PayloadReader {
   tempUpdates: Update[] = [];
 
   constructor(
-    eventSource: EventStream,
+    eventStream: EventStream,
     private readonly _jsonObjConverters: JsonObjConverters,
     private readonly _errorHandler?: (errorKind: DataSourceErrorKind, message: string) => void,
     private readonly _logger?: LDLogger,
   ) {
-    this._attachHandler(eventSource, 'server-intent', this._processServerIntent);
-    this._attachHandler(eventSource, 'put-object', this._processPutObject);
-    this._attachHandler(eventSource, 'delete-object', this._processDeleteObject);
-    this._attachHandler(eventSource, 'payload-transferred', this._processPayloadTransferred);
+    this._attachHandler(eventStream, 'server-intent', this._processServerIntent);
+    this._attachHandler(eventStream, 'put-object', this._processPutObject);
+    this._attachHandler(eventStream, 'delete-object', this._processDeleteObject);
+    this._attachHandler(eventStream, 'payload-transferred', this._processPayloadTransferred);
   }
 
   addPayloadListener(listener: PayloadListener) {
@@ -79,8 +79,8 @@ export class PayloadReader {
     });
   }
 
-  private _convertJsonObj(jsonObj: any): any {
-    return this._jsonObjConverters[jsonObj.kind]?.(jsonObj);
+  private _processObj(kind: string, jsonObj: any): any {
+    return this._jsonObjConverters[kind]?.(jsonObj);
   }
 
   // TODO: add valid state/reset handling if an invalid message is received part way through processing and to avoid starting prcessing put/deletes before server intent is received
@@ -111,45 +111,45 @@ export class PayloadReader {
     this.tempId = payload?.id;
   };
 
-  private _processPutObject = (jsonObj: any) => {
+  private _processPutObject = (event?: { data?: DataObject }) => {
     // if the following properties haven't been provided by now, we're in an invalid state
-    if (!jsonObj.kind || !jsonObj.key || !jsonObj.version || !jsonObj.object) {
+    if (!event?.data?.kind || !event?.data?.key || !event?.data?.version || !event?.data?.object) {
       this._resetState();
       return;
     }
 
-    const obj = this._convertJsonObj(jsonObj);
+    const obj = this._processObj(event.data.kind, event.data.object);
     if (!obj) {
       // ignore unrecognized kinds
       return;
     }
 
     this.tempUpdates.push({
-      kind: jsonObj.kind,
-      key: jsonObj.key,
-      version: jsonObj.version,
+      kind: event.data.kind,
+      key: event.data.key,
+      version: event.data.version,
       object: obj,
       // intentionally omit deleted for this put
     });
   };
 
-  private _processDeleteObject = (jsonObj: any) => {
+  private _processDeleteObject = (event?: { data?: DataObject }) => {
     // if the following properties haven't been provided by now, we're in an invalid state
-    if (!jsonObj.kind || !jsonObj.key || !jsonObj.version || !jsonObj.object) {
+    if (!event?.data?.kind || !event?.data?.key || !event?.data?.version || !event?.data?.object) {
       this._resetState();
       return;
     }
 
-    const obj = this._convertJsonObj(jsonObj);
+    const obj = this._processObj(event.data.kind, event.data.object);
     if (!obj) {
       // ignore unrecognized kinds
       return;
     }
 
     this.tempUpdates.push({
-      kind: jsonObj.kind,
-      key: jsonObj.key,
-      version: jsonObj.version,
+      kind: event.data.kind,
+      key: event.data.key,
+      version: event.data.version,
       object: obj,
       deleted: true,
     });
@@ -157,7 +157,7 @@ export class PayloadReader {
 
   private _processPayloadTransferred = (event?: { data?: PayloadTransferred }) => {
     // if the following properties haven't been provided by now, we're in an invalid state
-    if (!event?.data?.state || !event.data.version || !this.tempBasis) {
+    if (!event?.data?.state || !event.data.version || this.tempBasis === undefined) {
       this._resetState();
       return;
     }
