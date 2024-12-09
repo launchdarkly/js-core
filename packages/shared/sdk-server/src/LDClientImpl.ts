@@ -32,11 +32,11 @@ import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
-import { createPayloadListener } from './data_sources/createStreamListenersFDv2';
+import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
 import Requestor from './data_sources/Requestor';
-import StreamingProcessorFDv2 from './data_sources/StreamingProcessorFDv2';
+import StreamingProcessor from './data_sources/StreamingProcessor';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
@@ -216,17 +216,16 @@ export default class LDClientImpl implements LDClient {
     };
     this._evaluator = new Evaluator(this._platform, queries);
 
-    const payloadListener = createPayloadListener(dataSourceUpdates, this.logger, () =>
-      this._initSuccess(),
-    );
-
+    const listeners = createStreamListeners(dataSourceUpdates, this._logger, {
+      put: () => this._initSuccess(),
+    });
     const makeDefaultProcessor = () =>
       config.stream
-        ? new StreamingProcessorFDv2(
+        ? new StreamingProcessor(
             clientContext,
             '/all',
             [],
-            payloadListener,
+            listeners,
             baseHeaders,
             this._diagnosticsManager,
             (e) => this._dataSourceErrorHandler(e),
