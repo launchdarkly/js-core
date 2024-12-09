@@ -51,7 +51,7 @@ async function main(): Promise<void> {
     context,
     {
       model: {
-        id: 'gpt-4',
+        name: 'gpt-4',
       },
     },
     { myVariable: 'My User Defined Variable' },
@@ -61,7 +61,7 @@ async function main(): Promise<void> {
   const completion = await tracker.trackOpenAIMetrics(async () =>
     client.chat.completions.create({
       messages: aiConfig.messages || [],
-      model: aiConfig.model?.id || 'gpt-4',
+      model: aiConfig.model?.name || 'gpt-4',
       temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
       max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
     }),
