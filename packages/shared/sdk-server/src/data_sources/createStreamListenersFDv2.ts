@@ -26,7 +26,8 @@ export const createPayloadListener =
     basisReceived: VoidFunction = () => {},
   ) =>
   (payload: Payload) => {
-    // This conversion from FDv2 updates to the existing types used with DataSourceUpdates should be temporary.
+    // This conversion from FDv2 updates to the existing types used with DataSourceUpdates should be temporary.  Eventually
+    // DataSourceUpdates will support update(...) taking in the list of updates.
     if (payload.basis) {
       // convert basis to init param structure
       const converted: LDFeatureStoreDataStorage = {};

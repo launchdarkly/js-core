@@ -1,7 +1,6 @@
 import {
   ClientContext,
   DataSourceErrorKind,
-  EventName,
   EventSource,
   getStreamingUri,
   httpErrorMessage,
@@ -10,28 +9,17 @@ import {
   LDHeaders,
   LDLogger,
   LDStreamingError,
-  ProcessStreamResponse,
   Requests,
   shouldRetry,
   StreamingErrorHandler,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
+import { PayloadListener } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
-const reportJsonError = (
-  type: string,
-  data: string,
-  logger?: LDLogger,
-  errorHandler?: StreamingErrorHandler,
-) => {
-  logger?.error(`Stream received invalid data in "${type}" message`);
-  logger?.debug(`Invalid JSON follows: ${data}`);
-  errorHandler?.(
-    new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed JSON data in event stream'),
-  );
-};
+import { processFlag, processSegment } from '../store/serialization';
 
 // TODO: consider naming this StreamingDatasource
-export default class StreamingProcessor implements subsystem.LDStreamProcessor {
+export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcessor {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
   private readonly _logger?: LDLogger;
@@ -44,7 +32,7 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
     clientContext: ClientContext,
     streamUriPath: string,
     parameters: { key: string; value: string }[],
-    private readonly _listeners: Map<EventName, ProcessStreamResponse>,
+    private readonly _payloadListener: PayloadListener,
     baseHeaders: LDHeaders,
     private readonly _diagnosticsManager?: internal.DiagnosticsManager,
     private readonly _errorHandler?: StreamingErrorHandler,
@@ -117,6 +105,22 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
       retryResetIntervalMillis: 60 * 1000,
     });
     this._eventSource = eventSource;
+    const payloadReader = new internal.PayloadReader(
+      eventSource,
+      {
+        flag: processFlag,
+        segment: processSegment,
+      },
+      (errorKind: DataSourceErrorKind, message: string) => {
+        this._errorHandler?.(new LDStreamingError(errorKind, message));
+      },
+    );
+    payloadReader.addPayloadListener(() => {
+      // TODO: discuss if it is satisfactory to switch from setting connection result on single event to getting a payload. Need
+      // to double check the handling in the ServerIntent:none case.  That may not trigger these payload listeners.
+      this._logConnectionResult(true);
+    });
+    payloadReader.addPayloadListener(this._payloadListener);
 
     eventSource.onclose = () => {
       this._logger?.info('Closed LaunchDarkly stream connection');
@@ -133,31 +137,6 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
     eventSource.onretrying = (e) => {
       this._logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
     };
-
-    this._listeners.forEach(({ deserializeData, processJson }, eventName) => {
-      eventSource.addEventListener(eventName, (event) => {
-        this._logger?.debug(`Received ${eventName} event`);
-
-        if (event?.data) {
-          this._logConnectionResult(true);
-          const { data } = event;
-          const dataJson = deserializeData(data);
-
-          if (!dataJson) {
-            reportJsonError(eventName, data, this._logger, this._errorHandler);
-            return;
-          }
-          processJson(dataJson);
-        } else {
-          this._errorHandler?.(
-            new LDStreamingError(
-              DataSourceErrorKind.Unknown,
-              'Unexpected payload from event stream',
-            ),
-          );
-        }
-      });
-    });
   }
 
   stop() {

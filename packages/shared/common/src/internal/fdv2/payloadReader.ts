@@ -1,9 +1,15 @@
-import { EventListener, EventName } from '../../api';
+/* eslint-disable no-underscore-dangle */
+import { EventListener, EventName, LDLogger } from '../../api';
+import { DataSourceErrorKind } from '../../datasource';
 import { DataObject, PayloadTransferred, ServerIntentData } from './proto';
 
 // Facade interface to contain only ability to add event listeners
 export interface EventStream {
   addEventListener(type: EventName, listener: EventListener): void;
+}
+
+export interface JsonObjConverters {
+  [kind: string]: (object: any) => any;
 }
 
 export interface Update extends DataObject {
@@ -29,13 +35,16 @@ export class PayloadReader {
   tempBasis?: boolean = undefined;
   tempUpdates: Update[] = [];
 
-  constructor(eventSource: EventStream, listeners: PayloadListener[]) {
-    this.listeners = listeners.concat(listeners);
-
-    eventSource.addEventListener('server-intent', this._processServerIntent);
-    eventSource.addEventListener('put-object', this._processPutObject);
-    eventSource.addEventListener('delete-object', this._processDeleteObject);
-    eventSource.addEventListener('payload-transferred', this._processPayloadTransferred);
+  constructor(
+    eventSource: EventStream,
+    private readonly _jsonObjConverters: JsonObjConverters,
+    private readonly _errorHandler?: (errorKind: DataSourceErrorKind, message: string) => void,
+    private readonly _logger?: LDLogger,
+  ) {
+    this._attachHandler(eventSource, 'server-intent', this._processServerIntent);
+    this._attachHandler(eventSource, 'put-object', this._processPutObject);
+    this._attachHandler(eventSource, 'delete-object', this._processDeleteObject);
+    this._attachHandler(eventSource, 'payload-transferred', this._processPayloadTransferred);
   }
 
   addPayloadListener(listener: PayloadListener) {
@@ -47,6 +56,31 @@ export class PayloadReader {
     if (index > -1) {
       this.listeners.splice(index, 1);
     }
+  }
+
+  private _attachHandler(stream: EventStream, eventName: string, processor: (obj: any) => void) {
+    stream.addEventListener(eventName, async (event?: { data?: string }) => {
+      if (event?.data) {
+        this._logger?.debug(`Received ${eventName} event`);
+
+        try {
+          processor(JSON.parse(event.data));
+        } catch {
+          this._logger?.error(`Stream received invalid data in "${eventName}" message`);
+          this._logger?.debug(`Invalid JSON follows: ${event.data}`);
+          this._errorHandler?.(
+            DataSourceErrorKind.InvalidData,
+            'Malformed JSON data in event stream',
+          );
+        }
+      } else {
+        this._errorHandler?.(DataSourceErrorKind.Unknown, 'Unexpected payload from event stream');
+      }
+    });
+  }
+
+  private _convertJsonObj(jsonObj: any): any {
+    return this._jsonObjConverters[jsonObj.kind]?.(jsonObj);
   }
 
   // TODO: add valid state/reset handling if an invalid message is received part way through processing and to avoid starting prcessing put/deletes before server intent is received
@@ -77,35 +111,46 @@ export class PayloadReader {
     this.tempId = payload?.id;
   };
 
-  private _processPutObject = (event?: { data?: DataObject }) => {
+  private _processPutObject = (jsonObj: any) => {
     // if the following properties haven't been provided by now, we're in an invalid state
-    if (!event?.data?.kind || !event.data.key || !event.data.version || !event.data.object) {
+    if (!jsonObj.kind || !jsonObj.key || !jsonObj.version || !jsonObj.object) {
       this._resetState();
       return;
     }
 
+    const obj = this._convertJsonObj(jsonObj);
+    if (!obj) {
+      // ignore unrecognized kinds
+      return;
+    }
+
     this.tempUpdates.push({
-      kind: event.data.kind,
-      key: event.data.key,
-      object: event.data.object,
-      version: event.data.version,
+      kind: jsonObj.kind,
+      key: jsonObj.key,
+      version: jsonObj.version,
+      object: obj,
       // intentionally omit deleted for this put
     });
   };
 
-  // TODO: consider merging put and delete and having param for delete logic
-  private _processDeleteObject = (event?: { data?: DataObject }) => {
+  private _processDeleteObject = (jsonObj: any) => {
     // if the following properties haven't been provided by now, we're in an invalid state
-    if (!event?.data?.kind || !event.data.key || !event.data.version || !event.data.object) {
+    if (!jsonObj.kind || !jsonObj.key || !jsonObj.version || !jsonObj.object) {
       this._resetState();
       return;
     }
 
+    const obj = this._convertJsonObj(jsonObj);
+    if (!obj) {
+      // ignore unrecognized kinds
+      return;
+    }
+
     this.tempUpdates.push({
-      kind: event.data.kind,
-      key: event.data.key,
-      object: event.data.object,
-      version: event.data.version,
+      kind: jsonObj.kind,
+      key: jsonObj.key,
+      version: jsonObj.version,
+      object: obj,
       deleted: true,
     });
   };
