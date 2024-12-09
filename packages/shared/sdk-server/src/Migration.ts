@@ -96,8 +96,7 @@ class Migration<
   TMigrationWrite,
   TMigrationReadInput = any,
   TMigrationWriteInput = any,
-> implements
-    LDMigration<TMigrationRead, TMigrationWrite, TMigrationReadInput, TMigrationWriteInput>
+> implements LDMigration<TMigrationRead, TMigrationWrite, TMigrationReadInput, TMigrationWriteInput>
 {
   private readonly _execution: LDSerialExecution | LDConcurrentExecution;
 

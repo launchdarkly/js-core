@@ -53,7 +53,7 @@ async function main() {
     context,
     {
       model: {
-        id: 'my-default-model',
+        name: 'my-default-model',
       },
       enabled: true,
     },
@@ -66,7 +66,7 @@ async function main() {
   const completion = tracker.trackBedrockConverseMetrics(
     await awsClient.send(
       new ConverseCommand({
-        modelId: aiConfig.model?.id ?? 'no-model',
+        modelId: aiConfig.model?.name ?? 'no-model',
         messages: mapPromptToConversation(aiConfig.messages ?? []),
         inferenceConfig: {
           temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,

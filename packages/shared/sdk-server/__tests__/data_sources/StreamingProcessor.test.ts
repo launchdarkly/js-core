@@ -1,11 +1,17 @@
-import { EventName, Info, LDLogger, ProcessStreamResponse } from '../../../src/api';
-import { LDStreamProcessor } from '../../../src/api/subsystem';
-import { DataSourceErrorKind } from '../../../src/datasource/DataSourceErrorKinds';
-import { LDStreamingError } from '../../../src/datasource/errors';
-import { DiagnosticsManager } from '../../../src/internal/diagnostics';
-import StreamingProcessor from '../../../src/internal/stream/StreamingProcessor';
-import { defaultHeaders } from '../../../src/utils';
-import { createBasicPlatform } from '../../createBasicPlatform';
+import {
+  DataSourceErrorKind,
+  defaultHeaders,
+  EventName,
+  Info,
+  internal,
+  LDLogger,
+  LDStreamingError,
+  ProcessStreamResponse,
+  subsystem,
+} from '@launchdarkly/js-sdk-common';
+
+import StreamingProcessor from '../../src/data_sources/StreamingProcessor';
+import { createBasicPlatform } from '../createBasicPlatform';
 
 let logger: LDLogger;
 
@@ -61,8 +67,8 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
 
 describe('given a stream processor with mock event source', () => {
   let info: Info;
-  let streamingProcessor: LDStreamProcessor;
-  let diagnosticsManager: DiagnosticsManager;
+  let streamingProcessor: subsystem.LDStreamProcessor;
+  let diagnosticsManager: internal.DiagnosticsManager;
   let listeners: Map<EventName, ProcessStreamResponse>;
   let mockEventSource: any;
   let mockListener: ProcessStreamResponse;
@@ -104,7 +110,7 @@ describe('given a stream processor with mock event source', () => {
     listeners.set('put', mockListener);
     listeners.set('patch', mockListener);
 
-    diagnosticsManager = new DiagnosticsManager(sdkKey, basicPlatform, {});
+    diagnosticsManager = new internal.DiagnosticsManager(sdkKey, basicPlatform, {});
     streamingProcessor = new StreamingProcessor(
       {
         basicConfiguration: getBasicConfiguration(logger),
