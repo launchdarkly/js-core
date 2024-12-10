@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.5.0...server-sdk-ai-v0.6.0) (2024-12-10)
+
+
+### ⚠ BREAKING CHANGES
+
+* Change versionKey to variationKey. ([#709](https://github.com/launchdarkly/js-core/issues/709))
+
+### Code Refactoring
+
+* Change versionKey to variationKey. ([#709](https://github.com/launchdarkly/js-core/issues/709)) ([bfee298](https://github.com/launchdarkly/js-core/commit/bfee29843125c55be1b21e4f77c9d8c3c8698856))
+
 ## [0.5.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.4.0...server-sdk-ai-v0.5.0) (2024-12-09)
 
 
