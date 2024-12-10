@@ -1,4 +1,4 @@
-import { Breadcrumb, EventData, Recorder, SessionData } from './api';
+import { Breadcrumb, ErrorData, EventData, Recorder, SessionData } from './api';
 
 const CUSTOM_KEY_PREFIX = '$ld:telemetry';
 const ERROR_KEY = `${CUSTOM_KEY_PREFIX}:error`;
