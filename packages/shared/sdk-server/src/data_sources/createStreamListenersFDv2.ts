@@ -1,4 +1,4 @@
-import { internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { internal, LDLogger, VoidFunction } from '@launchdarkly/js-sdk-common';
 import { Payload } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
 import {
