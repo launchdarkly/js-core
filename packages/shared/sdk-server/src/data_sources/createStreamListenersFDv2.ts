@@ -1,5 +1,4 @@
 import { internal, LDLogger, VoidFunction } from '@launchdarkly/js-sdk-common';
-import { Payload } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
 import {
   LDDataSourceUpdates,
@@ -24,12 +23,12 @@ export const createPayloadListener =
     logger?: LDLogger,
     basisReceived: VoidFunction = () => {},
   ) =>
-  (payload: Payload) => {
+  (payload: internal.Payload) => {
     // This conversion from FDv2 updates to the existing types used with DataSourceUpdates should be temporary.  Eventually
     // DataSourceUpdates will support update(...) taking in the list of updates.
     if (payload.basis) {
       // convert basis to init param structure
-      // TODO: remove conversion as part of FDv2 Persistence work
+      // TODO: SDK-850 - remove conversion as part of FDv2 Persistence work
       const converted: LDFeatureStoreDataStorage = {};
       payload.updates.forEach((it: internal.Update) => {
         const namespace = namespaceForKind(it.kind);
@@ -56,7 +55,7 @@ export const createPayloadListener =
       dataSourceUpdates.init(converted, basisReceived);
     } else {
       // convert data to upsert param
-      // TODO: remove conversion as part of FDv2 Persistence work
+      // TODO: SDK-850 - remove conversion as part of FDv2 Persistence work
       payload.updates.forEach((it: internal.Update) => {
         const converted: LDKeyedFeatureStoreItem = {
           key: it.key,
