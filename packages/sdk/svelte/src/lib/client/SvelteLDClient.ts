@@ -1,4 +1,4 @@
-import { derived, get, type Readable, readonly, writable, type Writable } from 'svelte/store';
+import { derived, type Readable, readonly, writable, type Writable } from 'svelte/store';
 
 import type { LDFlagSet } from '@launchdarkly/js-client-sdk';
 import {
@@ -8,7 +8,7 @@ import {
   type LDFlagValue,
 } from '@launchdarkly/js-client-sdk/compat';
 
-export type { LDContext };
+export type { LDContext, LDFlagValue };
 
 /** Client ID for LaunchDarkly */
 export type LDClientID = string;
@@ -112,15 +112,15 @@ function createLD() {
     derived<Writable<LDFlags>, LDFlagValue>(flagsWritable, ($flags) => $flags[flagKey]);
 
   /**
-   * Checks if a flag is on.
-   * @param {string} flagKey - The key of the flag to check.
-   * @returns {boolean} True if the flag is on, false otherwise.
+   * Gets the current value of a flag.
+   * @param {string} flagKey - The key of the flag to get.
+   * @param {TFlag} defaultValue - The default value of the flag.
+   * @returns {TFlag} The current value of the flag.
    */
-  const isOn = (flagKey: string): boolean => {
+  function useFlag<TFlag extends LDFlagValue>(flagKey: string, defaultValue: TFlag): TFlag {
     isClientInitialized(coreLdClient);
-    const currentFlags = get(flagsWritable);
-    return !!currentFlags[flagKey];
-  };
+    return coreLdClient.variation(flagKey, defaultValue);
+  }
 
   return {
     identify,
@@ -128,7 +128,7 @@ function createLD() {
     initialize: LDInitialize,
     initializing: readonly(loading),
     watch,
-    isOn,
+    useFlag,
   };
 }
 

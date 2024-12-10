@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { LD, type LDFlagsValue } from './client/SvelteLDClient.js';
+    import { LD, type LDFlagValue } from './client/SvelteLDClient.js';
 
     export let flag: string;
-    export let matches: LDFlagsValue = true;
+    export let matches: LDFlagValue = true;
 
     $: flagValue = LD.watch(flag);
   </script>
