@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { EventListener, EventName, LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
-import { DataObject, PayloadTransferred, ServerIntentData } from './proto';
+import { DeleteObject, PayloadTransferred, PutObject, ServerIntentData } from './proto';
 
 // Facade interface to contain only ability to add event listeners
 export interface EventStream {
@@ -12,7 +12,11 @@ export interface JsonObjConverters {
   [kind: string]: (object: any) => any;
 }
 
-export interface Update extends DataObject {
+export interface Update {
+  kind: string;
+  key: string;
+  version: number;
+  object?: any;
   deleted?: boolean;
 }
 
@@ -45,6 +49,8 @@ export class PayloadReader {
     this._attachHandler(eventStream, 'put-object', this._processPutObject);
     this._attachHandler(eventStream, 'delete-object', this._processDeleteObject);
     this._attachHandler(eventStream, 'payload-transferred', this._processPayloadTransferred);
+    this._attachHandler(eventStream, 'goodbye', this._processGoodbye);
+    this._attachHandler(eventStream, 'error', this._processError);
   }
 
   addPayloadListener(listener: PayloadListener) {
@@ -83,7 +89,6 @@ export class PayloadReader {
     return this._jsonObjConverters[kind]?.(jsonObj);
   }
 
-  // TODO: add valid state/reset handling if an invalid message is received part way through processing and to avoid starting prcessing put/deletes before server intent is received
   private _processServerIntent = (event?: { data?: ServerIntentData }) => {
     // clear state in prep for handling data
     this._resetState();
@@ -111,10 +116,15 @@ export class PayloadReader {
     this.tempId = payload?.id;
   };
 
-  private _processPutObject = (event?: { data?: DataObject }) => {
-    // if the following properties haven't been provided by now, we're in an invalid state
-    if (!event?.data?.kind || !event?.data?.key || !event?.data?.version || !event?.data?.object) {
-      this._resetState();
+  private _processPutObject = (event?: { data?: PutObject }) => {
+    // if the following properties haven't been provided by now, we should ignore the event
+    if (
+      !this.tempId || // server intent hasn't been recieved yet.
+      !event?.data?.kind ||
+      !event?.data?.key ||
+      !event?.data?.version ||
+      !event?.data?.object
+    ) {
       return;
     }
 
@@ -133,16 +143,9 @@ export class PayloadReader {
     });
   };
 
-  private _processDeleteObject = (event?: { data?: DataObject }) => {
-    // if the following properties haven't been provided by now, we're in an invalid state
-    if (!event?.data?.kind || !event?.data?.key || !event?.data?.version || !event?.data?.object) {
-      this._resetState();
-      return;
-    }
-
-    const obj = this._processObj(event.data.kind, event.data.object);
-    if (!obj) {
-      // ignore unrecognized kinds
+  private _processDeleteObject = (event?: { data?: DeleteObject }) => {
+    // if the following properties haven't been provided by now, we should ignore the event
+    if (!this.tempId || !event?.data?.kind || !event?.data?.key || !event?.data?.version) {
       return;
     }
 
@@ -150,15 +153,20 @@ export class PayloadReader {
       kind: event.data.kind,
       key: event.data.key,
       version: event.data.version,
-      object: obj,
+      // intentionally omit object for this delete
       deleted: true,
     });
   };
 
   private _processPayloadTransferred = (event?: { data?: PayloadTransferred }) => {
-    // if the following properties haven't been provided by now, we're in an invalid state
-    if (!event?.data?.state || !event.data.version || this.tempBasis === undefined) {
-      this._resetState();
+    // if the following properties haven't been provided by now, we should reset
+    if (
+      !this.tempId || // server intent hasn't been recieved yet.
+      !event?.data?.state ||
+      !event.data.version ||
+      this.tempBasis === undefined
+    ) {
+      this._resetState(); // a reset is best defensive action since payload transferred terminates a payload
       return;
     }
 
@@ -171,6 +179,20 @@ export class PayloadReader {
     };
 
     this.listeners.forEach((it) => it(payload));
+    this._resetState();
+  };
+
+  private _processGoodbye = (event?: { data?: any }) => {
+    this._logger?.info(
+      `Goodbye was received from the LaunchDarkly connection with reason: ${event?.data?.reason}.`,
+    );
+    this._resetState();
+  };
+
+  private _processError = (event?: { data?: any }) => {
+    this._logger?.info(
+      `An issue was encountered receiving updates for payload ${this.tempId} with reason: ${event?.data?.reason}. Automatic retry will occur.`,
+    );
     this._resetState();
   };
 

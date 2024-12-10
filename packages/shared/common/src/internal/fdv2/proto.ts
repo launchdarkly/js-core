@@ -16,11 +16,17 @@ export interface PayloadIntent {
   reason: string;
 }
 
-export interface DataObject {
+export interface PutObject {
   kind: string;
   key: string;
   version: number;
   object: any;
+}
+
+export interface DeleteObject {
+  kind: string;
+  key: string;
+  version: number;
 }
 
 export interface PayloadTransferred {
