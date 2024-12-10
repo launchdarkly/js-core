@@ -52,7 +52,7 @@
     "rollup-plugin-generate-package-json": "^3.2.0",
     "ts-jest": "^29.1.0",
     "typedoc": "0.25.0",
-    "typescript": "5.1.6"
+    "typescript": "5.6.3"
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "^2.10.0",

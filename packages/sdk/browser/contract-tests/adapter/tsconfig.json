@@ -8,7 +8,6 @@
     "moduleResolution": "node",
     "outDir": "dist",
     "sourceMap": true,
-    "skipLibCheck": true
   },
   "lib": ["ES6"],
   "exclude": ["**/*.test.ts", "dist", "node_modules"]

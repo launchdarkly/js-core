@@ -41,7 +41,7 @@
     "prettier": "^3.0.0",
     "rimraf": "^5.0.5",
     "typedoc": "0.25.0",
-    "typescript": "^5.5.3"
+    "typescript": "5.6.3"
   },
   "directories": {
     "example": "example"
