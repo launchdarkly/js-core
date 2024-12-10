@@ -1,8 +1,10 @@
-import { type LDContext, type LDEvaluationDetail } from 'launchdarkly-js-client-sdk';
 import * as rrweb from 'rrweb';
+
+import type { LDContext, LDEvaluationDetail } from '@launchdarkly/js-client-sdk';
 
 import { Recorder } from '../../api';
 import { Collector } from '../../api/Collector';
+import { SessionMetadata } from '../../api/SessionMetadata';
 import ContinuousReplay from './ContinuousReplay';
 import RollingReplay from './RollingReplay';
 import { ContinuousCapture, RollingCapture, SessionReplayOptions } from './SessionReplayOptions';
@@ -18,7 +20,7 @@ function isContinuousCapture(capture: unknown): capture is ContinuousCapture {
 /**
  * Experimental capture of sessions using rrweb.
  */
-export default class SessionReplay implements Collector {
+export default class SessionReplay implements Collector, SessionMetadata {
   impl: Collector;
 
   constructor(options?: SessionReplayOptions) {
@@ -43,7 +45,7 @@ export default class SessionReplay implements Collector {
     this.impl.unregister();
   }
 
-  handleFlagUsed?(flagKey: string, flagDetail: LDEvaluationDetail, _context: LDContext): void {
+  handleFlagUsed?(flagKey: string, flagDetail: LDEvaluationDetail, _context?: LDContext): void {
     rrweb.record.addCustomEvent('flag-used', { key: flagKey, detail: flagDetail });
   }
 

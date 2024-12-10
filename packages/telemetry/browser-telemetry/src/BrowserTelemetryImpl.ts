@@ -18,6 +18,7 @@ import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
 import { ErrorData } from './api/ErrorData';
 import { EventData } from './api/EventData';
+import { SessionMetadata } from './api/SessionMetadata';
 import ClickCollector from './collectors/dom/ClickCollector';
 import KeypressCollector from './collectors/dom/KeypressCollector';
 import ErrorCollector from './collectors/error';
@@ -81,6 +82,8 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private _collectors: Collector[] = [];
   private _sessionId: string = randomUuidV4();
 
+  private _recorder: Recorder;
+
   constructor(private _options: ParsedOptions) {
     configureTraceKit(_options.stack);
 
@@ -120,12 +123,57 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       this._collectors.push(new KeypressCollector());
     }
 
-    this._collectors.forEach((collector) => collector.register(this as Recorder, this._sessionId));
+    this._recorder = this._makeRecorder();
+
+    this._collectors.forEach((collector) => collector.register(this._recorder, this._sessionId));
 
     const impl = this;
     const inspectors: LDInspection[] = [];
     makeInspectors(_options, inspectors, impl);
     this._inspectorInstances.push(...inspectors);
+  }
+
+  /**
+   * Make a recorder for use by collectors.
+   *
+   * The recorder interface isn't directly implemented on the telemetry implementation because
+   * that would not allow us to expose methods via the recorder that are not available directly
+   * on the telemetry instance.
+   *
+   * @returns A recorder instance.
+   */
+  private _makeRecorder() {
+    const captureError = (error: Error) => {
+      const validException = error !== undefined && error !== null;
+
+      const data: ErrorData = validException
+        ? {
+            type: error.name || error.constructor?.name || GENERIC_EXCEPTION,
+            // Only coalesce null/undefined, not empty.
+            message: error.message ?? MISSING_MESSAGE,
+            stack: parse(error, this._options.stack),
+            breadcrumbs: [...this._breadcrumbs],
+            sessionId: this._sessionId,
+          }
+        : {
+            type: GENERIC_EXCEPTION,
+            message: NULL_EXCEPTION_MESSAGE,
+            stack: { frames: [] },
+            breadcrumbs: [...this._breadcrumbs],
+            sessionId: this._sessionId,
+          };
+      this._capture(ERROR_KEY, data);
+    };
+    const captureErrorEvent = (error: ErrorEvent) => {
+      captureError(error.error);
+    };
+    const addBreadcrumb = (breadcrumb: Breadcrumb) => {
+      this.addBreadcrumb(breadcrumb);
+    };
+    const captureSession = (sessionData: SessionData) => {
+      this._captureSession(sessionData);
+    };
+    return { captureError, captureErrorEvent, addBreadcrumb, captureSession };
   }
 
   register(client: LDClientTracking): void {
@@ -184,7 +232,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.captureError(errorEvent.error);
   }
 
-  captureSession(sessionEvent: SessionData): void {
+  private _captureSession(sessionEvent: SessionData): void {
     this._capture(SESSION_CAPTURE_KEY, { ...sessionEvent, breadcrumbs: [...this._breadcrumbs] });
   }
 
@@ -207,7 +255,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
    *
    * @internal
    */
-  handleFlagUsed(flagKey: string, detail: LDEvaluationDetail, _context?: LDContext): void {
+  handleFlagUsed(flagKey: string, detail: LDEvaluationDetail, context?: LDContext): void {
     const breadcrumb: FeatureManagementBreadcrumb = {
       type: 'flag-evaluated',
       data: {
@@ -219,6 +267,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       level: 'info',
     };
     this.addBreadcrumb(breadcrumb);
+    this._collectors.forEach((collector) => {
+      const metaDataCollector = collector as unknown as SessionMetadata;
+      metaDataCollector.handleFlagUsed?.(flagKey, detail, context);
+    });
   }
 
   /**
@@ -242,5 +294,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     };
 
     this.addBreadcrumb(breadcrumb);
+    this._collectors.forEach((collector) => {
+      const metaDataCollector = collector as unknown as SessionMetadata;
+      metaDataCollector.handleFlagDetailChanged?.(flagKey, detail);
+    });
   }
 }
