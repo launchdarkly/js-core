@@ -6,6 +6,7 @@ import {
   LDFileDataSourceError,
   LDPollingError,
   LDStreamingError,
+  StreamingErrorHandler,
 } from './datasource';
 
 export * from './api';
@@ -24,5 +25,6 @@ export {
   DataSourceErrorKind,
   LDPollingError,
   LDStreamingError,
+  StreamingErrorHandler,
   LDFileDataSourceError,
 };

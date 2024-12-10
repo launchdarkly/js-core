@@ -90,7 +90,7 @@ it('tracks OpenAI usage', async () => {
   const PROMPT_TOKENS = 49;
   const COMPLETION_TOKENS = 51;
 
-  await tracker.trackOpenAI(async () => ({
+  await tracker.trackOpenAIMetrics(async () => ({
     usage: {
       total_tokens: TOTAL_TOKENS,
       prompt_tokens: PROMPT_TOKENS,
@@ -151,7 +151,7 @@ it('tracks Bedrock conversation with successful response', () => {
     },
   };
 
-  tracker.trackBedrockConverse(response);
+  tracker.trackBedrockConverseMetrics(response);
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation',
@@ -198,7 +198,7 @@ it('tracks Bedrock conversation with error response', () => {
 
   // TODO: We may want a track failure.
 
-  tracker.trackBedrockConverse(response);
+  tracker.trackBedrockConverseMetrics(response);
 
   expect(mockTrack).not.toHaveBeenCalled();
 });
@@ -267,4 +267,40 @@ it('only tracks non-zero token counts', () => {
     expect.anything(),
     expect.anything(),
   );
+});
+
+it('returns empty summary when no metrics tracked', () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, versionKey, testContext);
+
+  const summary = tracker.getSummary();
+
+  expect(summary).toEqual({});
+});
+
+it('summarizes tracked metrics', () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, versionKey, testContext);
+
+  tracker.trackDuration(1000);
+  tracker.trackTokens({
+    total: 100,
+    input: 40,
+    output: 60,
+  });
+  tracker.trackFeedback({ kind: LDFeedbackKind.Positive });
+  tracker.trackSuccess();
+
+  const summary = tracker.getSummary();
+
+  expect(summary).toEqual({
+    durationMs: 1000,
+    tokens: {
+      total: 100,
+      input: 40,
+      output: 60,
+    },
+    feedback: {
+      kind: 'positive',
+    },
+    success: true,
+  });
 });

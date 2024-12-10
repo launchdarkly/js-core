@@ -151,7 +151,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     if (this._client === undefined) {
       this._pendingEvents.push({ type, data: event });
       if (this._pendingEvents.length > this._maxPendingEvents) {
-        // TODO: Log when pending events must be dropped. (SDK-915)
+        // TODO: Log when pending events must be dropped. (SDK-915, SDK-973)
         this._pendingEvents.shift();
       }
     }

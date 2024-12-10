@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.5.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.4.0...server-sdk-ai-v0.5.0) (2024-12-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename model and providerid to name. ([#706](https://github.com/launchdarkly/js-core/issues/706))
+
+### Features
+
+* Add getSummary method to the tracker. ([#698](https://github.com/launchdarkly/js-core/issues/698)) ([4df902d](https://github.com/launchdarkly/js-core/commit/4df902d98584c88b072d6dab5f32a6ea8c4fcdf5))
+
+
+### Code Refactoring
+
+* Rename model and providerid to name. ([#706](https://github.com/launchdarkly/js-core/issues/706)) ([8dd3951](https://github.com/launchdarkly/js-core/commit/8dd39517cfc14c6e037a2438d22f20a9527c9ffa))
+
+## [0.4.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.3.0...server-sdk-ai-v0.4.0) (2024-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697))
+
+### Features
+
+* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697)) ([cd72ea8](https://github.com/launchdarkly/js-core/commit/cd72ea8193888b0635b5beffa0a877b18294777e))
+
 ## [0.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.2.1...server-sdk-ai-v0.3.0) (2024-11-15)
 
 

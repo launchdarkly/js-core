@@ -1,19 +1,21 @@
 import {
+  ClientContext,
+  DataSourceErrorKind,
   EventName,
   EventSource,
+  getStreamingUri,
+  httpErrorMessage,
   HttpErrorResponse,
+  internal,
+  LDHeaders,
   LDLogger,
+  LDStreamingError,
   ProcessStreamResponse,
   Requests,
-} from '../../api';
-import { LDStreamProcessor } from '../../api/subsystem';
-import { DataSourceErrorKind } from '../../datasource/DataSourceErrorKinds';
-import { LDStreamingError } from '../../datasource/errors';
-import { ClientContext } from '../../options';
-import { getStreamingUri } from '../../options/ServiceEndpoints';
-import { httpErrorMessage, LDHeaders, shouldRetry } from '../../utils';
-import { DiagnosticsManager } from '../diagnostics';
-import { StreamingErrorHandler } from './types';
+  shouldRetry,
+  StreamingErrorHandler,
+  subsystem,
+} from '@launchdarkly/js-sdk-common';
 
 const reportJsonError = (
   type: string,
@@ -28,8 +30,7 @@ const reportJsonError = (
   );
 };
 
-// TODO: SDK-156 - Move to Server SDK specific location
-class StreamingProcessor implements LDStreamProcessor {
+export default class StreamingProcessor implements subsystem.LDStreamProcessor {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
   private readonly _logger?: LDLogger;
@@ -44,7 +45,7 @@ class StreamingProcessor implements LDStreamProcessor {
     parameters: { key: string; value: string }[],
     private readonly _listeners: Map<EventName, ProcessStreamResponse>,
     baseHeaders: LDHeaders,
-    private readonly _diagnosticsManager?: DiagnosticsManager,
+    private readonly _diagnosticsManager?: internal.DiagnosticsManager,
     private readonly _errorHandler?: StreamingErrorHandler,
     private readonly _streamInitialReconnectDelay = 1,
   ) {
@@ -167,5 +168,3 @@ class StreamingProcessor implements LDStreamProcessor {
     this.stop();
   }
 }
-
-export default StreamingProcessor;

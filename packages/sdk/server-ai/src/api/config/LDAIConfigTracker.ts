@@ -1,6 +1,31 @@
 import { LDFeedbackKind, LDTokenUsage } from '../metrics';
 
 /**
+ * Metrics which have been tracked.
+ */
+export interface LDAIMetricSummary {
+  /**
+   * The duration of generation.
+   */
+  durationMs?: number;
+
+  /**
+   * Information about token usage.
+   */
+  tokens?: LDTokenUsage;
+
+  /**
+   * Was generation successful.
+   */
+  success?: boolean;
+
+  /**
+   * Any sentiment about the generation.
+   */
+  feedback?: { kind: LDFeedbackKind };
+}
+
+/**
  * The LDAIConfigTracker is used to track various details about AI operations.
  */
 export interface LDAIConfigTracker {
@@ -45,7 +70,7 @@ export interface LDAIConfigTracker {
    * @param func Function which executes the operation.
    * @returns The result of the operation.
    */
-  trackOpenAI<
+  trackOpenAIMetrics<
     TRes extends {
       usage?: {
         total_tokens?: number;
@@ -63,7 +88,7 @@ export interface LDAIConfigTracker {
    * @param res The result of the Bedrock operation.
    * @returns The input operation.
    */
-  trackBedrockConverse<
+  trackBedrockConverseMetrics<
     TRes extends {
       $metadata: { httpStatusCode?: number };
       metrics?: { latencyMs?: number };
@@ -76,4 +101,9 @@ export interface LDAIConfigTracker {
   >(
     res: TRes,
   ): TRes;
+
+  /**
+   * Get a summary of the tracked metrics.
+   */
+  getSummary(): LDAIMetricSummary;
 }

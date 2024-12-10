@@ -7,7 +7,7 @@ import { ContinuousCapture } from './SessionReplayOptions';
 
 export default class ContinuousReplay implements Collector {
   private _telemetry?: Recorder;
-  // TODO: Use a better buffer.
+  // TODO: Use a better buffer. (SDK-972)
   private _buffer: eventWithTime[] = [];
   private _stopper?: () => void;
   private _visibilityHandler: any;

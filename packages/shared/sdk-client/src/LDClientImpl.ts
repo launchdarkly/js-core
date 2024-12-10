@@ -509,6 +509,14 @@ export default class LDClientImpl implements LDClient {
       if (item?.flag && !item.flag.deleted) {
         const { reason, value, variation } = item.flag;
         details[flagKey] = createSuccessEvaluationDetail(value, variation, reason);
+      } else {
+        details[flagKey] = {
+          value: undefined,
+          // For backwards compatibility purposes reason and variationIndex are null instead of
+          // being undefined.
+          reason: null,
+          variationIndex: null,
+        };
       }
     });
     if (type === 'init') {

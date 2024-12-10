@@ -48,12 +48,12 @@ async function main() {
 
   const aiClient = initAi(ldClient);
 
-  const aiConfig = await aiClient.modelConfig(
+  const aiConfig = await aiClient.config(
     aiConfigKey!,
     context,
     {
       model: {
-        modelId: 'my-default-model',
+        name: 'my-default-model',
       },
       enabled: true,
     },
@@ -63,14 +63,14 @@ async function main() {
   );
   const { tracker } = aiConfig;
 
-  const completion = tracker.trackBedrockConverse(
+  const completion = tracker.trackBedrockConverseMetrics(
     await awsClient.send(
       new ConverseCommand({
-        modelId: aiConfig.model?.modelId ?? 'no-model',
-        messages: mapPromptToConversation(aiConfig.prompt ?? []),
+        modelId: aiConfig.model?.name ?? 'no-model',
+        messages: mapPromptToConversation(aiConfig.messages ?? []),
         inferenceConfig: {
-          temperature: aiConfig.model?.temperature ?? 0.5,
-          maxTokens: aiConfig.model?.maxTokens ?? 4096,
+          temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
+          maxTokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
         },
       }),
     ),

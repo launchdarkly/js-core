@@ -1,11 +1,14 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from './api/config';
+import { LDAIMetricSummary } from './api/config/LDAIConfigTracker';
 import { createBedrockTokenUsage, LDFeedbackKind, LDTokenUsage } from './api/metrics';
 import { createOpenAiUsage } from './api/metrics/OpenAiUsage';
 import { LDClientMin } from './LDClientMin';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
+  private _trackedMetrics: LDAIMetricSummary = {};
+
   constructor(
     private _ldClient: LDClientMin,
     private _configKey: string,
@@ -21,6 +24,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackDuration(duration: number): void {
+    this._trackedMetrics.durationMs = duration;
     this._ldClient.track('$ld:ai:duration:total', this._context, this._getTrackData(), duration);
   }
 
@@ -34,6 +38,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackFeedback(feedback: { kind: LDFeedbackKind }): void {
+    this._trackedMetrics.feedback = feedback;
     if (feedback.kind === LDFeedbackKind.Positive) {
       this._ldClient.track('$ld:ai:feedback:user:positive', this._context, this._getTrackData(), 1);
     } else if (feedback.kind === LDFeedbackKind.Negative) {
@@ -42,10 +47,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackSuccess(): void {
+    this._trackedMetrics.success = true;
     this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
   }
 
-  async trackOpenAI<
+  async trackOpenAIMetrics<
     TRes extends {
       usage?: {
         total_tokens?: number;
@@ -62,7 +68,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     return result;
   }
 
-  trackBedrockConverse<
+  trackBedrockConverseMetrics<
     TRes extends {
       $metadata: { httpStatusCode?: number };
       metrics?: { latencyMs?: number };
@@ -88,6 +94,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackTokens(tokens: LDTokenUsage): void {
+    this._trackedMetrics.tokens = tokens;
     const trackData = this._getTrackData();
     if (tokens.total > 0) {
       this._ldClient.track('$ld:ai:tokens:total', this._context, trackData, tokens.total);
@@ -98,5 +105,12 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     if (tokens.output > 0) {
       this._ldClient.track('$ld:ai:tokens:output', this._context, trackData, tokens.output);
     }
+  }
+
+  /**
+   * Get a summary of the tracked metrics.
+   */
+  getSummary(): LDAIMetricSummary {
+    return { ...this._trackedMetrics };
   }
 }

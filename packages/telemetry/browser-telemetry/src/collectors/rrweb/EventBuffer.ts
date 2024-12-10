@@ -10,7 +10,7 @@ export default class EventBuffer {
     if (this.content.length < this._size) {
       this.content.push(item);
     }
-    // TODO: Something?
+    // TODO: Log (SDK-915, SDK-973)
   }
 
   hasSpace(): boolean {
@@ -22,7 +22,7 @@ export default class EventBuffer {
   }
 
   clear(): void {
-    // TODO: Re-use the buffer. Keep write index instead of pushing.
+    // TODO: Re-use the buffer. Keep write index instead of pushing. (SDK-972)
     this.content = [];
   }
 }
