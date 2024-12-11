@@ -9,10 +9,19 @@
 	};
 </script>
 
-<div>
+
+{#snippet failed(error: unknown, reset: () => void)}
+	<main>
+		<h1>Something failed!</h1>
+		<p>There was an error loading the app. Please make sure you have the environment variables properly setup</p>
+		<button on:click={reset}>Retry</button>
+	</main>
+{/snippet}
+
+<svelte:boundary {failed} onerror={console.error}>
 	<LDProvider clientID={PUBLIC_LD_CLIENT_ID} {context}>
 		<slot />
 
 		<p slot="initializing">loading flags...</p>
 	</LDProvider>
-</div>
+</svelte:boundary>

@@ -13,7 +13,7 @@ yarn install
 Next, create a `.env` file in the root of the project and add your LaunchDarkly client-side ID and flag key. You can obtain these from any LaunchDarkly project/environment you choose.
 
 ```bash
-PUBLIC_LD_CLIENT_SIDE_ID=your-client-side-id
+PUBLIC_LD_CLIENT_ID=your-client-side-id
 PUBLIC_LD_FLAG_KEY=your-flag-key
 ```
 
