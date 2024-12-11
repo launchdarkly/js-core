@@ -76,8 +76,5 @@
     "ts-jest": "^29.1.0",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
-  },
-  "bundledDependencies": [
-    "@launchdarkly/js-server-sdk-common-edge"
-  ]
+  }
 }
