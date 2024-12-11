@@ -268,3 +268,39 @@ it('only tracks non-zero token counts', () => {
     expect.anything(),
   );
 });
+
+it('returns empty summary when no metrics tracked', () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, versionKey, testContext);
+
+  const summary = tracker.getSummary();
+
+  expect(summary).toEqual({});
+});
+
+it('summarizes tracked metrics', () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, versionKey, testContext);
+
+  tracker.trackDuration(1000);
+  tracker.trackTokens({
+    total: 100,
+    input: 40,
+    output: 60,
+  });
+  tracker.trackFeedback({ kind: LDFeedbackKind.Positive });
+  tracker.trackSuccess();
+
+  const summary = tracker.getSummary();
+
+  expect(summary).toEqual({
+    durationMs: 1000,
+    tokens: {
+      total: 100,
+      input: 40,
+      output: 60,
+    },
+    feedback: {
+      kind: 'positive',
+    },
+    success: true,
+  });
+});
