@@ -225,22 +225,28 @@ describe('given a stream processor with mock event source', () => {
       },
     });
 
-    // this._errorHandler?.(
-    //   DataSourceErrorKind.InvalidData,
-    //   'Malformed JSON data in event stream',
-    // );
-
-    resume here at fixing this test, was updating the expected parameter.
-    expect(mockErrorHandler).toHaveBeenCalledWith(
-      1,
-      new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed JSON data in event stream'),
+    expect(mockErrorHandler.mock.calls[0][0].kind).toEqual(DataSourceErrorKind.InvalidData);
+    expect(mockErrorHandler.mock.calls[0][0].message).toEqual(
+      'Malformed JSON data in event stream',
     );
   });
 
   it('calls error handler if event.data prop is missing', async () => {
-    simulateEvents({ flags: {} });
-    expect(listener).toHaveBeenCalled();
-    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/unexpected payload/i);
+    simulateEvents({
+      'server-intent': {
+        notData: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+      },
+      'put-object': {
+        notData:
+          '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+      },
+      'payload-transferred': {
+        notData: '{"data": {"state": "mockState", "version": 1}}',
+      },
+    });
+    expect(listener).not.toHaveBeenCalled();
+    expect(mockErrorHandler.mock.calls[0][0].kind).toEqual(DataSourceErrorKind.Unknown);
+    expect(mockErrorHandler.mock.calls[0][0].message).toMatch(/unexpected message/i);
   });
 
   it('closes and stops', async () => {
