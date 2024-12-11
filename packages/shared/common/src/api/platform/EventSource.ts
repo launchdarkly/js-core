@@ -1,6 +1,6 @@
 import type { HttpErrorResponse } from './Requests';
 
-export type EventName = 'delete' | 'patch' | 'ping' | 'put';
+export type EventName = string;
 export type EventListener = (event?: { data?: any }) => void;
 export type ProcessStreamResponse = {
   deserializeData: (data: string) => any;
