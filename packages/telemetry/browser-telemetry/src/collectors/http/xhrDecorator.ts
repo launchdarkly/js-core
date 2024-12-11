@@ -83,7 +83,7 @@ export default function decorateXhr(callback: (breadcrumb: HttpBreadcrumb) => vo
       });
     } catch {
       // Intentional ignore.
-      // TODO: If we add debug logging, then this should be logged.
+      // TODO: If we add debug logging, then this should be logged. (SDK-973)
     }
   }
 
@@ -118,6 +118,6 @@ export default function decorateXhr(callback: (breadcrumb: HttpBreadcrumb) => vo
     });
   } catch {
     // Intentional ignore.
-    // TODO: If we add debug logging, then this should be logged.
+    // TODO: If we add debug logging, then this should be logged. (SDK-973)
   }
 }

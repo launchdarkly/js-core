@@ -29,10 +29,20 @@ export default function makeInspectors(
   if (options.breadcrumbs.flagChange) {
     inspectors.push({
       type: 'flag-detail-changed',
-      name: 'launchdarkly-browser-telemetry-flag-used',
+      name: 'launchdarkly-browser-telemetry-flag-detail-changed',
       synchronous: true,
       method(flagKey: string, detail: LDEvaluationDetail): void {
         telemetry.handleFlagDetailChanged(flagKey, detail);
+      },
+    });
+    inspectors.push({
+      type: 'flag-details-changed',
+      name: 'launchdarkly-browser-telemetry-flag-details-changed',
+      synchronous: true,
+      method(details: Record<string, LDEvaluationDetail>) {
+        Object.entries(details).forEach(([key, detail]) => {
+          telemetry.handleFlagDetailChanged(key, detail);
+        });
       },
     });
   }

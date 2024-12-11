@@ -5,3 +5,5 @@ export * from './Options';
 export * from './Recorder';
 export * from './stack';
 export * from './client';
+export * from './EventData';
+export * from './SessionData';
