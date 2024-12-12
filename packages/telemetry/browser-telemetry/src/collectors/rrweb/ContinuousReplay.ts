@@ -6,7 +6,7 @@ import { Collector } from '../../api/Collector';
 import { ContinuousCapture } from './SessionReplayOptions';
 
 export default class ContinuousReplay implements Collector {
-  private _telemetry?: Recorder;
+  private _destination?: Recorder;
   // TODO: Use a better buffer. (SDK-972)
   private _buffer: eventWithTime[] = [];
   private _stopper?: () => void;
@@ -39,13 +39,13 @@ export default class ContinuousReplay implements Collector {
   }
 
   register(recorder: Recorder, sessionId: string): void {
-    this._telemetry = recorder;
+    this._destination = recorder;
     this._sessionId = sessionId;
   }
 
   unregister(): void {
     this._stopper?.();
-    this._telemetry = undefined;
+    this._destination = undefined;
     document.removeEventListener('visibilitychange', this._visibilityHandler);
     clearInterval(this._timerHandle);
   }
@@ -62,8 +62,8 @@ export default class ContinuousReplay implements Collector {
   private _recordCapture(): void {
     // Telemetry and sessionId should always be set at the same time, but check both
     // for correctness.
-    if (this._telemetry && this._sessionId) {
-      this._telemetry.captureSession({
+    if (this._destination && this._sessionId) {
+      this._destination.captureSession({
         events: [...this._buffer],
         index: this._index,
       });
