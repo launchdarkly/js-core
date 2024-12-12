@@ -43,16 +43,20 @@ export default class RollingBuffer {
 
   toArray(): any[] {
     const asArray: any[] = [];
-    const size = this._buffers.reduce((acc: number, item: EventBuffer) => {
-      if (item.isPopulated()) {
-        return acc + 1;
-      }
-      return acc;
-    }, 0);
 
-    for (let index = this._headPointer; index < this._headPointer + size; index += 1) {
+    // Loop through the buffers, apprending their contents to asArray, until we find an empty one.
+    for (
+      let index = this._headPointer;
+      index < this._headPointer + this._buffers.length;
+      index += 1
+    ) {
       const realIndex = index % this._buffers.length;
-      asArray.push(...this._buffers[realIndex].content);
+      const item = this._buffers[realIndex];
+
+      if (!item.isPopulated) {
+        break;
+      }
+      asArray.push(...item.content);
     }
 
     return asArray;

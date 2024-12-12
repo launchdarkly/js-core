@@ -27,3 +27,27 @@ it('when the buffer is exceeded it will wrap around', () => {
 
   expect(buffer.toArray()).toEqual(expectedItems);
 });
+
+it('can reset the buffer', () => {
+  const bufferSize = 5;
+  const numberBuffers = 4;
+  const buffer = new RollingBuffer(bufferSize, numberBuffers);
+  const demoItems = Array.from(new Array(10), (_, i) => i);
+
+  demoItems.forEach(buffer.push.bind(buffer));
+  buffer.reset();
+
+  expect(buffer.toArray()).toEqual([]);
+});
+
+it('returns correct items when buffer is partially filled', () => {
+  const bufferSize = 5;
+  const numberBuffers = 4;
+  const buffer = new RollingBuffer(bufferSize, numberBuffers);
+  const itemsToAdd = 7; // Less than total capacity
+  const demoItems = Array.from(new Array(itemsToAdd), (_, i) => i);
+
+  demoItems.forEach(buffer.push.bind(buffer));
+
+  expect(buffer.toArray()).toEqual(demoItems);
+});
