@@ -22,6 +22,7 @@ export type { LDClient, LDOptions, EdgeProvider };
 export const init = (clientSideID: string, platformInfo: Info, options: LDOptionsInternal) => {
   // this throws if options are invalid
   validateOptions(clientSideID, options);
+  console.log('options', options);
 
   return new LDClient(clientSideID, platformInfo, options);
 };

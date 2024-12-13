@@ -1,0 +1,28 @@
+# This file describes a Fastly Compute package. To learn more visit:
+# https://www.fastly.com/documentation/reference/compute/fastly-toml
+
+authors = []
+cloned_from = "J4RQReO3g9zZdp3eDM8Sr5"
+description = "A basic starter kit that demonstrates routing, simple synthetic responses and overriding caching rules."
+language = "javascript"
+manifest_version = 3
+name = "Default starter for TypeScript"
+service_id = "J4RQReO3g9zZdp3eDM8Sr5"
+
+[scripts]
+build = "yarn build"
+post_init = "yarn install"
+
+[local_server]
+
+  [local_server.backends]
+
+  [local_server.kv_stores]
+
+    [[local_server.kv_stores.testkv]]
+      data = "placeholder"
+      key = "placeholder"
+
+    [[local_server.kv_stores.testkv]]
+      key = "readme"
+      path = "./README.md"

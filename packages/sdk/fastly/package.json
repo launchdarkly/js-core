@@ -1,0 +1,50 @@
+{
+  "name": "@launchdarkly/fastly-server-sdk",
+  "version": "0.0.1",
+  "packageManager": "yarn@3.4.1",
+  "description": "Cloudflare LaunchDarkly SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "launchdarkly",
+    "fastly",
+    "edge",
+    "compute",
+    "kv"
+  ],
+  "type": "module",
+  "exports": {
+    "require": "./dist/cjs/src/index.js",
+    "import": "./dist/esm/src/index.js"
+  },
+  "main": "./dist/cjs/src/index.js",
+  "types": "./dist/cjs/src/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "../../../scripts/build-package.sh && ../../../scripts/replace-version.sh .",
+    "clean": "rimraf dist",
+    "tsw": "yarn tsc --watch",
+    "start": "rimraf dist && yarn tsw",
+    "lint": "eslint . --ext .ts",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+  },
+  "dependencies": {
+    "@fastly/js-compute": "^3.28.0"
+  },
+  "devDependencies": {
+    "@launchdarkly/js-server-sdk-common-edge": "2.5.2",
+    "eslint": "^8.45.0",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "rollup": "^4.28.1",
+    "typedoc": "^0.27.4",
+    "typescript": "^5.7.2"
+  }
+}
