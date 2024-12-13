@@ -15,25 +15,25 @@ it('returns config with interpolated messagess', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
   const defaultValue: LDAIDefaults = {
-    model: { id: 'test', parameters: { name: 'test-model' } },
+    model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
     enabled: true,
   };
 
   const mockVariation = {
     model: {
-      id: 'example-model',
+      name: 'example-model',
       parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
     },
     provider: {
-      id: 'example-provider',
+      name: 'example-provider',
     },
     messages: [
       { role: 'system', content: 'Hello {{name}}' },
       { role: 'user', content: 'Score: {{score}}' },
     ],
     _ldMeta: {
-      versionKey: 'v1',
+      variationKey: 'v1',
       enabled: true,
     },
   };
@@ -45,11 +45,11 @@ it('returns config with interpolated messagess', async () => {
 
   expect(result).toEqual({
     model: {
-      id: 'example-model',
+      name: 'example-model',
       parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
     },
     provider: {
-      id: 'example-provider',
+      name: 'example-provider',
     },
     messages: [
       { role: 'system', content: 'Hello John' },
@@ -64,13 +64,13 @@ it('includes context in variables for messages interpolation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
   const defaultValue: LDAIDefaults = {
-    model: { id: 'test', parameters: { name: 'test-model' } },
+    model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
   };
 
   const mockVariation = {
     messages: [{ role: 'system', content: 'User key: {{ldctx.key}}' }],
-    _ldMeta: { versionKey: 'v1', enabled: true },
+    _ldMeta: { variationKey: 'v1', enabled: true },
   };
 
   mockLdClient.variation.mockResolvedValue(mockVariation);
@@ -84,12 +84,12 @@ it('handles missing metadata in variation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
   const defaultValue: LDAIDefaults = {
-    model: { id: 'test', parameters: { name: 'test-model' } },
+    model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
   };
 
   const mockVariation = {
-    model: { id: 'example-provider', parameters: { name: 'imagination' } },
+    model: { name: 'example-provider', parameters: { name: 'imagination' } },
     messages: [{ role: 'system', content: 'Hello' }],
   };
 
@@ -98,7 +98,7 @@ it('handles missing metadata in variation', async () => {
   const result = await client.config(key, testContext, defaultValue);
 
   expect(result).toEqual({
-    model: { id: 'example-provider', parameters: { name: 'imagination' } },
+    model: { name: 'example-provider', parameters: { name: 'imagination' } },
     messages: [{ role: 'system', content: 'Hello' }],
     tracker: expect.any(Object),
     enabled: false,
@@ -109,8 +109,8 @@ it('passes the default value to the underlying client', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'non-existent-flag';
   const defaultValue: LDAIDefaults = {
-    model: { id: 'default-model', parameters: { name: 'default' } },
-    provider: { id: 'default-provider' },
+    model: { name: 'default-model', parameters: { name: 'default' } },
+    provider: { name: 'default-provider' },
     messages: [{ role: 'system', content: 'Default messages' }],
     enabled: true,
   };

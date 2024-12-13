@@ -7,7 +7,7 @@ export interface LDModelConfig {
   /**
    * The ID of the model.
    */
-  id: string;
+  name: string;
 
   /**
    * Model specific parameters.
@@ -24,7 +24,7 @@ export interface LDProviderConfig {
   /**
    * The ID of the provider.
    */
-  id: string;
+  name: string;
 }
 
 /**
