@@ -9,7 +9,7 @@ const streamingREgex = /\/eval\/[^/]+\/(?<context>[^/?]*)\??.*?/;
  */
 export default function defaultUrlFilter(url: string): string {
   // TODO: Maybe we consider a way to identify LD requests so they can be filtered without
-  // regular expressions.
+  // regular expressions. (SDK-974)
 
   if (url.includes('/sdk/evalx')) {
     const regexMatch = url.match(pollingRegex);

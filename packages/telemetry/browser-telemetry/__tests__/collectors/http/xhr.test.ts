@@ -9,6 +9,7 @@ it('registers recorder and uses it for xhr calls', () => {
     addBreadcrumb: jest.fn(),
     captureError: jest.fn(),
     captureErrorEvent: jest.fn(),
+    captureSession: jest.fn(),
   };
 
   const collector = new XhrCollector({
@@ -47,6 +48,7 @@ it('stops adding breadcrumbs after unregistering', () => {
     addBreadcrumb: jest.fn(),
     captureError: jest.fn(),
     captureErrorEvent: jest.fn(),
+    captureSession: jest.fn(),
   };
 
   const collector = new XhrCollector({
@@ -70,6 +72,7 @@ it('marks requests with error events as errors', () => {
     addBreadcrumb: jest.fn(),
     captureError: jest.fn(),
     captureErrorEvent: jest.fn(),
+    captureSession: jest.fn(),
   };
 
   const collector = new XhrCollector({
@@ -106,6 +109,7 @@ it('applies URL filters to requests', () => {
     addBreadcrumb: jest.fn(),
     captureError: jest.fn(),
     captureErrorEvent: jest.fn(),
+    captureSession: jest.fn(),
   };
 
   const collector = new XhrCollector({

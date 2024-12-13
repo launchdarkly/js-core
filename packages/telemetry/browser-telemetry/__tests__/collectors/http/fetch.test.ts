@@ -14,6 +14,7 @@ describe('given a FetchCollector with a mock recorder', () => {
       addBreadcrumb: jest.fn(),
       captureError: jest.fn(),
       captureErrorEvent: jest.fn(),
+      captureSession: jest.fn(),
     };
     // Create collector with default options
     collector = new FetchCollector({
