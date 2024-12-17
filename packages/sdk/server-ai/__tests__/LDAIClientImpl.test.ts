@@ -33,7 +33,7 @@ it('returns config with interpolated messagess', async () => {
       { role: 'user', content: 'Score: {{score}}' },
     ],
     _ldMeta: {
-      versionKey: 'v1',
+      variationKey: 'v1',
       enabled: true,
     },
   };
@@ -70,7 +70,7 @@ it('includes context in variables for messages interpolation', async () => {
 
   const mockVariation = {
     messages: [{ role: 'system', content: 'User key: {{ldctx.key}}' }],
-    _ldMeta: { versionKey: 'v1', enabled: true },
+    _ldMeta: { variationKey: 'v1', enabled: true },
   };
 
   mockLdClient.variation.mockResolvedValue(mockVariation);
