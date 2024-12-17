@@ -30,11 +30,15 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
 
   async trackDurationOf<TRes>(func: () => Promise<TRes>): Promise<TRes> {
     const startTime = Date.now();
-    const result = await func();
-    const endTime = Date.now();
-    const duration = endTime - startTime; // duration in milliseconds
-    this.trackDuration(duration);
-    return result;
+    try {
+      // Be sure to await here so that we can track the duration of the function and also handle errors.
+      const result = await func();
+      return result;
+    } finally {
+      const endTime = Date.now();
+      const duration = endTime - startTime; // duration in milliseconds
+      this.trackDuration(duration);
+    }
   }
 
   trackFeedback(feedback: { kind: LDFeedbackKind }): void {
@@ -49,6 +53,13 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackSuccess(): void {
     this._trackedMetrics.success = true;
     this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
+    this._ldClient.track('$ld:ai:generation:success', this._context, this._getTrackData(), 1);
+  }
+
+  trackError(): void {
+    this._trackedMetrics.success = false;
+    this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
+    this._ldClient.track('$ld:ai:generation:error', this._context, this._getTrackData(), 1);
   }
 
   async trackOpenAIMetrics<
@@ -60,12 +71,17 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       };
     },
   >(func: () => Promise<TRes>): Promise<TRes> {
-    const result = await this.trackDurationOf(func);
-    this.trackSuccess();
-    if (result.usage) {
-      this.trackTokens(createOpenAiUsage(result.usage));
+    try {
+      const result = await this.trackDurationOf(func);
+      this.trackSuccess();
+      if (result.usage) {
+        this.trackTokens(createOpenAiUsage(result.usage));
+      }
+      return result;
+    } catch(err) {
+      this.trackError();
+      throw err;
     }
-    return result;
   }
 
   trackBedrockConverseMetrics<
@@ -82,7 +98,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     if (res.$metadata?.httpStatusCode === 200) {
       this.trackSuccess();
     } else if (res.$metadata?.httpStatusCode && res.$metadata.httpStatusCode >= 400) {
-      // Potentially add error tracking in the future.
+      this.trackError();
     }
     if (res.metrics && res.metrics.latencyMs) {
       this.trackDuration(res.metrics.latencyMs);
