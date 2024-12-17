@@ -11,7 +11,7 @@ import { LDClientMin } from './LDClientMin';
  * Metadata assorted with a model configuration variation.
  */
 interface LDMeta {
-  versionKey: string;
+  variationKey: string;
   enabled: boolean;
 }
 
@@ -44,7 +44,7 @@ export class LDAIClientImpl implements LDAIClient {
       this._ldClient,
       key,
       // eslint-disable-next-line no-underscore-dangle
-      value._ldMeta?.versionKey ?? '',
+      value._ldMeta?.variationKey ?? '',
       context,
     );
     // eslint-disable-next-line no-underscore-dangle
