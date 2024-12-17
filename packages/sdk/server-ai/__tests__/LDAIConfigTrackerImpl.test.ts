@@ -142,7 +142,7 @@ it('tracks error when OpenAI metrics function throws', async () => {
   await expect(
     tracker.trackOpenAIMetrics(async () => {
       throw error;
-    })
+    }),
   ).rejects.toThrow(error);
 
   expect(mockTrack).toHaveBeenCalledWith(
@@ -357,7 +357,7 @@ it('tracks duration when async function throws', async () => {
   await expect(
     tracker.trackDurationOf(async () => {
       throw error;
-    })
+    }),
   ).rejects.toThrow(error);
 
   expect(mockTrack).toHaveBeenCalledWith(

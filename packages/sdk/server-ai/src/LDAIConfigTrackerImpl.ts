@@ -78,7 +78,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
         this.trackTokens(createOpenAiUsage(result.usage));
       }
       return result;
-    } catch(err) {
+    } catch (err) {
       this.trackError();
       throw err;
     }

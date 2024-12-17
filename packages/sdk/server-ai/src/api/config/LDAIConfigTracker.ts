@@ -64,12 +64,12 @@ export interface LDAIConfigTracker {
 
   /**
    * Track the duration of execution of the provided function.
-   * 
+   *
    * If the provided function throws, then this method will also throw.
    * In the case the provided function throws, this function will still record the duration.
-   * 
+   *
    * This function does not automatically record an error when the function throws.
-   * 
+   *
    * @param func The function to track the duration of.
    * @returns The result of the function.
    */
@@ -77,9 +77,9 @@ export interface LDAIConfigTracker {
 
   /**
    * Track an OpenAI operation.
-   * 
+   *
    * This function will track the duration of the operation, the token usage, and the success or error status.
-   * 
+   *
    * If the provided function throws, then this method will also throw.
    * In the case the provided function throws, this function will record the duration and an error.
    * A failed operation will not have any token usage data.
@@ -101,7 +101,7 @@ export interface LDAIConfigTracker {
 
   /**
    * Track an operation which uses Bedrock.
-   * 
+   *
    * This function will track the duration of the operation, the token usage, and the success or error status.
    *
    * @param res The result of the Bedrock operation.
