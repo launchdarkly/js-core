@@ -2,7 +2,6 @@ import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { LDDataSourceUpdates } from '../../src/api/subsystems';
 import { createPayloadListener } from '../../src/data_sources/createPayloadListenerFDv2';
-import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 
 jest.mock('../../src/store/serialization');
 
