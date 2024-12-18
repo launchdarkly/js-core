@@ -34,13 +34,13 @@ const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
 const events = {
   'server-intent': {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   },
   'put-object': {
-    data: '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   },
   'payload-transferred': {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   },
 };
 
@@ -211,36 +211,31 @@ describe('given a stream processor with mock event source', () => {
 
   it('executes payload listener', () => {
     simulateEvents();
-    const patchHandler = mockEventSource.addEventListener.mock.calls[1][1];
-    patchHandler(events);
-
     expect(listener).toHaveBeenCalled();
   });
 
   it('passes error to callback if json data is malformed', async () => {
     simulateEvents({
       'server-intent': {
-        data: '{"data": {"payloads": [{"intent INTENTIONAL CORRUPTION MUWAHAHAHA',
+        data: '{"payloads": [{"intent INTENTIONAL CORRUPTION MUWAHAHAHA',
       },
     });
 
     expect(mockErrorHandler.mock.calls[0][0].kind).toEqual(DataSourceErrorKind.InvalidData);
-    expect(mockErrorHandler.mock.calls[0][0].message).toEqual(
-      'Malformed JSON data in event stream',
-    );
+    expect(mockErrorHandler.mock.calls[0][0].message).toEqual('Malformed data in event stream');
   });
 
   it('calls error handler if event.data prop is missing', async () => {
     simulateEvents({
       'server-intent': {
-        notData: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+        notData: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
       },
       'put-object': {
         notData:
-          '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+          '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
       },
       'payload-transferred': {
-        notData: '{"data": {"state": "mockState", "version": 1}}',
+        notData: '{"state": "mockState", "version": 1}',
       },
     });
     expect(listener).not.toHaveBeenCalled();
