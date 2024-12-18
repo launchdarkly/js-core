@@ -1,10 +1,8 @@
 import { EventListener, EventName, LDLogger } from '../../../src/api';
 import { EventStream, Payload, PayloadReader } from '../../../src/internal/fdv2/payloadReader';
 
-class MockEventStreamm implements EventStream {
-  private _listeners: {
-    [event: EventName]: EventListener;
-  } = {};
+class MockEventStream implements EventStream {
+  private _listeners: Record<EventName, EventListener> = {};
 
   addEventListener(eventName: EventName, listener: EventListener): void {
     this._listeners[eventName] = listener;
@@ -16,7 +14,7 @@ class MockEventStreamm implements EventStream {
 }
 
 it('it sets basis to true when intent code is xfer-full', () => {
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
@@ -26,10 +24,10 @@ it('it sets basis to true when intent code is xfer-full', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
@@ -38,7 +36,7 @@ it('it sets basis to true when intent code is xfer-full', () => {
 });
 
 it('it sets basis to false when intent code is xfer-changes', () => {
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
@@ -48,10 +46,10 @@ it('it sets basis to false when intent code is xfer-changes', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-changes", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-changes", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
@@ -60,7 +58,7 @@ it('it sets basis to false when intent code is xfer-changes', () => {
 });
 
 it('it includes multiple types of updates in payload', () => {
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
@@ -70,19 +68,19 @@ it('it includes multiple types of updates in payload', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   });
   mockStream.simulateEvent('delete-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagB", "version": 123}}',
+    data: '{"kind": "mockKind", "key": "flagB", "version": 123}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagC", "version": 123, "object": {"objectFieldC": "objectValueC"}}}',
+    data: '{"kind": "mockKind", "key": "flagC", "version": 123, "object": {"objectFieldC": "objectValueC"}}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
@@ -98,7 +96,7 @@ it('it includes multiple types of updates in payload', () => {
 });
 
 it('it does not include messages thats are not between server-intent and payloader-transferred', () => {
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
@@ -108,16 +106,16 @@ it('it does not include messages thats are not between server-intent and payload
   });
 
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagShouldIgnore", "version": 123, "object": {"objectFieldShouldIgnore": "objectValueShouldIgnore"}}}',
+    data: '{"kind": "mockKind", "key": "flagShouldIgnore", "version": 123, "object": {"objectFieldShouldIgnore": "objectValueShouldIgnore"}}',
   });
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].updates.length).toEqual(1);
@@ -131,7 +129,7 @@ it('logs prescribed message when goodbye event is encountered', () => {
     info: jest.fn(),
     debug: jest.fn(),
   };
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(
     mockStream,
@@ -146,7 +144,7 @@ it('logs prescribed message when goodbye event is encountered', () => {
   });
 
   mockStream.simulateEvent('goodbye', {
-    data: '{"data": {"reason": "Bye"}}',
+    data: '{"reason": "Bye"}',
   });
 
   expect(receivedPayloads.length).toEqual(0);
@@ -162,7 +160,7 @@ it('logs prescribed message when error event is encountered', () => {
     info: jest.fn(),
     debug: jest.fn(),
   };
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(
     mockStream,
@@ -177,16 +175,16 @@ it('logs prescribed message when error event is encountered', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   });
   mockStream.simulateEvent('error', {
-    data: '{"data": {"reason": "Womp womp"}}',
+    data: '{"reason": "Womp womp"}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(0);
   expect(mockLogger.info).toHaveBeenCalledWith(
@@ -201,7 +199,7 @@ it('discards partially transferred data when an error is encountered', () => {
     info: jest.fn(),
     debug: jest.fn(),
   };
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(
     mockStream,
@@ -216,31 +214,31 @@ it('discards partially transferred data when an error is encountered', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   });
   mockStream.simulateEvent('error', {
-    data: '{"data": {"reason": "Womp womp"}}',
+    data: '{"reason": "Womp womp"}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId2"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId2"}]}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagX", "version": 123, "object": {"objectFieldX": "objectValueX"}}}',
+    data: '{"kind": "mockKind", "key": "flagX", "version": 123, "object": {"objectFieldX": "objectValueX"}}',
   });
   mockStream.simulateEvent('delete-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagY", "version": 123}}',
+    data: '{"kind": "mockKind", "key": "flagY", "version": 123}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagZ", "version": 123, "object": {"objectFieldZ": "objectValueZ"}}}',
+    data: '{"kind": "mockKind", "key": "flagZ", "version": 123, "object": {"objectFieldZ": "objectValueZ"}}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState2", "version": 1}}',
+    data: '{"state": "mockState2", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId2');
@@ -256,7 +254,7 @@ it('discards partially transferred data when an error is encountered', () => {
 });
 
 it('silently ignores unrecognized kinds', () => {
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
@@ -266,16 +264,16 @@ it('silently ignores unrecognized kinds', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "ItsMeYourBrotherUnrecognizedKind", "key": "unrecognized", "version": 123, "object": {"unrecognized": "unrecognized"}}}',
+    data: '{"kind": "ItsMeYourBrotherUnrecognizedKind", "key": "unrecognized", "version": 123, "object": {"unrecognized": "unrecognized"}}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
@@ -286,7 +284,7 @@ it('silently ignores unrecognized kinds', () => {
 });
 
 it('ignores additional payloads beyond the first payload in the server-intent message', () => {
-  const mockStream = new MockEventStreamm();
+  const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
@@ -296,16 +294,16 @@ it('ignores additional payloads beyond the first payload in the server-intent me
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"data": {"payloads": [{"intentCode": "xfer-full", "id": "mockId"},{"intentCode": "IShouldBeIgnored", "id": "IShouldBeIgnored"}]}}',
+    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"},{"code": "IShouldBeIgnored", "id": "IShouldBeIgnored"}]}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}}',
+    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   });
   mockStream.simulateEvent('put-object', {
-    data: '{"data": {"kind": "ItsMeYourBrotherUnrecognizedKind", "key": "unrecognized", "version": 123, "object": {"unrecognized": "unrecognized"}}}',
+    data: '{"kind": "ItsMeYourBrotherUnrecognizedKind", "key": "unrecognized", "version": 123, "object": {"unrecognized": "unrecognized"}}',
   });
   mockStream.simulateEvent('payload-transferred', {
-    data: '{"data": {"state": "mockState", "version": 1}}',
+    data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');

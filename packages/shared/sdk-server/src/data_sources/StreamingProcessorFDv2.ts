@@ -16,6 +16,8 @@ import {
 } from '@launchdarkly/js-sdk-common';
 import { PayloadListener } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
+import { Flag } from '../evaluation/data/Flag';
+import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 
 // TODO: consider naming this StreamingDatasource
@@ -107,12 +109,19 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
     const payloadReader = new internal.PayloadReader(
       eventSource,
       {
-        flag: processFlag,
-        segment: processSegment,
+        flag: (flag: Flag) => {
+          processFlag(flag);
+          return flag;
+        },
+        segment: (segment: Segment) => {
+          processSegment(segment);
+          return segment;
+        },
       },
       (errorKind: DataSourceErrorKind, message: string) => {
         this._errorHandler?.(new LDStreamingError(errorKind, message));
       },
+      this._logger,
     );
     payloadReader.addPayloadListener(() => {
       // TODO: discuss if it is satisfactory to switch from setting connection result on single event to getting a payload. Need

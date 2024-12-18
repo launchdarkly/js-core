@@ -12,7 +12,7 @@ export type IntentCode = 'xfer-full' | 'xfer-changes' | 'none';
 export interface PayloadIntent {
   id: string;
   target: number;
-  intentCode: IntentCode;
+  code: IntentCode;
   reason: string;
 }
 

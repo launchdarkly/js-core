@@ -5,7 +5,6 @@ import {
   internal,
   LDLogger,
   LDStreamingError,
-  ProcessStreamResponse,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 

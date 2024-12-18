@@ -8,7 +8,7 @@ import {
 
 const namespaceForKind = (kind: string) => {
   switch (kind) {
-    case 'feature':
+    case 'flag':
       return 'features';
     case 'segment':
       return 'segments';
