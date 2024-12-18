@@ -1,11 +1,11 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { LDDataSourceUpdates } from '../api/subsystems';
-import { deserializeAll, deserializeDelete, deserializePatch } from '../store/serialization';
-import VersionedDataKinds from '../store/VersionedDataKinds';
-import { createStreamListeners } from './createStreamListeners';
+import { LDDataSourceUpdates } from '../../src/api/subsystems';
+import { createStreamListeners } from '../../src/data_sources/createStreamListeners';
+import { deserializeAll, deserializeDelete, deserializePatch } from '../../src/store/serialization';
+import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 
-jest.mock('../store/serialization');
+jest.mock('../../src/store/serialization');
 
 let logger: LDLogger;
 
