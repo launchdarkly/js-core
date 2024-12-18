@@ -18,8 +18,16 @@
   ],
   "type": "module",
   "exports": {
-    "require": "./dist/cjs/src/index.js",
-    "import": "./dist/esm/src/index.js"
+    ".": {
+      "import": {
+        "types": "./dist/esm/src/index.d.ts",
+        "default": "./dist/esm/bundle.es.js"
+      },
+      "require": {
+        "types": "./dist/cjs/src/index.d.ts",
+        "default": "./dist/cjs/bundle.cjs.js"
+      }
+    }
   },
   "main": "./dist/cjs/src/index.js",
   "types": "./dist/cjs/src/index.d.ts",
@@ -27,7 +35,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "../../../scripts/build-package.sh && ../../../scripts/replace-version.sh .",
+    "build": "rollup -c rollup.config.js && ../../../scripts/replace-version.sh .",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
@@ -36,14 +44,20 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@fastly/js-compute": "^3.28.0"
+    "@fastly/js-compute": "^3.28.0",
+    "events": "^3.3.0",
+    "rollup-plugin-polyfill-node": "^0.13.0"
   },
   "devDependencies": {
     "@launchdarkly/js-server-sdk-common-edge": "2.5.2",
-    "eslint": "^8.45.0",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-typescript": "^12.1.1",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "rollup": "^4.28.1",
+    "rollup-plugin-generate-package-json": "^3.2.0",
     "typedoc": "^0.27.4",
     "typescript": "^5.7.2"
   }

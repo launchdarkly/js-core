@@ -2,17 +2,18 @@
 /// <reference types="@fastly/js-compute" />
 // import { CacheOverride } from "fastly:cache-override";
 import { env } from 'fastly:env';
-import { allowDynamicBackends, includeBytes } from 'fastly:experimental';
+import { includeBytes } from 'fastly:experimental';
 import { KVStore } from 'fastly:kv-store';
 import { Logger } from 'fastly:logger';
 
 import { init } from '@launchdarkly/fastly-server-sdk';
-import { LDContext } from '@launchdarkly/js-sdk-common';
-import { LDClient } from '@launchdarkly/js-server-sdk-common-edge';
 
 // Load a static file as a Uint8Array at compile time.
 // File path is relative to root of project, not to this file
 const welcomePage = includeBytes('./src/welcome-to-compute.html');
+
+const cat = includeBytes('./src/cat.jpeg');
+const dog = includeBytes('./src/dog.jpeg');
 
 // The entry point for your application.
 //
@@ -23,7 +24,7 @@ const welcomePage = includeBytes('./src/welcome-to-compute.html');
 
 addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 
-async function flushEvents(ldClient: LDClient) {
+async function flushEvents(ldClient: any) {
   console.log('Flushing events');
   await ldClient.flush();
   console.log('Events flushed');
@@ -36,7 +37,7 @@ async function handleRequest(event: FetchEvent) {
   console.log('FASTLY_SERVICE_VERSION:', env('FASTLY_SERVICE_VERSION') || 'local');
 
   // Get the client request.
-  let req = event.request;
+  const req = event.request;
 
   // Filter requests that have unexpected methods.
   if (!['HEAD', 'GET', 'PURGE'].includes(req.method)) {
@@ -45,10 +46,53 @@ async function handleRequest(event: FetchEvent) {
     });
   }
 
-  let url = new URL(req.url);
+  const store = new KVStore('testkv');
+  const ldClient = init(store, '675aea6b1b327709c85da941', {
+    sendEvents: true,
+  });
+  await ldClient.waitForInitialization();
+
+  const flagContext = {
+    key: env('FASTLY_TRACE_ID'),
+    custom: {
+      fastly_service_version: env('FASTLY_SERVICE_VERSION'),
+      fastly_cache_generation: env('FASTLY_CACHE_GENERATION'),
+      fastly_hostname: env('FASTLY_HOSTNAME'),
+      fastly_pop: env('FASTLY_POP'),
+      fastly_region: env('FASTLY_REGION'),
+      fastly_service_id: env('FASTLY_SERVICE_ID'),
+      fastly_trace_id: env('FASTLY_TRACE_ID'),
+      henry: 'barrow',
+    },
+  };
+
+  const url = new URL(req.url);
+
+  if (url.pathname === '/cat') {
+    return new Response(cat, {
+      status: 200,
+      headers: new Headers({ 'Content-Type': 'image/jpeg' }),
+    });
+  }
+  if (url.pathname === '/dog') {
+    return new Response(dog, {
+      status: 200,
+      headers: new Headers({ 'Content-Type': 'image/jpeg' }),
+    });
+  }
+  if (url.pathname === '/animal') {
+    const animal = await ldClient.stringVariation('animal', flagContext, 'cat');
+    const image = animal === 'cat' ? cat : dog;
+
+    event.waitUntil(flushEvents(ldClient));
+    return new Response(image, {
+      status: 200,
+      headers: new Headers({ 'Content-Type': 'image/jpeg' }),
+    });
+  }
 
   // If request is to the `/` path...
-  if (url.pathname == '/') {
+  if (url.pathname === '/') {
     // Below are some common patterns for Fastly Compute services using JavaScript.
     // Head to https://developer.fastly.com/learning/compute/javascript/ to discover more.
 
@@ -88,33 +132,15 @@ async function handleRequest(event: FetchEvent) {
     });
   }
 
-  const store = new KVStore('testkv');
-  const ldClient = init(store, '675aea6b1b327709c85da941', {
-    sendEvents: true,
-  });
-  await ldClient.waitForInitialization();
   const flagKey = 'enable-2025-brand-refresh';
-  const flagContext: LDContext = {
-    key: 'test-user',
-    custom: {
-      fastly_service_version: env('FASTLY_SERVICE_VERSION'),
-      fastly_cache_generation: env('FASTLY_CACHE_GENERATION'),
-      fastly_hostname: env('FASTLY_HOSTNAME'),
-      fastly_pop: env('FASTLY_POP'),
-      fastly_region: env('FASTLY_REGION'),
-      fastly_service_id: env('FASTLY_SERVICE_ID'),
-      fastly_trace_id: env('FASTLY_TRACE_ID'),
-    },
-  };
   const variationDetail = await ldClient.boolVariationDetail(flagKey, flagContext, false);
   logger.log(`Flag value: ${variationDetail}`);
 
   const output = {
     flagContext,
-    variationDetail: variationDetail,
+    variationDetail,
   };
   event.waitUntil(flushEvents(ldClient));
-  await flushEvents(ldClient);
 
   // // Catch all other requests and return a 404.
   // const text = (await readme?.text()) || 'The page you requested could not be found';

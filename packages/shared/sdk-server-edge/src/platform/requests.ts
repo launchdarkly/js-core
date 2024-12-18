@@ -13,16 +13,14 @@ export interface EdgeRequestsOptions {
 }
 
 export default class EdgeRequests implements Requests {
-  private options: EdgeRequestsOptions;
+  private _options: EdgeRequestsOptions;
 
   constructor(options: EdgeRequestsOptions = {}) {
-    this.options = options;
+    this._options = options;
   }
 
   fetch(url: string, options: Options = {}): Promise<Response> {
-    const finalOptions = { ...options, ...this.options.additionalFetchOptions };
-    console.log(finalOptions);
-    console.log('Additional options', this.options.additionalFetchOptions);
+    const finalOptions = { ...options, ...this._options.additionalFetchOptions };
     // @ts-ignore
     return fetch(url, finalOptions);
   }

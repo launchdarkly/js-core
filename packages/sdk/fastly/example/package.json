@@ -7,20 +7,14 @@
   },
   "devDependencies": {
     "@fastly/cli": "^10.14.0",
-    "node-polyfill-webpack-plugin": "^4.1.0",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.2.2",
-    "webpack": "^5.97.1",
-    "webpack-cli": "^5.1.4"
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "@fastly/js-compute": "^3.7.0",
-    "@launchdarkly/fastly-server-sdk": "workspace:^",
-    "eventemitter3": "^5.0.1",
-    "events": "^3.3.0"
+    "@launchdarkly/fastly-server-sdk": "workspace:^"
   },
   "scripts": {
-    "build": "webpack && js-compute-runtime dist/index.js bin/main.wasm",
+    "build": "tsc && js-compute-runtime build/index.js bin/main.wasm",
     "start": "fastly compute serve",
     "deploy": "fastly compute publish"
   }
