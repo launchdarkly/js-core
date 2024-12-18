@@ -65,6 +65,10 @@
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
         }
       ]
+    },
+    "packages/tooling/jest": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
     }
   },
   "plugins": [
