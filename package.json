@@ -14,6 +14,7 @@
     "packages/sdk/react-universal",
     "packages/sdk/react-universal/example",
     "packages/sdk/vercel",
+    "packages/sdk/svelte",
     "packages/sdk/akamai-base",
     "packages/sdk/akamai-base/example",
     "packages/sdk/akamai-edgekv",
