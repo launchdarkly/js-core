@@ -41,10 +41,6 @@ export interface LDUser {
 
   /**
    * The user's IP address.
-   *
-   * If you provide an IP, LaunchDarkly will use a geolocation service to
-   * automatically infer a `country` for the user, unless you've already
-   * specified one.
    */
   ip?: string;
 
