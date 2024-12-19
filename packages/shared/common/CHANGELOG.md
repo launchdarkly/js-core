@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.12.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.12.0...js-sdk-common-v2.12.1) (2024-12-19)
+
+
+### Bug Fixes
+
+* Remove outdated reference to geolocation. ([#719](https://github.com/launchdarkly/js-core/issues/719)) ([0eeb3b6](https://github.com/launchdarkly/js-core/commit/0eeb3b6472419d257bf52c4ab3ae33864eae1902))
+
 ## [2.12.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.11.0...js-sdk-common-v2.12.0) (2024-11-04)
 
 
