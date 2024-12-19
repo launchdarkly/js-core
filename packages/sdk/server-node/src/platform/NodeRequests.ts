@@ -57,7 +57,7 @@ function processProxyOptions(
   };
   if (proxyOptions.auth) {
     parsedOptions.headers = {
-      'Proxy-Authorization': `Basic ${Buffer.from(proxyOptions.auth).toString('base64')}}`,
+      'Proxy-Authorization': `Basic ${Buffer.from(proxyOptions.auth).toString('base64')}`,
     };
   }
 
