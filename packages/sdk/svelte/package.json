@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/svelte-client-sdk",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Svelte LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/svelte",
   "repository": {
