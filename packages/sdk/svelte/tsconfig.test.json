@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "lib": ["es6", "dom"],
+    "module": "ES6",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "strict": true,
+    "types": ["jest", "node"]
+  },
+  "exclude": ["dist", "node_modules", "__tests__", "example"]
+}
