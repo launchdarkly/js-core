@@ -3,6 +3,7 @@
   "packages/shared/sdk-server": "2.10.0",
   "packages/sdk/server-node": "9.7.2",
   "packages/sdk/cloudflare": "2.6.2",
+  "packages/sdk/fastly": "0.0.1",
   "packages/shared/sdk-server-edge": "2.5.2",
   "packages/sdk/vercel": "1.3.21",
   "packages/sdk/akamai-base": "2.1.20",
