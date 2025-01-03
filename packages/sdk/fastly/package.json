@@ -19,45 +19,43 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/esm/src/index.d.ts",
-        "default": "./dist/esm/bundle.es.js"
-      },
       "require": {
-        "types": "./dist/cjs/src/index.d.ts",
-        "default": "./dist/cjs/bundle.cjs.js"
+        "types": "./dist/index.d.cts",
+        "require": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
       }
     }
   },
-  "main": "./dist/cjs/src/index.js",
-  "types": "./dist/cjs/src/index.d.ts",
+  "main": "../dist/index.cjs",
+  "types": "./dist/index.d.cts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c rollup.config.js && ../../../scripts/replace-version.sh .",
+    "build": "tsup",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
+    "test": "npx jest --runInBand",
+    "coverage": "yarn test --coverage",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "dependencies": {
     "@fastly/js-compute": "^3.28.0",
-    "events": "^3.3.0",
-    "rollup-plugin-polyfill-node": "^0.13.0"
+    "@launchdarkly/js-server-sdk-common": "2.10.0",
+    "crypto-js": "^4.2.0"
   },
   "devDependencies": {
-    "@launchdarkly/js-server-sdk-common-edge": "2.5.2",
-    "@rollup/plugin-commonjs": "^28.0.1",
-    "@rollup/plugin-node-resolve": "^15.3.0",
-    "@rollup/plugin-replace": "^6.0.2",
-    "@rollup/plugin-typescript": "^12.1.1",
+    "eslint": "^8.45.0",
+    "jest": "^29.7.0",
     "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.28.1",
-    "rollup-plugin-generate-package-json": "^3.2.0",
+    "tsup": "^8.3.5",
     "typedoc": "^0.27.4",
     "typescript": "^5.7.2"
   }

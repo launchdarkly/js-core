@@ -8,9 +8,10 @@ export default class EdgePlatform implements Platform {
 
   crypto: Crypto = new EdgeCrypto();
 
-  requests: Requests = new EdgeRequests();
+  requests: Requests;
 
-  constructor(info: Info) {
+  constructor(info: Info, eventsBackend: string) {
     this.info = info;
+    this.requests = new EdgeRequests(eventsBackend);
   }
 }

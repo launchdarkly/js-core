@@ -4,25 +4,14 @@
     "module": "ES2022",
     "target": "ES2022",
     "moduleResolution": "bundler",
-    "customConditions": [
-      "fastly"
-    ],
+    "customConditions": ["fastly"],
     "esModuleInterop": true,
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "rootDir": "src",
     "outDir": "build",
-    "types": [
-      "@fastly/js-compute"
-    ],
+    "types": ["@fastly/js-compute"],
     "skipLibCheck": true
   },
-  "include": [
-    "./src/**/*.js",
-    "./src/**/*.ts",
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["./src/**/*.js", "./src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

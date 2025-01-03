@@ -9,9 +9,15 @@ import type {
 } from '@launchdarkly/js-server-sdk-common';
 
 export default class EdgeRequests implements Requests {
+  eventsBackend: string;
+
+  constructor(eventsBackend: string) {
+    this.eventsBackend = eventsBackend;
+  }
+
   fetch(url: string, options: Options = {}): Promise<Response> {
     // @ts-ignore
-    return fetch(url, options);
+    return fetch(url, { ...options, backend: this.eventsBackend });
   }
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): EventSource {

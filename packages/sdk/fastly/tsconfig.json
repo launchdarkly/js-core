@@ -4,9 +4,7 @@
     "rootDir": ".",
     "outDir": "dist",
     "target": "es2017",
-    "lib": [
-      "es6"
-    ],
+    "lib": ["es6"],
     "module": "commonjs",
     "strict": true,
     "noImplicitOverride": true,
@@ -17,17 +15,8 @@
     "resolveJsonModule": true,
     "stripInternal": true,
     "moduleResolution": "node",
-    "types": [
-      "jest",
-      "node"
-    ],
+    "types": ["jest", "node"],
     "skipLibCheck": true
   },
-  "exclude": [
-    "**/*.test.ts",
-    "dist",
-    "node_modules",
-    "__tests__",
-    "example"
-  ]
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
 }

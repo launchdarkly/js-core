@@ -6,14 +6,16 @@
     "node": "^16 || >=18"
   },
   "devDependencies": {
-    "@fastly/cli": "^10.14.0",
-    "typescript": "^5.2.2"
+    "@fastly/cli": "^10.17.1",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.2"
   },
   "dependencies": {
-    "@fastly/js-compute": "^3.7.0",
+    "@fastly/js-compute": "^3.28.0",
     "@launchdarkly/fastly-server-sdk": "workspace:^"
   },
   "scripts": {
+    "clean": "rimraf build && rimraf bin",
     "build": "tsc && js-compute-runtime build/index.js bin/main.wasm",
     "start": "fastly compute serve",
     "deploy": "fastly compute publish"
