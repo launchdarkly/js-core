@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "packageManager": "yarn@3.4.1",
   "description": "Cloudflare LaunchDarkly SDK",
-  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/fastly",
   "repository": {
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"
