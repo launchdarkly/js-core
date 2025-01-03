@@ -20,6 +20,15 @@
         "src/createPlatformInfo.ts"
       ]
     },
+    "packages/sdk/fastly": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/fastly-server-sdk']"
+        }
+      ]
+    },
     "packages/sdk/react-native": {},
     "packages/sdk/server-node": {},
     "packages/sdk/vercel": {
