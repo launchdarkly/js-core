@@ -20,9 +20,14 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 const mockEventProcessor = internal.EventProcessor as jest.Mock;
 describe('Edge LDClient', () => {
   it('uses clientSideID endpoints', async () => {
-    const client = new LDClient('client-side-id', createBasicPlatform().info, {
-      sendEvents: true,
-    });
+    const client = new LDClient(
+      'client-side-id',
+      createBasicPlatform().info,
+      {
+        sendEvents: true,
+      },
+      'launchdarkly',
+    );
     await client.waitForInitialization({ timeout: 10 });
     const passedConfig = mockEventProcessor.mock.calls[0][0];
 
