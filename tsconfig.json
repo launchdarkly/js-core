@@ -66,6 +66,9 @@
     },
     {
       "path": "./packages/telemetry/browser-telemetry/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/fastly/tsconfig.ref.json"
     }
   ]
 }
