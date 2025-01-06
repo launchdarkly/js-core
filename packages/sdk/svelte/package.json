@@ -44,7 +44,6 @@
     "test:unit-coverage": "vitest --coverage"
   },
   "peerDependencies": {
-    "@launchdarkly/js-client-sdk": "workspace:^",
     "svelte": "^4.0.0"
   },
   "dependencies": {
@@ -72,7 +71,6 @@
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-svelte": "^2.35.1",
     "jsdom": "^24.0.0",
-    "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "prettier-plugin-svelte": "^3.1.2",
     "publint": "^0.1.9",
