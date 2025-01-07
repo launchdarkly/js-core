@@ -137,6 +137,13 @@ export interface LDFeatureStore {
    */
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void;
 
+  applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String | undefined,
+    callback: () => void,
+  ): void;
+
   /**
    * Tests whether the store is initialized.
    *

@@ -53,19 +53,55 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this._initCalled = true;
-    this._allData = allData as LDFeatureStoreDataStorage;
-    callback?.();
+    this.applyChanges(true, allData, undefined, callback);
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
-    const deletedItem = { version, deleted: true };
-    this._addItem(kind, key, deletedItem);
-    callback?.();
+    const item: LDKeyedFeatureStoreItem = { key, version, deleted: true };
+    this.applyChanges(
+      false,
+      {
+        [kind.namespace]: {
+          [key]: item,
+        },
+      },
+      undefined,
+      callback,
+    );
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    this._addItem(kind, data.key, data);
+    this.applyChanges(
+      false,
+      {
+        [kind.namespace]: {
+          [data.key]: data,
+        },
+      },
+      undefined,
+      callback,
+    );
+  }
+
+  applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String | undefined, // TODO handle selector
+    callback: () => void,
+  ): void {
+    if (basis) {
+      this._initCalled = true;
+      this._allData = data;
+    } else {
+      Object.entries(data).forEach(([namespace, items]) => {
+        Object.keys(items || {}).forEach((key) => {
+          const item = items[key];
+          // TODO: optimize this section, perhaps get rid of _addItem
+          this._addItem({ namespace }, key, item);
+        });
+      });
+    }
+
     callback?.();
   }
 

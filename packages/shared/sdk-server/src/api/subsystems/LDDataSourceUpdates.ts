@@ -40,4 +40,11 @@ export interface LDDataSourceUpdates {
    *   Will be called after the upsert operation is complete.
    */
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void;
+
+  applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String,
+    callback: () => void,
+  ): void;
 }
