@@ -88,6 +88,7 @@ describe('createPayloadListenerFDv2', () => {
     dataSourceUpdates = {
       init: jest.fn(),
       upsert: jest.fn(),
+      applyChanges: jest.fn(),
     };
     basisRecieved = jest.fn();
   });
