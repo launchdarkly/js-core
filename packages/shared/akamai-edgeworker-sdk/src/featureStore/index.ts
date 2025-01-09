@@ -107,6 +107,15 @@ export class EdgeFeatureStore implements LDFeatureStore {
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+    this.applyChanges(true, allData, undefined, callback);
+  }
+
+  applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String | undefined,
+    callback: () => void,
+  ): void {
     callback();
   }
 

@@ -6,6 +6,7 @@ const mockFeatureStore: LDFeatureStore = {
   init: jest.fn(),
   initialized: jest.fn(),
   upsert: jest.fn(),
+  applyChanges: jest.fn(),
   get: jest.fn(),
   delete: jest.fn(),
 };
