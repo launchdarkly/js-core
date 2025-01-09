@@ -12,22 +12,6 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
 
   private _initCalled = false;
 
-  private _addItem(kind: DataKind, key: string, item: LDFeatureStoreItem) {
-    let items = this._allData[kind.namespace];
-    if (!items) {
-      items = {};
-      this._allData[kind.namespace] = items;
-    }
-    if (Object.hasOwnProperty.call(items, key)) {
-      const old = items[key];
-      if (!old || old.version < item.version) {
-        items[key] = item;
-      }
-    } else {
-      items[key] = item;
-    }
-  }
-
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
     const items = this._allData[kind.namespace];
     if (items) {
@@ -95,9 +79,20 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
     } else {
       Object.entries(data).forEach(([namespace, items]) => {
         Object.keys(items || {}).forEach((key) => {
+          let existingItems = this._allData[namespace];
+          if (!existingItems) {
+            existingItems = {};
+            this._allData[namespace] = existingItems;
+          }
           const item = items[key];
-          // TODO: optimize this section, perhaps get rid of _addItem
-          this._addItem({ namespace }, key, item);
+          if (Object.hasOwnProperty.call(existingItems, key)) {
+            const old = existingItems[key];
+            if (!old || old.version < item.version) {
+              existingItems[key] = item;
+            }
+          } else {
+            existingItems[key] = item;
+          }
         });
       });
     }
