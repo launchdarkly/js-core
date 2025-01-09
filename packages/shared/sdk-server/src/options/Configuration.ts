@@ -59,6 +59,8 @@ const validations: Record<string, TypeValidator> = {
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
 };
 
+
+
 /**
  * @internal
  */
