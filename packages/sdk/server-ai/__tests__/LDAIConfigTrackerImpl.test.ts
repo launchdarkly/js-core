@@ -134,6 +134,39 @@ it('tracks OpenAI usage', async () => {
   );
 });
 
+it('tracks error when OpenAI metrics function throws', async () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, variationKey, testContext);
+  jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+  const error = new Error('OpenAI API error');
+  await expect(
+    tracker.trackOpenAIMetrics(async () => {
+      throw error;
+    }),
+  ).rejects.toThrow(error);
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:duration:total',
+    testContext,
+    { configKey, variationKey },
+    1000,
+  );
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation',
+    testContext,
+    { configKey, variationKey },
+    1,
+  );
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation:error',
+    testContext,
+    { configKey, variationKey },
+    1,
+  );
+});
+
 it('tracks Bedrock conversation with successful response', () => {
   const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, variationKey, testContext);
 
@@ -196,11 +229,22 @@ it('tracks Bedrock conversation with error response', () => {
     $metadata: { httpStatusCode: 400 },
   };
 
-  // TODO: We may want a track failure.
-
   tracker.trackBedrockConverseMetrics(response);
 
-  expect(mockTrack).not.toHaveBeenCalled();
+  expect(mockTrack).toHaveBeenCalledTimes(2);
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation',
+    testContext,
+    { configKey, variationKey },
+    1,
+  );
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation:error',
+    testContext,
+    { configKey, variationKey },
+    1,
+  );
 });
 
 it('tracks tokens', () => {
@@ -303,4 +347,42 @@ it('summarizes tracked metrics', () => {
     },
     success: true,
   });
+});
+
+it('tracks duration when async function throws', async () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, variationKey, testContext);
+  jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+  const error = new Error('test error');
+  await expect(
+    tracker.trackDurationOf(async () => {
+      throw error;
+    }),
+  ).rejects.toThrow(error);
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:duration:total',
+    testContext,
+    { configKey, variationKey },
+    1000,
+  );
+});
+
+it('tracks error', () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, variationKey, testContext);
+  tracker.trackError();
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation',
+    testContext,
+    { configKey, variationKey },
+    1,
+  );
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation:error',
+    testContext,
+    { configKey, variationKey },
+    1,
+  );
 });
