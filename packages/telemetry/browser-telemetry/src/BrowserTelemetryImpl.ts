@@ -60,7 +60,11 @@ function configureTraceKit(options: ParsedStackOptions) {
   // from the before context.
   // The typing for this is a bool, but it accepts a number.
   const beforeAfterMax = Math.max(options.source.afterLines, options.source.beforeLines);
-  (TraceKit as any).linesOfContext = beforeAfterMax * 2 + 1;
+  // The assignment here has bene split to prevent esbuild from complaining about an assigment to
+  // an import. TraceKit exports a single object and the interface requires modifying an exported
+  // var.
+  let anyObj = TraceKit as any;
+  anyObj.linesOfContext = beforeAfterMax * 2 + 1;
 }
 
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
