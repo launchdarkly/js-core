@@ -33,11 +33,12 @@ export interface BrowserTelemetry {
   /**
    * Captures a browser ErrorEvent for telemetry purposes.
    *
-   * This method can be used to capture a manually created error event. Use this
-   * function to represent application specific errors which cannot be captured
-   * automatically or are not `Error` types.
+   * This can be used to capture error events, such as those emitted by 'error'
+   * or 'unhandledrejection' events. Error events are automatically collected
+   * so this method is only generally required if synthesizing error events
+   * manually.
    *
-   * For most errors {@link captureError} should be used.
+   * For most manual error reporting {@link captureError} should be used.
    *
    * @param errorEvent The ErrorEvent to capture
    */

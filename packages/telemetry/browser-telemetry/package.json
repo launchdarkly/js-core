@@ -49,6 +49,7 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@launchdarkly/js-client-sdk": "0.3.2",
+    "@rrweb/types": "^2.0.0-alpha.17",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/css-font-loading-module": "^0.0.13",
     "@types/jest": "^29.5.11",
@@ -66,9 +67,13 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "prettier": "^3.0.0",
     "rimraf": "^5.0.5",
+    "rrweb": "2.0.0-alpha.4",
     "ts-jest": "^29.1.1",
     "tsup": "^8.3.5",
     "typedoc": "0.25.0",
     "typescript": "^5.5.3"
+  },
+  "peerDependencies": {
+    "rrweb": "2.0.0-alpha.4"
   }
 }

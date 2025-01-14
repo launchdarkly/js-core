@@ -40,6 +40,7 @@ describe('given a ClickCollector with a mock recorder', () => {
       addBreadcrumb: jest.fn(),
       captureError: jest.fn(),
       captureErrorEvent: jest.fn(),
+      captureSession: jest.fn(),
     };
 
     // Create collector
