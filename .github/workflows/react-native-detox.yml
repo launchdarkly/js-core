@@ -19,7 +19,7 @@ on:
       - '.github/**'
 jobs:
   detox-android:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       id-token: write
       contents: read
