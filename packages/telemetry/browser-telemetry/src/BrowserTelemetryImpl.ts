@@ -1,5 +1,3 @@
-import {getTraceKit} from './vendor/TraceKit';
-
 /**
  * A limited selection of type information is provided by the browser client SDK.
  * This is only a type dependency and these types should be compatible between
@@ -23,6 +21,7 @@ import makeInspectors from './inspectors';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
+import { getTraceKit } from './vendor/TraceKit';
 
 // TODO: Use a ring buffer for the breadcrumbs/pending events instead of shifting. (SDK-914)
 
@@ -64,7 +63,7 @@ function configureTraceKit(options: ParsedStackOptions) {
   // The assignment here has bene split to prevent esbuild from complaining about an assigment to
   // an import. TraceKit exports a single object and the interface requires modifying an exported
   // var.
-  let anyObj = TraceKit as any;
+  const anyObj = TraceKit as any;
   anyObj.linesOfContext = beforeAfterMax * 2 + 1;
 }
 
