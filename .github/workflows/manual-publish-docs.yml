@@ -12,6 +12,7 @@ on:
           - packages/shared/sdk-server-edge
           - packages/shared/akamai-edgeworker-sdk
           - packages/sdk/cloudflare
+          - packages/sdk/fastly
           - packages/sdk/server-node
           - packages/sdk/vercel
           - packages/sdk/akamai-base

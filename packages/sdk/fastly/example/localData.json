@@ -1,0 +1,67 @@
+{
+  "flags": {
+    "animal": {
+      "key": "animal",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [],
+      "fallthrough": {
+        "rollout": {
+          "contextKind": "fastly-request",
+          "variations": [
+            { "variation": 0, "weight": 50000 },
+            { "variation": 1, "weight": 50000 }
+          ],
+          "bucketBy": "key"
+        }
+      },
+      "offVariation": 1,
+      "variations": ["cat", "dog"],
+      "clientSideAvailability": { "usingMobileKey": false, "usingEnvironmentId": false },
+      "clientSide": false,
+      "salt": "0ab7b96471ff4edb98113157355cbb9f",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 5,
+      "deleted": false
+    },
+    "example-flag": {
+      "key": "example-flag",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "contextTargets": [],
+      "rules": [
+        {
+          "variation": 1,
+          "id": "8b96123e-759f-4f73-b91e-884ac56d0a06",
+          "clauses": [
+            {
+              "contextKind": "fastly-request",
+              "attribute": "fastly_region",
+              "op": "in",
+              "values": ["US-West"],
+              "negate": false
+            }
+          ],
+          "trackEvents": false
+        }
+      ],
+      "fallthrough": { "variation": 0 },
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": { "usingMobileKey": false, "usingEnvironmentId": false },
+      "clientSide": false,
+      "salt": "ca17f93252064631bacb2cffea217f20",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 8,
+      "deleted": false
+    }
+  },
+  "segments": {}
+}
