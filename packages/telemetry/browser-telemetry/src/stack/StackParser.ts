@@ -1,4 +1,4 @@
-import { computeStackTrace } from 'tracekit';
+import { getTraceKit } from '../vendor/TraceKit';
 
 import { StackFrame } from '../api/stack/StackFrame';
 import { StackTrace } from '../api/stack/StackTrace';
@@ -195,8 +195,9 @@ export function getSrcLines(
  * @returns The stack trace for the given error.
  */
 export default function parse(error: Error, options: ParsedStackOptions): StackTrace {
-  const parsed = computeStackTrace(error);
-  const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
+  // @ts-ignore
+  const parsed = getTraceKit().computeStackTrace(error);
+  const frames: StackFrame[] = parsed.stack.reverse().map((inFrame: any) => ({
     fileName: processUrlToFileName(inFrame.url, window.location.origin),
     function: inFrame.func,
     line: inFrame.line,

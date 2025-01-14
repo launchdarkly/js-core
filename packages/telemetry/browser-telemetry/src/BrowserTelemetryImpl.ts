@@ -1,4 +1,4 @@
-import * as TraceKit from 'tracekit';
+import {getTraceKit} from './vendor/TraceKit';
 
 /**
  * A limited selection of type information is provided by the browser client SDK.
@@ -54,6 +54,7 @@ function safeValue(u: unknown): string | boolean | number | undefined {
 }
 
 function configureTraceKit(options: ParsedStackOptions) {
+  const TraceKit = getTraceKit();
   // Include before + after + source line.
   // TraceKit only takes a total context size, so we have to over capture and then reduce the lines.
   // So, for instance if before is 3 and after is 4 we need to capture 4 and 4 and then drop a line
