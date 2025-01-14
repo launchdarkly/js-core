@@ -43,9 +43,6 @@
   "bugs": {
     "url": "https://github.com/launchdarkly/js-core/issues"
   },
-  "dependencies": {
-    "tracekit": "^0.4.6"
-  },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@launchdarkly/js-client-sdk": "0.3.2",

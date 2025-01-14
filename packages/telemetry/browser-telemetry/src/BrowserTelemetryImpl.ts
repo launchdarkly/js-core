@@ -1,5 +1,3 @@
-import * as TraceKit from 'tracekit';
-
 /**
  * A limited selection of type information is provided by the browser client SDK.
  * This is only a type dependency and these types should be compatible between
@@ -23,6 +21,7 @@ import makeInspectors from './inspectors';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
+import { getTraceKit } from './vendor/TraceKit';
 
 // TODO: Use a ring buffer for the breadcrumbs/pending events instead of shifting. (SDK-914)
 
@@ -54,13 +53,18 @@ function safeValue(u: unknown): string | boolean | number | undefined {
 }
 
 function configureTraceKit(options: ParsedStackOptions) {
+  const TraceKit = getTraceKit();
   // Include before + after + source line.
   // TraceKit only takes a total context size, so we have to over capture and then reduce the lines.
   // So, for instance if before is 3 and after is 4 we need to capture 4 and 4 and then drop a line
   // from the before context.
   // The typing for this is a bool, but it accepts a number.
   const beforeAfterMax = Math.max(options.source.afterLines, options.source.beforeLines);
-  (TraceKit as any).linesOfContext = beforeAfterMax * 2 + 1;
+  // The assignment here has bene split to prevent esbuild from complaining about an assigment to
+  // an import. TraceKit exports a single object and the interface requires modifying an exported
+  // var.
+  const anyObj = TraceKit as any;
+  anyObj.linesOfContext = beforeAfterMax * 2 + 1;
 }
 
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
