@@ -210,7 +210,7 @@ it('unregisters collectors on close', () => {
   expect(mockCollector.unregister).toHaveBeenCalled();
 });
 
-it('filters breadcrumbs using provided filter', () => {
+it('filters breadcrumbs using provided filters', () => {
   const options: ParsedOptions = {
     ...defaultOptions,
     breadcrumbs: {
@@ -329,7 +329,7 @@ it('omits breadcrumb when a filter throws an exception', () => {
   expect(breadSpy).not.toHaveBeenCalled();
 });
 
-it('omits breadcrumb when a filter is not a function throws an exception', () => {
+it('omits breadcrumbs when a filter is not a function', () => {
   const options: ParsedOptions = {
     ...defaultOptions,
     breadcrumbs: {
