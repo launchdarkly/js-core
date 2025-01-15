@@ -22,6 +22,7 @@ it('can set all options at once', () => {
       click: false,
       evaluations: false,
       flagChange: false,
+      breadcrumbFilters: [(breadcrumb) => breadcrumb],
     },
     collectors: [new ErrorCollector(), new ErrorCollector()],
   });
@@ -38,6 +39,7 @@ it('can set all options at once', () => {
         instrumentFetch: true,
         instrumentXhr: true,
       },
+      breadcrumbFilters: expect.any(Array),
     },
     stack: {
       source: {

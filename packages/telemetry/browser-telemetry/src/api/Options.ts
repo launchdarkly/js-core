@@ -1,3 +1,4 @@
+import { Breadcrumb } from './Breadcrumb';
 import { Collector } from './Collector';
 
 /**
@@ -22,7 +23,17 @@ export interface UrlFilter {
   (url: string): string;
 }
 
-export interface HttpBreadCrumbOptions {
+/**
+ * Interface for breadcrumb filters.
+ *
+ * Given a breadcrumb the filter may return a modified breadcrumb or undefined to
+ * exclude the breadcrumb.
+ */
+export interface BreadcrumbFilter {
+  (breadcrumb: Breadcrumb): Breadcrumb | undefined;
+}
+
+export interface HttpBreadcrumbOptions {
   /**
    * If fetch should be instrumented and breadcrumbs included for fetch requests.
    *
@@ -131,7 +142,38 @@ export interface Options {
      * http: false
      * ```
      */
-    http?: HttpBreadCrumbOptions | false;
+    http?: HttpBreadcrumbOptions | false;
+
+    /**
+     * Custom breadcrumb filters.
+     *
+     * Can be used to redact or modify breadcrumbs.
+     *
+     * Example:
+     * ```
+     * // We want to redact any click events that include the message 'sneaky-button'
+     * breadcrumbFilters: [
+     *   (breadcrumb) => {
+     *     if(
+     *       breadcrumb.class === 'ui' &&
+     *       breadcrumb.type === 'click' &&
+     *       breadcrumb.message?.includes('sneaky-button')
+     *     ) {
+     *       return;
+     *     }
+     *    return breadcrumb;
+     *   }
+     * ]
+     * ```
+     *
+     * If you want to redact or modify URLs in breadcrumbs, then a urlFilter should be used.
+     *
+     * If any breadcrumFilters throw an exception while processing a breadcrumb, then that breadcrumb will be excluded.
+     *
+     * If any breadcrumbFilter cannot be executed, for example because it is not a function, then all breadcrumbs will
+     * be excluded.
+     */
+    breadcrumbFilters?: BreadcrumbFilter[];
   };
 
   /**
