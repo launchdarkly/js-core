@@ -43,10 +43,6 @@
   "bugs": {
     "url": "https://github.com/launchdarkly/js-core/issues"
   },
-  "dependencies": {
-    "rrweb": "2.0.0-alpha.4",
-    "tracekit": "^0.4.6"
-  },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@launchdarkly/js-client-sdk": "0.3.2",
