@@ -1,6 +1,7 @@
 import { Collector } from './api/Collector';
+import { MinLogger } from './api/MinLogger';
 import { HttpBreadCrumbOptions, Options, StackOptions, UrlFilter } from './api/Options';
-import { MinLogger } from './MinLogger';
+import { fallbackLogger, prefixLog, safeMinLogger } from './logging';
 
 export function defaultOptions(): ParsedOptions {
   return {
@@ -28,7 +29,9 @@ export function defaultOptions(): ParsedOptions {
 }
 
 function wrongOptionType(name: string, expectedType: string, actualType: string): string {
-  return `Config option "${name}" should be of type ${expectedType}, got ${actualType}, using default value`;
+  return prefixLog(
+    `Config option "${name}" should be of type ${expectedType}, got ${actualType}, using default value`,
+  );
 }
 
 function checkBasic<T>(type: string, name: string, logger?: MinLogger): (item: T) => boolean {
@@ -77,7 +80,9 @@ function parseHttp(
   if (options?.customUrlFilter) {
     if (typeof options.customUrlFilter !== 'function') {
       logger?.warn(
-        `The "breadcrumbs.http.customUrlFilter" must be a function. Received ${typeof options.customUrlFilter}`,
+        prefixLog(
+          `The "breadcrumbs.http.customUrlFilter" must be a function. Received ${typeof options.customUrlFilter}`,
+        ),
       );
     }
   }
@@ -99,6 +104,18 @@ function parseHttp(
     ),
     customUrlFilter,
   };
+}
+
+function parseLogger(options: Options): MinLogger | undefined {
+  if (options.logger) {
+    const { logger } = options;
+    if (typeof logger === 'object' && logger !== null && 'warn' in logger) {
+      return safeMinLogger(logger);
+    }
+    // Using console.warn here because the logger is not suitable to log with.
+    fallbackLogger.warn(wrongOptionType('logger', 'MinLogger or LDLogger', typeof logger));
+  }
+  return undefined;
 }
 
 function parseStack(
@@ -175,10 +192,11 @@ export default function parse(options: Options, logger?: MinLogger): ParsedOptio
         if (Array.isArray(item)) {
           return true;
         }
-        logger?.warn(logger?.warn(wrongOptionType('collectors', 'Collector[]', typeof item)));
+        logger?.warn(wrongOptionType('collectors', 'Collector[]', typeof item));
         return false;
       }),
     ],
+    logger: parseLogger(options),
   };
 }
 
@@ -282,4 +300,9 @@ export interface ParsedOptions {
    * Additional, or custom, collectors.
    */
   collectors: Collector[];
+
+  /**
+   * Logger to use for warnings.
+   */
+  logger?: MinLogger;
 }

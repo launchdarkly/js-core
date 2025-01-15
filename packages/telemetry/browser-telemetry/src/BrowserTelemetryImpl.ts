@@ -5,7 +5,7 @@
  */
 import type { LDContext, LDEvaluationDetail, LDInspection } from '@launchdarkly/js-client-sdk';
 
-import { LDClientTracking } from './api';
+import { LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
@@ -18,6 +18,7 @@ import FetchCollector from './collectors/http/fetch';
 import XhrCollector from './collectors/http/xhr';
 import defaultUrlFilter from './filters/defaultUrlFilter';
 import makeInspectors from './inspectors';
+import { fallbackLogger, prefixLog } from './logging';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
@@ -80,6 +81,8 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private _collectors: Collector[] = [];
   private _sessionId: string = randomUuidV4();
 
+  private _logger: MinLogger;
+
   constructor(private _options: ParsedOptions) {
     configureTraceKit(_options.stack);
 
@@ -127,14 +130,26 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     const inspectors: LDInspection[] = [];
     makeInspectors(_options, inspectors, impl);
     this._inspectorInstances.push(...inspectors);
+
+    // Set the initial logger, it may be replaced when the client is registered.
+    // For typescript purposes, we need the logger to be directly set in the constructor.
+    this._logger = this._options.logger ?? fallbackLogger;
   }
 
   register(client: LDClientTracking): void {
     this._client = client;
+    // When the client is registered, we need to set the logger again, because we may be able to use the client's
+    // logger.
+    this._setLogger();
     this._pendingEvents.forEach((event) => {
       this._client?.track(event.type, event.data);
     });
     this._pendingEvents = [];
+  }
+
+  private _setLogger() {
+    this._logger =
+      this._options.logger ?? ((this._client as any)?.logger as MinLogger) ?? fallbackLogger;
   }
 
   inspectors(): LDInspection[] {
@@ -153,7 +168,11 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     if (this._client === undefined) {
       this._pendingEvents.push({ type, data: event });
       if (this._pendingEvents.length > this._maxPendingEvents) {
-        // TODO: Log when pending events must be dropped. (SDK-915)
+        this._logger.warn(
+          prefixLog(
+            `Dropping ${this._pendingEvents.length - this._maxPendingEvents} pending events.`,
+          ),
+        );
         this._pendingEvents.shift();
       }
     }
