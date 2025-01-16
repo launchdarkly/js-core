@@ -201,7 +201,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
           this._eventsDropped = true;
           this._logger.warn(
             prefixLog(
-              `Maximim pending events reached. Old events will be dropped until the SDK client is registered.`,
+              `Maximum pending events reached. Old events will be dropped until the SDK client is registered.`,
             ),
           );
         }

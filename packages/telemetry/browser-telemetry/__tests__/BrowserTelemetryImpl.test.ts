@@ -227,7 +227,7 @@ it('logs event dropped message when maxPendingEvents is reached', () => {
 
   telemetry.captureError(new Error('Test error 3'));
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'LaunchDarkly - Browser Telemetry: Maximim pending events reached. Old events will be dropped until the SDK' +
+    'LaunchDarkly - Browser Telemetry: Maximum pending events reached. Old events will be dropped until the SDK' +
       ' client is registered.',
   );
 
