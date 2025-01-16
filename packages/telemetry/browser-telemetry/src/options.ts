@@ -20,7 +20,7 @@ export function defaultOptions(): ParsedOptions {
         instrumentFetch: true,
         instrumentXhr: true,
       },
-      breadcrumbFilters: [],
+      filters: [],
     },
     stack: {
       source: {
@@ -170,10 +170,10 @@ export default function parse(options: Options, logger?: MinLogger): ParsedOptio
         checkBasic('boolean', 'breadcrumbs.keyboardInput', logger),
       ),
       http: parseHttp(options.breadcrumbs?.http, defaults.breadcrumbs.http, logger),
-      breadcrumbFilters: itemOrDefault(
-        options.breadcrumbs?.breadcrumbFilters,
-        defaults.breadcrumbs.breadcrumbFilters,
-        checkBasic('array', 'breadcrumbs.breadcrumbFilters', logger),
+      filters: itemOrDefault(
+        options.breadcrumbs?.filters,
+        defaults.breadcrumbs.filters,
+        checkBasic('array', 'breadcrumbs.filters', logger),
       ),
     },
     stack: parseStack(options.stack, defaults.stack),
@@ -287,7 +287,7 @@ export interface ParsedOptions {
     /**
      * Custom breadcrumb filters.
      */
-    breadcrumbFilters: BreadcrumbFilter[];
+    filters: BreadcrumbFilter[];
   };
 
   /**

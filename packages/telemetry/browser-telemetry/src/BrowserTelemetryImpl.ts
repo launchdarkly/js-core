@@ -59,10 +59,7 @@ function applyBreadcrumbFilter(
   return breadcrumb === undefined ? undefined : filter(breadcrumb);
 }
 
-function applyBreadcrumbFilters(
-  breadcrumb: Breadcrumb,
-  filters: BreadcrumbFilter[],
-): Breadcrumb | undefined {
+function applyfilters(breadcrumb: Breadcrumb, filters: BreadcrumbFilter[]): Breadcrumb | undefined {
   try {
     return filters.reduce(
       (breadcrumbToFilter: Breadcrumb | undefined, filter: BreadcrumbFilter) =>
@@ -213,10 +210,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   addBreadcrumb(breadcrumb: Breadcrumb): void {
-    const filtered = applyBreadcrumbFilters(
-      breadcrumb,
-      this._options.breadcrumbs.breadcrumbFilters,
-    );
+    const filtered = applyfilters(breadcrumb, this._options.breadcrumbs.filters);
     if (filtered !== undefined) {
       this._breadcrumbs.push(filtered);
       if (this._breadcrumbs.length > this._maxBreadcrumbs) {

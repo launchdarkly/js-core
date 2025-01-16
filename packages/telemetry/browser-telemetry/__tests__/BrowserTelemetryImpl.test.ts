@@ -22,7 +22,7 @@ const defaultOptions: ParsedOptions = {
     },
     evaluations: true,
     flagChange: true,
-    breadcrumbFilters: [],
+    filters: [],
   },
   stack: {
     source: {
@@ -220,7 +220,7 @@ it('filters breadcrumbs using provided filters', () => {
       flagChange: false,
       http: { instrumentFetch: false, instrumentXhr: false },
       keyboardInput: false,
-      breadcrumbFilters: [
+      filters: [
         // Filter to remove breadcrumbs with id:2
         (breadcrumb) => {
           if (breadcrumb.type === 'custom' && breadcrumb.data?.id === 2) {
@@ -296,7 +296,7 @@ it('omits breadcrumb when a filter throws an exception', () => {
     ...defaultOptions,
     breadcrumbs: {
       ...defaultOptions.breadcrumbs,
-      breadcrumbFilters: [
+      filters: [
         () => {
           throw new Error('Filter error');
         },
@@ -335,7 +335,7 @@ it('omits breadcrumbs when a filter is not a function', () => {
     breadcrumbs: {
       ...defaultOptions.breadcrumbs,
       // @ts-ignore
-      breadcrumbFilters: ['potato'],
+      filters: ['potato'],
     },
   };
   const telemetry = new BrowserTelemetryImpl(options);

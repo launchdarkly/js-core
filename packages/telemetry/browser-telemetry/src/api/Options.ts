@@ -152,7 +152,7 @@ export interface Options {
      * Example:
      * ```
      * // We want to redact any click events that include the message 'sneaky-button'
-     * breadcrumbFilters: [
+     * filters: [
      *   (breadcrumb) => {
      *     if(
      *       breadcrumb.class === 'ui' &&
@@ -173,7 +173,7 @@ export interface Options {
      * If any breadcrumbFilter cannot be executed, for example because it is not a function, then all breadcrumbs will
      * be excluded.
      */
-    breadcrumbFilters?: BreadcrumbFilter[];
+    filters?: BreadcrumbFilter[];
   };
 
   /**
