@@ -67,14 +67,38 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
   ) {}
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+    this.applyChanges(true, allData, undefined, callback); // basis is true for init. selector is undefined for FDv1 init
+  }
+
+  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
+    this.applyChanges(
+      false, // basis is false for upserts
+      {
+        [kind.namespace]: {
+          [data.key]: data,
+        },
+      },
+      undefined, // selector is undefined for FDv1 upsert
+      callback,
+    );
+  }
+
+  applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String | undefined,
+    callback: () => void,
+  ): void {
     const checkForChanges = this._hasEventListeners();
-    const doInit = (oldData?: LDFeatureStoreDataStorage) => {
-      this._featureStore.init(allData, () => {
+    const doApplyChanges = (oldData: LDFeatureStoreDataStorage) => {
+      this._featureStore.applyChanges(basis, data, selector, () => {
         // Defer change events so they execute after the callback.
         Promise.resolve().then(() => {
-          this._dependencyTracker.reset();
+          if (basis) {
+            this._dependencyTracker.reset();
+          }
 
-          Object.entries(allData).forEach(([namespace, items]) => {
+          Object.entries(data).forEach(([namespace, items]) => {
             Object.keys(items || {}).forEach((key) => {
               const item = items[key];
               this._dependencyTracker.updateDependenciesFrom(
@@ -87,11 +111,18 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
 
           if (checkForChanges) {
             const updatedItems = new NamespacedDataSet<boolean>();
-            Object.keys(allData).forEach((namespace) => {
-              const oldDataForKind = oldData?.[namespace] || {};
-              const newDataForKind = allData[namespace];
-              const mergedData = { ...oldDataForKind, ...newDataForKind };
-              Object.keys(mergedData).forEach((key) => {
+            Object.keys(data).forEach((namespace) => {
+              const oldDataForKind = oldData[namespace];
+              const newDataForKind = data[namespace];
+              let iterateData;
+              if (basis) {
+                // for basis, need to iterate on all keys
+                iterateData = { ...oldDataForKind, ...newDataForKind };
+              } else {
+                // for non basis, only need to iterate on keys in incoming data
+                iterateData = { ...newDataForKind };
+              }
+              Object.keys(iterateData).forEach((key) => {
                 this.addIfModified(
                   namespace,
                   key,
@@ -101,6 +132,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
                 );
               });
             });
+
             this.sendChangeEvents(updatedItems);
           }
         });
@@ -108,48 +140,20 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
       });
     };
 
+    let oldData = {};
     if (checkForChanges) {
+      // record old data before making changes to use for change calculations
       this._featureStore.all(VersionedDataKinds.Features, (oldFlags) => {
         this._featureStore.all(VersionedDataKinds.Segments, (oldSegments) => {
-          const oldData = {
+          oldData = {
             [VersionedDataKinds.Features.namespace]: oldFlags,
             [VersionedDataKinds.Segments.namespace]: oldSegments,
           };
-          doInit(oldData);
         });
       });
-    } else {
-      doInit();
     }
-  }
 
-  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    const { key } = data;
-    const checkForChanges = this._hasEventListeners();
-    const doUpsert = (oldItem?: LDFeatureStoreItem | null) => {
-      this._featureStore.upsert(kind, data, () => {
-        // Defer change events so they execute after the callback.
-        Promise.resolve().then(() => {
-          this._dependencyTracker.updateDependenciesFrom(
-            kind.namespace,
-            key,
-            computeDependencies(kind.namespace, data),
-          );
-          if (checkForChanges) {
-            const updatedItems = new NamespacedDataSet<boolean>();
-            this.addIfModified(kind.namespace, key, oldItem, data, updatedItems);
-            this.sendChangeEvents(updatedItems);
-          }
-        });
-
-        callback?.();
-      });
-    };
-    if (checkForChanges) {
-      this._featureStore.get(kind, key, doUpsert);
-    } else {
-      doUpsert();
-    }
+    doApplyChanges(oldData);
   }
 
   addIfModified(

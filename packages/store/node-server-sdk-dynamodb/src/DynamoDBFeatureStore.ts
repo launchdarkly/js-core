@@ -51,6 +51,15 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
     this._wrapper.upsert(kind, data, callback);
   }
 
+  applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String | undefined,
+    callback: () => void,
+  ): void {
+    this._wrapper.applyChanges(basis, data, selector, callback);
+  }
+
   initialized(callback: (isInitialized: boolean) => void): void {
     this._wrapper.initialized(callback);
   }
