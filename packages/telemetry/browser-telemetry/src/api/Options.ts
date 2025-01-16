@@ -168,7 +168,7 @@ export interface Options {
      *
      * If you want to redact or modify URLs in breadcrumbs, then a urlFilter should be used.
      *
-     * If any breadcrumFilters throw an exception while processing a breadcrumb, then that breadcrumb will be excluded.
+     * If any breadcrumb filters throw an exception while processing a breadcrumb, then that breadcrumb will be excluded.
      *
      * If any breadcrumbFilter cannot be executed, for example because it is not a function, then all breadcrumbs will
      * be excluded.
