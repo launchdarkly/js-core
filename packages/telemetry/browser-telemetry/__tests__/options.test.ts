@@ -22,6 +22,7 @@ it('can set all options at once', () => {
       click: false,
       evaluations: false,
       flagChange: false,
+      filters: [(breadcrumb) => breadcrumb],
     },
     collectors: [new ErrorCollector(), new ErrorCollector()],
   });
@@ -38,6 +39,7 @@ it('can set all options at once', () => {
         instrumentFetch: true,
         instrumentXhr: true,
       },
+      filters: expect.any(Array),
     },
     stack: {
       source: {
@@ -418,5 +420,21 @@ it('warns when breadcrumbs.http.customUrlFilter is not a function', () => {
   expect(outOptions.breadcrumbs.http.customUrlFilter).toBeUndefined();
   expect(mockLogger.warn).toHaveBeenCalledWith(
     'LaunchDarkly - Browser Telemetry: The "breadcrumbs.http.customUrlFilter" must be a function. Received string',
+  );
+});
+
+it('warns when filters is not an array', () => {
+  const outOptions = parse(
+    {
+      breadcrumbs: {
+        // @ts-ignore
+        filters: 'not an array',
+      },
+    },
+    mockLogger,
+  );
+  expect(outOptions.breadcrumbs.filters).toEqual([]);
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.filters" should be of type array, got string, using default value',
   );
 });

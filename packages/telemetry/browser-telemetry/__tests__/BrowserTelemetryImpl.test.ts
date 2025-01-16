@@ -22,6 +22,7 @@ const defaultOptions: ParsedOptions = {
     },
     evaluations: true,
     flagChange: true,
+    filters: [],
   },
   stack: {
     source: {
@@ -231,4 +232,154 @@ it('logs event dropped message when maxPendingEvents is reached', () => {
 
   telemetry.captureError(new Error('Test error 4'));
   expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+});
+
+it('filters breadcrumbs using provided filters', () => {
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      click: false,
+      evaluations: false,
+      flagChange: false,
+      http: { instrumentFetch: false, instrumentXhr: false },
+      keyboardInput: false,
+      filters: [
+        // Filter to remove breadcrumbs with id:2
+        (breadcrumb) => {
+          if (breadcrumb.type === 'custom' && breadcrumb.data?.id === 2) {
+            return undefined;
+          }
+          return breadcrumb;
+        },
+        // Filter to transform breadcrumbs with id:3
+        (breadcrumb) => {
+          if (breadcrumb.type === 'custom' && breadcrumb.data?.id === 3) {
+            return {
+              ...breadcrumb,
+              data: { id: 'filtered-3' },
+            };
+          }
+          return breadcrumb;
+        },
+      ],
+    },
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 2 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 3 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  const error = new Error('Test error');
+  telemetry.captureError(error);
+  telemetry.register(mockClient);
+
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      breadcrumbs: expect.arrayContaining([
+        expect.objectContaining({ data: { id: 1 } }),
+        expect.objectContaining({ data: { id: 'filtered-3' } }),
+      ]),
+    }),
+  );
+
+  // Verify breadcrumb with id:2 was filtered out
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      breadcrumbs: expect.not.arrayContaining([expect.objectContaining({ data: { id: 2 } })]),
+    }),
+  );
+});
+
+it('omits breadcrumb when a filter throws an exception', () => {
+  const breadSpy = jest.fn((breadcrumb) => breadcrumb);
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      filters: [
+        () => {
+          throw new Error('Filter error');
+        },
+        // This filter should never run
+        breadSpy,
+      ],
+    },
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  const error = new Error('Test error');
+  telemetry.captureError(error);
+  telemetry.register(mockClient);
+
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      breadcrumbs: [],
+    }),
+  );
+
+  expect(breadSpy).not.toHaveBeenCalled();
+});
+
+it('omits breadcrumbs when a filter is not a function', () => {
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      // @ts-ignore
+      filters: ['potato'],
+    },
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  const error = new Error('Test error');
+  telemetry.captureError(error);
+  telemetry.register(mockClient);
+
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      breadcrumbs: [],
+    }),
+  );
 });
