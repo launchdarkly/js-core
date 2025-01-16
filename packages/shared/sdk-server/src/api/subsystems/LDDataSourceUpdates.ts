@@ -48,7 +48,7 @@ export interface LDDataSourceUpdates {
    * @param data An object in which each key is the "namespace" of a collection (e.g. `"features"`) and
    * the value is an object that maps keys to entities. The actual type of this parameter is
    * `interfaces.FullDataSet<VersionedData>`.
-   * @param selector TODO
+   * @param selector opaque string that uniquely identifies the state that contains the changes
    * @param callback Will be called after the changes are applied.
    */
   applyChanges(

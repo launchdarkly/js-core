@@ -70,19 +70,25 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined, // TODO handle selector
+    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
   ): void {
     if (basis) {
       this._initCalled = true;
       this._allData = data;
     } else {
+      const tempData: LDFeatureStoreDataStorage = {};
+      // shallow copy to protect against concurrent read
+      Object.entries(this._allData).forEach(([namespace, items]) => {
+        tempData[namespace] = { ...items };
+      });
+
       Object.entries(data).forEach(([namespace, items]) => {
         Object.keys(items || {}).forEach((key) => {
-          let existingItems = this._allData[namespace];
+          let existingItems = tempData[namespace];
           if (!existingItems) {
             existingItems = {};
-            this._allData[namespace] = existingItems;
+            tempData[namespace] = existingItems;
           }
           const item = items[key];
           if (Object.hasOwnProperty.call(existingItems, key)) {
@@ -95,6 +101,8 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
           }
         });
       });
+
+      this._allData = tempData;
     }
 
     callback?.();
