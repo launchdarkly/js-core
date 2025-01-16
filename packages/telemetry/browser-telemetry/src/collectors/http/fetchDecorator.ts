@@ -77,7 +77,7 @@ export default function decorateFetch(callback: (breadcrumb: HttpBreadcrumb) => 
       return response;
     });
   }
-  wrapper.prototype = originalFetch.prototype;
+  wrapper.prototype = originalFetch?.prototype;
 
   try {
     // Use defineProperty to prevent this value from being enumerable.

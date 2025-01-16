@@ -83,6 +83,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   private _logger: MinLogger;
 
+  // Used to ensure we only log the event dropped message once.
+  private _eventsDropped: boolean = false;
+
   constructor(private _options: ParsedOptions) {
     configureTraceKit(_options.stack);
 
@@ -168,11 +171,14 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     if (this._client === undefined) {
       this._pendingEvents.push({ type, data: event });
       if (this._pendingEvents.length > this._maxPendingEvents) {
-        this._logger.warn(
-          prefixLog(
-            `Dropping ${this._pendingEvents.length - this._maxPendingEvents} pending events.`,
-          ),
-        );
+        if (!this._eventsDropped) {
+          this._eventsDropped = true;
+          this._logger.warn(
+            prefixLog(
+              `Maximim pending events reached. Old events will be dropped until the SDK client is registered.`,
+            ),
+          );
+        }
         this._pendingEvents.shift();
       }
     }
@@ -184,20 +190,20 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
     const data: ErrorData = validException
       ? {
-          type: exception.name || exception.constructor?.name || GENERIC_EXCEPTION,
-          // Only coalesce null/undefined, not empty.
-          message: exception.message ?? MISSING_MESSAGE,
-          stack: parse(exception, this._options.stack),
-          breadcrumbs: [...this._breadcrumbs],
-          sessionId: this._sessionId,
-        }
+        type: exception.name || exception.constructor?.name || GENERIC_EXCEPTION,
+        // Only coalesce null/undefined, not empty.
+        message: exception.message ?? MISSING_MESSAGE,
+        stack: parse(exception, this._options.stack),
+        breadcrumbs: [...this._breadcrumbs],
+        sessionId: this._sessionId,
+      }
       : {
-          type: GENERIC_EXCEPTION,
-          message: NULL_EXCEPTION_MESSAGE,
-          stack: { frames: [] },
-          breadcrumbs: [...this._breadcrumbs],
-          sessionId: this._sessionId,
-        };
+        type: GENERIC_EXCEPTION,
+        message: NULL_EXCEPTION_MESSAGE,
+        stack: { frames: [] },
+        breadcrumbs: [...this._breadcrumbs],
+        sessionId: this._sessionId,
+      };
     this._capture(ERROR_KEY, data);
   }
 
