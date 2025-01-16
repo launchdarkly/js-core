@@ -170,6 +170,8 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   private _setLogger() {
+    // If the user has provided a logger, then we want to prioritize that over the client's logger.
+    // If the client supports LDClientLogging, then we to prioritize that over the fallback logger.
     if (this._options.logger) {
       this._logger = this._options.logger;
     } else if (isLDClientLogging(this._client)) {
