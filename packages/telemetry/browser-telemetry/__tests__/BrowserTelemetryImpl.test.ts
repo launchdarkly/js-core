@@ -215,17 +215,6 @@ it('logs event dropped message when maxPendingEvents is reached', () => {
   };
   const telemetry = new BrowserTelemetryImpl({
     ...defaultOptions,
-    breadcrumbs: {
-      maxBreadcrumbs: 2,
-      click: false,
-      keyboardInput: false,
-      http: {
-        instrumentFetch: false,
-        instrumentXhr: false,
-      },
-      evaluations: false,
-      flagChange: false,
-    },
     maxPendingEvents: 2,
     logger: mockLogger,
   });
@@ -237,8 +226,9 @@ it('logs event dropped message when maxPendingEvents is reached', () => {
   telemetry.captureError(new Error('Test error 3'));
   expect(mockLogger.warn).toHaveBeenCalledWith(
     'LaunchDarkly - Browser Telemetry: Maximim pending events reached. Old events will be dropped until the SDK' +
-    ' client is registered.');
+      ' client is registered.',
+  );
 
   telemetry.captureError(new Error('Test error 4'));
-  expect(mockLogger.warn).toHaveBeenCalledTimes(1)
+  expect(mockLogger.warn).toHaveBeenCalledTimes(1);
 });
