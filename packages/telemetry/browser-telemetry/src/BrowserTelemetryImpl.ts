@@ -5,7 +5,7 @@
  */
 import type { LDContext, LDEvaluationDetail, LDInspection } from '@launchdarkly/js-client-sdk';
 
-import { BreadcrumbFilter, LDClientTracking } from './api';
+import { BreadcrumbFilter, LDClientLogging, LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
@@ -18,6 +18,7 @@ import FetchCollector from './collectors/http/fetch';
 import XhrCollector from './collectors/http/xhr';
 import defaultUrlFilter from './filters/defaultUrlFilter';
 import makeInspectors from './inspectors';
+import { fallbackLogger, prefixLog } from './logging';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
 import parse from './stack/StackParser';
@@ -59,21 +60,6 @@ function applyBreadcrumbFilter(
   return breadcrumb === undefined ? undefined : filter(breadcrumb);
 }
 
-function applyBreadcrumbFilters(
-  breadcrumb: Breadcrumb,
-  filters: BreadcrumbFilter[],
-): Breadcrumb | undefined {
-  try {
-    return filters.reduce(
-      (breadcrumbToFilter: Breadcrumb | undefined, filter: BreadcrumbFilter) =>
-        applyBreadcrumbFilter(breadcrumbToFilter, filter),
-      breadcrumb,
-    );
-  } catch (e) {
-    return undefined;
-  }
-}
-
 function configureTraceKit(options: ParsedStackOptions) {
   const TraceKit = getTraceKit();
   // Include before + after + source line.
@@ -89,6 +75,16 @@ function configureTraceKit(options: ParsedStackOptions) {
   anyObj.linesOfContext = beforeAfterMax * 2 + 1;
 }
 
+/**
+ * Check if the client supports LDClientLogging.
+ *
+ * @param client The client to check.
+ * @returns True if the client is an instance of LDClientLogging.
+ */
+function isLDClientLogging(client: unknown): client is LDClientLogging {
+  return (client as any).logger !== undefined;
+}
+
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private _maxPendingEvents: number;
   private _maxBreadcrumbs: number;
@@ -101,6 +97,13 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private _inspectorInstances: LDInspection[] = [];
   private _collectors: Collector[] = [];
   private _sessionId: string = randomUuidV4();
+
+  private _logger: MinLogger;
+
+  // Used to ensure we only log the event dropped message once.
+  private _eventsDropped: boolean = false;
+  // Used to ensure we only log the breadcrumb filter error once.
+  private _breadcrumbFilterError: boolean = false;
 
   constructor(private _options: ParsedOptions) {
     configureTraceKit(_options.stack);
@@ -149,14 +152,33 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     const inspectors: LDInspection[] = [];
     makeInspectors(_options, inspectors, impl);
     this._inspectorInstances.push(...inspectors);
+
+    // Set the initial logger, it may be replaced when the client is registered.
+    // For typescript purposes, we need the logger to be directly set in the constructor.
+    this._logger = this._options.logger ?? fallbackLogger;
   }
 
   register(client: LDClientTracking): void {
     this._client = client;
+    // When the client is registered, we need to set the logger again, because we may be able to use the client's
+    // logger.
+    this._setLogger();
     this._pendingEvents.forEach((event) => {
       this._client?.track(event.type, event.data);
     });
     this._pendingEvents = [];
+  }
+
+  private _setLogger() {
+    // If the user has provided a logger, then we want to prioritize that over the client's logger.
+    // If the client supports LDClientLogging, then we to prioritize that over the fallback logger.
+    if (this._options.logger) {
+      this._logger = this._options.logger;
+    } else if (isLDClientLogging(this._client)) {
+      this._logger = this._client.logger;
+    } else {
+      this._logger = fallbackLogger;
+    }
   }
 
   inspectors(): LDInspection[] {
@@ -175,7 +197,14 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     if (this._client === undefined) {
       this._pendingEvents.push({ type, data: event });
       if (this._pendingEvents.length > this._maxPendingEvents) {
-        // TODO: Log when pending events must be dropped. (SDK-915)
+        if (!this._eventsDropped) {
+          this._eventsDropped = true;
+          this._logger.warn(
+            prefixLog(
+              `Maximum pending events reached. Old events will be dropped until the SDK client is registered.`,
+            ),
+          );
+        }
         this._pendingEvents.shift();
       }
     }
@@ -212,8 +241,27 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this._capture(SESSION_CAPTURE_KEY, { ...sessionEvent, breadcrumbs: [...this._breadcrumbs] });
   }
 
+  private _applyBreadcrumbFilters(
+    breadcrumb: Breadcrumb,
+    filters: BreadcrumbFilter[],
+  ): Breadcrumb | undefined {
+    try {
+      return filters.reduce(
+        (breadcrumbToFilter: Breadcrumb | undefined, filter: BreadcrumbFilter) =>
+          applyBreadcrumbFilter(breadcrumbToFilter, filter),
+        breadcrumb,
+      );
+    } catch (e) {
+      if (!this._breadcrumbFilterError) {
+        this._breadcrumbFilterError = true;
+        this._logger.warn(prefixLog(`Error applying breadcrumb filters: ${e}`));
+      }
+      return undefined;
+    }
+  }
+
   addBreadcrumb(breadcrumb: Breadcrumb): void {
-    const filtered = applyBreadcrumbFilters(breadcrumb, this._options.breadcrumbs.filters);
+    const filtered = this._applyBreadcrumbFilters(breadcrumb, this._options.breadcrumbs.filters);
     if (filtered !== undefined) {
       this._breadcrumbs.push(filtered);
       if (this._breadcrumbs.length > this._maxBreadcrumbs) {

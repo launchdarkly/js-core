@@ -1,5 +1,6 @@
 import { Breadcrumb } from './Breadcrumb';
 import { Collector } from './Collector';
+import { MinLogger } from './MinLogger';
 
 /**
  * Interface for URL filters.
@@ -185,4 +186,15 @@ export interface Options {
    * Configuration that controls the capture of the stack trace.
    */
   stack?: StackOptions;
+
+  /**
+   * Logger to use for warnings.
+   *
+   * This option is compatible with the `LDLogger` interface used by the LaunchDarkly SDK.
+   *
+   * If this option is not provided, the logs will be written to console.log unless the LaunchDarkly SDK is registered,
+   * and the registered SDK instance exposes its logger. In which case, the logs will be written to the registered SDK's
+   * logger. The 3.x SDKs do not expose their logger.
+   */
+  logger?: MinLogger;
 }

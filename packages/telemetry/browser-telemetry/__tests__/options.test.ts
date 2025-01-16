@@ -63,7 +63,7 @@ it('warns when maxPendingEvents is not a number', () => {
 
   expect(outOptions.maxPendingEvents).toEqual(defaultOptions().maxPendingEvents);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "maxPendingEvents" should be of type number, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "maxPendingEvents" should be of type number, got string, using default value',
   );
 });
 
@@ -90,7 +90,7 @@ it('warns when breadcrumbs config is not an object', () => {
 
   expect(outOptions.breadcrumbs).toEqual(defaultOptions().breadcrumbs);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs" should be of type object, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs" should be of type object, got string, using default value',
   );
 });
 
@@ -105,7 +105,7 @@ it('warns when collectors is not an array', () => {
 
   expect(outOptions.collectors).toEqual(defaultOptions().collectors);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "collectors" should be of type Collector[], got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "collectors" should be of type Collector[], got string, using default value',
   );
 });
 
@@ -133,7 +133,7 @@ it('warns when stack config is not an object', () => {
 
   expect(outOptions.stack).toEqual(defaultOptions().stack);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "stack" should be of type object, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "stack" should be of type object, got string, using default value',
   );
 });
 
@@ -152,7 +152,7 @@ it('warns when breadcrumbs.maxBreadcrumbs is not a number', () => {
     defaultOptions().breadcrumbs.maxBreadcrumbs,
   );
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.maxBreadcrumbs" should be of type number, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.maxBreadcrumbs" should be of type number, got string, using default value',
   );
 });
 
@@ -183,7 +183,7 @@ it('warns when breadcrumbs.click is not boolean', () => {
 
   expect(outOptions.breadcrumbs.click).toEqual(defaultOptions().breadcrumbs.click);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.click" should be of type boolean, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.click" should be of type boolean, got string, using default value',
   );
 });
 
@@ -200,7 +200,7 @@ it('warns when breadcrumbs.evaluations is not boolean', () => {
 
   expect(outOptions.breadcrumbs.evaluations).toEqual(defaultOptions().breadcrumbs.evaluations);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.evaluations" should be of type boolean, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.evaluations" should be of type boolean, got string, using default value',
   );
 });
 
@@ -217,7 +217,7 @@ it('warns when breadcrumbs.flagChange is not boolean', () => {
 
   expect(outOptions.breadcrumbs.flagChange).toEqual(defaultOptions().breadcrumbs.flagChange);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.flagChange" should be of type boolean, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.flagChange" should be of type boolean, got string, using default value',
   );
 });
 
@@ -234,7 +234,7 @@ it('warns when breadcrumbs.keyboardInput is not boolean', () => {
 
   expect(outOptions.breadcrumbs.keyboardInput).toEqual(defaultOptions().breadcrumbs.keyboardInput);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.keyboardInput" should be of type boolean, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.keyboardInput" should be of type boolean, got string, using default value',
   );
 });
 
@@ -307,7 +307,7 @@ it('warns when breadcrumbs.http is not an object', () => {
 
   expect(outOptions.breadcrumbs.http).toEqual(defaultOptions().breadcrumbs.http);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.http" should be of type HttpBreadCrumbOptions | false, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.http" should be of type HttpBreadCrumbOptions | false, got string, using default value',
   );
 });
 
@@ -328,7 +328,7 @@ it('warns when breadcrumbs.http.instrumentFetch is not boolean', () => {
     defaultOptions().breadcrumbs.http.instrumentFetch,
   );
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.http.instrumentFetch" should be of type boolean, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.http.instrumentFetch" should be of type boolean, got string, using default value',
   );
 });
 
@@ -349,7 +349,7 @@ it('warns when breadcrumbs.http.instrumentXhr is not boolean', () => {
     defaultOptions().breadcrumbs.http.instrumentXhr,
   );
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.http.instrumentXhr" should be of type boolean, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.http.instrumentXhr" should be of type boolean, got string, using default value',
   );
 });
 
@@ -419,7 +419,7 @@ it('warns when breadcrumbs.http.customUrlFilter is not a function', () => {
 
   expect(outOptions.breadcrumbs.http.customUrlFilter).toBeUndefined();
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'The "breadcrumbs.http.customUrlFilter" must be a function. Received string',
+    'LaunchDarkly - Browser Telemetry: The "breadcrumbs.http.customUrlFilter" must be a function. Received string',
   );
 });
 
@@ -435,6 +435,6 @@ it('warns when filters is not an array', () => {
   );
   expect(outOptions.breadcrumbs.filters).toEqual([]);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'Config option "breadcrumbs.filters" should be of type array, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.filters" should be of type array, got string, using default value',
   );
 });

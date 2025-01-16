@@ -1,3 +1,4 @@
+import { LDClientLogging } from '../src/api';
 import { LDClientTracking } from '../src/api/client/LDClientTracking';
 import BrowserTelemetryImpl from '../src/BrowserTelemetryImpl';
 import { ParsedOptions } from '../src/options';
@@ -210,6 +211,30 @@ it('unregisters collectors on close', () => {
   expect(mockCollector.unregister).toHaveBeenCalled();
 });
 
+it('logs event dropped message when maxPendingEvents is reached', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const telemetry = new BrowserTelemetryImpl({
+    ...defaultOptions,
+    maxPendingEvents: 2,
+    logger: mockLogger,
+  });
+  telemetry.captureError(new Error('Test error'));
+  expect(mockLogger.warn).not.toHaveBeenCalled();
+  telemetry.captureError(new Error('Test error 2'));
+  expect(mockLogger.warn).not.toHaveBeenCalled();
+
+  telemetry.captureError(new Error('Test error 3'));
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Maximum pending events reached. Old events will be dropped until the SDK' +
+      ' client is registered.',
+  );
+
+  telemetry.captureError(new Error('Test error 4'));
+  expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+});
+
 it('filters breadcrumbs using provided filters', () => {
   const options: ParsedOptions = {
     ...defaultOptions,
@@ -357,5 +382,143 @@ it('omits breadcrumbs when a filter is not a function', () => {
     expect.objectContaining({
       breadcrumbs: [],
     }),
+  );
+});
+
+it('warns when a breadcrumb filter is not a function', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    // @ts-ignore
+    breadcrumbs: { ...defaultOptions.breadcrumbs, filters: ['potato'] },
+    logger: mockLogger,
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: TypeError: filter is not a function',
+  );
+});
+
+it('warns when a breadcrumb filter throws an exception', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      filters: [
+        () => {
+          throw new Error('Filter error');
+        },
+      ],
+    },
+    logger: mockLogger,
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
+  );
+});
+
+it('only logs breadcrumb filter error once', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      filters: [
+        () => {
+          throw new Error('Filter error');
+        },
+      ],
+    },
+    logger: mockLogger,
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  // Add multiple breadcrumbs that will trigger the filter error
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 2 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  // Verify warning was only logged once
+  expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
+  );
+});
+
+it('uses the client logger when no logger is provided', () => {
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      filters: [
+        () => {
+          throw new Error('Filter error');
+        },
+      ],
+    },
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  const mockClientWithLogging: jest.Mocked<LDClientLogging & LDClientTracking> = {
+    logger: {
+      warn: jest.fn(),
+    },
+    track: jest.fn(),
+  };
+
+  telemetry.register(mockClientWithLogging);
+
+  // Add multiple breadcrumbs that will trigger the filter error
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  expect(mockClientWithLogging.logger.warn).toHaveBeenCalledTimes(1);
+  expect(mockClientWithLogging.logger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
   );
 });
