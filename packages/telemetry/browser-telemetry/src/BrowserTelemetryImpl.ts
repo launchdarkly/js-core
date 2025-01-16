@@ -5,7 +5,7 @@
  */
 import type { LDContext, LDEvaluationDetail, LDInspection } from '@launchdarkly/js-client-sdk';
 
-import { BreadcrumbFilter, LDClientTracking, MinLogger } from './api';
+import { BreadcrumbFilter, LDClientLogging, LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
@@ -73,6 +73,16 @@ function configureTraceKit(options: ParsedStackOptions) {
   // var.
   const anyObj = TraceKit as any;
   anyObj.linesOfContext = beforeAfterMax * 2 + 1;
+}
+
+/**
+ * Check if the client supports LDClientLogging.
+ *
+ * @param client The client to check.
+ * @returns True if the client is an instance of LDClientLogging.
+ */
+function isLDClientLogging(client: unknown): client is LDClientLogging {
+  return (client as any).logger !== undefined;
 }
 
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
@@ -159,8 +169,13 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   private _setLogger() {
-    this._logger =
-      this._options.logger ?? ((this._client as any)?.logger as MinLogger) ?? fallbackLogger;
+    if (this._options.logger) {
+      this._logger = this._options.logger;
+    } else if (isLDClientLogging(this._client)) {
+      this._logger = this._client.logger;
+    } else {
+      this._logger = fallbackLogger;
+    }
   }
 
   inspectors(): LDInspection[] {

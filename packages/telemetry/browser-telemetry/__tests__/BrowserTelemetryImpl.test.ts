@@ -1,3 +1,4 @@
+import { LDClientLogging } from '../src/api';
 import { LDClientTracking } from '../src/api/client/LDClientTracking';
 import BrowserTelemetryImpl from '../src/BrowserTelemetryImpl';
 import { ParsedOptions } from '../src/options';
@@ -479,6 +480,45 @@ it('only logs breadcrumb filter error once', () => {
   // Verify warning was only logged once
   expect(mockLogger.warn).toHaveBeenCalledTimes(1);
   expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
+  );
+});
+
+it('uses the client logger when no logger is provided', () => {
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      filters: [
+        () => {
+          throw new Error('Filter error');
+        },
+      ],
+    },
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  const mockClientWithLogging: jest.Mocked<LDClientLogging & LDClientTracking> = {
+    logger: {
+      warn: jest.fn(),
+    },
+    track: jest.fn(),
+  };
+
+  telemetry.register(mockClientWithLogging);
+
+  // Add multiple breadcrumbs that will trigger the filter error
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  expect(mockClientWithLogging.logger.warn).toHaveBeenCalledTimes(1);
+  expect(mockClientWithLogging.logger.warn).toHaveBeenCalledWith(
     'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
   );
 });
