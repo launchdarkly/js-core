@@ -5,7 +5,7 @@
  */
 import type { LDContext, LDEvaluationDetail, LDInspection } from '@launchdarkly/js-client-sdk';
 
-import { LDClientTracking } from './api';
+import { BreadcrumbFilter, LDClientTracking } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { Collector } from './api/Collector';
@@ -49,6 +49,28 @@ function safeValue(u: unknown): string | boolean | number | undefined {
       return u;
     default:
       return undefined;
+  }
+}
+
+function applyBreadcrumbFilter(
+  breadcrumb: Breadcrumb | undefined,
+  filter: BreadcrumbFilter,
+): Breadcrumb | undefined {
+  return breadcrumb === undefined ? undefined : filter(breadcrumb);
+}
+
+function applyBreadcrumbFilters(
+  breadcrumb: Breadcrumb,
+  filters: BreadcrumbFilter[],
+): Breadcrumb | undefined {
+  try {
+    return filters.reduce(
+      (breadcrumbToFilter: Breadcrumb | undefined, filter: BreadcrumbFilter) =>
+        applyBreadcrumbFilter(breadcrumbToFilter, filter),
+      breadcrumb,
+    );
+  } catch (e) {
+    return undefined;
   }
 }
 
@@ -191,9 +213,12 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   addBreadcrumb(breadcrumb: Breadcrumb): void {
-    this._breadcrumbs.push(breadcrumb);
-    if (this._breadcrumbs.length > this._maxBreadcrumbs) {
-      this._breadcrumbs.shift();
+    const filtered = applyBreadcrumbFilters(breadcrumb, this._options.breadcrumbs.filters);
+    if (filtered !== undefined) {
+      this._breadcrumbs.push(filtered);
+      if (this._breadcrumbs.length > this._maxBreadcrumbs) {
+        this._breadcrumbs.shift();
+      }
     }
   }
 

@@ -1,5 +1,11 @@
 import { Collector } from './api/Collector';
-import { HttpBreadCrumbOptions, Options, StackOptions, UrlFilter } from './api/Options';
+import {
+  BreadcrumbFilter,
+  HttpBreadcrumbOptions,
+  Options,
+  StackOptions,
+  UrlFilter,
+} from './api/Options';
 import { MinLogger } from './MinLogger';
 
 export function defaultOptions(): ParsedOptions {
@@ -14,6 +20,7 @@ export function defaultOptions(): ParsedOptions {
         instrumentFetch: true,
         instrumentXhr: true,
       },
+      filters: [],
     },
     stack: {
       source: {
@@ -55,7 +62,7 @@ function itemOrDefault<T>(item: T | undefined, defaultValue: T, checker?: (item:
 }
 
 function parseHttp(
-  options: HttpBreadCrumbOptions | false | undefined,
+  options: HttpBreadcrumbOptions | false | undefined,
   defaults: ParsedHttpOptions,
   logger?: MinLogger,
 ): ParsedHttpOptions {
@@ -163,6 +170,11 @@ export default function parse(options: Options, logger?: MinLogger): ParsedOptio
         checkBasic('boolean', 'breadcrumbs.keyboardInput', logger),
       ),
       http: parseHttp(options.breadcrumbs?.http, defaults.breadcrumbs.http, logger),
+      filters: itemOrDefault(
+        options.breadcrumbs?.filters,
+        defaults.breadcrumbs.filters,
+        checkBasic('array', 'breadcrumbs.filters', logger),
+      ),
     },
     stack: parseStack(options.stack, defaults.stack),
     maxPendingEvents: itemOrDefault(
@@ -271,6 +283,11 @@ export interface ParsedOptions {
      * Settings for http instrumentation and breadcrumbs.
      */
     http: ParsedHttpOptions;
+
+    /**
+     * Custom breadcrumb filters.
+     */
+    filters: BreadcrumbFilter[];
   };
 
   /**
