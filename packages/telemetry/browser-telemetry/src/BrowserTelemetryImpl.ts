@@ -102,6 +102,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   // Used to ensure we only log the event dropped message once.
   private _eventsDropped: boolean = false;
+  // Used to ensure we only log the breadcrumb filter error once.
   private _breadcrumbFilterError: boolean = false;
 
   constructor(private _options: ParsedOptions) {
