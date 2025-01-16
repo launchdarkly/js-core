@@ -383,3 +383,102 @@ it('omits breadcrumbs when a filter is not a function', () => {
     }),
   );
 });
+
+it('warns when a breadcrumb filter is not a function', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    // @ts-ignore
+    breadcrumbs: { ...defaultOptions.breadcrumbs, filters: ['potato'] },
+    logger: mockLogger,
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: TypeError: filter is not a function',
+  );
+});
+
+it('warns when a breadcrumb filter throws an exception', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      filters: [
+        () => {
+          throw new Error('Filter error');
+        },
+      ],
+    },
+    logger: mockLogger,
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
+  );
+});
+
+it('only logs breadcrumb filter error once', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    breadcrumbs: {
+      ...defaultOptions.breadcrumbs,
+      filters: [
+        () => {
+          throw new Error('Filter error');
+        },
+      ],
+    },
+    logger: mockLogger,
+  };
+
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  // Add multiple breadcrumbs that will trigger the filter error
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 1 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  telemetry.addBreadcrumb({
+    type: 'custom',
+    data: { id: 2 },
+    timestamp: Date.now(),
+    class: 'custom',
+    level: 'info',
+  });
+
+  // Verify warning was only logged once
+  expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
+  );
+});

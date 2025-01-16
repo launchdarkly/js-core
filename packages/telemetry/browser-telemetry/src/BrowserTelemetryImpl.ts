@@ -60,21 +60,6 @@ function applyBreadcrumbFilter(
   return breadcrumb === undefined ? undefined : filter(breadcrumb);
 }
 
-function applyBreadcrumbFilters(
-  breadcrumb: Breadcrumb,
-  filters: BreadcrumbFilter[],
-): Breadcrumb | undefined {
-  try {
-    return filters.reduce(
-      (breadcrumbToFilter: Breadcrumb | undefined, filter: BreadcrumbFilter) =>
-        applyBreadcrumbFilter(breadcrumbToFilter, filter),
-      breadcrumb,
-    );
-  } catch (e) {
-    return undefined;
-  }
-}
-
 function configureTraceKit(options: ParsedStackOptions) {
   const TraceKit = getTraceKit();
   // Include before + after + source line.
@@ -107,6 +92,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   // Used to ensure we only log the event dropped message once.
   private _eventsDropped: boolean = false;
+  private _breadcrumbFilterError: boolean = false;
 
   constructor(private _options: ParsedOptions) {
     configureTraceKit(_options.stack);
@@ -237,8 +223,27 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this._capture(SESSION_CAPTURE_KEY, { ...sessionEvent, breadcrumbs: [...this._breadcrumbs] });
   }
 
+  private _applyBreadcrumbFilters(
+    breadcrumb: Breadcrumb,
+    filters: BreadcrumbFilter[],
+  ): Breadcrumb | undefined {
+    try {
+      return filters.reduce(
+        (breadcrumbToFilter: Breadcrumb | undefined, filter: BreadcrumbFilter) =>
+          applyBreadcrumbFilter(breadcrumbToFilter, filter),
+        breadcrumb,
+      );
+    } catch (e) {
+      if (!this._breadcrumbFilterError) {
+        this._breadcrumbFilterError = true;
+        this._logger.warn(prefixLog(`Error applying breadcrumb filters: ${e}`));
+      }
+      return undefined;
+    }
+  }
+
   addBreadcrumb(breadcrumb: Breadcrumb): void {
-    const filtered = applyBreadcrumbFilters(breadcrumb, this._options.breadcrumbs.filters);
+    const filtered = this._applyBreadcrumbFilters(breadcrumb, this._options.breadcrumbs.filters);
     if (filtered !== undefined) {
       this._breadcrumbs.push(filtered);
       if (this._breadcrumbs.length > this._maxBreadcrumbs) {
