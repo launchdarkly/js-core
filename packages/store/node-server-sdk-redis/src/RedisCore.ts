@@ -29,6 +29,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   constructor(
     private readonly state: RedisClientState,
     private readonly logger?: LDLogger,
+    private readonly localFeatureStore?: any,
   ) {
     this.initedKey = this.state.prefixedKey('$inited');
   }
@@ -107,8 +108,21 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   ): void {
     if (!this.state.isConnected() && !this.state.isInitialConnection()) {
       this.logger?.warn('Attempted to fetch all keys while Redis connection is down');
-      callback(undefined);
-      return;
+      this.localFeatureStore().then(
+        (items: any) => {
+          let localResults = {};
+          if (kind.namespace === 'features') {
+            localResults = items.features;
+          } else {
+            localResults = items.segments;
+          }
+          callback(localResults as any);
+        },
+        (err: any) => {
+          console.log(err);
+          callback(undefined);
+        },
+      );
     }
 
     this.state.getClient().hgetall(this.state.prefixedKey(kind.namespace), (err, values) => {

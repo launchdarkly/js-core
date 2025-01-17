@@ -23,7 +23,10 @@ import RedisFeatureStore from './RedisFeatureStore';
  * @returns
  *   A factory function suitable for use in the SDK configuration (LDOptions).
  */
-export default function RedisFeatureStoreFactory(options?: LDRedisOptions) {
+export default function RedisFeatureStoreFactory(
+  options?: LDRedisOptions,
+  localFeatureStore?: any,
+) {
   return (config: LDClientContext) =>
-    new RedisFeatureStore(options, config.basicConfiguration.logger);
+    new RedisFeatureStore(options, config.basicConfiguration.logger, localFeatureStore);
 }
