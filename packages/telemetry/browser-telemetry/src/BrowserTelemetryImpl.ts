@@ -28,7 +28,7 @@ import { getTraceKit } from './vendor/TraceKit';
 
 const CUSTOM_KEY_PREFIX = '$ld:telemetry';
 const ERROR_KEY = `${CUSTOM_KEY_PREFIX}:error`;
-const SESSION_CAPTURE_KEY = `${CUSTOM_KEY_PREFIX}:sessionCapture`;
+const SESSION_INIT_KEY = `${CUSTOM_KEY_PREFIX}:session:init`;
 const GENERIC_EXCEPTION = 'generic';
 const NULL_EXCEPTION_MESSAGE = 'exception was null or undefined';
 const MISSING_MESSAGE = 'exception had no message';
@@ -163,6 +163,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     // When the client is registered, we need to set the logger again, because we may be able to use the client's
     // logger.
     this._setLogger();
+
+    this._client.track(SESSION_INIT_KEY, { sessionId: this._sessionId });
+
     this._pendingEvents.forEach((event) => {
       this._client?.track(event.type, event.data);
     });
@@ -235,10 +238,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   captureErrorEvent(errorEvent: ErrorEvent): void {
     this.captureError(errorEvent.error);
-  }
-
-  captureSession(sessionEvent: EventData): void {
-    this._capture(SESSION_CAPTURE_KEY, { ...sessionEvent, breadcrumbs: [...this._breadcrumbs] });
   }
 
   private _applyBreadcrumbFilters(
