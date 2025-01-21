@@ -2,8 +2,8 @@
  * A less constrained version of the LDInspection interface in order to allow for greater compatibility between
  * SDK versions.
  *
- * This interface is not intended for use by the application developer and is instead intended as a compatibility bridge
- *  to support multiple SDK versions.
+ * This interface is not intended for use by application developers and is instead intended as a compatibility bridge
+ * to support multiple SDK versions.
  */
 export interface BrowserTelemetryInspector {
   /**
