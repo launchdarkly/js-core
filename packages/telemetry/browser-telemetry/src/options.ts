@@ -190,7 +190,13 @@ export default function parse(options: Options, logger?: MinLogger): ParsedOptio
       filters: itemOrDefault(
         options.breadcrumbs?.filters,
         defaults.breadcrumbs.filters,
-        checkBasic('array', 'breadcrumbs.filters', logger),
+        (item) => {
+          if (Array.isArray(item)) {
+            return true;
+          }
+          logger?.warn(wrongOptionType('breadcrumbs.filters', 'BreadcrumbFilter[]', typeof item));
+          return false;
+        },
       ),
     },
     stack: parseStack(options.stack, defaults.stack),
