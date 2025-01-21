@@ -1,3 +1,4 @@
+import { Breadcrumb } from '../src/api/Breadcrumb';
 import ErrorCollector from '../src/collectors/error';
 import parse, { defaultOptions } from '../src/options';
 
@@ -15,6 +16,7 @@ it('handles an empty configuration', () => {
 });
 
 it('can set all options at once', () => {
+  const filter = (breadcrumb: Breadcrumb) => breadcrumb;
   const outOptions = parse({
     maxPendingEvents: 1,
     breadcrumbs: {
@@ -22,7 +24,7 @@ it('can set all options at once', () => {
       click: false,
       evaluations: false,
       flagChange: false,
-      filters: [(breadcrumb) => breadcrumb],
+      filters: [filter],
     },
     collectors: [new ErrorCollector(), new ErrorCollector()],
   });
@@ -39,7 +41,7 @@ it('can set all options at once', () => {
         instrumentFetch: true,
         instrumentXhr: true,
       },
-      filters: expect.any(Array),
+      filters: expect.arrayContaining([filter]),
     },
     stack: {
       source: {
@@ -50,6 +52,7 @@ it('can set all options at once', () => {
     },
     collectors: [new ErrorCollector(), new ErrorCollector()],
   });
+  expect(mockLogger.warn).not.toHaveBeenCalled();
 });
 
 it('warns when maxPendingEvents is not a number', () => {
@@ -435,6 +438,6 @@ it('warns when filters is not an array', () => {
   );
   expect(outOptions.breadcrumbs.filters).toEqual([]);
   expect(mockLogger.warn).toHaveBeenCalledWith(
-    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.filters" should be of type array, got string, using default value',
+    'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.filters" should be of type BreadcrumbFilter[], got string, using default value',
   );
 });
