@@ -3,6 +3,7 @@ import type { LDInspection } from '@launchdarkly/js-client-sdk';
 import { LDClientTracking } from '../api';
 import { Breadcrumb } from '../api/Breadcrumb';
 import { getTelemetryInstance } from './singletonInstance';
+import { BrowserTelemetryInspector } from '../api/client/BrowserTelemetryInspector';
 
 /**
  * Returns an array of active SDK inspectors to use with SDK versions that do
@@ -13,7 +14,7 @@ import { getTelemetryInstance } from './singletonInstance';
  *
  * @returns An array of {@link LDInspection} objects.
  */
-export function inspectors(): LDInspection[] {
+export function inspectors(): BrowserTelemetryInspector[] {
   return getTelemetryInstance()?.inspectors() || [];
 }
 

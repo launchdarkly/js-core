@@ -2,6 +2,7 @@ import type { LDInspection } from '@launchdarkly/js-client-sdk';
 
 import { Breadcrumb } from './Breadcrumb';
 import { LDClientTracking } from './client/LDClientTracking';
+import { BrowserTelemetryInspector } from './client/BrowserTelemetryInspector';
 
 /**
  * Interface for browser-based telemetry collection in LaunchDarkly SDKs.
@@ -17,7 +18,7 @@ export interface BrowserTelemetry {
    *
    * @returns An array of {@link LDInspection} objects.
    */
-  inspectors(): LDInspection[];
+  inspectors(): BrowserTelemetryInspector[];
 
   /**
    * Captures an Error object for telemetry purposes.

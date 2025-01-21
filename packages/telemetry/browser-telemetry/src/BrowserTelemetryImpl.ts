@@ -3,7 +3,7 @@
  * This is only a type dependency and these types should be compatible between
  * SDKs.
  */
-import type { LDContext, LDEvaluationDetail, LDInspection } from '@launchdarkly/js-client-sdk';
+import type { LDContext, LDEvaluationDetail } from '@launchdarkly/js-client-sdk';
 
 import { BreadcrumbFilter, LDClientLogging, LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
@@ -18,6 +18,7 @@ import FetchCollector from './collectors/http/fetch';
 import XhrCollector from './collectors/http/xhr';
 import defaultUrlFilter from './filters/defaultUrlFilter';
 import makeInspectors from './inspectors';
+import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector';
 import { fallbackLogger, prefixLog } from './logging';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
@@ -94,7 +95,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   private _breadcrumbs: Breadcrumb[] = [];
 
-  private _inspectorInstances: LDInspection[] = [];
+  private _inspectorInstances: BrowserTelemetryInspector[] = [];
   private _collectors: Collector[] = [];
   private _sessionId: string = randomUuidV4();
 
@@ -149,7 +150,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     );
 
     const impl = this;
-    const inspectors: LDInspection[] = [];
+    const inspectors: BrowserTelemetryInspector[] = [];
     makeInspectors(_options, inspectors, impl);
     this._inspectorInstances.push(...inspectors);
 
@@ -184,7 +185,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     }
   }
 
-  inspectors(): LDInspection[] {
+  inspectors(): BrowserTelemetryInspector[] {
     return this._inspectorInstances;
   }
 
