@@ -1,5 +1,6 @@
 import { Breadcrumb, LDClientTracking } from '../../src/api';
 import { BrowserTelemetry } from '../../src/api/BrowserTelemetry';
+import { BrowserTelemetryInspector } from '../../src/api/client/BrowserTelemetryInspector';
 import { getTelemetryInstance } from '../../src/singleton/singletonInstance';
 import {
   addBreadcrumb,
@@ -9,7 +10,6 @@ import {
   inspectors,
   register,
 } from '../../src/singleton/singletonMethods';
-import { BrowserTelemetryInspector } from '../../src/api/client/BrowserTelemetryInspector';
 
 jest.mock('../../src/singleton/singletonInstance');
 

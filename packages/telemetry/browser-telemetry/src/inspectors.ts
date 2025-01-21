@@ -1,8 +1,8 @@
 import type { LDContext, LDEvaluationDetail } from '@launchdarkly/js-client-sdk';
 
+import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector.js';
 import BrowserTelemetryImpl from './BrowserTelemetryImpl.js';
 import { ParsedOptions } from './options.js';
-import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector.js';
 
 /**
  * Create inspectors to register with an LDClient instance.

@@ -8,6 +8,7 @@ import type { LDContext, LDEvaluationDetail } from '@launchdarkly/js-client-sdk'
 import { BreadcrumbFilter, LDClientLogging, LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
+import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector';
 import { Collector } from './api/Collector';
 import { ErrorData } from './api/ErrorData';
 import { EventData } from './api/EventData';
@@ -18,7 +19,6 @@ import FetchCollector from './collectors/http/fetch';
 import XhrCollector from './collectors/http/xhr';
 import defaultUrlFilter from './filters/defaultUrlFilter';
 import makeInspectors from './inspectors';
-import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector';
 import { fallbackLogger, prefixLog } from './logging';
 import { ParsedOptions, ParsedStackOptions } from './options';
 import randomUuidV4 from './randomUuidV4';
