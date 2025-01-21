@@ -32,7 +32,7 @@ let warnedClientNotInitialized: boolean = false;
  * register(ldClient);
  * ```
  *
- * If using the 3.x version of the LaunchDarkly SDK, then you must also add inspectors when intializing your LaunchDarkly client.
+ * If using the 3.x version of the LaunchDarkly SDK, then you must also add inspectors when initializing your LaunchDarkly client.
  * This allows for integration with feature flag data.
  *
  * @example
