@@ -1,7 +1,6 @@
-import type { LDInspection } from '@launchdarkly/js-client-sdk';
-
 import { LDClientTracking } from '../api';
 import { Breadcrumb } from '../api/Breadcrumb';
+import { BrowserTelemetryInspector } from '../api/client/BrowserTelemetryInspector';
 import { getTelemetryInstance } from './singletonInstance';
 
 /**
@@ -11,9 +10,9 @@ import { getTelemetryInstance } from './singletonInstance';
  * Telemetry must be initialized, using {@link initializeTelemetry} before calling this method.
  * If telemetry is not initialized, this method will return an empty array.
  *
- * @returns An array of {@link LDInspection} objects.
+ * @returns An array of {@link BrowserTelemetryInspector} objects.
  */
-export function inspectors(): LDInspection[] {
+export function inspectors(): BrowserTelemetryInspector[] {
   return getTelemetryInstance()?.inspectors() || [];
 }
 

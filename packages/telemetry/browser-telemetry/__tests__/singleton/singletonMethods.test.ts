@@ -1,7 +1,6 @@
-import { LDInspection } from '@launchdarkly/js-client-sdk';
-
 import { Breadcrumb, LDClientTracking } from '../../src/api';
 import { BrowserTelemetry } from '../../src/api/BrowserTelemetry';
+import { BrowserTelemetryInspector } from '../../src/api/client/BrowserTelemetryInspector';
 import { getTelemetryInstance } from '../../src/singleton/singletonInstance';
 import {
   addBreadcrumb,
@@ -36,8 +35,8 @@ it('returns empty array when telemetry is not initialized for inspectors', () =>
 });
 
 it('returns inspectors when telemetry is initialized', () => {
-  const mockInspectors: LDInspection[] = [
-    { name: 'test-inspector', type: 'flag-used', method: () => {} },
+  const mockInspectors: BrowserTelemetryInspector[] = [
+    { name: 'test-inspector', type: 'flag-used', synchronous: true, method: () => {} },
   ];
   mockGetTelemetryInstance.mockReturnValue(mockTelemetry);
   mockTelemetry.inspectors.mockReturnValue(mockInspectors);
