@@ -93,6 +93,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
           const item = items[key];
           if (Object.hasOwnProperty.call(existingItems, key)) {
             const old = existingItems[key];
+            // TODO: SDK-1046 - Determine if version check should be removed
             if (!old || old.version < item.version) {
               existingItems[key] = item;
             }
