@@ -11,7 +11,7 @@ export * from './singleton';
 /**
  * Initialize a new telemetry instance.
  *
- * This instance is not global. Generally developers should use {@link initializeTelemetry} instead.
+ * This instance is not global. Generally developers should use {@link initTelemetry} instead.
  *
  * If for some reason multiple telemetry instances are needed, this method can be used to create a new instance.
  * Instances are not aware of each other and may send duplicate data from automatically captured events.
@@ -19,7 +19,7 @@ export * from './singleton';
  * @param options The options to use for the telemetry instance.
  * @returns A telemetry instance.
  */
-export function initializeTelemetryInstance(options?: Options): BrowserTelemetry {
+export function initTelemetryInstance(options?: Options): BrowserTelemetry {
   const parsedOptions = parse(options || {}, safeMinLogger(options?.logger));
   return new BrowserTelemetryImpl(parsedOptions);
 }
