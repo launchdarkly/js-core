@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/browser-telemetry",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "packageManager": "yarn@3.4.1",
   "type": "module",
   "main": "./dist/index.cjs",
