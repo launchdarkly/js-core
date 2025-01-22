@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>ProcessStreamResponse | @launchdarkly/node-server-sdk - v9.7.3</title><meta name="description" content="Documentation for @launchdarkly/node-server-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>StreamingErrorHandler | @launchdarkly/node-server-sdk - v9.7.3</title><meta name="description" content="Documentation for @launchdarkly/node-server-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -14,40 +14,24 @@
 <ul class="tsd-breadcrumb">
 <li><a href="../index.html">@launchdarkly/node-server-sdk</a></li>
 <li><a href="../modules/platform-1.html">platform</a></li>
-<li><a href="platform-1.ProcessStreamResponse.html">ProcessStreamResponse</a></li></ul>
-<h1>Type alias ProcessStreamResponse</h1></div>
-<div class="tsd-signature"><span class="tsd-kind-type-alias">Process<wbr/>Stream<wbr/>Response</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">deserializeData</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">processJson</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">json</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
+<li><a href="platform-1.StreamingErrorHandler.html">StreamingErrorHandler</a></li></ul>
+<h1>Type alias StreamingErrorHandler</h1></div>
+<div class="tsd-signature"><span class="tsd-kind-type-alias">Streaming<wbr/>Error<wbr/>Handler</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></div>
 <div class="tsd-type-declaration">
 <h4>Type declaration</h4>
 <ul class="tsd-parameters">
-<li class="tsd-parameter">
-<h5><span class="tsd-kind-property">deserialize<wbr/>Data</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span></h5>
-<ul class="tsd-parameters">
 <li class="tsd-parameter-signature">
 <ul class="tsd-signatures">
-<li class="tsd-signature" id="__type.deserializeData.__type-1.__type-2"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">data</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
+<li class="tsd-signature" id="__type.__type-1"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">data</span>: <span class="tsd-signature-type">string</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4></li></ul></li></ul></li>
-<li class="tsd-parameter">
-<h5><span class="tsd-kind-property">process<wbr/>Json</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">json</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></h5>
-<ul class="tsd-parameters">
-<li class="tsd-parameter-signature">
-<ul class="tsd-signatures">
-<li class="tsd-signature" id="__type.processJson.__type-3.__type-4"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">json</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-<li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5><span class="tsd-kind-parameter">json</span>: <span class="tsd-signature-type">any</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div><aside class="tsd-sources">
+<h5><span class="tsd-kind-parameter">err</span>: <a href="../classes/platform-1.LDStreamingError.html" class="tsd-signature-type tsd-kind-class">LDStreamingError</a></h5></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/esm/api/platform/EventSource.d.ts:6</li></ul></aside></div>
+<li>Defined in packages/shared/common/dist/esm/datasource/errors.d.ts:17</li></ul></aside></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -240,8 +224,8 @@
 <li><a href="platform-1.LDFlagValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDFlag<wbr/>Value</span></a></li>
 <li><a href="platform-1.LDHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDHeaders</span></a></li>
 <li><a href="platform-1.LDLogLevel.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDLog<wbr/>Level</span></a></li>
-<li><a href="platform-1.ProcessStreamResponse.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Process<wbr/>Stream<wbr/>Response</span></a></li>
-<li><a href="platform-1.StreamingErrorHandler.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Streaming<wbr/>Error<wbr/>Handler</span></a></li>
+<li><a href="platform-1.ProcessStreamResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Process<wbr/>Stream<wbr/>Response</span></a></li>
+<li><a href="platform-1.StreamingErrorHandler.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Streaming<wbr/>Error<wbr/>Handler</span></a></li>
 <li><a href="platform-1.VoidFunction.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Void<wbr/>Function</span></a></li>
 <li><a href="../functions/platform-1.base64UrlEncode.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-64"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)"></path></g></svg><span>base64<wbr/>Url<wbr/>Encode</span></a></li>
 <li><a href="../functions/platform-1.cancelableTimedPromise.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>cancelable<wbr/>Timed<wbr/>Promise</span></a></li>
