@@ -41,6 +41,16 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
   }
 
+  trackTimeToFirstToken(timeToFirstTokenMs: number) {
+    this._trackedMetrics.timeToFirstTokenMs = timeToFirstTokenMs;
+    this._ldClient.track(
+      '$ld:ai:tokens:ttf',
+      this._context,
+      this._getTrackData(),
+      timeToFirstTokenMs,
+    );
+  }
+
   trackFeedback(feedback: { kind: LDFeedbackKind }): void {
     this._trackedMetrics.feedback = feedback;
     if (feedback.kind === LDFeedbackKind.Positive) {

@@ -46,6 +46,18 @@ it('tracks duration of async function', async () => {
   );
 });
 
+it('tracks time to first token', () => {
+  const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, variationKey, testContext);
+  tracker.trackTimeToFirstToken(1000);
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:tokens:ttf',
+    testContext,
+    { configKey, variationKey },
+    1000,
+  );
+});
+
 it('tracks positive feedback', () => {
   const tracker = new LDAIConfigTrackerImpl(mockLdClient, configKey, variationKey, testContext);
   tracker.trackFeedback({ kind: LDFeedbackKind.Positive });
