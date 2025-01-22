@@ -1,5 +1,6 @@
 import { Breadcrumb } from './Breadcrumb';
 import { Collector } from './Collector';
+import { ErrorData } from './ErrorData';
 import { MinLogger } from './MinLogger';
 
 /**
@@ -27,11 +28,19 @@ export interface UrlFilter {
 /**
  * Interface for breadcrumb filters.
  *
- * Given a breadcrumb the filter may return a modified breadcrumb or undefined to
- * exclude the breadcrumb.
+ * Given a breadcrumb the filter may return a modified breadcrumb or undefined to exclude the breadcrumb.
  */
 export interface BreadcrumbFilter {
   (breadcrumb: Breadcrumb): Breadcrumb | undefined;
+}
+
+/**
+ * Interface for filtering error data before it is sent to LaunchDarkly.
+ *
+ * Given {@link ErrorData} the filter may return modified data or undefined to exclude the breadcrumb.
+ */
+export interface ErrorDataFilter {
+  (event: ErrorData): ErrorData | undefined;
 }
 
 export interface HttpBreadcrumbOptions {
@@ -197,4 +206,14 @@ export interface Options {
    * logger. The 3.x SDKs do not expose their logger.
    */
   logger?: MinLogger;
+
+  /**
+   * Custom error data filters.
+   *
+   * Can be used to redact or modify error data.
+   *
+   * For filtering breadcrumbs or URLs in error data, see {@link breadcrumbs.filters} and
+   * {@link breadcrumbs.http.customUrlFilter}.
+   */
+  errorFilters?: ErrorDataFilter[];
 }

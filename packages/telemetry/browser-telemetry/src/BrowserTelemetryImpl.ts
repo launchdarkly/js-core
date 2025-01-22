@@ -5,7 +5,7 @@
  */
 import type { LDContext, LDEvaluationDetail } from '@launchdarkly/js-client-sdk';
 
-import { BreadcrumbFilter, LDClientLogging, LDClientTracking, MinLogger } from './api';
+import { LDClientLogging, LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector';
@@ -54,11 +54,8 @@ function safeValue(u: unknown): string | boolean | number | undefined {
   }
 }
 
-function applyBreadcrumbFilter(
-  breadcrumb: Breadcrumb | undefined,
-  filter: BreadcrumbFilter,
-): Breadcrumb | undefined {
-  return breadcrumb === undefined ? undefined : filter(breadcrumb);
+function applyFilter<T>(item: T | undefined, filter: (item: T) => T | undefined): T | undefined {
+  return item === undefined ? undefined : filter(item);
 }
 
 function configureTraceKit(options: ParsedStackOptions) {
@@ -69,7 +66,7 @@ function configureTraceKit(options: ParsedStackOptions) {
   // from the before context.
   // The typing for this is a bool, but it accepts a number.
   const beforeAfterMax = Math.max(options.source.afterLines, options.source.beforeLines);
-  // The assignment here has bene split to prevent esbuild from complaining about an assigment to
+  // The assignment here has bene split to prevent esbuild from complaining about an assignment to
   // an import. TraceKit exports a single object and the interface requires modifying an exported
   // var.
   const anyObj = TraceKit as any;
@@ -105,6 +102,8 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private _eventsDropped: boolean = false;
   // Used to ensure we only log the breadcrumb filter error once.
   private _breadcrumbFilterError: boolean = false;
+  // Used to ensure we only log the error filter error once.
+  private _errorFilterError: boolean = false;
 
   constructor(private _options: ParsedOptions) {
     configureTraceKit(_options.stack);
@@ -198,8 +197,18 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
    * @param event The event data.
    */
   private _capture(type: string, event: EventData) {
+    const filteredEvent = this._applyFilters(event, this._options.errorFilters, (e: unknown) => {
+      if (!this._errorFilterError) {
+        this._errorFilterError = true;
+        this._logger.warn(prefixLog(`Error applying error filters: ${e}`));
+      }
+    });
+    if (filteredEvent === undefined) {
+      return;
+    }
+
     if (this._client === undefined) {
-      this._pendingEvents.push({ type, data: event });
+      this._pendingEvents.push({ type, data: filteredEvent });
       if (this._pendingEvents.length > this._maxPendingEvents) {
         if (!this._eventsDropped) {
           this._eventsDropped = true;
@@ -212,7 +221,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
         this._pendingEvents.shift();
       }
     }
-    this._client?.track(type, event);
+    this._client?.track(type, filteredEvent);
   }
 
   captureError(exception: Error): void {
@@ -241,27 +250,34 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this.captureError(errorEvent.error);
   }
 
-  private _applyBreadcrumbFilters(
-    breadcrumb: Breadcrumb,
-    filters: BreadcrumbFilter[],
-  ): Breadcrumb | undefined {
+  private _applyFilters<T>(
+    item: T,
+    filters: ((item: T) => T | undefined)[],
+    handleError: (e: unknown) => void,
+  ): T | undefined {
     try {
       return filters.reduce(
-        (breadcrumbToFilter: Breadcrumb | undefined, filter: BreadcrumbFilter) =>
-          applyBreadcrumbFilter(breadcrumbToFilter, filter),
-        breadcrumb,
+        (itemToFilter: T | undefined, filter: (item: T) => T | undefined) =>
+          applyFilter(itemToFilter, filter),
+        item,
       );
     } catch (e) {
-      if (!this._breadcrumbFilterError) {
-        this._breadcrumbFilterError = true;
-        this._logger.warn(prefixLog(`Error applying breadcrumb filters: ${e}`));
-      }
+      handleError(e);
       return undefined;
     }
   }
 
   addBreadcrumb(breadcrumb: Breadcrumb): void {
-    const filtered = this._applyBreadcrumbFilters(breadcrumb, this._options.breadcrumbs.filters);
+    const filtered = this._applyFilters(
+      breadcrumb,
+      this._options.breadcrumbs.filters,
+      (e: unknown) => {
+        if (!this._breadcrumbFilterError) {
+          this._breadcrumbFilterError = true;
+          this._logger.warn(prefixLog(`Error applying breadcrumb filters: ${e}`));
+        }
+      },
+    );
     if (filtered !== undefined) {
       this._breadcrumbs.push(filtered);
       if (this._breadcrumbs.length > this._maxBreadcrumbs) {
@@ -275,7 +291,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   /**
-   * Used to automatically collect flag usage for breacrumbs.
+   * Used to automatically collect flag usage for breadcrumbs.
    *
    * When session replay is in use the data is also forwarded to the session
    * replay collector.

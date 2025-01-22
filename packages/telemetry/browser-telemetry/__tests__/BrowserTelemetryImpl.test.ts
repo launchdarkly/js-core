@@ -33,6 +33,7 @@ const defaultOptions: ParsedOptions = {
     },
   },
   collectors: [],
+  errorFilters: [],
 };
 
 it('sends buffered events when client is registered', () => {
@@ -533,4 +534,126 @@ it('sends session init event when client is registered', () => {
       sessionId: expect.any(String),
     }),
   );
+});
+
+it('applies error filters to captured errors', () => {
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    errorFilters: [
+      (error) => ({
+        ...error,
+        message: error.message.replace('secret', 'redacted'),
+      }),
+    ],
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.captureError(new Error('Error with secret info'));
+  telemetry.register(mockClient);
+
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      message: 'Error with redacted info',
+    }),
+  );
+});
+
+it('filters out errors when filter returns undefined', () => {
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    errorFilters: [() => undefined],
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.captureError(new Error('Test error'));
+  telemetry.register(mockClient);
+
+  // Verify only session init event was tracked
+  expect(mockClient.track).toHaveBeenCalledTimes(1);
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:session:init',
+    expect.objectContaining({
+      sessionId: expect.any(String),
+    }),
+  );
+});
+
+it('applies multiple error filters in sequence', () => {
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    errorFilters: [
+      (error) => ({
+        ...error,
+        message: error.message.replace('secret', 'redacted'),
+      }),
+      (error) => ({
+        ...error,
+        message: error.message.replace('redacted', 'sneaky'),
+      }),
+    ],
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.captureError(new Error('Error with secret info'));
+  telemetry.register(mockClient);
+
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      message: 'Error with sneaky info',
+    }),
+  );
+});
+
+it('handles error filter throwing an exception', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    errorFilters: [
+      () => {
+        throw new Error('Filter error');
+      },
+    ],
+    logger: mockLogger,
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.captureError(new Error('Test error'));
+  telemetry.register(mockClient);
+
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Error applying error filters: Error: Filter error',
+  );
+  // Verify only session init event was tracked
+  expect(mockClient.track).toHaveBeenCalledTimes(1);
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:session:init',
+    expect.objectContaining({
+      sessionId: expect.any(String),
+    }),
+  );
+});
+
+it('only logs error filter error once', () => {
+  const mockLogger = {
+    warn: jest.fn(),
+  };
+  const options: ParsedOptions = {
+    ...defaultOptions,
+    errorFilters: [
+      () => {
+        throw new Error('Filter error');
+      },
+    ],
+    logger: mockLogger,
+  };
+  const telemetry = new BrowserTelemetryImpl(options);
+
+  telemetry.captureError(new Error('Error 1'));
+  telemetry.captureError(new Error('Error 2'));
+
+  expect(mockLogger.warn).toHaveBeenCalledTimes(1);
 });

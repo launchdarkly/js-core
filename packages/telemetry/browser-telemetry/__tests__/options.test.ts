@@ -1,4 +1,5 @@
 import { Breadcrumb } from '../src/api/Breadcrumb';
+import { ErrorData } from '../src/api/ErrorData';
 import ErrorCollector from '../src/collectors/error';
 import parse, { defaultOptions } from '../src/options';
 
@@ -16,7 +17,8 @@ it('handles an empty configuration', () => {
 });
 
 it('can set all options at once', () => {
-  const filter = (breadcrumb: Breadcrumb) => breadcrumb;
+  const breadcrumbFilter = (breadcrumb: Breadcrumb) => breadcrumb;
+  const errorFilter = (error: ErrorData) => error;
   const outOptions = parse({
     maxPendingEvents: 1,
     breadcrumbs: {
@@ -24,9 +26,10 @@ it('can set all options at once', () => {
       click: false,
       evaluations: false,
       flagChange: false,
-      filters: [filter],
+      filters: [breadcrumbFilter],
     },
     collectors: [new ErrorCollector(), new ErrorCollector()],
+    errorFilters: [errorFilter],
   });
   expect(outOptions).toEqual({
     maxPendingEvents: 1,
@@ -41,7 +44,7 @@ it('can set all options at once', () => {
         instrumentFetch: true,
         instrumentXhr: true,
       },
-      filters: expect.arrayContaining([filter]),
+      filters: expect.arrayContaining([breadcrumbFilter]),
     },
     stack: {
       source: {
@@ -51,6 +54,7 @@ it('can set all options at once', () => {
       },
     },
     collectors: [new ErrorCollector(), new ErrorCollector()],
+    errorFilters: expect.arrayContaining([errorFilter]),
   });
   expect(mockLogger.warn).not.toHaveBeenCalled();
 });
@@ -440,4 +444,32 @@ it('warns when filters is not an array', () => {
   expect(mockLogger.warn).toHaveBeenCalledWith(
     'LaunchDarkly - Browser Telemetry: Config option "breadcrumbs.filters" should be of type BreadcrumbFilter[], got string, using default value',
   );
+});
+
+it('warns when errorFilters is not an array', () => {
+  const outOptions = parse(
+    {
+      // @ts-ignore
+      errorFilters: 'not an array',
+    },
+    mockLogger,
+  );
+
+  expect(outOptions.errorFilters).toEqual([]);
+  expect(mockLogger.warn).toHaveBeenCalledWith(
+    'LaunchDarkly - Browser Telemetry: Config option "errorFilters" should be of type ErrorDataFilter[], got string, using default value',
+  );
+});
+
+it('accepts valid error filters array', () => {
+  const errorFilters = [(error: any) => error];
+  const outOptions = parse(
+    {
+      errorFilters,
+    },
+    mockLogger,
+  );
+
+  expect(outOptions.errorFilters).toEqual(errorFilters);
+  expect(mockLogger.warn).not.toHaveBeenCalled();
 });
