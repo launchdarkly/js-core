@@ -52,6 +52,7 @@ describe('createStreamListeners', () => {
     dataSourceUpdates = {
       init: jest.fn(),
       upsert: jest.fn(),
+      applyChanges: jest.fn(),
     };
     onPutCompleteHandler = jest.fn();
     onPatchCompleteHandler = jest.fn();

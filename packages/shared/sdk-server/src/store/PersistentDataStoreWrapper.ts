@@ -252,6 +252,27 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     this.upsert(kind, { key, version, deleted: true }, callback);
   }
 
+  applyChanges(
+    _basis: boolean,
+    _data: LDFeatureStoreDataStorage,
+    _selector: String | undefined,
+    _callback: () => void,
+  ): void {
+    // TODO: SDK-1029 - Transactional persistent store - update this to not iterate over items and instead send data to underlying PersistentDataStore
+    // no need for queue at the moment as init and upsert handle that, but as part of SDK-1029, queue may be needed
+    if (_basis) {
+      this.init(_data, _callback);
+    } else {
+      Object.entries(_data).forEach(([namespace, items]) => {
+        Object.keys(items || {}).forEach((key) => {
+          const item = items[key];
+          this.upsert({ namespace }, { key, ...item }, () => {});
+        });
+      });
+      _callback();
+    }
+  }
+
   close(): void {
     this._itemCache?.close();
     this._allItemsCache?.close();
