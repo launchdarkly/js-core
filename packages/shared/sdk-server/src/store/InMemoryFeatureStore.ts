@@ -18,11 +18,11 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
       if (Object.prototype.hasOwnProperty.call(items, key)) {
         const item = items[key];
         if (item && !item.deleted) {
-          return callback?.(item);
+          callback?.(item);
         }
       }
     }
-    return callback?.(null);
+    callback?.(null);
   }
 
   all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void): void {
@@ -110,7 +110,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {
-    return callback?.(this._initCalled);
+    callback?.(this._initCalled);
   }
 
   /* eslint-disable class-methods-use-this */
