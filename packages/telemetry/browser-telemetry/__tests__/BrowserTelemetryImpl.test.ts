@@ -67,8 +67,8 @@ it('limits pending events to maxPendingEvents', () => {
 
   telemetry.register(mockClient);
 
-  // Should only see the last 2 errors tracked
-  expect(mockClient.track).toHaveBeenCalledTimes(2);
+  // Should only see the the session init event and last 2 errors tracked
+  expect(mockClient.track).toHaveBeenCalledTimes(3);
   expect(mockClient.track).toHaveBeenCalledWith(
     '$ld:telemetry:error',
     expect.objectContaining({
@@ -520,5 +520,17 @@ it('uses the client logger when no logger is provided', () => {
   expect(mockClientWithLogging.logger.warn).toHaveBeenCalledTimes(1);
   expect(mockClientWithLogging.logger.warn).toHaveBeenCalledWith(
     'LaunchDarkly - Browser Telemetry: Error applying breadcrumb filters: Error: Filter error',
+  );
+});
+
+it('sends session init event when client is registered', () => {
+  const telemetry = new BrowserTelemetryImpl(defaultOptions);
+  telemetry.register(mockClient);
+
+  expect(mockClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:session:init',
+    expect.objectContaining({
+      sessionId: expect.any(String),
+    }),
   );
 });

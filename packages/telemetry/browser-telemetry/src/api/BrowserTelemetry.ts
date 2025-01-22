@@ -1,6 +1,5 @@
-import type { LDInspection } from '@launchdarkly/js-client-sdk';
-
 import { Breadcrumb } from './Breadcrumb';
+import { BrowserTelemetryInspector } from './client/BrowserTelemetryInspector';
 import { LDClientTracking } from './client/LDClientTracking';
 
 /**
@@ -15,9 +14,9 @@ export interface BrowserTelemetry {
    * Returns an array of active SDK inspectors to use with SDK versions that do
    * not support hooks.
    *
-   * @returns An array of {@link LDInspection} objects.
+   * @returns An array of {@link BrowserTelemetryInspector} objects.
    */
-  inspectors(): LDInspection[];
+  inspectors(): BrowserTelemetryInspector[];
 
   /**
    * Captures an Error object for telemetry purposes.

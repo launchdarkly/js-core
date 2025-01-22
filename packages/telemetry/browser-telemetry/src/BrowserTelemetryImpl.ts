@@ -3,11 +3,12 @@
  * This is only a type dependency and these types should be compatible between
  * SDKs.
  */
-import type { LDContext, LDEvaluationDetail, LDInspection } from '@launchdarkly/js-client-sdk';
+import type { LDContext, LDEvaluationDetail } from '@launchdarkly/js-client-sdk';
 
 import { BreadcrumbFilter, LDClientLogging, LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
+import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector';
 import { Collector } from './api/Collector';
 import { ErrorData } from './api/ErrorData';
 import { EventData } from './api/EventData';
@@ -28,7 +29,7 @@ import { getTraceKit } from './vendor/TraceKit';
 
 const CUSTOM_KEY_PREFIX = '$ld:telemetry';
 const ERROR_KEY = `${CUSTOM_KEY_PREFIX}:error`;
-const SESSION_CAPTURE_KEY = `${CUSTOM_KEY_PREFIX}:sessionCapture`;
+const SESSION_INIT_KEY = `${CUSTOM_KEY_PREFIX}:session:init`;
 const GENERIC_EXCEPTION = 'generic';
 const NULL_EXCEPTION_MESSAGE = 'exception was null or undefined';
 const MISSING_MESSAGE = 'exception had no message';
@@ -94,7 +95,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   private _breadcrumbs: Breadcrumb[] = [];
 
-  private _inspectorInstances: LDInspection[] = [];
+  private _inspectorInstances: BrowserTelemetryInspector[] = [];
   private _collectors: Collector[] = [];
   private _sessionId: string = randomUuidV4();
 
@@ -149,7 +150,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     );
 
     const impl = this;
-    const inspectors: LDInspection[] = [];
+    const inspectors: BrowserTelemetryInspector[] = [];
     makeInspectors(_options, inspectors, impl);
     this._inspectorInstances.push(...inspectors);
 
@@ -163,6 +164,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     // When the client is registered, we need to set the logger again, because we may be able to use the client's
     // logger.
     this._setLogger();
+
+    this._client.track(SESSION_INIT_KEY, { sessionId: this._sessionId });
+
     this._pendingEvents.forEach((event) => {
       this._client?.track(event.type, event.data);
     });
@@ -181,7 +185,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     }
   }
 
-  inspectors(): LDInspection[] {
+  inspectors(): BrowserTelemetryInspector[] {
     return this._inspectorInstances;
   }
 
@@ -235,10 +239,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   captureErrorEvent(errorEvent: ErrorEvent): void {
     this.captureError(errorEvent.error);
-  }
-
-  captureSession(sessionEvent: EventData): void {
-    this._capture(SESSION_CAPTURE_KEY, { ...sessionEvent, breadcrumbs: [...this._breadcrumbs] });
   }
 
   private _applyBreadcrumbFilters(
