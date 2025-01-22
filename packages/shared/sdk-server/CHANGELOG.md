@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.11.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.10.0...js-server-sdk-common-v2.11.0) (2025-01-22)
+
+
+### Features
+
+* Adds StreamingProcessor for FDv2 to sdk-server package. ([#707](https://github.com/launchdarkly/js-core/issues/707)) ([7f5c275](https://github.com/launchdarkly/js-core/commit/7f5c2750dcc8341d049d7e736ca21ec36e168703))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.12.0 to 2.13.0
+
 ## [2.10.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.9.1...js-server-sdk-common-v2.10.0) (2024-11-14)
 
 
