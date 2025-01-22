@@ -2,6 +2,7 @@ import { Collector } from './api/Collector';
 import { MinLogger } from './api/MinLogger';
 import {
   BreadcrumbFilter,
+  ErrorDataFilter,
   HttpBreadcrumbOptions,
   Options,
   StackOptions,
@@ -32,6 +33,7 @@ export function defaultOptions(): ParsedOptions {
     },
     maxPendingEvents: 100,
     collectors: [],
+    errorFilters: [],
   };
 }
 
@@ -211,6 +213,13 @@ export default function parse(options: Options, logger?: MinLogger): ParsedOptio
       }),
     ],
     logger: parseLogger(options),
+    errorFilters: itemOrDefault(options.errorFilters, defaults.errorFilters, (item) => {
+      if (Array.isArray(item)) {
+        return true;
+      }
+      logger?.warn(wrongOptionType('errorFilters', 'ErrorDataFilter[]', typeof item));
+      return false;
+    }),
   };
 }
 
@@ -324,4 +333,9 @@ export interface ParsedOptions {
    * Logger to use for warnings.
    */
   logger?: MinLogger;
+
+  /**
+   * Custom error data filters.
+   */
+  errorFilters: ErrorDataFilter[];
 }
