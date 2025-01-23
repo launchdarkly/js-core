@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.1.0...browser-telemetry-v0.1.1) (2025-01-23)
+
+
+### Bug Fixes
+
+* Fix race condition with client registration. ([#750](https://github.com/launchdarkly/js-core/issues/750)) ([d2ac2e2](https://github.com/launchdarkly/js-core/commit/d2ac2e230118b573b4e90b5781350067c7920fcf))
+
 ## [0.1.0](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.0.9...browser-telemetry-v0.1.0) (2025-01-22)
 
 
