@@ -34,6 +34,10 @@ const GENERIC_EXCEPTION = 'generic';
 const NULL_EXCEPTION_MESSAGE = 'exception was null or undefined';
 const MISSING_MESSAGE = 'exception had no message';
 
+// Timeout for client initialization. The telemetry SDK doesn't require that the client be initialized, but it does
+// require that the context processing that happens during initialization complete. This is some subset of the total
+// initialization time, but we don't care if initialization actually completes within the, just that the context
+// is available for event sending.
 const INITIALIZATION_TIMEOUT = 5;
 
 /**
