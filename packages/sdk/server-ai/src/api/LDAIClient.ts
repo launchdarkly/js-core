@@ -15,7 +15,7 @@ export interface LDAIClient {
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
    * @param defaultValue A fallback value containing model configuration and messages. This will
-   * be used if the configuration is not available from launchdarkly.
+   * be used if the configuration is not available from LaunchDarkly.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
    * the message templates. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
