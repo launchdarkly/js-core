@@ -5,7 +5,7 @@
  */
 import type { LDContext, LDEvaluationDetail } from '@launchdarkly/js-client-sdk';
 
-import { LDClientLogging, LDClientTracking, MinLogger } from './api';
+import { LDClientInitialization, LDClientLogging, LDClientTracking, MinLogger } from './api';
 import { Breadcrumb, FeatureManagementBreadcrumb } from './api/Breadcrumb';
 import { BrowserTelemetry } from './api/BrowserTelemetry';
 import { BrowserTelemetryInspector } from './api/client/BrowserTelemetryInspector';
@@ -33,6 +33,8 @@ const SESSION_INIT_KEY = `${CUSTOM_KEY_PREFIX}:session:init`;
 const GENERIC_EXCEPTION = 'generic';
 const NULL_EXCEPTION_MESSAGE = 'exception was null or undefined';
 const MISSING_MESSAGE = 'exception had no message';
+
+const INITIALIZATION_TIMEOUT = 5;
 
 /**
  * Given a flag value ensure it is safe for analytics.
@@ -83,6 +85,10 @@ function isLDClientLogging(client: unknown): client is LDClientLogging {
   return (client as any).logger !== undefined;
 }
 
+function isLDClientInitialization(client: unknown): client is LDClientInitialization {
+  return (client as any).waitForInitialization !== undefined;
+}
+
 export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private _maxPendingEvents: number;
   private _maxBreadcrumbs: number;
@@ -98,6 +104,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
 
   private _logger: MinLogger;
 
+  private _registrationComplete: boolean = false;
+
+  // Used to ensure we only log the event dropped message once.
+  private _clientRegistered: boolean = false;
   // Used to ensure we only log the event dropped message once.
   private _eventsDropped: boolean = false;
   // Used to ensure we only log the breadcrumb filter error once.
@@ -159,17 +169,45 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   }
 
   register(client: LDClientTracking): void {
+    if (this._client !== undefined) {
+      return;
+    }
+
     this._client = client;
+
     // When the client is registered, we need to set the logger again, because we may be able to use the client's
     // logger.
     this._setLogger();
 
-    this._client.track(SESSION_INIT_KEY, { sessionId: this._sessionId });
+    const completeRegistration = () => {
+      this._client?.track(SESSION_INIT_KEY, { sessionId: this._sessionId });
 
-    this._pendingEvents.forEach((event) => {
-      this._client?.track(event.type, event.data);
-    });
-    this._pendingEvents = [];
+      this._pendingEvents.forEach((event) => {
+        this._client?.track(event.type, event.data);
+      });
+      this._pendingEvents = [];
+      this._registrationComplete = true;
+    };
+
+    if (isLDClientInitialization(client)) {
+      // We don't actually need the client initialization to complete, but we do need the context processing that
+      // happens during initialization to complete. This time will be some time greater than that, but we don't
+      // care if initialization actually completes within the timeout.
+
+      // An immediately invoked async function is used to ensure that the registration method can be called synchronously.
+      // Making the `register` method async would increase the complexity for application developers.
+      (async () => {
+        try {
+          await client.waitForInitialization(INITIALIZATION_TIMEOUT);
+        } catch {
+          // We don't care if the initialization fails.
+        }
+        completeRegistration();
+      })();
+    } else {
+      // TODO(EMSR-36): Figure out how to handle the 4.x implementation.
+      completeRegistration();
+    }
   }
 
   private _setLogger() {
@@ -207,7 +245,9 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       return;
     }
 
-    if (this._client === undefined) {
+    if (this._registrationComplete) {
+      this._client?.track(type, filteredEvent);
+    } else {
       this._pendingEvents.push({ type, data: filteredEvent });
       if (this._pendingEvents.length > this._maxPendingEvents) {
         if (!this._eventsDropped) {
@@ -221,7 +261,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
         this._pendingEvents.shift();
       }
     }
-    this._client?.track(type, filteredEvent);
   }
 
   captureError(exception: Error): void {
