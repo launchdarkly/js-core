@@ -17,7 +17,7 @@ export interface LDAIClient {
    * @param defaultValue A fallback value containing model configuration and messages. This will
    * be used if the configuration is not available from LaunchDarkly.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
-   * the message templates. The keys correspond to placeholders within the template, and the values
+   * the message content. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
    *
    * @returns The AI `config`, processed `messages`, and a `tracker`. If the configuration cannot be accessed from
