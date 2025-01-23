@@ -212,8 +212,10 @@ export interface Options {
    *
    * Can be used to redact or modify error data.
    *
-   * For filtering breadcrumbs or URLs in error data, see {@link breadcrumbs.filters} and
-   * {@link breadcrumbs.http.customUrlFilter}.
+   * If any filter throws an exception, then the error data will be discarded.
+   *
+   * For filtering breadcrumbs or URLs in error data, refer to the `breadcrumbs.filters` option in {@link breadcrumbs} and
+   * `breadcrumbs.http.customUrlFilter` - {@link HttpBreadcrumbOptions.customUrlFilter}.
    */
   errorFilters?: ErrorDataFilter[];
 }
