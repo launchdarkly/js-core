@@ -20,7 +20,7 @@ export interface LDAIClient {
    * the message content. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
    *
-   * @returns The AI `config`, processed `messages`, and a `tracker`. If the configuration cannot be accessed from
+   * @returns The AI `config`, customized `messages`, and a `tracker`. If the configuration cannot be accessed from
    * LaunchDarkly, then the return value will include information from the `defaultValue`. The returned `tracker` can
    * be used to track AI operation metrics (latency, token usage, etc.).
    *
