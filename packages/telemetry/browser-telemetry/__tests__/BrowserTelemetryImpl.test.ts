@@ -657,3 +657,79 @@ it('only logs error filter error once', () => {
 
   expect(mockLogger.warn).toHaveBeenCalledTimes(1);
 });
+
+it('waits for client initialization before sending events', async () => {
+  const telemetry = new BrowserTelemetryImpl(defaultOptions);
+  const error = new Error('Test error');
+
+  let resolver;
+
+  const initPromise = new Promise((resolve) => {
+    resolver = resolve;
+  });
+
+  const mockInitClient = {
+    track: jest.fn(),
+    waitForInitialization: jest.fn().mockImplementation(() => initPromise),
+  };
+
+  telemetry.captureError(error);
+  telemetry.register(mockInitClient);
+
+  expect(mockInitClient.track).not.toHaveBeenCalled();
+
+  resolver!();
+
+  await initPromise;
+
+  expect(mockInitClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:session:init',
+    expect.objectContaining({
+      sessionId: expect.any(String),
+    }),
+  );
+
+  expect(mockInitClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      type: 'Error',
+      message: 'Test error',
+      stack: { frames: expect.any(Array) },
+      breadcrumbs: [],
+      sessionId: expect.any(String),
+    }),
+  );
+});
+
+it('handles client initialization failure gracefully', async () => {
+  const telemetry = new BrowserTelemetryImpl(defaultOptions);
+  const error = new Error('Test error');
+  const mockInitClient = {
+    track: jest.fn(),
+    waitForInitialization: jest.fn().mockRejectedValue(new Error('Init failed')),
+  };
+
+  telemetry.captureError(error);
+  telemetry.register(mockInitClient);
+
+  await expect(mockInitClient.waitForInitialization()).rejects.toThrow('Init failed');
+
+  // Should still send events even if initialization fails
+  expect(mockInitClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:session:init',
+    expect.objectContaining({
+      sessionId: expect.any(String),
+    }),
+  );
+
+  expect(mockInitClient.track).toHaveBeenCalledWith(
+    '$ld:telemetry:error',
+    expect.objectContaining({
+      type: 'Error',
+      message: 'Test error',
+      stack: { frames: expect.any(Array) },
+      breadcrumbs: [],
+      sessionId: expect.any(String),
+    }),
+  );
+});
