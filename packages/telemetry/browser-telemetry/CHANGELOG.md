@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.1.1...browser-telemetry-v0.2.0) (2025-01-23)
+
+
+### Features
+
+* Add support for filtering username/password URL authority. ([#751](https://github.com/launchdarkly/js-core/issues/751)) ([62ab9fb](https://github.com/launchdarkly/js-core/commit/62ab9fb774847b5d953041f29b5f997629f86fa7))
+
 ## [0.1.1](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.1.0...browser-telemetry-v0.1.1) (2025-01-23)
 
 
