@@ -72,7 +72,6 @@
   },
     "packages/telemetry/browser-telemetry": {
       "bump-minor-pre-major": true
-
     }
   },
   "plugins": [
