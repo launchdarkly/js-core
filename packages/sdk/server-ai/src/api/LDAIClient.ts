@@ -8,7 +8,7 @@ import { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
 export interface LDAIClient {
   /**
    * Retrieves and processes an AI configuration based on the provided key, LaunchDarkly context,
-   * and variables. This includes the model configuration and the processed messages.
+   * and variables. This includes the model configuration and the customized messages.
    *
    * @param key The key of the AI configuration.
    * @param context The LaunchDarkly context object that contains relevant information about the
