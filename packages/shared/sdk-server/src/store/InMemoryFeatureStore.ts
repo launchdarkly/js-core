@@ -110,7 +110,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {
-    callback?.(this._initCalled);
+    return callback?.(this._initCalled);
   }
 
   /* eslint-disable class-methods-use-this */
