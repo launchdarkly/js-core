@@ -66,6 +66,10 @@
         }
       ]
     },
+    "packages/tooling/jest": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
+    },
     "packages/telemetry/browser-telemetry": {
       "bump-minor-pre-major": true
     }
