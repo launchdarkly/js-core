@@ -269,25 +269,25 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
   ): void {
-    this._queue.enqueue((cb) => {
-      if (basis) {
+    if (basis) {
+      this._queue.enqueue((cb) => {
         this._internalInit(data, cb);
-      } else {
-        const promises: Promise<void>[] = [];
-        Object.entries(data).forEach(([namespace, items]) => {
-          Object.keys(items || {}).forEach((key) => {
-            promises.push(
-              new Promise<void>((resolve, _) => {
-                const item = items[key];
-                this._internalUpsert({ namespace }, { key, ...item }, resolve); // callback intentionally not passed
-              }),
-            );
-          });
+      }, callback);
+    } else {
+      Object.entries(data).forEach(([namespace, items]) => {
+        Object.keys(items || {}).forEach((key) => {
+          this._queue.enqueue(
+            (cb) => {
+              const item = items[key];
+              this._internalUpsert({ namespace }, { key, ...item }, cb);
+            },
+            () => {}, // intentional no-op callback per upsert
+          );
         });
-        // invoke callback after all operations complete
-        Promise.all(promises).then(cb);
-      }
-    }, callback);
+      });
+      // add callback to end of queue, will be called after all others are handled
+      this._queue.enqueue((cb) => cb(), callback);
+    }
   }
 
   close(): void {
