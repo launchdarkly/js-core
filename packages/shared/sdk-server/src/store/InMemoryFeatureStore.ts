@@ -18,11 +18,11 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
       if (Object.prototype.hasOwnProperty.call(items, key)) {
         const item = items[key];
         if (item && !item.deleted) {
-          callback?.(item);
+          return callback?.(item);
         }
       }
     }
-    callback?.(null);
+    return callback?.(null);
   }
 
   all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void): void {

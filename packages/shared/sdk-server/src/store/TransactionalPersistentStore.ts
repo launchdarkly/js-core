@@ -72,7 +72,7 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
   ): void {
     this._memoryStore.applyChanges(basis, data, selector, () => {
       // TODO: SDK-1047 conditional propgation to persistence based on parameter
-      this._nonTransPersistenceStore.applyChanges(basis, data, selector, callback)
+      this._nonTransPersistenceStore.applyChanges(basis, data, selector, callback);
     });
 
     if (basis) {
