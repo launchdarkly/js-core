@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.0...server-sdk-ai-v0.8.1) (2025-01-24)
+
+
+### Bug Fixes
+
+* Correct documentation for AI config function. ([#754](https://github.com/launchdarkly/js-core/issues/754)) ([0bdb0be](https://github.com/launchdarkly/js-core/commit/0bdb0be6b0e0213c5139af9008884ea74be197b1))
+
+## [0.8.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.7.1...server-sdk-ai-v0.8.0) (2025-01-23)
+
+
+### Features
+
+* track timeToFirstToken in LDAIConfigTracker ([#749](https://github.com/launchdarkly/js-core/issues/749)) ([c97674f](https://github.com/launchdarkly/js-core/commit/c97674fe521bcfe14dc6e0679bf25e293a2a1ad1))
+
 ## [0.7.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.7.0...server-sdk-ai-v0.7.1) (2025-01-22)
 
 

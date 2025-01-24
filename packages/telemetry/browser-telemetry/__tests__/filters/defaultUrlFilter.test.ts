@@ -39,3 +39,27 @@ it.each([
 ])('passes through other URLs unfiltered', (url) => {
   expect(defaultUrlFilter(url)).toBe(url);
 });
+
+it('filters out username and password from URLs', () => {
+  const urls = [
+    // Username only
+    {
+      input: 'https://user@sdk.launchdarkly.com/',
+      expected: 'https://redacted@sdk.launchdarkly.com/',
+    },
+    // Password only
+    {
+      input: 'https://:password123@sdk.launchdarkly.com/',
+      expected: 'https://:redacted@sdk.launchdarkly.com/',
+    },
+    // Both username and password
+    {
+      input: 'https://user:password123@sdk.launchdarkly.com/',
+      expected: 'https://redacted:redacted@sdk.launchdarkly.com/',
+    },
+  ];
+
+  urls.forEach(({ input, expected }) => {
+    expect(defaultUrlFilter(input)).toBe(expected);
+  });
+});

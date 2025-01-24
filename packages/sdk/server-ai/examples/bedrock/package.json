@@ -24,7 +24,7 @@
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.679.0",
     "@launchdarkly/node-server-sdk": "^9.7.1",
-    "@launchdarkly/server-sdk-ai": "0.7.1"
+    "@launchdarkly/server-sdk-ai": "0.8.1"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
