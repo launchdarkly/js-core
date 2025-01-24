@@ -1,7 +1,7 @@
 import { BasicLogger, LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
 import LDClient from './api/LDClient';
-import { buildRootKey, EdgeFeatureStore, EdgeProvider } from './featureStore';
+import { EdgeFeatureStore, EdgeProvider } from './featureStore';
 import CacheableStoreProvider from './featureStore/cacheableStoreProvider';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
