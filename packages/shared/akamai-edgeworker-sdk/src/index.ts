@@ -37,10 +37,7 @@ export const init = (params: BaseSDKParams): LDClient => {
 
   const logger = options.logger ?? BasicLogger.get();
 
-  const cachableStoreProvider = new CacheableStoreProvider(
-    featureStoreProvider,
-    buildRootKey(sdkKey),
-  );
+  const cachableStoreProvider = new CacheableStoreProvider(featureStoreProvider);
   const featureStore = new EdgeFeatureStore(cachableStoreProvider, sdkKey, 'Akamai', logger);
 
   const ldOptions: LDOptionsCommon = {
