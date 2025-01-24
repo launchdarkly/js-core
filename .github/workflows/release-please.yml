@@ -345,8 +345,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    # HACK: jest is not ready for release yet.
-    if: false #${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
+    if: ${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
