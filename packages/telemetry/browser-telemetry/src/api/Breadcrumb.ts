@@ -68,7 +68,7 @@ export interface Breadcrumb {
 /**
  * Utility type which allows for easy extension of base breadcrumb type.
  */
-type ImplementsCrumb<U extends Breadcrumb> = U;
+export type ImplementsCrumb<U extends Breadcrumb> = U;
 
 /**
  * Type for custom breadcrumbs.

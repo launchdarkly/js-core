@@ -6,7 +6,7 @@ import { NativeModules, Platform } from 'react-native';
  */
 const locale =
   Platform.OS === 'ios'
-    ? NativeModules.SettingsManager?.settings.AppleLocale // iOS
+    ? NativeModules.SettingsManager?.settings?.AppleLocale // iOS
     : NativeModules.I18nManager?.localeIdentifier;
 
 export default locale;

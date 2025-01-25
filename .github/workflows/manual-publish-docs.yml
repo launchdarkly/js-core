@@ -21,6 +21,7 @@ on:
           - packages/telemetry/node-server-sdk-otel
           - packages/sdk/browser
           - packages/sdk/server-ai
+          - packages/telemetry/browser-telemetry
 name: Publish Documentation
 jobs:
   build-publish:

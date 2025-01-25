@@ -1,5 +1,21 @@
 # Changelog
 
+## [10.9.5](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.4...react-native-client-sdk-v10.9.5) (2025-01-24)
+
+
+### Bug Fixes
+
+* **react-native:** check for nullability in SettingsManager?.settings ([#758](https://github.com/launchdarkly/js-core/issues/758)) ([3449934](https://github.com/launchdarkly/js-core/commit/3449934027697ac9283aeeeca8df9a76d172fcad))
+
+## [10.9.4](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.3...react-native-client-sdk-v10.9.4) (2025-01-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.1 to 1.12.2
+
 ## [10.9.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.2...react-native-client-sdk-v10.9.3) (2024-11-22)
 
 
