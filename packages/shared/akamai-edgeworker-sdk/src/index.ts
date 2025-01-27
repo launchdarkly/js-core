@@ -1,7 +1,7 @@
 import { BasicLogger, LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
 import LDClient from './api/LDClient';
-import { EdgeFeatureStore, EdgeProvider } from './featureStore';
+import { buildRootKey, EdgeFeatureStore, EdgeProvider } from './featureStore';
 import CacheableStoreProvider from './featureStore/cacheableStoreProvider';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
@@ -33,11 +33,23 @@ type BaseSDKParams = {
 };
 
 export const init = (params: BaseSDKParams): LDClient => {
-  const { sdkKey, options = {}, featureStoreProvider, platformName, sdkName, sdkVersion } = params;
+  const {
+    sdkKey,
+    options: inputOptions = {},
+    featureStoreProvider,
+    platformName,
+    sdkName,
+    sdkVersion,
+  } = params;
 
-  const logger = options.logger ?? BasicLogger.get();
+  const logger = inputOptions.logger ?? BasicLogger.get();
+  const { cacheTtlMs, ...options } = inputOptions as any;
 
-  const cachableStoreProvider = new CacheableStoreProvider(featureStoreProvider);
+  const cachableStoreProvider = new CacheableStoreProvider(
+    featureStoreProvider,
+    buildRootKey(sdkKey),
+    cacheTtlMs,
+  );
   const featureStore = new EdgeFeatureStore(cachableStoreProvider, sdkKey, 'Akamai', logger);
 
   const ldOptions: LDOptionsCommon = {

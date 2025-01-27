@@ -8,10 +8,22 @@
  *
  * @packageDocumentation
  */
-import { init as initEdge, LDClient, LDOptions } from '@launchdarkly/akamai-edgeworker-sdk-common';
+import {
+  init as initEdge,
+  LDClient,
+  LDOptions as LDCommonAkamaiOptions,
+} from '@launchdarkly/akamai-edgeworker-sdk-common';
 import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
 
 import EdgeKVProvider from './edgekv/edgeKVProvider';
+
+export type LDOptions = LDCommonAkamaiOptions & {
+  /**
+   * The time-to-live for the cache in milliseconds. The default is 100ms. A
+   * value of 0 will cache indefinitely.
+   */
+  cacheTtlMs?: number;
+};
 
 export * from '@launchdarkly/akamai-edgeworker-sdk-common';
 
@@ -34,12 +46,13 @@ export const init = ({
   sdkKey,
 }: AkamaiLDClientParams): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
+  const cacheTtlMs = options.cacheTtlMs ?? 100;
 
   const edgekvProvider = new EdgeKVProvider({ namespace, group, logger });
 
   return initEdge({
     sdkKey,
-    options: { ...options, logger },
+    options: { ...options, logger, cacheTtlMs },
     featureStoreProvider: edgekvProvider,
     platformName: 'Akamai EdgeWorker',
     sdkName: '@launchdarkly/akamai-server-edgekv-sdk',

@@ -46,6 +46,7 @@ class LDClient extends LDClientImpl {
     defaultValue: LDFlagValue,
     callback?: (err: any, res: LDFlagValue) => void,
   ): Promise<LDFlagValue> {
+    await this._cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.variation(key, context, defaultValue, callback);
   }
 
@@ -55,6 +56,7 @@ class LDClient extends LDClientImpl {
     defaultValue: LDFlagValue,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail> {
+    await this._cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.variationDetail(key, context, defaultValue, callback);
   }
 
@@ -63,6 +65,7 @@ class LDClient extends LDClientImpl {
     options?: LDFlagsStateOptions,
     callback?: (err: Error | null, res: LDFlagsState) => void,
   ): Promise<LDFlagsState> {
+    await this._cacheableStoreProvider.prefetchPayloadFromOriginStore();
     return super.allFlagsState(context, options, callback);
   }
 }
