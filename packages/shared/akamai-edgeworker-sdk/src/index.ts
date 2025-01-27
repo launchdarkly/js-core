@@ -12,7 +12,13 @@ import { validateOptions } from './utils';
  * supported. sendEvents is unsupported and is only included as a beta
  * preview.
  */
-type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
+type LDOptions = {
+  /**
+   * The time-to-live for the cache in milliseconds. The default is 100ms. A
+   * value of 0 will cache indefinitely.
+   */
+  cacheTtlMs?: number;
+} & Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
 
 /**
  * The internal options include featureStore because that's how the LDClient
