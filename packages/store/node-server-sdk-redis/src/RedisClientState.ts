@@ -62,6 +62,7 @@ export default class RedisClientState {
     });
 
     client.on('reconnecting', (delay: number) => {
+      this.connected = false;
       this.attempt += 1;
       logger?.info(
         `Attempting to reconnect to redis (attempt # ${this.attempt}, delay: ${delay}ms)`,
