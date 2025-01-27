@@ -112,14 +112,21 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   }
 
   #prepareArray(values: Record<string, string>) {
-    const results: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] = [];
-    Object.keys(values).forEach((key) => {
-      const value = values[key];
-      // When getting we do not populate version and deleted.
-      // The SDK will have to deserialize to access these values.
-      results.push({ key, item: { version: 0, deleted: false, serializedItem: value } });
-    });
-    return results;
+    const keys = Object.keys(values);
+    const results: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] = new Array(
+      keys.length,
+    );
+    return keys.reduce((acc, key, index) => {
+      acc[index] = {
+        key,
+        item: {
+          version: 0,
+          deleted: false,
+          serializedItem: values[key],
+        },
+      };
+      return acc;
+    }, results);
   }
 
   #useItemsFromCodefresh(
