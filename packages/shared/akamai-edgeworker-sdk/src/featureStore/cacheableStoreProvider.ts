@@ -13,7 +13,13 @@ import { EdgeProvider } from '.';
  * `prefetchPayloadFromOriginStore`.
  *
  * The wrapper is necessary to ensure that we don't make redundant sub-requests
- * from Akamai to fetch an entire environment payload.
+ * from Akamai to fetch an entire environment payload. At the time of this writing,
+ * the Akamai documentation (https://techdocs.akamai.com/edgeworkers/docs/resource-tier-limitations)
+ * limits the number of sub-requests to:
+ *
+ * - 2 for basic compute
+ * - 4 for dynamic compute
+ * - 10 for enterprise
  */
 export default class CacheableStoreProvider implements EdgeProvider {
   cache: string | null | undefined;
