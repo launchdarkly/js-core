@@ -139,7 +139,8 @@ export interface LDFeatureStore {
 
   /**
    * Applies the provided data onto the existing data, replacing all data or upserting depending
-   * on the basis parameter.
+   * on the basis parameter.  Must call {@link applyChanges} providing basis before calling {@link applyChanges}
+   * that is not a basis.
    *
    * @param basis If true, completely overwrites the current contents of the data store
    * with the provided data.  If false, upserts the items in the provided data.  Upserts
