@@ -1,3 +1,5 @@
+import { MaxRetriesPerRequestError } from 'ioredis/built/errors';
+
 import { interfaces, LDLogger } from '@launchdarkly/node-server-sdk';
 
 import RedisClientState from './RedisClientState';
@@ -29,6 +31,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   constructor(
     private readonly state: RedisClientState,
     private readonly logger?: LDLogger,
+    private readonly localFeatureStore?: any,
   ) {
     this.initedKey = this.state.prefixedKey('$inited');
   }
@@ -99,6 +102,50 @@ export default class RedisCore implements interfaces.PersistentDataStore {
     });
   }
 
+  #serializeItems(kind: any, itemsObj: Record<string, any>) {
+    const serializedItemsObj: Record<string, any> = {};
+    Object.keys(itemsObj).forEach((key) => {
+      const value = itemsObj[key];
+      serializedItemsObj[key] = kind.serialize(value).serializedItem;
+    });
+    return serializedItemsObj;
+  }
+
+  #prepareArray(values: Record<string, string>) {
+    const results: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] = [];
+    Object.keys(values).forEach((key) => {
+      const value = values[key];
+      // When getting we do not populate version and deleted.
+      // The SDK will have to deserialize to access these values.
+      results.push({ key, item: { version: 0, deleted: false, serializedItem: value } });
+    });
+    return results;
+  }
+
+  #useItemsFromCodefresh(
+    kind: interfaces.PersistentStoreDataKind,
+    callback: (
+      descriptors: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] | undefined,
+    ) => void,
+  ) {
+    this.localFeatureStore().then(
+      (items: any) => {
+        let localResults;
+        if (kind.namespace === 'features') {
+          localResults = items.features;
+        } else {
+          localResults = items.segments;
+        }
+        const serializedItems = this.#serializeItems(kind, localResults);
+        callback(this.#prepareArray(serializedItems));
+      },
+      (error: any) => {
+        console.log(error);
+        callback(undefined);
+      },
+    );
+  }
+
   getAll(
     kind: interfaces.PersistentStoreDataKind,
     callback: (
@@ -107,22 +154,17 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   ): void {
     if (!this.state.isConnected() && !this.state.isInitialConnection()) {
       this.logger?.warn('Attempted to fetch all keys while Redis connection is down');
-      callback(undefined);
-      return;
+      this.#useItemsFromCodefresh(kind, callback);
     }
 
     this.state.getClient().hgetall(this.state.prefixedKey(kind.namespace), (err, values) => {
       if (err) {
         this.logger?.error(`Error fetching '${kind.namespace}' from Redis ${err}`);
+        if (err instanceof MaxRetriesPerRequestError) {
+          this.#useItemsFromCodefresh(kind, callback);
+        }
       } else if (values) {
-        const results: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] = [];
-        Object.keys(values).forEach((key) => {
-          const value = values[key];
-          // When getting we do not populate version and deleted.
-          // The SDK will have to deserialize to access these values.
-          results.push({ key, item: { version: 0, deleted: false, serializedItem: value } });
-        });
-        callback(results);
+        callback(this.#prepareArray(values));
       } else {
         callback(undefined);
       }
