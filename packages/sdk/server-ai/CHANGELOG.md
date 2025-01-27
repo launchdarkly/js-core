@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.1...server-sdk-ai-v0.8.2) (2025-01-27)
+
+
+### Bug Fixes
+
+* **docs:** Node.js AI SDK: modelConfig --&gt; config in readme ([#765](https://github.com/launchdarkly/js-core/issues/765)) ([4d46117](https://github.com/launchdarkly/js-core/commit/4d4611700e7eebd9a7d6f8fd596a7a4ff3310802))
+
 ## [0.8.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.0...server-sdk-ai-v0.8.1) (2025-01-24)
 
 
