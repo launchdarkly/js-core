@@ -123,32 +123,35 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
     this._queue.enqueue((cb) => {
-      const afterStoreInit = () => {
-        this._isInitialized = true;
-        if (this._itemCache) {
-          this._itemCache.clear();
-          this._allItemsCache!.clear();
-
-          Object.keys(allData).forEach((kindNamespace) => {
-            const kind = persistentStoreKinds[kindNamespace];
-            const items = allData[kindNamespace];
-            this._allItemsCache!.set(allForKindCacheKey(kind), items);
-            Object.keys(items).forEach((key) => {
-              const itemForKey = items[key];
-
-              const itemDescriptor: ItemDescriptor = {
-                version: itemForKey.version,
-                item: itemForKey,
-              };
-              this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
-            });
-          });
-        }
-        cb();
-      };
-
-      this._core.init(sortDataSet(allData), afterStoreInit);
+      this._internalInit(allData, cb);
     }, callback);
+  }
+  private _internalInit(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+    const afterStoreInit = () => {
+      this._isInitialized = true;
+      if (this._itemCache) {
+        this._itemCache.clear();
+        this._allItemsCache!.clear();
+
+        Object.keys(allData).forEach((kindNamespace) => {
+          const kind = persistentStoreKinds[kindNamespace];
+          const items = allData[kindNamespace];
+          this._allItemsCache!.set(allForKindCacheKey(kind), items);
+          Object.keys(items).forEach((key) => {
+            const itemForKey = items[key];
+
+            const itemDescriptor: ItemDescriptor = {
+              version: itemForKey.version,
+              item: itemForKey,
+            };
+            this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
+          });
+        });
+      }
+      callback();
+    };
+
+    this._core.init(sortDataSet(allData), afterStoreInit);
   }
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
@@ -218,34 +221,42 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
     this._queue.enqueue((cb) => {
-      // Clear the caches which contain all the values of a specific kind.
-      if (this._allItemsCache) {
-        this._allItemsCache.clear();
-      }
-
-      const persistKind = persistentStoreKinds[kind.namespace];
-      this._core.upsert(
-        persistKind,
-        data.key,
-        persistKind.serialize(data),
-        (err, updatedDescriptor) => {
-          if (!err && updatedDescriptor) {
-            if (updatedDescriptor.serializedItem) {
-              const value = deserialize(persistKind, updatedDescriptor);
-              this._itemCache?.set(cacheKey(kind, data.key), value);
-            } else if (updatedDescriptor.deleted) {
-              // Deleted and there was not a serialized representation.
-              this._itemCache?.set(data.key, {
-                key: data.key,
-                version: updatedDescriptor.version,
-                deleted: true,
-              });
-            }
-          }
-          cb();
-        },
-      );
+      this._internalUpsert(kind, data, cb);
     }, callback);
+  }
+
+  private _internalUpsert(
+    kind: DataKind,
+    data: LDKeyedFeatureStoreItem,
+    callback: () => void,
+  ): void {
+    // Clear the caches which contain all the values of a specific kind.
+    if (this._allItemsCache) {
+      this._allItemsCache.clear();
+    }
+
+    const persistKind = persistentStoreKinds[kind.namespace];
+    this._core.upsert(
+      persistKind,
+      data.key,
+      persistKind.serialize(data),
+      (err, updatedDescriptor) => {
+        if (!err && updatedDescriptor) {
+          if (updatedDescriptor.serializedItem) {
+            const value = deserialize(persistKind, updatedDescriptor);
+            this._itemCache?.set(cacheKey(kind, data.key), value);
+          } else if (updatedDescriptor.deleted) {
+            // Deleted and there was not a serialized representation.
+            this._itemCache?.set(data.key, {
+              key: data.key,
+              version: updatedDescriptor.version,
+              deleted: true,
+            });
+          }
+        }
+        callback();
+      },
+    );
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
@@ -253,23 +264,29 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   applyChanges(
-    _basis: boolean,
-    _data: LDFeatureStoreDataStorage,
-    _selector: String | undefined,
-    _callback: () => void,
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
+    callback: () => void,
   ): void {
-    // TODO: SDK-1029 - Transactional persistent store - update this to not iterate over items and instead send data to underlying PersistentDataStore
-    // no need for queue at the moment as init and upsert handle that, but as part of SDK-1029, queue may be needed
-    if (_basis) {
-      this.init(_data, _callback);
+    if (basis) {
+      this._queue.enqueue((cb) => {
+        this._internalInit(data, cb);
+      }, callback);
     } else {
-      Object.entries(_data).forEach(([namespace, items]) => {
+      Object.entries(data).forEach(([namespace, items]) => {
         Object.keys(items || {}).forEach((key) => {
-          const item = items[key];
-          this.upsert({ namespace }, { key, ...item }, () => {});
+          this._queue.enqueue(
+            (cb) => {
+              const item = items[key];
+              this._internalUpsert({ namespace }, { key, ...item }, cb);
+            },
+            () => {}, // intentional no-op callback per upsert
+          );
         });
       });
-      _callback();
+      // add callback to end of queue, will be called after all others are handled
+      this._queue.enqueue((cb) => cb(), callback);
     }
   }
 
