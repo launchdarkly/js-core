@@ -9,7 +9,7 @@ describe('given a mock edge provider with test data', () => {
   const mockGet = mockEdgeProvider.get as jest.Mock;
 
   beforeEach(() => {
-    jest.useFakeTimers()
+    jest.useFakeTimers();
     mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
   });
 
