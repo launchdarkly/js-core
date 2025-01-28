@@ -70,7 +70,7 @@ export default class CacheableStoreProvider implements EdgeProvider {
   private _isCacheValid(): boolean {
     // If we don't have a cache, or we don't know how old the cache is, we have
     // to consider it is invalid.
-    if (!this.cache || !this.cachedAt) {
+    if (!this.cache || this.cachedAt === undefined) {
       return false;
     }
 

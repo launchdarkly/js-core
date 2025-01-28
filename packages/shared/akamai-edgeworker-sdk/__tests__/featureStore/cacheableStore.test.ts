@@ -66,21 +66,23 @@ describe('given a mock edge provider with test data', () => {
     });
 
     it('caches expires after duration', async () => {
+      jest.spyOn(Date, 'now').mockImplementation(() => 0);
       const cacheProvider = new CacheableStoreProvider(mockEdgeProvider, 'rootKey', 50);
       await cacheProvider.get('rootKey');
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(1);
 
-      await jest.advanceTimersByTimeAsync(20);
+      jest.spyOn(Date, 'now').mockImplementation(() => 20);
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(1);
 
-      await jest.advanceTimersByTimeAsync(30);
+      jest.spyOn(Date, 'now').mockImplementation(() => 50);
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(2);
     });
 
     it('prefetch respects cache TTL', async () => {
+      jest.spyOn(Date, 'now').mockImplementation(() => 0);
       const cacheProvider = new CacheableStoreProvider(mockEdgeProvider, 'rootKey', 50);
       await cacheProvider.get('rootKey');
       await cacheProvider.get('rootKey');
@@ -90,7 +92,7 @@ describe('given a mock edge provider with test data', () => {
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(1);
 
-      await jest.advanceTimersByTimeAsync(50);
+      jest.spyOn(Date, 'now').mockImplementation(() => 50);
       await cacheProvider.prefetchPayloadFromOriginStore();
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(2);
