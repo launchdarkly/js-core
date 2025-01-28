@@ -2,7 +2,7 @@ import { EdgeProvider } from '../../src/featureStore';
 import CacheableStoreProvider from '../../src/featureStore/cacheableStoreProvider';
 import * as testData from '../testData.json';
 
-describe('CacheableStoreProvider', () => {
+describe('given a mock edge provider with test data', () => {
   const mockEdgeProvider: EdgeProvider = {
     get: jest.fn(),
   };
@@ -44,7 +44,7 @@ describe('CacheableStoreProvider', () => {
       expect(mockGet).toHaveBeenCalledTimes(1);
     });
 
-    it('prefetch does not reset', async () => {
+    it('does not reset on prefetch', async () => {
       const cacheProvider = new CacheableStoreProvider(mockEdgeProvider, 'rootKey', 0);
       await cacheProvider.get('rootKey');
       await cacheProvider.get('rootKey');

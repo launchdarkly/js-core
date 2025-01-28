@@ -28,7 +28,7 @@ export default class CacheableStoreProvider implements EdgeProvider {
   constructor(
     private readonly _edgeProvider: EdgeProvider,
     private readonly _rootKey: string,
-    private readonly _cacheTtlMs: number | undefined = undefined,
+    private readonly _cacheTtlMs?: number,
   ) {}
 
   /**
@@ -49,7 +49,7 @@ export default class CacheableStoreProvider implements EdgeProvider {
   }
 
   /**
-   * Fetches environment payload data from the origin in according with the caching configuration.
+   * Fetches environment payload data from the origin in accordance with the caching configuration.
    *
    * You should only call this function within a feature store to pre-fetch and cache payload data in environments
    * where its expensive to make multiple outbound requests to the origin
