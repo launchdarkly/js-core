@@ -28,10 +28,10 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/node-server-sdk-redis](packages/store/node-server-sdk-redis/README.md)       | [![NPM][node-redis-npm-badge]][node-redis-npm-link]       | [Node Redis][node-redis-issues]       | [![Actions Status][node-redis-ci-badge]][node-redis-ci]       |
 | [@launchdarkly/node-server-sdk-dynamodb](packages/store/node-server-sdk-dynamodb/README.md) | [![NPM][node-dynamodb-npm-badge]][node-dynamodb-npm-link] | [Node DynamoDB][node-dynamodb-issues] | [![Actions Status][node-dynamodb-ci-badge]][node-dynamodb-ci] |
 
-| Telemetry Packages                                                                      | npm                                               | issues                        | tests                                                 |
-| --------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------- | ----------------------------------------------------- |
-| [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md) | [![NPM][node-otel-npm-badge]][node-otel-npm-link] | [Node OTel][node-otel-issues] | [![Actions Status][node-otel-ci-badge]][node-otel-ci] |
-| [@launchdarkly/browser-telemetry](packages/telemetry/browser-telemetry/README.md) | [![NPM][browser-telemetry-npm-badge]][browser-telemetry-npm-link] | [Browser Telemetry][browser-telemetry-issues] | [![Actions Status][browser-telemetry-ci-badge]][browser-telemetry-ci] |
+| Telemetry Packages                                                                      | npm                                                               | issues                                        | tests                                                                 |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md) | [![NPM][node-otel-npm-badge]][node-otel-npm-link]                 | [Node OTel][node-otel-issues]                 | [![Actions Status][node-otel-ci-badge]][node-otel-ci]                 |
+| [@launchdarkly/browser-telemetry](packages/telemetry/browser-telemetry/README.md)       | [![NPM][browser-telemetry-npm-badge]][browser-telemetry-npm-link] | [Browser Telemetry][browser-telemetry-issues] | [![Actions Status][browser-telemetry-ci-badge]][browser-telemetry-ci] |
 
 ## Organization
 
