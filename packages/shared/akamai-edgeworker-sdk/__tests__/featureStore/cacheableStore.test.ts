@@ -9,6 +9,7 @@ describe('given a mock edge provider with test data', () => {
   const mockGet = mockEdgeProvider.get as jest.Mock;
 
   beforeEach(() => {
+    jest.useFakeTimers()
     mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
   });
 
@@ -70,8 +71,11 @@ describe('given a mock edge provider with test data', () => {
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(1);
 
-      // eslint-disable-next-line no-promise-executor-return
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      await jest.advanceTimersByTimeAsync(20);
+      await cacheProvider.get('rootKey');
+      expect(mockGet).toHaveBeenCalledTimes(1);
+
+      await jest.advanceTimersByTimeAsync(30);
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(2);
     });
@@ -86,8 +90,7 @@ describe('given a mock edge provider with test data', () => {
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(1);
 
-      // eslint-disable-next-line no-promise-executor-return
-      await new Promise((resolve) => setTimeout(resolve, 60));
+      await jest.advanceTimersByTimeAsync(50);
       await cacheProvider.prefetchPayloadFromOriginStore();
       await cacheProvider.get('rootKey');
       expect(mockGet).toHaveBeenCalledTimes(2);
