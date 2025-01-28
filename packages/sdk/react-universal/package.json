@@ -68,7 +68,6 @@
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk": "0.3.3",
-    "@launchdarkly/js-client-sdk-common": "1.12.1",
     "@launchdarkly/node-server-sdk": "9.7.2"
   },
   "peerDependencies": {

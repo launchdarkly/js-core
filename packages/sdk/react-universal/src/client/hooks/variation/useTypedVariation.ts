@@ -1,4 +1,4 @@
-import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk-common';
+import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 
 import { useLDClient } from '../useLDClient';
 
