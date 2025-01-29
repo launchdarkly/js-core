@@ -1,10 +1,12 @@
 import EdgeKVProvider from '../src/edgekv/edgeKVProvider';
-import { init as initWithEdgeKV, LDClient, LDContext } from '../src/index';
+import { init as initWithEdgeKV, LDClient, LDContext, LDLogger } from '../src/index';
 import * as testData from './testData.json';
 
 jest.mock('../src/edgekv/edgekv', () => ({
   EdgeKV: jest.fn(),
 }));
+
+let logger: LDLogger;
 
 const sdkKey = 'test-sdk-key';
 const flagKey1 = 'testFlag1';
@@ -17,11 +19,17 @@ describe('init', () => {
 
   describe('init with Edge KV', () => {
     beforeAll(async () => {
-      ldClient = initWithEdgeKV({ namespace: 'akamai-test', group: 'Akamai', sdkKey });
+      ldClient = initWithEdgeKV({ namespace: 'akamai-test', group: 'Akamai', sdkKey, options: { logger } });
       await ldClient.waitForInitialization();
     });
 
     beforeEach(() => {
+      logger = {
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
+      };
       jest
         .spyOn(EdgeKVProvider.prototype, 'get')
         .mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
@@ -30,6 +38,12 @@ describe('init', () => {
     afterAll(() => {
       ldClient.close();
     });
+
+    it('should not log a warning about initialization', async () => {
+      const spy = jest.spyOn(logger, 'warn');
+      const value = await ldClient.variation(flagKey1, context, false);
+      expect(spy).not.toHaveBeenCalled();
+    })
 
     describe('flags', () => {
       it('variation default', async () => {
