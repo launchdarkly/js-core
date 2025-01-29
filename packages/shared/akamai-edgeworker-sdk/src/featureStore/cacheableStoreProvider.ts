@@ -22,7 +22,7 @@ import { EdgeProvider } from '.';
  * - 10 for enterprise
  */
 export default class CacheableStoreProvider implements EdgeProvider {
-  cache: string | null | undefined;
+  cache: Promise<string | null | undefined> | null | undefined;
   cachedAt: number | undefined;
 
   constructor(
@@ -38,10 +38,7 @@ export default class CacheableStoreProvider implements EdgeProvider {
    */
   async get(rootKey: string): Promise<string | null | undefined> {
     if (!this._isCacheValid()) {
-      const updatedResults = await this._edgeProvider.get(rootKey);
-      if (updatedResults !== undefined) {
-        this.cache = updatedResults;
-      }
+      this.cache = this._edgeProvider.get(rootKey);
       this.cachedAt = Date.now();
     }
 
