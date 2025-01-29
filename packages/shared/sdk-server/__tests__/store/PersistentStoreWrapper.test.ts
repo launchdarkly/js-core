@@ -499,5 +499,143 @@ describe.each(['caching', 'non-caching'])(
       const allValues = await asyncWrapper.all(VersionedDataKinds.Features);
       expect(allValues).toEqual({});
     });
+
+    it('applyChanges with basis results in initialization', async () => {
+      await asyncWrapper.applyChanges(
+        true,
+        {
+          features: {
+            key1: {
+              version: 1,
+            },
+          },
+        },
+        'selector1',
+      );
+
+      expect(await asyncWrapper.initialized()).toBeTruthy();
+      expect(await asyncWrapper.all(VersionedDataKinds.Features)).toEqual({
+        key1: {
+          version: 1,
+        },
+      });
+    });
+
+    it('applyChanges with basis overwrites existing data', async () => {
+      await asyncWrapper.applyChanges(
+        true,
+        {
+          features: {
+            oldFeature: {
+              version: 1,
+            },
+          },
+        },
+        'selector1',
+      );
+
+      expect(await asyncWrapper.all(VersionedDataKinds.Features)).toEqual({
+        oldFeature: {
+          version: 1,
+        },
+      });
+
+      await asyncWrapper.applyChanges(
+        true,
+        {
+          features: {
+            newFeature: {
+              version: 1,
+            },
+          },
+        },
+        'selector1',
+      );
+
+      expect(await asyncWrapper.all(VersionedDataKinds.Features)).toEqual({
+        newFeature: {
+          version: 1,
+        },
+      });
+    });
+
+    it('applyChanges callback fires after all upserts complete', async () => {
+      let callbackCount = 0;
+      jest
+        .spyOn(mockPersistentStore, 'upsert')
+        .mockImplementation(async (_kind, _key, _data, cb) => {
+          callbackCount += 1;
+          // this await gives chance for execution to continue elsewhere. If there is a bug, this will lead to a failure
+          await new Promise((f) => {
+            setTimeout(f, 1);
+          });
+          cb();
+        });
+
+      await asyncWrapper.applyChanges(
+        false,
+        {
+          features: {
+            key1: {
+              version: 1,
+            },
+            key2: {
+              version: 1,
+            },
+            key3: {
+              version: 1,
+            },
+          },
+        },
+        'selector',
+      );
+      expect(callbackCount).toEqual(3);
+    });
+
+    it('applyChanges with basis=false merges correctly', async () => {
+      await asyncWrapper.applyChanges(
+        true,
+        {
+          features: {
+            key1: {
+              version: 1,
+            },
+            key2: {
+              version: 1,
+            },
+          },
+        },
+        'selector',
+      );
+
+      await asyncWrapper.applyChanges(
+        false,
+        {
+          features: {
+            key1: {
+              version: 2,
+            },
+            key3: {
+              version: 1,
+            },
+          },
+        },
+        'selector',
+      );
+
+      expect(await asyncWrapper.all(VersionedDataKinds.Features)).toEqual({
+        key1: {
+          key: 'key1',
+          version: 2,
+        },
+        key2: {
+          version: 1,
+        },
+        key3: {
+          key: 'key3',
+          version: 1,
+        },
+      });
+    });
   },
 );

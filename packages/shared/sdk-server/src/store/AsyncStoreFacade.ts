@@ -57,6 +57,16 @@ export default class AsyncStoreFacade {
     });
   }
 
+  async applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    selector: String | undefined,
+  ): Promise<void> {
+    return promisify((cb) => {
+      this._store.applyChanges(basis, data, selector, cb);
+    });
+  }
+
   close(): void {
     this._store.close();
   }
