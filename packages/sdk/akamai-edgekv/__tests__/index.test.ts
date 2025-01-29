@@ -19,7 +19,12 @@ describe('init', () => {
 
   describe('init with Edge KV', () => {
     beforeAll(async () => {
-      ldClient = initWithEdgeKV({ namespace: 'akamai-test', group: 'Akamai', sdkKey, options: { logger } });
+      ldClient = initWithEdgeKV({
+        namespace: 'akamai-test',
+        group: 'Akamai',
+        sdkKey,
+        options: { logger },
+      });
       await ldClient.waitForInitialization();
     });
 
@@ -41,9 +46,9 @@ describe('init', () => {
 
     it('should not log a warning about initialization', async () => {
       const spy = jest.spyOn(logger, 'warn');
-      const value = await ldClient.variation(flagKey1, context, false);
+      await ldClient.variation(flagKey1, context, false);
       expect(spy).not.toHaveBeenCalled();
-    })
+    });
 
     describe('flags', () => {
       it('variation default', async () => {
