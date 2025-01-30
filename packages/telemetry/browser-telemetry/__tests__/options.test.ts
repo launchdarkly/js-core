@@ -16,6 +16,27 @@ it('handles an empty configuration', () => {
   expect(outOptions).toEqual(defaultOptions());
 });
 
+it('disables all breadcrumb options when breadcrumbs is false', () => {
+  const outOptions = parse({
+    breadcrumbs: false,
+  });
+
+  expect(outOptions.breadcrumbs).toEqual({
+    maxBreadcrumbs: 0,
+    click: false,
+    evaluations: false,
+    flagChange: false,
+    keyboardInput: false,
+    http: {
+      instrumentFetch: false,
+      instrumentXhr: false,
+      customUrlFilter: undefined,
+    },
+    filters: [],
+  });
+  expect(mockLogger.warn).not.toHaveBeenCalled();
+});
+
 it('can set all options at once', () => {
   const breadcrumbFilter = (breadcrumb: Breadcrumb) => breadcrumb;
   const errorFilter = (error: ErrorData) => error;
@@ -471,5 +492,20 @@ it('accepts valid error filters array', () => {
   );
 
   expect(outOptions.errorFilters).toEqual(errorFilters);
+  expect(mockLogger.warn).not.toHaveBeenCalled();
+});
+
+it('disables all stack options when stack is false', () => {
+  const outOptions = parse({
+    stack: false,
+  });
+
+  expect(outOptions.stack).toEqual({
+    source: {
+      beforeLines: 0,
+      afterLines: 0,
+      maxLineLength: 0,
+    },
+  });
   expect(mockLogger.warn).not.toHaveBeenCalled();
 });

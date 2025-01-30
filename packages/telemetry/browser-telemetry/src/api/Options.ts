@@ -93,6 +93,86 @@ export interface StackOptions {
   };
 }
 
+export interface BreadcrumbsOptions {
+  /**
+   * Set the maximum number of breadcrumbs. Defaults to 50.
+   */
+  maxBreadcrumbs?: number;
+
+  /**
+   * True to enable automatic evaluation breadcrumbs. Defaults to true.
+   */
+  evaluations?: boolean;
+
+  /**
+   * True to enable flag change breadcrumbs. Defaults to true.
+   */
+  flagChange?: boolean;
+
+  /**
+   * True to enable click breadcrumbs. Defaults to true.
+   */
+  click?: boolean;
+
+  /**
+   * True to enable input breadcrumbs for keypresses. Defaults to true.
+   *
+   * Input breadcrumbs do not include entered text, just that text was entered.
+   */
+  keyboardInput?: boolean;
+
+  /**
+   * Controls instrumentation and breadcrumbs for HTTP requests.
+   * The default is to instrument XMLHttpRequests and fetch requests.
+   *
+   * `false` to disable all HTTP breadcrumbs and instrumentation.
+   *
+   * Example:
+   * ```
+   * // This would instrument only XmlHttpRequests
+   * http: {
+   *  instrumentFetch: false
+   *  instrumentXhr: true
+   * }
+   *
+   * // Disable all HTTP instrumentation:
+   * http: false
+   * ```
+   */
+  http?: HttpBreadcrumbOptions | false;
+
+  /**
+   * Custom breadcrumb filters.
+   *
+   * Can be used to redact or modify breadcrumbs.
+   *
+   * Example:
+   * ```
+   * // We want to redact any click events that include the message 'sneaky-button'
+   * filters: [
+   *   (breadcrumb) => {
+   *     if(
+   *       breadcrumb.class === 'ui' &&
+   *       breadcrumb.type === 'click' &&
+   *       breadcrumb.message?.includes('sneaky-button')
+   *     ) {
+   *       return;
+   *     }
+   *    return breadcrumb;
+   *   }
+   * ]
+   * ```
+   *
+   * If you want to redact or modify URLs in breadcrumbs, then a urlFilter should be used.
+   *
+   * If any breadcrumb filters throw an exception while processing a breadcrumb, then that breadcrumb will be excluded.
+   *
+   * If any breadcrumbFilter cannot be executed, for example because it is not a function, then all breadcrumbs will
+   * be excluded.
+   */
+  filters?: BreadcrumbFilter[];
+}
+
 /**
  * Options for configuring browser telemetry.
  */
@@ -103,88 +183,11 @@ export interface Options {
    * events captured during initialization.
    */
   maxPendingEvents?: number;
+
   /**
-   * Properties related to automatic breadcrumb collection.
+   * Properties related to automatic breadcrumb collection, or `false` to disable automatic breadcrumbs.
    */
-  breadcrumbs?: {
-    /**
-     * Set the maximum number of breadcrumbs. Defaults to 50.
-     */
-    maxBreadcrumbs?: number;
-
-    /**
-     * True to enable automatic evaluation breadcrumbs. Defaults to true.
-     */
-    evaluations?: boolean;
-
-    /**
-     * True to enable flag change breadcrumbs. Defaults to true.
-     */
-    flagChange?: boolean;
-
-    /**
-     * True to enable click breadcrumbs. Defaults to true.
-     */
-    click?: boolean;
-
-    /**
-     * True to enable input breadcrumbs for keypresses. Defaults to true.
-     *
-     * Input breadcrumbs do not include entered text, just that text was entered.
-     */
-    keyboardInput?: boolean;
-
-    /**
-     * Controls instrumentation and breadcrumbs for HTTP requests.
-     * The default is to instrument XMLHttpRequests and fetch requests.
-     *
-     * `false` to disable all HTTP breadcrumbs and instrumentation.
-     *
-     * Example:
-     * ```
-     * // This would instrument only XmlHttpRequests
-     * http: {
-     *  instrumentFetch: false
-     *  instrumentXhr: true
-     * }
-     *
-     * // Disable all HTTP instrumentation:
-     * http: false
-     * ```
-     */
-    http?: HttpBreadcrumbOptions | false;
-
-    /**
-     * Custom breadcrumb filters.
-     *
-     * Can be used to redact or modify breadcrumbs.
-     *
-     * Example:
-     * ```
-     * // We want to redact any click events that include the message 'sneaky-button'
-     * filters: [
-     *   (breadcrumb) => {
-     *     if(
-     *       breadcrumb.class === 'ui' &&
-     *       breadcrumb.type === 'click' &&
-     *       breadcrumb.message?.includes('sneaky-button')
-     *     ) {
-     *       return;
-     *     }
-     *    return breadcrumb;
-     *   }
-     * ]
-     * ```
-     *
-     * If you want to redact or modify URLs in breadcrumbs, then a urlFilter should be used.
-     *
-     * If any breadcrumb filters throw an exception while processing a breadcrumb, then that breadcrumb will be excluded.
-     *
-     * If any breadcrumbFilter cannot be executed, for example because it is not a function, then all breadcrumbs will
-     * be excluded.
-     */
-    filters?: BreadcrumbFilter[];
-  };
+  breadcrumbs?: BreadcrumbsOptions | false;
 
   /**
    * Additional, or custom, collectors.
@@ -192,9 +195,9 @@ export interface Options {
   collectors?: Collector[];
 
   /**
-   * Configuration that controls the capture of the stack trace.
+   * Configuration that controls the capture of the stack trace, or `false` to exclude stack frames from error events.
    */
-  stack?: StackOptions;
+  stack?: StackOptions | false;
 
   /**
    * Logger to use for warnings.
