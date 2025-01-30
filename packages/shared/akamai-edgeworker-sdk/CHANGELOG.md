@@ -86,6 +86,13 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from ^2.2.1 to ^2.2.2
 
+## [1.4.0](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.3.3...akamai-edgeworker-sdk-common-v1.4.0) (2025-01-30)
+
+
+### Features
+
+* Add cacheTtlMs option ([#760](https://github.com/launchdarkly/js-core/issues/760)) ([4f961dd](https://github.com/launchdarkly/js-core/commit/4f961dd16fd10f5bb55dd2116d26b218944bfeb2))
+
 ## [1.3.3](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v1.3.2...akamai-edgeworker-sdk-common-v1.3.3) (2025-01-22)
 
 
