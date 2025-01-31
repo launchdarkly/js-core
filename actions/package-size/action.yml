@@ -33,7 +33,7 @@ runs:
     - name: Find Size Comment
       # Only do commenting on non-forks. A fork does not have permissions for comments.
       if: github.event.pull_request.head.repo.full_name == github.repository
-      uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e
+      uses: peter-evans/find-comment@c1b7dc4909a4ebc1def27dba63afb389a2c6a4db
       id: fc
       with:
         issue-number: ${{ inputs.pr_number }}
