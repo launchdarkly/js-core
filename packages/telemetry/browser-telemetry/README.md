@@ -5,7 +5,6 @@
 > [!WARNING]
 > This is an alpha version. The API is not stabilized and will introduce breaking changes.
 
-
 [![NPM][browser-telemetry-npm-badge]][browser-telemetry-npm-link]
 [![Actions Status][browser-telemetry-ci-badge]][browser-telemetry-ci]
 [![Documentation][browser-telemetry-ghp-badge]][browser-telemetry-ghp-link]
