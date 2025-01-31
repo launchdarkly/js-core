@@ -31,7 +31,7 @@ import { initTelemetry, register } from "@launchdarkly/browser-telemetry";
 
 // Initialize the telemetry as early as possible in your application.
 // Errors will be missed if they occur before the telemetry is initialized.
-// For metrics only breadcrumbs and stack traces are not required.
+// For metrics only, breadcrumbs and stack traces are not required.
 initTelemetry({breadcrumbs: false, stack: false});
 
 // Initialize the LaunchDarkly client.
