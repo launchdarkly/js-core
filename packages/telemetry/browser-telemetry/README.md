@@ -48,7 +48,7 @@ import { initialize } from "launchdarkly-js-client-sdk";
 import { initTelemetry, register, inspectors } from "@launchdarkly/browser-telemetry";
 
 // Initialize the telemetry as early as possible in your application.
-// Errors can be missed if they occur before the telemetry is initialized.
+// Errors will be missed if they occur before the telemetry is initialized.
 initTelemetry();
 
 // Initialize the LaunchDarkly client.
