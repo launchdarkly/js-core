@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.2.0...browser-telemetry-v0.3.0) (2025-01-31)
+
+
+### Features
+
+* Option to disable all breadcrumbs and stack. ([#770](https://github.com/launchdarkly/js-core/issues/770)) ([2c51838](https://github.com/launchdarkly/js-core/commit/2c51838f84a6c21ab38b12d960117d8ed801a114))
+
 ## [0.2.0](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.1.1...browser-telemetry-v0.2.0) (2025-01-23)
 
 
