@@ -2,6 +2,7 @@ import { Collector } from './api/Collector';
 import { MinLogger } from './api/MinLogger';
 import {
   BreadcrumbFilter,
+  BreadcrumbsOptions,
   ErrorDataFilter,
   HttpBreadcrumbOptions,
   Options,
@@ -9,6 +10,29 @@ import {
   UrlFilter,
 } from './api/Options';
 import { fallbackLogger, prefixLog, safeMinLogger } from './logging';
+
+const disabledBreadcrumbs: ParsedBreadcrumbsOptions = {
+  maxBreadcrumbs: 0,
+  evaluations: false,
+  flagChange: false,
+  click: false,
+  keyboardInput: false,
+  http: {
+    instrumentFetch: false,
+    instrumentXhr: false,
+    customUrlFilter: undefined,
+  },
+  filters: [],
+};
+
+const disabledStack: ParsedStackOptions = {
+  enabled: false,
+  source: {
+    beforeLines: 0,
+    afterLines: 0,
+    maxLineLength: 0,
+  },
+};
 
 export function defaultOptions(): ParsedOptions {
   return {
@@ -25,6 +49,7 @@ export function defaultOptions(): ParsedOptions {
       filters: [],
     },
     stack: {
+      enabled: true,
       source: {
         beforeLines: 3,
         afterLines: 3,
@@ -128,11 +153,16 @@ function parseLogger(options: Options): MinLogger | undefined {
 }
 
 function parseStack(
-  options: StackOptions | undefined,
+  options: StackOptions | false | undefined,
   defaults: ParsedStackOptions,
   logger?: MinLogger,
 ): ParsedStackOptions {
+  if (options === false) {
+    return disabledStack;
+  }
   return {
+    // Internal option not parsed from the options object.
+    enabled: true,
     source: {
       beforeLines: itemOrDefault(
         options?.source?.beforeLines,
@@ -153,6 +183,51 @@ function parseStack(
   };
 }
 
+function parseBreadcrumbs(
+  options: BreadcrumbsOptions | false | undefined,
+  defaults: ParsedBreadcrumbsOptions,
+  logger: MinLogger | undefined,
+): ParsedBreadcrumbsOptions {
+  if (options === false) {
+    return disabledBreadcrumbs;
+  }
+  return {
+    maxBreadcrumbs: itemOrDefault(
+      options?.maxBreadcrumbs,
+      defaults.maxBreadcrumbs,
+      checkBasic('number', 'breadcrumbs.maxBreadcrumbs', logger),
+    ),
+    evaluations: itemOrDefault(
+      options?.evaluations,
+      defaults.evaluations,
+      checkBasic('boolean', 'breadcrumbs.evaluations', logger),
+    ),
+    flagChange: itemOrDefault(
+      options?.flagChange,
+      defaults.flagChange,
+      checkBasic('boolean', 'breadcrumbs.flagChange', logger),
+    ),
+    click: itemOrDefault(
+      options?.click,
+      defaults.click,
+      checkBasic('boolean', 'breadcrumbs.click', logger),
+    ),
+    keyboardInput: itemOrDefault(
+      options?.keyboardInput,
+      defaults.keyboardInput,
+      checkBasic('boolean', 'breadcrumbs.keyboardInput', logger),
+    ),
+    http: parseHttp(options?.http, defaults.http, logger),
+    filters: itemOrDefault(options?.filters, defaults.filters, (item) => {
+      if (Array.isArray(item)) {
+        return true;
+      }
+      logger?.warn(wrongOptionType('breadcrumbs.filters', 'BreadcrumbFilter[]', typeof item));
+      return false;
+    }),
+  };
+}
+
 export default function parse(options: Options, logger?: MinLogger): ParsedOptions {
   const defaults = defaultOptions();
   if (options.breadcrumbs) {
@@ -162,42 +237,8 @@ export default function parse(options: Options, logger?: MinLogger): ParsedOptio
     checkBasic('object', 'stack', logger)(options.stack);
   }
   return {
-    breadcrumbs: {
-      maxBreadcrumbs: itemOrDefault(
-        options.breadcrumbs?.maxBreadcrumbs,
-        defaults.breadcrumbs.maxBreadcrumbs,
-        checkBasic('number', 'breadcrumbs.maxBreadcrumbs', logger),
-      ),
-      evaluations: itemOrDefault(
-        options.breadcrumbs?.evaluations,
-        defaults.breadcrumbs.evaluations,
-        checkBasic('boolean', 'breadcrumbs.evaluations', logger),
-      ),
-      flagChange: itemOrDefault(
-        options.breadcrumbs?.flagChange,
-        defaults.breadcrumbs.flagChange,
-        checkBasic('boolean', 'breadcrumbs.flagChange', logger),
-      ),
-      click: itemOrDefault(
-        options.breadcrumbs?.click,
-        defaults.breadcrumbs.click,
-        checkBasic('boolean', 'breadcrumbs.click', logger),
-      ),
-      keyboardInput: itemOrDefault(
-        options.breadcrumbs?.keyboardInput,
-        defaults.breadcrumbs.keyboardInput,
-        checkBasic('boolean', 'breadcrumbs.keyboardInput', logger),
-      ),
-      http: parseHttp(options.breadcrumbs?.http, defaults.breadcrumbs.http, logger),
-      filters: itemOrDefault(options.breadcrumbs?.filters, defaults.breadcrumbs.filters, (item) => {
-        if (Array.isArray(item)) {
-          return true;
-        }
-        logger?.warn(wrongOptionType('breadcrumbs.filters', 'BreadcrumbFilter[]', typeof item));
-        return false;
-      }),
-    },
-    stack: parseStack(options.stack, defaults.stack),
+    breadcrumbs: parseBreadcrumbs(options.breadcrumbs, defaults.breadcrumbs, logger),
+    stack: parseStack(options.stack, defaults.stack, logger),
     maxPendingEvents: itemOrDefault(
       options.maxPendingEvents,
       defaults.maxPendingEvents,
@@ -249,6 +290,7 @@ export interface ParsedHttpOptions {
  * @internal
  */
 export interface ParsedStackOptions {
+  enabled: boolean;
   source: {
     /**
      * The number of lines captured before the originating line.
@@ -269,6 +311,47 @@ export interface ParsedStackOptions {
 }
 
 /**
+ * Internal type for parsed breadcrumbs options.
+ * @internal
+ */
+export interface ParsedBreadcrumbsOptions {
+  /**
+   * Set the maximum number of breadcrumbs. Defaults to 50.
+   */
+  maxBreadcrumbs: number;
+
+  /**
+   * True to enable automatic evaluation breadcrumbs. Defaults to true.
+   */
+  evaluations: boolean;
+
+  /**
+   * True to enable flag change breadcrumbs. Defaults to true.
+   */
+  flagChange: boolean;
+
+  /**
+   * True to enable click breadcrumbs. Defaults to true.
+   */
+  click: boolean;
+
+  /**
+   * True to enable input breadcrumbs for keypresses. Defaults to true.
+   */
+  keyboardInput?: boolean;
+
+  /**
+   * Settings for http instrumentation and breadcrumbs.
+   */
+  http: ParsedHttpOptions;
+
+  /**
+   * Custom breadcrumb filters.
+   */
+  filters: BreadcrumbFilter[];
+}
+
+/**
  * Internal type for parsed options.
  * @internal
  */
@@ -279,48 +362,14 @@ export interface ParsedOptions {
    * events captured during initialization.
    */
   maxPendingEvents: number;
+
   /**
-   * Properties related to automatic breadcrumb collection.
+   * Properties related to automatic breadcrumb collection, or `false` to disable automatic breadcrumbs.
    */
-  breadcrumbs: {
-    /**
-     * Set the maximum number of breadcrumbs. Defaults to 50.
-     */
-    maxBreadcrumbs: number;
-
-    /**
-     * True to enable automatic evaluation breadcrumbs. Defaults to true.
-     */
-    evaluations: boolean;
-
-    /**
-     * True to enable flag change breadcrumbs. Defaults to true.
-     */
-    flagChange: boolean;
-
-    /**
-     * True to enable click breadcrumbs. Defaults to true.
-     */
-    click: boolean;
-
-    /**
-     * True to enable input breadcrumbs for keypresses. Defaults to true.
-     */
-    keyboardInput?: boolean;
-
-    /**
-     * Settings for http instrumentation and breadcrumbs.
-     */
-    http: ParsedHttpOptions;
-
-    /**
-     * Custom breadcrumb filters.
-     */
-    filters: BreadcrumbFilter[];
-  };
+  breadcrumbs: ParsedBreadcrumbsOptions;
 
   /**
-   * Settings which affect call stack capture.
+   * Settings which affect call stack capture, or `false` to exclude stack frames from error events .
    */
   stack: ParsedStackOptions;
 
