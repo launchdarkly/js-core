@@ -68,6 +68,7 @@ it('can set all options at once', () => {
       filters: expect.arrayContaining([breadcrumbFilter]),
     },
     stack: {
+      enabled: true,
       source: {
         beforeLines: 3,
         afterLines: 3,
@@ -501,6 +502,7 @@ it('disables all stack options when stack is false', () => {
   });
 
   expect(outOptions.stack).toEqual({
+    enabled: false,
     source: {
       beforeLines: 0,
       afterLines: 0,
