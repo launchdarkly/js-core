@@ -18,6 +18,7 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
   private _activeStore: LDFeatureStore;
 
   constructor(private readonly _nonTransPersistenceStore: LDFeatureStore) {
+    // persistence store is inital active store
     this._activeStore = this._nonTransPersistenceStore;
     this._memoryStore = new InMemoryFeatureStore();
   }
