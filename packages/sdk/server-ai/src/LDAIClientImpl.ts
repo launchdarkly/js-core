@@ -13,7 +13,7 @@ import { LDClientMin } from './LDClientMin';
 interface LDMeta {
   variationKey: string;
   enabled: boolean;
-  version: number;
+  version?: number;
 }
 
 /**
