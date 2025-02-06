@@ -58,6 +58,10 @@ export default class MobileDataManager extends BaseDataManager {
     context: Context,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void> {
+    if (this.closed) {
+      this._debugLog('Identify called after data manager was closed.');
+      return;
+    }
     this.context = context;
     const offline = this.connectionMode === 'offline';
     // In offline mode we do not support waiting for results.
@@ -140,6 +144,11 @@ export default class MobileDataManager extends BaseDataManager {
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
+    if (this.closed) {
+      this._debugLog('setting connection mode after data manager was closed');
+      return;
+    }
+
     if (this.connectionMode === mode) {
       this._debugLog(`setConnectionMode ignored. Mode is already '${mode}'.`);
       return;
