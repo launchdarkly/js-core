@@ -13,13 +13,15 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     private _ldClient: LDClientMin,
     private _configKey: string,
     private _variationKey: string,
+    private _version: number,
     private _context: LDContext,
   ) {}
 
-  private _getTrackData(): { variationKey: string; configKey: string } {
+  private _getTrackData(): { variationKey: string; configKey: string; version: number } {
     return {
       variationKey: this._variationKey,
       configKey: this._configKey,
+      version: this._version,
     };
   }
 
