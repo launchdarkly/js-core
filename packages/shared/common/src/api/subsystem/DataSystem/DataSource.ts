@@ -11,7 +11,7 @@ export interface DataSource {
    * @param cb may be invoked many times
    * @returns
    */
-  run(dataCallback: (basis: boolean, data: Data) => void, errorHander: (err: any) => void): void;
+  run(dataCallback: (basis: boolean, data: Data) => void, errorHander: (err: Error) => void): void;
 }
 
 export interface DataSourceWithStatus {

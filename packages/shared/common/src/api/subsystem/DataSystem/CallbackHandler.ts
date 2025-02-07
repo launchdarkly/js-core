@@ -4,12 +4,12 @@ export enum Transition {
   SwitchToSync,
   Fallback,
   Recover,
-  Stop,
+  None,
 }
 
 export type TransitionCondition = (status: HealthStatus, durationMS: number) => boolean;
 
-export default class CallbackHandler {
+export class CallbackHandler {
   private _disabled: boolean = false;
 
   constructor(
@@ -58,6 +58,7 @@ export default class CallbackHandler {
     }
     this._disabled = true;
 
+    // TODO: should this error be reported or contained silently if we have a fallback?
     // report error up
     this._errorCallback(err);
 

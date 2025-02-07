@@ -1,9 +1,11 @@
-import CallbackHandler, { Transition, TransitionCondition } from './CallbackHandler';
+import { CallbackHandler, Transition, TransitionCondition } from './CallbackHandler';
 import { Data, DataSource, HealthStatus } from './DataSource';
-import { DataSystemInitializer } from './DataSystemInitializer';
-import { DataSystemSynchronizer } from './DataSystemSynchronizer';
+import { DataSystemInitializer, InitializerFactory } from './DataSystemInitializer';
+import { DataSystemSynchronizer, SynchronizerFactory } from './DataSystemSynchronizer';
 
-export default class CompositeDataSource implements DataSource {
+// TODO: SDK-856 async notification if initializer takes too long
+// TODO: SDK-1044 utilize selector from initializers
+export class CompositeDataSource implements DataSource {
   private readonly _defaultFallbackTimeMs = 2 * 60 * 1000;
   private readonly _defaultRecoveryTimeMs = 5 * 60 * 1000;
 
@@ -15,8 +17,8 @@ export default class CompositeDataSource implements DataSource {
   private _externalStopResolve?: (value: Transition) => void;
 
   constructor(
-    private readonly _initializers: DataSystemInitializer[],
-    private readonly _synchronizers: DataSystemSynchronizer[],
+    private readonly _initializers: InitializerFactory[],
+    private readonly _synchronizers: SynchronizerFactory[],
   ) {
     this._externalStopPromise = new Promise<Transition>((transition) => {
       this._externalStopResolve = transition;
@@ -27,22 +29,23 @@ export default class CompositeDataSource implements DataSource {
 
   async run(
     dataCallback: (basis: boolean, data: Data) => void,
-    errorCallback: (err: any) => void,
+    errorCallback: (err: Error) => void,
   ): Promise<void> {
     if (!this._stopped) {
+      // don't allow multiple simultaneous runs
       return;
     }
     this._stopped = false;
 
-    // TODO: async notification if initializer takes too long
-    // TODO: utilize selector from initializers
-
-    let transition: Transition | undefined;
-    while (transition !== Transition.Stop) {
-      const currentDS: DataSystemInitializer | DataSystemSynchronizer | undefined =
-        this._nextDataSource(transition);
-      if (currentDS === undefined) {
-        // TODO: handle no further data sources to use (such as when used all initializers)
+    let transition: Transition = Transition.None; // first loop has no transition
+    while (!this._stopped) {
+      const current: DataSystemInitializer | DataSystemSynchronizer | undefined =
+        this._pickDataSource(transition);
+      if (current === undefined) {
+        errorCallback({
+          name: 'ExhaustedDataSources',
+          message: 'CompositeDataSource has exhausted all configured datasources.',
+        });
         return;
       }
 
@@ -57,7 +60,7 @@ export default class CompositeDataSource implements DataSource {
           recoveryCondition,
           fallbackCondition,
         );
-        currentDS.run(
+        current.run(
           callbackHandler.dataHanlder,
           callbackHandler.statusHandler,
           callbackHandler.errorHandler,
@@ -68,10 +71,8 @@ export default class CompositeDataSource implements DataSource {
       // eslint-disable-next-line no-await-in-loop
       transition = await Promise.race([internalTransitionPromise, this._externalStopPromise]);
 
-      // TODO: call stop on datasource
-      //   if (currentDS instanceof DataSystemSynchronizer) {
-      //     currentDS.stop?.();
-      //   }
+      // stop the current datasource before transitioning to next state
+      current.stop();
     }
 
     // reset so that run can be called again in the future
@@ -80,34 +81,34 @@ export default class CompositeDataSource implements DataSource {
 
   async stop() {
     this._stopped = true;
-    this._externalStopResolve?.(Transition.Stop);
+    this._externalStopResolve?.(Transition.None); // TODO: this feels a little hacky.
   }
 
   private _reset() {
+    this._initPhaseActive = true;
+    this._currentPosition = 0;
     this._externalStopPromise = new Promise<Transition>((transition) => {
       this._externalStopResolve = transition;
     });
-    this._initPhaseActive = true;
-    this._currentPosition = 0;
   }
 
-  private _nextDataSource(
+  private _pickDataSource(
     transition: Transition | undefined,
   ): DataSystemInitializer | DataSystemSynchronizer | undefined {
     switch (transition) {
       case Transition.SwitchToSync:
-        this._initPhaseActive = false;
+        this._initPhaseActive = false; // one way toggle to false, unless this class is reset()
         this._currentPosition = 0;
         break;
       case Transition.Fallback:
         this._currentPosition += 1;
 
-        // TODO: handle reaching end of initializers with error
+        // if outside range of initializers, don't loop back to start, instead return undefined
         if (this._initPhaseActive && this._currentPosition >= this._initializers.length) {
           return undefined;
         }
 
-        // modulate back into range
+        // modulate position back into array range
         this._currentPosition %= this._initPhaseActive
           ? this._initializers.length
           : this._synchronizers.length;
@@ -115,16 +116,16 @@ export default class CompositeDataSource implements DataSource {
       case Transition.Recover:
         this._currentPosition = 0;
         break;
-      case Transition.Stop:
+      case Transition.None:
       default:
-        return undefined;
+        // don't do anything in this case
         break;
     }
 
     if (this._initPhaseActive) {
-      return this._initializers[this._currentPosition];
+      return this._initializers[this._currentPosition].create();
     }
-    return this._synchronizers[this._currentPosition];
+    return this._synchronizers[this._currentPosition].create();
   }
 
   private _makeFallbackCondition(): TransitionCondition {
