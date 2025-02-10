@@ -46,8 +46,8 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@fastly/js-compute": "^3.28.0",
-    "@launchdarkly/js-server-sdk-common": "2.10.0",
+    "@fastly/js-compute": "^3.30.1",
+    "@launchdarkly/js-server-sdk-common": "2.11.0",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {
