@@ -1,9 +1,9 @@
 import { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
-class VercelPlatformInfo implements Info {
+class FastlyPlatformInfo implements Info {
   platformData(): PlatformData {
     return {
-      name: 'Fastly Edge',
+      name: 'Fastly Compute',
     };
   }
 
@@ -16,6 +16,6 @@ class VercelPlatformInfo implements Info {
   }
 }
 
-const createPlatformInfo = () => new VercelPlatformInfo();
+const createPlatformInfo = () => new FastlyPlatformInfo();
 
 export default createPlatformInfo;

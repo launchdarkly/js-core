@@ -1,6 +1,6 @@
 # Example test app for Fastly LaunchDarkly SDK
 
-This is an example test app to showcase the usage of the Fastly LaunchDarkly SDK in a [Fastly Compute@Edge](https://docs.fastly.com/products/compute-at-edge) application. The example demonstrates:
+This is an example test app to showcase the usage of the Fastly LaunchDarkly SDK in a [Fastly Compute](https://docs.fastly.com/products/compute-at-edge) application. The example demonstrates:
 
 1. Initializing the LaunchDarkly SDK with a Fastly KV Store
 2. Evaluating boolean and string feature flags

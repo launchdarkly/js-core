@@ -5,7 +5,7 @@ describe('Fastly Platform Info', () => {
     const platformData = createPlatformInfo();
 
     expect(platformData.platformData()).toEqual({
-      name: 'Fastly Edge',
+      name: 'Fastly Compute',
     });
 
     expect(platformData.sdkData()).toEqual({
