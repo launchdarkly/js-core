@@ -24,6 +24,11 @@
       "extra-files": [
         {
           "type": "json",
+          "path": "jsr.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/fastly-server-sdk']"
         }
