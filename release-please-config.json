@@ -32,7 +32,8 @@
           "path": "example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/fastly-server-sdk']"
         },
-        "src/createPlatformInfo.ts"
+        "src/createPlatformInfo.ts",
+        "__tests__/createPlatformInfo.test.ts"
       ]
     },
     "packages/sdk/react-native": {},
