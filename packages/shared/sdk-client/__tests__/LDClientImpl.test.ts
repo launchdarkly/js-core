@@ -413,4 +413,21 @@ describe('sdk-client object', () => {
       }),
     );
   });
+
+  test('closes event source when client is closed', async () => {
+    const carContext: LDContext = { kind: 'car', key: 'test-car' };
+
+    const mockCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) => {
+      mockEventSource = new MockEventSource(streamUri, options);
+      mockEventSource.simulateEvents('put', [{ data: JSON.stringify(defaultPutResponse) }]);
+      return mockEventSource;
+    });
+    mockPlatform.requests.createEventSource = mockCreateEventSource;
+
+    await ldc.identify(carContext);
+    expect(mockEventSource.closed).toBe(false);
+
+    await ldc.close();
+    expect(mockEventSource.closed).toBe(true);
+  });
 });

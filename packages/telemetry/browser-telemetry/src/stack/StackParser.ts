@@ -1,8 +1,7 @@
-import { computeStackTrace } from 'tracekit';
-
 import { StackFrame } from '../api/stack/StackFrame';
 import { StackTrace } from '../api/stack/StackTrace';
 import { ParsedStackOptions } from '../options';
+import { getTraceKit } from '../vendor/TraceKit';
 
 /**
  * In the browser we will not always be able to determine the source file that code originates
@@ -195,7 +194,13 @@ export function getSrcLines(
  * @returns The stack trace for the given error.
  */
 export default function parse(error: Error, options: ParsedStackOptions): StackTrace {
-  const parsed = computeStackTrace(error);
+  if (!options.enabled) {
+    return {
+      frames: [],
+    };
+  }
+
+  const parsed = getTraceKit().computeStackTrace(error);
   const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
     fileName: processUrlToFileName(inFrame.url, window.location.origin),
     function: inFrame.func,

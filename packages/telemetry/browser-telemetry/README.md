@@ -5,7 +5,11 @@
 > [!WARNING]
 > This is an alpha version. The API is not stabilized and will introduce breaking changes.
 
-TODO Add badges
+[![NPM][browser-telemetry-npm-badge]][browser-telemetry-npm-link]
+[![Actions Status][browser-telemetry-ci-badge]][browser-telemetry-ci]
+[![Documentation][browser-telemetry-ghp-badge]][browser-telemetry-ghp-link]
+[![NPM][browser-telemetry-dm-badge]][browser-telemetry-npm-link]
+[![NPM][browser-telemetry-dt-badge]][browser-telemetry-npm-link]
 
 ## LaunchDarkly overview
 
@@ -15,11 +19,47 @@ TODO Add badges
 
 ## Compatibility
 
-TODO
+This package is compatible with the `launchdarkly-js-client-sdk` version 3.4.0 and later.
 
 ## Setup
 
-TODO
+### For error metric collection only
+
+```
+import { initialize } from "launchdarkly-js-client-sdk";
+import { initTelemetry, register } from "@launchdarkly/browser-telemetry";
+
+// Initialize the telemetry as early as possible in your application.
+// Errors will be missed if they occur before the telemetry is initialized.
+// For metrics only, breadcrumbs and stack traces are not required.
+initTelemetry({breadcrumbs: false, stack: false});
+
+// Initialize the LaunchDarkly client.
+const client = initialize('sdk-key', context);
+
+// Register the client with the telemetry instance.
+register(client);
+```
+
+### For error monitoring + metric collection
+
+```
+import { initialize } from "launchdarkly-js-client-sdk";
+import { initTelemetry, register, inspectors } from "@launchdarkly/browser-telemetry";
+
+// Initialize the telemetry as early as possible in your application.
+// Errors will be missed if they occur before the telemetry is initialized.
+initTelemetry();
+
+// Initialize the LaunchDarkly client.
+const client = initialize('sdk-key', context, {
+  // Inspectors allows the telemetry SDK to capture feature flag information.
+  inspectors: inspectors(),
+});
+
+// Register the client with the telemetry instance.
+register(client);
+```
 
 ## Contributing
 
@@ -39,3 +79,12 @@ We encourage pull requests and other contributions from the community. Check out
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[browser-telemetry-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/browser-telemetry.yml/badge.svg
+[browser-telemetry-ci]: https://github.com/launchdarkly/js-core/actions/workflows/browser-telemetry.yml
+[browser-telemetry-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/browser-telemetry.svg?style=flat-square
+[browser-telemetry-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser-telemetry
+[browser-telemetry-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[browser-telemetry-ghp-link]: https://launchdarkly.github.io/js-core/packages/telemetry/browser-telemetry/docs/
+[browser-telemetry-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/browser-telemetry.svg?style=flat-square
+[browser-telemetry-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/browser-telemetry.svg?style=flat-square

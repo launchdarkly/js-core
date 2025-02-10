@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.4.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.4.0...js-client-sdk-v0.4.1) (2025-02-06)
+
+
+### Bug Fixes
+
+* Ensure streaming connection is closed on SDK close. ([#774](https://github.com/launchdarkly/js-core/issues/774)) ([f58e746](https://github.com/launchdarkly/js-core/commit/f58e746a089fb0cd5f6169f6c246e1f6515f5047))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.2 to 1.12.3
+
+## [0.4.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.3...js-client-sdk-v0.4.0) (2025-01-22)
+
+
+### Features
+
+* Enable source maps with inlined sources for browser SDK. ([#734](https://github.com/launchdarkly/js-core/issues/734)) ([c2a87b1](https://github.com/launchdarkly/js-core/commit/c2a87b11d1eeb31bf0423e3d7dfc8e99fc940c99))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.1 to 1.12.2
+
 ## [0.3.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.2...js-client-sdk-v0.3.3) (2024-11-22)
 
 

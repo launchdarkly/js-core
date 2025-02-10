@@ -12,7 +12,13 @@ import { validateOptions } from './utils';
  * supported. sendEvents is unsupported and is only included as a beta
  * preview.
  */
-type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
+type LDOptions = {
+  /**
+   * The time-to-live for the cache in milliseconds. The default is 100ms. A
+   * value of 0 will cache indefinitely.
+   */
+  cacheTtlMs?: number;
+} & Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
 
 /**
  * The internal options include featureStore because that's how the LDClient
@@ -33,13 +39,22 @@ type BaseSDKParams = {
 };
 
 export const init = (params: BaseSDKParams): LDClient => {
-  const { sdkKey, options = {}, featureStoreProvider, platformName, sdkName, sdkVersion } = params;
+  const {
+    sdkKey,
+    options: inputOptions = {},
+    featureStoreProvider,
+    platformName,
+    sdkName,
+    sdkVersion,
+  } = params;
 
-  const logger = options.logger ?? BasicLogger.get();
+  const logger = inputOptions.logger ?? BasicLogger.get();
+  const { cacheTtlMs, ...options } = inputOptions as any;
 
   const cachableStoreProvider = new CacheableStoreProvider(
     featureStoreProvider,
     buildRootKey(sdkKey),
+    cacheTtlMs,
   );
   const featureStore = new EdgeFeatureStore(cachableStoreProvider, sdkKey, 'Akamai', logger);
 

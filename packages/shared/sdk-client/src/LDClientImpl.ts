@@ -11,7 +11,6 @@ import {
   LDHeaders,
   LDLogger,
   Platform,
-  subsystem,
   timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -48,7 +47,6 @@ export default class LDClientImpl implements LDClient {
   private readonly _diagnosticsManager?: internal.DiagnosticsManager;
   private _eventProcessor?: internal.EventProcessor;
   readonly logger: LDLogger;
-  private _updateProcessor?: subsystem.LDStreamProcessor;
 
   private readonly _highTimeoutThreshold: number = 15;
 
@@ -153,7 +151,7 @@ export default class LDClientImpl implements LDClient {
   async close(): Promise<void> {
     await this.flush();
     this._eventProcessor?.close();
-    this._updateProcessor?.close();
+    this.dataManager.close();
     this.logger.debug('Closed event processor and data source.');
   }
 
