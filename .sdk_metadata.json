@@ -28,7 +28,7 @@
         "tag-prefix": "cloudflare-server-sdk-"
       }
     },
-    "Fastly": {
+    "fastly": {
       "name": "Fastly SDK",
       "type": "edge",
       "path": "packages/sdk/fastly",
