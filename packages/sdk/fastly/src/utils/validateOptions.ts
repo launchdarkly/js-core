@@ -1,20 +1,23 @@
 import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
 /**
- * The Launchdarkly Edge SDKs configuration options. Only logger is officially
- * supported. sendEvents is unsupported and is only included as a beta
- * preview.
+ * The Launchdarkly Fastly Compute SDK configuration options.
  */
-export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
+export type FastlySDKOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents' | 'eventsUri'> & {
+  /**
+   * The Fastly Backend name to send LaunchDarkly events. Backends are configured using the Fastly service backend configuration. This option can be ignored if the `sendEvents` option is set to `false`. See [Fastly's Backend documentation](https://developer.fastly.com/reference/api/services/backend/) for more information. The default value is `launchdarkly`.
+   */
+  eventsBackendName?: string;
+};
 
 /**
  * The internal options include featureStore because that's how the LDClient
  * implementation expects it.
  */
-export type LDOptionsInternal = LDOptions & Pick<LDOptionsCommon, 'featureStore'>;
+export type LDOptionsInternal = FastlySDKOptions & Pick<LDOptionsCommon, 'featureStore'>;
 
 const validateOptions = (sdkKey: string, options: LDOptionsInternal) => {
-  const { featureStore, logger, sendEvents, ...rest } = options;
+  const { eventsBackendName, featureStore, logger, sendEvents, ...rest } = options;
   if (!sdkKey) {
     throw new Error('You must configure the client with a client key');
   }

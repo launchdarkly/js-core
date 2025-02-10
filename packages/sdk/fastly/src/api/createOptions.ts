@@ -10,6 +10,12 @@ export const defaultOptions: LDOptions = {
 
 const createOptions = (options: LDOptions) => {
   const finalOptions = { ...defaultOptions, ...options };
+
+  // The Fastly SDK does not poll LaunchDarkly for updates, so a custom baseUri does not make sense. However, we need
+  // to set it to something when a custom eventsUri is specified in order to pass validation in sdk-server-common.
+  if (finalOptions.eventsUri) {
+    finalOptions.baseUri = finalOptions.eventsUri;
+  }
   finalOptions.logger?.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
   return finalOptions;
 };

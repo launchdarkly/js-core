@@ -1,20 +1,12 @@
 /// <reference types="@fastly/js-compute" />
 import { KVStore } from 'fastly:kv-store';
 
-import { BasicLogger, LDOptions } from '@launchdarkly/js-server-sdk-common';
+import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { EdgeFeatureStore, EdgeProvider, LDClient } from './api';
+import { DEFAULT_EVENTS_BACKEND_NAME } from './api/LDClient';
 import createPlatformInfo from './createPlatformInfo';
-import validateOptions from './utils/validateOptions';
-
-const DEFAULT_EVENTS_BACKEND_NAME = 'launchdarkly';
-
-export type FastlySDKOptions = LDOptions & {
-  /**
-   * The Fastly Backend name to send LaunchDarkly events. Backends are configured using the Fastly service backend configuration. This option can be ignored if the `sendEvents` option is set to `false`. See [Fastly's Backend documentation](https://developer.fastly.com/reference/api/services/backend/) for more information. The default value is `launchdarkly`.
-   */
-  eventsBackendName?: string;
-};
+import validateOptions, { FastlySDKOptions } from './utils/validateOptions';
 
 export const init = (
   sdkKey: string,
@@ -30,19 +22,12 @@ export const init = (
     },
   };
 
-  const { eventsBackendName, ...ldOptions } = options;
-
   const finalOptions = {
     featureStore: new EdgeFeatureStore(edgeProvider, sdkKey, 'Fastly', logger),
     logger,
-    ...ldOptions,
+    ...options,
   };
 
   validateOptions(sdkKey, finalOptions);
-  return new LDClient(
-    sdkKey,
-    createPlatformInfo(),
-    finalOptions,
-    eventsBackendName || DEFAULT_EVENTS_BACKEND_NAME,
-  );
+  return new LDClient(sdkKey, createPlatformInfo(), finalOptions);
 };
