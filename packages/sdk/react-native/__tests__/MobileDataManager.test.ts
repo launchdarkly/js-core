@@ -54,6 +54,8 @@ describe('given a MobileDataManager with mocked dependencies', () => {
   let diagnosticsManager: jest.Mocked<internal.DiagnosticsManager>;
   let mobileDataManager: MobileDataManager;
   let logger: LDLogger;
+  let eventSourceCloseMethod: jest.Mock;
+
   beforeEach(() => {
     logger = {
       error: jest.fn(),
@@ -61,6 +63,8 @@ describe('given a MobileDataManager with mocked dependencies', () => {
       info: jest.fn(),
       debug: jest.fn(),
     };
+    eventSourceCloseMethod = jest.fn();
+
     config = {
       logger,
       maxCachedContexts: 5,
@@ -94,7 +98,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           options,
           onclose: jest.fn(),
           addEventListener: jest.fn(),
-          close: jest.fn(),
+          close: eventSourceCloseMethod,
         })),
         fetch: mockedFetch,
         getEventSourceCapabilities: jest.fn(),
@@ -223,6 +227,23 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     expect(platform.requests.fetch).not.toHaveBeenCalled();
   });
 
+  it('makes no connection when closed', async () => {
+    mobileDataManager.close();
+
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    expect(platform.requests.fetch).not.toHaveBeenCalled();
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[MobileDataManager] Identify called after data manager was closed.',
+    );
+  });
+
   it('should load cached flags and resolve the identify', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
     const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
@@ -298,5 +319,26 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     expect(flagManager.loadCached).toHaveBeenCalledWith(context);
     expect(identifyResolve).toHaveBeenCalled();
     expect(identifyReject).not.toHaveBeenCalled();
+  });
+
+  it('closes the event source when the data manager is closed', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
+
+    mobileDataManager.close();
+    expect(eventSourceCloseMethod).toHaveBeenCalled();
+
+    // Verify a subsequent identify doesn't create a new event source
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[MobileDataManager] Identify called after data manager was closed.',
+    );
   });
 });

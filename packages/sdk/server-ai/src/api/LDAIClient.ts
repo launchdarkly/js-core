@@ -8,22 +8,21 @@ import { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
 export interface LDAIClient {
   /**
    * Retrieves and processes an AI configuration based on the provided key, LaunchDarkly context,
-   * and variables. This includes the model configuration and the processed prompts.
+   * and variables. This includes the model configuration and the customized messages.
    *
    * @param key The key of the AI configuration.
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
+   * @param defaultValue A fallback value containing model configuration and messages. This will
+   * be used if the configuration is not available from LaunchDarkly.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
-   * the prompt template. The keys correspond to placeholders within the template, and the values
+   * the message content. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
-   * @param defaultValue A fallback value containing model configuration and prompts. This will
-   * be used if the configurationuration is not available from launchdarkly.
    *
-   * @returns The AI configurationuration including a processed prompt after all variables have been
-   * substituted in the stored prompt template. This will also include a `tracker` used to track
-   * the state of the AI operation. If the configuration cannot be accessed from LaunchDarkly, then
-   * the return value will include information from the defaultValue.
+   * @returns The AI `config`, customized `messages`, and a `tracker`. If the configuration cannot be accessed from
+   * LaunchDarkly, then the return value will include information from the `defaultValue`. The returned `tracker` can
+   * be used to track AI operation metrics (latency, token usage, etc.).
    *
    * @example
    * ```
@@ -34,7 +33,7 @@ export interface LDAIClient {
    *  enabled: false,
    * };
    *
-   * const result = modelConfig(key, context, defaultValue, variables);
+   * const result = config(key, context, defaultValue, variables);
    * // Output:
    * {
    *   enabled: true,
@@ -44,7 +43,7 @@ export interface LDAIClient {
    *     maxTokens: 4096,
    *     userDefinedKey: "myValue",
    *   },
-   *   prompt: [
+   *   messages: [
    *     {
    *       role: "system",
    *       content: "You are an amazing GPT."

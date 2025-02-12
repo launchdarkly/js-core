@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/browser-telemetry",
-  "version": "0.0.9",
+  "version": "0.3.1",
   "packageManager": "yarn@3.4.1",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -43,13 +43,9 @@
   "bugs": {
     "url": "https://github.com/launchdarkly/js-core/issues"
   },
-  "dependencies": {
-    "rrweb": "2.0.0-alpha.4",
-    "tracekit": "^0.4.6"
-  },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@launchdarkly/js-client-sdk": "0.3.2",
+    "@launchdarkly/js-client-sdk": "0.4.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/css-font-loading-module": "^0.0.13",
     "@types/jest": "^29.5.11",

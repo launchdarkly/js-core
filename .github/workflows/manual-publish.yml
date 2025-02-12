@@ -34,6 +34,7 @@ on:
           - packages/tooling/jest
           - packages/sdk/browser
           - packages/sdk/server-ai
+          - packages/telemetry/browser-telemetry
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean

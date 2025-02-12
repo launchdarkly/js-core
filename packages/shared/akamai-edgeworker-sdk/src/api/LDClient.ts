@@ -34,6 +34,10 @@ class LDClient extends LDClientImpl {
     this._cacheableStoreProvider = storeProvider;
   }
 
+  override initialized(): boolean {
+    return true;
+  }
+
   override waitForInitialization(): Promise<LDClientType> {
     // we need to resolve the promise immediately because Akamai's runtime doesnt
     // have a setimeout so everything executes synchronously.

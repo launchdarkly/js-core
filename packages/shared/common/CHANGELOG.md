@@ -2,6 +2,18 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.13.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.12.0...js-sdk-common-v2.13.0) (2025-01-22)
+
+
+### Features
+
+* Adds StreamingProcessor for FDv2 to sdk-server package. ([#707](https://github.com/launchdarkly/js-core/issues/707)) ([7f5c275](https://github.com/launchdarkly/js-core/commit/7f5c2750dcc8341d049d7e736ca21ec36e168703))
+
+
+### Bug Fixes
+
+* Remove outdated reference to geolocation. ([#719](https://github.com/launchdarkly/js-core/issues/719)) ([0eeb3b6](https://github.com/launchdarkly/js-core/commit/0eeb3b6472419d257bf52c4ab3ae33864eae1902))
+
 ## [2.12.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.11.0...js-sdk-common-v2.12.0) (2024-11-04)
 
 
