@@ -35,7 +35,8 @@ export default async function RootLayout({
         <LDProvider
           clientSideID={clientSideID}
           context={context}
-          options={{ bootstrap, evaluationReasons: true }}
+          bootstrap={bootstrap}
+          options={{ withReasons: true }}
         >
           {children}
         </LDProvider>
