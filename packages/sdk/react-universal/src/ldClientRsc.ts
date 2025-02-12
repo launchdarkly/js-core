@@ -13,6 +13,12 @@ import type { JSSdk } from './types';
 // Omit variationDetail because its return type is incompatible with js-core.
 type PartialJSSdk = Omit<Partial<JSSdk>, 'variationDetail'>;
 
+// Create a helper type for the variation methods
+type VariationMethod<T> = (key: string, defaultValue: T) => T;
+
+// Create a helper type for the variation detail methods
+type VariationDetailMethod<T> = (key: string, defaultValue: T) => LDEvaluationDetailTyped<T>;
+
 /**
  * A partial ldClient suitable for RSC and server side rendering.
  */
@@ -30,37 +36,41 @@ export class LDClientRsc implements PartialJSSdk {
     return this._ldContext;
   }
 
-  /**
-   *
-   * Call the server sdk variation for analytics purposes.
-   */
-  boolVariation(key: string, defaultValue: boolean): boolean {
-    if (isServer) {
-      global.nodeSdk.boolVariation(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
+  private createVariation<T>(
+    key: string,
+    defaultValue: T,
+    serverMethod: (key: string, context: LDContext, defaultValue: T) => Promise<T>,
+  ): T {
+    serverMethod(key, this._ldContext, defaultValue).then(/* ignore */);
+
     return this._bootstrap[key] ?? defaultValue;
   }
 
-  stringVariation(key: string, defaultValue: string): string {
-    if (isServer) {
-      global.nodeSdk.stringVariation(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
-    return this._bootstrap[key] ?? defaultValue;
+  private createVariationDetail<T>(
+    key: string,
+    defaultValue: T,
+    serverMethod: (
+      key: string,
+      context: LDContext,
+      defaultValue: T,
+    ) => Promise<LDEvaluationDetailTyped<T>>,
+  ): LDEvaluationDetailTyped<T> {
+    serverMethod(key, this._ldContext, defaultValue).then(/* ignore */);
+    const { reason, variation: variationIndex } = this._bootstrap.$flagsState[key];
+    return { value: this._bootstrap[key], reason, variationIndex };
   }
 
-  numberVariation(key: string, defaultValue: number): number {
-    if (isServer) {
-      global.nodeSdk.numberVariation(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
-    return this._bootstrap[key] ?? defaultValue;
-  }
+  boolVariation: VariationMethod<boolean> = (key, defaultValue) =>
+    this.createVariation(key, defaultValue, global.nodeSdk.boolVariation.bind(global.nodeSdk));
 
-  jsonVariation(key: string, defaultValue: unknown): unknown {
-    if (isServer) {
-      global.nodeSdk.jsonVariation(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
-    return this._bootstrap[key] ?? defaultValue;
-  }
+  stringVariation: VariationMethod<string> = (key, defaultValue) =>
+    this.createVariation(key, defaultValue, global.nodeSdk.stringVariation.bind(global.nodeSdk));
+
+  numberVariation: VariationMethod<number> = (key, defaultValue) =>
+    this.createVariation(key, defaultValue, global.nodeSdk.numberVariation.bind(global.nodeSdk));
+
+  jsonVariation: VariationMethod<unknown> = (key, defaultValue) =>
+    this.createVariation(key, defaultValue, global.nodeSdk.jsonVariation.bind(global.nodeSdk));
 
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
     if (isServer) {
@@ -69,41 +79,33 @@ export class LDClientRsc implements PartialJSSdk {
     return this._bootstrap[key] ?? defaultValue;
   }
 
-  boolVariationDetail(key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean> {
-    if (isServer) {
-      global.nodeSdk.boolVariationDetail(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
+  boolVariationDetail: VariationDetailMethod<boolean> = (key, defaultValue) =>
+    this.createVariationDetail(
+      key,
+      defaultValue,
+      global.nodeSdk.boolVariationDetail.bind(global.nodeSdk),
+    );
 
-    const { reason, variation: variationIndex } = this._bootstrap.$flagsState[key];
-    return { value: this._bootstrap[key], reason, variationIndex };
-  }
+  stringVariationDetail: VariationDetailMethod<string> = (key, defaultValue) =>
+    this.createVariationDetail(
+      key,
+      defaultValue,
+      global.nodeSdk.stringVariationDetail.bind(global.nodeSdk),
+    );
 
-  stringVariationDetail(key: string, defaultValue: string): LDEvaluationDetailTyped<string> {
-    if (isServer) {
-      global.nodeSdk.stringVariationDetail(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
+  numberVariationDetail: VariationDetailMethod<number> = (key, defaultValue) =>
+    this.createVariationDetail(
+      key,
+      defaultValue,
+      global.nodeSdk.numberVariationDetail.bind(global.nodeSdk),
+    );
 
-    const { reason, variation: variationIndex } = this._bootstrap.$flagsState[key];
-    return { value: this._bootstrap[key], reason, variationIndex };
-  }
-
-  numberVariationDetail(key: string, defaultValue: number): LDEvaluationDetailTyped<number> {
-    if (isServer) {
-      global.nodeSdk.numberVariationDetail(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
-
-    const { reason, variation: variationIndex } = this._bootstrap.$flagsState[key];
-    return { value: this._bootstrap[key], reason, variationIndex };
-  }
-
-  jsonVariationDetail(key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> {
-    if (isServer) {
-      global.nodeSdk.jsonVariationDetail(key, this._ldContext, defaultValue).then(/* ignore */);
-    }
-
-    const { reason, variation: variationIndex } = this._bootstrap.$flagsState[key];
-    return { value: this._bootstrap[key], reason, variationIndex };
-  }
+  jsonVariationDetail: VariationDetailMethod<unknown> = (key, defaultValue) =>
+    this.createVariationDetail(
+      key,
+      defaultValue,
+      global.nodeSdk.jsonVariationDetail.bind(global.nodeSdk),
+    );
 
   variationDetail(key: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
     if (isServer) {
