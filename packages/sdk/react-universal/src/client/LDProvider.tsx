@@ -38,6 +38,8 @@ export const LDProvider = ({
   let jsSdk: JSSdk = undefined as any;
   if (!isServer) {
     jsSdk = initialize(clientSideID ?? '', options);
+    // When bootstrap is passed in, identify runs immediately
+    jsSdk.identify(context, { bootstrap });
   }
 
   const [state, setState] = useState<ReactContext>({
@@ -48,7 +50,6 @@ export const LDProvider = ({
 
   useEffect(() => {
     setupListeners(setState, jsSdk);
-    jsSdk.identify(context, { bootstrap });
   }, []);
 
   return <Provider value={state}>{children}</Provider>;
