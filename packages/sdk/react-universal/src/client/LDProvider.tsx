@@ -39,7 +39,9 @@ export const LDProvider = ({
   if (!isServer) {
     jsSdk = initialize(clientSideID ?? '', options);
     // When bootstrap is passed in, identify runs immediately
-    jsSdk.identify(context, { bootstrap });
+    (async () => {
+      await jsSdk.identify(context, { bootstrap });
+    })();
   }
 
   const [state, setState] = useState<ReactContext>({
