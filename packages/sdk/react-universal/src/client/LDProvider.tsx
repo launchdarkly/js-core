@@ -45,7 +45,7 @@ export const LDProvider = ({
   });
 
   useEffect(() => {
-    setupListeners(setState, jsSdk);
+    setupListeners(jsSdk, setState);
     jsSdk.identify(context, { bootstrap });
   }, []);
 
