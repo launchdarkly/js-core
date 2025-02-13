@@ -51,6 +51,9 @@
     "packages/sdk/browser": {
       "bump-minor-pre-major": true
     },
+    "packages/sdk/react-universal": {
+      "bump-minor-pre-major": true
+    },
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
       "extra-files": [
