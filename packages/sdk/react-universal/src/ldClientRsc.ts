@@ -36,7 +36,7 @@ export class LDClientRsc implements PartialJSSdk {
     return this._ldContext;
   }
 
-  private createVariation<T>(
+  private _createVariation<T>(
     key: string,
     defaultValue: T,
     serverMethod: (key: string, context: LDContext, defaultValue: T) => Promise<T>,
@@ -46,7 +46,7 @@ export class LDClientRsc implements PartialJSSdk {
     return this._bootstrap[key] ?? defaultValue;
   }
 
-  private createVariationDetail<T>(
+  private _createVariationDetail<T>(
     key: string,
     defaultValue: T,
     serverMethod: (
@@ -61,16 +61,16 @@ export class LDClientRsc implements PartialJSSdk {
   }
 
   boolVariation: VariationMethod<boolean> = (key, defaultValue) =>
-    this.createVariation(key, defaultValue, global.nodeSdk.boolVariation.bind(global.nodeSdk));
+    this._createVariation(key, defaultValue, global.nodeSdk.boolVariation.bind(global.nodeSdk));
 
   stringVariation: VariationMethod<string> = (key, defaultValue) =>
-    this.createVariation(key, defaultValue, global.nodeSdk.stringVariation.bind(global.nodeSdk));
+    this._createVariation(key, defaultValue, global.nodeSdk.stringVariation.bind(global.nodeSdk));
 
   numberVariation: VariationMethod<number> = (key, defaultValue) =>
-    this.createVariation(key, defaultValue, global.nodeSdk.numberVariation.bind(global.nodeSdk));
+    this._createVariation(key, defaultValue, global.nodeSdk.numberVariation.bind(global.nodeSdk));
 
   jsonVariation: VariationMethod<unknown> = (key, defaultValue) =>
-    this.createVariation(key, defaultValue, global.nodeSdk.jsonVariation.bind(global.nodeSdk));
+    this._createVariation(key, defaultValue, global.nodeSdk.jsonVariation.bind(global.nodeSdk));
 
   variation(key: string, defaultValue?: LDFlagValue): LDFlagValue {
     if (isServer) {
@@ -80,28 +80,28 @@ export class LDClientRsc implements PartialJSSdk {
   }
 
   boolVariationDetail: VariationDetailMethod<boolean> = (key, defaultValue) =>
-    this.createVariationDetail(
+    this._createVariationDetail(
       key,
       defaultValue,
       global.nodeSdk.boolVariationDetail.bind(global.nodeSdk),
     );
 
   stringVariationDetail: VariationDetailMethod<string> = (key, defaultValue) =>
-    this.createVariationDetail(
+    this._createVariationDetail(
       key,
       defaultValue,
       global.nodeSdk.stringVariationDetail.bind(global.nodeSdk),
     );
 
   numberVariationDetail: VariationDetailMethod<number> = (key, defaultValue) =>
-    this.createVariationDetail(
+    this._createVariationDetail(
       key,
       defaultValue,
       global.nodeSdk.numberVariationDetail.bind(global.nodeSdk),
     );
 
   jsonVariationDetail: VariationDetailMethod<unknown> = (key, defaultValue) =>
-    this.createVariationDetail(
+    this._createVariationDetail(
       key,
       defaultValue,
       global.nodeSdk.jsonVariationDetail.bind(global.nodeSdk),
