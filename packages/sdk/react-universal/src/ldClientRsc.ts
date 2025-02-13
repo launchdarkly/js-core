@@ -9,9 +9,8 @@ import type {
 import { isServer } from './isServer';
 import type { JSSdk } from './types';
 
-// GOTCHA: Partially implement the js sdk.
-// Omit variationDetail because its return type is incompatible with js-core.
-type PartialJSSdk = Omit<Partial<JSSdk>, 'variationDetail'>;
+// Partially implement the js sdk for server components.
+type PartialJSSdk = Partial<JSSdk>;
 
 /**
  * A partial ldClient suitable for RSC and server side rendering.
