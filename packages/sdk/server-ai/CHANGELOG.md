@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.2...server-sdk-ai-v0.9.0) (2025-02-06)
+
+
+### Features
+
+* add support for versioned metrics for AI Configs ([#773](https://github.com/launchdarkly/js-core/issues/773)) ([a3f756f](https://github.com/launchdarkly/js-core/commit/a3f756f3c3207a068115b147d5c7439e204b7ae4))
+
+## [0.8.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.1...server-sdk-ai-v0.8.2) (2025-01-27)
+
+
+### Bug Fixes
+
+* **docs:** Node.js AI SDK: modelConfig --&gt; config in readme ([#765](https://github.com/launchdarkly/js-core/issues/765)) ([4d46117](https://github.com/launchdarkly/js-core/commit/4d4611700e7eebd9a7d6f8fd596a7a4ff3310802))
+
 ## [0.8.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.0...server-sdk-ai-v0.8.1) (2025-01-24)
 
 

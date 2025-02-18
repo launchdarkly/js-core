@@ -74,6 +74,11 @@ export default class BrowserDataManager extends BaseDataManager {
     context: Context,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void> {
+    if (this.closed) {
+      this._debugLog('Identify called after data manager was closed.');
+      return;
+    }
+
     this.context = context;
     const browserIdentifyOptions = identifyOptions as BrowserIdentifyOptions | undefined;
     if (browserIdentifyOptions?.hash) {

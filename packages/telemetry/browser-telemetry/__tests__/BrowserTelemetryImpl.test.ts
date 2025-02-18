@@ -26,6 +26,7 @@ const defaultOptions: ParsedOptions = {
     filters: [],
   },
   stack: {
+    enabled: true,
     source: {
       beforeLines: 5,
       afterLines: 5,

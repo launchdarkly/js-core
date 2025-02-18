@@ -1,15 +1,34 @@
 import { EdgeProvider } from '.';
 
 /**
- * Wraps around an edge provider to cache a copy of the sdk payload locally an explicit request is made to refetch data from the origin.
- * The wrapper is neccessary to ensure that we dont make redundant sub-requests from Akamai to fetch an entire environment payload.
+ * Wraps around an edge provider to cache a copy of the SDK payload locally.
+ *
+ * If a cacheTtlMs is specified, then the cacheable store provider will cache
+ * results for that specified duration. If the data lookup fails after that
+ * interval, previously stored values will be retained. The lookup will be
+ * retried again after the TTL.
+ *
+ * If no cacheTtlMs is specified, the cache will be stored for the lifetime of
+ * the object. The cache can be manually refreshed by calling
+ * `prefetchPayloadFromOriginStore`.
+ *
+ * The wrapper is necessary to ensure that we don't make redundant sub-requests
+ * from Akamai to fetch an entire environment payload. At the time of this writing,
+ * the Akamai documentation (https://techdocs.akamai.com/edgeworkers/docs/resource-tier-limitations)
+ * limits the number of sub-requests to:
+ *
+ * - 2 for basic compute
+ * - 4 for dynamic compute
+ * - 10 for enterprise
  */
 export default class CacheableStoreProvider implements EdgeProvider {
-  cache: string | null | undefined;
+  cache: Promise<string | null | undefined> | null | undefined;
+  cachedAt: number | undefined;
 
   constructor(
     private readonly _edgeProvider: EdgeProvider,
     private readonly _rootKey: string,
+    private readonly _cacheTtlMs?: number,
   ) {}
 
   /**
@@ -18,22 +37,47 @@ export default class CacheableStoreProvider implements EdgeProvider {
    * @returns
    */
   async get(rootKey: string): Promise<string | null | undefined> {
-    if (!this.cache) {
-      this.cache = await this._edgeProvider.get(rootKey);
+    if (!this._isCacheValid()) {
+      this.cache = this._edgeProvider.get(rootKey);
+      this.cachedAt = Date.now();
     }
 
     return this.cache;
   }
 
   /**
-   * Invalidates cache and fetch environment payload data from origin. The result of this data is cached in memory.
+   * Fetches environment payload data from the origin in accordance with the caching configuration.
+   *
    * You should only call this function within a feature store to pre-fetch and cache payload data in environments
    * where its expensive to make multiple outbound requests to the origin
    * @param rootKey
    * @returns
    */
   async prefetchPayloadFromOriginStore(rootKey?: string): Promise<string | null | undefined> {
-    this.cache = undefined; // clear the cache so that new data can be fetched from the origin
+    if (this._cacheTtlMs === undefined) {
+      this.cache = undefined; // clear the cache so that new data can be fetched from the origin
+    }
+
     return this.get(rootKey || this._rootKey);
+  }
+
+  /**
+   * Internal helper to determine if the cached values are still considered valid.
+   */
+  private _isCacheValid(): boolean {
+    // If we don't have a cache, or we don't know how old the cache is, we have
+    // to consider it is invalid.
+    if (!this.cache || this.cachedAt === undefined) {
+      return false;
+    }
+
+    // If the cache provider was configured without a TTL, then the cache is
+    // always considered valid.
+    if (!this._cacheTtlMs) {
+      return true;
+    }
+
+    // Otherwise, it all depends on the time.
+    return Date.now() - this.cachedAt < this._cacheTtlMs;
   }
 }

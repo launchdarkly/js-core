@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.12.2...js-client-sdk-common-v1.12.3) (2025-02-06)
+
+
+### Bug Fixes
+
+* Ensure streaming connection is closed on SDK close. ([#774](https://github.com/launchdarkly/js-core/issues/774)) ([f58e746](https://github.com/launchdarkly/js-core/commit/f58e746a089fb0cd5f6169f6c246e1f6515f5047))
+
 ## [1.12.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.12.1...js-client-sdk-common-v1.12.2) (2025-01-22)
 
 

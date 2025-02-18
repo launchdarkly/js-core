@@ -65,6 +65,10 @@ function applyFilter<T>(item: T | undefined, filter: (item: T) => T | undefined)
 }
 
 function configureTraceKit(options: ParsedStackOptions) {
+  if (!options.enabled) {
+    return;
+  }
+
   const TraceKit = getTraceKit();
   // Include before + after + source line.
   // TraceKit only takes a total context size, so we have to over capture and then reduce the lines.

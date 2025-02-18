@@ -194,6 +194,12 @@ export function getSrcLines(
  * @returns The stack trace for the given error.
  */
 export default function parse(error: Error, options: ParsedStackOptions): StackTrace {
+  if (!options.enabled) {
+    return {
+      frames: [],
+    };
+  }
+
   const parsed = getTraceKit().computeStackTrace(error);
   const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
     fileName: processUrlToFileName(inFrame.url, window.location.origin),

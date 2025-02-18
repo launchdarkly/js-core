@@ -34,12 +34,13 @@ export const init = ({
   sdkKey,
 }: AkamaiLDClientParams): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
+  const cacheTtlMs = options.cacheTtlMs ?? 100;
 
   const edgekvProvider = new EdgeKVProvider({ namespace, group, logger });
 
   return initEdge({
     sdkKey,
-    options: { ...options, logger },
+    options: { ...options, logger, cacheTtlMs },
     featureStoreProvider: edgekvProvider,
     platformName: 'Akamai EdgeWorker',
     sdkName: '@launchdarkly/akamai-server-edgekv-sdk',
