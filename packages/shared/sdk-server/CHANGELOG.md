@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.11.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.11.0...js-server-sdk-common-v2.11.1) (2025-02-18)
+
+
+### Bug Fixes
+
+* Fix issue where flush callback could be called twice. ([#779](https://github.com/launchdarkly/js-core/issues/779)) ([c377e89](https://github.com/launchdarkly/js-core/commit/c377e890f9af71f1658f3303217118206496a602))
+
 ## [2.11.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.10.0...js-server-sdk-common-v2.11.0) (2025-01-22)
 
 
