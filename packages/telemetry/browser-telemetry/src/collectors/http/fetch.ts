@@ -9,11 +9,25 @@ import HttpCollectorOptions from './HttpCollectorOptions';
  */
 export default class FetchCollector implements Collector {
   private _destination?: Recorder;
+  private _loggedIssue: boolean = false;
 
   constructor(options: HttpCollectorOptions) {
     decorateFetch((breadcrumb) => {
-      filterHttpBreadcrumb(breadcrumb, options);
-      this._destination?.addBreadcrumb(breadcrumb);
+      let filtered = false;
+      try {
+        filterHttpBreadcrumb(breadcrumb, options);
+        filtered = true;
+      } catch (err) {
+        if (!this._loggedIssue) {
+          options.getLogger?.()?.warn('Error filtering http breadcrumb', err);
+          this._loggedIssue = true;
+        }
+      }
+      // Only add the breadcrumb if the filter didn't throw. We don't want to
+      // report a breadcrumb that may have not have had the correct information redacted.
+      if (filtered) {
+        this._destination?.addBreadcrumb(breadcrumb);
+      }
     });
   }
 
