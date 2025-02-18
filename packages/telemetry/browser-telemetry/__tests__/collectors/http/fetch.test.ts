@@ -182,4 +182,23 @@ describe('given a FetchCollector with a URL filter that throws an error', () => 
 
     expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
   });
+
+  it('only logs the filter error once for multiple requests', async () => {
+    collector.register(mockRecorder, 'test-session');
+
+    const mockResponse = new Response('test response', { status: 200, statusText: 'OK' });
+    (initialFetch as jest.Mock).mockResolvedValue(mockResponse);
+
+    // Make multiple fetch calls that will trigger the filter error
+    await fetch('https://api.example.com/data');
+    await fetch('https://api.example.com/data2');
+    await fetch('https://api.example.com/data3');
+
+    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Error filtering http breadcrumb',
+      new Error('test error'),
+    );
+    expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
+  });
 });
