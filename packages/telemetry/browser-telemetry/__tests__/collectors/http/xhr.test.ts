@@ -1,4 +1,5 @@
 import { HttpBreadcrumb } from '../../../src/api/Breadcrumb';
+import { MinLogger } from '../../../src/api/MinLogger';
 import { Recorder } from '../../../src/api/Recorder';
 import XhrCollector from '../../../src/collectors/http/xhr';
 
@@ -136,4 +137,71 @@ it('applies URL filters to requests', () => {
 
 afterEach(() => {
   window.XMLHttpRequest = initialXhr;
+});
+
+describe('given a XhrCollector with a URL filter that throws an error', () => {
+  let mockRecorder: Recorder;
+  let collector: XhrCollector;
+  let mockLogger: MinLogger;
+  beforeEach(() => {
+    mockLogger = {
+      warn: jest.fn(),
+    };
+    mockRecorder = {
+      addBreadcrumb: jest.fn(),
+      captureError: jest.fn(),
+      captureErrorEvent: jest.fn(),
+    };
+    collector = new XhrCollector({
+      urlFilters: [
+        () => {
+          throw new Error('test error');
+        },
+      ],
+      getLogger: () => mockLogger,
+    });
+  });
+
+  it('logs an error if it fails to filter a breadcrumb', async () => {
+    collector.register(mockRecorder, 'test-session');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.example.com/data?token=secret123');
+    xhr.send();
+
+    Object.defineProperty(xhr, 'status', { value: 200 });
+    xhr.dispatchEvent(new Event('loadend'));
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Error filtering http breadcrumb',
+      new Error('test error'),
+    );
+
+    expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
+  });
+
+  it('only logs the filter error once for multiple requests', async () => {
+    collector.register(mockRecorder, 'test-session');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.example.com/data?token=secret123');
+    xhr.send();
+
+    Object.defineProperty(xhr, 'status', { value: 200 });
+    xhr.dispatchEvent(new Event('loadend'));
+
+    const xhr2 = new XMLHttpRequest();
+    xhr2.open('GET', 'https://api.example.com/data?token=secret123');
+    xhr2.send();
+
+    Object.defineProperty(xhr2, 'status', { value: 200 });
+    xhr2.dispatchEvent(new Event('loadend'));
+
+    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Error filtering http breadcrumb',
+      new Error('test error'),
+    );
+    expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
+  });
 });
