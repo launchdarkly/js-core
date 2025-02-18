@@ -14,10 +14,10 @@ export default class XhrCollector implements Collector {
 
   constructor(options: HttpCollectorOptions) {
     decorateXhr((breadcrumb) => {
-      let filtered = false;
+      let filtersExecuted = false;
       try {
         filterHttpBreadcrumb(breadcrumb, options);
-        filtered = true;
+        filtersExecuted = true;
       } catch (err) {
         if (!this._loggedIssue) {
           options.getLogger?.()?.warn('Error filtering http breadcrumb', err);
@@ -26,7 +26,7 @@ export default class XhrCollector implements Collector {
       }
       // Only add the breadcrumb if the filter didn't throw. We don't want to
       // report a breadcrumb that may have not have had the correct information redacted.
-      if (filtered) {
+      if (filtersExecuted) {
         this._destination?.addBreadcrumb(breadcrumb);
       }
     });
