@@ -17,7 +17,7 @@ Cat photo by [Sergey Semin](https://unsplash.com/@feneek?utm_content=creditCopyT
 
 A node environment of version 16 and yarn are required to develop in this repository.
 You will also need the [Fastly CLI](https://developer.fastly.com/learning/tools/cli) installed and a Fastly account to setup
-the test data required by this example.
+the test data required by this example. If you don't have a Fastly account, you can sign up for a free developer account [here](https://www.fastly.com/signup?tier=free).
 
 ## Setting up your LaunchDarkly environment
 
