@@ -63,3 +63,11 @@ it('filters out username and password from URLs', () => {
     expect(defaultUrlFilter(input)).toBe(expected);
   });
 });
+
+it('can handle partial URLs', () => {
+  expect(defaultUrlFilter('/partial/url')).toBe('/partial/url');
+});
+
+it('can handle invalid URLs', () => {
+  expect(defaultUrlFilter('invalid url')).toBe('invalid url');
+});

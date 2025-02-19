@@ -1,4 +1,5 @@
 import { HttpBreadcrumb } from '../../../src/api/Breadcrumb';
+import { MinLogger } from '../../../src/api/MinLogger';
 import { Recorder } from '../../../src/api/Recorder';
 import FetchCollector from '../../../src/collectors/http/fetch';
 
@@ -138,5 +139,66 @@ describe('given a FetchCollector with a mock recorder', () => {
         type: 'fetch',
       }),
     );
+  });
+});
+
+describe('given a FetchCollector with a URL filter that throws an error', () => {
+  let mockRecorder: Recorder;
+  let collector: FetchCollector;
+  let mockLogger: MinLogger;
+  beforeEach(() => {
+    mockLogger = {
+      warn: jest.fn(),
+    };
+    // Create mock recorder
+    mockRecorder = {
+      addBreadcrumb: jest.fn(),
+      captureError: jest.fn(),
+      captureErrorEvent: jest.fn(),
+    };
+    collector = new FetchCollector({
+      urlFilters: [
+        () => {
+          throw new Error('test error');
+        },
+      ],
+      getLogger: () => mockLogger,
+    });
+  });
+
+  it('logs an error if it fails to filter a breadcrumb', async () => {
+    collector.register(mockRecorder, 'test-session');
+
+    const mockResponse = new Response('test response', { status: 200, statusText: 'OK' });
+    (initialFetch as jest.Mock).mockResolvedValue(mockResponse);
+
+    await fetch('https://api.example.com/data');
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Error filtering http breadcrumb',
+      new Error('test error'),
+    );
+    expect(initialFetch).toHaveBeenCalledWith('https://api.example.com/data');
+
+    expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
+  });
+
+  it('only logs the filter error once for multiple requests', async () => {
+    collector.register(mockRecorder, 'test-session');
+
+    const mockResponse = new Response('test response', { status: 200, statusText: 'OK' });
+    (initialFetch as jest.Mock).mockResolvedValue(mockResponse);
+
+    // Make multiple fetch calls that will trigger the filter error
+    await fetch('https://api.example.com/data');
+    await fetch('https://api.example.com/data2');
+    await fetch('https://api.example.com/data3');
+
+    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Error filtering http breadcrumb',
+      new Error('test error'),
+    );
+    expect(mockRecorder.addBreadcrumb).not.toHaveBeenCalled();
   });
 });
