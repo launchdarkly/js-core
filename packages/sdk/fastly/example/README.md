@@ -9,6 +9,12 @@ This is an example test app to showcase the usage of the Fastly LaunchDarkly SDK
 
 Most of the LaunchDarkly-related code can be found in [src/index.ts](src/index.ts).
 
+### Photo credits
+
+- Cat photo by [Sergey Semin](https://unsplash.com/@feneek?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash) on [Unsplash](https://unsplash.com/photos/brown-and-white-tabby-cat-DwHULfmhulE?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash).
+
+- Dog photo by [Taylor Kopel](https://unsplash.com/@taylorkopel?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash) on [Unsplash](https://unsplash.com/photos/yellow-labrador-retriever-puppy-sitting-on-floor-WX4i1Jq_o0Y?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash).
+
 ## Prerequisites
 
 A node environment of version 16 and yarn are required to develop in this repository.

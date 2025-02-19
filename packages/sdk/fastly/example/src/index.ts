@@ -14,8 +14,8 @@ const KV_STORE_NAME = 'launchdarkly';
 // Set the Fastly Backend name used to send LaunchDarkly events here
 const EVENTS_BACKEND_NAME = 'launchdarkly';
 
-const cat = includeBytes('./src/cat.jpeg');
-const dog = includeBytes('./src/dog.jpeg');
+const cat = includeBytes('./src/cat.jpg');
+const dog = includeBytes('./src/dog.jpg');
 
 // The entry point for your application.
 //
