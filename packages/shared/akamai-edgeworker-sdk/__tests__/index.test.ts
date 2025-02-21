@@ -6,6 +6,7 @@ const createClient = (sdkKey: string, mockLogger: LDLogger, mockEdgeProvider: Ed
     sdkKey,
     options: {
       logger: mockLogger,
+      cacheTtlMs: 0,
     },
     featureStoreProvider: mockEdgeProvider,
     platformName: 'platform-name',
@@ -40,14 +41,6 @@ describe('EdgeWorker', () => {
   it('should call edge providers get method only once', async () => {
     const client = createClient(sdkKey, mockLogger, mockEdgeProvider);
     await client.waitForInitialization();
-    await client.allFlagsState({ kind: 'multi', l: { key: 'key' } });
-
-    expect(mockGet).toHaveBeenCalledTimes(1);
-  });
-
-  it('should call edge providers get method only 3 times', async () => {
-    const client = createClient(sdkKey, mockLogger, mockEdgeProvider);
-    await client.waitForInitialization();
 
     const context: LDMultiKindContext = { kind: 'multi', l: { key: 'key' } };
 
@@ -55,7 +48,7 @@ describe('EdgeWorker', () => {
     await client.variation('testFlag1', context, false);
     await client.variationDetail('testFlag1', context, false);
 
-    expect(mockGet).toHaveBeenCalledTimes(3);
+    expect(mockGet).toHaveBeenCalledTimes(1);
   });
 
   it('should successfully return data for allFlagsState', async () => {

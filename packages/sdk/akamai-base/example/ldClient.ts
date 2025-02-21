@@ -54,6 +54,9 @@ export const evaluateFlagFromCustomFeatureStore = async (
   const client = init({
     sdkKey: 'Your-launchdarkly-environment-client-id',
     featureStoreProvider: new MyCustomStoreProvider(),
+    options: {
+      cacheTtlMs: 1_000,
+    },
   });
 
   return client.variation(flagKey, context, defaultValue);
