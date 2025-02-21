@@ -96,13 +96,12 @@ export class EdgeFeatureStore implements LDFeatureStore {
   // This method is used to retrieve the environment payload from the edge
   // provider. It will cache the payload for the duration of the cacheTtlMs.
 
-
   /**
-  * This method is used to retrieve the environment payload from the edge
-  * provider. It will cache the payload for the duration of the cacheTtlMs.
-  *
-  * @returns
-  */
+   * This method is used to retrieve the environment payload from the edge
+   * provider. It will cache the payload for the duration of the cacheTtlMs.
+   *
+   * @returns
+   */
   private async _getStorePayload(): Promise<ReturnType<typeof deserializePoll>> {
     let payload = this._cache.get();
     if (payload !== undefined) {

@@ -56,7 +56,7 @@ export const evaluateFlagFromCustomFeatureStore = async (
     featureStoreProvider: new MyCustomStoreProvider(),
     options: {
       cacheTtlMs: 1_000,
-    }
+    },
   });
 
   return client.variation(flagKey, context, defaultValue);

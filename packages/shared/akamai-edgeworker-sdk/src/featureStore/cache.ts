@@ -1,10 +1,10 @@
 interface CacheItem {
-  value: any,
-  expiration: number,
+  value: any;
+  expiration: number;
 }
 
 export default class Cache {
-  _cache: CacheItem | undefined;
+  private _cache: CacheItem | undefined;
 
   constructor(private readonly _cacheTtlMs: number) {}
 
@@ -36,8 +36,8 @@ export default class Cache {
 
   set(value: any): void {
     this._cache = {
-      value: value,
+      value,
       expiration: Date.now() + this._cacheTtlMs,
-    }
+    };
   }
 }
