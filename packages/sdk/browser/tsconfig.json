@@ -18,7 +18,7 @@
     "types": ["node", "jest"],
     "allowJs": true
   },
-  "include": ["src"],
+  "include": ["src", "../../shared/common/src/datasource/Backoff.ts"],
   "exclude": [
     "vite.config.ts",
     "__tests__",

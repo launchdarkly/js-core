@@ -1,8 +1,11 @@
 export interface Data {}
 
-export enum HealthStatus {
-  Online,
+// TODO: refactor client-sdk to use this enum
+export enum DataSourceState {
+  Initializing,
+  Valid,
   Interrupted,
+  Closed,
 }
 
 export interface DataSource {
@@ -11,7 +14,10 @@ export interface DataSource {
    * @param cb may be invoked many times
    * @returns
    */
-  run(dataCallback: (basis: boolean, data: Data) => void, errorHander: (err: Error) => void): void;
+  run(
+    dataCallback: (basis: boolean, data: Data) => void,
+    statusCallback: (status: DataSourceState, err?: any) => void,
+  ): void;
 
   /**
    * May be called any number of times, if already stopped, has no effect.
@@ -21,15 +27,20 @@ export interface DataSource {
   stop(): void;
 }
 
-export interface DataSourceWithStatus {
-  /**
-   * May be called any number of times, if already started, has no effect
-   * @param cb may be invoked many times
-   * @returns
-   */
-  run(
-    dataCallback: (basis: boolean, data: Data) => void,
-    statusCallback: (status: HealthStatus, durationMS: number) => void,
-    errorHander: (err: any) => void,
-  ): void;
+/**
+ * A data source that can be used to fetch the basis.
+ */
+export interface DataSystemInitializer extends DataSource {}
+
+/**
+ * A data source that can be used to fetch the basis or ongoing data changes.
+ */
+export interface DataSystemSynchronizer extends DataSource {}
+
+export interface InitializerFactory {
+  create(): DataSystemInitializer;
+}
+
+export interface SynchronizerFactory {
+  create(): DataSystemSynchronizer;
 }

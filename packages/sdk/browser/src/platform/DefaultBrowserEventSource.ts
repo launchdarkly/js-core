@@ -6,7 +6,7 @@ import {
   EventSource as LDEventSource,
 } from '@launchdarkly/js-client-sdk-common';
 
-import Backoff from './Backoff';
+import Backoff from '../../../../shared/common/src/datasource/Backoff';
 
 /**
  * Implementation Notes:
