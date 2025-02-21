@@ -87,7 +87,7 @@ describe('EdgeFeatureStore', () => {
       jest.resetAllMocks();
     });
 
-    it('expires are configured duration', async () => {
+    it('expires after configured duration', async () => {
       jest.spyOn(Date, 'now').mockImplementation(() => 0);
       await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
       await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
