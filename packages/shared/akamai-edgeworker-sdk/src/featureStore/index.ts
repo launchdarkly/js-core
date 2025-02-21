@@ -96,25 +96,25 @@ export class EdgeFeatureStore implements LDFeatureStore {
   // This method is used to retrieve the environment payload from the edge
   // provider. It will cache the payload for the duration of the cacheTtlMs.
   private async _getStorePayload(): Promise<ReturnType<typeof deserializePoll>> {
-    let item = this._cache.get();
-    if (item !== undefined) {
-      return item;
+    let payload = this._cache.get();
+    if (payload !== undefined) {
+      return payload;
     }
 
-    const i = await this._edgeProvider.get(this._rootKey);
+    const providerData = await this._edgeProvider.get(this._rootKey);
 
-    if (!i) {
+    if (!providerData) {
       throw new Error(`${this._rootKey} is not found in KV.`);
     }
 
-    item = deserializePoll(i);
-    if (!item) {
+    payload = deserializePoll(providerData);
+    if (!payload) {
       throw new Error(`Error deserializing ${this._rootKey}`);
     }
 
-    this._cache.set(item);
+    this._cache.set(payload);
 
-    return item;
+    return payload;
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
