@@ -8,6 +8,8 @@ import type {
 } from '@launchdarkly/js-server-sdk-common';
 import { deserializePoll, noop } from '@launchdarkly/js-server-sdk-common';
 
+import Cache from './cache';
+
 export interface EdgeProvider {
   get: (rootKey: string) => Promise<string | null | undefined>;
 }
@@ -21,14 +23,17 @@ export const buildRootKey = (sdkKey: string) => `LD-Env-${sdkKey}`;
 
 export class EdgeFeatureStore implements LDFeatureStore {
   private readonly _rootKey: string;
+  private _cache: Cache;
 
   constructor(
     private readonly _edgeProvider: EdgeProvider,
     private readonly _sdkKey: string,
     private readonly _description: string,
     private _logger: LDLogger,
+    _cacheTtlMs: number,
   ) {
     this._rootKey = buildRootKey(this._sdkKey);
+    this._cache = new Cache(_cacheTtlMs);
   }
 
   async get(
@@ -41,23 +46,17 @@ export class EdgeFeatureStore implements LDFeatureStore {
     this._logger.debug(`Requesting ${dataKey} from ${this._rootKey}.${kindKey}`);
 
     try {
-      const i = await this._edgeProvider.get(this._rootKey);
-
-      if (!i) {
-        throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
-
-      const item = deserializePoll(i);
-      if (!item) {
-        throw new Error(`Error deserializing ${kindKey}`);
+      const storePayload = await this._getStorePayload();
+      if (!storePayload) {
+        throw new Error(`Error deserializing ${this._rootKey}`);
       }
 
       switch (namespace) {
         case 'features':
-          callback(item.flags[dataKey]);
+          callback(storePayload.flags[dataKey]);
           break;
         case 'segments':
-          callback(item.segments[dataKey]);
+          callback(storePayload.segments[dataKey]);
           break;
         default:
           callback(null);
@@ -73,22 +72,17 @@ export class EdgeFeatureStore implements LDFeatureStore {
     const kindKey = namespace === 'features' ? 'flags' : namespace;
     this._logger.debug(`Requesting all from ${this._rootKey}.${kindKey}`);
     try {
-      const i = await this._edgeProvider.get(this._rootKey);
-      if (!i) {
+      const storePayload = await this._getStorePayload();
+      if (!storePayload) {
         throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
-
-      const item = deserializePoll(i);
-      if (!item) {
-        throw new Error(`Error deserializing ${kindKey}`);
       }
 
       switch (namespace) {
         case 'features':
-          callback(item.flags);
+          callback(storePayload.flags);
           break;
         case 'segments':
-          callback(item.segments);
+          callback(storePayload.segments);
           break;
         default:
           throw new Error(`Unsupported DataKind: ${namespace}`);
@@ -97,6 +91,30 @@ export class EdgeFeatureStore implements LDFeatureStore {
       this._logger.error(err);
       callback({});
     }
+  }
+
+  // This method is used to retrieve the environment payload from the edge
+  // provider. It will cache the payload for the duration of the cacheTtlMs.
+  private async _getStorePayload(): Promise<ReturnType<typeof deserializePoll>> {
+    let item = this._cache.get();
+    if (item !== undefined) {
+      return item;
+    }
+
+    const i = await this._edgeProvider.get(this._rootKey);
+
+    if (!i) {
+      throw new Error(`${this._rootKey} is not found in KV.`);
+    }
+
+    item = deserializePoll(i);
+    if (!item) {
+      throw new Error(`Error deserializing ${this._rootKey}`);
+    }
+
+    this._cache.set(item);
+
+    return item;
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {

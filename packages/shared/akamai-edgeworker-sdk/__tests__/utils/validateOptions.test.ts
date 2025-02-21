@@ -26,7 +26,7 @@ const mockOptions = ({
 }) => {
   const mockLogger = logger ?? BasicLogger.get();
   const mockFeatureStore =
-    featureStore ?? new EdgeFeatureStore(edgeProvider, SDK_KEY, 'validationTest', mockLogger);
+    featureStore ?? new EdgeFeatureStore(edgeProvider, SDK_KEY, 'validationTest', mockLogger, 0);
 
   return {
     featureStore: allowEmptyFS ? undefined : mockFeatureStore,
