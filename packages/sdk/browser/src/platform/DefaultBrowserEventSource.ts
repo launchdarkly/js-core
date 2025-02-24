@@ -5,8 +5,7 @@ import {
   HttpErrorResponse,
   EventSource as LDEventSource,
 } from '@launchdarkly/js-client-sdk-common';
-
-import Backoff from '../../../../shared/common/src/datasource/Backoff';
+import { DefaultBackoff } from '@launchdarkly/js-sdk-common';
 
 /**
  * Implementation Notes:
@@ -22,7 +21,7 @@ import Backoff from '../../../../shared/common/src/datasource/Backoff';
  */
 export default class DefaultBrowserEventSource implements LDEventSource {
   private _es?: EventSource;
-  private _backoff: Backoff;
+  private _backoff: DefaultBackoff;
   private _errorFilter: (err: HttpErrorResponse) => boolean;
 
   // The type of the handle can be platform specific and we treat is opaquely.
@@ -34,7 +33,10 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     private readonly _url: string,
     options: EventSourceInitDict,
   ) {
-    this._backoff = new Backoff(options.initialRetryDelayMillis, options.retryResetIntervalMillis);
+    this._backoff = new DefaultBackoff(
+      options.initialRetryDelayMillis,
+      options.retryResetIntervalMillis,
+    );
     this._errorFilter = options.errorFilter;
     this._openConnection();
   }

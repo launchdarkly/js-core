@@ -1,3 +1,4 @@
+import { Backoff, DefaultBackoff } from './Backoff';
 import { DataSourceErrorKind } from './DataSourceErrorKinds';
 import {
   LDFileDataSourceError,
@@ -7,6 +8,8 @@ import {
 } from './errors';
 
 export {
+  Backoff,
+  DefaultBackoff,
   DataSourceErrorKind,
   LDFileDataSourceError,
   LDPollingError,

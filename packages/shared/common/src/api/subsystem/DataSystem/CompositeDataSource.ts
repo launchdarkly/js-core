@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import Backoff from '../../../datasource/Backoff';
+import { Backoff } from '../../../datasource/Backoff';
 import { CallbackHandler } from './CallbackHandler';
 import {
   Data,
@@ -31,6 +31,11 @@ export enum Transition {
    * Transition to the first data source of the same kind.
    */
   Recover,
+
+  /**
+   * Transition to idle and reset
+   */
+  Stop,
 }
 
 /**
@@ -57,11 +62,10 @@ export class CompositeDataSource implements DataSource {
 
   private _initPhaseActive: boolean = true;
   private _currentPosition: number = 0;
-  private _backoff: Backoff;
 
   private _stopped: boolean = true;
-  private _externalStopPromise: Promise<TransitionRequest>;
-  private _externalStopResolve?: (value: TransitionRequest) => void;
+  private _externalTransitionPromise: Promise<TransitionRequest>;
+  private _externalTransitionResolve?: (value: TransitionRequest) => void;
 
   /**
    * @param _initializers factories to create {@link DataSystemInitializer}s, in priority order.
@@ -71,15 +75,13 @@ export class CompositeDataSource implements DataSource {
     private readonly _initializers: InitializerFactory[],
     private readonly _synchronizers: SynchronizerFactory[],
     private readonly _transitionConditions: TransitionConditions,
-    initialRetryDelayMillis: number,
-    retryResetIntervalMillis: number,
+    private readonly _backoff: Backoff,
   ) {
-    this._externalStopPromise = new Promise<TransitionRequest>((tr) => {
-      this._externalStopResolve = tr;
+    this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
+      this._externalTransitionResolve = tr;
     });
     this._initPhaseActive = true;
     this._currentPosition = 0;
-    this._backoff = new Backoff(initialRetryDelayMillis, retryResetIntervalMillis);
   }
 
   async run(
@@ -95,87 +97,99 @@ export class CompositeDataSource implements DataSource {
     let lastTransition: Transition = Transition.None;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      if (this._stopped) {
-        // report we are closed, no error as this was due to stop breaking the loop
-        statusCallback(DataSourceState.Closed, null);
-        break;
-      }
-
-      const current: DataSource | undefined = this._pickDataSource(lastTransition);
-      if (current === undefined) {
-        statusCallback(DataSourceState.Closed, {
-          name: 'ExhaustedDataSources',
-          message: `CompositeDataSource has exhausted all configured datasources (${this._initializers.length} initializers, ${this._synchronizers.length} synchronizers).`,
-        });
-        break;
-      }
-
+      const currentDS: DataSource | undefined = this._pickDataSource(lastTransition);
       const internalTransitionPromise = new Promise<TransitionRequest>((transitionResolve) => {
-        // these local variables are used for handling automatic transition related to data source status (ex: recovering to primary after
-        // secondary has been valid for N many minutes)
-        let lastState: DataSourceState | undefined;
-        let cancelScheduledTransition: (() => void) | undefined;
+        if (currentDS) {
+          // these local variables are used for handling automatic transition related to data source status (ex: recovering to primary after
+          // secondary has been valid for N many seconds)
+          let lastState: DataSourceState | undefined;
+          let cancelScheduledTransition: (() => void) | undefined;
 
-        const callbackHandler = new CallbackHandler(
-          (basis: boolean, data: Data) => {
-            dataCallback(basis, data);
-            if (basis && this._initPhaseActive) {
-              // transition to sync if we get basis during init
-              callbackHandler.disable();
-              cancelScheduledTransition?.();
-              transitionResolve({ transition: Transition.SwitchToSync });
-            }
-          },
-          (state: DataSourceState, err?: any) => {
-            // When we get a status update, we want to fallback if it is an error.  We also want to schedule a transition for some
-            // time in the future if this status remains for some duration (ex: Recover to primary synchronizer after the secondary
-            // synchronizer has been Valid for some time).  These scheduled transitions are configurable in the constructor.
+          // this callback handler can be disabled and ensures only one transition request occurs
+          const callbackHandler = new CallbackHandler(
+            (basis: boolean, data: Data) => {
+              this._backoff.success(Date.now());
+              dataCallback(basis, data);
+              if (basis && this._initPhaseActive) {
+                // transition to sync if we get basis during init
+                callbackHandler.disable();
+                cancelScheduledTransition?.();
+                transitionResolve({ transition: Transition.SwitchToSync });
+              }
+            },
+            (state: DataSourceState, err?: any) => {
+              // When we get a status update, we want to fallback if it is an error.  We also want to schedule a transition for some
+              // time in the future if this status remains for some duration (ex: Recover to primary synchronizer after the secondary
+              // synchronizer has been Valid for some time).  These scheduled transitions are configurable in the constructor.
 
-            if (err || state === DataSourceState.Closed) {
-              callbackHandler.disable();
-              statusCallback(DataSourceState.Interrupted, null); // underlying errors or closed states are masked as interrupted while we transition
-              cancelScheduledTransition?.();
-              transitionResolve({ transition: Transition.Fallback, err }); // unrecoverable error has occurred, so fallback
-            } else {
-              if (state !== lastState) {
-                lastState = state;
-                cancelScheduledTransition?.(); // cancel previously scheduled status transition if one was scheduled
-                const excludeRecovery = this._currentPosition === 0; // primary source cannot recover to itself, so exclude it
-                const condition = this._lookupTransitionCondition(state, excludeRecovery);
-                if (condition) {
-                  const { promise, cancel } = this._cancellableDelay(condition.durationMS);
-                  cancelScheduledTransition = cancel;
-                  promise.then(() => {
-                    callbackHandler.disable();
-                    transitionResolve({ transition: condition.transition });
-                  });
-                } else {
-                  // this data source state does not have a transition condition, so don't schedule any transition
+              if (err || state === DataSourceState.Closed) {
+                callbackHandler.disable();
+                statusCallback(DataSourceState.Interrupted, err); // underlying errors or closed states are masked as interrupted while we transition
+                cancelScheduledTransition?.();
+                transitionResolve({ transition: Transition.Fallback, err }); // unrecoverable error has occurred, so fallback
+              } else {
+                statusCallback(state, null); // report the status upward
+                if (state !== lastState) {
+                  lastState = state;
+                  cancelScheduledTransition?.(); // cancel previously scheduled status transition if one was scheduled
+                  const excludeRecovery = this._currentPosition === 0; // primary source cannot recover to itself, so exclude it
+                  const condition = this._lookupTransitionCondition(state, excludeRecovery);
+                  if (condition) {
+                    const { promise, cancel } = this._cancellableDelay(condition.durationMS);
+                    cancelScheduledTransition = cancel;
+                    promise.then(() => {
+                      callbackHandler.disable();
+                      transitionResolve({ transition: condition.transition });
+                    });
+                  } else {
+                    // this data source state does not have a transition condition, so don't schedule any transition
+                  }
                 }
               }
-              statusCallback(state, null); // report the status upward
-            }
-          },
-        );
-        current.run(callbackHandler.dataHanlder, callbackHandler.statusHandler);
+            },
+          );
+          currentDS.run(callbackHandler.dataHanlder, callbackHandler.statusHandler);
+        } else {
+          // we don't have a data source to use!
+          transitionResolve({
+            transition: Transition.Stop,
+            err: {
+              name: 'ExhaustedDataSources',
+              message: `CompositeDataSource has exhausted all configured datasources (${this._initializers.length} initializers, ${this._synchronizers.length} synchronizers).`,
+            },
+          });
+        }
       });
 
       // await transition triggered by internal data source or an external stop request
-      const transitionRequest = await Promise.race([
+      let transitionRequest = await Promise.race([
         internalTransitionPromise,
-        this._externalStopPromise,
+        this._externalTransitionPromise,
       ]);
 
-      // if the transition was due to an error, throttle the transition
-      if (transitionRequest.err) {
-        const delay = this._backoff.fail();
-        await new Promise((resolve) => {
+      // stop the underlying datasource before transitioning to next state
+      currentDS?.stop();
+
+      if (transitionRequest.err && transitionRequest.transition !== Transition.Stop) {
+        // if the transition was due to an error, throttle the transition
+        const delay = this._backoff.fail(Date.now());
+        const delayedTransition = new Promise((resolve) => {
           setTimeout(resolve, delay);
-        });
+        }).then(() => transitionRequest);
+
+        // race the delayed transition and external transition requests to be responsive
+        transitionRequest = await Promise.race([
+          delayedTransition,
+          this._externalTransitionPromise,
+        ]);
       }
 
-      // stop the underlying datasource before transitioning to next state
-      current.stop();
+      if (transitionRequest.transition === Transition.Stop) {
+        // exit the loop
+        statusCallback(DataSourceState.Closed, transitionRequest.err);
+        break;
+      }
+
       lastTransition = transitionRequest.transition;
     }
 
@@ -184,15 +198,15 @@ export class CompositeDataSource implements DataSource {
   }
 
   async stop() {
-    this._stopped = true;
-    this._externalStopResolve?.({ transition: Transition.None }); // the value here doesn't matter, just needs to break the loop's await
+    this._externalTransitionResolve?.({ transition: Transition.Stop });
   }
 
   private _reset() {
+    this._stopped = true;
     this._initPhaseActive = true;
     this._currentPosition = 0;
-    this._externalStopPromise = new Promise<TransitionRequest>((tr) => {
-      this._externalStopResolve = tr;
+    this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
+      this._externalTransitionResolve = tr;
     });
     // intentionally not resetting the backoff to avoid a code path that could circumvent throttling
   }
