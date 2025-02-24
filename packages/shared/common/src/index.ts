@@ -2,7 +2,9 @@ import AttributeReference from './AttributeReference';
 import Context from './Context';
 import ContextFilter from './ContextFilter';
 import {
+  Backoff,
   DataSourceErrorKind,
+  DefaultBackoff,
   LDFileDataSourceError,
   LDPollingError,
   LDStreamingError,
@@ -23,6 +25,8 @@ export {
   Context,
   ContextFilter,
   DataSourceErrorKind,
+  Backoff,
+  DefaultBackoff,
   LDPollingError,
   LDStreamingError,
   StreamingErrorHandler,
