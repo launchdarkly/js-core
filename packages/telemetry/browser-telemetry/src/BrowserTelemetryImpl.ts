@@ -115,8 +115,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
   private _registrationComplete: boolean = false;
 
   // Used to ensure we only log the event dropped message once.
-  private _clientRegistered: boolean = false;
-  // Used to ensure we only log the event dropped message once.
   private _eventsDropped: boolean = false;
   // Used to ensure we only log the breadcrumb filter error once.
   private _breadcrumbFilterError: boolean = false;
@@ -133,6 +131,10 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     this._maxPendingEvents = _options.maxPendingEvents;
     this._maxBreadcrumbs = _options.breadcrumbs.maxBreadcrumbs;
 
+    // Set the initial logger, it may be replaced when the client is registered.
+    // For typescript purposes, we need the logger to be directly set in the constructor.
+    this._logger = this._options.logger ?? fallbackLogger;
+
     const urlFilters = [defaultUrlFilter];
     if (_options.breadcrumbs.http.customUrlFilter) {
       urlFilters.push(_options.breadcrumbs.http.customUrlFilter);
@@ -142,6 +144,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       this._collectors.push(
         new FetchCollector({
           urlFilters,
+          getLogger: () => this._logger,
         }),
       );
     }
@@ -150,6 +153,7 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       this._collectors.push(
         new XhrCollector({
           urlFilters,
+          getLogger: () => this._logger,
         }),
       );
     }
@@ -170,10 +174,6 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
     const inspectors: BrowserTelemetryInspector[] = [];
     makeInspectors(_options, inspectors, impl);
     this._inspectorInstances.push(...inspectors);
-
-    // Set the initial logger, it may be replaced when the client is registered.
-    // For typescript purposes, we need the logger to be directly set in the constructor.
-    this._logger = this._options.logger ?? fallbackLogger;
   }
 
   register(client: LDClientTracking): void {

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.1](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v1.0.0...browser-telemetry-v1.0.1) (2025-02-18)
+
+
+### Bug Fixes
+
+* Fix issue processing URLs for fetch and XHR requests. ([#783](https://github.com/launchdarkly/js-core/issues/783)) ([32cec6a](https://github.com/launchdarkly/js-core/commit/32cec6af00384e7496832ba87a3005b26558c528))
+
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.3.1...browser-telemetry-v1.0.0) (2025-02-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* 1.0 Release for browser-telemetry.
+
+### Features
+
+* 1.0 Release for browser-telemetry. ([681e423](https://github.com/launchdarkly/js-core/commit/681e4230efb99abb1acb51de3a7d0265fddcd6e0))
+
 ## [0.3.1](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v0.3.0...browser-telemetry-v0.3.1) (2025-02-06)
 
 
