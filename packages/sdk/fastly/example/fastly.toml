@@ -6,7 +6,7 @@ description = "A basic example of using the LaunchDarkly SDK for Fastly"
 language = "javascript"
 manifest_version = 3
 name = "LaunchDarkly SDK for Fastly Example"
-service_id = ""
+service_id = "J4RQReO3g9zZdp3eDM8Sr5"
 
 [scripts]
 build = "yarn build"

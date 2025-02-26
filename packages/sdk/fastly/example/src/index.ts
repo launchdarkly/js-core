@@ -8,7 +8,7 @@ import { init } from '@launchdarkly/fastly-server-sdk';
 import type { LDMultiKindContext } from '@launchdarkly/js-server-sdk-common';
 
 // Set your LaunchDarkly client ID here
-const LAUNCHDARKLY_CLIENT_ID = '<your-client-id>';
+const LAUNCHDARKLY_CLIENT_ID = '675aea6b1b327709c85da941';
 // Set the KV store name used to store the LaunchDarkly data here
 const KV_STORE_NAME = 'launchdarkly';
 // Set the Fastly Backend name used to send LaunchDarkly events here
