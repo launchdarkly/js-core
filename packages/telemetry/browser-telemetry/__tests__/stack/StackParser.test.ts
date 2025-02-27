@@ -52,6 +52,8 @@ describe('given source lines', () => {
 describe('given an input stack frame', () => {
   const inputFrame = {
     context: ['1234567890', 'ABCDEFGHIJ', 'the src line', '0987654321', 'abcdefghij'],
+    line: 3,
+    srcStart: 1,
     column: 0,
   };
 
@@ -121,6 +123,56 @@ describe('given an input stack frame', () => {
       srcLine: 'the src line',
       srcAfter: ['0987654321'],
     });
+  });
+});
+
+it('can handle an origin before the context window', () => {
+  // This isn't expected, but we just want to make sure it is handle gracefully.
+  const inputFrame = {
+    context: ['1234567890', 'ABCDEFGHIJ', 'the src line', '0987654321', 'abcdefghij'],
+    line: 3,
+    srcStart: 5,
+    column: 0,
+  };
+
+  expect(
+    getSrcLines(inputFrame, {
+      enabled: true,
+      source: {
+        beforeLines: 1,
+        afterLines: 1,
+        maxLineLength: 280,
+      },
+    }),
+  ).toMatchObject({
+    srcBefore: [],
+    srcLine: '1234567890',
+    srcAfter: ['ABCDEFGHIJ'],
+  });
+});
+
+it('can handle an origin after the context window', () => {
+  // This isn't expected, but we just want to make sure it is handle gracefully.
+  const inputFrame = {
+    context: ['1234567890', 'ABCDEFGHIJ', 'the src line', '0987654321', 'abcdefghij'],
+    line: 100,
+    srcStart: 5,
+    column: 0,
+  };
+
+  expect(
+    getSrcLines(inputFrame, {
+      enabled: true,
+      source: {
+        beforeLines: 1,
+        afterLines: 1,
+        maxLineLength: 280,
+      },
+    }),
+  ).toMatchObject({
+    srcBefore: ['0987654321'],
+    srcLine: 'abcdefghij',
+    srcAfter: [],
   });
 });
 
