@@ -15,6 +15,6 @@
   "packages/telemetry/node-server-sdk-otel": "1.1.4",
   "packages/sdk/browser": "0.4.1",
   "packages/sdk/server-ai": "0.9.1",
-  "packages/telemetry/browser-telemetry": "1.0.1",
+  "packages/telemetry/browser-telemetry": "1.0.2",
   "packages/tooling/jest": "0.1.1"
 }
