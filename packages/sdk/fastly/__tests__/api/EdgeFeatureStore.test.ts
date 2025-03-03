@@ -5,8 +5,8 @@ import mockEdgeProvider from '../../src/utils/mockEdgeProvider';
 import * as testData from './testData.json';
 
 describe('EdgeFeatureStore', () => {
-  const sdkKey = 'sdkKey';
-  const kvKey = `LD-Env-${sdkKey}`;
+  const clientSideId = 'client-side-id';
+  const kvKey = `LD-Env-${clientSideId}`;
   const mockLogger = {
     error: jest.fn(),
     warn: jest.fn(),
@@ -19,7 +19,12 @@ describe('EdgeFeatureStore', () => {
 
   beforeEach(() => {
     mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
-    featureStore = new EdgeFeatureStore(mockEdgeProvider, sdkKey, 'MockEdgeProvider', mockLogger);
+    featureStore = new EdgeFeatureStore(
+      mockEdgeProvider,
+      clientSideId,
+      'MockEdgeProvider',
+      mockLogger,
+    );
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
 
@@ -28,33 +33,33 @@ describe('EdgeFeatureStore', () => {
   });
 
   describe('get', () => {
-    test('get flag', async () => {
+    it('can retrieve valid flag', async () => {
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
       expect(flag).toMatchObject(testData.flags.testFlag1);
     });
 
-    test('invalid flag key', async () => {
+    it('returns undefined for invalid flag key', async () => {
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'invalid');
 
       expect(flag).toBeUndefined();
     });
 
-    test('get segment', async () => {
+    it('can retrieve valid segment', async () => {
       const segment = await asyncFeatureStore.get({ namespace: 'segments' }, 'testSegment1');
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
       expect(segment).toMatchObject(testData.segments.testSegment1);
     });
 
-    test('invalid segment key', async () => {
+    it('returns undefined for invalid segment key', async () => {
       const segment = await asyncFeatureStore.get({ namespace: 'segments' }, 'invalid');
 
       expect(segment).toBeUndefined();
     });
 
-    test('invalid kv key', async () => {
+    it('returns null for invalid kv key', async () => {
       mockGet.mockImplementation(() => Promise.resolve(null));
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
 
@@ -63,27 +68,27 @@ describe('EdgeFeatureStore', () => {
   });
 
   describe('all', () => {
-    test('all flags', async () => {
+    it('can retrieve all flags', async () => {
       const flags = await asyncFeatureStore.all({ namespace: 'features' });
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
       expect(flags).toMatchObject(testData.flags);
     });
 
-    test('all segments', async () => {
+    it('can retrieve all segments', async () => {
       const segment = await asyncFeatureStore.all({ namespace: 'segments' });
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
       expect(segment).toMatchObject(testData.segments);
     });
 
-    test('invalid DataKind', async () => {
+    it('returns empty object for invalid DataKind', async () => {
       const flag = await asyncFeatureStore.all({ namespace: 'InvalidDataKind' });
 
       expect(flag).toEqual({});
     });
 
-    test('invalid kv key', async () => {
+    it('returns empty object for invalid kv key', async () => {
       mockGet.mockImplementation(() => Promise.resolve(null));
       const segment = await asyncFeatureStore.all({ namespace: 'segments' });
 
@@ -92,14 +97,14 @@ describe('EdgeFeatureStore', () => {
   });
 
   describe('initialized', () => {
-    test('is initialized', async () => {
+    it('returns true when initialized', async () => {
       const isInitialized = await asyncFeatureStore.initialized();
 
       expect(mockGet).toHaveBeenCalledWith(kvKey);
       expect(isInitialized).toBeTruthy();
     });
 
-    test('not initialized', async () => {
+    it('returns false when not initialized', async () => {
       mockGet.mockImplementation(() => Promise.resolve(null));
       const isInitialized = await asyncFeatureStore.initialized();
 
@@ -109,14 +114,14 @@ describe('EdgeFeatureStore', () => {
   });
 
   describe('init & getDescription', () => {
-    test('init', (done) => {
+    it('can initialize', (done) => {
       const cb = jest.fn(() => {
         done();
       });
       featureStore.init(testData, cb);
     });
 
-    test('getDescription', async () => {
+    it('can retrieve description', async () => {
       const description = featureStore.getDescription?.();
 
       expect(description).toEqual('MockEdgeProvider');

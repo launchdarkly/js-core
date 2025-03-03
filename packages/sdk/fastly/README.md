@@ -1,6 +1,6 @@
 # LaunchDarkly SDK for Fastly
 
-The LaunchDarkly SDK for Fastly is designed primarily for use in [Fastly Compute Platform](https://www.fastly.com/documentation/guides/compute/). It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
+The LaunchDarkly SDK for Fastly is designed for use in [Fastly Compute Platform](https://www.fastly.com/documentation/guides/compute/). It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
 # ⛔️⛔️⛔️⛔️
 

@@ -36,20 +36,11 @@ yarn && yarn build
 
 2. Replace `LAUNCHDARKLY_CLIENT_ID` in [src/index.ts](src/index.ts) with your LaunchDarkly SDK key.
 
-3. Create a new Fastly Compute service and KV Store:
+3. Create a new Fastly Compute service in the Fastly UI.
 
-```shell
-# Login to Fastly CLI
-fastly login
+4. Create a new Fastly KV in the Fastly UI named `launchdarkly`.
 
-# Create a new Compute@Edge service
-fastly compute init
-
-# Create a new KV Store
-fastly kv-store create --name launchdarkly
-```
-
-4. Run the following command to install dependencies:
+5. Run the following command to install dependencies:
 
 ```shell
 yarn

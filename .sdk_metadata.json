@@ -34,7 +34,7 @@
       "path": "packages/sdk/fastly",
       "languages": ["JavaScript", "TypeScript"],
       "releases": {
-        "tag-prefix": "faslty-server-sdk-"
+        "tag-prefix": "fastly-server-sdk-"
       }
     },
     "react-native": {

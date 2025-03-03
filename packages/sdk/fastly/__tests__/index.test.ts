@@ -38,13 +38,13 @@ describe('init', () => {
     ldClient.close();
   });
 
-  describe('flags', () => {
-    test('variation default', async () => {
+  describe('flag tests', () => {
+    it('evaluates a boolean flag with a variation call', async () => {
       const value = await ldClient.variation(flagKey1, context, false);
       expect(value).toBeTruthy();
     });
 
-    test('variation default rollout', async () => {
+    it('evaluates a boolean flag with a variation and variation detail call', async () => {
       const contextWithEmail = { ...context, email: 'test@yahoo.com' };
       const value = await ldClient.variation(flagKey2, contextWithEmail, false);
       const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
@@ -53,7 +53,7 @@ describe('init', () => {
       expect(value).toBeTruthy();
     });
 
-    test('rule match', async () => {
+    it('evaluates a boolean flag with a targeting rule match', async () => {
       const contextWithEmail = { ...context, email: 'test@gmail.com' };
       const value = await ldClient.variation(flagKey1, contextWithEmail, false);
       const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
@@ -66,7 +66,7 @@ describe('init', () => {
       expect(value).toBeFalsy();
     });
 
-    test('fallthrough', async () => {
+    it('evaluates a feature flag with a context that does not match any targeting rules', async () => {
       const contextWithEmail = { ...context, email: 'test@yahoo.com' };
       const value = await ldClient.variation(flagKey1, contextWithEmail, false);
       const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
@@ -75,7 +75,7 @@ describe('init', () => {
       expect(value).toBeTruthy();
     });
 
-    test('allFlags fallthrough', async () => {
+    it('returns allFlagsState for a context', async () => {
       const allFlags = await ldClient.allFlagsState(context);
 
       expect(allFlags).toBeDefined();
@@ -93,8 +93,8 @@ describe('init', () => {
     });
   });
 
-  describe('segments', () => {
-    test('segment by country', async () => {
+  describe('segment tests', () => {
+    it('evaluates a boolean flag with a segment targeting rule match', async () => {
       const contextWithCountry = { ...context, country: 'australia' };
       const value = await ldClient.variation(flagKey3, contextWithCountry, false);
       const detail = await ldClient.variationDetail(flagKey3, contextWithCountry, false);

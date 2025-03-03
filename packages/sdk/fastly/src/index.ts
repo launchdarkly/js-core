@@ -9,7 +9,7 @@ import createPlatformInfo from './createPlatformInfo';
 import validateOptions, { FastlySDKOptions } from './utils/validateOptions';
 
 export const init = (
-  sdkKey: string,
+  clientSideId: string,
   kvStore: KVStore,
   options: FastlySDKOptions = { eventsBackendName: DEFAULT_EVENTS_BACKEND_NAME },
 ) => {
@@ -23,11 +23,11 @@ export const init = (
   };
 
   const finalOptions = {
-    featureStore: new EdgeFeatureStore(edgeProvider, sdkKey, 'Fastly', logger),
+    featureStore: new EdgeFeatureStore(edgeProvider, clientSideId, 'Fastly', logger),
     logger,
     ...options,
   };
 
-  validateOptions(sdkKey, finalOptions);
-  return new LDClient(sdkKey, createPlatformInfo(), finalOptions);
+  validateOptions(clientSideId, finalOptions);
+  return new LDClient(clientSideId, createPlatformInfo(), finalOptions);
 };
