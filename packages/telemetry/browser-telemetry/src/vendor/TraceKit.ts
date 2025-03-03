@@ -11,6 +11,9 @@
  * Functionality unused by this SDK has been removed to minimize size.
  *
  * It has additionally been converted to typescript.
+ *
+ * The functionality of computeStackTrace has been extended to allow for easier use of the context
+ * information in stack frames.
  */
 
 /**
@@ -34,6 +37,23 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-underscore-dangle */
 
+/**
+ * Source context information.
+ *
+ * This was not present in the original source, but helps to easily identify which line in the
+ * context is the original line.
+ *
+ * Without this knowledge of the source file is requires for a consumer to know the position
+ * of the original source line within the context.
+ */
+export interface SourceContext {
+  /**
+   * The starting location in the source code. This is 1-based.
+   */
+  startFromSource?: number;
+  contextLines: string[] | null;
+}
+
 export interface TraceKitStatic {
   computeStackTrace: {
     (ex: Error, depth?: number): StackTrace;
@@ -45,7 +65,7 @@ export interface TraceKitStatic {
     ) => boolean;
     computeStackTraceFromStackProp: (ex: Error) => StackTrace | null;
     guessFunctionName: (url: string, lineNo: number | string) => string;
-    gatherContext: (url: string, line: number | string) => string[] | null;
+    gatherContext: (url: string, line: number | string) => SourceContext | null;
     ofCaller: (depth?: number) => StackTrace;
     getSource: (url: string) => string[];
   };
@@ -61,9 +81,18 @@ export interface StackFrame {
   url: string;
   func: string;
   args?: string[];
-  line?: number;
-  column?: number;
-  context?: string[];
+  /**
+   * The line number of source code.
+   * This is 1-based.
+   */
+  line?: number | null;
+  column?: number | null;
+  context?: string[] | null;
+  /**
+   * The source line number that is the first line of the context.
+   * This is 1-based.
+   */
+  srcStart?: number;
 }
 
 export type Mode = 'stack' | 'stacktrace' | 'multiline' | 'callers' | 'onerror' | 'failed';
@@ -315,10 +344,10 @@ export interface StackTrace {
      * Retrieves the surrounding lines from where an exception occurred.
      * @param {string} url URL of source code.
      * @param {(string|number)} line Line number in source code to center around for context.
-     * @return {?Array.<string>} Lines of source code.
+     * @return {SourceContext} Lines of source code and line the source context starts on.
      * @memberof TraceKit.computeStackTrace
      */
-    function gatherContext(url: string, line: string | number): string[] | null {
+    function gatherContext(url: string, line: string | number): SourceContext | null {
       if (typeof line !== 'number') {
         line = Number(line);
       }
@@ -346,9 +375,14 @@ export interface StackTrace {
         }
       }
 
-      return context.length > 0 ? context : null;
+      return context.length > 0
+        ? {
+            contextLines: context,
+            // Source lines are in base-1.
+            startFromSource: start + 1,
+          }
+        : null;
     }
-
     /**
      * Escapes special characters, except for whitespace, in a string to be
      * used inside a regular expression as a string literal.
@@ -573,10 +607,10 @@ export interface StackTrace {
       const chromeEval = /\((\S*)(?::(\d+))(?::(\d+))\)/;
 
       const lines = ex.stack.split('\n');
-      const stack: any = [];
+      const stack: StackFrame[] = [];
       let submatch: any;
       let parts: any;
-      let element: any;
+      let element: StackFrame;
       const reference: any = /^(.*) is undefined$/.exec(ex.message);
 
       for (let i = 0, j = lines.length; i < j; ++i) {
@@ -633,7 +667,9 @@ export interface StackTrace {
           element.func = guessFunctionName(element.url, element.line);
         }
 
-        element.context = element.line ? gatherContext(element.url, element.line) : null;
+        const srcContext = gatherContext(element.url, element.line!);
+        element.context = element.line ? (srcContext?.contextLines ?? null) : null;
+        element.srcStart = srcContext?.startFromSource;
         stack.push(element);
       }
 
@@ -677,7 +713,7 @@ export interface StackTrace {
       let parts;
 
       for (let line = 0; line < lines.length; line += 2) {
-        let element: any = null;
+        let element: StackFrame | null = null;
         if ((parts = opera10Regex.exec(lines[line]))) {
           element = {
             url: parts[2],
@@ -702,7 +738,9 @@ export interface StackTrace {
           }
           if (element.line) {
             try {
-              element.context = gatherContext(element.url, element.line);
+              const srcContext = gatherContext(element.url, element.line);
+              element.srcStart = srcContext?.startFromSource;
+              element.context = element.line ? (srcContext?.contextLines ?? null) : null;
             } catch (exc) {}
           }
 
@@ -820,7 +858,9 @@ export interface StackTrace {
           if (!item.func) {
             item.func = guessFunctionName(item.url, item.line);
           }
-          const context = gatherContext(item.url, item.line);
+          const srcContext = gatherContext(item.url, item.line);
+          item.srcStart = srcContext?.startFromSource;
+          const context = srcContext?.contextLines;
           const midline = context ? context[Math.floor(context.length / 2)] : null;
           if (
             context &&
@@ -880,7 +920,9 @@ export interface StackTrace {
         }
 
         if (!initial.context) {
-          initial.context = gatherContext(initial.url, initial.line);
+          const srcContext = gatherContext(initial.url, initial.line);
+          initial.context = srcContext?.contextLines ?? null;
+          initial.srcStart = srcContext?.startFromSource;
         }
 
         const reference = / '([^']+)' /.exec(message);
