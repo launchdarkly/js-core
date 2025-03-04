@@ -3,6 +3,7 @@ import { LDClientContext, LDLogger, subsystem, VoidFunction } from '@launchdarkl
 import { Hook } from '../integrations/Hook';
 import { LDDataSourceUpdates, LDFeatureStore } from '../subsystems';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
+import { LDDataSystemOptions } from './LDDataSystemOptions';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
 
@@ -67,8 +68,47 @@ export interface LDOptions {
    * Some implementations provide the store implementation object itself, while others
    * provide a factory function that creates the store implementation based on the SDK
    * configuration; this property accepts either.
+   *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
+   *
+   * @deprecated This is now superceded by {@link LDOptions#dataSystem} using property
+   * {@link LDDataSystemOptions#persistentStore}. The scope of the {@link LDFeatureStore}
+   * that you provide is being reduced in the next major version to only being responsible
+   * for persistence. See documention on {@link LDDataSystemOptions#persistentStore} for
+   * more information.
    */
   featureStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
+
+  /**
+   * Configuration options for the Data System that the SDK uses to get and maintain flags and other
+   * data from LaunchDarkly and other sources.
+   *
+   * Setting this option supercedes
+   *
+   * Example (Recommended):
+   * ```typescript
+   * let dataSystemOptions = {
+   *     dataSource: {
+   *         type: 'standard';
+   *         // options can be customized here, though defaults are recommended
+   *     },
+   * }
+   *
+   * Example (Polling with DynamoDB Persistent Store):
+   * ```typescript
+   * import { DynamoDBFeatureStore } from '@launchdarkly/node-server-sdk-dynamodb';
+   *
+   * let dataSystemOptions = {
+   *     dataSource: {
+   *         type: 'polling';
+   *         pollInterval: 300;
+   *     },
+   *     persistentStore: DynamoDBFeatureStore('your-table', { cacheTTL: 30 });
+   * }
+   * const client = init('my-sdk-key', { hooks: [new TracingHook()] });
+   * ```
+   */
+  dataSystem?: LDDataSystemOptions;
 
   /**
    * Additional parameters for configuring the SDK's Big Segments behavior.
@@ -86,7 +126,10 @@ export interface LDOptions {
   /**
    * A component that obtains feature flag data and puts it in the feature store.
    *
-   * By default, this is the client's default streaming or polling component.
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
+   *
+   * @deprecated This has moved to {@link LDOptions#dataSystem}. Use property
+   * {@link LDDataSystemOptions#updateProcessor} instead.
    */
   updateProcessor?:
     | object
@@ -104,6 +147,12 @@ export interface LDOptions {
 
   /**
    * The time between polling requests, in seconds. Ignored in streaming mode.
+   *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
+   *
+   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem} by
+   * specifying the {@link LDDataSystemOptions#dataSource}. Specifying the polling interval is still
+   * available when using {@link StandardDataSourceOptions} or {@link PollingDataSourceOptions}.
    */
   pollInterval?: number;
 
@@ -122,6 +171,13 @@ export interface LDOptions {
    *
    * This is true by default. If you set it to false, the client will use polling.
    * Streaming should only be disabled on the advice of LaunchDarkly support.
+   *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
+   *
+   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem}
+   * by specifying {@link LDDataSystemOptions#dataSource} options. To opt out of
+   * streaming, you can use the {@link PollingDataSourceOptions}.  Streaming should
+   * only be disabled on the advice of LaunchDarkly support.
    */
   stream?: boolean;
 
@@ -133,6 +189,13 @@ export interface LDOptions {
    * increase exponentially for any subsequent connection failures.
    *
    * The default value is 1.
+   *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
+   *
+   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem}
+   * by specifying {@link LDDataSystemOptions#dataSource} options. Specifying the reconnect
+   * delay is still available when using {@link StandardDataSourceOptions} or
+   * {@link StreamingDataSourceOptions}.
    */
   streamInitialReconnectDelay?: number;
 

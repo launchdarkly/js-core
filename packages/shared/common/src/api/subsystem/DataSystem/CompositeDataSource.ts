@@ -5,8 +5,8 @@ import {
   Data,
   DataSource,
   DataSourceState,
-  InitializerFactory,
-  SynchronizerFactory,
+  LDInitializerFactory,
+  LDSynchronizerFactory,
 } from './DataSource';
 
 // TODO: SDK-858, specify these constants when CompositeDataSource is used.
@@ -32,6 +32,7 @@ interface TransitionRequest {
   err?: Error;
 }
 
+// TODO SDK-858: move this out of API directory to neighbor datasource folder
 /**
  * The {@link CompositeDataSource} can combine a number of {@link DataSystemInitializer}s and {@link DataSystemSynchronizer}s
  * into a single {@link DataSource}, implementing fallback and recovery logic internally to choose where data is sourced from.
@@ -52,8 +53,8 @@ export class CompositeDataSource implements DataSource {
    * @param _synchronizers factories to create  {@link DataSystemSynchronizer}s, in priority order.
    */
   constructor(
-    private readonly _initializers: InitializerFactory[],
-    private readonly _synchronizers: SynchronizerFactory[],
+    private readonly _initializers: LDInitializerFactory[],
+    private readonly _synchronizers: LDSynchronizerFactory[],
     private readonly _transitionConditions: TransitionConditions,
     private readonly _backoff: Backoff,
   ) {
@@ -64,7 +65,7 @@ export class CompositeDataSource implements DataSource {
     this._currentPosition = 0;
   }
 
-  async run(
+  async start(
     dataCallback: (basis: boolean, data: Data) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
   ): Promise<void> {
@@ -128,7 +129,7 @@ export class CompositeDataSource implements DataSource {
               }
             },
           );
-          currentDS.run(
+          currentDS.start(
             (basis, data) => callbackHandler.dataHanlder(basis, data),
             (status, err) => callbackHandler.statusHandler(status, err),
           );
@@ -218,7 +219,7 @@ export class CompositeDataSource implements DataSource {
         return undefined;
       }
 
-      return this._initializers[this._currentPosition].create();
+      return this._initializers[this._currentPosition]();
     }
     // getting here indicates we are using a synchronizer
 
@@ -231,7 +232,7 @@ export class CompositeDataSource implements DataSource {
       // this is only possible if no synchronizers were provided
       return undefined;
     }
-    return this._synchronizers[this._currentPosition].create();
+    return this._synchronizers[this._currentPosition]();
   }
 
   /**

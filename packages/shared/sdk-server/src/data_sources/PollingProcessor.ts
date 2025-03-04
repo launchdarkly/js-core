@@ -13,6 +13,7 @@ import Configuration from '../options/Configuration';
 import { deserializePoll } from '../store';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import Requestor from './Requestor';
+import { isPollingOptions, isStandardOptions } from '../api/options/LDDataSystemOptions';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
@@ -22,22 +23,16 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
 export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private _stopped = false;
 
-  private _logger?: LDLogger;
-
-  private _pollInterval: number;
-
   private _timeoutHandle: any;
 
   constructor(
-    config: Configuration,
     private readonly _requestor: Requestor,
+    private readonly _pollInterval: number,
     private readonly _featureStore: LDDataSourceUpdates,
+    private readonly _logger?: LDLogger,
     private readonly _initSuccessHandler: VoidFunction = () => {},
     private readonly _errorHandler?: PollingErrorHandler,
-  ) {
-    this._logger = config.logger;
-    this._pollInterval = config.pollInterval;
-  }
+  ) {}
 
   private _poll() {
     if (this._stopped) {
