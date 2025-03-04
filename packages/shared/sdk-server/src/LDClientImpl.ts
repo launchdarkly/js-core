@@ -30,6 +30,11 @@ import {
 import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
+import {
+  isPollingOptions,
+  isStandardOptions,
+  isStreamingOptions,
+} from './api/options/LDDataSystemOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { createStreamListeners } from './data_sources/createStreamListeners';
@@ -219,25 +224,34 @@ export default class LDClientImpl implements LDClient {
     const listeners = createStreamListeners(dataSourceUpdates, this._logger, {
       put: () => this._initSuccess(),
     });
-    const makeDefaultProcessor = () =>
-      config.stream
-        ? new StreamingProcessor(
-            clientContext,
-            '/all',
-            [],
-            listeners,
-            baseHeaders,
-            this._diagnosticsManager,
-            (e) => this._dataSourceErrorHandler(e),
-            this._config.streamInitialReconnectDelay,
-          )
-        : new PollingProcessor(
-            config,
-            new Requestor(config, this._platform.requests, baseHeaders),
-            dataSourceUpdates,
-            () => this._initSuccess(),
-            (e) => this._dataSourceErrorHandler(e),
-          );
+    const makeDefaultProcessor = () => {
+      if (isPollingOptions(config.dataSystem.dataSource)) {
+        return new PollingProcessor(
+          new Requestor(config, this._platform.requests, baseHeaders),
+          config.dataSystem.dataSource.pollInterval ?? 30,
+          dataSourceUpdates,
+          config.logger,
+          () => this._initSuccess(),
+          (e) => this._dataSourceErrorHandler(e),
+        );
+      }
+      // TODO: SDK-858 Hook up composite data source and config
+      const reconnectDelay =
+        isStandardOptions(config.dataSystem.dataSource) ||
+        isStreamingOptions(config.dataSystem.dataSource)
+          ? config.dataSystem.dataSource.streamInitialReconnectDelay
+          : 1;
+      return new StreamingProcessor(
+        clientContext,
+        '/all',
+        [],
+        listeners,
+        baseHeaders,
+        this._diagnosticsManager,
+        (e) => this._dataSourceErrorHandler(e),
+        reconnectDelay,
+      );
+    };
 
     if (!(config.offline || config.useLdd)) {
       this._updateProcessor =
