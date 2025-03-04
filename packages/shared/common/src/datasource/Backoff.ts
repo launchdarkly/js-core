@@ -1,6 +1,11 @@
 const MAX_RETRY_DELAY = 30 * 1000; // Maximum retry delay 30 seconds.
 const JITTER_RATIO = 0.5; // Delay should be 50%-100% of calculated time.
 
+export interface Backoff {
+  success(): void;
+  fail(): number;
+}
+
 /**
  * Implements exponential backoff and jitter. This class tracks successful connections and failures
  * and produces a retry delay.
@@ -11,7 +16,7 @@ const JITTER_RATIO = 0.5; // Delay should be 50%-100% of calculated time.
  * initialRetryDelayMillis and capping at MAX_RETRY_DELAY.  If RESET_INTERVAL has elapsed after a
  * success, without an intervening faulure, then the backoff is reset to initialRetryDelayMillis.
  */
-export default class Backoff {
+export class DefaultBackoff {
   private _retryCount: number = 0;
   private _activeSince?: number;
   private _initialRetryDelayMillis: number;
