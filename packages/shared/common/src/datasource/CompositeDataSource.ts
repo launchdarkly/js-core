@@ -29,6 +29,7 @@ interface TransitionRequest {
   err?: Error;
 }
 
+// TODO SDK-858: move this out of API directory to neighbor datasource folder
 /**
  * The {@link CompositeDataSource} can combine a number of {@link DataSystemInitializer}s and {@link DataSystemSynchronizer}s
  * into a single {@link DataSource}, implementing fallback and recovery logic internally to choose where data is sourced from.

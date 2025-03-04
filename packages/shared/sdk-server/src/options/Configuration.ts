@@ -14,6 +14,15 @@ import {
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
 import { Hook } from '../api/integrations';
+import {
+  isPollingOptions,
+  isStandardOptions,
+  isStreamingOptions,
+  LDDataSystemOptions,
+  PollingDataSourceOptions,
+  StandardDataSourceOptions,
+  StreamingDataSourceOptions,
+} from '../api/options/LDDataSystemOptions';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
@@ -35,6 +44,7 @@ const validations: Record<string, TypeValidator> = {
   capacity: TypeValidators.Number,
   logger: TypeValidators.Object,
   featureStore: TypeValidators.ObjectOrFactory,
+  dataSystem: TypeValidators.Object,
   bigSegments: TypeValidators.Object,
   updateProcessor: TypeValidators.ObjectOrFactory,
   flushInterval: TypeValidators.Number,
@@ -57,6 +67,30 @@ const validations: Record<string, TypeValidator> = {
   application: TypeValidators.Object,
   payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
+  type: TypeValidators.String,
+};
+
+const DEFAULT_POLL_INTERVAL = 30;
+const DEFAULT_STREAM_RECONNECT_DELAY = 1;
+
+const defaultStandardDataSourceOptions: StandardDataSourceOptions = {
+  type: 'standard',
+  streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
+  pollInterval: DEFAULT_POLL_INTERVAL,
+};
+
+const defaultStreamingDataSourceOptions: StreamingDataSourceOptions = {
+  type: 'streaming',
+  streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
+};
+
+const defaultPollingDataSourceOptions: PollingDataSourceOptions = {
+  type: 'polling',
+  pollInterval: DEFAULT_POLL_INTERVAL,
+};
+
+const defaultDataSystemOptions = {
+  dataSource: defaultStandardDataSourceOptions,
 };
 
 /**
@@ -67,12 +101,12 @@ export const defaultValues: ValidatedOptions = {
   streamUri: 'https://stream.launchdarkly.com',
   eventsUri: ServiceEndpoints.DEFAULT_EVENTS,
   stream: true,
-  streamInitialReconnectDelay: 1,
+  streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
   sendEvents: true,
   timeout: 5,
   capacity: 10000,
   flushInterval: 5,
-  pollInterval: 30,
+  pollInterval: DEFAULT_POLL_INTERVAL,
   offline: false,
   useLdd: false,
   allAttributesPrivate: false,
@@ -82,14 +116,23 @@ export const defaultValues: ValidatedOptions = {
   diagnosticOptOut: false,
   diagnosticRecordingInterval: 900,
   featureStore: () => new InMemoryFeatureStore(),
+  dataSystem: defaultDataSystemOptions,
 };
 
-function validateTypesAndNames(options: LDOptions): {
+// General options type needed by validation algorithm.  Specific types can be asserted after use.
+type Options = {
+  [k: string]: any;
+};
+
+function validateTypesAndNames(
+  options: Options,
+  defaults: Options,
+): {
   errors: string[];
-  validatedOptions: ValidatedOptions;
+  validatedOptions: Options;
 } {
   const errors: string[] = [];
-  const validatedOptions: ValidatedOptions = { ...defaultValues };
+  const validatedOptions: Options = { ...defaults };
   Object.keys(options).forEach((optionName) => {
     // We need to tell typescript it doesn't actually know what options are.
     // If we don't then it complains we are doing crazy things with it.
@@ -123,7 +166,7 @@ function validateTypesAndNames(options: LDOptions): {
   return { errors, validatedOptions };
 }
 
-function validateEndpoints(options: LDOptions, validatedOptions: ValidatedOptions) {
+function validateEndpoints(options: LDOptions, validatedOptions: Options) {
   const { baseUri, streamUri, eventsUri } = options;
   const streamingEndpointSpecified = streamUri !== undefined && streamUri !== null;
   const pollingEndpointSpecified = baseUri !== undefined && baseUri !== null;
@@ -150,6 +193,62 @@ function validateEndpoints(options: LDOptions, validatedOptions: ValidatedOption
   }
 }
 
+function validateDataSystemOptions(options: Options): {
+  errors: string[];
+  validatedOptions: Options;
+} {
+  const allErrors: string[] = [];
+  const validatedOptions: Options = { ...options };
+
+  if (!TypeValidators.ObjectOrFactory.is(options.persistentStore)) {
+    validatedOptions.persistentStore = undefined; // default is to not use this
+    allErrors.push(
+      OptionMessages.wrongOptionType(
+        'persistentStore',
+        'LDFeatureStore',
+        typeof options.persistentStore,
+      ),
+    );
+  }
+
+  if (!TypeValidators.ObjectOrFactory.is(options.updateProcessor)) {
+    validatedOptions.persistentStore = undefined; // default is to not use this
+    allErrors.push(
+      OptionMessages.wrongOptionType(
+        'updateProcessor',
+        'UpdateProcessor',
+        typeof options.persistentStore,
+      ),
+    );
+  }
+
+  let result: { errors: string[]; validatedOptions: Options };
+  let validatedDataSourceOptions;
+  if (isStandardOptions(options.dataSource)) {
+    result = validateTypesAndNames(options.dataSource, defaultStandardDataSourceOptions);
+  } else if (isStreamingOptions(options.dataSource)) {
+    result = validateTypesAndNames(options.dataSource, defaultStreamingDataSourceOptions);
+  } else if (isPollingOptions(options.dataSource)) {
+    result = validateTypesAndNames(options.dataSource, defaultPollingDataSourceOptions);
+  } else {
+    // provided datasource options don't fit any expected form, drop them and use defaults
+    result = {
+      errors: [
+        OptionMessages.wrongOptionType(
+          'dataSource',
+          'DataSourceOptions',
+          typeof options.dataSource,
+        ),
+      ],
+      validatedOptions: defaultStandardDataSourceOptions,
+    };
+  }
+
+  validatedOptions.dataSource = validatedDataSourceOptions;
+  allErrors.concat(result.errors);
+  return { errors: allErrors, validatedOptions };
+}
+
 /**
  * Configuration options for the LDClient.
  *
@@ -166,15 +265,9 @@ export default class Configuration {
 
   public readonly flushInterval: number;
 
-  public readonly pollInterval: number;
-
   public readonly proxyOptions?: LDProxyOptions;
 
   public readonly offline: boolean;
-
-  public readonly stream: boolean;
-
-  public readonly streamInitialReconnectDelay: number;
 
   public readonly useLdd: boolean;
 
@@ -204,6 +297,8 @@ export default class Configuration {
 
   public readonly featureStoreFactory: (clientContext: LDClientContext) => LDFeatureStore;
 
+  public readonly dataSystem: LDDataSystemOptions;
+
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
     dataSourceUpdates: LDDataSourceUpdates,
@@ -223,12 +318,41 @@ export default class Configuration {
     // If there isn't a valid logger from the platform, then logs would go nowhere.
     this.logger = options.logger;
 
-    const { errors, validatedOptions } = validateTypesAndNames(options);
+    const { errors, validatedOptions: topLevelResult } = validateTypesAndNames(
+      options,
+      defaultValues,
+    );
+    const validatedOptions = topLevelResult as ValidatedOptions;
     errors.forEach((error) => {
       this.logger?.warn(error);
     });
 
     validateEndpoints(options, validatedOptions);
+
+    if (options.dataSystem) {
+      // validate the data system options, this will also apply reasonable defaults
+      const { errors: dsErrors, validatedOptions: dsResult } = validateDataSystemOptions(
+        options.dataSystem,
+      );
+      this.dataSystem = dsResult as LDDataSystemOptions;
+      dsErrors.forEach((error) => {
+        this.logger?.warn(error);
+      });
+    } else {
+      // if no data system was specified (such as implmentations using this SDK before data system
+      // was added), we'll make one based on the stream option
+      this.dataSystem = {
+        dataSource: options.stream
+          ? {
+              type: 'streaming',
+              streamInitialReconnectDelay: validatedOptions.streamInitialReconnectDelay,
+            }
+          : {
+              type: 'polling',
+              pollInterval: validatedOptions.pollInterval,
+            },
+      };
+    }
 
     this.serviceEndpoints = new ServiceEndpoints(
       validatedOptions.streamUri,
@@ -244,7 +368,6 @@ export default class Configuration {
 
     this.bigSegments = validatedOptions.bigSegments;
     this.flushInterval = validatedOptions.flushInterval;
-    this.pollInterval = validatedOptions.pollInterval;
     this.proxyOptions = validatedOptions.proxyOptions;
 
     this.sendEvents = validatedOptions.sendEvents;
@@ -259,10 +382,9 @@ export default class Configuration {
     this.wrapperVersion = validatedOptions.wrapperVersion;
     this.tags = new ApplicationTags(validatedOptions);
     this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;
+    this.hooks = validatedOptions.hooks;
 
     this.offline = validatedOptions.offline;
-    this.stream = validatedOptions.stream;
-    this.streamInitialReconnectDelay = validatedOptions.streamInitialReconnectDelay;
     this.useLdd = validatedOptions.useLdd;
 
     if (TypeValidators.Function.is(validatedOptions.updateProcessor)) {
@@ -282,7 +404,5 @@ export default class Configuration {
       // @ts-ignore
       this.featureStoreFactory = () => validatedOptions.featureStore;
     }
-
-    this.hooks = validatedOptions.hooks;
   }
 }

@@ -408,4 +408,8 @@ describe('when setting different options', () => {
       },
     ]);
   });
+
+  it('drop', () => {
+
+  }
 });
