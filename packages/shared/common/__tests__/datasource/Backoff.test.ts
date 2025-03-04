@@ -1,4 +1,4 @@
-import DefaultBackoff from '../../src/datasource/Backoff';
+import { DefaultBackoff } from '../../src/datasource/Backoff';
 
 const noJitter = (): number => 0;
 const maxJitter = (): number => 1;

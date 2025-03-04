@@ -1,11 +1,11 @@
 import {
+  DefaultBackoff,
   EventListener,
   EventName,
   EventSourceInitDict,
   HttpErrorResponse,
   EventSource as LDEventSource,
 } from '@launchdarkly/js-client-sdk-common';
-import { DefaultBackoff } from '@launchdarkly/js-sdk-common';
 
 /**
  * Implementation Notes:

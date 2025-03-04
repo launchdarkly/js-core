@@ -11,7 +11,7 @@ import {
   InitializerFactory,
   SynchronizerFactory,
 } from '../../../src/api/subsystem/DataSystem/DataSource';
-import DefaultBackoff, { Backoff } from '../../../src/datasource/Backoff';
+import { Backoff } from '../../../src/datasource/Backoff';
 
 function makeInitializerFactory(internal: DataSystemInitializer): InitializerFactory {
   return {
@@ -29,29 +29,29 @@ function makeTestTransitionConditions(): TransitionConditions {
   return {
     [DataSourceState.Initializing]: {
       durationMS: 0,
-      transition: Transition.Fallback,
+      transition: 'fallback',
     },
     [DataSourceState.Interrupted]: {
       durationMS: 0,
-      transition: Transition.Fallback,
+      transition: 'fallback',
     },
     [DataSourceState.Closed]: {
       durationMS: 0,
-      transition: Transition.Fallback,
+      transition: 'fallback',
     },
     [DataSourceState.Valid]: {
       durationMS: 0,
-      transition: Transition.Fallback,
+      transition: 'fallback',
     },
   };
 }
 
 function makeZeroBackoff(): Backoff {
   return {
-    success(_timeStampMs) {
+    success() {
       return 0;
     },
-    fail(_timeStampMs) {
+    fail() {
       return 0;
     },
   };
@@ -323,9 +323,7 @@ it('it can be stopped when in thrashing synchronizer fallback loop', async () =>
   expect(mockInitializer1.run).toHaveBeenCalled();
   expect(mockSynchronizer1.run).toHaveBeenCalled();
   expect(dataCallback).toHaveBeenNthCalledWith(1, true, { key: 'init1' });
-  console.log(`About to call stop on composite source.`);
   underTest.stop();
-  console.log(`Got past stop`);
 
   // wait for stop to take effect before checking status is closed
   await new Promise((f) => {
@@ -382,7 +380,6 @@ it('it can be stopped and restarted', async () => {
   await new Promise<void>((resolve) => {
     callback1 = jest.fn((_: boolean, data: Data) => {
       if (data === mockSynchronizer1Data) {
-        console.log(`About to call stop`);
         underTest.stop();
         resolve();
       }

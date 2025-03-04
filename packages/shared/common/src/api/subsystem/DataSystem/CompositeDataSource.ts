@@ -9,34 +9,16 @@ import {
   SynchronizerFactory,
 } from './DataSource';
 
+// TODO: SDK-858, specify these constants when CompositeDataSource is used.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const DEFAULT_FALLBACK_TIME_MS = 2 * 60 * 1000;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const DEFAULT_RECOVERY_TIME_MS = 5 * 60 * 1000;
+
 /**
  * Represents a transition between data sources.
  */
-export enum Transition {
-  /**
-   * A no-op transition.
-   */
-  None,
-  /**
-   * Transition from current data source to the first synchronizer.
-   */
-  SwitchToSync,
-
-  /**
-   * Transition to the next data source of the same kind.
-   */
-  Fallback,
-
-  /**
-   * Transition to the first data source of the same kind.
-   */
-  Recover,
-
-  /**
-   * Transition to idle and reset
-   */
-  Stop,
-}
+export type Transition = 'none' | 'switchToSync' | 'fallback' | 'recover' | 'stop';
 
 /**
  * Given a {@link DataSourceState}, how long to wait before transitioning.
@@ -57,8 +39,6 @@ interface TransitionRequest {
 export class CompositeDataSource implements DataSource {
   // TODO: SDK-856 async notification if initializer takes too long
   // TODO: SDK-1044 utilize selector from initializers
-  private readonly _defaultFallbackTimeMs = 2 * 60 * 1000;
-  private readonly _defaultRecoveryTimeMs = 5 * 60 * 1000;
 
   private _initPhaseActive: boolean = true;
   private _currentPosition: number = 0;
@@ -77,8 +57,8 @@ export class CompositeDataSource implements DataSource {
     private readonly _transitionConditions: TransitionConditions,
     private readonly _backoff: Backoff,
   ) {
-    this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
-      this._externalTransitionResolve = tr;
+    this._externalTransitionPromise = new Promise<TransitionRequest>((resolveTransition) => {
+      this._externalTransitionResolve = resolveTransition;
     });
     this._initPhaseActive = true;
     this._currentPosition = 0;
@@ -94,7 +74,7 @@ export class CompositeDataSource implements DataSource {
     }
     this._stopped = false;
 
-    let lastTransition: Transition = Transition.None;
+    let lastTransition: Transition = 'none';
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const currentDS: DataSource | undefined = this._pickDataSource(lastTransition);
@@ -108,13 +88,13 @@ export class CompositeDataSource implements DataSource {
           // this callback handler can be disabled and ensures only one transition request occurs
           const callbackHandler = new CallbackHandler(
             (basis: boolean, data: Data) => {
-              this._backoff.success(Date.now());
+              this._backoff.success();
               dataCallback(basis, data);
               if (basis && this._initPhaseActive) {
                 // transition to sync if we get basis during init
                 callbackHandler.disable();
                 cancelScheduledTransition?.();
-                transitionResolve({ transition: Transition.SwitchToSync });
+                transitionResolve({ transition: 'switchToSync' });
               }
             },
             (state: DataSourceState, err?: any) => {
@@ -126,7 +106,7 @@ export class CompositeDataSource implements DataSource {
                 callbackHandler.disable();
                 statusCallback(DataSourceState.Interrupted, err); // underlying errors or closed states are masked as interrupted while we transition
                 cancelScheduledTransition?.();
-                transitionResolve({ transition: Transition.Fallback, err }); // unrecoverable error has occurred, so fallback
+                transitionResolve({ transition: 'fallback', err }); // unrecoverable error has occurred, so fallback
               } else {
                 statusCallback(state, null); // report the status upward
                 if (state !== lastState) {
@@ -148,11 +128,14 @@ export class CompositeDataSource implements DataSource {
               }
             },
           );
-          currentDS.run(callbackHandler.dataHanlder, callbackHandler.statusHandler);
+          currentDS.run(
+            (basis, data) => callbackHandler.dataHanlder(basis, data),
+            (status, err) => callbackHandler.statusHandler(status, err),
+          );
         } else {
           // we don't have a data source to use!
           transitionResolve({
-            transition: Transition.Stop,
+            transition: 'stop',
             err: {
               name: 'ExhaustedDataSources',
               message: `CompositeDataSource has exhausted all configured datasources (${this._initializers.length} initializers, ${this._synchronizers.length} synchronizers).`,
@@ -170,9 +153,9 @@ export class CompositeDataSource implements DataSource {
       // stop the underlying datasource before transitioning to next state
       currentDS?.stop();
 
-      if (transitionRequest.err && transitionRequest.transition !== Transition.Stop) {
+      if (transitionRequest.err && transitionRequest.transition !== 'stop') {
         // if the transition was due to an error, throttle the transition
-        const delay = this._backoff.fail(Date.now());
+        const delay = this._backoff.fail();
         const delayedTransition = new Promise((resolve) => {
           setTimeout(resolve, delay);
         }).then(() => transitionRequest);
@@ -184,7 +167,7 @@ export class CompositeDataSource implements DataSource {
         ]);
       }
 
-      if (transitionRequest.transition === Transition.Stop) {
+      if (transitionRequest.transition === 'stop') {
         // exit the loop
         statusCallback(DataSourceState.Closed, transitionRequest.err);
         break;
@@ -198,7 +181,7 @@ export class CompositeDataSource implements DataSource {
   }
 
   async stop() {
-    this._externalTransitionResolve?.({ transition: Transition.Stop });
+    this._externalTransitionResolve?.({ transition: 'stop' });
   }
 
   private _reset() {
@@ -213,17 +196,17 @@ export class CompositeDataSource implements DataSource {
 
   private _pickDataSource(transition: Transition | undefined): DataSource | undefined {
     switch (transition) {
-      case Transition.SwitchToSync:
+      case 'switchToSync':
         this._initPhaseActive = false; // one way toggle to false, unless this class is reset()
         this._currentPosition = 0;
         break;
-      case Transition.Fallback:
+      case 'fallback':
         this._currentPosition += 1;
         break;
-      case Transition.Recover:
+      case 'recover':
         this._currentPosition = 0;
         break;
-      case Transition.None:
+      case 'none':
       default:
         // don't do anything in this case
         break;
@@ -262,7 +245,7 @@ export class CompositeDataSource implements DataSource {
     const condition = this._transitionConditions[state];
 
     // exclude recovery can happen for certain initializers/synchronizers (ex: the primary synchronizer shouldn't recover to itself)
-    if (!condition || (excludeRecover && condition.transition === Transition.Recover)) {
+    if (!condition || (excludeRecover && condition.transition === 'recover')) {
       return undefined;
     }
 

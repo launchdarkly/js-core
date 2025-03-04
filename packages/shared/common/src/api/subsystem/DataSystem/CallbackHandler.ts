@@ -17,7 +17,7 @@ export class CallbackHandler {
     this._disabled = true;
   }
 
-  dataHanlder = async (basis: boolean, data: Data) => {
+  async dataHanlder(basis: boolean, data: Data) {
     if (this._disabled) {
       return;
     }
@@ -25,13 +25,13 @@ export class CallbackHandler {
     // TODO: SDK-1044 track selector for future synchronizer to use
     // report data up
     this._dataCallback(basis, data);
-  };
+  }
 
-  statusHandler = async (status: DataSourceState, err?: any) => {
+  async statusHandler(status: DataSourceState, err?: any) {
     if (this._disabled) {
       return;
     }
 
     this._statusCallback(status, err);
-  };
+  }
 }

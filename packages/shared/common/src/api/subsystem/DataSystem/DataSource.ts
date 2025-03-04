@@ -11,8 +11,9 @@ export enum DataSourceState {
 export interface DataSource {
   /**
    * May be called any number of times, if already started, has no effect
-   * @param cb may be invoked many times
-   * @returns
+   * @param dataCallback that will be called when data arrives, may be called multiple times.
+   * @param statusCallback that will be called when data source state changes or an unrecoverable error
+   * has been encountered.
    */
   run(
     dataCallback: (basis: boolean, data: Data) => void,
@@ -21,8 +22,6 @@ export interface DataSource {
 
   /**
    * May be called any number of times, if already stopped, has no effect.
-   * @param cb
-   * @returns
    */
   stop(): void;
 }
