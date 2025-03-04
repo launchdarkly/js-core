@@ -28,6 +28,15 @@
         "tag-prefix": "cloudflare-server-sdk-"
       }
     },
+    "fastly": {
+      "name": "Fastly SDK",
+      "type": "edge",
+      "path": "packages/sdk/fastly",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "fastly-server-sdk-"
+      }
+    },
     "react-native": {
       "name": "React Native SDK",
       "type": "client-side",
