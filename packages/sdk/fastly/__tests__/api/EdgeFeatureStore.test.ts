@@ -1,7 +1,7 @@
 import { AsyncStoreFacade, LDFeatureStore } from '@launchdarkly/js-server-sdk-common';
 
 import { EdgeFeatureStore } from '../../src/api/EdgeFeatureStore';
-import mockEdgeProvider from '../../src/utils/mockEdgeProvider';
+import mockEdgeProvider from '../utils/mockEdgeProvider';
 import * as testData from './testData.json';
 
 describe('EdgeFeatureStore', () => {

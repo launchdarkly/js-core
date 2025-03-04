@@ -1,4 +1,4 @@
-import { EdgeProvider } from '../api';
+import { EdgeProvider } from '../../src/api';
 
 const mockEdgeProvider: EdgeProvider = {
   get: jest.fn(),

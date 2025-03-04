@@ -1,7 +1,7 @@
 import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
 
-import mockFeatureStore from '../../src/utils/mockFeatureStore';
 import validateOptions from '../../src/utils/validateOptions';
+import mockFeatureStore from './mockFeatureStore';
 
 describe('validateOptions', () => {
   test('throws without SDK key', () => {
