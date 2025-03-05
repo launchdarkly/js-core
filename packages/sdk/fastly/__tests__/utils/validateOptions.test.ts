@@ -7,19 +7,19 @@ describe('validateOptions', () => {
   test('throws without SDK key', () => {
     expect(() => {
       validateOptions('', {});
-    }).toThrowError(/You must configure the client with a client key/);
+    }).toThrow(/You must configure the client with a client-side id/);
   });
 
   test('throws without featureStore', () => {
     expect(() => {
       validateOptions('test-sdk-key', {});
-    }).toThrowError(/You must configure the client with a feature store/);
+    }).toThrow(/You must configure the client with a feature store/);
   });
 
   test('throws without logger', () => {
     expect(() => {
       validateOptions('test-sdk-key', { featureStore: mockFeatureStore });
-    }).toThrowError(/You must configure the client with a logger/);
+    }).toThrow(/You must configure the client with a logger/);
   });
 
   test('success valid options', () => {

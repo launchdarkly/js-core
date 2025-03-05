@@ -1,4 +1,9 @@
-import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
+import {
+  LDFeatureStore,
+  LDOptions as LDOptionsCommon,
+  TypeValidator,
+  TypeValidators,
+} from '@launchdarkly/js-server-sdk-common';
 
 /**
  * The Launchdarkly Fastly Compute SDK configuration options.
@@ -16,17 +21,23 @@ export type FastlySDKOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents' | '
  */
 export type LDOptionsInternal = FastlySDKOptions & Pick<LDOptionsCommon, 'featureStore'>;
 
-const validateOptions = (sdkKey: string, options: LDOptionsInternal) => {
+const validators = {
+  clientSideId: TypeValidators.String,
+  featureStore: TypeValidators.ObjectOrFactory,
+  logger: TypeValidators.Object,
+};
+
+const validateOptions = (clientSideId: string, options: LDOptionsInternal) => {
   const { eventsBackendName, featureStore, logger, sendEvents, ...rest } = options;
-  if (!sdkKey) {
-    throw new Error('You must configure the client with a client key');
+  if (!clientSideId || !validators.clientSideId.is(clientSideId)) {
+    throw new Error('You must configure the client with a client-side id');
   }
 
-  if (!featureStore || typeof featureStore !== 'object' || !featureStore.get) {
+  if (!featureStore || !validators.featureStore.is(featureStore)) {
     throw new Error('You must configure the client with a feature store');
   }
 
-  if (!logger) {
+  if (!logger || !validators.logger.is(logger)) {
     throw new Error('You must configure the client with a logger');
   }
 
