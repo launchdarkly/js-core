@@ -1,9 +1,4 @@
-import {
-  LDFeatureStore,
-  LDOptions as LDOptionsCommon,
-  TypeValidator,
-  TypeValidators,
-} from '@launchdarkly/js-server-sdk-common';
+import { LDOptions as LDOptionsCommon, TypeValidators } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * The Launchdarkly Fastly Compute SDK configuration options.
