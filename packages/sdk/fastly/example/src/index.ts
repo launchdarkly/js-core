@@ -44,8 +44,7 @@ async function handleRequest(event: FetchEvent) {
   const kvStoreName = isLocal ? 'launchdarkly_local' : KV_STORE_NAME;
   const ldClientId = isLocal ? 'local' : LAUNCHDARKLY_CLIENT_ID;
 
-  const store = new KVStore(kvStoreName);
-  const ldClient = init(ldClientId, store, {
+  const ldClient = init(ldClientId, kvStoreName, {
     sendEvents: true,
     eventsBackendName: EVENTS_BACKEND_NAME,
   });
