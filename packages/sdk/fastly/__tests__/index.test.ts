@@ -13,18 +13,15 @@ const flagKey1 = 'testFlag1';
 const flagKey2 = 'testFlag2';
 const flagKey3 = 'testFlag3';
 const context = { kind: 'user', key: 'test-user-key-1' };
-const kvStoreName = 'test-kv-store';
 
 describe('init', () => {
   let ldClient: LDClient;
   let mockKVStore: jest.Mocked<KVStore>;
 
   beforeAll(async () => {
-    // Create a mock KVStore instance
-    mockKVStore = new KVStore(kvStoreName) as jest.Mocked<KVStore>;
+    mockKVStore = new KVStore('test-kv-store') as jest.Mocked<KVStore>;
     const testDataString = JSON.stringify(testData);
 
-    // Configure the mock to return test data when get is called with the expected root key
     mockKVStore.get.mockResolvedValue({
       text: jest.fn().mockResolvedValue(testDataString),
       json: jest.fn().mockResolvedValue(testData),
@@ -34,12 +31,7 @@ describe('init', () => {
       metadata: () => null,
       metadataText: () => null,
     });
-
-    // Mock the KVStore constructor to return our configured mock
-    (KVStore as jest.MockedClass<typeof KVStore>).mockImplementation(() => mockKVStore);
-
-    // Initialize the client with the KV store name (string)
-    ldClient = init(sdkKey, kvStoreName);
+    ldClient = init(sdkKey, mockKVStore);
     await ldClient.waitForInitialization();
   });
 

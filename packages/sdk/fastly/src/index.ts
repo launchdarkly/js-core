@@ -10,14 +10,13 @@ import validateOptions, { FastlySDKOptions } from './utils/validateOptions';
 
 export const init = (
   clientSideId: string,
-  kvStoreName: string,
+  kvStore: KVStore,
   options: FastlySDKOptions = { eventsBackendName: DEFAULT_EVENTS_BACKEND_NAME },
 ) => {
   const logger = options.logger ?? BasicLogger.get();
 
   const edgeProvider: EdgeProvider = {
     get: async (rootKey: string) => {
-      const kvStore = new KVStore(kvStoreName);
       const entry = await kvStore.get(rootKey);
       return entry ? entry.text() : null;
     },

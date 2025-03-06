@@ -12,7 +12,6 @@ export default defineConfig({
   sourcemap: false,
   clean: true,
   noExternal: ['@launchdarkly/js-server-sdk-common'],
-  external: ['fastly:kv-store'],
   dts: true,
   metafile: true,
   esbuildOptions(opts) {

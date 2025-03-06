@@ -8,7 +8,7 @@ import { init } from '@launchdarkly/fastly-server-sdk';
 import type { LDMultiKindContext } from '@launchdarkly/js-server-sdk-common';
 
 // Set your LaunchDarkly client ID here
-const LAUNCHDARKLY_CLIENT_ID = '<your-client-id>';
+const LAUNCHDARKLY_CLIENT_ID = '675aea6b1b327709c85da941';
 // Set the KV store name used to store the LaunchDarkly data here
 const KV_STORE_NAME = 'launchdarkly';
 // Set the Fastly Backend name used to send LaunchDarkly events here
@@ -26,15 +26,6 @@ const dog = includeBytes('./src/dog.jpg');
 
 addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 
-const isLocal = env('FASTLY_HOSTNAME') === 'localhost';
-const kvStoreName = isLocal ? 'launchdarkly_local' : KV_STORE_NAME;
-const ldClientId = isLocal ? 'local' : LAUNCHDARKLY_CLIENT_ID;
-
-const ldClient = init(ldClientId, kvStoreName, {
-  sendEvents: true,
-  eventsBackendName: EVENTS_BACKEND_NAME,
-});
-
 async function handleRequest(event: FetchEvent) {
   // Log service version
   console.log('FASTLY_SERVICE_VERSION:', env('FASTLY_SERVICE_VERSION') || 'local');
@@ -49,6 +40,15 @@ async function handleRequest(event: FetchEvent) {
     });
   }
 
+  const isLocal = env('FASTLY_HOSTNAME') === 'localhost';
+  const kvStoreName = isLocal ? 'launchdarkly_local' : KV_STORE_NAME;
+  const ldClientId = isLocal ? 'local' : LAUNCHDARKLY_CLIENT_ID;
+
+  const store = new KVStore(kvStoreName);
+  const ldClient = init(ldClientId, store, {
+    sendEvents: true,
+    eventsBackendName: EVENTS_BACKEND_NAME,
+  });
   await ldClient.waitForInitialization();
 
   const flagContext: LDMultiKindContext = {
@@ -70,6 +70,32 @@ async function handleRequest(event: FetchEvent) {
   };
 
   const url = new URL(req.url);
+
+  if (url.pathname === '/loop') {
+    const flagValues: boolean[] = [];
+
+    // Run evaluations in series instead of parallel
+    const runEvaluationsInSeries = async (
+      count: number,
+      results: boolean[],
+    ): Promise<boolean[]> => {
+      if (count <= 0) {
+        return results;
+      }
+
+      const result = await ldClient.boolVariation('example-flag', flagContext, false);
+      results.push(result);
+
+      return runEvaluationsInSeries(count - 1, results);
+    };
+
+    await runEvaluationsInSeries(35, flagValues);
+
+    return new Response(JSON.stringify(flagValues, undefined, 2), {
+      status: 200,
+      headers: new Headers({ 'Content-Type': 'application/json' }),
+    });
+  }
 
   if (url.pathname === '/') {
     const flagKey = 'example-flag';
