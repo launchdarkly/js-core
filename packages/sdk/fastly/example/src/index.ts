@@ -26,6 +26,15 @@ const dog = includeBytes('./src/dog.jpg');
 
 addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 
+const isLocal = env('FASTLY_HOSTNAME') === 'localhost';
+const kvStoreName = isLocal ? 'launchdarkly_local' : KV_STORE_NAME;
+const ldClientId = isLocal ? 'local' : LAUNCHDARKLY_CLIENT_ID;
+
+const ldClient = init(ldClientId, kvStoreName, {
+  sendEvents: true,
+  eventsBackendName: EVENTS_BACKEND_NAME,
+});
+
 async function handleRequest(event: FetchEvent) {
   // Log service version
   console.log('FASTLY_SERVICE_VERSION:', env('FASTLY_SERVICE_VERSION') || 'local');
@@ -40,14 +49,6 @@ async function handleRequest(event: FetchEvent) {
     });
   }
 
-  const isLocal = env('FASTLY_HOSTNAME') === 'localhost';
-  const kvStoreName = isLocal ? 'launchdarkly_local' : KV_STORE_NAME;
-  const ldClientId = isLocal ? 'local' : LAUNCHDARKLY_CLIENT_ID;
-
-  const ldClient = init(ldClientId, kvStoreName, {
-    sendEvents: true,
-    eventsBackendName: EVENTS_BACKEND_NAME,
-  });
   await ldClient.waitForInitialization();
 
   const flagContext: LDMultiKindContext = {
