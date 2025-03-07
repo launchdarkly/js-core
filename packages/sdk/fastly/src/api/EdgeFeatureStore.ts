@@ -9,12 +9,12 @@ import type {
 import { deserializePoll, noop } from '@launchdarkly/js-server-sdk-common';
 
 export interface EdgeProvider {
-  get: (rootKey: string) => Promise<string | null | undefined>;
+  get: (rootKey: string) => Promise<string | null>;
 }
 
 export class EdgeFeatureStore implements LDFeatureStore {
   private readonly _rootKey: string;
-  private _kvData: string | null | undefined;
+  private _kvData: string | null = null;
 
   constructor(
     private readonly _edgeProvider: EdgeProvider,

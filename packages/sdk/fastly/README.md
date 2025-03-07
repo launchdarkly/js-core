@@ -12,6 +12,12 @@ npm i @launchdarkly/fastly-server-sdk
 yarn add @launchdarkly/fastly-server-sdk
 ```
 
+## Usage notes
+
+- The SDK must be initialized and used when processing requests, not during build-time initialization.
+- The SDK caches all KV data during initialization to reduce the number of backend requests needed to fetch KV data. This means changes to feature flags or segments will not be picked up during the lifecycle of a single request instance.
+- Events should flushed using the [`waitUntil()` method](https://js-compute-reference-docs.edgecompute.app/docs/globals/FetchEvent/prototype/waitUntil).
+
 ## Quickstart
 
 See the full [example app](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/fastly/example).
