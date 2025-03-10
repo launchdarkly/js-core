@@ -47,6 +47,18 @@ export function processUrlToFileName(input: string, origin: string): string {
   return cleaned;
 }
 
+/**
+ * Clamp a value to be between an inclusive max an minimum.
+ *
+ * @param min The inclusive minimum value.
+ * @param max The inclusive maximum value.
+ * @param value The value to clamp.
+ * @returns The clamped value in range [min, max].
+ */
+function clamp(min: number, max: number, value: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 export interface TrimOptions {
   /**
    * The maximum length of the trimmed line.
@@ -130,6 +142,8 @@ export function getSrcLines(
     // as we can.
     context?: string[] | null;
     column?: number | null;
+    srcStart?: number | null;
+    line?: number | null;
   },
   options: ParsedStackOptions,
 ): {
@@ -168,7 +182,8 @@ export function getSrcLines(
       0,
     );
 
-  const origin = Math.floor(context.length / 2);
+  const origin = clamp(0, context.length - 1, (inFrame?.line ?? 0) - (inFrame.srcStart ?? 0));
+
   return {
     // The lines immediately preceeding the origin line.
     srcBefore: getLines(origin - options.source.beforeLines, origin, context, trimmer),
@@ -204,8 +219,9 @@ export default function parse(error: Error, options: ParsedStackOptions): StackT
   const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
     fileName: processUrlToFileName(inFrame.url, window.location.origin),
     function: inFrame.func,
-    line: inFrame.line,
-    col: inFrame.column,
+    // Strip the nulls so we only ever return undefined.
+    line: inFrame.line ?? undefined,
+    col: inFrame.column ?? undefined,
     ...getSrcLines(inFrame, options),
   }));
   return {

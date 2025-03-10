@@ -21,7 +21,13 @@ describe('EdgeFeatureStore', () => {
 
   beforeEach(() => {
     mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
-    featureStore = new EdgeFeatureStore(mockEdgeProvider, sdkKey, 'MockEdgeProvider', mockLogger);
+    featureStore = new EdgeFeatureStore(
+      mockEdgeProvider,
+      sdkKey,
+      'MockEdgeProvider',
+      mockLogger,
+      0,
+    );
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
 

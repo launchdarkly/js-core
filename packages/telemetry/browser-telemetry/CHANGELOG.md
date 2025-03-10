@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v1.0.1...browser-telemetry-v1.0.2) (2025-02-28)
+
+
+### Bug Fixes
+
+* Fix a bug where the incorrect src lines may have been captured. ([#792](https://github.com/launchdarkly/js-core/issues/792)) ([1f44dd5](https://github.com/launchdarkly/js-core/commit/1f44dd5bad3cc108beda5fb23d9b2b540812e7e6))
+
 ## [1.0.1](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v1.0.0...browser-telemetry-v1.0.1) (2025-02-18)
 
 

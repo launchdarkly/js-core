@@ -114,4 +114,123 @@ describe('TraceKit', function () {
       expect(stackFrames.stack[0].url).toEqual('<anonymous>');
     });
   });
+
+  describe('given mock source code, xhr, and domain', () => {
+    // Mock source code that will be fetched
+    const mockSource =
+      'function foo() {\n' +
+      '  console.log("line 2");\n' +
+      '  throw new Error("error on line 3");\n' +
+      '  console.log("line 4");\n' +
+      '}\n' +
+      'foo();';
+
+    // Mock XMLHttpRequest
+    const mockXHR = {
+      open: jest.fn(),
+      send: jest.fn(),
+      responseText: mockSource,
+    };
+
+    // @ts-ignore - we know this is incomplete
+    window.XMLHttpRequest = jest.fn(() => mockXHR);
+
+    window.document.domain = 'localhost';
+
+    it('should populate srcStart and context from source code with firefox style stack trace', () => {
+      const traceKit = getTraceKit();
+      traceKit.remoteFetching = true;
+      traceKit.linesOfContext = 10;
+
+      const error = new Error('error on line 3');
+      // Firefox style stack trace
+      error.stack =
+        'foo/<@http://localhost:8081/assets/index-BvsURM3r.js:3:2\n' +
+        '@http://localhost:8081/assets/index-BvsURM3r.js:6:0';
+      const stackFrames = traceKit.computeStackTrace(error);
+
+      expect(stackFrames).toBeTruthy();
+      expect(stackFrames.stack[0]).toEqual({
+        url: 'http://localhost:8081/assets/index-BvsURM3r.js',
+        func: 'foo/<',
+        args: [],
+        line: 3,
+        column: 2,
+        context: [
+          'function foo() {',
+          '  console.log("line 2");',
+          '  throw new Error("error on line 3");',
+          '  console.log("line 4");',
+          '}',
+          'foo();',
+        ],
+        srcStart: 1,
+      });
+    });
+
+    it('should populate srcStart and context from source code with chrome style stack trace', () => {
+      const traceKit = getTraceKit();
+      traceKit.remoteFetching = true;
+      traceKit.linesOfContext = 10;
+
+      const error = new Error('error on line 3');
+      // Chrome style stack trace
+      error.stack =
+        'Error: error on line 3\n' +
+        '    at foo (http://localhost:8081/assets/index-BvsURM3r.js:3:2)\n' +
+        '    at http://localhost:8081/assets/index-BvsURM3r.js:6:0';
+      const stackFrames = traceKit.computeStackTrace(error);
+
+      expect(stackFrames).toBeTruthy();
+      expect(stackFrames.stack[0]).toEqual({
+        url: 'http://localhost:8081/assets/index-BvsURM3r.js',
+        func: 'foo',
+        args: [],
+        line: 3,
+        column: 2,
+        context: [
+          'function foo() {',
+          '  console.log("line 2");',
+          '  throw new Error("error on line 3");',
+          '  console.log("line 4");',
+          '}',
+          'foo();',
+        ],
+        srcStart: 1,
+      });
+    });
+
+    it('should populate srcStart and context from source code with opera style stack trace', () => {
+      const traceKit = getTraceKit();
+      traceKit.remoteFetching = true;
+      traceKit.linesOfContext = 10;
+
+      const error = new Error('error on line 3');
+      // Opera style stack trace
+      // @ts-ignore - Opera does what it wants.
+      error.stacktrace =
+        'Error initially occurred at line 3, column 2 in foo() in http://localhost:8081/assets/index-BvsURM3r.js:\n' +
+        'throw new Error("error on line 3");\n' +
+        'called from line 6, column 1 in foo() in http://localhost:8081/assets/index-BvsURM3r.js:';
+      const stackFrames = traceKit.computeStackTrace(error);
+
+      expect(stackFrames).toBeTruthy();
+      expect(stackFrames.stack[0]).toEqual({
+        url: 'http://localhost:8081/assets/index-BvsURM3r.js',
+        func: 'foo',
+        args: [],
+        line: 3,
+        column: 2,
+        context: [
+          'function foo() {',
+          '  console.log("line 2");',
+          '  throw new Error("error on line 3");',
+          '  console.log("line 4");',
+          '}',
+          'foo();',
+        ],
+        srcStart: 1,
+      });
+    });
+  });
 });
