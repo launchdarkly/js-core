@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@fastly/js-compute": "^3.30.1",
-    "@launchdarkly/fastly-server-sdk": "0.0.1-beta.1"
+    "@launchdarkly/fastly-server-sdk": "0.1.0"
   },
   "scripts": {
     "clean": "rimraf build && rimraf bin",
