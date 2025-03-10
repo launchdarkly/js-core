@@ -9,6 +9,8 @@
     "packages/sdk/server-node",
     "packages/sdk/cloudflare",
     "packages/sdk/cloudflare/example",
+    "packages/sdk/fastly",
+    "packages/sdk/fastly/example",
     "packages/sdk/react-native",
     "packages/sdk/react-native/example",
     "packages/sdk/react-universal",

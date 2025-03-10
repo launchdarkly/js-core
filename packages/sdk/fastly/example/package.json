@@ -1,0 +1,23 @@
+{
+  "name": "fastly-example",
+  "packageManager": "yarn@3.4.1",
+  "type": "module",
+  "engines": {
+    "node": "^16 || >=18"
+  },
+  "devDependencies": {
+    "@fastly/cli": "^10.19.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@fastly/js-compute": "^3.30.1",
+    "@launchdarkly/fastly-server-sdk": "0.0.1-beta.1"
+  },
+  "scripts": {
+    "clean": "rimraf build && rimraf bin",
+    "build": "tsc && js-compute-runtime build/index.js bin/main.wasm",
+    "start": "fastly compute serve",
+    "deploy": "fastly compute publish"
+  }
+}
