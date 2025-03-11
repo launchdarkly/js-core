@@ -2,7 +2,7 @@
   "name": "@launchdarkly/fastly-server-sdk",
   "version": "0.1.0",
   "packageManager": "yarn@3.4.1",
-  "description": "Cloudflare LaunchDarkly SDK",
+  "description": "Fastly LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/fastly",
   "repository": {
     "type": "git",
