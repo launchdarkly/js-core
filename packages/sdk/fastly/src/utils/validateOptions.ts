@@ -1,7 +1,8 @@
 import { LDOptions as LDOptionsCommon, TypeValidators } from '@launchdarkly/js-server-sdk-common';
 
+export type { LDOptionsCommon };
 /**
- * The Launchdarkly Fastly Compute SDK configuration options.
+ * The Launchdarkly Fastly Compute SDK configuration options. See {@link LDOptionsCommon} for more information on the 'logger', 'sendEvents', and 'eventsUri' options.
  */
 export type FastlySDKOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents' | 'eventsUri'> & {
   /**
