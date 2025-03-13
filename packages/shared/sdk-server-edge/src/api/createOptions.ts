@@ -10,7 +10,7 @@ export const defaultOptions: LDOptions = {
 
 const createOptions = (options: LDOptions) => {
   const finalOptions = { ...defaultOptions, ...options };
-  finalOptions.logger?.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
+  // finalOptions.logger?.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
   return finalOptions;
 };
 
