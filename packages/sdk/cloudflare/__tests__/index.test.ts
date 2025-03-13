@@ -21,87 +21,155 @@ const namespace = 'LD_KV';
 const rootEnvKey = `LD-Env-${clientSideID}`;
 
 describe('init', () => {
-  let kv: KVNamespace;
-  let ldClient: LDClient;
+  describe('without caching', () => {
+    let kv: KVNamespace;
+    let ldClient: LDClient;
 
-  beforeAll(async () => {
-    kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
-    await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
-    ldClient = init(clientSideID, kv);
-    await ldClient.waitForInitialization();
+    beforeAll(async () => {
+      kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
+      await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
+      ldClient = init(clientSideID, kv);
+      await ldClient.waitForInitialization();
+    });
+
+    afterAll(() => {
+      ldClient.close();
+    });
+
+    describe('flags', () => {
+      test('variation default', async () => {
+        const value = await ldClient.variation(flagKey1, context, false);
+        expect(value).toBeTruthy();
+      });
+
+      test('variation default rollout', async () => {
+        const contextWithEmail = { ...context, email: 'test@yahoo.com' };
+        const value = await ldClient.variation(flagKey2, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
+
+        expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+        expect(value).toBeTruthy();
+      });
+
+      test('rule match', async () => {
+        const contextWithEmail = { ...context, email: 'test@falsemail.com' };
+        const value = await ldClient.variation(flagKey1, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+
+        expect(detail).toEqual({
+          reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
+          value: false,
+          variationIndex: 1,
+        });
+        expect(value).toBeFalsy();
+      });
+
+      test('fallthrough', async () => {
+        const contextWithEmail = { ...context, email: 'test@yahoo.com' };
+        const value = await ldClient.variation(flagKey1, contextWithEmail, false);
+        const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+
+        expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+        expect(value).toBeTruthy();
+      });
+
+      test('allFlags fallthrough', async () => {
+        const allFlags = await ldClient.allFlagsState(context);
+
+        expect(allFlags).toBeDefined();
+        expect(allFlags.toJSON()).toEqual({
+          $flagsState: {
+            testFlag1: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+            testFlag2: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+            testFlag3: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
+          },
+          $valid: true,
+          testFlag1: true,
+          testFlag2: true,
+          testFlag3: true,
+        });
+      });
+    });
+
+    describe('segments', () => {
+      test('segment by country', async () => {
+        const contextWithCountry = { ...context, country: 'australia' };
+        const value = await ldClient.variation(flagKey3, contextWithCountry, false);
+        const detail = await ldClient.variationDetail(flagKey3, contextWithCountry, false);
+
+        expect(detail).toEqual({
+          reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
+          value: false,
+          variationIndex: 1,
+        });
+        expect(value).toBeFalsy();
+      });
+    });
   });
 
-  afterAll(() => {
-    ldClient.close();
-  });
+  describe('with caching', () => {
+    test('will cache across multiple variation calls', async () => {
+      const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
+      await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
+      const ldClient = init(clientSideID, kv, { cache: { ttl: 60, checkInterval: 600 } });
 
-  describe('flags', () => {
-    test('variation default', async () => {
-      const value = await ldClient.variation(flagKey1, context, false);
-      expect(value).toBeTruthy();
+      await ldClient.waitForInitialization();
+      const spy = jest.spyOn(kv, 'get');
+      await ldClient.variation(flagKey1, context, false);
+      await ldClient.variation(flagKey2, context, false);
+      ldClient.close();
+
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('variation default rollout', async () => {
-      const contextWithEmail = { ...context, email: 'test@yahoo.com' };
-      const value = await ldClient.variation(flagKey2, contextWithEmail, false);
-      const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
+    test('will cache across multiple allFlags calls', async () => {
+      const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
+      await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
+      const ldClient = init(clientSideID, kv, { cache: { ttl: 60, checkInterval: 600 } });
 
-      expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
-      expect(value).toBeTruthy();
+      await ldClient.waitForInitialization();
+      const spy = jest.spyOn(kv, 'get');
+      await ldClient.allFlagsState(context);
+      await ldClient.allFlagsState(context);
+      ldClient.close();
+
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('rule match', async () => {
-      const contextWithEmail = { ...context, email: 'test@falsemail.com' };
-      const value = await ldClient.variation(flagKey1, contextWithEmail, false);
-      const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+    test('will cache between allFlags and variation', async () => {
+      const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
+      await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
+      const ldClient = init(clientSideID, kv, { cache: { ttl: 60, checkInterval: 600 } });
 
-      expect(detail).toEqual({
-        reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
-        value: false,
-        variationIndex: 1,
-      });
-      expect(value).toBeFalsy();
+      await ldClient.waitForInitialization();
+      const spy = jest.spyOn(kv, 'get');
+      await ldClient.variation(flagKey1, context, false);
+      await ldClient.allFlagsState(context);
+      ldClient.close();
+
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('fallthrough', async () => {
-      const contextWithEmail = { ...context, email: 'test@yahoo.com' };
-      const value = await ldClient.variation(flagKey1, contextWithEmail, false);
-      const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
+    test('will eventually expire', async () => {
+      jest.spyOn(Date, 'now').mockImplementation(() => 0);
 
-      expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
-      expect(value).toBeTruthy();
-    });
+      const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
+      await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
+      const ldClient = init(clientSideID, kv, { cache: { ttl: 60, checkInterval: 600 } });
 
-    test('allFlags fallthrough', async () => {
-      const allFlags = await ldClient.allFlagsState(context);
+      await ldClient.waitForInitialization();
+      const spy = jest.spyOn(kv, 'get');
+      await ldClient.variation(flagKey1, context, false);
+      await ldClient.variation(flagKey2, context, false);
 
-      expect(allFlags).toBeDefined();
-      expect(allFlags.toJSON()).toEqual({
-        $flagsState: {
-          testFlag1: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
-          testFlag2: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
-          testFlag3: { debugEventsUntilDate: 2000, variation: 0, version: 2 },
-        },
-        $valid: true,
-        testFlag1: true,
-        testFlag2: true,
-        testFlag3: true,
-      });
-    });
-  });
+      expect(spy).toHaveBeenCalledTimes(1);
 
-  describe('segments', () => {
-    test('segment by country', async () => {
-      const contextWithCountry = { ...context, country: 'australia' };
-      const value = await ldClient.variation(flagKey3, contextWithCountry, false);
-      const detail = await ldClient.variationDetail(flagKey3, contextWithCountry, false);
+      jest.spyOn(Date, 'now').mockImplementation(() => 60 * 1000 + 1);
 
-      expect(detail).toEqual({
-        reason: { kind: 'RULE_MATCH', ruleId: 'rule1', ruleIndex: 0 },
-        value: false,
-        variationIndex: 1,
-      });
-      expect(value).toBeFalsy();
+      await ldClient.variation(flagKey2, context, false);
+      expect(spy).toHaveBeenCalledTimes(2);
+
+      ldClient.close();
     });
   });
 });
