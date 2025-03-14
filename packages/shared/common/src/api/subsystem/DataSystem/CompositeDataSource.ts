@@ -87,7 +87,7 @@ export class CompositeDataSource implements DataSource {
           // these local variables are used for handling automatic transition related to data source status (ex: recovering to primary after
           // secondary has been valid for N many seconds)
           let lastState: DataSourceState | undefined;
-          let cancelScheduledTransition: (() => void) | undefined;
+          let cancelScheduledTransition: () => void = () => {};
 
           // this callback handler can be disabled and ensures only one transition request occurs
           const callbackHandler = new CallbackHandler(
@@ -97,7 +97,7 @@ export class CompositeDataSource implements DataSource {
               if (basis && this._initPhaseActive) {
                 // transition to sync if we get basis during init
                 callbackHandler.disable();
-                cancelScheduledTransition?.();
+                this._consumeCancelToken(cancelScheduledTransition);
                 transitionResolve({ transition: 'switchToSync' });
               }
             },
@@ -109,19 +109,19 @@ export class CompositeDataSource implements DataSource {
               if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
                 statusCallback(DataSourceState.Interrupted, err); // underlying errors or closed states are masked as interrupted while we transition
-                cancelScheduledTransition?.();
+                this._consumeCancelToken(cancelScheduledTransition);
                 transitionResolve({ transition: 'fallback', err }); // unrecoverable error has occurred, so fallback
               } else {
                 statusCallback(state, null); // report the status upward
                 if (state !== lastState) {
                   lastState = state;
-                  cancelScheduledTransition?.(); // cancel previously scheduled status transition if one was scheduled
+                  this._consumeCancelToken(cancelScheduledTransition); // cancel previously scheduled status transition if one was scheduled
                   const excludeRecovery = this._currentPosition === 0; // primary source cannot recover to itself, so exclude it
                   const condition = this._lookupTransitionCondition(state, excludeRecovery);
                   if (condition) {
                     const { promise, cancel } = this._cancellableDelay(condition.durationMS);
-                    this._cancelTokens.push(cancel);
                     cancelScheduledTransition = cancel;
+                    this._cancelTokens.push(cancelScheduledTransition);
                     promise.then(() => {
                       callbackHandler.disable();
                       transitionResolve({ transition: condition.transition });
@@ -161,8 +161,8 @@ export class CompositeDataSource implements DataSource {
       if (transitionRequest.err && transitionRequest.transition !== 'stop') {
         // if the transition was due to an error, throttle the transition
         const delay = this._backoff.fail();
-        const { promise, cancel } = this._cancellableDelay(delay);
-        this._cancelTokens.push(cancel);
+        const { promise, cancel: cancelDelay } = this._cancellableDelay(delay);
+        this._cancelTokens.push(cancelDelay);
         const delayedTransition = promise.then(() => transitionRequest);
 
         // race the delayed transition and external transition requests to be responsive
@@ -170,6 +170,9 @@ export class CompositeDataSource implements DataSource {
           delayedTransition,
           this._externalTransitionPromise,
         ]);
+
+        // consume the delay cancel token (even if it resolved, need to stop tracking its token)
+        this._consumeCancelToken(cancelDelay);
       }
 
       if (transitionRequest.transition === 'stop') {
@@ -188,6 +191,7 @@ export class CompositeDataSource implements DataSource {
 
   async stop() {
     this._cancelTokens.forEach((cancel) => cancel());
+    this._cancelTokens = [];
     this._externalTransitionResolve?.({ transition: 'stop' });
   }
 
@@ -274,4 +278,12 @@ export class CompositeDataSource implements DataSource {
       },
     };
   };
+
+  private _consumeCancelToken(cancel: () => void) {
+    cancel();
+    const index = this._cancelTokens.indexOf(cancel, 0);
+    if (index > -1) {
+      this._cancelTokens.splice(index, 1);
+    }
+  }
 }
