@@ -42,7 +42,7 @@ export interface LDMessage {
 }
 
 /**
- * AI configuration and tracker.
+ * AI Config and tracker.
  */
 export interface LDAIConfig {
   /**

@@ -24,7 +24,7 @@ yarn build
 Before running the example, make sure to set the following environment variables:
 
 - `LAUNCHDARKLY_SDK_KEY`: Your LaunchDarkly SDK key
-- `LAUNCHDARKLY_AI_CONFIG_KEY`: Your LaunchDarkly AI configuration key (defaults to 'sample-ai-config' if not set)
+- `LAUNCHDARKLY_AI_CONFIG_KEY`: Your LaunchDarkly AI Config key (defaults to 'sample-ai-config' if not set)
 - `OPENAI_API_KEY`: Your OpenAI API key
 
 ## Usage
@@ -46,4 +46,4 @@ yarn start
 
 ## Note
 
-This example uses OpenAI's chat completions API. Make sure your LaunchDarkly AI configuration is set up correctly to work with OpenAI's models and API structure.
+This example uses OpenAI's chat completions API. Make sure your LaunchDarkly AI Config is set up correctly to work with OpenAI's models and API structure.

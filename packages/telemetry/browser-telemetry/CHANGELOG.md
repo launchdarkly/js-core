@@ -60,7 +60,7 @@
 
 ### ⚠ BREAKING CHANGES
 
-* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697))
+* Updated AI Config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697))
 
 ### Features
 
@@ -80,7 +80,7 @@
 * Random uuid for telemetry package. ([#689](https://github.com/launchdarkly/js-core/issues/689)) ([4cf34f9](https://github.com/launchdarkly/js-core/commit/4cf34f94f9d1a1949462187d09e7d84b096edb15))
 * Rename initializeTelemetryInstance to initTelemetryInstance for consistency with initTelemetry. ([257734f](https://github.com/launchdarkly/js-core/commit/257734f74d5c36d9e68441d6ca7dd7d1a6a2ba9b))
 * Source maps with inline sources for browser-telemetry. ([#735](https://github.com/launchdarkly/js-core/issues/735)) ([1656a85](https://github.com/launchdarkly/js-core/commit/1656a856e412a661af26ed08620aebedf2064ae1))
-* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697)) ([cd72ea8](https://github.com/launchdarkly/js-core/commit/cd72ea8193888b0635b5beffa0a877b18294777e))
+* Updated AI Config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697)) ([cd72ea8](https://github.com/launchdarkly/js-core/commit/cd72ea8193888b0635b5beffa0a877b18294777e))
 * Vendor TraceKit ([d1b364e](https://github.com/launchdarkly/js-core/commit/d1b364eaf08502b8b7d65c124833b617577fd081))
 
 
