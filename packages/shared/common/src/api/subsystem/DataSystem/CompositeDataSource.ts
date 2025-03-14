@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import { Backoff } from '../../../datasource/Backoff';
+import { LDLogger } from '../../logging';
 import { CallbackHandler } from './CallbackHandler';
 import {
   Data,
@@ -46,6 +47,7 @@ export class CompositeDataSource implements DataSource {
   private _stopped: boolean = true;
   private _externalTransitionPromise: Promise<TransitionRequest>;
   private _externalTransitionResolve?: (value: TransitionRequest) => void;
+  private _cancelTokens: (() => void)[] = [];
 
   /**
    * @param _initializers factories to create {@link DataSystemInitializer}s, in priority order.
@@ -56,6 +58,7 @@ export class CompositeDataSource implements DataSource {
     private readonly _synchronizers: SynchronizerFactory[],
     private readonly _transitionConditions: TransitionConditions,
     private readonly _backoff: Backoff,
+    private readonly _logger?: LDLogger,
   ) {
     this._externalTransitionPromise = new Promise<TransitionRequest>((resolveTransition) => {
       this._externalTransitionResolve = resolveTransition;
@@ -70,6 +73,7 @@ export class CompositeDataSource implements DataSource {
   ): Promise<void> {
     if (!this._stopped) {
       // don't allow multiple simultaneous runs
+      this._logger?.info('CompositeDataSource already running. Ignoring call to start.');
       return;
     }
     this._stopped = false;
@@ -116,6 +120,7 @@ export class CompositeDataSource implements DataSource {
                   const condition = this._lookupTransitionCondition(state, excludeRecovery);
                   if (condition) {
                     const { promise, cancel } = this._cancellableDelay(condition.durationMS);
+                    this._cancelTokens.push(cancel);
                     cancelScheduledTransition = cancel;
                     promise.then(() => {
                       callbackHandler.disable();
@@ -129,7 +134,7 @@ export class CompositeDataSource implements DataSource {
             },
           );
           currentDS.run(
-            (basis, data) => callbackHandler.dataHanlder(basis, data),
+            (basis, data) => callbackHandler.dataHandler(basis, data),
             (status, err) => callbackHandler.statusHandler(status, err),
           );
         } else {
@@ -156,9 +161,9 @@ export class CompositeDataSource implements DataSource {
       if (transitionRequest.err && transitionRequest.transition !== 'stop') {
         // if the transition was due to an error, throttle the transition
         const delay = this._backoff.fail();
-        const delayedTransition = new Promise((resolve) => {
-          setTimeout(resolve, delay);
-        }).then(() => transitionRequest);
+        const { promise, cancel } = this._cancellableDelay(delay);
+        this._cancelTokens.push(cancel);
+        const delayedTransition = promise.then(() => transitionRequest);
 
         // race the delayed transition and external transition requests to be responsive
         transitionRequest = await Promise.race([
@@ -170,6 +175,7 @@ export class CompositeDataSource implements DataSource {
       if (transitionRequest.transition === 'stop') {
         // exit the loop
         statusCallback(DataSourceState.Closed, transitionRequest.err);
+        lastTransition = transitionRequest.transition;
         break;
       }
 
@@ -181,6 +187,7 @@ export class CompositeDataSource implements DataSource {
   }
 
   async stop() {
+    this._cancelTokens.forEach((cancel) => cancel());
     this._externalTransitionResolve?.({ transition: 'stop' });
   }
 
@@ -254,19 +261,15 @@ export class CompositeDataSource implements DataSource {
 
   private _cancellableDelay = (delayMS: number) => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
-    let reject: ((reason?: any) => void) | undefined;
-    const promise = new Promise((res, rej) => {
+    const promise = new Promise((res, _) => {
       timeout = setTimeout(res, delayMS);
-      reject = rej;
     });
     return {
       promise,
       cancel() {
         if (timeout) {
           clearTimeout(timeout);
-          reject?.();
           timeout = undefined;
-          reject = undefined;
         }
       },
     };

@@ -1,6 +1,5 @@
 import {
   CompositeDataSource,
-  Transition,
   TransitionConditions,
 } from '../../../src/api/subsystem/DataSystem/CompositeDataSource';
 import {
@@ -57,7 +56,7 @@ function makeZeroBackoff(): Backoff {
   };
 }
 
-it('initializer gets basis, switch to syncrhonizer', async () => {
+it('handles initializer getting basis, switching to syncrhonizer', async () => {
   const mockInitializer1 = {
     run: jest
       .fn()
@@ -112,7 +111,7 @@ it('initializer gets basis, switch to syncrhonizer', async () => {
   expect(callback).toHaveBeenNthCalledWith(2, false, { key: 'sync1' });
 });
 
-it('initializer gets basis, switch to synchronizer 1, fallback to synchronizer 2, recover to synchronizer 1', async () => {
+it('handles initializer getting basis, switches to synchronizer 1, falls back to synchronizer 2, recovers to synchronizer 1', async () => {
   const mockInitializer1: DataSystemInitializer = {
     run: jest
       .fn()
@@ -194,7 +193,7 @@ it('initializer gets basis, switch to synchronizer 1, fallback to synchronizer 2
   expect(callback).toHaveBeenNthCalledWith(3, false, { key: 'sync1' }); // sync2 recovers back to sync1
 });
 
-it('it reports error when all initializers fail', async () => {
+it('reports error when all initializers fail', async () => {
   const mockInitializer1Error = {
     name: 'Error',
     message: 'I am initializer1 error!',
@@ -271,7 +270,7 @@ it('it reports error when all initializers fail', async () => {
   expect(statusCallback).toHaveBeenCalledTimes(3);
 });
 
-it('it can be stopped when in thrashing synchronizer fallback loop', async () => {
+it('can be stopped when in thrashing synchronizer fallback loop', async () => {
   const mockInitializer1 = {
     run: jest
       .fn()
@@ -338,7 +337,7 @@ it('it can be stopped when in thrashing synchronizer fallback loop', async () =>
   expect(statusCallback).toHaveBeenNthCalledWith(2, DataSourceState.Closed, undefined);
 });
 
-it('it can be stopped and restarted', async () => {
+it('can be stopped and restarted', async () => {
   const mockInitializer1Data = { key: 'init1' };
   const mockInitializer1 = {
     run: jest
@@ -415,7 +414,7 @@ it('it can be stopped and restarted', async () => {
   expect(callback2).toHaveBeenCalledTimes(2);
 });
 
-it('it is well behaved with no initializers and no synchronizers configured', async () => {
+it('is well behaved with no initializers and no synchronizers configured', async () => {
   const underTest = new CompositeDataSource(
     [],
     [],
@@ -439,7 +438,7 @@ it('it is well behaved with no initializers and no synchronizers configured', as
   });
 });
 
-it('it is well behaved with an initializer and no synchronizers configured', async () => {
+it('is well behaved with an initializer and no synchronizers configured', async () => {
   const mockInitializer1 = {
     run: jest
       .fn()

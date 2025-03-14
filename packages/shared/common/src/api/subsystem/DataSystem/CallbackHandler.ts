@@ -17,7 +17,7 @@ export class CallbackHandler {
     this._disabled = true;
   }
 
-  async dataHanlder(basis: boolean, data: Data) {
+  async dataHandler(basis: boolean, data: Data) {
     if (this._disabled) {
       return;
     }
