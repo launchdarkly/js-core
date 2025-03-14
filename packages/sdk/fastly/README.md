@@ -1,5 +1,11 @@
 # LaunchDarkly SDK for Fastly
 
+[![NPM][sdk-fastly-npm-badge]][sdk-fastly-npm-link]
+[![Actions Status][sdk-fastly-ci-badge]][sdk-fastly-ci]
+[![Documentation][sdk-fastly-ghp-badge]][sdk-fastly-ghp-link]
+[![NPM][sdk-fastly-dm-badge]][sdk-fastly-npm-link]
+[![NPM][sdk-fastly-dt-badge]][sdk-fastly-npm-link]
+
 The LaunchDarkly SDK for Fastly is designed for use in [Fastly Compute Platform](https://www.fastly.com/documentation/guides/compute/). It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
 ## Install
