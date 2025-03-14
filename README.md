@@ -109,6 +109,16 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-cloudflare-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
 [sdk-cloudflare-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
 [package-sdk-cloudflare-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fcloudflare%22+
+[//]: # 'sdk/fastly'
+[sdk-fastly-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/fastly.yml/badge.svg
+[sdk-fastly-ci]: https://github.com/launchdarkly/js-core/actions/workflows/fastly.yml
+[sdk-fastly-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/fastly-server-sdk.svg?style=flat-square
+[sdk-fastly-npm-link]: https://www.npmjs.com/package/@launchdarkly/fastly-server-sdk
+[package-sdk-fastly-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Ffastly%22+
+[sdk-fastly-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-fastly-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/fastly/docs/
+[sdk-fastly-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/fastly-server-sdk.svg?style=flat-square
+[sdk-fastly-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/fastly-server-sdk.svg?style=flat-square
 [//]: # 'sdk/server-node'
 [sdk-server-node-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk.svg?style=flat-square
 [sdk-server-node-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk
