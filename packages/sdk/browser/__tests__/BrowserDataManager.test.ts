@@ -63,6 +63,8 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
   let diagnosticsManager: jest.Mocked<internal.DiagnosticsManager>;
   let dataManager: BrowserDataManager;
   let logger: LDLogger;
+  let eventSourceCloseMethod: jest.Mock;
+
   beforeEach(() => {
     logger = {
       error: jest.fn(),
@@ -70,6 +72,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       info: jest.fn(),
       debug: jest.fn(),
     };
+    eventSourceCloseMethod = jest.fn();
     config = {
       logger,
       maxCachedContexts: 5,
@@ -106,7 +109,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
           options,
           onclose: jest.fn(),
           addEventListener: jest.fn(),
-          close: jest.fn(),
+          close: eventSourceCloseMethod,
         })),
         fetch: mockedFetch,
         getEventSourceCapabilities: jest.fn(),
@@ -494,5 +497,32 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
 
     expect(platform.requests.createEventSource).toHaveBeenCalled();
+  });
+
+  it('closes the event source when the data manager is closed', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: BrowserIdentifyOptions = {};
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    dataManager.setForcedStreaming(undefined);
+    dataManager.setAutomaticStreamingState(true);
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+
+    flagManager.loadCached.mockResolvedValue(false);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
+
+    dataManager.close();
+    expect(eventSourceCloseMethod).toHaveBeenCalled();
+    // Verify a subsequent identify doesn't create a new event source
+    await dataManager.identify(identifyResolve, identifyReject, context, {});
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[BrowserDataManager] Identify called after data manager was closed.',
+    );
   });
 });

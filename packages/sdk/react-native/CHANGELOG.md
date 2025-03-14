@@ -1,5 +1,35 @@
 # Changelog
 
+## [10.9.6](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.5...react-native-client-sdk-v10.9.6) (2025-02-06)
+
+
+### Bug Fixes
+
+* Ensure streaming connection is closed on SDK close. ([#774](https://github.com/launchdarkly/js-core/issues/774)) ([f58e746](https://github.com/launchdarkly/js-core/commit/f58e746a089fb0cd5f6169f6c246e1f6515f5047))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.2 to 1.12.3
+
+## [10.9.5](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.4...react-native-client-sdk-v10.9.5) (2025-01-24)
+
+
+### Bug Fixes
+
+* **react-native:** check for nullability in SettingsManager?.settings ([#758](https://github.com/launchdarkly/js-core/issues/758)) ([3449934](https://github.com/launchdarkly/js-core/commit/3449934027697ac9283aeeeca8df9a76d172fcad))
+
+## [10.9.4](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.3...react-native-client-sdk-v10.9.4) (2025-01-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.1 to 1.12.2
+
 ## [10.9.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.9.2...react-native-client-sdk-v10.9.3) (2024-11-22)
 
 

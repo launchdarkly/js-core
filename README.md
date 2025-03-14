@@ -10,6 +10,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/akamai-server-base-sdk](packages/sdk/akamai-base/README.md)     | [![NPM][sdk-akamai-base-npm-badge]][sdk-akamai-base-npm-link]     | [Akamai Base][package-sdk-akamai-base-issues]     | [![Actions Status][sdk-akamai-base-ci-badge]][sdk-akamai-base-ci]     |
 | [@launchdarkly/akamai-server-edgekv-sdk](packages/sdk/akamai-edgekv/README.md) | [![NPM][sdk-akamai-edgekv-npm-badge]][sdk-akamai-edgekv-npm-link] | [Akamai EdgeKV][package-sdk-akamai-edgekv-issues] | [![Actions Status][sdk-akamai-edgekv-ci-badge]][sdk-akamai-edgekv-ci] |
 | [@launchdarkly/cloudflare-server-sdk](packages/sdk/cloudflare/README.md)       | [![NPM][sdk-cloudflare-npm-badge]][sdk-cloudflare-npm-link]       | [Cloudflare][package-sdk-cloudflare-issues]       | [![Actions Status][sdk-cloudflare-ci-badge]][sdk-cloudflare-ci]       |
+| [@launchdarkly/fastly-server-sdk](packages/sdk/fastly/README.md)               | [![NPM][sdk-fastly-npm-badge]][sdk-fastly-npm-link]               | [Fastly][package-sdk-fastly-issues]               | [![Actions Status][sdk-fastly-ci-badge]][sdk-fastly-ci]               |
 | [@launchdarkly/node-server-sdk](packages/sdk/server-node/README.md)            | [![NPM][sdk-server-node-npm-badge]][sdk-server-node-npm-link]     | [Node.js Server][package-sdk-server-node-issues]  | [![Actions Status][sdk-server-node-ci-badge]][sdk-server-node-ci]     |
 | [@launchdarkly/vercel-server-sdk](packages/sdk/vercel/README.md)               | [![NPM][sdk-vercel-npm-badge]][sdk-vercel-npm-link]               | [Vercel][package-sdk-vercel-issues]               | [![Actions Status][sdk-vercel-ci-badge]][sdk-vercel-ci]               |
 | [@launchdarkly/react-native-client-sdk](packages/sdk/react-native/README.md)   | [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]   | [React-Native][package-sdk-react-native-issues]   | [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]   |
@@ -28,9 +29,10 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/node-server-sdk-redis](packages/store/node-server-sdk-redis/README.md)       | [![NPM][node-redis-npm-badge]][node-redis-npm-link]       | [Node Redis][node-redis-issues]       | [![Actions Status][node-redis-ci-badge]][node-redis-ci]       |
 | [@launchdarkly/node-server-sdk-dynamodb](packages/store/node-server-sdk-dynamodb/README.md) | [![NPM][node-dynamodb-npm-badge]][node-dynamodb-npm-link] | [Node DynamoDB][node-dynamodb-issues] | [![Actions Status][node-dynamodb-ci-badge]][node-dynamodb-ci] |
 
-| Telemetry Packages                                                                      | npm                                               | issues                        | tests                                                 |
-| --------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------- | ----------------------------------------------------- |
-| [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md) | [![NPM][node-otel-npm-badge]][node-otel-npm-link] | [Node OTel][node-otel-issues] | [![Actions Status][node-otel-ci-badge]][node-otel-ci] |
+| Telemetry Packages                                                                      | npm                                                               | issues                                        | tests                                                                 |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
+| [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md) | [![NPM][node-otel-npm-badge]][node-otel-npm-link]                 | [Node OTel][node-otel-issues]                 | [![Actions Status][node-otel-ci-badge]][node-otel-ci]                 |
+| [@launchdarkly/browser-telemetry](packages/telemetry/browser-telemetry/README.md)       | [![NPM][browser-telemetry-npm-badge]][browser-telemetry-npm-link] | [Browser Telemetry][browser-telemetry-issues] | [![Actions Status][browser-telemetry-ci-badge]][browser-telemetry-ci] |
 
 ## Organization
 
@@ -107,6 +109,16 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-cloudflare-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
 [sdk-cloudflare-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/cloudflare-server-sdk.svg?style=flat-square
 [package-sdk-cloudflare-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fcloudflare%22+
+[//]: # 'sdk/fastly'
+[sdk-fastly-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/fastly.yml/badge.svg
+[sdk-fastly-ci]: https://github.com/launchdarkly/js-core/actions/workflows/fastly.yml
+[sdk-fastly-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/fastly-server-sdk.svg?style=flat-square
+[sdk-fastly-npm-link]: https://www.npmjs.com/package/@launchdarkly/fastly-server-sdk
+[package-sdk-fastly-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Ffastly%22+
+[sdk-fastly-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-fastly-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/fastly/docs/
+[sdk-fastly-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/fastly-server-sdk.svg?style=flat-square
+[sdk-fastly-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/fastly-server-sdk.svg?style=flat-square
 [//]: # 'sdk/server-node'
 [sdk-server-node-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-server-sdk.svg?style=flat-square
 [sdk-server-node-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-server-sdk
@@ -191,3 +203,9 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-server-ai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/server-sdk-ai.svg?style=flat-square
 [sdk-server-ai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/server-sdk-ai.svg?style=flat-square
 [package-sdk-server-ai-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fserver-ai%22+
+[//]: # 'telemetry/browser-telemetry'
+[browser-telemetry-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/browser-telemetry.yml/badge.svg
+[browser-telemetry-ci]: https://github.com/launchdarkly/js-core/actions/workflows/browser-telemetry.yml
+[browser-telemetry-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/browser-telemetry.svg?style=flat-square
+[browser-telemetry-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser-telemetry
+[browser-telemetry-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+telemetry%2Fbrowser-telemetry%22+

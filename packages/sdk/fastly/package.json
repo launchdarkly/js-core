@@ -1,0 +1,74 @@
+{
+  "name": "@launchdarkly/fastly-server-sdk",
+  "version": "0.1.0",
+  "packageManager": "yarn@3.4.1",
+  "description": "Fastly LaunchDarkly SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/fastly",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "launchdarkly",
+    "fastly",
+    "edge",
+    "compute",
+    "kv"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "require": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "main": "../dist/index.cjs",
+  "types": "./dist/index.d.cts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && ../../../scripts/replace-version.sh .",
+    "clean": "rimraf dist",
+    "tsw": "yarn tsc --watch",
+    "start": "rimraf dist && yarn tsw",
+    "lint": "eslint . --ext .ts",
+    "test": "npx jest --runInBand",
+    "coverage": "yarn test --coverage",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+  },
+  "dependencies": {
+    "@fastly/js-compute": "^3.30.1",
+    "@launchdarkly/js-server-sdk-common": "2.11.1",
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "@types/crypto-js": "^4.2.2",
+    "@types/jest": "^29.5.14",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-prettier": "^5.2.3",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.2.5",
+    "tsup": "^8.3.5",
+    "typedoc": "^0.27.4",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,4 +1,4 @@
-import {
+import parse, {
   getLines,
   getSrcLines,
   processUrlToFileName,
@@ -52,12 +52,15 @@ describe('given source lines', () => {
 describe('given an input stack frame', () => {
   const inputFrame = {
     context: ['1234567890', 'ABCDEFGHIJ', 'the src line', '0987654321', 'abcdefghij'],
+    line: 3,
+    srcStart: 1,
     column: 0,
   };
 
   it('can produce a full stack source in the output frame', () => {
     expect(
       getSrcLines(inputFrame, {
+        enabled: true,
         source: {
           beforeLines: 2,
           afterLines: 2,
@@ -74,6 +77,7 @@ describe('given an input stack frame', () => {
   it('can trim all the lines', () => {
     expect(
       getSrcLines(inputFrame, {
+        enabled: true,
         source: {
           beforeLines: 2,
           afterLines: 2,
@@ -90,6 +94,7 @@ describe('given an input stack frame', () => {
   it('can handle fewer input lines than the expected context', () => {
     expect(
       getSrcLines(inputFrame, {
+        enabled: true,
         source: {
           beforeLines: 3,
           afterLines: 3,
@@ -106,6 +111,7 @@ describe('given an input stack frame', () => {
   it('can handle more input lines than the expected context', () => {
     expect(
       getSrcLines(inputFrame, {
+        enabled: true,
         source: {
           beforeLines: 1,
           afterLines: 1,
@@ -118,4 +124,67 @@ describe('given an input stack frame', () => {
       srcAfter: ['0987654321'],
     });
   });
+});
+
+it('can handle an origin before the context window', () => {
+  // This isn't expected, but we just want to make sure it is handle gracefully.
+  const inputFrame = {
+    context: ['1234567890', 'ABCDEFGHIJ', 'the src line', '0987654321', 'abcdefghij'],
+    line: 3,
+    srcStart: 5,
+    column: 0,
+  };
+
+  expect(
+    getSrcLines(inputFrame, {
+      enabled: true,
+      source: {
+        beforeLines: 1,
+        afterLines: 1,
+        maxLineLength: 280,
+      },
+    }),
+  ).toMatchObject({
+    srcBefore: [],
+    srcLine: '1234567890',
+    srcAfter: ['ABCDEFGHIJ'],
+  });
+});
+
+it('can handle an origin after the context window', () => {
+  // This isn't expected, but we just want to make sure it is handle gracefully.
+  const inputFrame = {
+    context: ['1234567890', 'ABCDEFGHIJ', 'the src line', '0987654321', 'abcdefghij'],
+    line: 100,
+    srcStart: 5,
+    column: 0,
+  };
+
+  expect(
+    getSrcLines(inputFrame, {
+      enabled: true,
+      source: {
+        beforeLines: 1,
+        afterLines: 1,
+        maxLineLength: 280,
+      },
+    }),
+  ).toMatchObject({
+    srcBefore: ['0987654321'],
+    srcLine: 'abcdefghij',
+    srcAfter: [],
+  });
+});
+
+it('returns an empty stack when stack parsing is disabled', () => {
+  expect(
+    parse(new Error('test'), {
+      enabled: false,
+      source: {
+        beforeLines: 1,
+        afterLines: 1,
+        maxLineLength: 280,
+      },
+    }),
+  ).toEqual({ frames: [] });
 });

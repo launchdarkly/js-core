@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.9.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.9.0...server-sdk-ai-v0.9.1) (2025-02-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.11.0 to 2.11.1
+  * peerDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.x to 2.11.1
+
+## [0.9.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.2...server-sdk-ai-v0.9.0) (2025-02-06)
+
+
+### Features
+
+* add support for versioned metrics for AI Configs ([#773](https://github.com/launchdarkly/js-core/issues/773)) ([a3f756f](https://github.com/launchdarkly/js-core/commit/a3f756f3c3207a068115b147d5c7439e204b7ae4))
+
+## [0.8.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.1...server-sdk-ai-v0.8.2) (2025-01-27)
+
+
+### Bug Fixes
+
+* **docs:** Node.js AI SDK: modelConfig --&gt; config in readme ([#765](https://github.com/launchdarkly/js-core/issues/765)) ([4d46117](https://github.com/launchdarkly/js-core/commit/4d4611700e7eebd9a7d6f8fd596a7a4ff3310802))
+
+## [0.8.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.8.0...server-sdk-ai-v0.8.1) (2025-01-24)
+
+
+### Bug Fixes
+
+* Correct documentation for AI config function. ([#754](https://github.com/launchdarkly/js-core/issues/754)) ([0bdb0be](https://github.com/launchdarkly/js-core/commit/0bdb0be6b0e0213c5139af9008884ea74be197b1))
+
+## [0.8.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.7.1...server-sdk-ai-v0.8.0) (2025-01-23)
+
+
+### Features
+
+* track timeToFirstToken in LDAIConfigTracker ([#749](https://github.com/launchdarkly/js-core/issues/749)) ([c97674f](https://github.com/launchdarkly/js-core/commit/c97674fe521bcfe14dc6e0679bf25e293a2a1ad1))
+
+## [0.7.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.7.0...server-sdk-ai-v0.7.1) (2025-01-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.10.0 to 2.11.0
+  * peerDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.x to 2.11.0
+
 ## [0.7.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.6.0...server-sdk-ai-v0.7.0) (2024-12-17)
 
 

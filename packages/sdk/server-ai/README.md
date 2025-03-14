@@ -21,8 +21,7 @@
 
 ## Quick Setup
 
-This assumes that you have already installed the LaunchDarkly Node.js SDK, or a compatible edge
-SDK.
+This assumes that you have already installed the LaunchDarkly Node.js (server-side) SDK, or a compatible edge SDK.
 
 1. Install this package with `npm` or `yarn`:
 
@@ -40,7 +39,7 @@ const aiClient = initAi(ldClient);
 3. Evaluate a model configuration:
 
 ```typescript
-const config = await aiClient.modelConfig(
+const config = await aiClient.config(
   aiConfigKey!,
   context,
   { enabled: false },

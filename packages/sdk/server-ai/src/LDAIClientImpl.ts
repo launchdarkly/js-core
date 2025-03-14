@@ -13,6 +13,7 @@ import { LDClientMin } from './LDClientMin';
 interface LDMeta {
   variationKey: string;
   enabled: boolean;
+  version?: number;
 }
 
 /**
@@ -45,6 +46,8 @@ export class LDAIClientImpl implements LDAIClient {
       key,
       // eslint-disable-next-line no-underscore-dangle
       value._ldMeta?.variationKey ?? '',
+      // eslint-disable-next-line no-underscore-dangle
+      value._ldMeta?.version ?? 1,
       context,
     );
     // eslint-disable-next-line no-underscore-dangle

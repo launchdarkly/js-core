@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/cloudflare-server-sdk",
-  "version": "2.6.3",
+  "version": "2.6.5",
   "exports": "./src/index.ts",
   "publish": {
     "include": [

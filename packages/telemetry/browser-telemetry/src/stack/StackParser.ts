@@ -1,8 +1,7 @@
-import { computeStackTrace } from 'tracekit';
-
 import { StackFrame } from '../api/stack/StackFrame';
 import { StackTrace } from '../api/stack/StackTrace';
 import { ParsedStackOptions } from '../options';
+import { getTraceKit } from '../vendor/TraceKit';
 
 /**
  * In the browser we will not always be able to determine the source file that code originates
@@ -46,6 +45,18 @@ export function processUrlToFileName(input: string, origin: string): string {
     }
   }
   return cleaned;
+}
+
+/**
+ * Clamp a value to be between an inclusive max an minimum.
+ *
+ * @param min The inclusive minimum value.
+ * @param max The inclusive maximum value.
+ * @param value The value to clamp.
+ * @returns The clamped value in range [min, max].
+ */
+function clamp(min: number, max: number, value: number): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 export interface TrimOptions {
@@ -131,6 +142,8 @@ export function getSrcLines(
     // as we can.
     context?: string[] | null;
     column?: number | null;
+    srcStart?: number | null;
+    line?: number | null;
   },
   options: ParsedStackOptions,
 ): {
@@ -169,7 +182,8 @@ export function getSrcLines(
       0,
     );
 
-  const origin = Math.floor(context.length / 2);
+  const origin = clamp(0, context.length - 1, (inFrame?.line ?? 0) - (inFrame.srcStart ?? 0));
+
   return {
     // The lines immediately preceeding the origin line.
     srcBefore: getLines(origin - options.source.beforeLines, origin, context, trimmer),
@@ -195,12 +209,19 @@ export function getSrcLines(
  * @returns The stack trace for the given error.
  */
 export default function parse(error: Error, options: ParsedStackOptions): StackTrace {
-  const parsed = computeStackTrace(error);
+  if (!options.enabled) {
+    return {
+      frames: [],
+    };
+  }
+
+  const parsed = getTraceKit().computeStackTrace(error);
   const frames: StackFrame[] = parsed.stack.reverse().map((inFrame) => ({
     fileName: processUrlToFileName(inFrame.url, window.location.origin),
     function: inFrame.func,
-    line: inFrame.line,
-    col: inFrame.column,
+    // Strip the nulls so we only ever return undefined.
+    line: inFrame.line ?? undefined,
+    col: inFrame.column ?? undefined,
     ...getSrcLines(inFrame, options),
   }));
   return {

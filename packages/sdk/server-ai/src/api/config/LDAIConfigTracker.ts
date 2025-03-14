@@ -23,6 +23,11 @@ export interface LDAIMetricSummary {
    * Any sentiment about the generation.
    */
   feedback?: { kind: LDFeedbackKind };
+
+  /**
+   * Time to first token for this generation.
+   */
+  timeToFirstTokenMs?: number;
 }
 
 /**
@@ -61,6 +66,13 @@ export interface LDAIConfigTracker {
    * @param feedback Feedback about the generation.
    */
   trackFeedback(feedback: { kind: LDFeedbackKind }): void;
+
+  /**
+   * Track the time to first token for this generation.
+   *
+   * @param timeToFirstTokenMs The duration in milliseconds.
+   */
+  trackTimeToFirstToken(timeToFirstTokenMs: number): void;
 
   /**
    * Track the duration of execution of the provided function.

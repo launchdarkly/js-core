@@ -773,9 +773,9 @@ export default class LDClientImpl implements LDClient {
     try {
       await this._eventProcessor.flush();
     } catch (err) {
-      callback?.(err as Error, false);
+      return callback?.(err as Error, false);
     }
-    callback?.(null, true);
+    return callback?.(null, true);
   }
 
   addHook(hook: Hook): void {

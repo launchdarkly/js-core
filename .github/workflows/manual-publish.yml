@@ -22,6 +22,7 @@ on:
           - packages/shared/sdk-server-edge
           - packages/shared/akamai-edgeworker-sdk
           - packages/sdk/cloudflare
+          - packages/sdk/fastly
           - packages/sdk/react-native
           - packages/sdk/server-node
           - packages/sdk/react-universal
@@ -34,6 +35,7 @@ on:
           - packages/tooling/jest
           - packages/sdk/browser
           - packages/sdk/server-ai
+          - packages/telemetry/browser-telemetry
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean

@@ -1,8 +1,7 @@
 import { BasicLogger, LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
 import LDClient from './api/LDClient';
-import { buildRootKey, EdgeFeatureStore, EdgeProvider } from './featureStore';
-import CacheableStoreProvider from './featureStore/cacheableStoreProvider';
+import { EdgeFeatureStore, EdgeProvider } from './featureStore';
 import EdgePlatform from './platform';
 import createPlatformInfo from './platform/info';
 import { validateOptions } from './utils';
@@ -12,7 +11,13 @@ import { validateOptions } from './utils';
  * supported. sendEvents is unsupported and is only included as a beta
  * preview.
  */
-type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
+type LDOptions = {
+  /**
+   * The time-to-live for the cache in milliseconds. The default is 100ms. A
+   * value of 0 will cache indefinitely.
+   */
+  cacheTtlMs?: number;
+} & Pick<LDOptionsCommon, 'logger' | 'sendEvents'>;
 
 /**
  * The internal options include featureStore because that's how the LDClient
@@ -33,15 +38,25 @@ type BaseSDKParams = {
 };
 
 export const init = (params: BaseSDKParams): LDClient => {
-  const { sdkKey, options = {}, featureStoreProvider, platformName, sdkName, sdkVersion } = params;
-
-  const logger = options.logger ?? BasicLogger.get();
-
-  const cachableStoreProvider = new CacheableStoreProvider(
+  const {
+    sdkKey,
+    options: inputOptions = {},
     featureStoreProvider,
-    buildRootKey(sdkKey),
+    platformName,
+    sdkName,
+    sdkVersion,
+  } = params;
+
+  const logger = inputOptions.logger ?? BasicLogger.get();
+  const { cacheTtlMs, ...options } = inputOptions as any;
+
+  const featureStore = new EdgeFeatureStore(
+    featureStoreProvider,
+    sdkKey,
+    'Akamai',
+    logger,
+    cacheTtlMs ?? 100,
   );
-  const featureStore = new EdgeFeatureStore(cachableStoreProvider, sdkKey, 'Akamai', logger);
 
   const ldOptions: LDOptionsCommon = {
     featureStore,
@@ -53,5 +68,5 @@ export const init = (params: BaseSDKParams): LDClient => {
   validateOptions(params.sdkKey, ldOptions);
   const platform = createPlatformInfo(platformName, sdkName, sdkVersion);
 
-  return new LDClient(sdkKey, new EdgePlatform(platform), ldOptions, cachableStoreProvider);
+  return new LDClient(sdkKey, new EdgePlatform(platform), ldOptions);
 };

@@ -5,7 +5,7 @@ import EdgeRequests from '../../src/platform/requests';
 const TEXT_RESPONSE = '';
 const JSON_RESPONSE = {};
 
-describe('given a default instance of requets', () => {
+describe('given a default instance of requests', () => {
   const requests = new EdgeRequests();
 
   describe('fetch', () => {
