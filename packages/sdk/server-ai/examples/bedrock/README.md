@@ -24,7 +24,7 @@ yarn build
 Before running the example, make sure to set the following environment variables:
 
 - `LAUNCHDARKLY_SDK_KEY`: Your LaunchDarkly SDK key
-- `LAUNCHDARKLY_AI_CONFIG_KEY`: Your LaunchDarkly AI configuration key (defaults to 'sample-ai-config' if not set)
+- `LAUNCHDARKLY_AI_CONFIG_KEY`: Your LaunchDarkly AI Config key (defaults to 'sample-ai-config' if not set)
 
 Additionally, ensure you have proper AWS credentials configured to access Bedrock services.
 

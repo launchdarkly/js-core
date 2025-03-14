@@ -30,7 +30,7 @@
 
 ### Bug Fixes
 
-* Correct documentation for AI config function. ([#754](https://github.com/launchdarkly/js-core/issues/754)) ([0bdb0be](https://github.com/launchdarkly/js-core/commit/0bdb0be6b0e0213c5139af9008884ea74be197b1))
+* Correct documentation for AI Config function. ([#754](https://github.com/launchdarkly/js-core/issues/754)) ([0bdb0be](https://github.com/launchdarkly/js-core/commit/0bdb0be6b0e0213c5139af9008884ea74be197b1))
 
 ## [0.8.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.7.1...server-sdk-ai-v0.8.0) (2025-01-23)
 
@@ -89,11 +89,11 @@
 
 ### ⚠ BREAKING CHANGES
 
-* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697))
+* Updated AI Config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697))
 
 ### Features
 
-* Updated AI config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697)) ([cd72ea8](https://github.com/launchdarkly/js-core/commit/cd72ea8193888b0635b5beffa0a877b18294777e))
+* Updated AI Config interface. ([#697](https://github.com/launchdarkly/js-core/issues/697)) ([cd72ea8](https://github.com/launchdarkly/js-core/commit/cd72ea8193888b0635b5beffa0a877b18294777e))
 
 ## [0.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.2.1...server-sdk-ai-v0.3.0) (2024-11-15)
 
