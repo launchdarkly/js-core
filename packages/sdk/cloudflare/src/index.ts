@@ -14,13 +14,25 @@ import {
   BasicLogger,
   EdgeFeatureStore,
   init as initEdge,
+  internalServer,
   type LDClient,
-  type LDOptions,
+  type LDOptions as LDOptionsCommon,
 } from '@launchdarkly/js-server-sdk-common-edge';
 
 import createPlatformInfo from './createPlatformInfo';
 
 export * from '@launchdarkly/js-server-sdk-common-edge';
+
+/**
+ * The Launchdarkly Edge SDKs configuration options.
+ */
+type LDOptions = {
+  /**
+   * Optional TTL cache configuration which allows for caching feature flags in
+   * memory.
+   */
+  cache?: internalServer.TtlCacheOptions;
+} & LDOptionsCommon;
 
 export type { LDClient };
 
@@ -41,7 +53,7 @@ export type { LDClient };
  * @param kvNamespace
  *  The Cloudflare KV configured for LaunchDarkly.
  * @param options
- *  Optional configuration settings. The only supported option is logger.
+ *  Optional configuration settings.
  * @return
  *  The new {@link LDClient} instance.
  */
@@ -51,9 +63,12 @@ export const init = (
   options: LDOptions = {},
 ): LDClient => {
   const logger = options.logger ?? BasicLogger.get();
+
+  const { cache: _cacheOptions, ...rest } = options;
+  const cache = options.cache ? new internalServer.TtlCache(options.cache) : undefined;
   return initEdge(clientSideID, createPlatformInfo(), {
-    featureStore: new EdgeFeatureStore(kvNamespace, clientSideID, 'Cloudflare', logger),
+    featureStore: new EdgeFeatureStore(kvNamespace, clientSideID, 'Cloudflare', logger, cache),
     logger,
-    ...options,
+    ...rest,
   });
 };
