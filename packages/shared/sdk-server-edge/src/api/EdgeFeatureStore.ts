@@ -38,9 +38,6 @@ export class EdgeFeatureStore implements LDFeatureStore {
 
     try {
       const storePayload = await this._getStorePayload();
-      if (!storePayload) {
-        throw new Error(`Error retrieving valid store payload`);
-      }
 
       switch (namespace) {
         case 'features':
@@ -64,9 +61,6 @@ export class EdgeFeatureStore implements LDFeatureStore {
     this._logger.debug(`Requesting all from ${this._rootKey}.${kindKey}`);
     try {
       const storePayload = await this._getStorePayload();
-      if (!storePayload) {
-        throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
 
       switch (namespace) {
         case 'features':
@@ -88,7 +82,9 @@ export class EdgeFeatureStore implements LDFeatureStore {
    * This method is used to retrieve the environment payload from the edge
    * provider. If a cache is provided, it will serve from that.
    */
-  private async _getStorePayload(): Promise<ReturnType<typeof deserializePoll>> {
+  private async _getStorePayload(): Promise<
+    Exclude<ReturnType<typeof deserializePoll>, undefined>
+  > {
     let payload = this._cache?.get(this._rootKey);
     if (payload !== undefined) {
       return payload;
