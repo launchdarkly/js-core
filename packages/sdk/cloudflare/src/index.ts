@@ -23,6 +23,8 @@ import createPlatformInfo from './createPlatformInfo';
 
 export * from '@launchdarkly/js-server-sdk-common-edge';
 
+export type TtlCacheOptions = internalServer.TtlCacheOptions;
+
 /**
  * The Launchdarkly Edge SDKs configuration options.
  */
@@ -31,7 +33,7 @@ type LDOptions = {
    * Optional TTL cache configuration which allows for caching feature flags in
    * memory.
    */
-  cache?: internalServer.TtlCacheOptions;
+  cache?: TtlCacheOptions;
 } & LDOptionsCommon;
 
 export type { LDClient };
