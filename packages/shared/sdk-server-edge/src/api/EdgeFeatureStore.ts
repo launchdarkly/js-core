@@ -8,6 +8,8 @@ import type {
 } from '@launchdarkly/js-server-sdk-common';
 import { deserializePoll, noop } from '@launchdarkly/js-server-sdk-common';
 
+import Cache from './cache';
+
 export interface EdgeProvider {
   get: (rootKey: string) => Promise<string | null | undefined>;
 }
@@ -20,6 +22,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
     sdkKey: string,
     private readonly _description: string,
     private _logger: LDLogger,
+    private _cache?: Cache,
   ) {
     this._rootKey = `LD-Env-${sdkKey}`;
   }
@@ -34,23 +37,14 @@ export class EdgeFeatureStore implements LDFeatureStore {
     this._logger.debug(`Requesting ${dataKey} from ${this._rootKey}.${kindKey}`);
 
     try {
-      const i = await this._edgeProvider.get(this._rootKey);
-
-      if (!i) {
-        throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
-
-      const item = deserializePoll(i);
-      if (!item) {
-        throw new Error(`Error deserializing ${kindKey}`);
-      }
+      const storePayload = await this._getStorePayload();
 
       switch (namespace) {
         case 'features':
-          callback(item.flags[dataKey]);
+          callback(storePayload.flags[dataKey]);
           break;
         case 'segments':
-          callback(item.segments[dataKey]);
+          callback(storePayload.segments[dataKey]);
           break;
         default:
           callback(null);
@@ -66,22 +60,14 @@ export class EdgeFeatureStore implements LDFeatureStore {
     const kindKey = namespace === 'features' ? 'flags' : namespace;
     this._logger.debug(`Requesting all from ${this._rootKey}.${kindKey}`);
     try {
-      const i = await this._edgeProvider.get(this._rootKey);
-      if (!i) {
-        throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
-
-      const item = deserializePoll(i);
-      if (!item) {
-        throw new Error(`Error deserializing ${kindKey}`);
-      }
+      const storePayload = await this._getStorePayload();
 
       switch (namespace) {
         case 'features':
-          callback(item.flags);
+          callback(storePayload.flags);
           break;
         case 'segments':
-          callback(item.segments);
+          callback(storePayload.segments);
           break;
         default:
           callback({});
@@ -90,6 +76,34 @@ export class EdgeFeatureStore implements LDFeatureStore {
       this._logger.error(err);
       callback({});
     }
+  }
+
+  /**
+   * This method is used to retrieve the environment payload from the edge
+   * provider. If a cache is provided, it will serve from that.
+   */
+  private async _getStorePayload(): Promise<
+    Exclude<ReturnType<typeof deserializePoll>, undefined>
+  > {
+    let payload = this._cache?.get(this._rootKey);
+    if (payload !== undefined) {
+      return payload;
+    }
+
+    const providerData = await this._edgeProvider.get(this._rootKey);
+
+    if (!providerData) {
+      throw new Error(`${this._rootKey} is not found in KV.`);
+    }
+
+    payload = deserializePoll(providerData);
+    if (!payload) {
+      throw new Error(`Error deserializing ${this._rootKey}`);
+    }
+
+    this._cache?.set(this._rootKey, payload);
+
+    return payload;
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
@@ -107,8 +121,11 @@ export class EdgeFeatureStore implements LDFeatureStore {
     return this._description;
   }
 
+  close(): void {
+    return this._cache?.close();
+  }
+
   // unused
-  close = noop;
 
   delete = noop;
 

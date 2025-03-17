@@ -7,12 +7,12 @@
  */
 import type { Info } from '@launchdarkly/js-server-sdk-common';
 
-import { EdgeFeatureStore, EdgeProvider, LDClient } from './api';
+import { Cache, EdgeFeatureStore, EdgeProvider, LDClient } from './api';
 import validateOptions, { LDOptions, LDOptionsInternal } from './utils/validateOptions';
 
 export * from '@launchdarkly/js-server-sdk-common';
 export { EdgeFeatureStore };
-export type { LDClient, LDOptions, EdgeProvider };
+export type { LDClient, LDOptions, EdgeProvider, Cache };
 
 /**
  * Do not use this function directly.
