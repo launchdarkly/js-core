@@ -87,8 +87,6 @@ export class EdgeFeatureStore implements LDFeatureStore {
   /**
    * This method is used to retrieve the environment payload from the edge
    * provider. If a cache is provided, it will serve from that.
-   *
-   * @returns
    */
   private async _getStorePayload(): Promise<ReturnType<typeof deserializePoll>> {
     let payload = this._cache?.get(this._rootKey);

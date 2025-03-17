@@ -7,18 +7,18 @@
  */
 export default interface Cache {
   /**
-  * Get a value from the cache. Returning `undefined` means the key was not found.
-  */
+   * Get a value from the cache. Returning `undefined` means the key was not found.
+   */
   get(key: string): any;
 
   /**
-  * Set a value in the cache.
-  */
+   * Set a value in the cache.
+   */
   set(key: string, value: any): void;
 
   /**
-  * The close method offers a way to clean up any resources used by the cache
-  * on shutdown.
-  */
+   * The close method offers a way to clean up any resources used by the cache
+   * on shutdown.
+   */
   close(): void;
 }
