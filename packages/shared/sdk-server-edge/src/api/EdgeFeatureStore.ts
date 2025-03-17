@@ -39,7 +39,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
     try {
       const storePayload = await this._getStorePayload();
       if (!storePayload) {
-        throw new Error(`Error deserializing ${this._rootKey}`);
+        throw new Error(`Error retrieving valid store payload`);
       }
 
       switch (namespace) {
