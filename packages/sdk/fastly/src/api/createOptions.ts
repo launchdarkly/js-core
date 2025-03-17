@@ -16,7 +16,6 @@ const createOptions = (options: LDOptions) => {
   if (finalOptions.eventsUri) {
     finalOptions.baseUri = finalOptions.eventsUri;
   }
-  finalOptions.logger?.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
   return finalOptions;
 };
 
