@@ -37,12 +37,12 @@ describe('init', () => {
     });
 
     describe('flags', () => {
-      test('variation default', async () => {
+      it('variation default', async () => {
         const value = await ldClient.variation(flagKey1, context, false);
         expect(value).toBeTruthy();
       });
 
-      test('variation default rollout', async () => {
+      it('variation default rollout', async () => {
         const contextWithEmail = { ...context, email: 'test@yahoo.com' };
         const value = await ldClient.variation(flagKey2, contextWithEmail, false);
         const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
@@ -51,7 +51,7 @@ describe('init', () => {
         expect(value).toBeTruthy();
       });
 
-      test('rule match', async () => {
+      it('rule match', async () => {
         const contextWithEmail = { ...context, email: 'test@falsemail.com' };
         const value = await ldClient.variation(flagKey1, contextWithEmail, false);
         const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
@@ -64,7 +64,7 @@ describe('init', () => {
         expect(value).toBeFalsy();
       });
 
-      test('fallthrough', async () => {
+      it('fallthrough', async () => {
         const contextWithEmail = { ...context, email: 'test@yahoo.com' };
         const value = await ldClient.variation(flagKey1, contextWithEmail, false);
         const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
@@ -73,7 +73,7 @@ describe('init', () => {
         expect(value).toBeTruthy();
       });
 
-      test('allFlags fallthrough', async () => {
+      it('allFlags fallthrough', async () => {
         const allFlags = await ldClient.allFlagsState(context);
 
         expect(allFlags).toBeDefined();
@@ -92,7 +92,7 @@ describe('init', () => {
     });
 
     describe('segments', () => {
-      test('segment by country', async () => {
+      it('segment by country', async () => {
         const contextWithCountry = { ...context, country: 'australia' };
         const value = await ldClient.variation(flagKey3, contextWithCountry, false);
         const detail = await ldClient.variationDetail(flagKey3, contextWithCountry, false);
@@ -108,7 +108,7 @@ describe('init', () => {
   });
 
   describe('with caching', () => {
-    test('will cache across multiple variation calls', async () => {
+    it('will cache across multiple variation calls', async () => {
       const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
       await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
       const ldClient = init(clientSideID, kv, { cache: { ttl: 60, checkInterval: 600 } });
@@ -122,7 +122,7 @@ describe('init', () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('will cache across multiple allFlags calls', async () => {
+    it('will cache across multiple allFlags calls', async () => {
       const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
       await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
       const ldClient = init(clientSideID, kv, { cache: { ttl: 60, checkInterval: 600 } });
@@ -136,7 +136,7 @@ describe('init', () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('will cache between allFlags and variation', async () => {
+    it('will cache between allFlags and variation', async () => {
       const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
       await kv.put(rootEnvKey, JSON.stringify(allFlagsSegments));
       const ldClient = init(clientSideID, kv, { cache: { ttl: 60, checkInterval: 600 } });
@@ -150,7 +150,7 @@ describe('init', () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    test('will eventually expire', async () => {
+    it('will eventually expire', async () => {
       jest.spyOn(Date, 'now').mockImplementation(() => 0);
 
       const kv = (await mf.getKVNamespace(namespace)) as unknown as KVNamespace;
