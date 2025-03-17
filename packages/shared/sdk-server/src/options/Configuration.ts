@@ -15,6 +15,7 @@ import {
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
 import { Hook } from '../api/integrations';
 import {
+  DataSourceOptions,
   isPollingOptions,
   isStandardOptions,
   isStreamingOptions,
@@ -24,6 +25,7 @@ import {
   StreamingDataSourceOptions,
 } from '../api/options/LDDataSystemOptions';
 import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
+import { PersistentDataStoreWrapper } from '../store';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
 
@@ -200,7 +202,7 @@ function validateDataSystemOptions(options: Options): {
   const allErrors: string[] = [];
   const validatedOptions: Options = { ...options };
 
-  if (!TypeValidators.ObjectOrFactory.is(options.persistentStore)) {
+  if (options.persistentStore && !TypeValidators.ObjectOrFactory.is(options.persistentStore)) {
     validatedOptions.persistentStore = undefined; // default is to not use this
     allErrors.push(
       OptionMessages.wrongOptionType(
@@ -211,42 +213,71 @@ function validateDataSystemOptions(options: Options): {
     );
   }
 
-  if (!TypeValidators.ObjectOrFactory.is(options.updateProcessor)) {
-    validatedOptions.persistentStore = undefined; // default is to not use this
+  if (options.updateProcessor && !TypeValidators.ObjectOrFactory.is(options.updateProcessor)) {
+    validatedOptions.updateProcessor = undefined; // default is to not use this
     allErrors.push(
       OptionMessages.wrongOptionType(
         'updateProcessor',
         'UpdateProcessor',
-        typeof options.persistentStore,
+        typeof options.updateProcessor,
       ),
     );
   }
 
-  let result: { errors: string[]; validatedOptions: Options };
-  let validatedDataSourceOptions;
-  if (isStandardOptions(options.dataSource)) {
-    result = validateTypesAndNames(options.dataSource, defaultStandardDataSourceOptions);
-  } else if (isStreamingOptions(options.dataSource)) {
-    result = validateTypesAndNames(options.dataSource, defaultStreamingDataSourceOptions);
-  } else if (isPollingOptions(options.dataSource)) {
-    result = validateTypesAndNames(options.dataSource, defaultPollingDataSourceOptions);
-  } else {
-    // provided datasource options don't fit any expected form, drop them and use defaults
-    result = {
-      errors: [
+  if (options.dataSource) {
+    let errors: string[];
+    let validatedDataSourceOptions: Options;
+    if (isStandardOptions(options.dataSource)) {
+      ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
+        options.dataSource,
+        defaultStandardDataSourceOptions,
+      ));
+    } else if (isStreamingOptions(options.dataSource)) {
+      ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
+        options.dataSource,
+        defaultStreamingDataSourceOptions,
+      ));
+    } else if (isPollingOptions(options.dataSource)) {
+      ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
+        options.dataSource,
+        defaultPollingDataSourceOptions,
+      ));
+    } else {
+      // provided datasource options don't fit any expected form, drop them and use defaults
+      validatedDataSourceOptions = defaultStandardDataSourceOptions;
+      errors = [
         OptionMessages.wrongOptionType(
           'dataSource',
           'DataSourceOptions',
           typeof options.dataSource,
         ),
-      ],
-      validatedOptions: defaultStandardDataSourceOptions,
-    };
+      ];
+    }
+    validatedOptions.dataSource = validatedDataSourceOptions;
+    allErrors.push(...errors);
+  } else {
+    // use default datasource options if no datasource was specified
+    validatedOptions.dataSource = defaultStandardDataSourceOptions;
   }
 
-  validatedOptions.dataSource = validatedDataSourceOptions;
-  allErrors.concat(result.errors);
   return { errors: allErrors, validatedOptions };
+}
+
+/**
+ * Configuration for the Data System
+ *
+ * @internal
+ */
+export interface DataSystemConfiguration {
+  dataSource?: DataSourceOptions;
+  featureStoreFactory: (clientContext: LDClientContext) => LDFeatureStore;
+  useLdd?: boolean;
+  updateProcessorFactory?: (
+    clientContext: LDClientContext,
+    dataSourceUpdates: LDDataSourceUpdates,
+    initSuccessHandler: VoidFunction,
+    errorHandler?: (e: Error) => void,
+  ) => subsystem.LDStreamProcessor;
 }
 
 /**
@@ -295,16 +326,7 @@ export default class Configuration {
 
   public readonly diagnosticRecordingInterval: number;
 
-  public readonly featureStoreFactory: (clientContext: LDClientContext) => LDFeatureStore;
-
-  public readonly dataSystem: LDDataSystemOptions;
-
-  public readonly updateProcessorFactory?: (
-    clientContext: LDClientContext,
-    dataSourceUpdates: LDDataSourceUpdates,
-    initSuccessHandler: VoidFunction,
-    errorHandler?: (e: Error) => void,
-  ) => subsystem.LDStreamProcessor;
+  public readonly dataSystem: DataSystemConfiguration;
 
   public readonly bigSegments?: LDBigSegmentsOptions;
 
@@ -334,23 +356,64 @@ export default class Configuration {
       const { errors: dsErrors, validatedOptions: dsResult } = validateDataSystemOptions(
         options.dataSystem,
       );
-      this.dataSystem = dsResult as LDDataSystemOptions;
+      const validatedDSOptions = dsResult as LDDataSystemOptions;
+      this.dataSystem = {
+        dataSource: validatedDSOptions.dataSource,
+        useLdd: validatedDSOptions.useLdd,
+        // TODO: Discuss typing error with Rlamb.  This was existing before it seems.
+        // @ts-ignore
+        featureStoreFactory: (clientContext) => {
+          if (validatedDSOptions.persistentStore === undefined) {
+            // the persistent store provided was either undefined or invalid, default to memory store
+            return new InMemoryFeatureStore();
+          }
+          if (TypeValidators.Function.is(validatedDSOptions.persistentStore)) {
+            return validatedDSOptions.persistentStore(clientContext);
+          }
+          return validatedDSOptions.persistentStore;
+        },
+        // TODO: Discuss typing error with Rlamb.  This was existing before it seems.
+        // @ts-ignore
+        updateProcessorFactory: TypeValidators.Function.is(validatedOptions.updateProcessor)
+          ? validatedOptions.updateProcessor
+          : () => validatedOptions.updateProcessor,
+      };
       dsErrors.forEach((error) => {
         this.logger?.warn(error);
       });
     } else {
-      // if no data system was specified (such as implmentations using this SDK before data system
-      // was added), we'll make one based on the stream option
+      // if data system is not specified, we will use the top level options
+      // that have been deprecated to make the data system configuration.
       this.dataSystem = {
-        dataSource: options.stream
-          ? {
-              type: 'streaming',
-              streamInitialReconnectDelay: validatedOptions.streamInitialReconnectDelay,
-            }
-          : {
-              type: 'polling',
-              pollInterval: validatedOptions.pollInterval,
-            },
+        // pick data source based on the stream option
+        dataSource:
+          (options.stream ?? true)
+            ? {
+                // default to standard which has streaming support
+                type: 'standard',
+                streamInitialReconnectDelay: validatedOptions.streamInitialReconnectDelay,
+                pollInterval: validatedOptions.pollInterval,
+              }
+            : {
+                type: 'polling',
+                pollInterval: validatedOptions.pollInterval,
+              },
+        useLdd: validatedOptions.useLdd,
+        /**
+         * TODO: Discuss typing error with Rlamb.  This was existing before it seems.
+Type '((LDFeatureStore | ((options: LDOptions) => LDFeatureStore)) & ((...args: any[]) => void)) | (() => LDFeatureStore | ((options: LDOptions) => LDFeatureStore))' is not assignable to type '((clientContext: LDClientContext) => LDFeatureStore) | undefined'.
+  Type 'LDFeatureStore & ((...args: any[]) => void)' is not assignable to type '((clientContext: LDClientContext) => LDFeatureStore) | undefined'.
+    Type 'LDFeatureStore & ((...args: any[]) => void)' is not assignable to type '(clientContext: LDClientContext) => LDFeatureStore'.
+      Type 'void' is not assignable to type 'LDFeatureStore'.
+         */
+        // @ts-ignore
+        featureStoreFactory: TypeValidators.Function.is(validatedOptions.featureStore)
+          ? validatedOptions.featureStore
+          : () => validatedOptions.featureStore,
+        // @ts-ignore
+        updateProcessorFactory: TypeValidators.Function.is(validatedOptions.updateProcessor)
+          ? validatedOptions.updateProcessor
+          : () => validatedOptions.updateProcessor,
       };
     }
 
@@ -386,23 +449,5 @@ export default class Configuration {
 
     this.offline = validatedOptions.offline;
     this.useLdd = validatedOptions.useLdd;
-
-    if (TypeValidators.Function.is(validatedOptions.updateProcessor)) {
-      // @ts-ignore
-      this.updateProcessorFactory = validatedOptions.updateProcessor;
-    } else {
-      // The processor is already created, just have the method return it.
-      // @ts-ignore
-      this.updateProcessorFactory = () => validatedOptions.updateProcessor;
-    }
-
-    if (TypeValidators.Function.is(validatedOptions.featureStore)) {
-      // @ts-ignore
-      this.featureStoreFactory = validatedOptions.featureStore;
-    } else {
-      // The store is already created, just have the method return it.
-      // @ts-ignore
-      this.featureStoreFactory = () => validatedOptions.featureStore;
-    }
   }
 }

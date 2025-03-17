@@ -171,7 +171,7 @@ export default class LDClientImpl implements LDClient {
     const baseHeaders = defaultHeaders(_sdkKey, _platform.info, config.tags);
 
     const clientContext = new ClientContext(_sdkKey, config, _platform);
-    const featureStore = config.featureStoreFactory(clientContext);
+    const featureStore = config.dataSystem.featureStoreFactory(clientContext);
 
     const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
 
@@ -253,9 +253,9 @@ export default class LDClientImpl implements LDClient {
       );
     };
 
-    if (!(config.offline || config.useLdd)) {
+    if (!(config.offline || config.dataSystem.useLdd)) {
       this._updateProcessor =
-        config.updateProcessorFactory?.(
+        config.dataSystem.updateProcessorFactory?.(
           clientContext,
           dataSourceUpdates,
           () => this._initSuccess(),

@@ -1,6 +1,7 @@
 import { LDClientContext, subsystem } from '@launchdarkly/js-sdk-common';
 
 import { LDDataSourceUpdates, LDFeatureStore } from '../subsystems';
+import { PersistentDataStore } from '../interfaces';
 
 /**
  * Configuration options for the Data System that the SDK uses to get and maintain flags and other
@@ -43,6 +44,29 @@ export interface LDDataSystemOptions {
   dataSource?: DataSourceOptions;
 
   /**
+   * Before data has arrived from LaunchDarkly, the SDK is able to evaluate flags using
+   * data from the persistent store. Once fresh data has arrived from LaunchDarkly, the
+   * SDK will no longer read from the persistent store, although it will keep it up-to-date
+   * for future startups.
+   * 
+   * Some implementations provide the store implementation object itself, while others
+   * provide a factory function that creates the store implementation based on the SDK
+   * configuration; this property accepts either.
+   * 
+   * @param clientContext whose properties may be used to influence creation of the persistent store.
+   */
+  persistentStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
+
+  /**
+   * Whether you are using the LaunchDarkly relay proxy in daemon mode.
+   *
+   * In this configuration, the client will not connect to LaunchDarkly to get feature flags,
+   * but will instead get feature state from a database (Redis or another supported feature
+   * store integration) that is populated by the relay. By default, this is false.
+   */
+  useLdd?: boolean;
+
+  /**
    * A component that obtains feature flag data and puts it in the feature store. Setting
    * this supercedes {@link LDDataSystemOptions#dataSource}.
    */
@@ -55,12 +79,6 @@ export interface LDDataSystemOptions {
         errorHandler?: (e: Error) => void,
       ) => subsystem.LDStreamProcessor);
 
-  /**
-   * Before data has arrived from LaunchDarkly, the SDK is able to evaluate flags using
-   * data from the persistent store. Once fresh data is available, the SDK will no longer
-   * read from the persistent store, although it will keep it up-to-date for future startups.
-   */
-  persistentStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
 }
 
 export type DataSourceOptions =
@@ -125,13 +143,13 @@ export interface PollingDataSourceOptions {
 }
 
 export function isStandardOptions(u: any): u is StandardDataSourceOptions {
-  return u.kind === 'standard';
+  return u.type === 'standard';
 }
 
 export function isStreamingOptions(u: any): u is StreamingDataSourceOptions {
-  return u.kind === 'streaming';
+  return u.type === 'streaming';
 }
 
 export function isPollingOptions(u: any): u is PollingDataSourceOptions {
-  return u.kind === 'polling';
+  return u.type === 'polling';
 }
