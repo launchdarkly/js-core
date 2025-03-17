@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.12.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.11.1...js-server-sdk-common-v2.12.0) (2025-03-17)
+
+
+### Features
+
+* Export internalServer module for internal LD usage ([#804](https://github.com/launchdarkly/js-core/issues/804)) ([ec43ac8](https://github.com/launchdarkly/js-core/commit/ec43ac8af03c778d8d0ac2bd6213f9d54bf011ac))
+
 ## [2.11.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.11.0...js-server-sdk-common-v2.11.1) (2025-02-18)
 
 
