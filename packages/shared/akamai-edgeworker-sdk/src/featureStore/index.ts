@@ -47,9 +47,6 @@ export class EdgeFeatureStore implements LDFeatureStore {
 
     try {
       const storePayload = await this._getStorePayload();
-      if (!storePayload) {
-        throw new Error(`Error deserializing ${this._rootKey}`);
-      }
 
       switch (namespace) {
         case 'features':
@@ -73,9 +70,6 @@ export class EdgeFeatureStore implements LDFeatureStore {
     this._logger.debug(`Requesting all from ${this._rootKey}.${kindKey}`);
     try {
       const storePayload = await this._getStorePayload();
-      if (!storePayload) {
-        throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
 
       switch (namespace) {
         case 'features':
@@ -102,7 +96,9 @@ export class EdgeFeatureStore implements LDFeatureStore {
    *
    * @returns
    */
-  private async _getStorePayload(): Promise<ReturnType<typeof deserializePoll>> {
+  private async _getStorePayload(): Promise<
+    Exclude<ReturnType<typeof deserializePoll>, undefined>
+  > {
     let payload = this._cache.get();
     if (payload !== undefined) {
       return payload;
