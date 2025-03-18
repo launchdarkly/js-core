@@ -463,7 +463,7 @@ describe('when setting different options', () => {
     ]);
   });
 
-  it('it provides reasonable defaults when datasystem is provided, but some options are missing', () => {
+  it('provides reasonable defaults when datasystem is provided, but some options are missing', () => {
     const config = new Configuration(
       withLogger({
         dataSystem: {},
@@ -473,7 +473,7 @@ describe('when setting different options', () => {
     expect(logger(config).getCount()).toEqual(0);
   });
 
-  it('it provides reasonable defaults within the dataSystem.dataSource options when they are missing', () => {
+  it('provides reasonable defaults within the dataSystem.dataSource options when they are missing', () => {
     const config = new Configuration(
       withLogger({
         dataSystem: { dataSource: { type: 'standard' } },
