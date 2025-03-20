@@ -1,4 +1,4 @@
-import { Data, DataSourceState } from './DataSource';
+import { DataSourceState } from './DataSource';
 
 /**
  * Handler that connects the current {@link DataSource} to the {@link CompositeDataSource}.  A single
@@ -9,7 +9,7 @@ export class CallbackHandler {
   private _disabled: boolean = false;
 
   constructor(
-    private readonly _dataCallback: (basis: boolean, data: Data) => void,
+    private readonly _dataCallback: (basis: boolean, data: any) => void,
     private readonly _statusCallback: (status: DataSourceState, err?: any) => void,
   ) {}
 
@@ -17,7 +17,7 @@ export class CallbackHandler {
     this._disabled = true;
   }
 
-  async dataHandler(basis: boolean, data: Data) {
+  async dataHandler(basis: boolean, data: any) {
     if (this._disabled) {
       return;
     }

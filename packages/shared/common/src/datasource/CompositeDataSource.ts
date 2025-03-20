@@ -1,19 +1,15 @@
 /* eslint-disable no-await-in-loop */
-import { Backoff } from '../../../datasource/Backoff';
-import { LDLogger } from '../../logging';
-import { CallbackHandler } from './CallbackHandler';
+import { LDLogger } from '../api/logging';
+import { CallbackHandler } from '../api/subsystem/DataSystem/CallbackHandler';
 import {
-  Data,
   DataSource,
   DataSourceState,
   LDInitializerFactory,
   LDSynchronizerFactory,
-} from './DataSource';
+} from '../api/subsystem/DataSystem/DataSource';
+import { Backoff, DefaultBackoff } from './Backoff';
 
-// TODO: SDK-858, specify these constants when CompositeDataSource is used.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEFAULT_FALLBACK_TIME_MS = 2 * 60 * 1000;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEFAULT_RECOVERY_TIME_MS = 5 * 60 * 1000;
 
 /**
@@ -57,8 +53,20 @@ export class CompositeDataSource implements DataSource {
   constructor(
     private readonly _initializers: LDInitializerFactory[],
     private readonly _synchronizers: LDSynchronizerFactory[],
-    private readonly _transitionConditions: TransitionConditions,
-    private readonly _backoff: Backoff,
+    private readonly _transitionConditions: TransitionConditions = {
+      [DataSourceState.Valid]: {
+        durationMS: DEFAULT_RECOVERY_TIME_MS,
+        transition: 'recover',
+      },
+      [DataSourceState.Interrupted]: {
+        durationMS: DEFAULT_FALLBACK_TIME_MS,
+        transition: 'fallback',
+      },
+    },
+    private readonly _backoff: Backoff = new DefaultBackoff(
+      1000, // TODO: come back and re-examine the interaction between different failing sources and connection attempts
+      30000, // TODO: make these consts after investigation
+    ),
     private readonly _logger?: LDLogger,
   ) {
     this._externalTransitionPromise = new Promise<TransitionRequest>((resolveTransition) => {
@@ -69,7 +77,7 @@ export class CompositeDataSource implements DataSource {
   }
 
   async start(
-    dataCallback: (basis: boolean, data: Data) => void,
+    dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
   ): Promise<void> {
     if (!this._stopped) {
@@ -92,7 +100,7 @@ export class CompositeDataSource implements DataSource {
 
           // this callback handler can be disabled and ensures only one transition request occurs
           const callbackHandler = new CallbackHandler(
-            (basis: boolean, data: Data) => {
+            (basis: boolean, data: any) => {
               this._backoff.success();
               dataCallback(basis, data);
               if (basis && this._initPhaseActive) {

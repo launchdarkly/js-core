@@ -1,10 +1,12 @@
-export interface Data {}
-
 // TODO: refactor client-sdk to use this enum
 export enum DataSourceState {
+  // Spinning up to make first connection attempt
   Initializing,
+  // Positive confirmation of connection/data receipt
   Valid,
+  // Transient issue, automatic retry is expected
   Interrupted,
+  // Permanent issue, external intervention required
   Closed,
 }
 
@@ -16,7 +18,7 @@ export interface DataSource {
    * has been encountered.
    */
   start(
-    dataCallback: (basis: boolean, data: Data) => void,
+    dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
   ): void;
 

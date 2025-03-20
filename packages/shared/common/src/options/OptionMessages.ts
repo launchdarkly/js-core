@@ -11,7 +11,7 @@ export default class OptionMessages {
   }
 
   static unknownOption(name: string): string {
-    return `Ignoring unknown config option "${name}"`;
+    return `Ignoring unknown config option todd was here"${name}"`;
   }
 
   static wrongOptionType(name: string, expectedType: string, actualType: string): string {

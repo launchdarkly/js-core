@@ -12,7 +12,7 @@ import {
   Requests,
   shouldRetry,
   StreamingErrorHandler,
-  subsystem,
+  subsystem as subsystemCommon,
 } from '@launchdarkly/js-sdk-common';
 import { PayloadListener } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
@@ -21,7 +21,7 @@ import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 
 // TODO: consider naming this StreamingDatasource
-export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcessor {
+export default class StreamingProcessorFDv2 implements subsystemCommon.DataSystemSynchronizer {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
   private readonly _logger?: LDLogger;
@@ -34,10 +34,8 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
     clientContext: ClientContext,
     streamUriPath: string,
     parameters: { key: string; value: string }[],
-    private readonly _payloadListener: PayloadListener,
     baseHeaders: LDHeaders,
     private readonly _diagnosticsManager?: internal.DiagnosticsManager,
-    private readonly _errorHandler?: StreamingErrorHandler,
     private readonly _streamInitialReconnectDelay = 1,
   ) {
     const { basicConfiguration, platform } = clientContext;
@@ -54,7 +52,7 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
     );
   }
 
-  private _logConnectionStarted() {
+  private _logConnectionAttempt() {
     this._connectionAttemptStartTime = Date.now();
   }
 
@@ -79,28 +77,34 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
    *
    * @private
    */
-  private _retryAndHandleError(err: HttpErrorResponse) {
+  private _retryAndHandleError(err: HttpErrorResponse, statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void) {
+    
+    let result;
     if (!shouldRetry(err)) {
-      this._logConnectionResult(false);
-      this._errorHandler?.(
-        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
-      );
       this._logger?.error(httpErrorMessage(err, 'streaming request'));
-      return false;
+      this._logConnectionResult(false);
+      result = false;
+    } else {
+      this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
+      this._logConnectionResult(false);
+      this._logConnectionAttempt();
+      result = true;
     }
 
-    this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
-    this._logConnectionResult(false);
-    this._logConnectionStarted();
-    return true;
+    statusCallback(subsystemCommon.DataSourceState.Interrupted, new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status))
+    return result;
   }
 
-  start() {
-    this._logConnectionStarted();
+  start(
+    dataCallback: (basis: boolean, data: any) => void,
+    statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
+  ) {
+    this._logConnectionAttempt();
+    statusCallback(subsystemCommon.DataSourceState.Initializing);
 
     const eventSource = this._requests.createEventSource(this._streamUri, {
       headers: this._headers,
-      errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error),
+      errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error, statusCallback),
       initialRetryDelayMillis: 1000 * this._streamInitialReconnectDelay,
       readTimeoutMillis: 5 * 60 * 1000,
       retryResetIntervalMillis: 60 * 1000,
@@ -119,7 +123,7 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
         },
       },
       (errorKind: DataSourceErrorKind, message: string) => {
-        this._errorHandler?.(new LDStreamingError(errorKind, message));
+        statusCallback(subsystemCommon.DataSourceState.Interrupted, new LDStreamingError(errorKind, message));
       },
       this._logger,
     );
@@ -128,10 +132,13 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
       // to double check the handling in the ServerIntent:none case.  That may not trigger these payload listeners.
       this._logConnectionResult(true);
     });
-    payloadReader.addPayloadListener(this._payloadListener);
+    payloadReader.addPayloadListener((payload) => {
+      dataCallback(payload.basis, payload);
+    });
 
     eventSource.onclose = () => {
       this._logger?.info('Closed LaunchDarkly stream connection');
+      statusCallback(subsystemCommon.DataSourceState.Closed);
     };
 
     eventSource.onerror = () => {
@@ -140,6 +147,7 @@ export default class StreamingProcessorFDv2 implements subsystem.LDStreamProcess
 
     eventSource.onopen = () => {
       this._logger?.info('Opened LaunchDarkly stream connection');
+      statusCallback(subsystemCommon.DataSourceState.Valid);
     };
 
     eventSource.onretrying = (e) => {

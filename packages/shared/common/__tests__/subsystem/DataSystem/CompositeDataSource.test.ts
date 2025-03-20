@@ -1,9 +1,4 @@
 import {
-  CompositeDataSource,
-  TransitionConditions,
-} from '../../../src/api/subsystem/DataSystem/CompositeDataSource';
-import {
-  Data,
   DataSourceState,
   DataSystemInitializer,
   DataSystemSynchronizer,
@@ -11,6 +6,10 @@ import {
   LDSynchronizerFactory,
 } from '../../../src/api/subsystem/DataSystem/DataSource';
 import { Backoff } from '../../../src/datasource/Backoff';
+import {
+  CompositeDataSource,
+  TransitionConditions,
+} from '../../../src/datasource/CompositeDataSource';
 
 function makeInitializerFactory(internal: DataSystemInitializer): LDInitializerFactory {
   return () => internal;
@@ -58,7 +57,7 @@ it('handles initializer getting basis, switching to syncrhonizer', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(true, { key: 'init1' });
@@ -73,7 +72,7 @@ it('handles initializer getting basis, switching to syncrhonizer', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(false, mockSynchronizer1Data);
@@ -91,7 +90,7 @@ it('handles initializer getting basis, switching to syncrhonizer', async () => {
 
   let callback;
   await new Promise<void>((resolve) => {
-    callback = jest.fn((_: boolean, data: Data) => {
+    callback = jest.fn((_: boolean, data: any) => {
       if (data === mockSynchronizer1Data) {
         resolve();
       }
@@ -113,7 +112,7 @@ it('handles initializer getting basis, switches to synchronizer 1, falls back to
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(true, { key: 'init1' });
@@ -129,7 +128,7 @@ it('handles initializer getting basis, switches to synchronizer 1, falls back to
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           if (sync1RunCount === 0) {
@@ -152,7 +151,7 @@ it('handles initializer getting basis, switches to synchronizer 1, falls back to
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(false, mockSynchronizer2Data);
@@ -171,7 +170,7 @@ it('handles initializer getting basis, switches to synchronizer 1, falls back to
 
   let callback;
   await new Promise<void>((resolve) => {
-    callback = jest.fn((_: boolean, data: Data) => {
+    callback = jest.fn((_: boolean, data: any) => {
       if (data === mockSynchronizer1Data) {
         resolve();
       }
@@ -199,7 +198,7 @@ it('reports error when all initializers fail', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _statusCallback(DataSourceState.Closed, mockInitializer1Error);
@@ -217,7 +216,7 @@ it('reports error when all initializers fail', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _statusCallback(DataSourceState.Closed, mockInitializer2Error);
@@ -272,7 +271,7 @@ it('can be stopped when in thrashing synchronizer fallback loop', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(true, { key: 'init1' });
@@ -287,7 +286,7 @@ it('can be stopped when in thrashing synchronizer fallback loop', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _statusCallback(DataSourceState.Closed, mockSynchronizer1Error); // error that will lead to fallback
@@ -340,7 +339,7 @@ it('can be stopped and restarted', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(true, mockInitializer1Data);
@@ -355,7 +354,7 @@ it('can be stopped and restarted', async () => {
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(false, mockSynchronizer1Data);
@@ -373,7 +372,7 @@ it('can be stopped and restarted', async () => {
 
   let callback1;
   await new Promise<void>((resolve) => {
-    callback1 = jest.fn((_: boolean, data: Data) => {
+    callback1 = jest.fn((_: boolean, data: any) => {
       if (data === mockSynchronizer1Data) {
         underTest.stop();
         resolve();
@@ -395,7 +394,7 @@ it('can be stopped and restarted', async () => {
 
   let callback2;
   await new Promise<void>((resolve) => {
-    callback2 = jest.fn((_: boolean, data: Data) => {
+    callback2 = jest.fn((_: boolean, data: any) => {
       if (data === mockSynchronizer1Data) {
         resolve();
       }
@@ -440,7 +439,7 @@ it('is well behaved with an initializer and no synchronizers configured', async 
       .fn()
       .mockImplementation(
         (
-          _dataCallback: (basis: boolean, data: Data) => void,
+          _dataCallback: (basis: boolean, data: any) => void,
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _dataCallback(true, { key: 'init1' });

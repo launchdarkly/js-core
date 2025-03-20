@@ -1,8 +1,10 @@
 import {
+  DataSource,
+  DataSourceState,
   DataSystemInitializer,
   DataSystemSynchronizer,
-  InitializerFactory,
-  SynchronizerFactory,
+  LDInitializerFactory,
+  LDSynchronizerFactory,
 } from './DataSystem';
 import LDContextDeduplicator from './LDContextDeduplicator';
 import LDEventProcessor from './LDEventProcessor';
@@ -10,10 +12,12 @@ import LDEventSender, { LDDeliveryStatus, LDEventSenderResult, LDEventType } fro
 import { LDStreamProcessor } from './LDStreamProcessor';
 
 export {
+  DataSource,
+  DataSourceState,
   DataSystemInitializer,
   DataSystemSynchronizer,
-  InitializerFactory,
-  SynchronizerFactory,
+  LDInitializerFactory,
+  LDSynchronizerFactory,
   LDEventProcessor,
   LDContextDeduplicator,
   LDEventSender,

@@ -21,6 +21,35 @@ export function makeSdkConfig(options, tag) {
     diagnosticOptOut: true,
   };
 
+  if (options.dataSystem) {
+    const dataSourceStreamingOptions = options.dataSystem.synchronizers?.primary?.streaming ?? options.dataSystem.synchronizers?.secondary?.streaming;
+    const dataSourcePollingOptions = options.dataSystem.synchronizers?.primary?.polling ?? options.dataSystem.synchronizers?.secondary?.polling;
+    let dataSourceOptions;
+    if (dataSourceStreamingOptions && dataSourcePollingOptions) {
+      dataSourceOptions = {
+        type: 'standard',
+        streamInitialReconnectDelay: dataSourceStreamingOptions.initialRetryDelayMs,
+        pollInterval: dataSourcePollingOptions.pollIntervalMs,
+      }
+    } else if (dataSourceStreamingOptions) {
+      dataSourceOptions = {
+        type: 'streaming',
+        streamInitialReconnectDelay: dataSourceStreamingOptions.initialRetryDelayMs,
+      }
+    } else if (dataSourcePollingOptions) {
+      dataSourceOptions = {
+        type: 'polling',
+        pollInterval: dataSourcePollingOptions.pollIntervalMs,
+      }
+    } else {
+      // No data source options were specified
+      dataSourceOptions = undefined;
+    }
+    cf.dataSystem = {
+      dataSource: dataSourceOptions,
+    }
+  }
+
   const maybeTime = (seconds) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
   if (options.streaming) {
@@ -33,7 +62,7 @@ export function makeSdkConfig(options, tag) {
   if (options.polling) {
     cf.stream = false;
     cf.baseUri = options.polling.baseUri;
-    cf.pollInterface = options.polling.pollIntervalMs / 1000;
+    cf.pollInterval = options.polling.pollIntervalMs / 1000;
     if (options.polling.filter) {
       cf.payloadFilterKey = options.polling.filter;
     }
