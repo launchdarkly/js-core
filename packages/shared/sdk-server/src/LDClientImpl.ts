@@ -940,14 +940,16 @@ export default class LDClientImpl implements LDClient {
     if (timeout) {
       const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
       return Promise.race([
-        basePromise.then(() => cancelableTimeout.cancel()).then(() => this),
+        basePromise.then(() => this),
         cancelableTimeout.promise.then(() => this),
-      ]).catch((reason) => {
-        if (reason instanceof LDTimeoutError) {
-          logger?.error(reason.message);
-        }
-        throw reason;
-      });
+      ])
+        .catch((reason) => {
+          if (reason instanceof LDTimeoutError) {
+            logger?.error(reason.message);
+          }
+          throw reason;
+        })
+        .finally(() => cancelableTimeout.cancel());
     }
     return basePromise;
   }
