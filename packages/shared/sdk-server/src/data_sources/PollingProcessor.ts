@@ -13,7 +13,7 @@ import Configuration from '../options/Configuration';
 import { deserializePoll } from '../store';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import Requestor from './Requestor';
-import { isPollingOptions, isStandardOptions } from '../api/options/LDDataSystemOptions';
+import { isPollingOnlyOptions, isStandardOptions } from '../api/options/LDDataSystemOptions';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 

@@ -79,20 +79,18 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSyste
    */
   private _retryAndHandleError(err: HttpErrorResponse, statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void) {
     
-    let result;
     if (!shouldRetry(err)) {
       this._logger?.error(httpErrorMessage(err, 'streaming request'));
       this._logConnectionResult(false);
-      result = false;
-    } else {
-      this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
-      this._logConnectionResult(false);
-      this._logConnectionAttempt();
-      result = true;
+      statusCallback(subsystemCommon.DataSourceState.Closed, new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status))
+      return false;
     }
 
-    statusCallback(subsystemCommon.DataSourceState.Interrupted, new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status))
-    return result;
+    this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
+    this._logConnectionResult(false);
+    this._logConnectionAttempt();
+    statusCallback(subsystemCommon.DataSourceState.Interrupted)
+    return true;
   }
 
   start(

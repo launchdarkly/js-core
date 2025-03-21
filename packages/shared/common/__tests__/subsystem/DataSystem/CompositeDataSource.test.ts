@@ -433,6 +433,41 @@ it('is well behaved with no initializers and no synchronizers configured', async
   });
 });
 
+it('is well behaved with no initializer and synchronizer configured', async () => {
+  const mockSynchronizer1Data = { key: 'sync1' };
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _dataCallback(false, mockSynchronizer1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [],
+    [makeSynchronizerFactory(mockSynchronizer1)],
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  let dataCallback;
+  await new Promise<void>((resolve) => {
+    dataCallback = jest.fn(() => {
+      resolve();
+    });
+
+    underTest.start(dataCallback, jest.fn());
+  });
+
+  expect(dataCallback).toHaveBeenNthCalledWith(1, false, { key: 'sync1' });
+});
+
 it('is well behaved with an initializer and no synchronizers configured', async () => {
   const mockInitializer1 = {
     start: jest
@@ -455,15 +490,18 @@ it('is well behaved with an initializer and no synchronizers configured', async 
     makeZeroBackoff(),
   );
 
+  let dataCallback;
   let statusCallback;
   await new Promise<void>((resolve) => {
+    dataCallback = jest.fn();
     statusCallback = jest.fn((_1: DataSourceState, _2: any) => {
       resolve();
     });
 
-    underTest.start(jest.fn(), statusCallback);
+    underTest.start(dataCallback, statusCallback);
   });
 
+  expect(dataCallback).toHaveBeenNthCalledWith(1, true, { key: 'init1' });
   expect(statusCallback).toHaveBeenNthCalledWith(1, DataSourceState.Closed, {
     name: 'ExhaustedDataSources',
     message:

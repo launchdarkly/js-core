@@ -31,6 +31,10 @@ export default class OneShotInitializer implements subsystemCommon.DataSystemIni
   ) {
     statusCallback(subsystemCommon.DataSourceState.Initializing);
 
+    // @ts-ignore
+    // eslint-disable-next-line no-underscore-dangle
+    console.log(this._requestor._headers);
+
     this._logger?.debug('Performing initialization request to LaunchDarkly for feature flag data.');
     this._requestor.requestAllData((err, body) => {
       if (err) {

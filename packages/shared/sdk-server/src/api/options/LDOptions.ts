@@ -100,7 +100,7 @@ export interface LDOptions {
    *
    * let dataSystemOptions = {
    *     dataSource: {
-   *         type: 'polling';
+   *         type: 'pollingOnly';
    *         pollInterval: 300;
    *     },
    *     persistentStore: DynamoDBFeatureStore('your-table', { cacheTTL: 30 });

@@ -38,8 +38,8 @@ export class CompositeDataSource implements DataSource {
   // TODO: SDK-856 async notification if initializer takes too long
   // TODO: SDK-1044 utilize selector from initializers
 
-  private _initPhaseActive: boolean = true;
-  private _currentPosition: number = 0;
+  private _initPhaseActive: boolean;
+  private _currentPosition: number;
 
   private _stopped: boolean = true;
   private _externalTransitionPromise: Promise<TransitionRequest>;
@@ -53,6 +53,7 @@ export class CompositeDataSource implements DataSource {
   constructor(
     private readonly _initializers: LDInitializerFactory[],
     private readonly _synchronizers: LDSynchronizerFactory[],
+    private readonly _logger?: LDLogger,
     private readonly _transitionConditions: TransitionConditions = {
       [DataSourceState.Valid]: {
         durationMS: DEFAULT_RECOVERY_TIME_MS,
@@ -67,12 +68,11 @@ export class CompositeDataSource implements DataSource {
       1000, // TODO: come back and re-examine the interaction between different failing sources and connection attempts
       30000, // TODO: make these consts after investigation
     ),
-    private readonly _logger?: LDLogger,
   ) {
     this._externalTransitionPromise = new Promise<TransitionRequest>((resolveTransition) => {
       this._externalTransitionResolve = resolveTransition;
     });
-    this._initPhaseActive = true;
+    this._initPhaseActive = _initializers.length > 0; // init phase if we have initializers
     this._currentPosition = 0;
   }
 
@@ -87,6 +87,9 @@ export class CompositeDataSource implements DataSource {
     }
     this._stopped = false;
 
+    this._logger?.debug(
+      `CompositeDataSource starting with (${this._initializers.length} initializers, ${this._synchronizers.length} synchronizers).`,
+    );
     let lastTransition: Transition = 'none';
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -114,7 +117,9 @@ export class CompositeDataSource implements DataSource {
               // When we get a status update, we want to fallback if it is an error.  We also want to schedule a transition for some
               // time in the future if this status remains for some duration (ex: Recover to primary synchronizer after the secondary
               // synchronizer has been Valid for some time).  These scheduled transitions are configurable in the constructor.
-
+              this._logger?.debug(
+                `CompositeDataSource received state ${state} from underlying data source.`,
+              );
               if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
                 statusCallback(DataSourceState.Interrupted, err); // underlying errors or closed states are masked as interrupted while we transition
@@ -206,7 +211,7 @@ export class CompositeDataSource implements DataSource {
 
   private _reset() {
     this._stopped = true;
-    this._initPhaseActive = true;
+    this._initPhaseActive = this._initializers.length > 0; // init phase if we have initializers;
     this._currentPosition = 0;
     this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
       this._externalTransitionResolve = tr;

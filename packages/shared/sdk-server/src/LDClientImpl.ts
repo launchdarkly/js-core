@@ -4,7 +4,6 @@ import {
   ClientContext,
   CompositeDataSource,
   Context,
-  DefaultBackoff,
   defaultHeaders,
   internal,
   LDClientError,
@@ -33,9 +32,9 @@ import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import {
-  isPollingOptions,
+  isPollingOnlyOptions,
   isStandardOptions,
-  isStreamingOptions,
+  isStreamingOnlyOptions,
 } from './api/options/LDDataSystemOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -228,31 +227,38 @@ export default class LDClientImpl implements LDClient {
     this._evaluator = new Evaluator(this._platform, queries);
 
     if (!(config.offline || config.dataSystem.useLdd)) {
-      if (config.dataSystem.updateProcessorFactory) {
-        // use configured update processor factory if provided
-        this._updateProcessor = config.dataSystem.updateProcessorFactory?.(
-          clientContext,
-          dataSourceUpdates,
-          () => this._initSuccess(),
-          (e) => this._dataSourceErrorHandler(e),
-        );
+      // use configured update processor factory if one exists
+      const updateProcessor = config.dataSystem.updateProcessorFactory?.(
+        clientContext,
+        dataSourceUpdates,
+        () => this._initSuccess(),
+        (e) => this._dataSourceErrorHandler(e),
+      );
+      if (updateProcessor) {
+        this._updateProcessor = updateProcessor;
         this._updateProcessor?.start();
       } else {
-        // otherwise make the FDv2 composite datasource with initializers/synchronizers
-        const initializers = [
-          () =>
-            new OneShotInitializer(
-              new Requestor(config, this._platform.requests, baseHeaders),
-              config.logger,
-            ),
-        ];
+        // make the FDv2 composite datasource with initializers/synchronizers
+        let initializers: subsystem.LDSynchronizerFactory[] = [];
+        if (isStandardOptions(config.dataSystem.dataSource)) {
+          initializers = [
+            () =>
+              new OneShotInitializer(
+                new Requestor(config, this._platform.requests, baseHeaders),
+                config.logger,
+              ),
+          ];
+        } else {
+          initializers = [];
+        }
+
         let synchronizers: subsystem.LDSynchronizerFactory[] = [];
-        if (isPollingOptions(config.dataSystem.dataSource)) {
+        if (isPollingOnlyOptions(config.dataSystem.dataSource)) {
           // TODO: SDK-851 - Make polling synchronizer
           synchronizers = [];
         } else if (
           isStandardOptions(config.dataSystem.dataSource) ||
-          isStreamingOptions(config.dataSystem.dataSource)
+          isStreamingOnlyOptions(config.dataSystem.dataSource)
         ) {
           const reconnectDelay = config.dataSystem.dataSource.streamInitialReconnectDelay;
           synchronizers = [
@@ -271,16 +277,19 @@ export default class LDClientImpl implements LDClient {
           synchronizers = [];
         }
 
-        this._dataSource = new CompositeDataSource(initializers, synchronizers);
+        this._dataSource = new CompositeDataSource(initializers, synchronizers, this.logger);
         const payloadListener = createPayloadListener(dataSourceUpdates, this.logger, () => {
           this._initSuccess();
         });
+
         this._dataSource.start(
           (_, payload) => {
             payloadListener(payload);
           },
           (_, err) => {
-            this._dataSourceErrorHandler(err);
+            if (err) {
+              this._dataSourceErrorHandler(err);
+            }
           },
         );
       }

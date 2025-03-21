@@ -21,37 +21,9 @@ export function makeSdkConfig(options, tag) {
     diagnosticOptOut: true,
   };
 
-  if (options.dataSystem) {
-    const dataSourceStreamingOptions = options.dataSystem.synchronizers?.primary?.streaming ?? options.dataSystem.synchronizers?.secondary?.streaming;
-    const dataSourcePollingOptions = options.dataSystem.synchronizers?.primary?.polling ?? options.dataSystem.synchronizers?.secondary?.polling;
-    let dataSourceOptions;
-    if (dataSourceStreamingOptions && dataSourcePollingOptions) {
-      dataSourceOptions = {
-        type: 'standard',
-        streamInitialReconnectDelay: dataSourceStreamingOptions.initialRetryDelayMs,
-        pollInterval: dataSourcePollingOptions.pollIntervalMs,
-      }
-    } else if (dataSourceStreamingOptions) {
-      dataSourceOptions = {
-        type: 'streaming',
-        streamInitialReconnectDelay: dataSourceStreamingOptions.initialRetryDelayMs,
-      }
-    } else if (dataSourcePollingOptions) {
-      dataSourceOptions = {
-        type: 'polling',
-        pollInterval: dataSourcePollingOptions.pollIntervalMs,
-      }
-    } else {
-      // No data source options were specified
-      dataSourceOptions = undefined;
-    }
-    cf.dataSystem = {
-      dataSource: dataSourceOptions,
-    }
-  }
-
   const maybeTime = (seconds) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
+
   if (options.streaming) {
     cf.streamUri = options.streaming.baseUri;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
@@ -110,6 +82,56 @@ export function makeSdkConfig(options, tag) {
       cf.wrapperVersion = options.wrapper.version;
     }
   }
+  if (options.dataSystem) {
+    const dataSourceStreamingOptions = options.dataSystem.synchronizers?.primary?.streaming ?? options.dataSystem.synchronizers?.secondary?.streaming;
+    const dataSourcePollingOptions = options.dataSystem.synchronizers?.primary?.polling ?? options.dataSystem.synchronizers?.secondary?.polling;
+    
+    if (dataSourceStreamingOptions) {
+      cf.streamUri = dataSourceStreamingOptions.baseUri;
+      cf.streamInitialReconnectDelay = maybeTime(dataSourceStreamingOptions.initialRetryDelayMs);
+      if (dataSourceStreamingOptions.filter) {
+        cf.payloadFilterKey = dataSourceStreamingOptions.filter;
+      }
+    }
+    if (dataSourcePollingOptions) {
+      cf.stream = false;
+      cf.baseUri = dataSourcePollingOptions.baseUri;
+      cf.pollInterval = dataSourcePollingOptions.pollIntervalMs / 1000;
+      if (dataSourcePollingOptions.filter) {
+        cf.payloadFilterKey = dataSourcePollingOptions.filter;
+      }
+    }
+    
+    let dataSourceOptions;
+    if (dataSourceStreamingOptions && dataSourcePollingOptions) {
+      dataSourceOptions = {
+        type: 'standard',
+        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && 
+          { streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs) }),
+       ...(dataSourcePollingOptions.pollIntervalMs != null && 
+          { pollInterval: dataSourcePollingOptions.pollIntervalMs }),
+      }
+    } else if (dataSourceStreamingOptions) {
+      dataSourceOptions = {
+        type: 'streamingOnly',
+        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && 
+          { streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs) }),
+      }
+    } else if (dataSourcePollingOptions) {
+      dataSourceOptions = {
+        type: 'pollingOnly',
+        ...(dataSourcePollingOptions.pollIntervalMs != null && 
+          { pollInterval: dataSourcePollingOptions.pollIntervalMs }),
+      }
+    } else {
+      // No data source options were specified
+      dataSourceOptions = undefined;
+    }
+    cf.dataSystem = {
+      dataSource: dataSourceOptions,
+    }
+  }
+
   return cf;
 }
 

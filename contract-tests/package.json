@@ -13,5 +13,9 @@
     "express": "^4.17.1",
     "got": "13.0.0",
     "node-server-sdk": "file:../packages/sdk/server-node"
+  },
+  "resolutions": {
+    "@launchdarkly/js-server-sdk-common": "file:../packages/shared/sdk-server",
+    "@launchdarkly/js-sdk-common": "file:../packages/shared/common"
   }
 }

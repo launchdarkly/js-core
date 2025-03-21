@@ -16,9 +16,9 @@ import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '.
 import { Hook } from '../api/integrations';
 import {
   DataSourceOptions,
-  isPollingOptions,
+  isPollingOnlyOptions,
   isStandardOptions,
-  isStreamingOptions,
+  isStreamingOnlyOptions,
   LDDataSystemOptions,
   PollingDataSourceOptions,
   StandardDataSourceOptions,
@@ -82,12 +82,12 @@ const defaultStandardDataSourceOptions: StandardDataSourceOptions = {
 };
 
 const defaultStreamingDataSourceOptions: StreamingDataSourceOptions = {
-  type: 'streaming',
+  type: 'streamingOnly',
   streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
 };
 
 const defaultPollingDataSourceOptions: PollingDataSourceOptions = {
-  type: 'polling',
+  type: 'pollingOnly',
   pollInterval: DEFAULT_POLL_INTERVAL,
 };
 
@@ -232,12 +232,12 @@ function validateDataSystemOptions(options: Options): {
         options.dataSource,
         defaultStandardDataSourceOptions,
       ));
-    } else if (isStreamingOptions(options.dataSource)) {
+    } else if (isStreamingOnlyOptions(options.dataSource)) {
       ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
         options.dataSource,
         defaultStreamingDataSourceOptions,
       ));
-    } else if (isPollingOptions(options.dataSource)) {
+    } else if (isPollingOnlyOptions(options.dataSource)) {
       ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
         options.dataSource,
         defaultPollingDataSourceOptions,
@@ -395,7 +395,7 @@ export default class Configuration {
                 pollInterval: validatedOptions.pollInterval,
               }
             : {
-                type: 'polling',
+                type: 'pollingOnly',
                 pollInterval: validatedOptions.pollInterval,
               },
         useLdd: validatedOptions.useLdd,
