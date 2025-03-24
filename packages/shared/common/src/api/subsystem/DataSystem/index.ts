@@ -1,7 +1,8 @@
 export {
+  DataSource,
+  DataSourceState,
   DataSystemInitializer,
   DataSystemSynchronizer,
-  InitializerFactory,
-  SynchronizerFactory,
+  LDInitializerFactory,
+  LDSynchronizerFactory,
 } from './DataSource';
-export { CompositeDataSource } from './CompositeDataSource';

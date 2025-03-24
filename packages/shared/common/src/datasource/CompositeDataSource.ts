@@ -1,19 +1,15 @@
 /* eslint-disable no-await-in-loop */
-import { Backoff } from '../../../datasource/Backoff';
-import { LDLogger } from '../../logging';
-import { CallbackHandler } from './CallbackHandler';
+import { LDLogger } from '../api/logging';
+import { CallbackHandler } from '../api/subsystem/DataSystem/CallbackHandler';
 import {
-  Data,
   DataSource,
   DataSourceState,
-  InitializerFactory,
-  SynchronizerFactory,
-} from './DataSource';
+  LDInitializerFactory,
+  LDSynchronizerFactory,
+} from '../api/subsystem/DataSystem/DataSource';
+import { Backoff, DefaultBackoff } from './Backoff';
 
-// TODO: SDK-858, specify these constants when CompositeDataSource is used.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEFAULT_FALLBACK_TIME_MS = 2 * 60 * 1000;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEFAULT_RECOVERY_TIME_MS = 5 * 60 * 1000;
 
 /**
@@ -41,8 +37,8 @@ export class CompositeDataSource implements DataSource {
   // TODO: SDK-856 async notification if initializer takes too long
   // TODO: SDK-1044 utilize selector from initializers
 
-  private _initPhaseActive: boolean = true;
-  private _currentPosition: number = 0;
+  private _initPhaseActive: boolean;
+  private _currentPosition: number;
 
   private _stopped: boolean = true;
   private _externalTransitionPromise: Promise<TransitionRequest>;
@@ -54,21 +50,33 @@ export class CompositeDataSource implements DataSource {
    * @param _synchronizers factories to create  {@link DataSystemSynchronizer}s, in priority order.
    */
   constructor(
-    private readonly _initializers: InitializerFactory[],
-    private readonly _synchronizers: SynchronizerFactory[],
-    private readonly _transitionConditions: TransitionConditions,
-    private readonly _backoff: Backoff,
+    private readonly _initializers: LDInitializerFactory[],
+    private readonly _synchronizers: LDSynchronizerFactory[],
     private readonly _logger?: LDLogger,
+    private readonly _transitionConditions: TransitionConditions = {
+      [DataSourceState.Valid]: {
+        durationMS: DEFAULT_RECOVERY_TIME_MS,
+        transition: 'recover',
+      },
+      [DataSourceState.Interrupted]: {
+        durationMS: DEFAULT_FALLBACK_TIME_MS,
+        transition: 'fallback',
+      },
+    },
+    private readonly _backoff: Backoff = new DefaultBackoff(
+      1000, // TODO SDK-1137: handle blacklisting perpetually failing sources
+      30000,
+    ),
   ) {
     this._externalTransitionPromise = new Promise<TransitionRequest>((resolveTransition) => {
       this._externalTransitionResolve = resolveTransition;
     });
-    this._initPhaseActive = true;
+    this._initPhaseActive = _initializers.length > 0; // init phase if we have initializers
     this._currentPosition = 0;
   }
 
-  async run(
-    dataCallback: (basis: boolean, data: Data) => void,
+  async start(
+    dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
   ): Promise<void> {
     if (!this._stopped) {
@@ -78,6 +86,9 @@ export class CompositeDataSource implements DataSource {
     }
     this._stopped = false;
 
+    this._logger?.debug(
+      `CompositeDataSource starting with (${this._initializers.length} initializers, ${this._synchronizers.length} synchronizers).`,
+    );
     let lastTransition: Transition = 'none';
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -91,7 +102,7 @@ export class CompositeDataSource implements DataSource {
 
           // this callback handler can be disabled and ensures only one transition request occurs
           const callbackHandler = new CallbackHandler(
-            (basis: boolean, data: Data) => {
+            (basis: boolean, data: any) => {
               this._backoff.success();
               dataCallback(basis, data);
               if (basis && this._initPhaseActive) {
@@ -105,7 +116,9 @@ export class CompositeDataSource implements DataSource {
               // When we get a status update, we want to fallback if it is an error.  We also want to schedule a transition for some
               // time in the future if this status remains for some duration (ex: Recover to primary synchronizer after the secondary
               // synchronizer has been Valid for some time).  These scheduled transitions are configurable in the constructor.
-
+              this._logger?.debug(
+                `CompositeDataSource received state ${state} from underlying data source.`,
+              );
               if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
                 statusCallback(DataSourceState.Interrupted, err); // underlying errors or closed states are masked as interrupted while we transition
@@ -133,7 +146,7 @@ export class CompositeDataSource implements DataSource {
               }
             },
           );
-          currentDS.run(
+          currentDS.start(
             (basis, data) => callbackHandler.dataHandler(basis, data),
             (status, err) => callbackHandler.statusHandler(status, err),
           );
@@ -197,7 +210,7 @@ export class CompositeDataSource implements DataSource {
 
   private _reset() {
     this._stopped = true;
-    this._initPhaseActive = true;
+    this._initPhaseActive = this._initializers.length > 0; // init phase if we have initializers;
     this._currentPosition = 0;
     this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
       this._externalTransitionResolve = tr;
@@ -229,7 +242,7 @@ export class CompositeDataSource implements DataSource {
         return undefined;
       }
 
-      return this._initializers[this._currentPosition].create();
+      return this._initializers[this._currentPosition]();
     }
     // getting here indicates we are using a synchronizer
 
@@ -242,7 +255,7 @@ export class CompositeDataSource implements DataSource {
       // this is only possible if no synchronizers were provided
       return undefined;
     }
-    return this._synchronizers[this._currentPosition].create();
+    return this._synchronizers[this._currentPosition]();
   }
 
   /**

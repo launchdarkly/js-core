@@ -43,7 +43,7 @@
     "test": "echo Please run tests for individual packages.",
     "coverage": "npm run test -- --coverage",
     "contract-test-service": "npm --prefix contract-tests install && npm --prefix contract-tests start",
-    "contract-test-harness": "curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \\ | VERSION=v2 PARAMS=\"-url http://localhost:8000 -debug -stop-service-at-end $TEST_HARNESS_PARAMS\" sh",
+    "contract-test-harness": "curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \\ | VERSION=v2 PARAMS=\"-url http://localhost:8000 -debug --skip-from=./contract-tests/testharness-suppressions.txt -stop-service-at-end $TEST_HARNESS_PARAMS\" sh",
     "contract-tests": "npm run contract-test-service & npm run contract-test-harness",
     "prettier": "npx prettier --write \"**/*.{js,ts,tsx,json,yaml,yml,md}\" --log-level warn",
     "check": "yarn && yarn prettier && yarn lint && tsc && yarn build"

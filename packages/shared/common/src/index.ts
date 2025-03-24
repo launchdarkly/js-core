@@ -3,6 +3,7 @@ import Context from './Context';
 import ContextFilter from './ContextFilter';
 import {
   Backoff,
+  CompositeDataSource,
   DataSourceErrorKind,
   DefaultBackoff,
   LDFileDataSourceError,
@@ -24,6 +25,7 @@ export {
   AttributeReference,
   Context,
   ContextFilter,
+  CompositeDataSource,
   DataSourceErrorKind,
   Backoff,
   DefaultBackoff,

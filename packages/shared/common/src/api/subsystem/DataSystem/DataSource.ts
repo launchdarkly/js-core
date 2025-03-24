@@ -1,10 +1,12 @@
-export interface Data {}
-
 // TODO: refactor client-sdk to use this enum
 export enum DataSourceState {
+  // Spinning up to make first connection attempt
   Initializing,
+  // Positive confirmation of connection/data receipt
   Valid,
+  // Transient issue, automatic retry is expected
   Interrupted,
+  // Permanent issue, external intervention required
   Closed,
 }
 
@@ -15,8 +17,8 @@ export interface DataSource {
    * @param statusCallback that will be called when data source state changes or an unrecoverable error
    * has been encountered.
    */
-  run(
-    dataCallback: (basis: boolean, data: Data) => void,
+  start(
+    dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
   ): void;
 
@@ -25,6 +27,10 @@ export interface DataSource {
    */
   stop(): void;
 }
+
+export type LDInitializerFactory = () => DataSystemInitializer;
+
+export type LDSynchronizerFactory = () => DataSystemSynchronizer;
 
 /**
  * A data source that can be used to fetch the basis.
@@ -35,11 +41,3 @@ export interface DataSystemInitializer extends DataSource {}
  * A data source that can be used to fetch the basis or ongoing data changes.
  */
 export interface DataSystemSynchronizer extends DataSource {}
-
-export interface InitializerFactory {
-  create(): DataSystemInitializer;
-}
-
-export interface SynchronizerFactory {
-  create(): DataSystemSynchronizer;
-}
