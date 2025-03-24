@@ -31,9 +31,9 @@ import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import {
-  isPollingOptions,
+  isPollingOnlyOptions,
   isStandardOptions,
-  isStreamingOptions,
+  isStreamingOnlyOptions,
 } from './api/options/LDDataSystemOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
@@ -225,7 +225,7 @@ export default class LDClientImpl implements LDClient {
       put: () => this._initSuccess(),
     });
     const makeDefaultProcessor = () => {
-      if (isPollingOptions(config.dataSystem.dataSource)) {
+      if (isPollingOnlyOptions(config.dataSystem.dataSource)) {
         return new PollingProcessor(
           new Requestor(config, this._platform.requests, baseHeaders),
           config.dataSystem.dataSource.pollInterval ?? 30,
@@ -238,7 +238,7 @@ export default class LDClientImpl implements LDClient {
       // TODO: SDK-858 Hook up composite data source and config
       const reconnectDelay =
         isStandardOptions(config.dataSystem.dataSource) ||
-        isStreamingOptions(config.dataSystem.dataSource)
+        isStreamingOnlyOptions(config.dataSystem.dataSource)
           ? config.dataSystem.dataSource.streamInitialReconnectDelay
           : 1;
       return new StreamingProcessor(

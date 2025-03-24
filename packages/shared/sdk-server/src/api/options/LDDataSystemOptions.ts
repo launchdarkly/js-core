@@ -21,7 +21,7 @@ import { PersistentDataStore } from '../interfaces';
  *
  * let dataSystemOptions = {
  *     dataSource: {
- *         type: 'polling';
+ *         type: 'pollingOnly';
  *         pollInterval: 300;
  *     },
  *     persistentStore: DynamoDBFeatureStore('your-table', { cacheTTL: 30 });
@@ -116,7 +116,7 @@ export interface StandardDataSourceOptions {
  * to provide real time data updates.
  */
 export interface StreamingDataSourceOptions {
-  type: 'streaming';
+  type: 'streamingOnly';
 
   /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
@@ -134,7 +134,7 @@ export interface StreamingDataSourceOptions {
  * This data source will periodically make a request to LaunchDarkly services to retrieve updated data.
  */
 export interface PollingDataSourceOptions {
-  type: 'polling';
+  type: 'pollingOnly';
 
   /**
    * The time between polling requests, in seconds. Default if omitted.
@@ -146,10 +146,10 @@ export function isStandardOptions(u: any): u is StandardDataSourceOptions {
   return u.type === 'standard';
 }
 
-export function isStreamingOptions(u: any): u is StreamingDataSourceOptions {
-  return u.type === 'streaming';
+export function isStreamingOnlyOptions(u: any): u is StreamingDataSourceOptions {
+  return u.type === 'streamingOnly';
 }
 
-export function isPollingOptions(u: any): u is PollingDataSourceOptions {
-  return u.type === 'polling';
+export function isPollingOnlyOptions(u: any): u is PollingDataSourceOptions {
+  return u.type === 'pollingOnly';
 }

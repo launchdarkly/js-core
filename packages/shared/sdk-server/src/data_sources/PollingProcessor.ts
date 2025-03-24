@@ -9,11 +9,9 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { LDDataSourceUpdates } from '../api/subsystems';
-import Configuration from '../options/Configuration';
 import { deserializePoll } from '../store';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import Requestor from './Requestor';
-import { isPollingOptions, isStandardOptions } from '../api/options/LDDataSystemOptions';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
