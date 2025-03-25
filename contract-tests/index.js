@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
       'event-sampling',
       'strongly-typed',
       'polling-gzip',
-      'inline-context',
+      'inline-context-all',
       'anonymous-redaction',
       'evaluation-hooks',
       'wrapper',

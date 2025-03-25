@@ -549,7 +549,6 @@ export default class LDClientImpl implements LDClient {
     context: LDContext,
     defaultValue: LDMigrationStage,
   ): Promise<{ detail: LDEvaluationDetail; migration: LDMigrationVariation }> {
-    const convertedContext = Context.fromLDContext(context);
     const res = await new Promise<{ detail: LDEvaluationDetail; flag?: Flag }>((resolve) => {
       this._evaluateIfPossible(
         key,
@@ -581,7 +580,6 @@ export default class LDClientImpl implements LDClient {
     });
 
     const { detail, flag } = res;
-    const contextKeys = convertedContext.valid ? convertedContext.kindsAndKeys : {};
     const checkRatio = flag?.migration?.checkRatio;
     const samplingRatio = flag?.samplingRatio;
 
@@ -591,7 +589,7 @@ export default class LDClientImpl implements LDClient {
         value: detail.value as LDMigrationStage,
         tracker: new MigrationOpTracker(
           key,
-          contextKeys,
+          context,
           defaultValue,
           detail.value,
           detail.reason,

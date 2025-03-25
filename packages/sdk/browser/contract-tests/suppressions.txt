@@ -4,3 +4,15 @@ streaming/requests/URL path is computed correctly/no environment filter/base URI
 streaming/requests/context properties/single kind minimal/REPORT
 streaming/requests/context properties/single kind with all attributes/REPORT
 streaming/requests/context properties/multi-kind/REPORT
+tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}

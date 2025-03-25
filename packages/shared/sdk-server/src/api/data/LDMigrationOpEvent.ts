@@ -1,4 +1,4 @@
-import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
+import { LDContext, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationStage } from './LDMigrationStage';
 
@@ -66,7 +66,11 @@ export interface LDMigrationOpEvent {
   kind: 'migration_op';
   operation: LDMigrationOp;
   creationDate: number;
-  contextKeys: Record<string, string>;
+  /**
+   * @deprecated Use 'context' instead.
+   */
+  contextKeys?: Record<string, string>;
+  context?: LDContext;
   evaluation: LDMigrationEvaluation;
   measurements: LDMigrationMeasurement[];
   samplingRatio: number;

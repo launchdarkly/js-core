@@ -32,7 +32,7 @@ interface CustomOutputEvent {
   kind: 'custom';
   creationDate: number;
   key: string;
-  contextKeys: Record<string, string>;
+  context: FilteredContext;
   data?: any;
   metricValue?: number;
   samplingRatio?: number;
@@ -83,9 +83,10 @@ interface PageviewOutputEvent {
  */
 type DiagnosticEvent = any;
 
-interface MigrationOutputEvent extends Omit<InputMigrationEvent, 'samplingRatio'> {
+interface MigrationOutputEvent extends Omit<InputMigrationEvent, 'samplingRatio' | 'context'> {
   // Make the sampling ratio optional so we can omit it when it is one.
   samplingRatio?: number;
+  context?: FilteredContext;
 }
 
 type OutputEvent =
@@ -236,6 +237,7 @@ export default class EventProcessor implements LDEventProcessor {
       if (shouldSample(inputEvent.samplingRatio)) {
         const migrationEvent: MigrationOutputEvent = {
           ...inputEvent,
+          context: inputEvent.context ? this._contextFilter.filter(inputEvent.context) : undefined,
         };
         if (migrationEvent.samplingRatio === 1) {
           delete migrationEvent.samplingRatio;
@@ -331,7 +333,7 @@ export default class EventProcessor implements LDEventProcessor {
           kind: 'custom',
           creationDate: event.creationDate,
           key: event.key,
-          contextKeys: event.context.kindsAndKeys,
+          context: this._contextFilter.filter(event.context),
         };
 
         if (event.samplingRatio !== 1) {
