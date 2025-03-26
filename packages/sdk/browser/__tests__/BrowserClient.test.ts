@@ -145,8 +145,9 @@ describe('given a mock platform for a BrowserClient', () => {
       kind: 'custom',
       creationDate: 1726704000000,
       key: 'user-key',
-      contextKeys: {
-        user: 'user-key',
+      context: {
+        key: 'user-key',
+        kind: 'user',
       },
       metricValue: 1,
       url: 'http://browserclientintegration.com',
@@ -178,8 +179,9 @@ describe('given a mock platform for a BrowserClient', () => {
       kind: 'custom',
       creationDate: 1726704000000,
       key: 'user-key',
-      contextKeys: {
-        user: 'user-key',
+      context: {
+        key: 'user-key',
+        kind: 'user',
       },
       metricValue: 1,
       url: 'http://filtered.org',
