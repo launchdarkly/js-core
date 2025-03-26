@@ -2,6 +2,18 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.14.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.13.0...js-sdk-common-v2.14.0) (2025-03-26)
+
+
+### Features
+
+* Support inline context for custom and migration events ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
+
+### Bug Fixes
+
+* Deprecate LDMigrationOpEvent.contextKeys in favor of LDMigrationOpEvent.context ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
 ## [2.13.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.12.0...js-sdk-common-v2.13.0) (2025-01-22)
 
 

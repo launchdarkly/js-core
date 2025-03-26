@@ -8,6 +8,25 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.13.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.12.1...js-server-sdk-common-v2.13.0) (2025-03-26)
+
+
+### Features
+
+* Support inline context for custom and migration events ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
+
+### Bug Fixes
+
+* Deprecate LDMigrationOpEvent.contextKeys in favor of LDMigrationOpEvent.context ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.13.0 to 2.14.0
+
 ## [2.12.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.12.0...js-server-sdk-common-v2.12.1) (2025-03-21)
 
 
