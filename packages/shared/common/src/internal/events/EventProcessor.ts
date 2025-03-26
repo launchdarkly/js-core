@@ -86,6 +86,7 @@ type DiagnosticEvent = any;
 interface MigrationOutputEvent extends Omit<InputMigrationEvent, 'samplingRatio' | 'context'> {
   // Make the sampling ratio optional so we can omit it when it is one.
   samplingRatio?: number;
+  // Context is optional because contextKeys is supported for backwards compatbility and may be provided instead of context.
   context?: FilteredContext;
 }
 
