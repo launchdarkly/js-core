@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common",
-  "version": "2.12.1",
+  "version": "2.13.0",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,7 +27,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "2.13.0",
+    "@launchdarkly/js-sdk-common": "2.14.0",
     "semver": "7.5.4"
   },
   "devDependencies": {
