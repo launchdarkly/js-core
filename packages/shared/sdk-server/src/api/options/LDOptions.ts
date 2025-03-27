@@ -304,4 +304,14 @@ export interface LDOptions {
    * ```
    */
   hooks?: Hook[];
+
+  /**
+   * Set to true to opt in to compressing event payloads if the SDK supports it, since the
+   * compression library may not be supported in the underlying SDK framework.  If the compression
+   * library is not supported then event payloads will not be compressed even if this option
+   * is enabled.
+   *
+   * Defaults to false.
+   */
+  enableEventCompression?: boolean;
 }

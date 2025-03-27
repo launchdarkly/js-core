@@ -39,6 +39,8 @@ app.get('/', (req, res) => {
       'evaluation-hooks',
       'wrapper',
       'client-prereq-events',
+      'event-gzip',
+      'optional-event-gzip',
     ],
   });
 });

@@ -41,4 +41,5 @@ export interface ValidatedOptions {
   [index: string]: any;
   bigSegments?: LDBigSegmentsOptions;
   hooks?: Hook[];
+  enableEventCompression: boolean;
 }

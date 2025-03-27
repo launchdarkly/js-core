@@ -133,6 +133,7 @@ describe('given an event sender', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     expect(mockFetch).toHaveBeenCalledWith(`${basicConfig.serviceEndpoints.events}/bulk`, {
       body: JSON.stringify(testEventData1),
+      compressBodyIfPossible: true,
       headers: analyticsHeaders(uuid),
       method: 'POST',
       keepalive: true,
@@ -150,6 +151,7 @@ describe('given an event sender', () => {
     expect(mockFetch).toHaveBeenCalledTimes(2);
     expect(mockFetch).toHaveBeenNthCalledWith(1, `${basicConfig.serviceEndpoints.events}/bulk`, {
       body: JSON.stringify(testEventData1),
+      compressBodyIfPossible: true,
       headers: analyticsHeaders(uuid),
       method: 'POST',
       keepalive: true,
@@ -159,6 +161,7 @@ describe('given an event sender', () => {
       `${basicConfig.serviceEndpoints.events}/diagnostic`,
       {
         body: JSON.stringify(testEventData2),
+        compressBodyIfPossible: true,
         headers: diagnosticHeaders,
         method: 'POST',
         keepalive: true,

@@ -57,6 +57,7 @@ const validations: Record<string, TypeValidator> = {
   application: TypeValidators.Object,
   payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
+  enableEventCompression: TypeValidators.Boolean,
 };
 
 /**
@@ -82,6 +83,7 @@ export const defaultValues: ValidatedOptions = {
   diagnosticOptOut: false,
   diagnosticRecordingInterval: 900,
   featureStore: () => new InMemoryFeatureStore(),
+  enableEventCompression: false,
 };
 
 function validateTypesAndNames(options: LDOptions): {
@@ -215,6 +217,8 @@ export default class Configuration {
 
   public readonly hooks?: Hook[];
 
+  public readonly enableEventCompression: boolean;
+
   constructor(options: LDOptions = {}, internalOptions: internal.LDInternalOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
@@ -283,5 +287,6 @@ export default class Configuration {
     }
 
     this.hooks = validatedOptions.hooks;
+    this.enableEventCompression = validatedOptions.enableEventCompression;
   }
 }

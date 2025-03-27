@@ -75,6 +75,11 @@ export interface Options {
   headers?: Record<string, string>;
   method?: string;
   body?: string;
+  /**
+   * Gzip compress the post body only if the underlying SDK framework supports it
+   * and the config option enableEventCompression is set to true.
+   */
+  compressBodyIfPossible?: boolean;
   timeout?: number;
   /**
    * For use in browser environments. Platform support will be best effort for this field.

@@ -16,6 +16,11 @@ export default class NodePlatform implements platform.Platform {
 
   constructor(options: LDOptions) {
     this.info = new NodeInfo(options);
-    this.requests = new NodeRequests(options.tlsParams, options.proxyOptions, options.logger);
+    this.requests = new NodeRequests(
+      options.tlsParams,
+      options.proxyOptions,
+      options.logger,
+      options.enableEventCompression,
+    );
   }
 }

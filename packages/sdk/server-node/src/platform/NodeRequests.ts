@@ -5,6 +5,8 @@ import { HttpsProxyAgentOptions } from 'https-proxy-agent';
 // No types for the event source.
 // @ts-ignore
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
+import { promisify } from 'util';
+import * as zlib from 'zlib';
 
 import {
   EventSourceCapabilities,
@@ -15,6 +17,8 @@ import {
 } from '@launchdarkly/js-server-sdk-common';
 
 import NodeResponse from './NodeResponse';
+
+const gzip = promisify(zlib.gzip);
 
 function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   const options: https.AgentOptions & { [index: string]: any } = {
@@ -101,25 +105,44 @@ export default class NodeRequests implements platform.Requests {
 
   private _hasProxyAuth: boolean = false;
 
-  constructor(tlsOptions?: LDTLSOptions, proxyOptions?: LDProxyOptions, logger?: LDLogger) {
+  private _enableEventCompression: boolean = false;
+
+  constructor(
+    tlsOptions?: LDTLSOptions,
+    proxyOptions?: LDProxyOptions,
+    logger?: LDLogger,
+    enableEventCompression?: boolean,
+  ) {
     this._agent = createAgent(tlsOptions, proxyOptions, logger);
     this._hasProxy = !!proxyOptions;
     this._hasProxyAuth = !!proxyOptions?.auth;
+    this._enableEventCompression = !!enableEventCompression;
   }
 
-  fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
+  async fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
 
+    const headers = { ...options.headers };
+    let bodyData: String | Buffer | undefined = options.body;
+
     // For get requests we are going to automatically support compressed responses.
     // Note this does not affect SSE as the event source is not using this fetch implementation.
-    const headers =
-      options.method?.toLowerCase() === 'get'
-        ? {
-            ...options.headers,
-            'accept-encoding': 'gzip',
-          }
-        : options.headers;
+    if (options.method?.toLowerCase() === 'get') {
+      headers['accept-encoding'] = 'gzip';
+    }
+    // For post requests we are going to support compressed post bodies if the
+    // enableEventCompression config setting is true and the compressBodyIfPossible
+    // option is true.
+    else if (
+      this._enableEventCompression &&
+      !!options.compressBodyIfPossible &&
+      options.method?.toLowerCase() === 'post' &&
+      options.body
+    ) {
+      headers['content-encoding'] = 'gzip';
+      bodyData = await gzip(Buffer.from(options.body, 'utf8'));
+    }
 
     return new Promise((resolve, reject) => {
       const req = impl.request(
@@ -133,8 +156,8 @@ export default class NodeRequests implements platform.Requests {
         (res) => resolve(new NodeResponse(res)),
       );
 
-      if (options.body) {
-        req.write(options.body);
+      if (bodyData) {
+        req.write(bodyData);
       }
 
       req.on('error', (err) => {

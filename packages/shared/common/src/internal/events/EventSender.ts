@@ -64,6 +64,7 @@ export default class EventSender implements LDEventSender {
       const { status, headers: resHeaders } = await this._requests.fetch(uri, {
         headers,
         body: JSON.stringify(events),
+        compressBodyIfPossible: true,
         method: 'POST',
         // When sending events from browser environments the request should be completed even
         // if the user is navigating away from the page.
