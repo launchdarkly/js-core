@@ -44,7 +44,7 @@ export class PayloadReader {
   private _listeners: PayloadListener[] = [];
 
   private _tempId?: string = undefined;
-  private _tempBasis?: boolean = undefined;
+  private _tempBasis: boolean = false;
   private _tempUpdates: Update[] = [];
 
   /**
@@ -105,7 +105,7 @@ export class PayloadReader {
 
   private _processServerIntent = (data: ServerIntentData) => {
     // clear state in prep for handling data
-    this._resetState();
+    this._resetAll();
 
     // if there's no payloads, return
     if (!data.payloads.length) {
@@ -133,7 +133,7 @@ export class PayloadReader {
   private _processPutObject = (data: PutObject) => {
     // if the following properties haven't been provided by now, we should ignore the event
     if (
-      !this._tempId || // server intent hasn't been recieved yet.
+      !this._tempId || // server intent hasn't been received yet.
       !data.kind ||
       !data.key ||
       !data.version ||
@@ -144,7 +144,7 @@ export class PayloadReader {
 
     const obj = this._processObj(data.kind, data.object);
     if (!obj) {
-      this._logger?.warn(`Unable to prcoess object for kind: '${data.kind}'`);
+      this._logger?.warn(`Unable to process object for kind: '${data.kind}'`);
       // ignore unrecognized kinds
       return;
     }
@@ -178,10 +178,9 @@ export class PayloadReader {
     if (
       !this._tempId || // server intent hasn't been recieved yet.
       !data.state ||
-      !data.version ||
-      this._tempBasis === undefined
+      !data.version
     ) {
-      this._resetState(); // a reset is best defensive action since payload transferred terminates a payload
+      this._resetAll(); // a reset is best defensive action since payload transferred terminates a payload
       return;
     }
 
@@ -194,26 +193,35 @@ export class PayloadReader {
     };
 
     this._listeners.forEach((it) => it(payload));
-    this._resetState();
+    this._resetAfterEmission();
   };
 
   private _processGoodbye = (data: any) => {
     this._logger?.info(
       `Goodbye was received from the LaunchDarkly connection with reason: ${data.reason}.`,
     );
-    this._resetState();
+    this._resetAll();
   };
 
   private _processError = (data: any) => {
     this._logger?.info(
-      `An issue was encountered receiving updates for payload ${this._tempId} with reason: ${data.reason}. Automatic retry will occur.`,
+      `An issue was encountered receiving updates for payload ${this._tempId} with reason: ${data.reason}.`,
     );
-    this._resetState();
+    this._resetAfterError();
   };
 
-  private _resetState() {
+  private _resetAfterEmission() {
+    this._tempBasis = false;
+    this._tempUpdates = [];
+  }
+
+  private _resetAfterError() {
+    this._tempUpdates = [];
+  }
+
+  private _resetAll() {
     this._tempId = undefined;
-    this._tempBasis = undefined;
+    this._tempBasis = false;
     this._tempUpdates = [];
   }
 }
