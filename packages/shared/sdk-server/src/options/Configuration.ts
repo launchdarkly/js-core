@@ -247,10 +247,6 @@ export default class Configuration {
     this.pollInterval = validatedOptions.pollInterval;
     this.proxyOptions = validatedOptions.proxyOptions;
 
-    this.offline = validatedOptions.offline;
-    this.stream = validatedOptions.stream;
-    this.streamInitialReconnectDelay = validatedOptions.streamInitialReconnectDelay;
-    this.useLdd = validatedOptions.useLdd;
     this.sendEvents = validatedOptions.sendEvents;
     this.allAttributesPrivate = validatedOptions.allAttributesPrivate;
     this.privateAttributes = validatedOptions.privateAttributes;
@@ -263,6 +259,11 @@ export default class Configuration {
     this.wrapperVersion = validatedOptions.wrapperVersion;
     this.tags = new ApplicationTags(validatedOptions);
     this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;
+
+    this.offline = validatedOptions.offline;
+    this.stream = validatedOptions.stream;
+    this.streamInitialReconnectDelay = validatedOptions.streamInitialReconnectDelay;
+    this.useLdd = validatedOptions.useLdd;
 
     if (TypeValidators.Function.is(validatedOptions.updateProcessor)) {
       // @ts-ignore

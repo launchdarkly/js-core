@@ -1,3 +1,5 @@
+import { Backoff, DefaultBackoff } from './Backoff';
+import { CompositeDataSource } from './CompositeDataSource';
 import { DataSourceErrorKind } from './DataSourceErrorKinds';
 import {
   LDFileDataSourceError,
@@ -7,6 +9,9 @@ import {
 } from './errors';
 
 export {
+  Backoff,
+  CompositeDataSource,
+  DefaultBackoff,
   DataSourceErrorKind,
   LDFileDataSourceError,
   LDPollingError,
