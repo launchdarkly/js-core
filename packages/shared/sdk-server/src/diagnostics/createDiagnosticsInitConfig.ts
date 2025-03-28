@@ -1,6 +1,11 @@
 import { Platform, secondsToMillis } from '@launchdarkly/js-sdk-common';
 
-import { LDFeatureStore } from '../api';
+import {
+  isPollingOnlyOptions,
+  isStandardOptions,
+  isStreamingOnlyOptions,
+  LDFeatureStore,
+} from '../api';
 import Configuration, { defaultValues } from '../options/Configuration';
 
 const createDiagnosticsInitConfig = (
@@ -18,13 +23,23 @@ const createDiagnosticsInitConfig = (
   connectTimeoutMillis: secondsToMillis(config.timeout),
   socketTimeoutMillis: secondsToMillis(config.timeout),
   eventsFlushIntervalMillis: secondsToMillis(config.flushInterval),
-  pollingIntervalMillis: secondsToMillis(config.pollInterval),
-  reconnectTimeMillis: secondsToMillis(config.streamInitialReconnectDelay),
+  // include polling interval if data source config has it
+  ...((isStandardOptions(config.dataSystem.dataSource) ||
+    isPollingOnlyOptions(config.dataSystem.dataSource)) &&
+  config.dataSystem.dataSource.pollInterval
+    ? { pollingIntervalMillis: config.dataSystem.dataSource.pollInterval }
+    : null),
+  // include reconnect delay if data source config has it
+  ...((isStandardOptions(config.dataSystem.dataSource) ||
+    isStreamingOnlyOptions(config.dataSystem.dataSource)) &&
+  config.dataSystem.dataSource.streamInitialReconnectDelay
+    ? { reconnectTimeMillis: config.dataSystem.dataSource.streamInitialReconnectDelay }
+    : null),
   contextKeysFlushIntervalMillis: secondsToMillis(config.contextKeysFlushInterval),
   diagnosticRecordingIntervalMillis: secondsToMillis(config.diagnosticRecordingInterval),
 
-  streamingDisabled: !config.stream,
-  usingRelayDaemon: config.useLdd,
+  streamingDisabled: isPollingOnlyOptions(config.dataSystem.dataSource),
+  usingRelayDaemon: config.dataSystem.useLdd,
   offline: config.offline,
   allAttributesPrivate: config.allAttributesPrivate,
   contextKeysCapacity: config.contextKeysCapacity,
