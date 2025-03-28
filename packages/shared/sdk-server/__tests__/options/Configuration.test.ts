@@ -47,7 +47,7 @@ describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without opti
     expect(config.tags.value).toBeUndefined();
     expect(config.timeout).toEqual(5);
     expect(config.tlsParams).toBeUndefined();
-    expect(config.useLdd).toBe(false);
+    expect(config.dataSystem.useLdd).toBe(false);
     expect(config.wrapperName).toBeUndefined();
     expect(config.wrapperVersion).toBeUndefined();
     expect(config.hooks).toBeUndefined();
@@ -233,7 +233,7 @@ describe('when setting different options', () => {
   ])('allows setting stream and validates useLdd', (value, expected, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ useLdd: value }));
-    expect(config.useLdd).toEqual(expected);
+    expect(config.dataSystem.useLdd).toEqual(expected);
     expect(logger(config).getCount()).toEqual(warnings);
   });
 
@@ -515,5 +515,30 @@ describe('when setting different options', () => {
     // @ts-ignore
     const result = config.dataSystem.featureStoreFactory(null);
     expect(result).toEqual(shouldBeUsed);
+  });
+
+  it('ignores top level useLdd option if datasystem is specified', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: new InMemoryFeatureStore(),
+        },
+        useLdd: true,
+      }),
+    );
+    const result = config.dataSystem.useLdd;
+    expect(result).toEqual(undefined);
+
+    const config2 = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: new InMemoryFeatureStore(),
+          useLdd: true,
+        },
+        useLdd: false,
+      }),
+    );
+    const result2 = config2.dataSystem.useLdd;
+    expect(result2).toEqual(true);
   });
 });

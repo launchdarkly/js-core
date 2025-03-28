@@ -23,7 +23,6 @@ export interface ValidatedOptions {
   flushInterval: number;
   pollInterval: number;
   offline: boolean;
-  useLdd: boolean;
   allAttributesPrivate: false;
   privateAttributes: string[];
   contextKeysCapacity: number;
