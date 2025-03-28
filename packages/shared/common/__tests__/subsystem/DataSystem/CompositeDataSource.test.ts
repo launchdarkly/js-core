@@ -516,3 +516,74 @@ it('is well behaved with an initializer and no synchronizers configured', async 
       'CompositeDataSource has exhausted all configured datasources (1 initializers, 0 synchronizers).',
   });
 });
+
+it('consumes cancellation tokens correctly', async () => {
+  const mockInitializer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _dataCallback(true, { key: 'init1' });
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Interrupted); // report interrupted to schedule automatic transition and create cancellation token
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [makeInitializerFactory(mockInitializer1)],
+    [makeSynchronizerFactory(mockSynchronizer1)],
+    undefined,
+    {
+      // pass in transition condition of 0 so that it will thrash, generating cancellation tokens repeatedly
+      [DataSourceState.Interrupted]: {
+        durationMS: 100,
+        transition: 'fallback',
+      },
+    },
+    makeZeroBackoff(),
+  );
+
+  let dataCallback;
+  let statusCallback;
+  let interruptedCount = 0;
+  await new Promise<void>((resolve) => {
+    dataCallback = jest.fn();
+    statusCallback = jest.fn((_1: DataSourceState, _2: any) => {
+      interruptedCount += 1;
+      if (interruptedCount > 10) {
+        // let it thrash for N iterations
+        resolve();
+      }
+    });
+
+    underTest.start(dataCallback, statusCallback);
+  });
+
+  // @ts-ignore
+  // eslint-disable-next-line no-underscore-dangle
+  expect(underTest._cancelTokens.length).toEqual(1);
+
+  underTest.stop();
+
+  // @ts-ignore
+  // eslint-disable-next-line no-underscore-dangle
+  expect(underTest._cancelTokens.length).toEqual(0);
+});
