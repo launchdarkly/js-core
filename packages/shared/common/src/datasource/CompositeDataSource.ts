@@ -135,12 +135,11 @@ export class CompositeDataSource implements DataSource {
                     const { promise, cancel } = this._cancellableDelay(condition.durationMS);
                     cancelScheduledTransition = cancel;
                     this._cancelTokens.push(cancelScheduledTransition);
-                    promise
-                      .then(() => this._consumeCancelToken(cancel))
-                      .then(() => {
-                        callbackHandler.disable();
-                        transitionResolve({ transition: condition.transition });
-                      });
+                    promise.then(() => {
+                      this._consumeCancelToken(cancel);
+                      callbackHandler.disable();
+                      transitionResolve({ transition: condition.transition });
+                    });
                   } else {
                     // this data source state does not have a transition condition, so don't schedule any transition
                   }
@@ -178,9 +177,10 @@ export class CompositeDataSource implements DataSource {
         const delay = this._backoff.fail();
         const { promise, cancel: cancelDelay } = this._cancellableDelay(delay);
         this._cancelTokens.push(cancelDelay);
-        const delayedTransition = promise
-          .then(() => this._consumeCancelToken(cancelDelay))
-          .then(() => transitionRequest);
+        const delayedTransition = promise.then(() => {
+          this._consumeCancelToken(cancelDelay);
+          return transitionRequest;
+        });
 
         // race the delayed transition and external transition requests to be responsive
         transitionRequest = await Promise.race([
