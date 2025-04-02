@@ -1,10 +1,5 @@
-polling/requests
-polling/payload/large payloads
-
 streaming/validation/drop and reconnect if stream event has malformed JSON
 streaming/validation/drop and reconnect if stream event has well-formed JSON not matching schema
-
-wrapper/poll requests/wrapper name and version
 
 streaming/fdv2/reconnection state management/initializes from polling initializer
 streaming/fdv2/reconnection state management/initializes from 2 polling initializers

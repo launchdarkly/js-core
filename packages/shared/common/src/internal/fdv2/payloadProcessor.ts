@@ -1,17 +1,21 @@
 /* eslint-disable no-underscore-dangle */
-import { EventListener, EventName, LDLogger } from '../../api';
+import { LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
 import { DeleteObject, PayloadTransferred, PutObject, ServerIntentData } from './proto';
-
-// Facade interface to contain only ability to add event listeners
-export interface EventStream {
-  addEventListener(type: EventName, listener: EventListener): void;
-}
 
 // Used to define object processing between deserialization and payload listener invocation.  This can be
 // used provide object sanitization logic.
 export interface ObjProcessors {
   [kind: string]: (object: any) => any;
+}
+
+export interface EventsSummary {
+  events: Event[];
+}
+
+export interface Event {
+  event: string;
+  data: any;
 }
 
 // Represents information for one keyed object.
@@ -40,7 +44,7 @@ export type PayloadListener = (payload: Payload) => void;
  * to the PayloadListeners as the payloads are received. Invalid series of events may be dropped silently,
  * but the payload reader will continue to operate.
  */
-export class PayloadReader {
+export class PayloadProcessor {
   private _listeners: PayloadListener[] = [];
 
   private _tempId?: string = undefined;
@@ -50,24 +54,15 @@ export class PayloadReader {
   /**
    * Creates a PayloadReader
    *
-   * @param eventStream event stream of FDv2 events
    * @param _objProcessors defines object processors for each object kind.
-   * @param _errorHandler that will be called with errors as they are encountered
+   * @param _errorHandler that will be called with parsing errors as they are encountered
    * @param _logger for logging
    */
   constructor(
-    eventStream: EventStream,
     private readonly _objProcessors: ObjProcessors,
     private readonly _errorHandler?: (errorKind: DataSourceErrorKind, message: string) => void,
     private readonly _logger?: LDLogger,
-  ) {
-    this._attachHandler(eventStream, 'server-intent', this._processServerIntent);
-    this._attachHandler(eventStream, 'put-object', this._processPutObject);
-    this._attachHandler(eventStream, 'delete-object', this._processDeleteObject);
-    this._attachHandler(eventStream, 'payload-transferred', this._processPayloadTransferred);
-    this._attachHandler(eventStream, 'goodbye', this._processGoodbye);
-    this._attachHandler(eventStream, 'error', this._processError);
-  }
+  ) {}
 
   addPayloadListener(listener: PayloadListener) {
     this._listeners.push(listener);
@@ -80,21 +75,41 @@ export class PayloadReader {
     }
   }
 
-  private _attachHandler(stream: EventStream, eventName: string, processor: (obj: any) => void) {
-    stream.addEventListener(eventName, async (event?: { data?: string }) => {
-      if (event?.data) {
-        this._logger?.debug(`Received ${eventName} event.  Data is ${event.data}`);
-        try {
-          processor(JSON.parse(event.data));
-        } catch {
-          this._logger?.error(
-            `Stream received data that was unable to be processed in "${eventName}" message`,
-          );
-          this._logger?.debug(`Data follows: ${event.data}`);
-          this._errorHandler?.(DataSourceErrorKind.InvalidData, 'Malformed data in event stream');
+  /**
+   * Gives the {@link PayloadProcessor} a series of events that it will statefully, incrementally processed.
+   * This may lead to listeners being invoked as necessary.
+   * @param events to be processed (can be a single element)
+   */
+  processEvents(events: Event[]) {
+    events.forEach((event) => {
+      switch (event.event) {
+        case 'server-intent': {
+          this._processServerIntent(event.data);
+          break;
         }
-      } else {
-        this._errorHandler?.(DataSourceErrorKind.Unknown, 'Unexpected message from event stream');
+        case 'put-object': {
+          this._processPutObject(event.data);
+          break;
+        }
+        case 'delete-object': {
+          this._processDeleteObject(event.data);
+          break;
+        }
+        case 'payload-transferred': {
+          this._processPayloadTransferred(event.data);
+          break;
+        }
+        case 'goodbye': {
+          this._processGoodbye(event.data);
+          break;
+        }
+        case 'error': {
+          this._processError(event.data);
+          break;
+        }
+        default: {
+          // no-op, unrecognized
+        }
       }
     });
   }

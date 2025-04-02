@@ -1,5 +1,7 @@
 import { EventListener, EventName, LDLogger } from '../../../src/api';
-import { EventStream, Payload, PayloadReader } from '../../../src/internal/fdv2/payloadReader';
+import { Payload } from '../../../src/internal/fdv2/payloadProcessor';
+import { EventStream, PayloadStreamReader } from '../../../src/internal/fdv2/payloadStreamReader';
+
 
 class MockEventStream implements EventStream {
   private _listeners: Record<EventName, EventListener> = {};
@@ -16,7 +18,7 @@ class MockEventStream implements EventStream {
 it('it sets basis to true when intent code is xfer-full', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(mockStream, {
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
   });
   readerUnderTest.addPayloadListener((it) => {
@@ -38,7 +40,7 @@ it('it sets basis to true when intent code is xfer-full', () => {
 it('it sets basis to false when intent code is xfer-changes', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(mockStream, {
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
   });
   readerUnderTest.addPayloadListener((it) => {
@@ -60,7 +62,7 @@ it('it sets basis to false when intent code is xfer-changes', () => {
 it('it handles xfer-full then xfer-changes', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(mockStream, {
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
   });
   readerUnderTest.addPayloadListener((it) => {
@@ -102,7 +104,7 @@ it('it handles xfer-full then xfer-changes', () => {
 it('it includes multiple types of updates in payload', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(mockStream, {
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
   });
   readerUnderTest.addPayloadListener((it) => {
@@ -140,7 +142,7 @@ it('it includes multiple types of updates in payload', () => {
 it('it does not include messages thats are not between server-intent and payloader-transferred', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(mockStream, {
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
   });
   readerUnderTest.addPayloadListener((it) => {
@@ -173,7 +175,7 @@ it('logs prescribed message when goodbye event is encountered', () => {
   };
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(
+  const readerUnderTest = new PayloadStreamReader(
     mockStream,
     {
       mockKind: (it) => it, // obj processor that just returns the same obj
@@ -204,7 +206,7 @@ it('logs prescribed message when error event is encountered', () => {
   };
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(
+  const readerUnderTest = new PayloadStreamReader(
     mockStream,
     {
       mockKind: (it) => it, // obj processor that just returns the same obj
@@ -246,7 +248,7 @@ it('discards partially transferred data when an error is encountered', () => {
   };
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(
+  const readerUnderTest = new PayloadStreamReader(
     mockStream,
     {
       mockKind: (it) => it, // obj processor that just returns the same obj
@@ -310,7 +312,7 @@ it('discards partially transferred data when an error is encountered', () => {
 it('silently ignores unrecognized kinds', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(mockStream, {
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
   });
   readerUnderTest.addPayloadListener((it) => {
@@ -340,7 +342,7 @@ it('silently ignores unrecognized kinds', () => {
 it('ignores additional payloads beyond the first payload in the server-intent message', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
-  const readerUnderTest = new PayloadReader(mockStream, {
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
     mockKind: (it) => it, // obj processor that just returns the same obj
   });
   readerUnderTest.addPayloadListener((it) => {

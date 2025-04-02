@@ -1,3 +1,10 @@
-import { Payload, PayloadListener, PayloadReader, Update } from './payloadReader';
+import {
+  EventsSummary,
+  Payload,
+  PayloadListener,
+  PayloadProcessor,
+  Update,
+} from './payloadProcessor';
+import { PayloadStreamReader } from './payloadStreamReader';
 
-export { Payload, PayloadListener, PayloadReader, Update };
+export { EventsSummary, Payload, PayloadListener, PayloadProcessor, PayloadStreamReader, Update };

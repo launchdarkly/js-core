@@ -11,10 +11,8 @@ import {
   LDStreamingError,
   Requests,
   shouldRetry,
-  StreamingErrorHandler,
   subsystem as subsystemCommon,
 } from '@launchdarkly/js-sdk-common';
-import { PayloadListener } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
@@ -77,19 +75,24 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSyste
    *
    * @private
    */
-  private _retryAndHandleError(err: HttpErrorResponse, statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void) {
-    
+  private _retryAndHandleError(
+    err: HttpErrorResponse,
+    statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
+  ) {
     if (!shouldRetry(err)) {
       this._logger?.error(httpErrorMessage(err, 'streaming request'));
       this._logConnectionResult(false);
-      statusCallback(subsystemCommon.DataSourceState.Closed, new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status))
+      statusCallback(
+        subsystemCommon.DataSourceState.Closed,
+        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
+      );
       return false;
     }
 
     this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     this._logConnectionResult(false);
     this._logConnectionAttempt();
-    statusCallback(subsystemCommon.DataSourceState.Interrupted)
+    statusCallback(subsystemCommon.DataSourceState.Interrupted);
     return true;
   }
 
@@ -108,7 +111,7 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSyste
       retryResetIntervalMillis: 60 * 1000,
     });
     this._eventSource = eventSource;
-    const payloadReader = new internal.PayloadReader(
+    const payloadReader = new internal.PayloadStreamReader(
       eventSource,
       {
         flag: (flag: Flag) => {
@@ -121,16 +124,20 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSyste
         },
       },
       (errorKind: DataSourceErrorKind, message: string) => {
-        statusCallback(subsystemCommon.DataSourceState.Interrupted, new LDStreamingError(errorKind, message));
+        statusCallback(
+          subsystemCommon.DataSourceState.Interrupted,
+          new LDStreamingError(errorKind, message),
+        );
+
+        // parsing error was encountered, defensively close the data source
+        this.stop();
       },
       this._logger,
     );
-    payloadReader.addPayloadListener(() => {
+    payloadReader.addPayloadListener((payload) => {
       // TODO: discuss if it is satisfactory to switch from setting connection result on single event to getting a payload. Need
       // to double check the handling in the ServerIntent:none case.  That may not trigger these payload listeners.
       this._logConnectionResult(true);
-    });
-    payloadReader.addPayloadListener((payload) => {
       dataCallback(payload.basis, payload);
     });
 

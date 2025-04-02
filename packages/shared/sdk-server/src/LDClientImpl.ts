@@ -39,10 +39,9 @@ import {
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
-import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import OneShotInitializer from './data_sources/OneShotInitializer';
-import PollingProcessor from './data_sources/PollingProcessor';
+import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
 import Requestor from './data_sources/Requestor';
 import StreamingProcessorFDv2 from './data_sources/StreamingProcessorFDv2';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
@@ -252,16 +251,14 @@ export default class LDClientImpl implements LDClient {
           initializers = [];
         }
 
-        let synchronizers: subsystem.LDSynchronizerFactory[] = [];
-        if (isPollingOnlyOptions(config.dataSystem.dataSource)) {
-          // TODO: SDK-851 - Make polling synchronizer
-          synchronizers = [];
-        } else if (
+        const synchronizers: subsystem.LDSynchronizerFactory[] = [];
+        // if streaming is configured, add streaming synchronizer
+        if (
           isStandardOptions(config.dataSystem.dataSource) ||
           isStreamingOnlyOptions(config.dataSystem.dataSource)
         ) {
           const reconnectDelay = config.dataSystem.dataSource.streamInitialReconnectDelay;
-          synchronizers = [
+          synchronizers.push(
             () =>
               new StreamingProcessorFDv2(
                 clientContext,
@@ -271,10 +268,23 @@ export default class LDClientImpl implements LDClient {
                 this._diagnosticsManager,
                 reconnectDelay,
               ),
-          ];
-        } else {
-          // TODO: this is an interesting case to be figured out later
-          synchronizers = [];
+          );
+        }
+
+        // if polling is configured, add polling synchronizer
+        if (
+          isStandardOptions(config.dataSystem.dataSource) ||
+          isPollingOnlyOptions(config.dataSystem.dataSource)
+        ) {
+          const pollingInterval = config.dataSystem.dataSource.pollInterval;
+          synchronizers.push(
+            () =>
+              new PollingProcessorFDv2(
+                new Requestor(config, this._platform.requests, baseHeaders),
+                pollingInterval,
+                config.logger,
+              ),
+          );
         }
 
         this._dataSource = new CompositeDataSource(initializers, synchronizers, this.logger);
