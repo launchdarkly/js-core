@@ -39,6 +39,8 @@ app.get('/', (req, res) => {
       'evaluation-hooks',
       'wrapper',
       'client-prereq-events',
+      // TODO: look into persistent layer test capabilities
+      // TODO: look into daemon mode testing capabilities
     ],
   });
 });
