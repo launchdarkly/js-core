@@ -176,7 +176,7 @@ export class PayloadReader {
   private _processPayloadTransferred = (data: PayloadTransferred) => {
     // if the following properties haven't been provided by now, we should reset
     if (
-      !this._tempId || // server intent hasn't been recieved yet.
+      !this._tempId || // server intent hasn't been received yet.
       !data.state ||
       !data.version
     ) {

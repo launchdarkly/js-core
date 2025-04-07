@@ -137,7 +137,7 @@ it('it includes multiple types of updates in payload', () => {
   expect(receivedPayloads[0].updates[2].deleted).toEqual(undefined);
 });
 
-it('it does not include messages thats are not between server-intent and payloader-transferred', () => {
+it('it does not include messages thats are not between server-intent and payload-transferred', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadReader(mockStream, {
