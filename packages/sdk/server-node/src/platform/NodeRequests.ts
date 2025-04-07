@@ -105,7 +105,7 @@ export default class NodeRequests implements platform.Requests {
 
   private _hasProxyAuth: boolean = false;
 
-  private _enableEventCompression: boolean = false;
+  private _enableBodyCompression: boolean = false;
 
   constructor(
     tlsOptions?: LDTLSOptions,
@@ -116,7 +116,7 @@ export default class NodeRequests implements platform.Requests {
     this._agent = createAgent(tlsOptions, proxyOptions, logger);
     this._hasProxy = !!proxyOptions;
     this._hasProxyAuth = !!proxyOptions?.auth;
-    this._enableEventCompression = !!enableEventCompression;
+    this._enableBodyCompression = !!enableEventCompression;
   }
 
   async fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
@@ -135,7 +135,7 @@ export default class NodeRequests implements platform.Requests {
     // enableEventCompression config setting is true and the compressBodyIfPossible
     // option is true.
     else if (
-      this._enableEventCompression &&
+      this._enableBodyCompression &&
       !!options.compressBodyIfPossible &&
       options.method?.toLowerCase() === 'post' &&
       options.body
