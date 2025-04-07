@@ -39,7 +39,7 @@ const createDiagnosticsInitConfig = (
   diagnosticRecordingIntervalMillis: secondsToMillis(config.diagnosticRecordingInterval),
 
   streamingDisabled: isPollingOnlyOptions(config.dataSystem.dataSource),
-  usingRelayDaemon: config.useLdd,
+  usingRelayDaemon: config.dataSystem.useLdd,
   offline: config.offline,
   allAttributesPrivate: config.allAttributesPrivate,
   contextKeysCapacity: config.contextKeysCapacity,
