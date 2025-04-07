@@ -1,5 +1,14 @@
-import { LDOptions } from '../../src';
+import {
+  ClientContext,
+  DataSourceOptions,
+  isStandardOptions,
+  LDFeatureStore,
+  LDOptions,
+  PollingDataSourceOptions,
+  StandardDataSourceOptions,
+} from '../../src';
 import Configuration from '../../src/options/Configuration';
+import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import TestLogger, { LogLevel } from '../Logger';
 
 function withLogger(options: LDOptions): LDOptions {
@@ -13,7 +22,7 @@ function logger(options: LDOptions): TestLogger {
 describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without options', (input) => {
   it('should have default options', () => {
     // JavaScript is not going to stop you from calling this with whatever
-    // you want. So we need to tell TS to ingore our bad behavior.
+    // you want. So we need to tell TS to ignore our bad behavior.
     // @ts-ignore
     const config = new Configuration(input);
 
@@ -25,19 +34,20 @@ describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without opti
     expect(config.flushInterval).toBe(5);
     expect(config.logger).toBeUndefined();
     expect(config.offline).toBe(false);
-    expect(config.pollInterval).toBe(30);
+    expect((config.dataSystem.dataSource as StandardDataSourceOptions).pollInterval).toEqual(30);
     expect(config.privateAttributes).toStrictEqual([]);
     expect(config.proxyOptions).toBeUndefined();
     expect(config.sendEvents).toBe(true);
     expect(config.serviceEndpoints.streaming).toEqual('https://stream.launchdarkly.com');
     expect(config.serviceEndpoints.polling).toEqual('https://sdk.launchdarkly.com');
     expect(config.serviceEndpoints.events).toEqual('https://events.launchdarkly.com');
-    expect(config.stream).toBe(true);
-    expect(config.streamInitialReconnectDelay).toEqual(1);
+    expect(
+      (config.dataSystem.dataSource as StandardDataSourceOptions).streamInitialReconnectDelay,
+    ).toEqual(1);
     expect(config.tags.value).toBeUndefined();
     expect(config.timeout).toEqual(5);
     expect(config.tlsParams).toBeUndefined();
-    expect(config.useLdd).toBe(false);
+    expect(config.dataSystem.useLdd).toBe(false);
     expect(config.wrapperName).toBeUndefined();
     expect(config.wrapperVersion).toBeUndefined();
     expect(config.hooks).toBeUndefined();
@@ -179,7 +189,9 @@ describe('when setting different options', () => {
   ])('allow setting and validates pollInterval', (value, expected, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ pollInterval: value }));
-    expect(config.pollInterval).toEqual(expected);
+    expect((config.dataSystem.dataSource as StandardDataSourceOptions).pollInterval).toEqual(
+      expected,
+    );
     expect(logger(config).getCount()).toEqual(warnings);
   });
 
@@ -207,7 +219,7 @@ describe('when setting different options', () => {
   ])('allows setting stream and validates stream', (value, expected, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ stream: value }));
-    expect(config.stream).toEqual(expected);
+    expect(isStandardOptions(config.dataSystem.dataSource)).toEqual(expected);
     expect(logger(config).getCount()).toEqual(warnings);
   });
 
@@ -221,7 +233,7 @@ describe('when setting different options', () => {
   ])('allows setting stream and validates useLdd', (value, expected, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ useLdd: value }));
-    expect(config.useLdd).toEqual(expected);
+    expect(config.dataSystem.useLdd).toEqual(expected);
     expect(logger(config).getCount()).toEqual(warnings);
   });
 
@@ -407,5 +419,126 @@ describe('when setting different options', () => {
           /Config option "hooks" should be of type Hook\[\], got string, using default value/,
       },
     ]);
+  });
+
+  it('drops invalid datasystem data source options and replaces with defaults', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: { dataSource: { bogus: 'myBogusOptions' } as unknown as DataSourceOptions },
+      }),
+    );
+    expect(isStandardOptions(config.dataSystem.dataSource)).toEqual(true);
+    logger(config).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "dataSource" should be of type DataSourceOptions/,
+      },
+    ]);
+  });
+
+  it('validates the datasystem persistent store is a factory or object', () => {
+    const config1 = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: () => new InMemoryFeatureStore(),
+        },
+      }),
+    );
+    expect(isStandardOptions(config1.dataSystem.dataSource)).toEqual(true);
+    expect(logger(config1).getCount()).toEqual(0);
+
+    const config2 = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: 'bogus type' as unknown as LDFeatureStore,
+        },
+      }),
+    );
+    expect(isStandardOptions(config2.dataSystem.dataSource)).toEqual(true);
+    logger(config2).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "persistentStore" should be of type LDFeatureStore/,
+      },
+    ]);
+  });
+
+  it('provides reasonable defaults when datasystem is provided, but some options are missing', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {},
+      }),
+    );
+    expect(isStandardOptions(config.dataSystem.dataSource)).toEqual(true);
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('provides reasonable defaults within the dataSystem.dataSource options when they are missing', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: { dataSource: { type: 'standard' } },
+      }),
+    );
+    expect(isStandardOptions(config.dataSystem.dataSource)).toEqual(true);
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('ignores deprecated top level options when dataSystem.dataSource options are provided', () => {
+    const config = new Configuration(
+      withLogger({
+        pollInterval: 501, // should be ignored
+        streamInitialReconnectDelay: 502, // should be ignored
+        dataSystem: {
+          dataSource: { type: 'standard', pollInterval: 100, streamInitialReconnectDelay: 200 }, // should be used
+        },
+      }),
+    );
+    expect(isStandardOptions(config.dataSystem.dataSource)).toEqual(true);
+    expect((config.dataSystem.dataSource as StandardDataSourceOptions).pollInterval).toEqual(100);
+    expect(
+      (config.dataSystem.dataSource as StandardDataSourceOptions).streamInitialReconnectDelay,
+    ).toEqual(200);
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('ignores top level featureStore in favor of the datasystem persistent store', () => {
+    const shouldNotBeUsed = new InMemoryFeatureStore();
+    const shouldBeUsed = new InMemoryFeatureStore();
+    const config = new Configuration(
+      withLogger({
+        featureStore: shouldNotBeUsed,
+        dataSystem: {
+          persistentStore: shouldBeUsed,
+        },
+      }),
+    );
+    // @ts-ignore
+    const result = config.dataSystem.featureStoreFactory(null);
+    expect(result).toEqual(shouldBeUsed);
+  });
+
+  it('ignores top level useLdd option if datasystem is specified', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: new InMemoryFeatureStore(),
+        },
+        useLdd: true,
+      }),
+    );
+    const result = config.dataSystem.useLdd;
+    expect(result).toEqual(undefined);
+
+    const config2 = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: new InMemoryFeatureStore(),
+          useLdd: true,
+        },
+        useLdd: false,
+      }),
+    );
+    const result2 = config2.dataSystem.useLdd;
+    expect(result2).toEqual(true);
   });
 });
