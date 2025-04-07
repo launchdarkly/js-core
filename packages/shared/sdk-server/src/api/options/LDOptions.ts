@@ -70,12 +70,6 @@ export interface LDOptions {
    * Some implementations provide the store implementation object itself, while others
    * provide a factory function that creates the store implementation based on the SDK
    * configuration; this property accepts either.
-   *
-   * @deprecated This is now superceded by {@link LDOptions#dataSystem} using property
-   * {@link LDDataSystemOptions#persistentStore}. The scope of the {@link LDFeatureStore}
-   * that you provide is being reduced in the next major version to only being responsible
-   * for persistence. See documention on {@link LDDataSystemOptions#persistentStore} for
-   * more information.
    */
   featureStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
 
@@ -83,7 +77,7 @@ export interface LDOptions {
    * Configuration options for the Data System that the SDK uses to get and maintain flags and other
    * data from LaunchDarkly and other sources.
    *
-   * Setting this option supercedes
+   * Setting this option supersedes
    *
    * Example (Recommended):
    * ```typescript
@@ -127,9 +121,6 @@ export interface LDOptions {
    * A component that obtains feature flag data and puts it in the feature store.
    *
    * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
-   *
-   * @deprecated This has moved to {@link LDOptions#dataSystem}. Use property
-   * {@link LDDataSystemOptions#updateProcessor} instead.
    */
   updateProcessor?:
     | object
@@ -149,10 +140,6 @@ export interface LDOptions {
    * The time between polling requests, in seconds. Ignored in streaming mode.
    *
    * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
-   *
-   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem} by
-   * specifying the {@link LDDataSystemOptions#dataSource}. Specifying the polling interval is still
-   * available when using {@link StandardDataSourceOptions} or {@link PollingDataSourceOptions}.
    */
   pollInterval?: number;
 
@@ -173,11 +160,6 @@ export interface LDOptions {
    *
    * This is true by default. If you set it to false, the client will use polling.
    * Streaming should only be disabled on the advice of LaunchDarkly support.
-   *
-   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem}
-   * by specifying {@link LDDataSystemOptions#dataSource} options. To opt out of
-   * streaming, you can use the {@link PollingDataSourceOptions}.  Streaming should
-   * only be disabled on the advice of LaunchDarkly support.
    */
   stream?: boolean;
 
@@ -191,12 +173,6 @@ export interface LDOptions {
    * increase exponentially for any subsequent connection failures.
    *
    * The default value is 1.
-   *
-   *
-   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem}
-   * by specifying {@link LDDataSystemOptions#dataSource} options. Specifying the reconnect
-   * delay is still available when using {@link StandardDataSourceOptions} or
-   * {@link StreamingDataSourceOptions}.
    */
   streamInitialReconnectDelay?: number;
 
@@ -208,9 +184,6 @@ export interface LDOptions {
    * In this configuration, the client will not connect to LaunchDarkly to get feature flags,
    * but will instead get feature state from a database (Redis or another supported feature
    * store integration) that is populated by the relay. By default, this is false.
-   *
-   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem}
-   * by specifying {@link LDDataSystemOptions#useLdd}.
    */
   useLdd?: boolean;
 
@@ -220,7 +193,7 @@ export interface LDOptions {
   sendEvents?: boolean;
 
   /**
-   * Whether all context attributes (except the contexy key) should be marked as private, and
+   * Whether all context attributes (except the context key) should be marked as private, and
    * not sent to LaunchDarkly.
    *
    * By default, this is false.

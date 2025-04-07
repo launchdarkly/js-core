@@ -37,9 +37,9 @@ export interface LDDataSystemOptions {
    * type and the optional fields you want to customize.
    *
    * If not specified, this defaults to using the {@link StandardDataSourceOptions} which
-   * pefroms a combination of streaming and polling.
+   * performs a combination of streaming and polling.
    *
-   * See {@link LDDataSystemOptions} decoumentation for exmaples.
+   * See {@link LDDataSystemOptions} documentation for examples.
    */
   dataSource?: DataSourceOptions;
 
@@ -48,11 +48,11 @@ export interface LDDataSystemOptions {
    * data from the persistent store. Once fresh data has arrived from LaunchDarkly, the
    * SDK will no longer read from the persistent store, although it will keep it up-to-date
    * for future startups.
-   * 
+   *
    * Some implementations provide the store implementation object itself, while others
    * provide a factory function that creates the store implementation based on the SDK
    * configuration; this property accepts either.
-   * 
+   *
    * @param clientContext whose properties may be used to influence creation of the persistent store.
    */
   persistentStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
@@ -68,7 +68,7 @@ export interface LDDataSystemOptions {
 
   /**
    * A component that obtains feature flag data and puts it in the feature store. Setting
-   * this supercedes {@link LDDataSystemOptions#dataSource}.
+   * this supersedes {@link LDDataSystemOptions#dataSource}.
    */
   updateProcessor?:
     | object

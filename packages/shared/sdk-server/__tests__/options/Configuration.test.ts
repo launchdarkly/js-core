@@ -22,7 +22,7 @@ function logger(options: LDOptions): TestLogger {
 describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without options', (input) => {
   it('should have default options', () => {
     // JavaScript is not going to stop you from calling this with whatever
-    // you want. So we need to tell TS to ingore our bad behavior.
+    // you want. So we need to tell TS to ignore our bad behavior.
     // @ts-ignore
     const config = new Configuration(input);
 
@@ -421,7 +421,7 @@ describe('when setting different options', () => {
     ]);
   });
 
-  it('drops invalid dataystem data source options and replaces with defaults', () => {
+  it('drops invalid datasystem data source options and replaces with defaults', () => {
     const config = new Configuration(
       withLogger({
         dataSystem: { dataSource: { bogus: 'myBogusOptions' } as unknown as DataSourceOptions },
@@ -436,7 +436,7 @@ describe('when setting different options', () => {
     ]);
   });
 
-  it('validates the datasystem persitent store is a factory or object', () => {
+  it('validates the datasystem persistent store is a factory or object', () => {
     const config1 = new Configuration(
       withLogger({
         dataSystem: {
@@ -501,7 +501,7 @@ describe('when setting different options', () => {
     expect(logger(config).getCount()).toEqual(0);
   });
 
-  it('ignores top level featureStore in favor of the datasystem persitent store', () => {
+  it('ignores top level featureStore in favor of the datasystem persistent store', () => {
     const shouldNotBeUsed = new InMemoryFeatureStore();
     const shouldBeUsed = new InMemoryFeatureStore();
     const config = new Configuration(
