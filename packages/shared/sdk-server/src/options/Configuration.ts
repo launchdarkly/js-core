@@ -299,8 +299,6 @@ export default class Configuration {
 
   public readonly offline: boolean;
 
-  public readonly useLdd: boolean;
-
   public readonly sendEvents: boolean;
 
   public readonly allAttributesPrivate: boolean;
@@ -447,6 +445,5 @@ Type '((LDFeatureStore | ((options: LDOptions) => LDFeatureStore)) & ((...args: 
     this.hooks = validatedOptions.hooks;
 
     this.offline = validatedOptions.offline;
-    this.useLdd = validatedOptions.useLdd;
   }
 }

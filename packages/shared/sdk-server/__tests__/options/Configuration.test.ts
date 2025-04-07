@@ -22,7 +22,7 @@ function logger(options: LDOptions): TestLogger {
 describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without options', (input) => {
   it('should have default options', () => {
     // JavaScript is not going to stop you from calling this with whatever
-    // you want. So we need to tell TS to ingore our bad behavior.
+    // you want. So we need to tell TS to ignore our bad behavior.
     // @ts-ignore
     const config = new Configuration(input);
 
@@ -47,7 +47,7 @@ describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without opti
     expect(config.tags.value).toBeUndefined();
     expect(config.timeout).toEqual(5);
     expect(config.tlsParams).toBeUndefined();
-    expect(config.useLdd).toBe(false);
+    expect(config.dataSystem.useLdd).toBe(false);
     expect(config.wrapperName).toBeUndefined();
     expect(config.wrapperVersion).toBeUndefined();
     expect(config.hooks).toBeUndefined();
@@ -233,7 +233,7 @@ describe('when setting different options', () => {
   ])('allows setting stream and validates useLdd', (value, expected, warnings) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ useLdd: value }));
-    expect(config.useLdd).toEqual(expected);
+    expect(config.dataSystem.useLdd).toEqual(expected);
     expect(logger(config).getCount()).toEqual(warnings);
   });
 
@@ -421,7 +421,7 @@ describe('when setting different options', () => {
     ]);
   });
 
-  it('drops invalid dataystem data source options and replaces with defaults', () => {
+  it('drops invalid datasystem data source options and replaces with defaults', () => {
     const config = new Configuration(
       withLogger({
         dataSystem: { dataSource: { bogus: 'myBogusOptions' } as unknown as DataSourceOptions },
@@ -436,7 +436,7 @@ describe('when setting different options', () => {
     ]);
   });
 
-  it('validates the datasystem persitent store is a factory or object', () => {
+  it('validates the datasystem persistent store is a factory or object', () => {
     const config1 = new Configuration(
       withLogger({
         dataSystem: {
@@ -501,7 +501,7 @@ describe('when setting different options', () => {
     expect(logger(config).getCount()).toEqual(0);
   });
 
-  it('ignores top level featureStore in favor of the datasystem persitent store', () => {
+  it('ignores top level featureStore in favor of the datasystem persistent store', () => {
     const shouldNotBeUsed = new InMemoryFeatureStore();
     const shouldBeUsed = new InMemoryFeatureStore();
     const config = new Configuration(
@@ -515,5 +515,30 @@ describe('when setting different options', () => {
     // @ts-ignore
     const result = config.dataSystem.featureStoreFactory(null);
     expect(result).toEqual(shouldBeUsed);
+  });
+
+  it('ignores top level useLdd option if datasystem is specified', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: new InMemoryFeatureStore(),
+        },
+        useLdd: true,
+      }),
+    );
+    const result = config.dataSystem.useLdd;
+    expect(result).toEqual(undefined);
+
+    const config2 = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: new InMemoryFeatureStore(),
+          useLdd: true,
+        },
+        useLdd: false,
+      }),
+    );
+    const result2 = config2.dataSystem.useLdd;
+    expect(result2).toEqual(true);
   });
 });

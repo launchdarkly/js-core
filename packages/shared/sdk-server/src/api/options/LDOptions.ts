@@ -83,7 +83,7 @@ export interface LDOptions {
    * Configuration options for the Data System that the SDK uses to get and maintain flags and other
    * data from LaunchDarkly and other sources.
    *
-   * Setting this option supercedes
+   * Setting this option supersedes
    *
    * Example (Recommended):
    * ```typescript
@@ -127,9 +127,6 @@ export interface LDOptions {
    * A component that obtains feature flag data and puts it in the feature store.
    *
    * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
-   *
-   * @deprecated This has moved to {@link LDOptions#dataSystem}. Use property
-   * {@link LDDataSystemOptions#updateProcessor} instead.
    */
   updateProcessor?:
     | object
@@ -149,10 +146,6 @@ export interface LDOptions {
    * The time between polling requests, in seconds. Ignored in streaming mode.
    *
    * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
-   *
-   * @deprecated This functionality is now controlled by {@link LDOptions#dataSystem} by
-   * specifying the {@link LDDataSystemOptions#dataSource}. Specifying the polling interval is still
-   * available when using {@link StandardDataSourceOptions} or {@link PollingDataSourceOptions}.
    */
   pollInterval?: number;
 
@@ -220,7 +213,7 @@ export interface LDOptions {
   sendEvents?: boolean;
 
   /**
-   * Whether all context attributes (except the contexy key) should be marked as private, and
+   * Whether all context attributes (except the context key) should be marked as private, and
    * not sent to LaunchDarkly.
    *
    * By default, this is false.
