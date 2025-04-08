@@ -45,6 +45,7 @@ export function makeSdkConfig(options, tag) {
     cf.diagnosticOptOut = !options.events.enableDiagnostics;
     cf.flushInterval = maybeTime(options.events.flushIntervalMs);
     cf.privateAttributes = options.events.globalPrivateAttributes;
+    cf.enableEventCompression = options.events.enableGzip;
   }
   if (options.tags) {
     cf.application = {
