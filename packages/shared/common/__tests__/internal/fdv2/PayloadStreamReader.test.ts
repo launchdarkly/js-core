@@ -59,6 +59,25 @@ it('it sets basis to false when intent code is xfer-changes', () => {
   expect(receivedPayloads[0].basis).toEqual(false);
 });
 
+it('it sets basis to false and emits empty payload when intent code is none', () => {
+  const mockStream = new MockEventStream();
+  const receivedPayloads: Payload[] = [];
+  const readerUnderTest = new PayloadStreamReader(mockStream, {
+    mockKind: (it) => it, // obj processor that just returns the same obj
+  });
+  readerUnderTest.addPayloadListener((it) => {
+    receivedPayloads.push(it);
+  });
+
+  mockStream.simulateEvent('server-intent', {
+    data: '{"payloads": [{"code": "none", "id": "mockId", "target": 42}]}',
+  });
+  expect(receivedPayloads.length).toEqual(1);
+  expect(receivedPayloads[0].id).toEqual('mockId');
+  expect(receivedPayloads[0].version).toEqual(42);
+  expect(receivedPayloads[0].basis).toEqual(false);
+});
+
 it('it handles xfer-full then xfer-changes', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];

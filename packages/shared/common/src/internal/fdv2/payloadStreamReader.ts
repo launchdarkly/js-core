@@ -16,7 +16,7 @@ export class PayloadStreamReader {
   private _payloadProcessor: PayloadProcessor;
 
   /**
-   * Creates a PayloadReader
+   * Creates a PayloadStreamReader
    *
    * @param eventStream event stream of FDv2 events
    * @param _objProcessors defines object processors for each object kind.

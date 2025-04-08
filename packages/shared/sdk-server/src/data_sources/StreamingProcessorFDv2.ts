@@ -18,7 +18,6 @@ import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 
-// TODO: consider naming this StreamingDatasource
 export default class StreamingProcessorFDv2 implements subsystemCommon.DataSystemSynchronizer {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
@@ -135,8 +134,6 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSyste
       this._logger,
     );
     payloadReader.addPayloadListener((payload) => {
-      // TODO: discuss if it is satisfactory to switch from setting connection result on single event to getting a payload. Need
-      // to double check the handling in the ServerIntent:none case.  That may not trigger these payload listeners.
       this._logConnectionResult(true);
       dataCallback(payload.basis, payload);
     });

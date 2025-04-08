@@ -65,8 +65,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
             subsystemCommon.DataSourceState.Interrupted,
             new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
           );
-          // It is not recoverable, return and do not trigger another
-          // poll.
+          // It is not recoverable, return and do not trigger another poll.
           return;
         }
         this._logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
@@ -100,10 +99,6 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
 
           payloadProcessor.processEvents(parsed.events);
 
-          // TODO: verify it is ok to schedule poll even if we have no knowledge
-          // of init succeeding since this layer no longer knows about the
-          // feature store.  FDv1 code would wait for init success callback before
-          // scheduling next poll
           this._timeoutHandle = setTimeout(() => {
             this._poll(dataCallback, statusCallback);
           }, sleepFor);

@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
-import { DeleteObject, PayloadTransferred, PutObject, ServerIntentData } from './proto';
+import { DeleteObject, PayloadIntent, PayloadTransferred, PutObject, ServerIntentData } from './proto';
 
 // Used to define object processing between deserialization and payload listener invocation.  This can be
 // used provide object sanitization logic.
@@ -9,10 +9,12 @@ export interface ObjProcessors {
   [kind: string]: (object: any) => any;
 }
 
+// Represents a collection of events (one case where this is seen is in the polling response)
 export interface EventsSummary {
   events: Event[];
 }
 
+// Represents a single event
 export interface Event {
   event: string;
   data: any;
@@ -32,7 +34,7 @@ export interface Update {
 export interface Payload {
   id: string;
   version: number;
-  state: string;
+  state?: string;
   basis: boolean;
   updates: Update[];
 }
@@ -40,9 +42,9 @@ export interface Payload {
 export type PayloadListener = (payload: Payload) => void;
 
 /**
- * A FDv2 PayloadReader can be used to parse payloads from a stream of FDv2 events. It will send payloads
+ * A FDv2 PayloadProcessor can be used to parse payloads from a stream of FDv2 events. It will send payloads
  * to the PayloadListeners as the payloads are received. Invalid series of events may be dropped silently,
- * but the payload reader will continue to operate.
+ * but the payload processor will continue to operate.
  */
 export class PayloadProcessor {
   private _listeners: PayloadListener[] = [];
@@ -52,7 +54,7 @@ export class PayloadProcessor {
   private _tempUpdates: Update[] = [];
 
   /**
-   * Creates a PayloadReader
+   * Creates a PayloadProcessor
    *
    * @param _objProcessors defines object processors for each object kind.
    * @param _errorHandler that will be called with parsing errors as they are encountered
@@ -134,8 +136,11 @@ export class PayloadProcessor {
         this._tempBasis = true;
         break;
       case 'xfer-changes':
+        this._tempBasis = false;
+        break;
       case 'none':
         this._tempBasis = false;
+        this._processIntentNone(payload);
         break;
       default:
         // unrecognized intent code, return
@@ -186,6 +191,24 @@ export class PayloadProcessor {
       // intentionally omit object for this delete
       deleted: true,
     });
+  };
+
+  private _processIntentNone = (intent: PayloadIntent) => {
+    // if the following properties aren't present ignore the event
+    if (!intent.id || !intent.target) {
+      return;
+    }
+
+    const payload: Payload = {
+      id: intent.id,
+      version: intent.target,
+      basis: false, // intent none is always not a basis
+      updates: [], // payload with no updates to hide the intent none concept from the consumer
+      // note: state is absent here as that only appears in payload transferred events
+    };
+
+    this._listeners.forEach((it) => it(payload));
+    this._resetAfterEmission();
   };
 
   private _processPayloadTransferred = (data: PayloadTransferred) => {
