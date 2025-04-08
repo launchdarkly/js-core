@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.14.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.13.0...js-server-sdk-common-v2.14.0) (2025-04-08)
+
+
+### Features
+
+* Option to use gzip to compress event ([#814](https://github.com/launchdarkly/js-core/issues/814)) ([4e91431](https://github.com/launchdarkly/js-core/commit/4e914317d31378e2a1eaed5aa03e0ac6beac43d5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.14.0 to 2.15.0
+
 ## [2.13.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.12.1...js-server-sdk-common-v2.13.0) (2025-03-26)
 
 
