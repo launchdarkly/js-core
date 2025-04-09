@@ -6,7 +6,7 @@ name: release-please
 
 jobs:
   release-please:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       package-common-released: ${{ steps.release.outputs['packages/shared/common--release_created'] }}
       package-sdk-client-released: ${{ steps.release.outputs['packages/shared/sdk-client--release_created'] }}
@@ -35,7 +35,7 @@ jobs:
           token: ${{secrets.GITHUB_TOKEN}}
 
   release-common:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please']
     permissions:
       id-token: write
@@ -55,7 +55,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-sdk-client:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-common']
     permissions:
       id-token: write
@@ -75,7 +75,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-sdk-server:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-common']
     permissions:
       id-token: write
@@ -95,7 +95,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-sdk-server-edge:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
@@ -115,7 +115,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-akamai-edgeworker-sdk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
@@ -135,7 +135,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-cloudflare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-server-edge']
     permissions:
       id-token: write
@@ -155,7 +155,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-fastly:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
@@ -175,7 +175,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-react-native:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-client']
     permissions:
       id-token: write
@@ -195,7 +195,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-client']
     permissions:
       id-token: write
@@ -215,7 +215,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-server-node:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
@@ -235,7 +235,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-vercel:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-server-edge']
     permissions:
       id-token: write
@@ -255,7 +255,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-akamai-base:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-akamai-edgeworker-sdk']
     permissions:
       id-token: write
@@ -275,7 +275,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-akamai-edgekv:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-akamai-edgeworker-sdk']
     permissions:
       id-token: write
@@ -295,7 +295,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-node-server-sdk-redis:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-server-node']
     permissions:
       id-token: write
@@ -319,7 +319,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-node-server-sdk-dynamodb:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-server-node']
     permissions:
       id-token: write
@@ -341,7 +341,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-node-server-sdk-otel:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-server-node']
     permissions:
       id-token: write
@@ -361,7 +361,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-tooling-jest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please']
     permissions:
       id-token: write
@@ -381,7 +381,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-tooling-react-universal:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-server-node', 'release-sdk-client']
     permissions:
       id-token: write
@@ -401,7 +401,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-server-ai:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-sdk-server']
     permissions:
       id-token: write
@@ -421,7 +421,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-browser-telemetry:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: ['release-please', 'release-browser']
     permissions:
       id-token: write
