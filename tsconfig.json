@@ -72,6 +72,9 @@
     },
     {
       "path": "./packages/sdk/fastly/tsconfig.ref.json"
+    },
+    {
+      "path": "./contract-tests/tsconfig.ref.json"
     }
   ]
 }

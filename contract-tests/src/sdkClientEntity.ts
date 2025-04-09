@@ -1,12 +1,19 @@
 import got from 'got';
+
 import ld, {
   createMigration,
+  LDClient,
   LDConcurrentExecution,
+  LDContext,
   LDExecutionOrdering,
+  LDFlagValue,
   LDMigrationError,
+  LDMigrationStage,
   LDMigrationSuccess,
+  LDOptions,
   LDSerialExecution,
-} from 'node-server-sdk';
+  LDUser,
+} from '@launchdarkly/node-server-sdk';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
@@ -15,29 +22,127 @@ import TestHook from './TestHook.js';
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
 
-export function makeSdkConfig(options, tag) {
-  const cf = {
+interface SdkConfigOptions {
+  streaming?: {
+    baseUri: string;
+    initialRetryDelayMs?: number;
+    filter?: string;
+  };
+  polling?: {
+    baseUri: string;
+    pollIntervalMs: number;
+    filter?: string;
+  };
+  events?: {
+    allAttributesPrivate?: boolean;
+    baseUri: string;
+    capacity?: number;
+    enableDiagnostics?: boolean;
+    flushIntervalMs?: number;
+    globalPrivateAttributes?: string[];
+    enableGzip?: boolean;
+  };
+  tags?: {
+    applicationId: string;
+    applicationVersion: string;
+  };
+  bigSegments?: {
+    callbackUri: string;
+    userCacheSize?: number;
+    userCacheTimeMs?: number;
+    statusPollIntervalMs?: number;
+    staleAfterMs?: number;
+  };
+  hooks?: {
+    hooks: {
+      name: string;
+      callbackUri: string;
+      data: any;
+      errors: any;
+    }[];
+  };
+  wrapper?: {
+    name?: string;
+    version?: string;
+  };
+}
+
+interface CommandParams {
+  command: string;
+  evaluate?: {
+    flagKey: string;
+    context?: LDContext;
+    user?: LDUser;
+    defaultValue: LDFlagValue;
+    detail?: boolean;
+    valueType?: string;
+  };
+  evaluateAll?: {
+    context?: LDContext;
+    user?: LDUser;
+    clientSideOnly?: boolean;
+    detailsOnlyForTrackedFlags?: boolean;
+    withReasons?: boolean;
+  };
+  identifyEvent?: {
+    context?: LDContext;
+    user?: LDUser;
+  };
+  customEvent?: {
+    eventKey: string;
+    context?: LDContext;
+    user?: LDUser;
+    data?: any;
+    metricValue?: number;
+  };
+  migrationVariation?: {
+    key: string;
+    context: LDContext;
+    defaultStage: LDMigrationStage;
+  };
+  migrationOperation?: {
+    operation: string;
+    key: string;
+    context: LDContext;
+    defaultStage: LDMigrationStage;
+    payload: any;
+    readExecutionOrder: string;
+    trackLatency?: boolean;
+    trackErrors?: boolean;
+    trackConsistency?: boolean;
+    newEndpoint: string;
+    oldEndpoint: string;
+  };
+}
+
+export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions {
+  const cf: LDOptions = {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,
   };
 
-  const maybeTime = (seconds) =>
+  const maybeTime = (seconds?: number) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
+
   if (options.streaming) {
     cf.streamUri = options.streaming.baseUri;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
     if (options.streaming.filter) {
-      cf.payloadFilterKey = options.streaming.filter;
+      cf.application = cf.application || {};
+      cf.application.payloadFilterKey = options.streaming.filter;
     }
   }
+
   if (options.polling) {
     cf.stream = false;
     cf.baseUri = options.polling.baseUri;
-    cf.pollInterface = options.polling.pollIntervalMs / 1000;
+    cf.pollInterval = options.polling.pollIntervalMs / 1000;
     if (options.polling.filter) {
-      cf.payloadFilterKey = options.polling.filter;
+      cf.application = cf.application || {};
+      cf.application.payloadFilterKey = options.polling.filter;
     }
   }
+
   if (options.events) {
     cf.allAttributesPrivate = options.events.allAttributesPrivate;
     cf.eventsUri = options.events.baseUri;
@@ -47,12 +152,14 @@ export function makeSdkConfig(options, tag) {
     cf.privateAttributes = options.events.globalPrivateAttributes;
     cf.enableEventCompression = options.events.enableGzip;
   }
+
   if (options.tags) {
     cf.application = {
       id: options.tags.applicationId,
       version: options.tags.applicationVersion,
     };
   }
+
   if (options.bigSegments) {
     const bigSegmentsOptions = options.bigSegments;
     cf.bigSegments = {
@@ -69,11 +176,13 @@ export function makeSdkConfig(options, tag) {
         : undefined,
     };
   }
+
   if (options.hooks) {
     cf.hooks = options.hooks.hooks.map(
       (hook) => new TestHook(hook.name, hook.callbackUri, hook.data, hook.errors),
     );
   }
+
   if (options.wrapper) {
     if (options.wrapper.name) {
       cf.wrapperName = options.wrapper.name;
@@ -82,10 +191,11 @@ export function makeSdkConfig(options, tag) {
       cf.wrapperVersion = options.wrapper.version;
     }
   }
+
   return cf;
 }
 
-function getExecution(order) {
+function getExecution(order: string) {
   switch (order) {
     case 'serial': {
       return new LDSerialExecution(LDExecutionOrdering.Fixed);
@@ -102,29 +212,41 @@ function getExecution(order) {
   }
 }
 
-function makeMigrationPostOptions(payload) {
+function makeMigrationPostOptions(payload: any) {
   if (payload) {
     return { body: payload };
   }
   return {};
 }
 
-export async function newSdkClientEntity(options) {
-  const c = {};
+function contextOrUser(
+  context: LDContext | undefined,
+  user: LDUser | undefined,
+): LDContext | LDUser {
+  return (context || user)!;
+}
+
+export interface SdkClientEntity {
+  close: () => void;
+  doCommand: (params: CommandParams) => Promise<any>;
+}
+
+export async function newSdkClientEntity(options: any): Promise<SdkClientEntity> {
+  const c: any = {};
   const log = Log(options.tag);
 
-  log.info('Creating client with configuration: ' + JSON.stringify(options.configuration));
+  log.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
     options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
-  const client = ld.init(
+  const client: LDClient = ld.init(
     options.configuration.credential || 'unknown-sdk-key',
     makeSdkConfig(options.configuration, options.tag),
   );
   try {
-    await client.waitForInitialization({ timeout: timeout });
+    await client.waitForInitialization({ timeout });
   } catch (_) {
     // if waitForInitialization() rejects, the client failed to initialize, see next line
   }
@@ -138,36 +260,25 @@ export async function newSdkClientEntity(options) {
     log.info('Test ended');
   };
 
-  c.doCommand = async (params) => {
-    log.info('Received command: ' + params.command);
+  c.doCommand = async (params: CommandParams) => {
+    log.info(`Received command: ${params.command}`);
     switch (params.command) {
       case 'evaluate': {
-        const pe = params.evaluate;
+        const pe = params.evaluate!;
+        const context = contextOrUser(pe.context, pe.user);
         if (pe.detail) {
           switch (pe.valueType) {
             case 'bool':
-              return await client.boolVariationDetail(
-                pe.flagKey,
-                pe.context || pe.user,
-                pe.defaultValue,
-              );
+              return client.boolVariationDetail(pe.flagKey, context, pe.defaultValue);
             case 'int': // Intentional fallthrough.
             case 'double':
-              return await client.numberVariationDetail(
-                pe.flagKey,
-                pe.context || pe.user,
-                pe.defaultValue,
-              );
+              return client.numberVariationDetail(pe.flagKey, context, pe.defaultValue);
             case 'string':
-              return await client.stringVariationDetail(
-                pe.flagKey,
-                pe.context || pe.user,
-                pe.defaultValue,
-              );
+              return client.stringVariationDetail(pe.flagKey, context, pe.defaultValue);
             default:
-              return await client.variationDetail(
+              return client.variationDetail(
                 pe.flagKey,
-                pe.context || pe.user,
+                contextOrUser(pe.context, pe.user),
                 pe.defaultValue,
               );
           }
@@ -175,54 +286,42 @@ export async function newSdkClientEntity(options) {
           switch (pe.valueType) {
             case 'bool':
               return {
-                value: await client.boolVariation(
-                  pe.flagKey,
-                  pe.context || pe.user,
-                  pe.defaultValue,
-                ),
+                value: await client.boolVariation(pe.flagKey, context, pe.defaultValue),
               };
             case 'int': // Intentional fallthrough.
             case 'double':
               return {
-                value: await client.numberVariation(
-                  pe.flagKey,
-                  pe.context || pe.user,
-                  pe.defaultValue,
-                ),
+                value: await client.numberVariation(pe.flagKey, context, pe.defaultValue),
               };
             case 'string':
               return {
-                value: await client.stringVariation(
-                  pe.flagKey,
-                  pe.context || pe.user,
-                  pe.defaultValue,
-                ),
+                value: await client.stringVariation(pe.flagKey, context, pe.defaultValue),
               };
             default:
               return {
-                value: await client.variation(pe.flagKey, pe.context || pe.user, pe.defaultValue),
+                value: await client.variation(pe.flagKey, context, pe.defaultValue),
               };
           }
         }
       }
 
       case 'evaluateAll': {
-        const pea = params.evaluateAll;
+        const pea = params.evaluateAll!;
         const eao = {
           clientSideOnly: pea.clientSideOnly,
           detailsOnlyForTrackedFlags: pea.detailsOnlyForTrackedFlags,
           withReasons: pea.withReasons,
         };
-        return { state: await client.allFlagsState(pea.context || pea.user, eao) };
+        return { state: await client.allFlagsState(contextOrUser(pea.context, pea.user), eao) };
       }
 
       case 'identifyEvent':
-        client.identify(params.identifyEvent.context || params.identifyEvent.user);
+        client.identify(params.identifyEvent!.context || params.identifyEvent!.user!);
         return undefined;
 
       case 'customEvent': {
-        const pce = params.customEvent;
-        client.track(pce.eventKey, pce.context || pce.user, pce.data, pce.metricValue);
+        const pce = params.customEvent!;
+        client.track(pce.eventKey, contextOrUser(pce.context, pce.user), pce.data, pce.metricValue);
         return undefined;
       }
 
@@ -231,20 +330,21 @@ export async function newSdkClientEntity(options) {
         return undefined;
 
       case 'getBigSegmentStoreStatus':
-        return await client.bigSegmentStoreStatusProvider.requireStatus();
+        return client.bigSegmentStoreStatusProvider.requireStatus();
 
-      case 'migrationVariation':
-        const migrationVariation = params.migrationVariation;
+      case 'migrationVariation': {
+        const migrationVariation = params.migrationVariation!;
         const res = await client.migrationVariation(
           migrationVariation.key,
           migrationVariation.context,
           migrationVariation.defaultStage,
         );
         return { result: res.value };
+      }
 
-      case 'migrationOperation':
-        const migrationOperation = params.migrationOperation;
-        const readExecutionOrder = migrationOperation.readExecutionOrder;
+      case 'migrationOperation': {
+        const migrationOperation = params.migrationOperation!;
+        const { readExecutionOrder } = migrationOperation;
 
         const migration = createMigration(client, {
           execution: getExecution(readExecutionOrder),
@@ -258,7 +358,7 @@ export async function newSdkClientEntity(options) {
                 makeMigrationPostOptions(payload),
               );
               return LDMigrationSuccess(res.body);
-            } catch (err) {
+            } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
@@ -269,7 +369,7 @@ export async function newSdkClientEntity(options) {
                 makeMigrationPostOptions(payload),
               );
               return LDMigrationSuccess(res.body);
-            } catch (err) {
+            } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
@@ -280,7 +380,7 @@ export async function newSdkClientEntity(options) {
                 makeMigrationPostOptions(payload),
               );
               return LDMigrationSuccess(res.body);
-            } catch (err) {
+            } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
@@ -291,7 +391,7 @@ export async function newSdkClientEntity(options) {
                 makeMigrationPostOptions(payload),
               );
               return LDMigrationSuccess(res.body);
-            } catch (err) {
+            } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
@@ -307,9 +407,8 @@ export async function newSdkClientEntity(options) {
             );
             if (res.success) {
               return { result: res.result };
-            } else {
-              return { result: res.error };
             }
+            return { result: res.error };
           }
           case 'write': {
             const res = await migration.write(
@@ -321,12 +420,14 @@ export async function newSdkClientEntity(options) {
 
             if (res.authoritative.success) {
               return { result: res.authoritative.result };
-            } else {
-              return { result: res.authoritative.error };
             }
+            return { result: res.authoritative.error };
+          }
+          default: {
+            return undefined;
           }
         }
-        return undefined;
+      }
 
       default:
         throw badCommandError;
