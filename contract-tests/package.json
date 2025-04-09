@@ -1,7 +1,7 @@
 {
   "name": "node-server-sdk-contract-tests",
   "version": "0.0.0",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
     "start": "node --inspect dist/src/index.js",
     "build": "tsc",
