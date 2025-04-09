@@ -45,9 +45,10 @@
     "lint:fix": "yarn run lint -- --fix",
     "test": "echo Please run tests for individual packages.",
     "coverage": "npm run test -- --coverage",
-    "contract-test-service": "yarn workspaces foreach -pR --topological-dev --from 'node-server-sdk-contract-tests' run build && yarn workspace node-server-sdk-contract-tests start",
+    "contract-test-service-build": "yarn workspaces foreach -pR --topological-dev --from 'node-server-sdk-contract-tests' run build",
+    "contract-test-service": "yarn workspace node-server-sdk-contract-tests start",
     "contract-test-harness": "curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \\ | VERSION=v2 PARAMS=\"-url http://localhost:8000 -debug -stop-service-at-end $TEST_HARNESS_PARAMS\" sh",
-    "contract-tests": "npm run contract-test-service & npm run contract-test-harness",
+    "contract-tests": "yarn contract-test-service-build && yarn contract-test-service & yarn contract-test-harness",
     "prettier": "npx prettier --write \"**/*.{js,ts,tsx,json,yaml,yml,md}\" --log-level warn",
     "check": "yarn && yarn prettier && yarn lint && tsc && yarn build"
   },
