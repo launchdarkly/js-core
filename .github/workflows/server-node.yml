@@ -31,6 +31,8 @@ jobs:
         with:
           workspace_name: '@launchdarkly/node-server-sdk'
           workspace_path: packages/sdk/server-node
+      - name: Install contract test service dependencies
+        run: yarn workspace node-server-sdk-contract-tests install
       - name: Build the test service
         run: yarn contract-test-service-build
       - name: Launch the test service in the background
