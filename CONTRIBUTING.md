@@ -35,6 +35,14 @@ To build all projects, from the root directory:
 yarn build
 ```
 
+To build a single project and all of its dependencies:
+```
+yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build
+```
+Replacing `@launchdarkly/js-client-sdk` with the specific package you want to build.
+
+Running `yarn build` in an individual package will build that package, but will not rebuild any dependencies.
+
 ### Testing
 
 Unit tests should be implemented in a `__tests__` folder in the root of the package. The directory structure inside of `__tests__` should mirror that of the source directory.
