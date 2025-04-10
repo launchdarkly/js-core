@@ -37,7 +37,7 @@ const events = {
     data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   },
   'put-object': {
-    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
+    data: '{"kind": "flag", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   },
   'payload-transferred': {
     data: '{"state": "mockState", "version": 1}',
@@ -208,7 +208,20 @@ describe('given a stream processor with mock event source', () => {
 
   it('executes payload listener', () => {
     simulateEvents();
-    expect(mockDataCallback).toHaveBeenCalled();
+    expect(mockDataCallback).toHaveBeenNthCalledWith(1, true, {
+      basis: true,
+      id: `mockId`,
+      state: `mockState`,
+      updates: [
+        {
+          kind: `flag`,
+          key: `flagA`,
+          version: 123,
+          object: { objectFieldA: 'objectValueA' },
+        },
+      ],
+      version: 1,
+    });
   });
 
   it('passes error to callback if json data is malformed', async () => {

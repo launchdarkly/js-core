@@ -20,8 +20,9 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
  */
 export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemSynchronizer {
   private _stopped = false;
-
   private _timeoutHandle: any;
+
+  private _statusCallback?: (status: subsystemCommon.DataSourceState, err?: any) => void;
 
   constructor(
     private readonly _requestor: Requestor,
@@ -68,7 +69,13 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
           // It is not recoverable, return and do not trigger another poll.
           return;
         }
-        this._logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
+
+        const message = httpErrorMessage(err, 'polling request', 'will retry');
+        statusCallback(
+          subsystemCommon.DataSourceState.Interrupted,
+          new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
+        );
+        this._logger?.warn(message);
         // schedule poll
         this._timeoutHandle = setTimeout(() => {
           this._poll(dataCallback, statusCallback);
@@ -112,6 +119,9 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
         });
 
         payloadProcessor.processEvents(parsed.events);
+
+        // TODO: SDK-855 implement blocking duplicate data source state events in DataAvailability API
+        statusCallback(subsystemCommon.DataSourceState.Valid);
       } catch {
         // We could not parse this JSON. Report the problem and fallthrough to
         // start another poll.
@@ -129,6 +139,8 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
     dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
   ) {
+    this._statusCallback = statusCallback; // hold reference for usage in stop()
+    statusCallback(subsystemCommon.DataSourceState.Initializing);
     this._poll(dataCallback, statusCallback);
   }
 
@@ -137,7 +149,9 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
       clearTimeout(this._timeoutHandle);
       this._timeoutHandle = undefined;
     }
+    this._statusCallback?.(subsystemCommon.DataSourceState.Closed);
     this._stopped = true;
+    this._statusCallback = undefined;
   }
 
   close() {
