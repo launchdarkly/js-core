@@ -69,49 +69,56 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
           return;
         }
         this._logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
-      } else if (body) {
-        try {
-          const parsed = JSON.parse(body) as internal.EventsSummary;
-
-          const payloadProcessor = new internal.PayloadProcessor(
-            {
-              flag: (flag: Flag) => {
-                processFlag(flag);
-                return flag;
-              },
-              segment: (segment: Segment) => {
-                processSegment(segment);
-                return segment;
-              },
-            },
-            (errorKind: DataSourceErrorKind, message: string) => {
-              statusCallback(
-                subsystemCommon.DataSourceState.Interrupted,
-                new LDPollingError(errorKind, message),
-              );
-            },
-            this._logger,
-          );
-
-          payloadProcessor.addPayloadListener((payload) => {
-            dataCallback(payload.basis, payload);
-          });
-
-          payloadProcessor.processEvents(parsed.events);
-
-          this._timeoutHandle = setTimeout(() => {
-            this._poll(dataCallback, statusCallback);
-          }, sleepFor);
-          return;
-        } catch {
-          // We could not parse this JSON. Report the problem and fallthrough to
-          // start another poll.
-          reportJsonError(body);
-        }
+        // schedule poll
+        this._timeoutHandle = setTimeout(() => {
+          this._poll(dataCallback, statusCallback);
+        }, sleepFor);
+        return;
       }
 
-      // Falling through, there was some type of error and we need to trigger
-      // a new poll.
+      if (!body) {
+        this._logger?.warn('Response missing body, will retry.');
+        // schedule poll
+        this._timeoutHandle = setTimeout(() => {
+          this._poll(dataCallback, statusCallback);
+        }, sleepFor);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(body) as internal.FDv2EventsCollection;
+        const payloadProcessor = new internal.PayloadProcessor(
+          {
+            flag: (flag: Flag) => {
+              processFlag(flag);
+              return flag;
+            },
+            segment: (segment: Segment) => {
+              processSegment(segment);
+              return segment;
+            },
+          },
+          (errorKind: DataSourceErrorKind, message: string) => {
+            statusCallback(
+              subsystemCommon.DataSourceState.Interrupted,
+              new LDPollingError(errorKind, message),
+            );
+          },
+          this._logger,
+        );
+
+        payloadProcessor.addPayloadListener((payload) => {
+          dataCallback(payload.basis, payload);
+        });
+
+        payloadProcessor.processEvents(parsed.events);
+      } catch {
+        // We could not parse this JSON. Report the problem and fallthrough to
+        // start another poll.
+        reportJsonError(body);
+      }
+
+      // schedule poll
       this._timeoutHandle = setTimeout(() => {
         this._poll(dataCallback, statusCallback);
       }, sleepFor);

@@ -3,7 +3,9 @@ import { EventListener, EventName, LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
 import { ObjProcessors, PayloadListener, PayloadProcessor } from './payloadProcessor';
 
-// Facade interface to contain only ability to add event listeners
+/**
+ * Interface for an event stream.  Only allows listening to events.
+ */
 export interface EventStream {
   addEventListener(type: EventName, listener: EventListener): void;
 }

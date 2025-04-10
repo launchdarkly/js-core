@@ -240,20 +240,14 @@ export default class LDClientImpl implements LDClient {
         // make the FDv2 composite datasource with initializers/synchronizers
         const initializers: subsystem.LDSynchronizerFactory[] = [];
 
-        // if polling is allowed, use one shot initializer for performance and cost
-        if (
-          isStandardOptions(config.dataSystem.dataSource) ||
-          isPollingOnlyOptions(config.dataSystem.dataSource)
-        ) {
-          this._logger?.debug(`Todd was here`);
-          initializers.push(
-            () =>
-              new OneShotInitializer(
-                new Requestor(config, this._platform.requests, baseHeaders),
-                config.logger,
-              ),
-          );
-        }
+        // use one shot initializer for performance and cost
+        initializers.push(
+          () =>
+            new OneShotInitializer(
+              new Requestor(config, this._platform.requests, baseHeaders),
+              config.logger,
+            ),
+        );
 
         const synchronizers: subsystem.LDSynchronizerFactory[] = [];
         // if streaming is configured, add streaming synchronizer

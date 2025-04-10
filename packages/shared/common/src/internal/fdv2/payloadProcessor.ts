@@ -1,7 +1,13 @@
 /* eslint-disable no-underscore-dangle */
 import { LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
-import { DeleteObject, PayloadIntent, PayloadTransferred, PutObject, ServerIntentData } from './proto';
+import {
+  DeleteObject,
+  PayloadIntent,
+  PayloadTransferred,
+  PutObject,
+  ServerIntentData,
+} from './proto';
 
 // Used to define object processing between deserialization and payload listener invocation.  This can be
 // used provide object sanitization logic.
@@ -10,12 +16,12 @@ export interface ObjProcessors {
 }
 
 // Represents a collection of events (one case where this is seen is in the polling response)
-export interface EventsSummary {
-  events: Event[];
+export interface FDv2EventsCollection {
+  events: FDv2Event[];
 }
 
 // Represents a single event
-export interface Event {
+export interface FDv2Event {
   event: string;
   data: any;
 }
@@ -78,11 +84,11 @@ export class PayloadProcessor {
   }
 
   /**
-   * Gives the {@link PayloadProcessor} a series of events that it will statefully, incrementally processed.
+   * Gives the {@link PayloadProcessor} a series of events that it will statefully, incrementally process.
    * This may lead to listeners being invoked as necessary.
    * @param events to be processed (can be a single element)
    */
-  processEvents(events: Event[]) {
+  processEvents(events: FDv2Event[]) {
     events.forEach((event) => {
       switch (event.event) {
         case 'server-intent': {
@@ -214,7 +220,7 @@ export class PayloadProcessor {
   private _processPayloadTransferred = (data: PayloadTransferred) => {
     // if the following properties haven't been provided by now, we should reset
     if (
-      !this._tempId || // server intent hasn't been recieved yet.
+      !this._tempId || // server intent hasn't been received yet.
       !data.state ||
       !data.version
     ) {

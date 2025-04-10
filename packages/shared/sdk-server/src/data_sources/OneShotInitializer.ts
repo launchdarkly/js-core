@@ -46,47 +46,47 @@ export default class OneShotInitializer implements subsystemCommon.DataSystemIni
           subsystemCommon.DataSourceState.Closed,
           new LDPollingError(DataSourceErrorKind.InvalidData, 'Polling response missing body'),
         );
-      } else {
-        try {
-          const parsed = JSON.parse(body) as internal.EventsSummary;
+        return;
+      }
 
-          const payloadProcessor = new internal.PayloadProcessor(
-            {
-              flag: (flag: Flag) => {
-                processFlag(flag);
-                return flag;
-              },
-              segment: (segment: Segment) => {
-                processSegment(segment);
-                return segment;
-              },
+      try {
+        const parsed = JSON.parse(body) as internal.FDv2EventsCollection;
+        const payloadProcessor = new internal.PayloadProcessor(
+          {
+            flag: (flag: Flag) => {
+              processFlag(flag);
+              return flag;
             },
-            (errorKind: DataSourceErrorKind, message: string) => {
-              statusCallback(
-                subsystemCommon.DataSourceState.Interrupted,
-                new LDPollingError(errorKind, message),
-              );
+            segment: (segment: Segment) => {
+              processSegment(segment);
+              return segment;
             },
-            this._logger,
-          );
+          },
+          (errorKind: DataSourceErrorKind, message: string) => {
+            statusCallback(
+              subsystemCommon.DataSourceState.Interrupted,
+              new LDPollingError(errorKind, message),
+            );
+          },
+          this._logger,
+        );
 
-          payloadProcessor.addPayloadListener((payload) => {
-            dataCallback(payload.basis, payload);
-          });
+        payloadProcessor.addPayloadListener((payload) => {
+          dataCallback(payload.basis, payload);
+        });
 
-          payloadProcessor.processEvents(parsed.events);
-        } catch {
-          // We could not parse this JSON. Report the problem.
-          this._logger?.error('Initialization response contained invalid data');
-          this._logger?.debug(`Invalid JSON follows: ${body}`);
-          statusCallback(
-            subsystemCommon.DataSourceState.Closed,
-            new LDPollingError(
-              DataSourceErrorKind.InvalidData,
-              'Malformed JSON data in polling response',
-            ),
-          );
-        }
+        payloadProcessor.processEvents(parsed.events);
+      } catch {
+        // We could not parse this JSON. Report the problem.
+        this._logger?.error('Initialization response contained invalid data');
+        this._logger?.debug(`Invalid JSON follows: ${body}`);
+        statusCallback(
+          subsystemCommon.DataSourceState.Closed,
+          new LDPollingError(
+            DataSourceErrorKind.InvalidData,
+            'Malformed JSON data in polling response',
+          ),
+        );
       }
     });
   }

@@ -1,5 +1,5 @@
 import {
-  EventsSummary,
+  FDv2EventsCollection,
   Payload,
   PayloadListener,
   PayloadProcessor,
@@ -7,4 +7,11 @@ import {
 } from './payloadProcessor';
 import { PayloadStreamReader } from './payloadStreamReader';
 
-export { EventsSummary, Payload, PayloadListener, PayloadProcessor, PayloadStreamReader, Update };
+export {
+  FDv2EventsCollection,
+  Payload,
+  PayloadListener,
+  PayloadProcessor,
+  PayloadStreamReader,
+  Update,
+};
