@@ -38,18 +38,6 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
       return;
     }
 
-    const reportJsonError = (data: string) => {
-      this._logger?.error('Polling received invalid data');
-      this._logger?.debug(`Invalid JSON follows: ${data}`);
-      statusCallback(
-        subsystemCommon.DataSourceState.Interrupted,
-        new LDPollingError(
-          DataSourceErrorKind.InvalidData,
-          'Malformed JSON data in polling response',
-        ),
-      );
-    };
-
     const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
     this._requestor.requestAllData((err, body) => {
@@ -125,7 +113,15 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
       } catch {
         // We could not parse this JSON. Report the problem and fallthrough to
         // start another poll.
-        reportJsonError(body);
+        this._logger?.error('Polling received malformed data');
+        this._logger?.debug(`Malformed JSON follows: ${body}`);
+        statusCallback(
+          subsystemCommon.DataSourceState.Interrupted,
+          new LDPollingError(
+            DataSourceErrorKind.InvalidData,
+            'Malformed JSON data in polling response',
+          ),
+        );
       }
 
       // schedule poll
@@ -152,9 +148,5 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
     this._statusCallback?.(subsystemCommon.DataSourceState.Closed);
     this._stopped = true;
     this._statusCallback = undefined;
-  }
-
-  close() {
-    this.stop();
   }
 }

@@ -40,7 +40,7 @@ import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
-import OneShotInitializer from './data_sources/OneShotInitializer';
+import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
 import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
 import Requestor from './data_sources/Requestor';
 import StreamingProcessorFDv2 from './data_sources/StreamingProcessorFDv2';
@@ -243,7 +243,7 @@ export default class LDClientImpl implements LDClient {
         // use one shot initializer for performance and cost
         initializers.push(
           () =>
-            new OneShotInitializer(
+            new OneShotInitializerFDv2(
               new Requestor(config, this._platform.requests, baseHeaders),
               config.logger,
             ),
