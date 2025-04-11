@@ -27,13 +27,17 @@ const createDiagnosticsInitConfig = (
   ...((isStandardOptions(config.dataSystem.dataSource) ||
     isPollingOnlyOptions(config.dataSystem.dataSource)) &&
   config.dataSystem.dataSource.pollInterval
-    ? { pollingIntervalMillis: config.dataSystem.dataSource.pollInterval }
+    ? { pollingIntervalMillis: secondsToMillis(config.dataSystem.dataSource.pollInterval) }
     : null),
   // include reconnect delay if data source config has it
   ...((isStandardOptions(config.dataSystem.dataSource) ||
     isStreamingOnlyOptions(config.dataSystem.dataSource)) &&
   config.dataSystem.dataSource.streamInitialReconnectDelay
-    ? { reconnectTimeMillis: config.dataSystem.dataSource.streamInitialReconnectDelay }
+    ? {
+        reconnectTimeMillis: secondsToMillis(
+          config.dataSystem.dataSource.streamInitialReconnectDelay,
+        ),
+      }
     : null),
   contextKeysFlushIntervalMillis: secondsToMillis(config.contextKeysFlushInterval),
   diagnosticRecordingIntervalMillis: secondsToMillis(config.diagnosticRecordingInterval),

@@ -2,6 +2,7 @@
 import {
   cancelableTimedPromise,
   ClientContext,
+  CompositeDataSource,
   Context,
   defaultHeaders,
   internal,
@@ -37,11 +38,12 @@ import {
 } from './api/options/LDDataSystemOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
-import { createStreamListeners } from './data_sources/createStreamListeners';
+import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
-import PollingProcessor from './data_sources/PollingProcessor';
+import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
+import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
 import Requestor from './data_sources/Requestor';
-import StreamingProcessor from './data_sources/StreamingProcessor';
+import StreamingProcessorFDv2 from './data_sources/StreamingProcessorFDv2';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
@@ -101,6 +103,8 @@ export default class LDClientImpl implements LDClient {
   private _featureStore: LDFeatureStore;
 
   private _updateProcessor?: subsystem.LDStreamProcessor;
+
+  private _dataSource?: subsystem.DataSource;
 
   private _eventFactoryDefault = new EventFactory(false);
 
@@ -221,50 +225,82 @@ export default class LDClientImpl implements LDClient {
     };
     this._evaluator = new Evaluator(this._platform, queries);
 
-    const listeners = createStreamListeners(dataSourceUpdates, this._logger, {
-      put: () => this._initSuccess(),
-    });
-    const makeDefaultProcessor = () => {
-      if (isPollingOnlyOptions(config.dataSystem.dataSource)) {
-        return new PollingProcessor(
-          new Requestor(config, this._platform.requests, baseHeaders),
-          config.dataSystem.dataSource.pollInterval ?? 30,
-          dataSourceUpdates,
-          config.logger,
-          () => this._initSuccess(),
-          (e) => this._dataSourceErrorHandler(e),
+    if (!(config.offline || config.dataSystem.useLdd)) {
+      // use configured update processor factory if one exists
+      const updateProcessor = config.dataSystem.updateProcessorFactory?.(
+        clientContext,
+        dataSourceUpdates,
+        () => this._initSuccess(),
+        (e) => this._dataSourceErrorHandler(e),
+      );
+      if (updateProcessor) {
+        this._updateProcessor = updateProcessor;
+        this._updateProcessor?.start();
+      } else {
+        // make the FDv2 composite datasource with initializers/synchronizers
+        const initializers: subsystem.LDSynchronizerFactory[] = [];
+
+        // use one shot initializer for performance and cost
+        initializers.push(
+          () =>
+            new OneShotInitializerFDv2(
+              new Requestor(config, this._platform.requests, baseHeaders),
+              config.logger,
+            ),
+        );
+
+        const synchronizers: subsystem.LDSynchronizerFactory[] = [];
+        // if streaming is configured, add streaming synchronizer
+        if (
+          isStandardOptions(config.dataSystem.dataSource) ||
+          isStreamingOnlyOptions(config.dataSystem.dataSource)
+        ) {
+          const reconnectDelay = config.dataSystem.dataSource.streamInitialReconnectDelay;
+          synchronizers.push(
+            () =>
+              new StreamingProcessorFDv2(
+                clientContext,
+                '/all',
+                [],
+                baseHeaders,
+                this._diagnosticsManager,
+                reconnectDelay,
+              ),
+          );
+        }
+
+        // if polling is configured, add polling synchronizer
+        if (
+          isStandardOptions(config.dataSystem.dataSource) ||
+          isPollingOnlyOptions(config.dataSystem.dataSource)
+        ) {
+          const pollingInterval = config.dataSystem.dataSource.pollInterval;
+          synchronizers.push(
+            () =>
+              new PollingProcessorFDv2(
+                new Requestor(config, this._platform.requests, baseHeaders),
+                pollingInterval,
+                config.logger,
+              ),
+          );
+        }
+
+        this._dataSource = new CompositeDataSource(initializers, synchronizers, this.logger);
+        const payloadListener = createPayloadListener(dataSourceUpdates, this.logger, () => {
+          this._initSuccess();
+        });
+
+        this._dataSource.start(
+          (_, payload) => {
+            payloadListener(payload);
+          },
+          (_, err) => {
+            if (err) {
+              this._dataSourceErrorHandler(err);
+            }
+          },
         );
       }
-      // TODO: SDK-858 Hook up composite data source and config
-      const reconnectDelay =
-        isStandardOptions(config.dataSystem.dataSource) ||
-        isStreamingOnlyOptions(config.dataSystem.dataSource)
-          ? config.dataSystem.dataSource.streamInitialReconnectDelay
-          : 1;
-      return new StreamingProcessor(
-        clientContext,
-        '/all',
-        [],
-        listeners,
-        baseHeaders,
-        this._diagnosticsManager,
-        (e) => this._dataSourceErrorHandler(e),
-        reconnectDelay,
-      );
-    };
-
-    if (!(config.offline || config.dataSystem.useLdd)) {
-      this._updateProcessor =
-        config.dataSystem.updateProcessorFactory?.(
-          clientContext,
-          dataSourceUpdates,
-          () => this._initSuccess(),
-          (e) => this._dataSourceErrorHandler(e),
-        ) ?? makeDefaultProcessor();
-    }
-
-    if (this._updateProcessor) {
-      this._updateProcessor.start();
     } else {
       // Deferring the start callback should allow client construction to complete before we start
       // emitting events. Allowing the client an opportunity to register events.
@@ -285,7 +321,10 @@ export default class LDClientImpl implements LDClient {
     // If there is no update processor, then there is functionally no initialization
     // so it is fine not to wait.
 
-    if (options?.timeout === undefined && this._updateProcessor !== undefined) {
+    if (
+      options?.timeout === undefined &&
+      (this._updateProcessor !== undefined || this._dataSource !== undefined)
+    ) {
       this._logger?.warn(
         'The waitForInitialization function was called without a timeout specified.' +
           ' In a future version a default timeout will be applied.',
@@ -294,7 +333,7 @@ export default class LDClientImpl implements LDClient {
     if (
       options?.timeout !== undefined &&
       options?.timeout > HIGH_TIMEOUT_THRESHOLD &&
-      this._updateProcessor !== undefined
+      (this._updateProcessor !== undefined || this._dataSource !== undefined)
     ) {
       this._logger?.warn(
         'The waitForInitialization function was called with a timeout greater than ' +
@@ -740,6 +779,7 @@ export default class LDClientImpl implements LDClient {
   close(): void {
     this._eventProcessor.close();
     this._updateProcessor?.close();
+    this._dataSource?.stop();
     this._featureStore.close();
     this._bigSegmentsManager.close();
   }

@@ -1,2 +1,11 @@
 streaming/validation/drop and reconnect if stream event has malformed JSON
 streaming/validation/drop and reconnect if stream event has well-formed JSON not matching schema
+
+streaming/fdv2/reconnection state management/initializes from polling initializer
+streaming/fdv2/reconnection state management/initializes from 2 polling initializers
+
+streaming/fdv2/reconnection state management/saves previously known state
+streaming/fdv2/reconnection state management/replaces previously known state
+streaming/fdv2/reconnection state management/updates previously known state
+streaming/fdv2/ignores model version
+streaming/fdv2/can discard partial events on errors

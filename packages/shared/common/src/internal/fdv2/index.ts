@@ -1,3 +1,17 @@
-import { Payload, PayloadListener, PayloadReader, Update } from './payloadReader';
+import {
+  FDv2EventsCollection,
+  Payload,
+  PayloadListener,
+  PayloadProcessor,
+  Update,
+} from './payloadProcessor';
+import { PayloadStreamReader } from './payloadStreamReader';
 
-export { Payload, PayloadListener, PayloadReader, Update };
+export {
+  FDv2EventsCollection,
+  Payload,
+  PayloadListener,
+  PayloadProcessor,
+  PayloadStreamReader,
+  Update,
+};
