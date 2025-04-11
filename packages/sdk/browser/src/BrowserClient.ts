@@ -117,12 +117,14 @@ export class BrowserClient extends LDClientImpl implements LDClient {
 
     const platform = overridePlatform ?? new BrowserPlatform(logger);
     const validatedBrowserOptions = validateOptions(options, logger);
+    console.log('validatedBrowserOptions', validatedBrowserOptions);
     const { eventUrlTransformer } = validatedBrowserOptions;
+    console.log('filtered options', filterToBaseOptions({ ...options, logger }));
     super(
       clientSideId,
       autoEnvAttributes,
       platform,
-      filterToBaseOptions({ ...options, logger }),
+      filterToBaseOptions({ ...validatedBrowserOptions, logger }),
       (
         flagManager: FlagManager,
         configuration: Configuration,

@@ -11,6 +11,7 @@ import DefaultBrowserEventSource from './DefaultBrowserEventSource';
 
 export default class BrowserRequests implements Requests {
   fetch(url: string, options?: Options): Promise<Response> {
+    delete options?.compressBodyIfPossible;
     // @ts-ignore
     return fetch(url, options);
   }

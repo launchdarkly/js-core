@@ -1,5 +1,6 @@
 import AttributeReference from '../src/AttributeReference';
 import Context from '../src/Context';
+import { setupCrypto } from './setupCrypto';
 
 // A sample of invalid characters.
 const invalidSampleChars = [
@@ -323,5 +324,197 @@ describe('given a multi context', () => {
 
   it('it can convert from LDContext to Context and back to LDContext', () => {
     expect(Context.toLDContext(input)).toEqual(expected);
+  });
+});
+
+describe('given mock crypto', () => {
+  const crypto = setupCrypto();
+
+  it('two equal contexts hash the same', async () => {
+    const a = Context.fromLDContext({
+      kind: 'multi',
+      org: {
+        key: 'testKey',
+        name: 'testName',
+        cat: 'calico',
+        dog: 'lab',
+        anonymous: true,
+        _meta: {
+          privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
+        },
+      },
+      customer: {
+        key: 'testKey',
+        name: 'testName',
+        bird: 'party parrot',
+        chicken: 'hen',
+      },
+    });
+
+    const b = Context.fromLDContext({
+      kind: 'multi',
+      org: {
+        key: 'testKey',
+        name: 'testName',
+        cat: 'calico',
+        dog: 'lab',
+        anonymous: true,
+        _meta: {
+          privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
+        },
+      },
+      customer: {
+        key: 'testKey',
+        name: 'testName',
+        bird: 'party parrot',
+        chicken: 'hen',
+      },
+    });
+    expect(await a.hash(crypto)).toEqual(await b.hash(crypto));
+  });
+
+  it('legacy and non-legacy equivalent contexts hash the same', async () => {
+    const legacy = Context.fromLDContext({
+      key: 'testKey',
+      name: 'testName',
+      custom: { cat: 'calico', dog: 'lab' },
+      anonymous: true,
+      privateAttributeNames: ['cat', 'dog'],
+    });
+
+    const nonLegacy = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      name: 'testName',
+      cat: 'calico',
+      dog: 'lab',
+      anonymous: true,
+      _meta: {
+        privateAttributes: ['cat', 'dog'],
+      },
+    });
+
+    expect(await legacy.hash(crypto)).toEqual(await nonLegacy.hash(crypto));
+  });
+
+  it('single context and multi-context with one kind hash the same', async () => {
+    const single = Context.fromLDContext({
+      kind: 'org',
+      key: 'testKey',
+      name: 'testName',
+      value: 'testValue',
+    });
+
+    const multi = Context.fromLDContext({
+      kind: 'multi',
+      org: {
+        key: 'testKey',
+        name: 'testName',
+        value: 'testValue',
+      },
+    });
+
+    expect(await single.hash(crypto)).toEqual(await multi.hash(crypto));
+  });
+
+  it('handles shared references without getting stuck', async () => {
+    const sharedObject = { value: 'shared' };
+    const context = Context.fromLDContext({
+      kind: 'multi',
+      org: {
+        key: 'testKey',
+        shared: sharedObject,
+      },
+      user: {
+        key: 'testKey',
+        shared: sharedObject,
+      },
+    });
+
+    const hash = await context.hash(crypto);
+    expect(hash).toBeDefined();
+  });
+
+  it('returns undefined for contexts with cycles', async () => {
+    const cyclicObject: any = { value: 'cyclic' };
+    cyclicObject.self = cyclicObject;
+
+    const context = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      cyclic: cyclicObject,
+    });
+
+    expect(await context.hash(crypto)).toBeUndefined();
+  });
+
+  it('handles nested objects correctly', async () => {
+    const context = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      nested: {
+        level1: {
+          level2: {
+            value: 'deep'
+          }
+        }
+      }
+    });
+
+    const hash = await context.hash(crypto);
+    expect(hash).toBeDefined();
+  });
+
+  it('handles arrays correctly', async () => {
+    const context = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      array: [1, 2, 3],
+      nestedArray: [[1, 2], [3, 4]]
+    });
+
+    const hash = await context.hash(crypto);
+    expect(hash).toBeDefined();
+  });
+
+  it('handles primitive values correctly', async () => {
+    const context = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      string: 'test',
+      number: 42,
+      boolean: true,
+      nullValue: null,
+      undefinedValue: undefined
+    });
+
+    const hash = await context.hash(crypto);
+    expect(hash).toBeDefined();
+  });
+
+  it('includes private attributes in hash calculation', async () => {
+    const baseContext = {
+      kind: 'user',
+      key: 'testKey',
+      name: 'testName',
+      nested: {
+        value: 'testValue'
+      }
+    };
+
+    const contextWithPrivate = Context.fromLDContext({
+      ...baseContext,
+      _meta: {
+        privateAttributes: ['name', 'nested/value']
+      }
+    });
+
+    const contextWithoutPrivate = Context.fromLDContext(baseContext);
+
+    const hashWithPrivate = await contextWithPrivate.hash(crypto);
+    const hashWithoutPrivate = await contextWithoutPrivate.hash(crypto);
+
+    // The hashes should be different because private attributes are included in the hash
+    expect(hashWithPrivate).not.toEqual(hashWithoutPrivate);
   });
 });

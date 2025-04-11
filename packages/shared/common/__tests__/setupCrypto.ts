@@ -1,14 +1,25 @@
 import { Hasher } from '../src/api';
 
+class MockHasher implements Hasher {
+  private state: string[] = [];
+
+  update(value: string): Hasher {
+    this.state.push(value);
+    return this;
+  }
+
+  digest(): string {
+    const result = this.state.join('');
+    this.state = []; // Reset state after digest
+    return result;
+  }
+}
+
 export const setupCrypto = () => {
   let counter = 0;
-  const hasher = {
-    update: jest.fn((): Hasher => hasher),
-    digest: jest.fn(() => '1234567890123456'),
-  };
 
   return {
-    createHash: jest.fn(() => hasher),
+    createHash: jest.fn(() => new MockHasher()),
     createHmac: jest.fn(),
     randomUUID: jest.fn(() => {
       counter += 1;

@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line max-classes-per-file
 import type {
+  Crypto,
   LDContext,
   LDContextCommon,
   LDMultiKindContext,
@@ -464,5 +465,70 @@ export default class Context {
 
   public get legacy(): boolean {
     return this._wasLegacy;
+  }
+
+  public async hash(crypto: Crypto): Promise<string | undefined> {
+    if (!this.valid) {
+      return undefined;
+    }
+
+
+    const hasher = crypto.createHash('sha256');
+
+    const stack: {
+      target: any;
+      visited: any[];
+    }[] = [];
+
+    const kinds = this.kinds.sort();
+    kinds.forEach(kind => hasher.update(kind));
+
+    for (const kind of kinds) {
+      hasher.update(kind);
+      const context = this._contextForKind(kind)!;
+      Object.getOwnPropertyNames(context).sort().forEach((key) => {
+        // Handled using private attributes.
+        if (key === "_meta") {
+          return;
+        }
+        stack.push({
+          target: context[key],
+          visited: [context],
+        });
+      });
+
+      const sortedAttributes = this.privateAttributes(kind).map(attr => attr.components.join('/')).sort();
+      sortedAttributes.forEach(attr => hasher.update(attr));
+    }
+
+    while (stack.length > 0) {
+      const { target, visited } = stack.pop()!;
+      if (visited.includes(target)) {
+        return undefined;
+      }
+      visited.push(target);
+      if (typeof target === 'object' && target !== null && target !== undefined) {
+        Object.getOwnPropertyNames(target).sort().forEach((key) => {
+          // Handled using private attributes.
+          if (key === "_meta") {
+            return;
+          }
+          stack.push({
+            target: target[key],
+            visited: [...visited, target],
+          });
+        });
+      } else {
+        hasher.update(String(target));
+      }
+    }
+
+    if (hasher.digest) {
+      return hasher.digest('hex');
+    }
+
+    // The hasher must have either digest or asyncDigest.
+    const digest = await hasher.asyncDigest!('hex');
+    return digest;
   }
 }
