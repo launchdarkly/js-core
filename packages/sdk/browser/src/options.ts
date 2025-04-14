@@ -84,9 +84,10 @@ export function filterToBaseOptions(opts: BrowserOptions): LDOptionsBase {
   return baseOptions;
 }
 
-function applyBrowserDefaults(opts: BrowserOptions) {
+export function applyBrowserDefaults(opts: BrowserOptions): BrowserOptions {
   // eslint-disable-next-line no-param-reassign
   opts.flushInterval ??= DEFAULT_FLUSH_INTERVAL_SECONDS;
+  return opts;
 }
 
 export default function validateOptions(opts: BrowserOptions, logger: LDLogger): ValidatedOptions {

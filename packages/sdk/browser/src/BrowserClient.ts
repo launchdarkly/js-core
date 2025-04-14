@@ -21,7 +21,7 @@ import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOp
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
-import validateOptions, { BrowserOptions, filterToBaseOptions } from './options';
+import validateOptions, { applyBrowserDefaults, BrowserOptions, filterToBaseOptions } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
 
 /**
@@ -116,13 +116,14 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     const baseUrl = options.baseUri ?? 'https://clientsdk.launchdarkly.com';
 
     const platform = overridePlatform ?? new BrowserPlatform(logger);
-    const validatedBrowserOptions = validateOptions(options, logger);
+    const withDefaults = applyBrowserDefaults(options);
+    const validatedBrowserOptions = validateOptions(withDefaults, logger);
     const { eventUrlTransformer } = validatedBrowserOptions;
     super(
       clientSideId,
       autoEnvAttributes,
       platform,
-      filterToBaseOptions({ ...validatedBrowserOptions, logger }),
+      filterToBaseOptions({ ...withDefaults, logger }),
       (
         flagManager: FlagManager,
         configuration: Configuration,

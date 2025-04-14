@@ -12,16 +12,16 @@ describe('given an event summarizer', () => {
   });
 
   it('does nothing for an identify event.', () => {
-    const beforeSummary = summarizer.getSummaries()[0];
+    const beforeSummary = summarizer.getSummary();
     summarizer.summarizeEvent(new InputIdentifyEvent(context));
-    const afterSummary = summarizer.getSummaries()[0];
+    const afterSummary = summarizer.getSummary();
     expect(beforeSummary).toEqual(afterSummary);
   });
 
   it('does nothing for a custom event.', () => {
-    const beforeSummary = summarizer.getSummaries()[0];
+    const beforeSummary = summarizer.getSummary();
     summarizer.summarizeEvent(new InputCustomEvent(context, 'custom', 'potato', 17));
-    const afterSummary = summarizer.getSummaries()[0];
+    const afterSummary = summarizer.getSummary();
     expect(beforeSummary).toEqual(afterSummary);
   });
 
@@ -33,9 +33,9 @@ describe('given an event summarizer', () => {
       context,
       excludeFromSummaries: true,
     };
-    const beforeSummary = summarizer.getSummaries()[0];
+    const beforeSummary = summarizer.getSummary();
     summarizer.summarizeEvent(event as any);
-    const afterSummary = summarizer.getSummaries()[0];
+    const afterSummary = summarizer.getSummary();
     expect(beforeSummary).toEqual(afterSummary);
   });
 
@@ -62,7 +62,7 @@ describe('given an event summarizer', () => {
     summarizer.summarizeEvent(event1 as any);
     summarizer.summarizeEvent(event2 as any);
     summarizer.summarizeEvent(event3 as any);
-    const data = summarizer.getSummaries()[0];
+    const data = summarizer.getSummary();
 
     expect(data.startDate).toEqual(1000);
     expect(data.endDate).toEqual(2000);
@@ -135,7 +135,7 @@ describe('given an event summarizer', () => {
     summarizer.summarizeEvent(event4 as any);
     summarizer.summarizeEvent(event5 as any);
     summarizer.summarizeEvent(event6 as any);
-    const summary = summarizer.getSummaries()[0];
+    const summary = summarizer.getSummary();
 
     summary.features.key1.counters.sort((a, b) => a.value - b.value);
     const expectedFeatures = {
@@ -223,7 +223,7 @@ describe('given an event summarizer', () => {
     summarizer.summarizeEvent(event1 as any);
     summarizer.summarizeEvent(event2 as any);
     summarizer.summarizeEvent(event3 as any);
-    const data = summarizer.getSummaries()[0];
+    const data = summarizer.getSummary();
 
     data.features.key1.counters.sort((a, b) => a.value - b.value);
     const expectedFeatures = {
@@ -282,7 +282,7 @@ describe('given an event summarizer', () => {
     summarizer.summarizeEvent(event1 as any);
     summarizer.summarizeEvent(event2 as any);
     summarizer.summarizeEvent(event3 as any);
-    const data = summarizer.getSummaries()[0];
+    const data = summarizer.getSummary();
 
     const expectedFeatures = {
       key1: {
