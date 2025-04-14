@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 
 import { LDLogger } from '@launchdarkly/js-client-sdk-common';
 
-import validateOptions, { filterToBaseOptions } from '../src/options';
+import validateBrowserOptions, { filterToBaseOptionsWithDefaults } from '../src/options';
 
 let logger: LDLogger;
 
@@ -16,7 +16,7 @@ beforeEach(() => {
 });
 
 it('logs no warnings when all configuration is valid', () => {
-  validateOptions(
+  validateBrowserOptions(
     {
       fetchGoals: true,
       eventUrlTransformer: (url: string) => url,
@@ -31,7 +31,7 @@ it('logs no warnings when all configuration is valid', () => {
 });
 
 it('warns for invalid configuration', () => {
-  validateOptions(
+  validateBrowserOptions(
     {
       // @ts-ignore
       fetchGoals: 'yes',
@@ -50,8 +50,8 @@ it('warns for invalid configuration', () => {
   );
 });
 
-it('applies default options', () => {
-  const opts = validateOptions({}, logger);
+it('applies default browser-specific options', () => {
+  const opts = validateBrowserOptions({}, logger);
 
   expect(opts.fetchGoals).toBe(true);
   expect(opts.eventUrlTransformer).toBeDefined();
@@ -69,9 +69,24 @@ it('filters to base options', () => {
     eventUrlTransformer: (url: string) => url,
   };
 
-  const baseOpts = filterToBaseOptions(opts);
+  const baseOpts = filterToBaseOptionsWithDefaults(opts);
   expect(baseOpts.debug).toBe(false);
-  expect(Object.keys(baseOpts).length).toEqual(1);
+  expect(Object.keys(baseOpts).length).toEqual(2);
   expect(baseOpts).not.toHaveProperty('fetchGoals');
   expect(baseOpts).not.toHaveProperty('eventUrlTransformer');
+  expect(baseOpts.flushInterval).toEqual(2);
+});
+
+it('applies default overrides to common config flushInterval', () => {
+  const opts = {};
+  const result = filterToBaseOptionsWithDefaults(opts);
+  expect(result.flushInterval).toEqual(2);
+});
+
+it('does not override common config flushInterval if it is set', () => {
+  const opts = {
+    flushInterval: 15,
+  };
+  const result = filterToBaseOptionsWithDefaults(opts);
+  expect(result.flushInterval).toEqual(15);
 });
