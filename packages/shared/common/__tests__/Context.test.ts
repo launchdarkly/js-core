@@ -455,10 +455,10 @@ describe('given mock crypto', () => {
       nested: {
         level1: {
           level2: {
-            value: 'deep'
-          }
-        }
-      }
+            value: 'deep',
+          },
+        },
+      },
     });
 
     const hash = await context.hash(crypto);
@@ -470,7 +470,10 @@ describe('given mock crypto', () => {
       kind: 'user',
       key: 'testKey',
       array: [1, 2, 3],
-      nestedArray: [[1, 2], [3, 4]]
+      nestedArray: [
+        [1, 2],
+        [3, 4],
+      ],
     });
 
     const hash = await context.hash(crypto);
@@ -485,7 +488,7 @@ describe('given mock crypto', () => {
       number: 42,
       boolean: true,
       nullValue: null,
-      undefinedValue: undefined
+      undefinedValue: undefined,
     });
 
     const hash = await context.hash(crypto);
@@ -498,15 +501,15 @@ describe('given mock crypto', () => {
       key: 'testKey',
       name: 'testName',
       nested: {
-        value: 'testValue'
-      }
+        value: 'testValue',
+      },
     };
 
     const contextWithPrivate = Context.fromLDContext({
       ...baseContext,
       _meta: {
-        privateAttributes: ['name', 'nested/value']
-      }
+        privateAttributes: ['name', 'nested/value'],
+      },
     });
 
     const contextWithoutPrivate = Context.fromLDContext(baseContext);

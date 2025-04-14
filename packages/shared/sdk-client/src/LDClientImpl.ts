@@ -80,9 +80,7 @@ export default class LDClientImpl implements LDClient {
       throw new Error('Platform must implement Encoding because btoa is required.');
     }
 
-    console.log('sdk-client options', options);
     this._config = new ConfigurationImpl(options, internalOptions);
-    console.log('this._config', this._config);
     this.logger = this._config.logger;
 
     this._baseHeaders = defaultHeaders(

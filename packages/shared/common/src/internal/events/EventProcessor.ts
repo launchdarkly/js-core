@@ -140,18 +140,20 @@ export default class EventProcessor implements LDEventProcessor {
     this._capacity = _config.eventsCapacity;
     this._logger = clientContext.basicConfiguration.logger;
     this._eventSender = new EventSender(clientContext, baseHeaders);
-    
+
     this._contextFilter = new ContextFilter(
       _config.allAttributesPrivate,
       _config.privateAttributes.map((ref) => new AttributeReference(ref)),
     );
 
-    if(summariesPerContext) {
-      this._summarizer = new MultiEventSummarizer(clientContext.platform.crypto, this._contextFilter);
+    if (summariesPerContext) {
+      this._summarizer = new MultiEventSummarizer(
+        clientContext.platform.crypto,
+        this._contextFilter,
+      );
     } else {
       this._summarizer = new EventSummarizer();
     }
-
 
     if (start) {
       this.start();
@@ -223,12 +225,11 @@ export default class EventProcessor implements LDEventProcessor {
     const summaries = this._summarizer.getSummaries();
     this._summarizer.clearSummary();
 
-    summaries.forEach(summary => {
+    summaries.forEach((summary) => {
       if (Object.keys(summary.features).length) {
         eventsToFlush.push(summary);
       }
     });
-
 
     if (!eventsToFlush.length) {
       return;

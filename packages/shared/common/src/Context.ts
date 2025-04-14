@@ -472,7 +472,6 @@ export default class Context {
       return undefined;
     }
 
-
     const hasher = crypto.createHash('sha256');
 
     const stack: {
@@ -481,24 +480,28 @@ export default class Context {
     }[] = [];
 
     const kinds = this.kinds.sort();
-    kinds.forEach(kind => hasher.update(kind));
+    kinds.forEach((kind) => hasher.update(kind));
 
     for (const kind of kinds) {
       hasher.update(kind);
       const context = this._contextForKind(kind)!;
-      Object.getOwnPropertyNames(context).sort().forEach((key) => {
-        // Handled using private attributes.
-        if (key === "_meta") {
-          return;
-        }
-        stack.push({
-          target: context[key],
-          visited: [context],
+      Object.getOwnPropertyNames(context)
+        .sort()
+        .forEach((key) => {
+          // Handled using private attributes.
+          if (key === '_meta') {
+            return;
+          }
+          stack.push({
+            target: context[key],
+            visited: [context],
+          });
         });
-      });
 
-      const sortedAttributes = this.privateAttributes(kind).map(attr => attr.components.join('/')).sort();
-      sortedAttributes.forEach(attr => hasher.update(attr));
+      const sortedAttributes = this.privateAttributes(kind)
+        .map((attr) => attr.components.join('/'))
+        .sort();
+      sortedAttributes.forEach((attr) => hasher.update(attr));
     }
 
     while (stack.length > 0) {
@@ -508,16 +511,18 @@ export default class Context {
       }
       visited.push(target);
       if (typeof target === 'object' && target !== null && target !== undefined) {
-        Object.getOwnPropertyNames(target).sort().forEach((key) => {
-          // Handled using private attributes.
-          if (key === "_meta") {
-            return;
-          }
-          stack.push({
-            target: target[key],
-            visited: [...visited, target],
+        Object.getOwnPropertyNames(target)
+          .sort()
+          .forEach((key) => {
+            // Handled using private attributes.
+            if (key === '_meta') {
+              return;
+            }
+            stack.push({
+              target: target[key],
+              visited: [...visited, target],
+            });
           });
-        });
       } else {
         hasher.update(String(target));
       }

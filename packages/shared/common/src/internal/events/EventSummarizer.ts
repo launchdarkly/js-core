@@ -1,4 +1,8 @@
-import LDEventSummarizer, { SummarizedFlagsEvent, FlagSummary, FlagCounter } from '../../api/subsystem/LDEventSummarizer';
+import LDEventSummarizer, {
+  FlagCounter,
+  FlagSummary,
+  SummarizedFlagsEvent,
+} from '../../api/subsystem/LDEventSummarizer';
 import Context from '../../Context';
 import ContextFilter from '../../ContextFilter';
 import { isFeature } from './guards';
@@ -7,8 +11,9 @@ import InputEvent from './InputEvent';
 import SummaryCounter from './SummaryCounter';
 
 function counterKey(event: InputEvalEvent) {
-  return `${event.key}:${event.variation !== null && event.variation !== undefined ? event.variation : ''
-    }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
+  return `${event.key}:${
+    event.variation !== null && event.variation !== undefined ? event.variation : ''
+  }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
 }
 
 /**
@@ -25,12 +30,14 @@ export default class EventSummarizer implements LDEventSummarizer {
 
   private _context?: Context;
 
-  constructor(private readonly _singleContext: boolean = false, private readonly _contextFilter?: ContextFilter) {
-  }
+  constructor(
+    private readonly _singleContext: boolean = false,
+    private readonly _contextFilter?: ContextFilter,
+  ) {}
 
   summarizeEvent(event: InputEvent) {
     if (isFeature(event) && !event.excludeFromSummaries) {
-      if(!this._context) {
+      if (!this._context) {
         this._context = event.context;
       }
       const countKey = counterKey(event);
@@ -96,13 +103,18 @@ export default class EventSummarizer implements LDEventSummarizer {
       {},
     );
 
-    return [{
-      startDate: this._startDate,
-      endDate: this._endDate,
-      features,
-      kind: 'summary',
-      context: this._context !== undefined && this._singleContext ? this._contextFilter?.filter(this._context) : undefined,
-    }];
+    return [
+      {
+        startDate: this._startDate,
+        endDate: this._endDate,
+        features,
+        kind: 'summary',
+        context:
+          this._context !== undefined && this._singleContext
+            ? this._contextFilter?.filter(this._context)
+            : undefined,
+      },
+    ];
   }
 
   clearSummary() {
