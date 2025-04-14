@@ -31,7 +31,6 @@ export default class EventSummarizer implements LDEventSummarizer {
   summarizeEvent(event: InputEvent) {
     if (isFeature(event) && !event.excludeFromSummaries) {
       if(!this._context) {
-        console.log('setting context', event.context);
         this._context = event.context;
       }
       const countKey = counterKey(event);
@@ -73,7 +72,7 @@ export default class EventSummarizer implements LDEventSummarizer {
           flagSummary = {
             default: counter.default,
             counters: [],
-            contextKinds: this._singleContext ? undefined : [...this._contextKinds[counter.key]],
+            contextKinds: [...this._contextKinds[counter.key]],
           };
           acc[counter.key] = flagSummary;
         }
@@ -96,9 +95,6 @@ export default class EventSummarizer implements LDEventSummarizer {
       },
       {},
     );
-
-    console.log("HAS CONTEXT", !!this._context);
-    console.log("SINGLE CONTEXT", this._singleContext);
 
     return [{
       startDate: this._startDate,
