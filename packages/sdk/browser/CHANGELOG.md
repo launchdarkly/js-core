@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.1...js-client-sdk-v0.5.2) (2025-04-15)
+
+
+### Bug Fixes
+
+* Handle default flush interval for browser SDK. ([#822](https://github.com/launchdarkly/js-core/issues/822)) ([2c1cc7a](https://github.com/launchdarkly/js-core/commit/2c1cc7a117fd011a329dfcc5332fddf7fd11eff9))
+
 ## [0.5.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.0...js-client-sdk-v0.5.1) (2025-04-08)
 
 
