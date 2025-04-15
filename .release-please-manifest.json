@@ -14,8 +14,8 @@
   "packages/shared/sdk-client": "1.12.5",
   "packages/sdk/react-native": "10.9.8",
   "packages/telemetry/node-server-sdk-otel": "1.1.8",
-  "packages/sdk/browser": "0.5.1",
+  "packages/sdk/browser": "0.5.2",
   "packages/sdk/server-ai": "0.9.5",
-  "packages/telemetry/browser-telemetry": "1.0.4",
+  "packages/telemetry/browser-telemetry": "1.0.5",
   "packages/tooling/jest": "0.1.3"
 }
