@@ -1,7 +1,5 @@
 /**
  * Metadata used to initialize an LDFeatureStore.
- *
- * @internal
  */
 export interface InitMetadata {
   environmentId: string;
@@ -14,8 +12,6 @@ export interface InitMetadata {
  * a streaming or polling connection to LD.
  * @returns InitMetadata object, or undefined if initHeaders is undefined
  * or missing the required header values.
- *
- * @internal
  */
 export function initMetadataFromHeaders(initHeaders?: {
   [key: string]: string;

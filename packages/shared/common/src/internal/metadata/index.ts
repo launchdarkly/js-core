@@ -1,1 +1,3 @@
-export { InitMetadata, initMetadataFromHeaders } from './InitMetadata';
+import { InitMetadata, initMetadataFromHeaders } from './InitMetadata';
+
+export { InitMetadata, initMetadataFromHeaders };
