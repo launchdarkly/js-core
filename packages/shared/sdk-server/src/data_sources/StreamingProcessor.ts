@@ -38,6 +38,7 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
   private _eventSource?: EventSource;
   private _requests: Requests;
   private _connectionAttemptStartTime?: number;
+  private _initHeaders?: { [key: string]: string };
 
   constructor(
     clientContext: ClientContext,
@@ -125,7 +126,8 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
       // The work is done by `errorFilter`.
     };
 
-    eventSource.onopen = () => {
+    eventSource.onopen = (e) => {
+      this._initHeaders = e.headers;
       this._logger?.info('Opened LaunchDarkly stream connection');
     };
 
@@ -146,7 +148,7 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
             reportJsonError(eventName, data, this._logger, this._errorHandler);
             return;
           }
-          processJson(dataJson);
+          processJson(dataJson, this._initHeaders);
         } else {
           this._errorHandler?.(
             new LDStreamingError(

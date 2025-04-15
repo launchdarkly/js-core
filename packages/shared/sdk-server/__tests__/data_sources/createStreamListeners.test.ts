@@ -94,13 +94,36 @@ describe('createStreamListeners', () => {
 
       processJson(allData);
 
-      expect(logger.debug).toBeCalledWith(expect.stringMatching(/initializing/i));
-      expect(dataSourceUpdates.init).toBeCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/initializing/i));
+      expect(dataSourceUpdates.init).toHaveBeenCalledWith(
         {
           features: flags,
           segments,
         },
         onPutCompleteHandler,
+        undefined,
+      );
+    });
+
+    test('data source init is called with initialization metadata', async () => {
+      const listeners = createStreamListeners(dataSourceUpdates, logger, onCompleteHandlers);
+      const { processJson } = listeners.get('put')!;
+      const {
+        data: { flags, segments },
+      } = allData;
+      const initHeaders = {
+        'x-ld-envid': '12345',
+      };
+      processJson(allData, initHeaders);
+
+      expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/initializing/i));
+      expect(dataSourceUpdates.init).toHaveBeenCalledWith(
+        {
+          features: flags,
+          segments,
+        },
+        onPutCompleteHandler,
+        { environmentId: '12345' },
       );
     });
   });
@@ -121,8 +144,8 @@ describe('createStreamListeners', () => {
 
       processJson(patchData);
 
-      expect(logger.debug).toBeCalledWith(expect.stringMatching(/updating/i));
-      expect(dataSourceUpdates.upsert).toBeCalledWith(kind, data, onPatchCompleteHandler);
+      expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/updating/i));
+      expect(dataSourceUpdates.upsert).toHaveBeenCalledWith(kind, data, onPatchCompleteHandler);
     });
 
     test('data source upsert not called missing kind', async () => {
@@ -132,7 +155,7 @@ describe('createStreamListeners', () => {
 
       processJson(missingKind);
 
-      expect(dataSourceUpdates.upsert).not.toBeCalled();
+      expect(dataSourceUpdates.upsert).not.toHaveBeenCalled();
     });
 
     test('data source upsert not called wrong namespace path', async () => {
@@ -142,7 +165,7 @@ describe('createStreamListeners', () => {
 
       processJson(wrongKey);
 
-      expect(dataSourceUpdates.upsert).not.toBeCalled();
+      expect(dataSourceUpdates.upsert).not.toHaveBeenCalled();
     });
   });
 
@@ -162,8 +185,8 @@ describe('createStreamListeners', () => {
 
       processJson(deleteData);
 
-      expect(logger.debug).toBeCalledWith(expect.stringMatching(/deleting/i));
-      expect(dataSourceUpdates.upsert).toBeCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/deleting/i));
+      expect(dataSourceUpdates.upsert).toHaveBeenCalledWith(
         kind,
         { key: 'flagkey', version, deleted: true },
         onDeleteCompleteHandler,
@@ -177,7 +200,7 @@ describe('createStreamListeners', () => {
 
       processJson(missingKind);
 
-      expect(dataSourceUpdates.upsert).not.toBeCalled();
+      expect(dataSourceUpdates.upsert).not.toHaveBeenCalled();
     });
 
     test('data source upsert not called wrong namespace path', async () => {
@@ -187,7 +210,7 @@ describe('createStreamListeners', () => {
 
       processJson(wrongKey);
 
-      expect(dataSourceUpdates.upsert).not.toBeCalled();
+      expect(dataSourceUpdates.upsert).not.toHaveBeenCalled();
     });
   });
 });

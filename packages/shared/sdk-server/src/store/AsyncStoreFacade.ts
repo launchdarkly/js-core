@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../api/interfaces';
 import {
   LDFeatureStore,
@@ -7,6 +9,8 @@ import {
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 import promisify from '../async/promisify';
+
+type InitMetadata = internal.InitMetadata;
 
 /**
  * Provides an async interface to a feature store.
@@ -33,9 +37,9 @@ export default class AsyncStoreFacade {
     });
   }
 
-  async init(allData: LDFeatureStoreDataStorage): Promise<void> {
+  async init(allData: LDFeatureStoreDataStorage, initMetadata?: InitMetadata): Promise<void> {
     return promisify((cb) => {
-      this._store.init(allData, cb);
+      this._store.init(allData, cb, initMetadata);
     });
   }
 
@@ -59,5 +63,9 @@ export default class AsyncStoreFacade {
 
   close(): void {
     this._store.close();
+  }
+
+  getInitMetadata?(): InitMetadata | undefined {
+    return this._store.getInitMetaData?.();
   }
 }

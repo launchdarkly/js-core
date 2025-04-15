@@ -147,4 +147,21 @@ describe('given an initialized feature store', () => {
     const feature = await featureStore.get({ namespace: 'potato' }, newPotato.key);
     expect(feature).toEqual(newPotato);
   });
+
+  it('returns undefined initMetadata', () => {
+    expect(featureStore.getInitMetadata?.()).toBeUndefined();
+  });
+});
+
+describe('given an initialized feature store with metadata', () => {
+  let featureStore: AsyncStoreFacade;
+
+  beforeEach(async () => {
+    featureStore = new AsyncStoreFacade(new InMemoryFeatureStore());
+    await featureStore.init({}, { environmentId: '12345' });
+  });
+
+  it('returns correct metadata', () => {
+    expect(featureStore.getInitMetadata?.()).toEqual({ environmentId: '12345' });
+  });
 });

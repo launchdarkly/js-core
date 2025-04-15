@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../api/interfaces';
 import {
   LDFeatureStore,
@@ -7,10 +9,14 @@ import {
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 
+type InitMetadata = internal.InitMetadata;
+
 export default class InMemoryFeatureStore implements LDFeatureStore {
   private _allData: LDFeatureStoreDataStorage = {};
 
   private _initCalled = false;
+
+  private _initMetadata?: InitMetadata;
 
   private _addItem(kind: DataKind, key: string, item: LDFeatureStoreItem) {
     let items = this._allData[kind.namespace];
@@ -52,9 +58,14 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
     callback?.(result);
   }
 
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+  init(
+    allData: LDFeatureStoreDataStorage,
+    callback: () => void,
+    initMetadata?: InitMetadata,
+  ): void {
     this._initCalled = true;
     this._allData = allData as LDFeatureStoreDataStorage;
+    this._initMetadata = initMetadata;
     callback?.();
   }
 
@@ -80,5 +91,9 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
 
   getDescription(): string {
     return 'memory';
+  }
+
+  getInitMetaData(): InitMetadata | undefined {
+    return this._initMetadata;
   }
 }

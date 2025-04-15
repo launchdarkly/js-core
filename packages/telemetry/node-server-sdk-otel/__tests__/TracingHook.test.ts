@@ -26,14 +26,19 @@ it('validates configuration', async () => {
         messages.push(text);
       },
     }),
+    // @ts-ignore
+    environmentId: 12345,
   });
 
-  expect(messages.length).toEqual(2);
+  expect(messages.length).toEqual(3);
   expect(messages[0]).toEqual(
     'error: [LaunchDarkly] Config option "includeVariant" should be of type boolean, got string, using default value',
   );
   expect(messages[1]).toEqual(
     'error: [LaunchDarkly] Config option "spans" should be of type boolean, got string, using default value',
+  );
+  expect(messages[2]).toEqual(
+    'error: [LaunchDarkly] Config option "environmentId" should be of type string, got number, using default value',
   );
 });
 
@@ -72,6 +77,7 @@ describe('with a testing otel span collector', () => {
     expect(spanEvent.attributes!['feature_flag.provider_name']).toEqual('LaunchDarkly');
     expect(spanEvent.attributes!['feature_flag.context.key']).toEqual('user-key');
     expect(spanEvent.attributes!['feature_flag.variant']).toBeUndefined();
+    expect(spanEvent.attributes!['feature_flag.set.id']).toBeUndefined();
   });
 
   it('can include variant in span events', async () => {
@@ -134,5 +140,82 @@ describe('with a testing otel span collector', () => {
     const spans = spanExporter.getFinishedSpans();
     const spanEvent = spans[0]!.events[0]!;
     expect(spanEvent.attributes!['feature_flag.context.key']).toEqual('org:org-key:user:bob');
+  });
+
+  it('can include environmentId from options', async () => {
+    const td = new integrations.TestData();
+    const client = init('bad-key', {
+      sendEvents: false,
+      updateProcessor: td.getFactory(),
+      hooks: [new TracingHook({ environmentId: 'id-from-options' })],
+    });
+
+    const tracer = trace.getTracer('trace-hook-test-tracer');
+    await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
+      await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
+      span.end();
+    });
+
+    const spans = spanExporter.getFinishedSpans();
+    const spanEvent = spans[0]!.events[0]!;
+    expect(spanEvent.attributes!['feature_flag.set.id']).toEqual('id-from-options');
+  });
+
+  it('can include environmentId from hook context', async () => {
+    const hook = new TracingHook();
+    const td = new integrations.TestData();
+    const client = init('bad-key', {
+      sendEvents: false,
+      updateProcessor: td.getFactory(),
+      hooks: [hook],
+    });
+
+    jest.spyOn(hook, 'afterEvaluation').mockImplementationOnce((hookContext, data, detail) =>
+      // @ts-ignore
+      hook.afterEvaluation?.(
+        { ...hookContext, environmentId: 'id-from-hook-context' },
+        data,
+        detail,
+      ),
+    );
+
+    const tracer = trace.getTracer('trace-hook-test-tracer');
+    await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
+      await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
+      span.end();
+    });
+
+    const spans = spanExporter.getFinishedSpans();
+    const spanEvent = spans[0]!.events[0]!;
+    expect(spanEvent.attributes!['feature_flag.set.id']).toEqual('id-from-hook-context');
+  });
+
+  it('can override hook context environmentId with options', async () => {
+    const hook = new TracingHook({ environmentId: 'id-from-options' });
+    const td = new integrations.TestData();
+    const client = init('bad-key', {
+      sendEvents: false,
+      updateProcessor: td.getFactory(),
+      hooks: [hook],
+    });
+
+    jest.spyOn(hook, 'afterEvaluation').mockImplementationOnce((hookContext, data, detail) =>
+      // @ts-ignore
+      hook.afterEvaluation?.(
+        { ...hookContext, environmentId: 'id-from-hook-context' },
+        data,
+        detail,
+      ),
+    );
+
+    const tracer = trace.getTracer('trace-hook-test-tracer');
+    await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
+      await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
+      span.end();
+    });
+
+    const spans = spanExporter.getFinishedSpans();
+    const spanEvent = spans[0]!.events[0]!;
+    expect(spanEvent.attributes!['feature_flag.set.id']).toEqual('id-from-options');
   });
 });

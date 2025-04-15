@@ -22,6 +22,7 @@ export default class HookRunner {
     defaultValue: unknown,
     methodName: string,
     method: () => Promise<LDEvaluationDetail>,
+    environmentId?: string,
   ): Promise<LDEvaluationDetail> {
     // This early return is here to avoid the extra async/await associated with
     // using withHooksDataWithDetail.
@@ -38,6 +39,7 @@ export default class HookRunner {
         const detail = await method();
         return { detail };
       },
+      environmentId,
     ).then(({ detail }) => detail);
   }
 
@@ -51,12 +53,13 @@ export default class HookRunner {
     defaultValue: unknown,
     methodName: string,
     method: () => Promise<{ detail: LDEvaluationDetail; [index: string]: any }>,
+    environmentId?: string,
   ): Promise<{ detail: LDEvaluationDetail; [index: string]: any }> {
     if (this._hooks.length === 0) {
       return method();
     }
     const { hooks, hookContext }: { hooks: Hook[]; hookContext: EvaluationSeriesContext } =
-      this._prepareHooks(key, context, defaultValue, methodName);
+      this._prepareHooks(key, context, defaultValue, methodName, environmentId);
     const hookData = this._executeBeforeEvaluation(hooks, hookContext);
     const result = await method();
     this._executeAfterEvaluation(hooks, hookContext, hookData, result.detail);
@@ -124,6 +127,7 @@ export default class HookRunner {
     context: LDContext,
     defaultValue: unknown,
     methodName: string,
+    environmentId?: string,
   ): {
     hooks: Hook[];
     hookContext: EvaluationSeriesContext;
@@ -137,6 +141,7 @@ export default class HookRunner {
       context,
       defaultValue,
       method: methodName,
+      environmentId,
     };
     return { hooks, hookContext };
   }

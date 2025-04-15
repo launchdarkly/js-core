@@ -36,6 +36,7 @@ describe('given a HookRunner', () => {
         reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
         variationIndex: null,
       }),
+      '12345',
     );
 
     testHook.verifyAfter(
@@ -44,6 +45,7 @@ describe('given a HookRunner', () => {
         context: { ...defaultUser },
         defaultValue: false,
         method: 'LDClient.variation',
+        environmentId: '12345',
       },
       { added: 'added data' },
       {
@@ -187,6 +189,7 @@ it('can add a hook after initialization', async () => {
       reason: { kind: 'FALLTHROUGH' },
       variationIndex: 0,
     }),
+    '12345',
   );
   testHook.verifyBefore(
     {
@@ -194,6 +197,7 @@ it('can add a hook after initialization', async () => {
       context: { ...defaultUser },
       defaultValue: false,
       method: 'LDClient.variation',
+      environmentId: '12345',
     },
     {},
   );
@@ -203,6 +207,7 @@ it('can add a hook after initialization', async () => {
       context: { ...defaultUser },
       defaultValue: false,
       method: 'LDClient.variation',
+      environmentId: '12345',
     },
     {},
     {
