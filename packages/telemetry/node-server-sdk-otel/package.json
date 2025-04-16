@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk-otel",
-  "version": "1.1.8",
+  "version": "1.2.0",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -33,7 +33,7 @@
     "@opentelemetry/api": ">=1.3.0"
   },
   "devDependencies": {
-    "@launchdarkly/node-server-sdk": "9.8.0",
+    "@launchdarkly/node-server-sdk": "9.9.0",
     "@opentelemetry/api": ">=1.3.0",
     "@opentelemetry/sdk-node": "0.49.1",
     "@opentelemetry/sdk-trace-node": "1.22.0",
