@@ -2,7 +2,10 @@ import { LDEvaluationReason, LDLogger } from '../../api';
 import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
 import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
 import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
-import { LDMultiEventSummarizer, SummarizedFlagsEvent } from '../../api/subsystem/LDEventSummarizer';
+import {
+  LDMultiEventSummarizer,
+  SummarizedFlagsEvent,
+} from '../../api/subsystem/LDEventSummarizer';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
@@ -108,7 +111,9 @@ export interface EventProcessorOptions {
   diagnosticRecordingInterval: number;
 }
 
-function isMultiEventSummarizer(summarizer: LDMultiEventSummarizer | EventSummarizer): summarizer is LDMultiEventSummarizer {
+function isMultiEventSummarizer(
+  summarizer: LDMultiEventSummarizer | EventSummarizer,
+): summarizer is LDMultiEventSummarizer {
   return (summarizer as LDMultiEventSummarizer).getSummaries !== undefined;
 }
 
@@ -219,8 +224,8 @@ export default class EventProcessor implements LDEventProcessor {
     if (this._shutdown) {
       throw new LDInvalidSDKKeyError(
         'Events cannot be posted because a permanent error has been encountered. ' +
-        'This is most likely an invalid SDK key. The specific error information ' +
-        'is logged independently.',
+          'This is most likely an invalid SDK key. The specific error information ' +
+          'is logged independently.',
       );
     }
 
@@ -241,8 +246,6 @@ export default class EventProcessor implements LDEventProcessor {
         eventsToFlush.push(summary);
       }
     }
-
-    this._summarizer.clearSummary();
 
     if (!eventsToFlush.length) {
       return;

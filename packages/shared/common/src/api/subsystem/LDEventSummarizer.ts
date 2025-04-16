@@ -31,10 +31,21 @@ export interface SummarizedFlagsEvent {
   context?: any;
 }
 
+/**
+ * Interface for summarizing feature flag evaluations bucketed by the context.
+ */
 export interface LDMultiEventSummarizer {
+  /**
+   * Processes an event for summarization if it is a feature flag event and not excluded from summaries.
+   * @param event The event to potentially summarize
+   */
   summarizeEvent(event: InputEvent): void;
-  getSummaries(): Promise<SummarizedFlagsEvent[]>;
-  clearSummary(): void;
+
+  /**
+   * Gets the current summary of processed events.
+   * @returns A summary of all processed feature flag events
+   */
+  getSummaries(): SummarizedFlagsEvent[];
 }
 
 /**
@@ -52,9 +63,4 @@ export default interface LDEventSummarizer {
    * @returns A summary of all processed feature flag events
    */
   getSummary(): SummarizedFlagsEvent;
-
-  /**
-   * Clears all summarized event data.
-   */
-  clearSummary(): void;
 }

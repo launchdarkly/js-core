@@ -482,7 +482,7 @@ export default class Context {
     const kinds = this.kinds.sort();
     kinds.forEach((kind) => hasher.update(kind));
 
-    for (const kind of kinds) {
+    kinds.forEach((kind) => {
       hasher.update(kind);
       const context = this._contextForKind(kind)!;
       Object.getOwnPropertyNames(context)
@@ -502,7 +502,7 @@ export default class Context {
         .map((attr) => attr.components.join('/'))
         .sort();
       sortedAttributes.forEach((attr) => hasher.update(attr));
-    }
+    });
 
     while (stack.length > 0) {
       const { target, visited } = stack.pop()!;

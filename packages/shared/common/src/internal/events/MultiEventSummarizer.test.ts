@@ -63,15 +63,16 @@ describe('with mocked crypto and hasher', () => {
     expect(summaries).toHaveLength(2);
   });
 
-  test('clears all summarizers', async () => {
+  test('automatically clears summaries when summarized', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'user1' });
     const event = new InputEvalEvent(true, context, 'flag-key', 'value', 'default', 1, 0, true);
 
     summarizer.summarizeEvent(event);
     await new Promise(process.nextTick);
-    summarizer.clearSummary();
 
-    const summaries = summarizer.getSummaries();
-    expect(summaries).toHaveLength(0);
+    const summariesA = summarizer.getSummaries();
+    const summariesB = summarizer.getSummaries();
+    expect(summariesA).toHaveLength(1);
+    expect(summariesB).toHaveLength(0);
   });
 });

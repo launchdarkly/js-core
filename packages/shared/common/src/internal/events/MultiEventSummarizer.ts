@@ -1,5 +1,5 @@
 import { Crypto } from '../../api';
-import LDEventSummarizer, { SummarizedFlagsEvent } from '../../api/subsystem/LDEventSummarizer';
+import { SummarizedFlagsEvent } from '../../api/subsystem/LDEventSummarizer';
 import ContextFilter from '../../ContextFilter';
 import EventSummarizer from './EventSummarizer';
 import { isFeature } from './guards';
@@ -11,12 +11,11 @@ export default class LDMultiEventSummarizer implements LDMultiEventSummarizer {
     private readonly _contextFilter: ContextFilter,
   ) {}
   private _summarizers: Record<string, EventSummarizer> = {};
-  private _tasks: Promise<void>[] = [];
 
   summarizeEvent(event: InputEvent) {
     // This will execute asynchronously, which means that a flush could happen before the event
     // is summarized. When that happens, then the event will just be in the next batch of summaries.
-    this._tasks.push((async () => {
+    (async () => {
       if (isFeature(event)) {
         const hash = await event.context.hash(this._crypto);
         if (!hash) {
@@ -33,17 +32,12 @@ export default class LDMultiEventSummarizer implements LDMultiEventSummarizer {
 
         summarizer.summarizeEvent(event);
       }
-    })());
+    })();
   }
 
-  async getSummaries(): Promise<SummarizedFlagsEvent[]> {
-    await Promise.all(this._tasks);
-    const tmpTasks = this._tasks;
-    this._tasks = [];
-    return Object.values(this._summarizers).map((summarizer) => summarizer.getSummary());
-  }
-
-  clearSummary(): void {
+  getSummaries(): SummarizedFlagsEvent[] {
+    const summarizersToFlush = this._summarizers;
     this._summarizers = {};
+    return Object.values(summarizersToFlush).map((summarizer) => summarizer.getSummary());
   }
 }

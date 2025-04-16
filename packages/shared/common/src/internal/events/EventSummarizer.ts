@@ -11,8 +11,9 @@ import InputEvent from './InputEvent';
 import SummaryCounter from './SummaryCounter';
 
 function counterKey(event: InputEvalEvent) {
-  return `${event.key}:${event.variation !== null && event.variation !== undefined ? event.variation : ''
-    }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
+  return `${event.key}:${
+    event.variation !== null && event.variation !== undefined ? event.variation : ''
+  }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
 }
 
 /**
@@ -32,7 +33,7 @@ export default class EventSummarizer implements LDEventSummarizer {
   constructor(
     private readonly _singleContext: boolean = false,
     private readonly _contextFilter?: ContextFilter,
-  ) { }
+  ) {}
 
   summarizeEvent(event: InputEvent) {
     if (isFeature(event) && !event.excludeFromSummaries) {
@@ -102,19 +103,21 @@ export default class EventSummarizer implements LDEventSummarizer {
       {},
     );
 
-    return {
+    const event: SummarizedFlagsEvent = {
       startDate: this._startDate,
-        endDate: this._endDate,
-          features,
-          kind: 'summary',
-            context:
-      this._context !== undefined && this._singleContext
-        ? this._contextFilter?.filter(this._context)
-        : undefined,
-      };
+      endDate: this._endDate,
+      features,
+      kind: 'summary',
+      context:
+        this._context !== undefined && this._singleContext
+          ? this._contextFilter?.filter(this._context)
+          : undefined,
+    };
+    this._clearSummary();
+    return event;
   }
 
-  clearSummary() {
+  private _clearSummary() {
     this._startDate = 0;
     this._endDate = 0;
     this._counters = {};

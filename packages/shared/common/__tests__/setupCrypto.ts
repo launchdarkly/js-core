@@ -1,16 +1,16 @@
 import { Hasher } from '../src/api';
 
 class MockHasher implements Hasher {
-  private state: string[] = [];
+  private _state: string[] = [];
 
   update(value: string): Hasher {
-    this.state.push(value);
+    this._state.push(value);
     return this;
   }
 
   digest(): string {
-    const result = this.state.join('');
-    this.state = []; // Reset state after digest
+    const result = this._state.join('');
+    this._state = []; // Reset state after digest
     return result;
   }
 }
