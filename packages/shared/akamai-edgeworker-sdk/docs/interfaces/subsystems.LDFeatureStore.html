@@ -39,7 +39,7 @@ immediately.</p>
 <li><a href="../classes/EdgeFeatureStore.html" class="tsd-signature-type tsd-kind-class">EdgeFeatureStore</a></li>
 <li><a href="../classes/PersistentDataStoreWrapper.html" class="tsd-signature-type tsd-kind-class">PersistentDataStoreWrapper</a></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:42</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:44</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -52,6 +52,7 @@ immediately.</p>
 <a href="subsystems.LDFeatureStore.html#delete" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>delete</span></a>
 <a href="subsystems.LDFeatureStore.html#get" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get</span></a>
 <a href="subsystems.LDFeatureStore.html#getDescription" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Description?</span></a>
+<a href="subsystems.LDFeatureStore.html#getInitMetaData" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Init<wbr/>Meta<wbr/>Data?</span></a>
 <a href="subsystems.LDFeatureStore.html#init" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>init</span></a>
 <a href="subsystems.LDFeatureStore.html#initialized" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>initialized</span></a>
 <a href="subsystems.LDFeatureStore.html#upsert" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>upsert</span></a>
@@ -95,7 +96,7 @@ immediately.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:76</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:78</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="close" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>close</span><a href="#close" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -106,7 +107,7 @@ immediately.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:143</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:148</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="delete" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>delete</span><a href="#delete" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -148,7 +149,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:111</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:116</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="get" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get</span><a href="#get" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -189,7 +190,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:60</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:62</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="getDescription" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>get<wbr/>Description</span><a href="#getDescription" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -200,11 +201,22 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:147</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:152</li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member"><a id="getInitMetaData" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>get<wbr/>Init<wbr/>Meta<wbr/>Data</span><a href="#getInitMetaData" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="tsd-signature tsd-anchor-link" id="getInitMetaData.getInitMetaData-1"><span class="tsd-kind-call-signature">get<wbr/>Init<wbr/>Meta<wbr/>Data</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="platform-1.internal.InitMetadata.html" class="tsd-signature-type tsd-kind-interface">InitMetadata</a><a href="#getInitMetaData.getInitMetaData-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Get the initialization metadata of the store.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="platform-1.internal.InitMetadata.html" class="tsd-signature-type tsd-kind-interface">InitMetadata</a></h4>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:156</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="init" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>init</span><a href="#init" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="init.init-1"><span class="tsd-kind-call-signature">init</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">allData</span>, <span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#init.init-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="init.init-1"><span class="tsd-kind-call-signature">init</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">allData</span>, <span class="tsd-kind-parameter">callback</span>, <span class="tsd-kind-parameter">initMetadata</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#init.init-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Initialize the store, overwriting any existing data.</p>
 </div>
@@ -226,11 +238,15 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <ul class="tsd-signatures">
 <li class="tsd-signature"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 <li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">initMetadata</span>: <a href="platform-1.internal.InitMetadata.html" class="tsd-signature-type tsd-kind-interface">InitMetadata</a></h5>
+<div class="tsd-comment tsd-typography"><p>Optional metadata to initialize the feature store with.</p>
+</div><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:88</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:93</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="initialized" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>initialized</span><a href="#initialized" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -262,7 +278,7 @@ database).</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:139</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:144</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="upsert" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>upsert</span><a href="#upsert" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -298,7 +314,7 @@ database).</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:128</li></ul></aside></li></ul></section></section></div>
+<li>Defined in packages/shared/sdk-server/dist/api/subsystems/LDFeatureStore.d.ts:133</li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -323,6 +339,7 @@ database).</p>
 <li><a href="#delete" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>delete</span></a></li>
 <li><a href="#get" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get</span></a></li>
 <li><a href="#getDescription" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Description</span></a></li>
+<li><a href="#getInitMetaData" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Init<wbr/>Meta<wbr/>Data</span></a></li>
 <li><a href="#init" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>init</span></a></li>
 <li><a href="#initialized" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>initialized</span></a></li>
 <li><a href="#upsert" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>upsert</span></a></li></ul></div></details></div>
