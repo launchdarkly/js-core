@@ -5,7 +5,7 @@ import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
 import {
   LDMultiEventSummarizer,
   SummarizedFlagsEvent,
-} from '../../api/subsystem/LDEventSummarizer';
+} from './LDEventSummarizer';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
