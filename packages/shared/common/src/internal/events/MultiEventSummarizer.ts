@@ -1,5 +1,5 @@
 import { Crypto } from '../../api';
-import { SummarizedFlagsEvent } from '../../api/subsystem/LDEventSummarizer';
+import { SummarizedFlagsEvent } from './LDEventSummarizer';
 import ContextFilter from '../../ContextFilter';
 import EventSummarizer from './EventSummarizer';
 import { isFeature } from './guards';

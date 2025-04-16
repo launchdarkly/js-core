@@ -2,7 +2,7 @@ import LDEventSummarizer, {
   FlagCounter,
   FlagSummary,
   SummarizedFlagsEvent,
-} from '../../api/subsystem/LDEventSummarizer';
+} from './LDEventSummarizer';
 import Context from '../../Context';
 import ContextFilter from '../../ContextFilter';
 import { isFeature } from './guards';
