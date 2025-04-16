@@ -1,9 +1,9 @@
 import { Crypto } from '../../api';
-import { SummarizedFlagsEvent } from './LDEventSummarizer';
 import ContextFilter from '../../ContextFilter';
 import EventSummarizer from './EventSummarizer';
 import { isFeature } from './guards';
 import InputEvent from './InputEvent';
+import { SummarizedFlagsEvent } from './LDEventSummarizer';
 
 export default class LDMultiEventSummarizer implements LDMultiEventSummarizer {
   constructor(

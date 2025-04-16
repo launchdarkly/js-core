@@ -1,4 +1,4 @@
-import InputEvent from '../../internal/events/InputEvent';
+import InputEvent from './InputEvent';
 
 /**
  * @internal

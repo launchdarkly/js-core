@@ -1,13 +1,13 @@
-import LDEventSummarizer, {
-  FlagCounter,
-  FlagSummary,
-  SummarizedFlagsEvent,
-} from './LDEventSummarizer';
 import Context from '../../Context';
 import ContextFilter from '../../ContextFilter';
 import { isFeature } from './guards';
 import InputEvalEvent from './InputEvalEvent';
 import InputEvent from './InputEvent';
+import LDEventSummarizer, {
+  FlagCounter,
+  FlagSummary,
+  SummarizedFlagsEvent,
+} from './LDEventSummarizer';
 import SummaryCounter from './SummaryCounter';
 
 function counterKey(event: InputEvalEvent) {

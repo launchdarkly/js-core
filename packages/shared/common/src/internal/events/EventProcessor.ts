@@ -2,10 +2,6 @@ import { LDEvaluationReason, LDLogger } from '../../api';
 import { LDDeliveryStatus, LDEventType } from '../../api/subsystem';
 import LDContextDeduplicator from '../../api/subsystem/LDContextDeduplicator';
 import LDEventProcessor from '../../api/subsystem/LDEventProcessor';
-import {
-  LDMultiEventSummarizer,
-  SummarizedFlagsEvent,
-} from './LDEventSummarizer';
 import AttributeReference from '../../AttributeReference';
 import ContextFilter from '../../ContextFilter';
 import { ClientContext } from '../../options';
@@ -17,6 +13,7 @@ import { isFeature, isIdentify, isMigration } from './guards';
 import InputEvent from './InputEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
 import InputMigrationEvent from './InputMigrationEvent';
+import { LDMultiEventSummarizer, SummarizedFlagsEvent } from './LDEventSummarizer';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 import MultiEventSummarizer from './MultiEventSummarizer';
 import shouldSample from './sampling';
