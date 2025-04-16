@@ -4,13 +4,13 @@ export type EventName = string;
 export type EventListener = (event?: { data?: any }) => void;
 export type ProcessStreamResponse = {
   deserializeData: (data: string) => any;
-  processJson: (json: any) => void;
+  processJson: (json: any, initHeaders?: { [key: string]: string }) => void;
 };
 
 export interface EventSource {
   onclose: (() => void) | undefined;
   onerror: ((err?: HttpErrorResponse) => void) | undefined;
-  onopen: (() => void) | undefined;
+  onopen: ((e: { headers?: { [key: string]: string } }) => void) | undefined;
   onretrying: ((e: { delayMillis: number }) => void) | undefined;
 
   addEventListener(type: EventName, listener: EventListener): void;

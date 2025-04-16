@@ -344,6 +344,7 @@ export default class LDClientImpl implements LDClient {
               },
             );
           }),
+        this._featureStore.getInitMetaData?.()?.environmentId,
       )
       .then((detail) => {
         callback?.(null, detail.value);
@@ -375,6 +376,7 @@ export default class LDClientImpl implements LDClient {
             },
           );
         }),
+      this._featureStore.getInitMetaData?.()?.environmentId,
     );
   }
 
@@ -409,6 +411,7 @@ export default class LDClientImpl implements LDClient {
             typeChecker,
           );
         }),
+      this._featureStore.getInitMetaData?.()?.environmentId,
     );
   }
 
@@ -470,6 +473,7 @@ export default class LDClientImpl implements LDClient {
               },
             );
           }),
+        this._featureStore.getInitMetaData?.()?.environmentId,
       )
       .then((detail) => detail.value);
   }
@@ -541,6 +545,7 @@ export default class LDClientImpl implements LDClient {
             },
           );
         }),
+      this._featureStore.getInitMetaData?.()?.environmentId,
     );
   }
 
@@ -615,6 +620,7 @@ export default class LDClientImpl implements LDClient {
       defaultValue,
       MIGRATION_VARIATION_METHOD_NAME,
       () => this._migrationVariationInternal(key, context, defaultValue),
+      this._featureStore.getInitMetaData?.()?.environmentId,
     );
 
     return res.migration;

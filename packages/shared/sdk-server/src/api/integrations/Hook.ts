@@ -8,6 +8,7 @@ export interface EvaluationSeriesContext {
   readonly context: LDContext;
   readonly defaultValue: unknown;
   readonly method: string;
+  readonly environmentId?: string;
 }
 
 /**

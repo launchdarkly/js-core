@@ -70,7 +70,7 @@ export default class Requestor implements LDFeatureRequestor {
     return { res, body };
   }
 
-  async requestAllData(cb: (err: any, body: any) => void) {
+  async requestAllData(cb: (err: any, body: any, headers: any) => void) {
     const options: Options = {
       method: 'GET',
       headers: this._headers,
@@ -83,11 +83,15 @@ export default class Requestor implements LDFeatureRequestor {
           `Unexpected status code: ${res.status}`,
           res.status,
         );
-        return cb(err, undefined);
+        return cb(err, undefined, undefined);
       }
-      return cb(undefined, res.status === 304 ? null : body);
+      return cb(
+        undefined,
+        res.status === 304 ? null : body,
+        Object.fromEntries(res.headers.entries()),
+      );
     } catch (err) {
-      return cb(err, undefined);
+      return cb(err, undefined, undefined);
     }
   }
 }
