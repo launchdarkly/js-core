@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>PayloadListener | @launchdarkly/akamai-edgeworker-sdk-common</title><meta name="description" content="Documentation for @launchdarkly/akamai-edgeworker-sdk-common"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>initMetadataFromHeaders | @launchdarkly/akamai-edgeworker-sdk-common</title><meta name="description" content="Documentation for @launchdarkly/akamai-edgeworker-sdk-common"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -15,24 +15,31 @@
 <li><a href="../modules.html">@launchdarkly/akamai-edgeworker-sdk-common</a></li>
 <li><a href="../modules/platform-1.html">platform</a></li>
 <li><a href="../modules/platform-1.internal.html">internal</a></li>
-<li><a href="platform-1.internal.PayloadListener.html">PayloadListener</a></li></ul>
-<h1>Type alias PayloadListener</h1></div>
-<div class="tsd-signature"><span class="tsd-kind-type-alias">Payload<wbr/>Listener</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></div>
-<div class="tsd-type-declaration">
-<h4>Type declaration</h4>
-<ul class="tsd-parameters">
-<li class="tsd-parameter-signature">
+<li><a href="platform-1.internal.initMetadataFromHeaders.html">initMetadataFromHeaders</a></li></ul>
+<h1>Function initMetadataFromHeaders</h1></div>
+<section class="tsd-panel">
 <ul class="tsd-signatures">
-<li class="tsd-signature" id="__type.__type-1"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+<li class="tsd-signature tsd-anchor-link" id="initMetadataFromHeaders"><span class="tsd-kind-call-signature">init<wbr/>Metadata<wbr/>From<wbr/>Headers</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">initHeaders</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/platform-1.internal.InitMetadata.html" class="tsd-signature-type tsd-kind-interface">InitMetadata</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><a href="#initMetadataFromHeaders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></li>
 <li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Creates an InitMetadata object from initialization headers.</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">payload</span>: <a href="../interfaces/platform-1.internal.Payload.html" class="tsd-signature-type tsd-kind-interface">Payload</a></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></div><aside class="tsd-sources">
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">initHeaders</span>: <span class="tsd-signature-symbol">{ </span><br/><span>    </span>[<span class="tsd-kind-index-signature">key</span>: <span class="tsd-signature-type">string</span>]<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h5>
+<div class="tsd-comment tsd-typography"><p>Initialization headers received when establishing
+a streaming or polling connection to LD.</p>
+</div><code class="tsd-tag ts-flagOptional">Optional</code> 
+<ul class="tsd-parameters">
+<li class="tsd-parameter-index-signature">
+<h5><span class="tsd-signature-symbol">[</span><span class="tsd-kind-parameter">key</span>: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><span class="tsd-signature-type">string</span></h5></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/platform-1.internal.InitMetadata.html" class="tsd-signature-type tsd-kind-interface">InitMetadata</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h4><p>InitMetadata object, or undefined if initHeaders is undefined
+or missing the required header values.</p>
+
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/esm/internal/fdv2/payloadReader.d.ts:23</li></ul></aside></div>
+<li>Defined in packages/shared/common/dist/esm/internal/metadata/InitMetadata.d.ts:15</li></ul></aside></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -175,15 +182,15 @@
 <li><a href="../interfaces/platform-1.internal.InputMigrationEvent.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Input<wbr/>Migration<wbr/>Event</span></a></li>
 <li><a href="../interfaces/platform-1.internal.Payload.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Payload</span></a></li>
 <li><a href="../interfaces/platform-1.internal.Update.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Update</span></a></li>
-<li><a href="platform-1.internal.EvalEventArgs.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2097152"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>Eval<wbr/>Event<wbr/>Args</span></a></li>
-<li><a href="platform-1.internal.InputEvent.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Input<wbr/>Event</span></a></li>
-<li><a href="platform-1.internal.LDInternalOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDInternal<wbr/>Options</span></a></li>
-<li><a href="platform-1.internal.PayloadListener.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Payload<wbr/>Listener</span></a></li>
-<li><a href="../functions/platform-1.internal.initMetadataFromHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-64"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)"></path></g></svg><span>init<wbr/>Metadata<wbr/>From<wbr/>Headers</span></a></li>
-<li><a href="../functions/platform-1.internal.isLegacyUser.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Legacy<wbr/>User</span></a></li>
-<li><a href="../functions/platform-1.internal.isMultiKind.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Multi<wbr/>Kind</span></a></li>
-<li><a href="../functions/platform-1.internal.isSingleKind.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Single<wbr/>Kind</span></a></li>
-<li><a href="../functions/platform-1.internal.shouldSample.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>should<wbr/>Sample</span></a></li></ul></div></details></li>
+<li><a href="../types/platform-1.internal.EvalEventArgs.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2097152"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>Eval<wbr/>Event<wbr/>Args</span></a></li>
+<li><a href="../types/platform-1.internal.InputEvent.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Input<wbr/>Event</span></a></li>
+<li><a href="../types/platform-1.internal.LDInternalOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDInternal<wbr/>Options</span></a></li>
+<li><a href="../types/platform-1.internal.PayloadListener.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Payload<wbr/>Listener</span></a></li>
+<li><a href="platform-1.internal.initMetadataFromHeaders.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-64"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)"></path></g></svg><span>init<wbr/>Metadata<wbr/>From<wbr/>Headers</span></a></li>
+<li><a href="platform-1.internal.isLegacyUser.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Legacy<wbr/>User</span></a></li>
+<li><a href="platform-1.internal.isMultiKind.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Multi<wbr/>Kind</span></a></li>
+<li><a href="platform-1.internal.isSingleKind.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Single<wbr/>Kind</span></a></li>
+<li><a href="platform-1.internal.shouldSample.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>should<wbr/>Sample</span></a></li></ul></div></details></li>
 <li><a href="../modules/platform-1.subsystem.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4"></use></svg><span>subsystem</span></a></li>
 <li><a href="../enums/platform-1.AutoEnvAttributes.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>Auto<wbr/>Env<wbr/>Attributes</span></a></li>
 <li><a href="../enums/platform-1.DataSourceErrorKind.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>Data<wbr/>Source<wbr/>Error<wbr/>Kind</span></a></li>
@@ -247,34 +254,34 @@
 <li><a href="../interfaces/platform-1.Storage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Storage</span></a></li>
 <li><a href="../interfaces/platform-1.TypeValidator.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Type<wbr/>Validator</span></a></li>
 <li><a href="../interfaces/platform-1.WatchHandle.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Watch<wbr/>Handle</span></a></li>
-<li><a href="platform-1.EventListener.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Event<wbr/>Listener</span></a></li>
-<li><a href="platform-1.EventName.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Event<wbr/>Name</span></a></li>
-<li><a href="platform-1.LDContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDContext</span></a></li>
-<li><a href="platform-1.LDFlagValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDFlag<wbr/>Value</span></a></li>
-<li><a href="platform-1.LDHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDHeaders</span></a></li>
-<li><a href="platform-1.LDLogLevel.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDLog<wbr/>Level</span></a></li>
-<li><a href="platform-1.ProcessStreamResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Process<wbr/>Stream<wbr/>Response</span></a></li>
-<li><a href="platform-1.StreamingErrorHandler.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Streaming<wbr/>Error<wbr/>Handler</span></a></li>
-<li><a href="platform-1.VoidFunction.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Void<wbr/>Function</span></a></li>
-<li><a href="../functions/platform-1.base64UrlEncode.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>base64<wbr/>Url<wbr/>Encode</span></a></li>
-<li><a href="../functions/platform-1.cancelableTimedPromise.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>cancelable<wbr/>Timed<wbr/>Promise</span></a></li>
-<li><a href="../functions/platform-1.clone.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>clone</span></a></li>
-<li><a href="../functions/platform-1.createSafeLogger.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>create<wbr/>Safe<wbr/>Logger</span></a></li>
-<li><a href="../functions/platform-1.debounce.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>debounce</span></a></li>
-<li><a href="../functions/platform-1.deepCompact.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deep<wbr/>Compact</span></a></li>
-<li><a href="../functions/platform-1.defaultHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>default<wbr/>Headers</span></a></li>
-<li><a href="../functions/platform-1.fastDeepEqual.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>fast<wbr/>Deep<wbr/>Equal</span></a></li>
-<li><a href="../functions/platform-1.getEventsUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Events<wbr/>Uri</span></a></li>
-<li><a href="../functions/platform-1.getPollingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Polling<wbr/>Uri</span></a></li>
-<li><a href="../functions/platform-1.getStreamingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Streaming<wbr/>Uri</span></a></li>
-<li><a href="../functions/platform-1.httpErrorMessage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>http<wbr/>Error<wbr/>Message</span></a></li>
-<li><a href="../functions/platform-1.isHttpLocallyRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Locally<wbr/>Recoverable</span></a></li>
-<li><a href="../functions/platform-1.isHttpRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Recoverable</span></a></li>
-<li><a href="../functions/platform-1.noop.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>noop</span></a></li>
-<li><a href="../functions/platform-1.secondsToMillis.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>seconds<wbr/>To<wbr/>Millis</span></a></li>
-<li><a href="../functions/platform-1.shouldRetry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>should<wbr/>Retry</span></a></li>
-<li><a href="../functions/platform-1.sleep.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>sleep</span></a></li>
-<li><a href="../functions/platform-1.timedPromise.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>timed<wbr/>Promise</span></a></li></ul></div></details></li>
+<li><a href="../types/platform-1.EventListener.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Event<wbr/>Listener</span></a></li>
+<li><a href="../types/platform-1.EventName.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Event<wbr/>Name</span></a></li>
+<li><a href="../types/platform-1.LDContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDContext</span></a></li>
+<li><a href="../types/platform-1.LDFlagValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDFlag<wbr/>Value</span></a></li>
+<li><a href="../types/platform-1.LDHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDHeaders</span></a></li>
+<li><a href="../types/platform-1.LDLogLevel.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDLog<wbr/>Level</span></a></li>
+<li><a href="../types/platform-1.ProcessStreamResponse.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Process<wbr/>Stream<wbr/>Response</span></a></li>
+<li><a href="../types/platform-1.StreamingErrorHandler.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Streaming<wbr/>Error<wbr/>Handler</span></a></li>
+<li><a href="../types/platform-1.VoidFunction.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Void<wbr/>Function</span></a></li>
+<li><a href="platform-1.base64UrlEncode.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>base64<wbr/>Url<wbr/>Encode</span></a></li>
+<li><a href="platform-1.cancelableTimedPromise.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>cancelable<wbr/>Timed<wbr/>Promise</span></a></li>
+<li><a href="platform-1.clone.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>clone</span></a></li>
+<li><a href="platform-1.createSafeLogger.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>create<wbr/>Safe<wbr/>Logger</span></a></li>
+<li><a href="platform-1.debounce.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>debounce</span></a></li>
+<li><a href="platform-1.deepCompact.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deep<wbr/>Compact</span></a></li>
+<li><a href="platform-1.defaultHeaders.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>default<wbr/>Headers</span></a></li>
+<li><a href="platform-1.fastDeepEqual.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>fast<wbr/>Deep<wbr/>Equal</span></a></li>
+<li><a href="platform-1.getEventsUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Events<wbr/>Uri</span></a></li>
+<li><a href="platform-1.getPollingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Polling<wbr/>Uri</span></a></li>
+<li><a href="platform-1.getStreamingUri.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>get<wbr/>Streaming<wbr/>Uri</span></a></li>
+<li><a href="platform-1.httpErrorMessage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>http<wbr/>Error<wbr/>Message</span></a></li>
+<li><a href="platform-1.isHttpLocallyRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Locally<wbr/>Recoverable</span></a></li>
+<li><a href="platform-1.isHttpRecoverable.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Http<wbr/>Recoverable</span></a></li>
+<li><a href="platform-1.noop.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>noop</span></a></li>
+<li><a href="platform-1.secondsToMillis.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>seconds<wbr/>To<wbr/>Millis</span></a></li>
+<li><a href="platform-1.shouldRetry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>should<wbr/>Retry</span></a></li>
+<li><a href="platform-1.sleep.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>sleep</span></a></li>
+<li><a href="platform-1.timedPromise.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>timed<wbr/>Promise</span></a></li></ul></div></details></li>
 <li><a href="../modules/subsystems.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4"></use></svg><span>subsystems</span></a></li>
 <li><a href="../enums/LDConsistencyCheck.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>LDConsistency<wbr/>Check</span></a></li>
 <li><a href="../enums/LDExecution.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-8"></use></svg><span>LDExecution</span></a></li>
@@ -304,21 +311,21 @@
 <li><a href="../interfaces/LDProxyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDProxy<wbr/>Options</span></a></li>
 <li><a href="../interfaces/LDTLSOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDTLSOptions</span></a></li>
 <li><a href="../interfaces/LDWaitForInitializationOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDWait<wbr/>For<wbr/>Initialization<wbr/>Options</span></a></li>
-<li><a href="LDMethodResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMethod<wbr/>Result</span></a></li>
-<li><a href="LDMigrationMeasurement.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Measurement</span></a></li>
-<li><a href="LDMigrationOp.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Op</span></a></li>
-<li><a href="LDMigrationOrigin.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Origin</span></a></li>
-<li><a href="LDMigrationReadResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Read<wbr/>Result</span></a></li>
-<li><a href="LDMigrationResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Result</span></a></li>
-<li><a href="LDMigrationWriteResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Write<wbr/>Result</span></a></li>
-<li><a href="LDOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions</span></a></li>
-<li><a href="LDOptionsInternal.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions<wbr/>Internal</span></a></li>
-<li><a href="../functions/IsMigrationStage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>Is<wbr/>Migration<wbr/>Stage</span></a></li>
-<li><a href="../functions/LDMigrationError.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>LDMigration<wbr/>Error</span></a></li>
-<li><a href="../functions/LDMigrationSuccess.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>LDMigration<wbr/>Success</span></a></li>
-<li><a href="../functions/createMigration.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>create<wbr/>Migration</span></a></li>
-<li><a href="../functions/deserializePoll.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deserialize<wbr/>Poll</span></a></li>
-<li><a href="../functions/init.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>init</span></a></li></ul></nav></div></div></div>
+<li><a href="../types/LDMethodResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMethod<wbr/>Result</span></a></li>
+<li><a href="../types/LDMigrationMeasurement.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Measurement</span></a></li>
+<li><a href="../types/LDMigrationOp.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Op</span></a></li>
+<li><a href="../types/LDMigrationOrigin.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Origin</span></a></li>
+<li><a href="../types/LDMigrationReadResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Read<wbr/>Result</span></a></li>
+<li><a href="../types/LDMigrationResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Result</span></a></li>
+<li><a href="../types/LDMigrationWriteResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Write<wbr/>Result</span></a></li>
+<li><a href="../types/LDOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions</span></a></li>
+<li><a href="../types/LDOptionsInternal.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions<wbr/>Internal</span></a></li>
+<li><a href="IsMigrationStage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>Is<wbr/>Migration<wbr/>Stage</span></a></li>
+<li><a href="LDMigrationError.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>LDMigration<wbr/>Error</span></a></li>
+<li><a href="LDMigrationSuccess.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>LDMigration<wbr/>Success</span></a></li>
+<li><a href="createMigration.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>create<wbr/>Migration</span></a></li>
+<li><a href="deserializePoll.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deserialize<wbr/>Poll</span></a></li>
+<li><a href="init.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>init</span></a></li></ul></nav></div></div></div>
 <div class="tsd-generator">
 <p>Generated using <a href="https://typedoc.org/" rel="noopener" target="_blank">TypeDoc</a></p></div>
 <div class="overlay"></div></body></html>
