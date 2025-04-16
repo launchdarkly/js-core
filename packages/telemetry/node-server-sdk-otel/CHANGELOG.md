@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.8...node-server-sdk-otel-v1.2.0) (2025-04-16)
+
+
+### Features
+
+* Environment ID support for hooks ([#823](https://github.com/launchdarkly/js-core/issues/823)) ([63dc9f9](https://github.com/launchdarkly/js-core/commit/63dc9f9f1300c598e79be27909f8195ac66d54ef))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.8.0 to 9.9.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.9.0
+
 ## [1.1.8](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.7...node-server-sdk-otel-v1.1.8) (2025-04-08)
 
 
