@@ -308,3 +308,49 @@ it('should not execute hooks for prerequisite evaluations', async () => {
     },
   );
 });
+
+it('should execute afterTrack hooks when tracking events', async () => {
+  const testHook: Hook = {
+    beforeEvaluation: jest.fn(),
+    afterEvaluation: jest.fn(),
+    beforeIdentify: jest.fn(),
+    afterIdentify: jest.fn(),
+    afterTrack: jest.fn(),
+    getMetadata(): HookMetadata {
+      return {
+        name: 'test hook',
+      };
+    },
+  };
+
+  const platform = createBasicPlatform();
+  const factory = makeTestDataManagerFactory('sdk-key', platform, {
+    disableNetwork: true,
+  });
+  const client = new LDClientImpl(
+    'sdk-key',
+    AutoEnvAttributes.Disabled,
+    platform,
+    {
+      sendEvents: false,
+      hooks: [testHook],
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
+    },
+    factory,
+  );
+
+  await client.identify({ kind: 'user', key: 'user-key' });
+  client.track('test', { test: 'data' }, 42);
+
+  expect(testHook.afterTrack).toHaveBeenCalledWith({
+    key: 'test',
+    context: { kind: 'user', key: 'user-key' },
+    data: { test: 'data' },
+    metricValue: 42,
+  });
+});

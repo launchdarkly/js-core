@@ -7,12 +7,14 @@ import {
   IdentifySeriesContext,
   IdentifySeriesData,
   IdentifySeriesResult,
+  TrackSeriesContext,
 } from './api/integrations/Hooks';
 import { LDEvaluationDetail } from './api/LDEvaluationDetail';
 
 const UNKNOWN_HOOK_NAME = 'unknown hook';
 const BEFORE_EVALUATION_STAGE_NAME = 'beforeEvaluation';
 const AFTER_EVALUATION_STAGE_NAME = 'afterEvaluation';
+const AFTER_TRACK_STAGE_NAME = 'afterTrack';
 
 function tryExecuteStage<TData>(
   logger: LDLogger,
@@ -114,6 +116,21 @@ function executeAfterIdentify(
   }
 }
 
+function executeAfterTrack(logger: LDLogger, hooks: Hook[], hookContext: TrackSeriesContext) {
+  // This iterates in reverse, versus reversing a shallow copy of the hooks,
+  // for efficiency.
+  for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
+    const hook = hooks[hookIndex];
+    tryExecuteStage(
+      logger,
+      AFTER_TRACK_STAGE_NAME,
+      getHookName(logger, hook),
+      () => hook?.afterTrack?.(hookContext),
+      undefined,
+    );
+  }
+}
+
 export default class HookRunner {
   private readonly _hooks: Hook[] = [];
 
@@ -163,5 +180,13 @@ export default class HookRunner {
 
   addHook(hook: Hook): void {
     this._hooks.push(hook);
+  }
+
+  afterTrack(hookContext: TrackSeriesContext): void {
+    if (this._hooks.length === 0) {
+      return;
+    }
+    const hooks: Hook[] = [...this._hooks];
+    executeAfterTrack(this._logger, hooks, hookContext);
   }
 }

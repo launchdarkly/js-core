@@ -307,6 +307,14 @@ export default class LDClientImpl implements LDClient {
         this._eventFactoryDefault.customEvent(key, this._checkedContext!, data, metricValue),
       ),
     );
+
+    this._hookRunner.afterTrack({
+      key,
+      // The context is pre-checked above, so we know it can be unwrapped.
+      context: this._uncheckedContext!,
+      data,
+      metricValue,
+    });
   }
 
   private _variationInternal(
