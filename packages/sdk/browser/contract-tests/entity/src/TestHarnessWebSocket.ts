@@ -9,7 +9,7 @@ export default class TestHarnessWebSocket {
   private _clientCounter = 0;
   private _logger: LDLogger = makeLogger('TestHarnessWebSocket');
 
-  constructor(private readonly _url: string) {}
+  constructor(private readonly _url: string) { }
 
   connect() {
     this._logger.info(`Connecting to web socket.`);
