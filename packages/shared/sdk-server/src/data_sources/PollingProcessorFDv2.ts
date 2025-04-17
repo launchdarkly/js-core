@@ -18,7 +18,7 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
 /**
  * @internal
  */
-export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemSynchronizer {
+export default class PollingProcessorFDv2 implements subsystemCommon.DataSource {
   private _stopped = false;
   private _timeoutHandle: any;
 
@@ -51,7 +51,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
           const message = httpErrorMessage(err, 'polling request');
           this._logger?.error(message);
           statusCallback(
-            subsystemCommon.DataSourceState.Interrupted,
+            subsystemCommon.DataSourceState.Off,
             new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
           );
           // It is not recoverable, return and do not trigger another poll.
@@ -73,6 +73,13 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
 
       if (!body) {
         this._logger?.warn('Response missing body, will retry.');
+        statusCallback(
+          subsystemCommon.DataSourceState.Interrupted,
+          new LDPollingError(
+            DataSourceErrorKind.ErrorResponse,
+            'Response missing body, will retry.',
+          ),
+        );
         // schedule poll
         this._timeoutHandle = setTimeout(() => {
           this._poll(dataCallback, statusCallback);
@@ -113,7 +120,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
       } catch {
         // We could not parse this JSON. Report the problem and fallthrough to
         // start another poll.
-        this._logger?.error('Polling received malformed data');
+        this._logger?.error('Malformed JSON data in polling response');
         this._logger?.debug(`Malformed JSON follows: ${body}`);
         statusCallback(
           subsystemCommon.DataSourceState.Interrupted,
