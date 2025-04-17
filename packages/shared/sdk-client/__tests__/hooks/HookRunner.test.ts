@@ -2,7 +2,6 @@ import { LDContext, LDEvaluationDetail, LDLogger } from '@launchdarkly/js-sdk-co
 
 import { Hook, IdentifySeriesResult } from '../../src/api/integrations/Hooks';
 import HookRunner from '../../src/HookRunner';
-import { TestHook } from './TestHook';
 
 describe('given a hook runner and test hook', () => {
   let logger: LDLogger;
@@ -364,68 +363,32 @@ describe('given a hook runner and test hook', () => {
     const afterIdentifyOrder: string[] = [];
     const afterTrackOrder: string[] = [];
 
-    const hookA = new TestHook();
-    hookA.beforeEvalImpl = (_context, data) => {
-      beforeEvalOrder.push('a');
-      return data;
-    };
-    hookA.afterEvalImpl = (_context, data, _detail) => {
-      afterEvalOrder.push('a');
-      return data;
-    };
-    hookA.beforeIdentifyImpl = (_context, data) => {
-      beforeIdentifyOrder.push('a');
-      return data;
-    };
-    hookA.afterIdentifyImpl = (_context, data, _result) => {
-      afterIdentifyOrder.push('a');
-      return data;
-    };
-    hookA.afterTrackImpl = () => {
-      afterTrackOrder.push('a');
-    };
+    const createMockHook = (id: string): Hook => ({
+      getMetadata: jest.fn().mockReturnValue({ name: `Hook ${id}` }),
+      beforeEvaluation: jest.fn().mockImplementation((_context, data) => {
+        beforeEvalOrder.push(id);
+        return data;
+      }),
+      afterEvaluation: jest.fn().mockImplementation((_context, data, _detail) => {
+        afterEvalOrder.push(id);
+        return data;
+      }),
+      beforeIdentify: jest.fn().mockImplementation((_context, data) => {
+        beforeIdentifyOrder.push(id);
+        return data;
+      }),
+      afterIdentify: jest.fn().mockImplementation((_context, data, _result) => {
+        afterIdentifyOrder.push(id);
+        return data;
+      }),
+      afterTrack: jest.fn().mockImplementation(() => {
+        afterTrackOrder.push(id);
+      }),
+    });
 
-    const hookB = new TestHook();
-    hookB.beforeEvalImpl = (_context, data) => {
-      beforeEvalOrder.push('b');
-      return data;
-    };
-    hookB.afterEvalImpl = (_context, data, _detail) => {
-      afterEvalOrder.push('b');
-      return data;
-    };
-    hookB.beforeIdentifyImpl = (_context, data) => {
-      beforeIdentifyOrder.push('b');
-      return data;
-    };
-    hookB.afterIdentifyImpl = (_context, data, _result) => {
-      afterIdentifyOrder.push('b');
-      return data;
-    };
-    hookB.afterTrackImpl = () => {
-      afterTrackOrder.push('b');
-    };
-
-    const hookC = new TestHook();
-    hookC.beforeEvalImpl = (_context, data) => {
-      beforeEvalOrder.push('c');
-      return data;
-    };
-    hookC.afterEvalImpl = (_context, data, _detail) => {
-      afterEvalOrder.push('c');
-      return data;
-    };
-    hookC.beforeIdentifyImpl = (_context, data) => {
-      beforeIdentifyOrder.push('c');
-      return data;
-    };
-    hookC.afterIdentifyImpl = (_context, data, _result) => {
-      afterIdentifyOrder.push('c');
-      return data;
-    };
-    hookC.afterTrackImpl = () => {
-      afterTrackOrder.push('c');
-    };
+    const hookA = createMockHook('a');
+    const hookB = createMockHook('b');
+    const hookC = createMockHook('c');
 
     const runner = new HookRunner(logger, [hookA, hookB]);
     runner.addHook(hookC);
