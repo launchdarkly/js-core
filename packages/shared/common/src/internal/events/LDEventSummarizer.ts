@@ -17,7 +17,7 @@ export interface FlagCounter {
 export interface FlagSummary {
   default: any;
   counters: FlagCounter[];
-  contextKinds?: string[];
+  contextKinds: string[];
 }
 
 /**
