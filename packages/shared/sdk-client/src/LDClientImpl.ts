@@ -302,11 +302,24 @@ export default class LDClientImpl implements LDClient {
       this.logger?.warn(ClientMessages.invalidMetricValue(typeof metricValue));
     }
 
-    this._eventProcessor?.sendEvent(
-      this._config.trackEventModifier(
-        this._eventFactoryDefault.customEvent(key, this._checkedContext!, data, metricValue),
-      ),
+    const event = this._eventFactoryDefault.customEvent(
+      key,
+      this._checkedContext!,
+      data,
+      metricValue,
     );
+    this._eventProcessor?.sendEvent(this._config.trackEventModifier(event));
+
+    // Call afterTrack hook
+    const ldContext = Context.toLDContext(this._checkedContext);
+    if (ldContext) {
+      this._hookRunner.afterTrack({
+        key,
+        context: ldContext,
+        data,
+        metricValue,
+      });
+    }
   }
 
   private _variationInternal(

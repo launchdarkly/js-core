@@ -1,7 +1,8 @@
 import { LDContext, LDEvaluationDetail, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { Hook, IdentifySeriesResult } from '../src/api/integrations/Hooks';
-import HookRunner from '../src/HookRunner';
+import { Hook, IdentifySeriesResult } from '../../src/api/integrations/Hooks';
+import HookRunner from '../../src/HookRunner';
+import { TestHook } from './TestHook';
 
 describe('given a hook runner and test hook', () => {
   let logger: LDLogger;
@@ -22,6 +23,7 @@ describe('given a hook runner and test hook', () => {
       afterEvaluation: jest.fn(),
       beforeIdentify: jest.fn(),
       afterIdentify: jest.fn(),
+      afterTrack: jest.fn(),
     };
 
     hookRunner = new HookRunner(logger, [testHook]);
@@ -300,5 +302,162 @@ describe('given a hook runner and test hook', () => {
         'An error was encountered in "beforeEvaluation" of the "Test Hook" hook: Error: Test error in beforeEvaluation',
       ),
     );
+  });
+
+  it('should execute afterTrack hooks', () => {
+    const context: LDContext = { kind: 'user', key: 'user-123' };
+    const key = 'test';
+    const data = { test: 'data' };
+    const metricValue = 42;
+
+    const trackContext = {
+      key,
+      context,
+      data,
+      metricValue,
+    };
+
+    testHook.afterTrack = jest.fn();
+
+    hookRunner.afterTrack(trackContext);
+
+    expect(testHook.afterTrack).toHaveBeenCalledWith(trackContext);
+  });
+
+  it('should handle errors in afterTrack hooks', () => {
+    const errorHook: Hook = {
+      getMetadata: jest.fn().mockReturnValue({ name: 'Error Hook' }),
+      afterTrack: jest.fn().mockImplementation(() => {
+        throw new Error('Hook error');
+      }),
+    };
+
+    const errorHookRunner = new HookRunner(logger, [errorHook]);
+
+    errorHookRunner.afterTrack({
+      key: 'test',
+      context: { kind: 'user', key: 'user-123' },
+    });
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'An error was encountered in "afterTrack" of the "Error Hook" hook: Error: Hook error',
+      ),
+    );
+  });
+
+  it('should skip afterTrack execution if there are no hooks', () => {
+    const emptyHookRunner = new HookRunner(logger, []);
+
+    emptyHookRunner.afterTrack({
+      key: 'test',
+      context: { kind: 'user', key: 'user-123' },
+    });
+
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it('executes hook stages in the specified order', () => {
+    const beforeEvalOrder: string[] = [];
+    const afterEvalOrder: string[] = [];
+    const beforeIdentifyOrder: string[] = [];
+    const afterIdentifyOrder: string[] = [];
+    const afterTrackOrder: string[] = [];
+
+    const hookA = new TestHook();
+    hookA.beforeEvalImpl = (_context, data) => {
+      beforeEvalOrder.push('a');
+      return data;
+    };
+    hookA.afterEvalImpl = (_context, data, _detail) => {
+      afterEvalOrder.push('a');
+      return data;
+    };
+    hookA.beforeIdentifyImpl = (_context, data) => {
+      beforeIdentifyOrder.push('a');
+      return data;
+    };
+    hookA.afterIdentifyImpl = (_context, data, _result) => {
+      afterIdentifyOrder.push('a');
+      return data;
+    };
+    hookA.afterTrackImpl = () => {
+      afterTrackOrder.push('a');
+    };
+
+    const hookB = new TestHook();
+    hookB.beforeEvalImpl = (_context, data) => {
+      beforeEvalOrder.push('b');
+      return data;
+    };
+    hookB.afterEvalImpl = (_context, data, _detail) => {
+      afterEvalOrder.push('b');
+      return data;
+    };
+    hookB.beforeIdentifyImpl = (_context, data) => {
+      beforeIdentifyOrder.push('b');
+      return data;
+    };
+    hookB.afterIdentifyImpl = (_context, data, _result) => {
+      afterIdentifyOrder.push('b');
+      return data;
+    };
+    hookB.afterTrackImpl = () => {
+      afterTrackOrder.push('b');
+    };
+
+    const hookC = new TestHook();
+    hookC.beforeEvalImpl = (_context, data) => {
+      beforeEvalOrder.push('c');
+      return data;
+    };
+    hookC.afterEvalImpl = (_context, data, _detail) => {
+      afterEvalOrder.push('c');
+      return data;
+    };
+    hookC.beforeIdentifyImpl = (_context, data) => {
+      beforeIdentifyOrder.push('c');
+      return data;
+    };
+    hookC.afterIdentifyImpl = (_context, data, _result) => {
+      afterIdentifyOrder.push('c');
+      return data;
+    };
+    hookC.afterTrackImpl = () => {
+      afterTrackOrder.push('c');
+    };
+
+    const runner = new HookRunner(logger, [hookA, hookB]);
+    runner.addHook(hookC);
+
+    // Test evaluation order
+    runner.withEvaluation('flagKey', { kind: 'user', key: 'bob' }, 'default', () => ({
+      value: false,
+      reason: { kind: 'ERROR', errorKind: 'FLAG_NOT_FOUND' },
+      variationIndex: null,
+    }));
+
+    // Test identify order
+    const identifyCallback = runner.identify({ kind: 'user', key: 'bob' }, 1000);
+    identifyCallback({ status: 'completed' });
+
+    // Test track order
+    runner.afterTrack({
+      key: 'test',
+      context: { kind: 'user', key: 'bob' },
+      data: { test: 'data' },
+      metricValue: 42,
+    });
+
+    // Verify evaluation hooks order
+    expect(beforeEvalOrder).toEqual(['a', 'b', 'c']);
+    expect(afterEvalOrder).toEqual(['c', 'b', 'a']);
+
+    // Verify identify hooks order
+    expect(beforeIdentifyOrder).toEqual(['a', 'b', 'c']);
+    expect(afterIdentifyOrder).toEqual(['c', 'b', 'a']);
+
+    // Verify track hooks order
+    expect(afterTrackOrder).toEqual(['c', 'b', 'a']);
   });
 });
