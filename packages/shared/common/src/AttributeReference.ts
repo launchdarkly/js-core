@@ -144,4 +144,8 @@ export default class AttributeReference {
       this._components.every((value, index) => value === other.getComponent(index))
     );
   }
+
+  public get components() {
+    return [...this._components];
+  }
 }
