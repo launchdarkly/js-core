@@ -12,13 +12,6 @@ export enum DataSourceState {
   Off,
 }
 
-// Matthew: include some designation with the Off status that indicates we should fall back to FDv1.
-// Expand existing FDv1 polling source and add translation layer in that implementation.
-// If FDv1 is also failing, then data system terminates/closes like it would if all FDv2 sources were failing.
-// If any FDv2 source indicates to fall back to FDv1, drop all FDv2 sources.
-
-// Resume here
-
 export interface DataSource {
   /**
    * May be called any number of times, if already started, has no effect

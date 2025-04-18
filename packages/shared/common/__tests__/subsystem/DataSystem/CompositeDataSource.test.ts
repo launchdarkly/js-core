@@ -37,8 +37,6 @@ function makeZeroBackoff(): Backoff {
   };
 }
 
-// TODO: go through tests and tune status reporting to verify composite data source is correctly coalescing/masking status during transitions.
-
 it('handles initializer getting basis, switching to synchronizer', async () => {
   const mockInitializer1 = {
     start: jest
