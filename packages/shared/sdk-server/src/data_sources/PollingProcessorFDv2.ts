@@ -72,7 +72,6 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       }
 
       if (!body) {
-        this._logger?.warn('Response missing body, will retry.');
         statusCallback(
           subsystemCommon.DataSourceState.Interrupted,
           new LDPollingError(
@@ -120,14 +119,11 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       } catch {
         // We could not parse this JSON. Report the problem and fallthrough to
         // start another poll.
-        this._logger?.error('Malformed JSON data in polling response');
-        this._logger?.debug(`Malformed JSON follows: ${body}`);
+        this._logger?.error('Response contained invalid data');
+        this._logger?.debug(`${err} - Body follows: ${body}`);
         statusCallback(
           subsystemCommon.DataSourceState.Interrupted,
-          new LDPollingError(
-            DataSourceErrorKind.InvalidData,
-            'Malformed JSON data in polling response',
-          ),
+          new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed data in polling response'),
         );
       }
 

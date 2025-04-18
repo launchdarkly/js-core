@@ -41,7 +41,6 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
       }
 
       if (!body) {
-        this._logger?.error('One shot initializer response missing body.');
         statusCallback(
           subsystemCommon.DataSourceState.Closed,
           new LDPollingError(
@@ -83,16 +82,13 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         payloadProcessor.processEvents(parsed.events);
 
         statusCallback(subsystemCommon.DataSourceState.Closed);
-      } catch {
+      } catch (error: any) {
         // We could not parse this JSON. Report the problem.
-        this._logger?.error('Initialization response contained invalid data');
-        this._logger?.debug(`Malformed JSON follows: ${body}`);
+        this._logger?.error('Response contained invalid data');
+        this._logger?.debug(`${err} - Body follows: ${body}`);
         statusCallback(
           subsystemCommon.DataSourceState.Closed,
-          new LDPollingError(
-            DataSourceErrorKind.InvalidData,
-            'Malformed JSON data in polling response',
-          ),
+          new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed data in polling response'),
         );
       }
     });
