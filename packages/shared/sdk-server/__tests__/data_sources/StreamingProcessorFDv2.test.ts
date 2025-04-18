@@ -311,7 +311,7 @@ describe('given a stream processor with mock event source', () => {
       expect(willRetry).toBeFalsy();
       expect(mockStatusCallback).toHaveBeenNthCalledWith(
         2,
-        subsystem.DataSourceState.Closed,
+        subsystem.DataSourceState.Off,
         new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
       );
       expect(logger.error).toBeCalledWith(
