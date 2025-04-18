@@ -38,7 +38,7 @@ describe('When using a proxy', () => {
   it('can use proxy in polling mode', async () => {
     const proxy = await TestHttpServer.startProxy();
     const server = await TestHttpServer.start();
-    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson(allData));
+    server.forMethodAndPath('get', '/sdk/poll', TestHttpHandlers.respondJson(allData));
 
     const client = new LDClientNode(sdkKey, {
       baseUri: server.url,
@@ -67,7 +67,7 @@ describe('When using a proxy', () => {
     const server = await TestHttpServer.start();
     const events = new AsyncQueue<SSEItem>();
     events.add({ type: 'put', data: JSON.stringify({ data: allData }) });
-    server.forMethodAndPath('get', '/all', TestHttpHandlers.sseStream(events));
+    server.forMethodAndPath('get', '/sdk/stream', TestHttpHandlers.sseStream(events));
 
     const client = new LDClientNode(sdkKey, {
       streamUri: server.url,
@@ -94,7 +94,7 @@ describe('When using a proxy', () => {
     const proxy = await TestHttpServer.startProxy();
     const pollingServer = await TestHttpServer.start();
     const eventsServer = await TestHttpServer.start();
-    pollingServer.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson(allData));
+    pollingServer.forMethodAndPath('get', '/sdk/poll', TestHttpHandlers.respondJson(allData));
     eventsServer.forMethodAndPath('post', '/diagnostic', TestHttpHandlers.respond(200));
 
     const client = new LDClientNode(sdkKey, {

@@ -1,8 +1,7 @@
-import { DataSourceErrorKind, LDPollingError, subsystem } from '../../src';
+import { subsystem } from '../../src';
 import OneShotInitializerFDv2 from '../../src/data_sources/OneShotInitializerFDv2';
-import PollingProcessorFDv2 from '../../src/data_sources/PollingProcessorFDv2';
 import Requestor from '../../src/data_sources/Requestor';
-import TestLogger, { LogLevel } from '../Logger';
+import TestLogger from '../Logger';
 
 describe('given a one shot initializer', () => {
   const requestor = {
@@ -12,7 +11,7 @@ describe('given a one shot initializer', () => {
     events: [
       {
         event: 'server-intent',
-        data: { payloads: [{ code: 'xfer-full', id: 'mockId' }] },
+        data: { payloads: [{ intentCode: 'xfer-full', id: 'mockId' }] },
       },
       {
         event: 'put-object',

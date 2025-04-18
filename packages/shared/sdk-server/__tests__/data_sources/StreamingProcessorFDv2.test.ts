@@ -34,7 +34,7 @@ const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
 const events = {
   'server-intent': {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   },
   'put-object': {
     data: '{"kind": "flag", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -108,7 +108,7 @@ describe('given a stream processor with mock event source', () => {
         basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
       },
-      '/all',
+      '/sdk/stream',
       [],
       {
         authorization: 'my-sdk-key',
@@ -132,7 +132,7 @@ describe('given a stream processor with mock event source', () => {
 
   it('uses expected uri and eventSource init args', () => {
     expect(basicPlatform.requests.createEventSource).toBeCalledWith(
-      `${serviceEndpoints.streaming}/all`,
+      `${serviceEndpoints.streaming}/sdk/stream`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, undefined),
@@ -149,7 +149,7 @@ describe('given a stream processor with mock event source', () => {
         basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
       },
-      '/all',
+      '/sdk/stream',
       [],
       {
         authorization: 'my-sdk-key',
@@ -162,7 +162,7 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor.start(jest.fn(), jest.fn());
 
     expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
-      `${serviceEndpoints.streaming}/all`,
+      `${serviceEndpoints.streaming}/sdk/stream`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, undefined),

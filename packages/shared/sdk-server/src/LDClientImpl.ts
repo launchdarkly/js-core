@@ -260,7 +260,7 @@ export default class LDClientImpl implements LDClient {
             () =>
               new StreamingProcessorFDv2(
                 clientContext,
-                '/all',
+                '/sdk/stream',
                 [],
                 baseHeaders,
                 this._diagnosticsManager,

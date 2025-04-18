@@ -2,7 +2,6 @@ import { EventListener, EventName, LDLogger } from '../../../src/api';
 import { Payload } from '../../../src/internal/fdv2/payloadProcessor';
 import { EventStream, PayloadStreamReader } from '../../../src/internal/fdv2/payloadStreamReader';
 
-
 class MockEventStream implements EventStream {
   private _listeners: Record<EventName, EventListener> = {};
 
@@ -26,7 +25,7 @@ it('it sets basis to true when intent code is xfer-full', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('payload-transferred', {
     data: '{"state": "mockState", "version": 1}',
@@ -48,7 +47,7 @@ it('it sets basis to false when intent code is xfer-changes', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-changes", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-changes", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('payload-transferred', {
     data: '{"state": "mockState", "version": 1}',
@@ -70,7 +69,7 @@ it('it sets basis to false and emits empty payload when intent code is none', ()
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "none", "id": "mockId", "target": 42}]}',
+    data: '{"payloads": [{"intentCode": "none", "id": "mockId", "target": 42}]}',
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
@@ -89,7 +88,7 @@ it('it handles xfer-full then xfer-changes', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -131,7 +130,7 @@ it('it includes multiple types of updates in payload', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -172,7 +171,7 @@ it('it does not include messages thats are not between server-intent and payload
     data: '{"kind": "mockKind", "key": "flagShouldIgnore", "version": 123, "object": {"objectFieldShouldIgnore": "objectValueShouldIgnore"}}',
   });
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -238,7 +237,7 @@ it('logs prescribed message when error event is encountered', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -280,7 +279,7 @@ it('discards partially transferred data when an error is encountered', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -295,7 +294,7 @@ it('discards partially transferred data when an error is encountered', () => {
     data: '{"state": "mockState", "version": 1}',
   });
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId2"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId2"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagX", "version": 123, "object": {"objectFieldX": "objectValueX"}}',
@@ -339,7 +338,7 @@ it('silently ignores unrecognized kinds', () => {
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -369,7 +368,7 @@ it('ignores additional payloads beyond the first payload in the server-intent me
   });
 
   mockStream.simulateEvent('server-intent', {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"},{"code": "IShouldBeIgnored", "id": "IShouldBeIgnored"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"},{"intentCode": "IShouldBeIgnored", "id": "IShouldBeIgnored"}]}',
   });
   mockStream.simulateEvent('put-object', {
     data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',

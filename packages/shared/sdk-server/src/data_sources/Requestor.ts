@@ -33,7 +33,7 @@ export default class Requestor implements LDFeatureRequestor {
     baseHeaders: LDHeaders,
   ) {
     this._headers = { ...baseHeaders };
-    this._uri = getPollingUri(config.serviceEndpoints, '/sdk/latest-all', []);
+    this._uri = getPollingUri(config.serviceEndpoints, '/sdk/poll', []);
   }
 
   /**
