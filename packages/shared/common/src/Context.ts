@@ -480,7 +480,6 @@ export default class Context {
     }[] = [];
 
     const kinds = this.kinds.sort();
-    kinds.forEach((kind) => hasher.update(kind));
 
     kinds.forEach((kind) => {
       hasher.update(kind);
