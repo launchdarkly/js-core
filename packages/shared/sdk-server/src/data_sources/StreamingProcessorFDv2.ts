@@ -18,7 +18,7 @@ import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 
-export default class StreamingProcessorFDv2 implements subsystemCommon.DataSystemSynchronizer {
+export default class StreamingProcessorFDv2 implements subsystemCommon.DataSource {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
   private readonly _logger?: LDLogger;
@@ -83,7 +83,7 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSyste
       this._logConnectionResult(false);
       statusCallback(
         subsystemCommon.DataSourceState.Closed,
-        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
+        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status, false),
       );
       return false;
     }

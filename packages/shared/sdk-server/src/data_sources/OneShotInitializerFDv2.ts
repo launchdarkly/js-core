@@ -15,7 +15,7 @@ import Requestor from './Requestor';
 /**
  * @internal
  */
-export default class OneShotInitializerFDv2 implements subsystemCommon.DataSystemInitializer {
+export default class OneShotInitializerFDv2 implements subsystemCommon.DataSource {
   constructor(
     private readonly _requestor: Requestor,
     private readonly _logger?: LDLogger,
@@ -41,7 +41,6 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSyste
       }
 
       if (!body) {
-        this._logger?.error('One shot initializer response missing body.');
         statusCallback(
           subsystemCommon.DataSourceState.Closed,
           new LDPollingError(
@@ -74,24 +73,22 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSyste
           this._logger,
         );
 
+        statusCallback(subsystemCommon.DataSourceState.Valid);
+
         payloadProcessor.addPayloadListener((payload) => {
           dataCallback(payload.basis, payload);
         });
 
         payloadProcessor.processEvents(parsed.events);
 
-        // TODO: SDK-855 implement blocking duplicate data source state events in DataAvailability API
-        statusCallback(subsystemCommon.DataSourceState.Valid);
-      } catch {
+        statusCallback(subsystemCommon.DataSourceState.Closed);
+      } catch (error: any) {
         // We could not parse this JSON. Report the problem.
-        this._logger?.error('Initialization response contained invalid data');
-        this._logger?.debug(`Malformed JSON follows: ${body}`);
+        this._logger?.error('Response contained invalid data');
+        this._logger?.debug(`${err} - Body follows: ${body}`);
         statusCallback(
           subsystemCommon.DataSourceState.Closed,
-          new LDPollingError(
-            DataSourceErrorKind.InvalidData,
-            'Malformed JSON data in polling response',
-          ),
+          new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed data in polling response'),
         );
       }
     });

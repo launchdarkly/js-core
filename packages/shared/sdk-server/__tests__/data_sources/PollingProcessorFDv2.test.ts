@@ -59,10 +59,18 @@ describe('given an event processor', () => {
     expect(mockStatusCallback).toHaveBeenNthCalledWith(1, subsystem.DataSourceState.Initializing);
   });
 
-  it('calls callback on success', () => {
+  it('calls callback on success', async () => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
-    processor.start(mockDataCallback, mockStatusCallback);
-    expect(mockDataCallback).toHaveBeenNthCalledWith(1, true, {
+    let dataCallback;
+    await new Promise<void>((resolve) => {
+      dataCallback = jest.fn(() => {
+        resolve();
+      });
+
+      processor.start(dataCallback, mockStatusCallback);
+    });
+
+    expect(dataCallback).toHaveBeenNthCalledWith(1, true, {
       basis: true,
       id: `mockId`,
       state: `mockState`,
@@ -179,10 +187,7 @@ describe('given a polling processor with a short poll duration', () => {
     expect(mockStatusCallback).toHaveBeenNthCalledWith(
       2,
       subsystem.DataSourceState.Interrupted,
-      new LDPollingError(
-        DataSourceErrorKind.ErrorResponse,
-        `Malformed JSON data in polling response`,
-      ),
+      new LDPollingError(DataSourceErrorKind.ErrorResponse, `Malformed data in polling response`),
     );
 
     setTimeout(() => {
@@ -208,13 +213,14 @@ describe('given a polling processor with a short poll duration', () => {
       expect(mockStatusCallback).toHaveBeenNthCalledWith(1, subsystem.DataSourceState.Initializing);
       expect(mockStatusCallback).toHaveBeenNthCalledWith(
         2,
-        subsystem.DataSourceState.Interrupted,
+        subsystem.DataSourceState.Closed,
         new LDPollingError(
           DataSourceErrorKind.ErrorResponse,
           status === 401
             ? `Received error ${status} (invalid SDK key) for polling request - giving up permanently`
             : `Received error ${status} for polling request - giving up permanently`,
           status as number,
+          false,
         ),
       );
       setTimeout(() => {

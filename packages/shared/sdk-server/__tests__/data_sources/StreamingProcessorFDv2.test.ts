@@ -312,7 +312,12 @@ describe('given a stream processor with mock event source', () => {
       expect(mockStatusCallback).toHaveBeenNthCalledWith(
         2,
         subsystem.DataSourceState.Closed,
-        new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
+        new LDStreamingError(
+          DataSourceErrorKind.Unknown,
+          testError.message,
+          testError.status,
+          true,
+        ),
       );
       expect(logger.error).toBeCalledWith(
         expect.stringMatching(new RegExp(`${status}.*permanently`)),

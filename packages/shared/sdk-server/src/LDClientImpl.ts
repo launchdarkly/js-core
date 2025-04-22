@@ -238,7 +238,7 @@ export default class LDClientImpl implements LDClient {
         this._updateProcessor?.start();
       } else {
         // make the FDv2 composite datasource with initializers/synchronizers
-        const initializers: subsystem.LDSynchronizerFactory[] = [];
+        const initializers: subsystem.LDDataSourceFactory[] = [];
 
         // use one shot initializer for performance and cost
         initializers.push(
@@ -249,7 +249,7 @@ export default class LDClientImpl implements LDClient {
             ),
         );
 
-        const synchronizers: subsystem.LDSynchronizerFactory[] = [];
+        const synchronizers: subsystem.LDDataSourceFactory[] = [];
         // if streaming is configured, add streaming synchronizer
         if (
           isStandardOptions(config.dataSystem.dataSource) ||

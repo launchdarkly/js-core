@@ -18,7 +18,7 @@ export type PollingErrorHandler = (err: LDPollingError) => void;
 /**
  * @internal
  */
-export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemSynchronizer {
+export default class PollingProcessorFDv2 implements subsystemCommon.DataSource {
   private _stopped = false;
   private _timeoutHandle: any;
 
@@ -51,8 +51,8 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
           const message = httpErrorMessage(err, 'polling request');
           this._logger?.error(message);
           statusCallback(
-            subsystemCommon.DataSourceState.Interrupted,
-            new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
+            subsystemCommon.DataSourceState.Closed,
+            new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status, false),
           );
           // It is not recoverable, return and do not trigger another poll.
           return;
@@ -72,7 +72,13 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
       }
 
       if (!body) {
-        this._logger?.warn('Response missing body, will retry.');
+        statusCallback(
+          subsystemCommon.DataSourceState.Interrupted,
+          new LDPollingError(
+            DataSourceErrorKind.ErrorResponse,
+            'Response missing body, will retry.',
+          ),
+        );
         // schedule poll
         this._timeoutHandle = setTimeout(() => {
           this._poll(dataCallback, statusCallback);
@@ -113,14 +119,11 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSystemS
       } catch {
         // We could not parse this JSON. Report the problem and fallthrough to
         // start another poll.
-        this._logger?.error('Polling received malformed data');
-        this._logger?.debug(`Malformed JSON follows: ${body}`);
+        this._logger?.error('Response contained invalid data');
+        this._logger?.debug(`${err} - Body follows: ${body}`);
         statusCallback(
           subsystemCommon.DataSourceState.Interrupted,
-          new LDPollingError(
-            DataSourceErrorKind.InvalidData,
-            'Malformed JSON data in polling response',
-          ),
+          new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed data in polling response'),
         );
       }
 

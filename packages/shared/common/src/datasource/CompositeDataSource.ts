@@ -4,10 +4,10 @@ import { CallbackHandler } from '../api/subsystem/DataSystem/CallbackHandler';
 import {
   DataSource,
   DataSourceState,
-  LDInitializerFactory,
-  LDSynchronizerFactory,
+  LDDataSourceFactory,
 } from '../api/subsystem/DataSystem/DataSource';
 import { Backoff, DefaultBackoff } from './Backoff';
+import { DataSourceList } from './dataSourceList';
 
 const DEFAULT_FALLBACK_TIME_MS = 2 * 60 * 1000;
 const DEFAULT_RECOVERY_TIME_MS = 5 * 60 * 1000;
@@ -15,7 +15,7 @@ const DEFAULT_RECOVERY_TIME_MS = 5 * 60 * 1000;
 /**
  * Represents a transition between data sources.
  */
-export type Transition = 'none' | 'switchToSync' | 'fallback' | 'recover' | 'stop';
+export type Transition = 'switchToSync' | 'fallback' | 'recover' | 'stop';
 
 /**
  * Given a {@link DataSourceState}, how long to wait before transitioning.
@@ -38,7 +38,8 @@ export class CompositeDataSource implements DataSource {
   // TODO: SDK-1044 utilize selector from initializers
 
   private _initPhaseActive: boolean;
-  private _currentPosition: number;
+  private _initFactories: DataSourceList<LDDataSourceFactory>;
+  private _syncFactories: DataSourceList<LDDataSourceFactory>;
 
   private _stopped: boolean = true;
   private _externalTransitionPromise: Promise<TransitionRequest>;
@@ -46,12 +47,12 @@ export class CompositeDataSource implements DataSource {
   private _cancelTokens: (() => void)[] = [];
 
   /**
-   * @param _initializers factories to create {@link DataSystemInitializer}s, in priority order.
-   * @param _synchronizers factories to create  {@link DataSystemSynchronizer}s, in priority order.
+   * @param initializers factories to create {@link DataSystemInitializer}s, in priority order.
+   * @param synchronizers factories to create  {@link DataSystemSynchronizer}s, in priority order.
    */
   constructor(
-    private readonly _initializers: LDInitializerFactory[],
-    private readonly _synchronizers: LDSynchronizerFactory[],
+    initializers: LDDataSourceFactory[],
+    synchronizers: LDDataSourceFactory[],
     private readonly _logger?: LDLogger,
     private readonly _transitionConditions: TransitionConditions = {
       [DataSourceState.Valid]: {
@@ -63,16 +64,14 @@ export class CompositeDataSource implements DataSource {
         transition: 'fallback',
       },
     },
-    private readonly _backoff: Backoff = new DefaultBackoff(
-      1000, // TODO SDK-1137: handle blacklisting perpetually failing sources
-      30000,
-    ),
+    private readonly _backoff: Backoff = new DefaultBackoff(1000, 30000),
   ) {
     this._externalTransitionPromise = new Promise<TransitionRequest>((resolveTransition) => {
       this._externalTransitionResolve = resolveTransition;
     });
-    this._initPhaseActive = _initializers.length > 0; // init phase if we have initializers
-    this._currentPosition = 0;
+    this._initPhaseActive = initializers.length > 0; // init phase if we have initializers
+    this._initFactories = new DataSourceList(false, initializers);
+    this._syncFactories = new DataSourceList(true, synchronizers);
   }
 
   async start(
@@ -87,12 +86,23 @@ export class CompositeDataSource implements DataSource {
     this._stopped = false;
 
     this._logger?.debug(
-      `CompositeDataSource starting with (${this._initializers.length} initializers, ${this._synchronizers.length} synchronizers).`,
+      `CompositeDataSource starting with (${this._initFactories.length()} initializers, ${this._syncFactories.length()} synchronizers).`,
     );
-    let lastTransition: Transition = 'none';
+
+    // this wrapper turns status updates from underlying data sources into a valid series of status updates for the consumer of this
+    // composite data source
+    const sanitizedStatusCallback = this._wrapStatusCallbackWithSanitizer(statusCallback);
+    sanitizedStatusCallback(DataSourceState.Initializing);
+
+    let lastTransition: Transition | undefined;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const currentDS: DataSource | undefined = this._pickDataSource(lastTransition);
+      const {
+        dataSource: currentDS,
+        isPrimary,
+        cullDSFactory,
+      } = this._pickDataSource(lastTransition);
+
       const internalTransitionPromise = new Promise<TransitionRequest>((transitionResolve) => {
         if (currentDS) {
           // these local variables are used for handling automatic transition related to data source status (ex: recovering to primary after
@@ -109,6 +119,7 @@ export class CompositeDataSource implements DataSource {
                 // transition to sync if we get basis during init
                 callbackHandler.disable();
                 this._consumeCancelToken(cancelScheduledTransition);
+                sanitizedStatusCallback(DataSourceState.Interrupted);
                 transitionResolve({ transition: 'switchToSync' });
               }
             },
@@ -121,16 +132,21 @@ export class CompositeDataSource implements DataSource {
               );
               if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
-                statusCallback(DataSourceState.Interrupted, err); // underlying errors or closed states are masked as interrupted while we transition
+                if (err.recoverable === false) {
+                  // don't use this datasource's factory again
+                  cullDSFactory?.();
+                }
+                sanitizedStatusCallback(state, err);
                 this._consumeCancelToken(cancelScheduledTransition);
                 transitionResolve({ transition: 'fallback', err }); // unrecoverable error has occurred, so fallback
               } else {
-                statusCallback(state, null); // report the status upward
+                sanitizedStatusCallback(state);
                 if (state !== lastState) {
                   lastState = state;
                   this._consumeCancelToken(cancelScheduledTransition); // cancel previously scheduled status transition if one was scheduled
-                  const excludeRecovery = this._currentPosition === 0; // primary source cannot recover to itself, so exclude it
-                  const condition = this._lookupTransitionCondition(state, excludeRecovery);
+
+                  // primary source cannot recover to itself, so exclude it
+                  const condition = this._lookupTransitionCondition(state, isPrimary);
                   if (condition) {
                     const { promise, cancel } = this._cancellableDelay(condition.durationMS);
                     cancelScheduledTransition = cancel;
@@ -138,6 +154,7 @@ export class CompositeDataSource implements DataSource {
                     promise.then(() => {
                       this._consumeCancelToken(cancel);
                       callbackHandler.disable();
+                      sanitizedStatusCallback(DataSourceState.Interrupted);
                       transitionResolve({ transition: condition.transition });
                     });
                   } else {
@@ -157,7 +174,7 @@ export class CompositeDataSource implements DataSource {
             transition: 'stop',
             err: {
               name: 'ExhaustedDataSources',
-              message: `CompositeDataSource has exhausted all configured datasources (${this._initializers.length} initializers, ${this._synchronizers.length} synchronizers).`,
+              message: `CompositeDataSource has exhausted all configured initializers and synchronizers.`,
             },
           });
         }
@@ -192,14 +209,12 @@ export class CompositeDataSource implements DataSource {
         this._consumeCancelToken(cancelDelay);
       }
 
+      lastTransition = transitionRequest.transition;
       if (transitionRequest.transition === 'stop') {
-        // exit the loop
+        // exit the loop, this is intentionally not the sanitized status callback
         statusCallback(DataSourceState.Closed, transitionRequest.err);
-        lastTransition = transitionRequest.transition;
         break;
       }
-
-      lastTransition = transitionRequest.transition;
     }
 
     // reset so that run can be called again in the future
@@ -214,52 +229,70 @@ export class CompositeDataSource implements DataSource {
 
   private _reset() {
     this._stopped = true;
-    this._initPhaseActive = this._initializers.length > 0; // init phase if we have initializers;
-    this._currentPosition = 0;
+    this._initPhaseActive = this._initFactories.length() > 0; // init phase if we have initializers;
+    this._initFactories.reset();
+    this._syncFactories.reset();
     this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
       this._externalTransitionResolve = tr;
     });
     // intentionally not resetting the backoff to avoid a code path that could circumvent throttling
   }
 
-  private _pickDataSource(transition: Transition | undefined): DataSource | undefined {
+  /**
+   * Determines the next datasource and returns that datasource as well as a closure to cull the
+   * datasource from the datasource lists. One example where the cull closure is invoked is if the
+   * datasource has an unrecoverable error.
+   */
+  private _pickDataSource(transition?: Transition): {
+    dataSource: DataSource | undefined;
+    isPrimary: boolean;
+    cullDSFactory: (() => void) | undefined;
+  } {
+    let factory: LDDataSourceFactory | undefined;
+    let isPrimary: boolean;
     switch (transition) {
       case 'switchToSync':
         this._initPhaseActive = false; // one way toggle to false, unless this class is reset()
-        this._currentPosition = 0;
-        break;
-      case 'fallback':
-        this._currentPosition += 1;
+        this._syncFactories.reset();
+        isPrimary = this._syncFactories.pos() === 0;
+        factory = this._syncFactories.next();
         break;
       case 'recover':
-        this._currentPosition = 0;
+        if (this._initPhaseActive) {
+          this._initFactories.reset();
+          isPrimary = this._initFactories.pos() === 0;
+          factory = this._initFactories.next();
+        } else {
+          this._syncFactories.reset();
+          isPrimary = this._syncFactories.pos() === 0;
+          factory = this._syncFactories.next();
+        }
         break;
-      case 'none':
+      case 'fallback':
       default:
-        // don't do anything in this case
+        if (this._initPhaseActive) {
+          isPrimary = this._initFactories.pos() === 0;
+          factory = this._initFactories.next();
+        } else {
+          isPrimary = this._syncFactories.pos() === 0;
+          factory = this._syncFactories.next();
+        }
         break;
     }
 
-    if (this._initPhaseActive) {
-      // We don't loop back through initializers, so if outside range of initializers, instead return undefined.
-      if (this._currentPosition > this._initializers.length - 1) {
-        return undefined;
-      }
+    if (!factory) {
+      return { dataSource: undefined, isPrimary, cullDSFactory: undefined };
+    }
 
-      return this._initializers[this._currentPosition]();
-    }
-    // getting here indicates we are using a synchronizer
-
-    // if no synchronizers, return undefined
-    if (this._synchronizers.length <= 0) {
-      return undefined;
-    }
-    this._currentPosition %= this._synchronizers.length; // modulate position to loop back to start if necessary
-    if (this._currentPosition > this._synchronizers.length - 1) {
-      // this is only possible if no synchronizers were provided
-      return undefined;
-    }
-    return this._synchronizers[this._currentPosition]();
+    return {
+      dataSource: factory(),
+      isPrimary,
+      cullDSFactory: () => {
+        if (factory) {
+          this._syncFactories.remove(factory);
+        }
+      },
+    };
   }
 
   /**
@@ -273,7 +306,7 @@ export class CompositeDataSource implements DataSource {
     const condition = this._transitionConditions[state];
 
     // exclude recovery can happen for certain initializers/synchronizers (ex: the primary synchronizer shouldn't recover to itself)
-    if (!condition || (excludeRecover && condition.transition === 'recover')) {
+    if (excludeRecover && condition?.transition === 'recover') {
       return undefined;
     }
 
@@ -302,5 +335,45 @@ export class CompositeDataSource implements DataSource {
     if (index > -1) {
       this._cancelTokens.splice(index, 1);
     }
+  }
+
+  /**
+   * This wrapper will ensure the following:
+   *
+   * Don't report DataSourceState.Initializing except as first status callback.
+   * Map underlying DataSourceState.Closed to interrupted.
+   * Don't report the same status and error twice in a row.
+   */
+  private _wrapStatusCallbackWithSanitizer(
+    statusCallback: (status: DataSourceState, err?: any) => void,
+  ): (status: DataSourceState, err?: any) => void {
+    let alreadyReportedInitializing = false;
+    let lastStatus: DataSourceState | undefined;
+    let lastErr: any;
+
+    return (status: DataSourceState, err?: any) => {
+      let sanitized = status;
+      // underlying errors, closed state, or off are masked as interrupted while we transition
+      if (status === DataSourceState.Closed) {
+        sanitized = DataSourceState.Interrupted;
+      }
+
+      // don't report the same combination of values twice in a row
+      if (sanitized === lastStatus && err === lastErr) {
+        return;
+      }
+
+      if (sanitized === DataSourceState.Initializing) {
+        // don't report initializing again if that has already been reported
+        if (alreadyReportedInitializing) {
+          return;
+        }
+        alreadyReportedInitializing = true;
+      }
+
+      lastStatus = sanitized;
+      lastErr = err;
+      statusCallback(sanitized, err);
+    };
   }
 }

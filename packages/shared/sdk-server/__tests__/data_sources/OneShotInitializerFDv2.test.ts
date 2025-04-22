@@ -38,10 +38,7 @@ describe('given a one shot initializer', () => {
 
   beforeEach(() => {
     testLogger = new TestLogger();
-    initializer = new OneShotInitializerFDv2(
-      requestor as unknown as Requestor,
-      testLogger,
-    );
+    initializer = new OneShotInitializerFDv2(requestor as unknown as Requestor, testLogger);
   });
 
   afterEach(() => {
