@@ -230,9 +230,10 @@ it('removes synchronizer that reports unrecoverable error and loops on remaining
           _statusCallback: (status: DataSourceState, err?: any) => void,
         ) => {
           _statusCallback(DataSourceState.Initializing);
-          _statusCallback(DataSourceState.Off, {
+          _statusCallback(DataSourceState.Closed, {
             name: 'Error',
-            message: 'I am an unrecoverable error!', // error will lead to culling
+            message: 'I am an unrecoverable error!', // error will lead to culling,
+            recoverable: false,
           });
         },
       ),
@@ -380,93 +381,99 @@ it('reports error when all initializers fail', async () => {
   );
   expect(statusCallback).toHaveBeenNthCalledWith(4, DataSourceState.Closed, {
     name: 'ExhaustedDataSources',
-    message:
-      'CompositeDataSource has exhausted all configured datasources (2 initializers, 0 synchronizers).',
+    message: 'CompositeDataSource has exhausted all configured initializers and synchronizers.',
   });
   expect(statusCallback).toHaveBeenCalledTimes(4);
 });
 
-// it('it reports DataSourceState Off when all synchronizers report Off', async () => {
-//   const mockInitializer1: DataSource = {
-//     start: jest
-//       .fn()
-//       .mockImplementation(
-//         (
-//           _dataCallback: (basis: boolean, data: any) => void,
-//           _statusCallback: (status: DataSourceState, err?: any) => void,
-//         ) => {
-//           _statusCallback(DataSourceState.Initializing);
-//           _statusCallback(DataSourceState.Valid);
-//           _dataCallback(true, { key: 'init1' });
-//           _statusCallback(DataSourceState.Closed);
-//         },
-//       ),
-//     stop: jest.fn(),
-//   };
+it('it reports DataSourceState Closed when all synchronizers report Closed with unrecoverable errors', async () => {
+  const mockInitializer1: DataSource = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          _dataCallback(true, { key: 'init1' });
+          _statusCallback(DataSourceState.Closed);
+        },
+      ),
+    stop: jest.fn(),
+  };
 
-//   const mockSynchronizer1 = {
-//     start: jest
-//       .fn()
-//       .mockImplementation(
-//         (
-//           _dataCallback: (basis: boolean, data: any) => void,
-//           _statusCallback: (status: DataSourceState, err?: any) => void,
-//         ) => {
-//           _statusCallback(DataSourceState.Initializing);
-//           _statusCallback(DataSourceState.Off, {
-//             name: 'Error1',
-//             message: 'I am an unrecoverable error!',
-//           });
-//         },
-//       ),
-//     stop: jest.fn(),
-//   };
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Closed, {
+            name: 'Error1',
+            message: 'I am an unrecoverable error!',
+            recoverable: false,
+          });
+        },
+      ),
+    stop: jest.fn(),
+  };
 
-//   const mockSynchronizer2 = {
-//     start: jest
-//       .fn()
-//       .mockImplementation(
-//         (
-//           _dataCallback: (basis: boolean, data: any) => void,
-//           _statusCallback: (status: DataSourceState, err?: any) => void,
-//         ) => {
-//           _statusCallback(DataSourceState.Initializing);
-//           _statusCallback(DataSourceState.Off, {
-//             name: 'Error2',
-//             message: 'I am an unrecoverable error!',
-//           });
-//         },
-//       ),
-//     stop: jest.fn(),
-//   };
+  const mockSynchronizer2 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Closed, {
+            name: 'Error2',
+            message: 'I am an unrecoverable error!',
+            recoverable: false,
+          });
+        },
+      ),
+    stop: jest.fn(),
+  };
 
-//   const underTest = new CompositeDataSource(
-//     [makeDataSourceFactory(mockInitializer1)],
-//     [makeDataSourceFactory(mockSynchronizer1), makeDataSourceFactory(mockSynchronizer2)],
-//     undefined,
-//     makeTestTransitionConditions(),
-//     makeZeroBackoff(),
-//   );
+  const underTest = new CompositeDataSource(
+    [makeDataSourceFactory(mockInitializer1)],
+    [makeDataSourceFactory(mockSynchronizer1), makeDataSourceFactory(mockSynchronizer2)],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
 
-//   let statusCallback;
-//   await new Promise<void>((resolve) => {
-//     statusCallback = jest.fn((state: DataSourceState, err: any) => {
-//       if (err && err.name === 'Error2') {
-//         resolve();
-//       }
-//     });
+  let statusCallback;
+  await new Promise<void>((resolve) => {
+    statusCallback = jest.fn((state: DataSourceState, _: any) => {
+      if (state === DataSourceState.Closed) {
+        resolve();
+      }
+    });
 
-//     underTest.start(jest.fn(), statusCallback);
-//   });
+    underTest.start(jest.fn(), statusCallback);
+  });
 
-//   expect(mockInitializer1.start).toHaveBeenCalledTimes(1);
-//   expect(mockSynchronizer1.start).toHaveBeenCalledTimes(1);
-//   expect(mockSynchronizer2.start).toHaveBeenCalledTimes(1);
-//   expect(statusCallback).toHaveBeenNthCalledWith(1, DataSourceState.Initializing, null);
-//   expect(statusCallback).toHaveBeenNthCalledWith(2, DataSourceState.Valid, null);
-//   expect(statusCallback).toHaveBeenNthCalledWith(3, DataSourceState.Interrupted, expect.anything());
-//   expect(statusCallback).toHaveBeenNthCalledWith(4, DataSourceState.Off, null);
-// });
+  expect(mockInitializer1.start).toHaveBeenCalledTimes(1);
+  expect(mockSynchronizer1.start).toHaveBeenCalledTimes(1);
+  expect(mockSynchronizer2.start).toHaveBeenCalledTimes(1);
+  expect(statusCallback).toHaveBeenNthCalledWith(1, DataSourceState.Initializing, undefined);
+  expect(statusCallback).toHaveBeenNthCalledWith(2, DataSourceState.Valid, undefined);
+  expect(statusCallback).toHaveBeenNthCalledWith(3, DataSourceState.Interrupted, undefined); // initializer closes properly
+  expect(statusCallback).toHaveBeenNthCalledWith(4, DataSourceState.Interrupted, expect.anything()); // sync1 closed with unrecoverable error
+  expect(statusCallback).toHaveBeenNthCalledWith(5, DataSourceState.Interrupted, expect.anything()); // sync2 closed with unrecoverable error
+  expect(statusCallback).toHaveBeenNthCalledWith(6, DataSourceState.Closed, {
+    name: 'ExhaustedDataSources',
+    message: `CompositeDataSource has exhausted all configured initializers and synchronizers.`,
+  });
+});
 
 it('can be stopped when in thrashing synchronizer fallback loop', async () => {
   const mockInitializer1 = {
@@ -639,8 +646,7 @@ it('is well behaved with no initializers and no synchronizers configured', async
   expect(statusCallback).toHaveBeenNthCalledWith(1, DataSourceState.Initializing, undefined); // initializer
   expect(statusCallback).toHaveBeenNthCalledWith(2, DataSourceState.Closed, {
     name: 'ExhaustedDataSources',
-    message:
-      'CompositeDataSource has exhausted all configured datasources (0 initializers, 0 synchronizers).',
+    message: 'CompositeDataSource has exhausted all configured initializers and synchronizers.',
   });
 });
 
@@ -730,8 +736,7 @@ it('is well behaved with an initializer and no synchronizers configured', async 
   expect(statusCallback).toHaveBeenNthCalledWith(3, DataSourceState.Interrupted, undefined); // initializer got data
   expect(statusCallback).toHaveBeenNthCalledWith(4, DataSourceState.Closed, {
     name: 'ExhaustedDataSources',
-    message:
-      'CompositeDataSource has exhausted all configured datasources (1 initializers, 0 synchronizers).',
+    message: 'CompositeDataSource has exhausted all configured initializers and synchronizers.',
   });
 });
 

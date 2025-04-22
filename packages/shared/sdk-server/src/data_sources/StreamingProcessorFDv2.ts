@@ -82,8 +82,8 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
       this._logger?.error(httpErrorMessage(err, 'streaming request'));
       this._logConnectionResult(false);
       statusCallback(
-        subsystemCommon.DataSourceState.Off,
-        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
+        subsystemCommon.DataSourceState.Closed,
+        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status, false),
       );
       return false;
     }

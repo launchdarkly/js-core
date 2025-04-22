@@ -34,7 +34,7 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         const message = httpErrorMessage(err, 'initializer', 'initializer does not retry');
         this._logger?.error(message);
         statusCallback(
-          subsystemCommon.DataSourceState.Off,
+          subsystemCommon.DataSourceState.Closed,
           new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
         );
         return;

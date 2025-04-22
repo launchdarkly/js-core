@@ -102,6 +102,7 @@ export class CompositeDataSource implements DataSource {
         isPrimary,
         cullDSFactory,
       } = this._pickDataSource(lastTransition);
+
       const internalTransitionPromise = new Promise<TransitionRequest>((transitionResolve) => {
         if (currentDS) {
           // these local variables are used for handling automatic transition related to data source status (ex: recovering to primary after
@@ -129,9 +130,9 @@ export class CompositeDataSource implements DataSource {
               this._logger?.debug(
                 `CompositeDataSource received state ${state} from underlying data source.`,
               );
-              if (err || state === DataSourceState.Closed || state === DataSourceState.Off) {
+              if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
-                if (state === DataSourceState.Off) {
+                if (err.recoverable === false) {
                   // don't use this datasource's factory again
                   cullDSFactory?.();
                 }
@@ -173,7 +174,7 @@ export class CompositeDataSource implements DataSource {
             transition: 'stop',
             err: {
               name: 'ExhaustedDataSources',
-              message: `CompositeDataSource has exhausted all configured datasources (${this._initFactories.length()} initializers, ${this._syncFactories.length()} synchronizers).`,
+              message: `CompositeDataSource has exhausted all configured initializers and synchronizers.`,
             },
           });
         }
@@ -340,7 +341,7 @@ export class CompositeDataSource implements DataSource {
    * This wrapper will ensure the following:
    *
    * Don't report DataSourceState.Initializing except as first status callback.
-   * Map underlying DataSourceState.Closed and DataSourceState.Off to interrupted.
+   * Map underlying DataSourceState.Closed to interrupted.
    * Don't report the same status and error twice in a row.
    */
   private _wrapStatusCallbackWithSanitizer(
@@ -353,7 +354,7 @@ export class CompositeDataSource implements DataSource {
     return (status: DataSourceState, err?: any) => {
       let sanitized = status;
       // underlying errors, closed state, or off are masked as interrupted while we transition
-      if (status === DataSourceState.Closed || status === DataSourceState.Off) {
+      if (status === DataSourceState.Closed) {
         sanitized = DataSourceState.Interrupted;
       }
 

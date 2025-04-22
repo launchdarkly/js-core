@@ -51,8 +51,8 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
           const message = httpErrorMessage(err, 'polling request');
           this._logger?.error(message);
           statusCallback(
-            subsystemCommon.DataSourceState.Off,
-            new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
+            subsystemCommon.DataSourceState.Closed,
+            new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status, false),
           );
           // It is not recoverable, return and do not trigger another poll.
           return;

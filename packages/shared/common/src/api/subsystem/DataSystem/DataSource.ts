@@ -6,10 +6,8 @@ export enum DataSourceState {
   Initializing,
   // Transient issue, automatic retry is expected
   Interrupted,
-  // Data source was closed and will not retry
+  // Data source was closed and will not retry automatically.
   Closed,
-  // This datasource encountered an unrecoverable error and it is not expected to be resolved through trying again in the future
-  Off,
 }
 
 export interface DataSource {

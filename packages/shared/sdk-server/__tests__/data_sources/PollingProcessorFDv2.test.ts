@@ -213,13 +213,14 @@ describe('given a polling processor with a short poll duration', () => {
       expect(mockStatusCallback).toHaveBeenNthCalledWith(1, subsystem.DataSourceState.Initializing);
       expect(mockStatusCallback).toHaveBeenNthCalledWith(
         2,
-        subsystem.DataSourceState.Off,
+        subsystem.DataSourceState.Closed,
         new LDPollingError(
           DataSourceErrorKind.ErrorResponse,
           status === 401
             ? `Received error ${status} (invalid SDK key) for polling request - giving up permanently`
             : `Received error ${status} for polling request - giving up permanently`,
           status as number,
+          false,
         ),
       );
       setTimeout(() => {
