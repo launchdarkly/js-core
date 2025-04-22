@@ -20,6 +20,69 @@ All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [1.3.28](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.27...vercel-server-sdk-v1.3.28) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.3 to 2.6.4
+
+## [1.3.27](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.26...vercel-server-sdk-v1.3.27) (2025-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.2 to 2.6.3
+
+## [1.3.26](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.25...vercel-server-sdk-v1.3.26) (2025-03-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.1 to 2.6.2
+
+## [1.3.25](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.24...vercel-server-sdk-v1.3.25) (2025-03-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.0 to 2.6.1
+
+## [1.3.24](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.23...vercel-server-sdk-v1.3.24) (2025-03-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.5.4 to 2.6.0
+
+## [1.3.23](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.22...vercel-server-sdk-v1.3.23) (2025-02-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.5.3 to 2.5.4
+
+## [1.3.22](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.21...vercel-server-sdk-v1.3.22) (2025-01-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.5.2 to 2.5.3
+
 ## [1.3.21](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.20...vercel-server-sdk-v1.3.21) (2024-11-14)
 
 

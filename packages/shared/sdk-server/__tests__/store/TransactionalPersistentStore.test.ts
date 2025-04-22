@@ -35,6 +35,7 @@ describe('given a non transactional store', () => {
           },
         },
       },
+      undefined,
       'selector1',
     );
     expect(await nonTransactionalFacade.all(VersionedDataKinds.Features)).toEqual({
@@ -85,6 +86,7 @@ describe('given a non transactional store', () => {
           },
         },
       },
+      undefined,
       'selector1',
     );
 

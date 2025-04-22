@@ -73,8 +73,14 @@ const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefine
   streaming: TypeValidators.Boolean,
 };
 
-export function filterToBaseOptions(opts: BrowserOptions): LDOptionsBase {
-  const baseOptions: LDOptionsBase = { ...opts };
+function withBrowserDefaults(opts: BrowserOptions): BrowserOptions {
+  const output = { ...opts };
+  output.flushInterval ??= DEFAULT_FLUSH_INTERVAL_SECONDS;
+  return output;
+}
+
+export function filterToBaseOptionsWithDefaults(opts: BrowserOptions): LDOptionsBase {
+  const baseOptions: LDOptionsBase = withBrowserDefaults(opts);
 
   // Remove any browser specific configuration keys so we don't get warnings from
   // the base implementation for unknown configuration.
@@ -84,14 +90,11 @@ export function filterToBaseOptions(opts: BrowserOptions): LDOptionsBase {
   return baseOptions;
 }
 
-function applyBrowserDefaults(opts: BrowserOptions) {
-  // eslint-disable-next-line no-param-reassign
-  opts.flushInterval ??= DEFAULT_FLUSH_INTERVAL_SECONDS;
-}
-
-export default function validateOptions(opts: BrowserOptions, logger: LDLogger): ValidatedOptions {
+export default function validateBrowserOptions(
+  opts: BrowserOptions,
+  logger: LDLogger,
+): ValidatedOptions {
   const output: ValidatedOptions = { ...optDefaults };
-  applyBrowserDefaults(output);
 
   Object.entries(validators).forEach((entry) => {
     const [key, validator] = entry as [keyof BrowserOptions, TypeValidator];

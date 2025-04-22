@@ -1,5 +1,7 @@
 import {
+  Context,
   internal,
+  LDContext,
   LDEvaluationReason,
   LDLogger,
   TypeValidators,
@@ -42,7 +44,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
 
   constructor(
     private readonly _flagKey: string,
-    private readonly _contextKeys: Record<string, string>,
+    private readonly _context: LDContext,
     private readonly _defaultStage: LDMigrationStage,
     private readonly _stage: LDMigrationStage,
     private readonly _reason: LDEvaluationReason,
@@ -97,7 +99,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
       return undefined;
     }
 
-    if (Object.keys(this._contextKeys).length === 0) {
+    if (!Context.fromLDContext(this._context).valid) {
       this._logger?.error(
         'The migration was not done against a valid context and cannot generate an event.',
       );
@@ -127,7 +129,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
       kind: 'migration_op',
       operation: this._operation,
       creationDate: Date.now(),
-      contextKeys: this._contextKeys,
+      context: this._context,
       evaluation: {
         key: this._flagKey,
         value: this._stage,

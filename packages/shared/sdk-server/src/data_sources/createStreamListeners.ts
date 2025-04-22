@@ -1,5 +1,6 @@
 import {
   EventName,
+  internal,
   LDLogger,
   ProcessStreamResponse,
   VoidFunction,
@@ -16,20 +17,24 @@ import {
 } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 
+const { initMetadataFromHeaders } = internal;
+
 export const createPutListener = (
   dataSourceUpdates: LDDataSourceUpdates,
   logger?: LDLogger,
   onPutCompleteHandler: VoidFunction = () => {},
 ) => ({
   deserializeData: deserializeAll,
-  processJson: async ({ data: { flags, segments } }: AllData) => {
+  processJson: async (
+    { data: { flags, segments } }: AllData,
+    initHeaders?: { [key: string]: string },
+  ) => {
     const initData = {
       [VersionedDataKinds.Features.namespace]: flags,
       [VersionedDataKinds.Segments.namespace]: segments,
     };
-
     logger?.debug('Initializing all data');
-    dataSourceUpdates.init(initData, onPutCompleteHandler);
+    dataSourceUpdates.init(initData, onPutCompleteHandler, initMetadataFromHeaders(initHeaders));
   },
 });
 

@@ -12,6 +12,7 @@ on:
           - packages/shared/sdk-server-edge
           - packages/shared/akamai-edgeworker-sdk
           - packages/sdk/cloudflare
+          - packages/sdk/fastly
           - packages/sdk/server-node
           - packages/sdk/vercel
           - packages/sdk/akamai-base
@@ -21,6 +22,7 @@ on:
           - packages/telemetry/node-server-sdk-otel
           - packages/sdk/browser
           - packages/sdk/server-ai
+          - packages/telemetry/browser-telemetry
 name: Publish Documentation
 jobs:
   build-publish:

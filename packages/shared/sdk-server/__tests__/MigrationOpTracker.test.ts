@@ -1,4 +1,4 @@
-import { LDMigrationStage } from '../src';
+import { LDContext, LDMigrationStage } from '../src';
 import { LDMigrationOrigin } from '../src/api/LDMigration';
 import MigrationOpTracker from '../src/MigrationOpTracker';
 import TestLogger, { LogLevel } from './Logger';
@@ -6,7 +6,7 @@ import TestLogger, { LogLevel } from './Logger';
 it('does not generate an event if an op is not set', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -20,9 +20,15 @@ it('does not generate an event if an op is not set', () => {
 });
 
 it('does not generate an event with missing context keys', () => {
-  const tracker = new MigrationOpTracker('flag', {}, LDMigrationStage.Off, LDMigrationStage.Off, {
-    kind: 'FALLTHROUGH',
-  });
+  const tracker = new MigrationOpTracker(
+    'flag',
+    {} as LDContext,
+    LDMigrationStage.Off,
+    LDMigrationStage.Off,
+    {
+      kind: 'FALLTHROUGH',
+    },
+  );
 
   // Set the op otherwise/invoked that would prevent an event as well.
   tracker.op('write');
@@ -52,7 +58,7 @@ it('does not generate an event with empty flag key', () => {
 it('generates an event if the minimal requirements are met.', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -64,7 +70,7 @@ it('generates an event if the minimal requirements are met.', () => {
   tracker.invoked('old');
 
   expect(tracker.createEvent()).toMatchObject({
-    contextKeys: { user: 'bob' },
+    context: { key: 'user-key' },
     evaluation: { default: 'off', key: 'flag', reason: { kind: 'FALLTHROUGH' }, value: 'off' },
     kind: 'migration_op',
     measurements: [
@@ -82,7 +88,7 @@ it('generates an event if the minimal requirements are met.', () => {
 it('can include the variation in the event', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -96,7 +102,7 @@ it('can include the variation in the event', () => {
   tracker.invoked('old');
 
   expect(tracker.createEvent()).toMatchObject({
-    contextKeys: { user: 'bob' },
+    context: { key: 'user-key' },
     evaluation: {
       default: 'off',
       key: 'flag',
@@ -120,7 +126,7 @@ it('can include the variation in the event', () => {
 it('can include the version in the event', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -135,7 +141,7 @@ it('can include the version in the event', () => {
   tracker.invoked('old');
 
   expect(tracker.createEvent()).toMatchObject({
-    contextKeys: { user: 'bob' },
+    context: { key: 'user-key' },
     evaluation: {
       default: 'off',
       key: 'flag',
@@ -159,7 +165,7 @@ it('can include the version in the event', () => {
 it('includes errors if at least one is set', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -181,7 +187,7 @@ it('includes errors if at least one is set', () => {
 
   const trackerB = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -205,7 +211,7 @@ it('includes errors if at least one is set', () => {
 it('includes latency if at least one measurement exists', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -227,7 +233,7 @@ it('includes latency if at least one measurement exists', () => {
 
   const trackerB = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -251,7 +257,7 @@ it('includes latency if at least one measurement exists', () => {
 it('includes if the result was consistent', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -274,7 +280,7 @@ it('includes if the result was consistent', () => {
 it('includes if the result was inconsistent', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -297,7 +303,7 @@ it('includes if the result was inconsistent', () => {
 it.each(['old', 'new'])('includes which single origins were invoked', (origin) => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -317,7 +323,7 @@ it.each(['old', 'new'])('includes which single origins were invoked', (origin) =
 it('includes when both origins were invoked', () => {
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -339,7 +345,7 @@ it('can handle exceptions thrown in the consistency check method', () => {
   const logger = new TestLogger();
   const tracker = new MigrationOpTracker(
     'flag',
-    { user: 'bob' },
+    { key: 'user-key' },
     LDMigrationStage.Off,
     LDMigrationStage.Off,
     {
@@ -376,7 +382,7 @@ it.each([
   (invoke_old, invoke_new, measure_old, measure_new) => {
     const tracker = new MigrationOpTracker(
       'flag',
-      { user: 'bob' },
+      { key: 'user-key' },
       LDMigrationStage.Off,
       LDMigrationStage.Off,
       {
@@ -413,7 +419,7 @@ it.each([
   (invoke_old, invoke_new, measure_old, measure_new) => {
     const tracker = new MigrationOpTracker(
       'flag',
-      { user: 'bob' },
+      { key: 'user-key' },
       LDMigrationStage.Off,
       LDMigrationStage.Off,
       {
@@ -450,7 +456,7 @@ it.each([
   (invoke_old, invoke_new, consistent) => {
     const tracker = new MigrationOpTracker(
       'flag',
-      { user: 'bob' },
+      { key: 'user-key' },
       LDMigrationStage.Off,
       LDMigrationStage.Off,
       {

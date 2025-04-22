@@ -138,7 +138,7 @@ describe('given a stream processor with mock event source', () => {
   });
 
   it('uses expected uri and eventSource init args', () => {
-    expect(basicPlatform.requests.createEventSource).toBeCalledWith(
+    expect(basicPlatform.requests.createEventSource).toHaveBeenCalledWith(
       `${serviceEndpoints.streaming}/all`,
       {
         errorFilter: expect.any(Function),
@@ -200,32 +200,44 @@ describe('given a stream processor with mock event source', () => {
     const patchHandler = mockEventSource.addEventListener.mock.calls[1][1];
     patchHandler(event);
 
-    expect(mockListener.deserializeData).toBeCalledTimes(2);
-    expect(mockListener.processJson).toBeCalledTimes(2);
+    expect(mockListener.deserializeData).toHaveBeenCalledTimes(2);
+    expect(mockListener.processJson).toHaveBeenCalledTimes(2);
+  });
+
+  it('passes initialization headers to listener', () => {
+    const headers = {
+      header1: 'value1',
+      header2: 'value2',
+      header3: 'value3',
+    };
+    mockEventSource.onopen({ type: 'open', headers });
+    simulatePutEvent();
+    expect(mockListener.processJson).toHaveBeenCalledTimes(1);
+    expect(mockListener.processJson).toHaveBeenNthCalledWith(1, expect.any(Object), headers);
   });
 
   it('passes error to callback if json data is malformed', async () => {
     (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
     simulatePutEvent();
 
-    expect(logger.error).toBeCalledWith(expect.stringMatching(/invalid data in "put"/));
-    expect(logger.debug).toBeCalledWith(expect.stringMatching(/invalid json/i));
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/invalid data in "put"/));
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/invalid json/i));
     expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/malformed json/i);
   });
 
   it('calls error handler if event.data prop is missing', async () => {
     simulatePutEvent({ flags: {} });
 
-    expect(mockListener.deserializeData).not.toBeCalled();
-    expect(mockListener.processJson).not.toBeCalled();
+    expect(mockListener.deserializeData).not.toHaveBeenCalled();
+    expect(mockListener.processJson).not.toHaveBeenCalled();
     expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/unexpected payload/i);
   });
 
   it('closes and stops', async () => {
     streamingProcessor.close();
 
-    expect(streamingProcessor.stop).toBeCalled();
-    expect(mockEventSource.close).toBeCalled();
+    expect(streamingProcessor.stop).toHaveBeenCalled();
+    expect(mockEventSource.close).toHaveBeenCalled();
     // @ts-ignore
     expect(streamingProcessor.eventSource).toBeUndefined();
   });
@@ -249,8 +261,8 @@ describe('given a stream processor with mock event source', () => {
       const willRetry = simulateError(testError);
 
       expect(willRetry).toBeTruthy();
-      expect(mockErrorHandler).not.toBeCalled();
-      expect(logger.warn).toBeCalledWith(
+      expect(mockErrorHandler).not.toHaveBeenCalled();
+      expect(logger.warn).toHaveBeenCalledWith(
         expect.stringMatching(new RegExp(`${status}.*will retry`)),
       );
 
@@ -270,10 +282,10 @@ describe('given a stream processor with mock event source', () => {
       const willRetry = simulateError(testError);
 
       expect(willRetry).toBeFalsy();
-      expect(mockErrorHandler).toBeCalledWith(
+      expect(mockErrorHandler).toHaveBeenCalledWith(
         new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
       );
-      expect(logger.error).toBeCalledWith(
+      expect(logger.error).toHaveBeenCalledWith(
         expect.stringMatching(new RegExp(`${status}.*permanently`)),
       );
 

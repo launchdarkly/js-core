@@ -67,6 +67,18 @@ describe('given an event processor', () => {
     expect(flags).toEqual(allData.flags);
     expect(segments).toEqual(allData.segments);
   });
+
+  it('initializes the feature store with metadata', () => {
+    const initHeaders = {
+      'x-ld-envid': '12345',
+    };
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData, initHeaders));
+
+    processor.start();
+    const metadata = storeFacade.getInitMetadata?.();
+
+    expect(metadata).toEqual({ environmentId: '12345' });
+  });
 });
 
 describe('given a polling processor with a short poll duration', () => {

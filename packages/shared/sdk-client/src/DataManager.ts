@@ -43,6 +43,11 @@ export interface DataManager {
     context: Context,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void>;
+
+  /**
+   * Closes the data manager. Any active connections are closed.
+   */
+  close(): void;
 }
 
 /**
@@ -69,6 +74,7 @@ export abstract class BaseDataManager implements DataManager {
   private _connectionParams?: ConnectionParams;
   protected readonly dataSourceStatusManager: DataSourceStatusManager;
   private readonly _dataSourceEventHandler: DataSourceEventHandler;
+  protected closed = false;
 
   constructor(
     protected readonly platform: Platform,
@@ -220,5 +226,10 @@ export abstract class BaseDataManager implements DataManager {
         statusManager.requestStateUpdate(DataSourceState.Closed);
       },
     };
+  }
+
+  public close() {
+    this.updateProcessor?.close();
+    this.closed = true;
   }
 }

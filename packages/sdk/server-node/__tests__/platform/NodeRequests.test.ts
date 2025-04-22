@@ -8,73 +8,76 @@ const TEXT_RESPONSE = 'Test Text';
 const JSON_RESPONSE = '{"text": "value"}';
 
 interface TestRequestData {
-  body: string;
+  body: string | Buffer;
   method: string | undefined;
   headers: http.IncomingHttpHeaders;
 }
 
-describe('given a default instance of NodeRequests', () => {
-  let resolve: (value: TestRequestData | PromiseLike<TestRequestData>) => void;
-  let promise: Promise<TestRequestData>;
-  let server: http.Server;
-  let resetResolve: () => void;
-  let resetPromise: Promise<void>;
+let resolve: (value: TestRequestData | PromiseLike<TestRequestData>) => void;
+let promise: Promise<TestRequestData>;
+let server: http.Server;
+let resetResolve: () => void;
+let resetPromise: Promise<void>;
 
-  beforeEach(() => {
-    resetPromise = new Promise((res) => {
-      resetResolve = res;
-    });
-
-    promise = new Promise<TestRequestData>((res) => {
-      resolve = res;
-    });
-    server = http.createServer({ keepAlive: false }, (req, res) => {
-      const chunks: any[] = [];
-      req.on('data', (chunk) => {
-        chunks.push(chunk);
-      });
-      req.on('end', () => {
-        resolve({
-          method: req.method,
-          body: Buffer.concat(chunks).toString(),
-          headers: req.headers,
-        });
-      });
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'text/plain');
-      res.setHeader('Connection', 'close');
-      if ((req.url?.indexOf('json') || -1) >= 0) {
-        res.end(JSON_RESPONSE);
-      } else if ((req.url?.indexOf('interrupt') || -1) >= 0) {
-        res.destroy();
-      } else if ((req.url?.indexOf('404') || -1) >= 0) {
-        res.statusCode = 404;
-        res.end();
-      } else if ((req.url?.indexOf('reset') || -1) >= 0) {
-        res.statusCode = 200;
-        res.flushHeaders();
-        res.write('potato');
-        setTimeout(() => {
-          res.destroy();
-          resetResolve();
-        }, 0);
-      } else if ((req.url?.indexOf('gzip') || -1) >= 0) {
-        res.setHeader('Content-Encoding', 'gzip');
-        res.end(zlib.gzipSync(Buffer.from(JSON_RESPONSE, 'utf8')));
-      } else {
-        res.end(TEXT_RESPONSE);
-      }
-    });
-    server.listen(PORT);
+beforeEach(() => {
+  resetPromise = new Promise((res) => {
+    resetResolve = res;
   });
 
-  afterEach(
-    async () =>
-      new Promise((resolveClose) => {
-        server.close(resolveClose);
-      }),
-  );
+  promise = new Promise<TestRequestData>((res) => {
+    resolve = res;
+  });
+  server = http.createServer({ keepAlive: false }, (req, res) => {
+    const chunks: any[] = [];
+    req.on('data', (chunk) => {
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      resolve({
+        method: req.method,
+        body:
+          req.headers['content-encoding'] === 'gzip'
+            ? Buffer.concat(chunks)
+            : Buffer.concat(chunks).toString(),
+        headers: req.headers,
+      });
+    });
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Connection', 'close');
+    if ((req.url?.indexOf('json') || -1) >= 0) {
+      res.end(JSON_RESPONSE);
+    } else if ((req.url?.indexOf('interrupt') || -1) >= 0) {
+      res.destroy();
+    } else if ((req.url?.indexOf('404') || -1) >= 0) {
+      res.statusCode = 404;
+      res.end();
+    } else if ((req.url?.indexOf('reset') || -1) >= 0) {
+      res.statusCode = 200;
+      res.flushHeaders();
+      res.write('potato');
+      setTimeout(() => {
+        res.destroy();
+        resetResolve();
+      }, 0);
+    } else if ((req.url?.indexOf('gzip') || -1) >= 0) {
+      res.setHeader('Content-Encoding', 'gzip');
+      res.end(zlib.gzipSync(Buffer.from(JSON_RESPONSE, 'utf8')));
+    } else {
+      res.end(TEXT_RESPONSE);
+    }
+  });
+  server.listen(PORT);
+});
 
+afterEach(
+  async () =>
+    new Promise((resolveClose) => {
+      server.close(resolveClose);
+    }),
+);
+
+describe('given a default instance of NodeRequests', () => {
   const requests = new NodeRequests();
   it('can make a basic get request', async () => {
     const res = await requests.fetch(`http://localhost:${PORT}`);
@@ -115,6 +118,17 @@ describe('given a default instance of NodeRequests', () => {
 
   it('can make a basic post', async () => {
     await requests.fetch(`http://localhost:${PORT}`, { method: 'POST', body: 'BODY TEXT' });
+    const serverResult = await promise;
+    expect(serverResult.method).toEqual('POST');
+    expect(serverResult.body).toEqual('BODY TEXT');
+  });
+
+  it('can make a basic post ignoring compressBodyIfPossible', async () => {
+    await requests.fetch(`http://localhost:${PORT}`, {
+      method: 'POST',
+      body: 'BODY TEXT',
+      compressBodyIfPossible: true,
+    });
     const serverResult = await promise;
     expect(serverResult.method).toEqual('POST');
     expect(serverResult.body).toEqual('BODY TEXT');
@@ -164,5 +178,32 @@ describe('given a default instance of NodeRequests', () => {
     const serverResult = await promise;
     expect(serverResult.method).toEqual('GET');
     expect(serverResult.body).toEqual('');
+  });
+});
+
+describe('given an instance of NodeRequests with enableEventCompression turned on', () => {
+  const requests = new NodeRequests(undefined, undefined, undefined, true);
+  it('can make a basic post with compressBodyIfPossible enabled', async () => {
+    await requests.fetch(`http://localhost:${PORT}`, {
+      method: 'POST',
+      body: 'BODY TEXT',
+      compressBodyIfPossible: true,
+    });
+    const serverResult = await promise;
+    expect(serverResult.method).toEqual('POST');
+    expect(serverResult.headers['content-encoding']).toEqual('gzip');
+    expect(serverResult.body).toEqual(zlib.gzipSync('BODY TEXT'));
+  });
+
+  it('can make a basic post with compressBodyIfPossible disabled', async () => {
+    await requests.fetch(`http://localhost:${PORT}`, {
+      method: 'POST',
+      body: 'BODY TEXT',
+      compressBodyIfPossible: false,
+    });
+    const serverResult = await promise;
+    expect(serverResult.method).toEqual('POST');
+    expect(serverResult.headers['content-encoding']).toBeUndefined();
+    expect(serverResult.body).toEqual('BODY TEXT');
   });
 });

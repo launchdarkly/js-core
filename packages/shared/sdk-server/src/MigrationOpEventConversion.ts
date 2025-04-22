@@ -1,4 +1,4 @@
-import { internal, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { Context, internal, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import {
   LDMigrationConsistencyMeasurement,
@@ -223,29 +223,35 @@ export default function MigrationOpEventToInputEvent(
     return undefined;
   }
 
-  if (!TypeValidators.Object.is(inEvent.contextKeys)) {
-    return undefined;
-  }
-
   if (!TypeValidators.Number.is(inEvent.creationDate)) {
     return undefined;
   }
 
-  if (!Object.keys(inEvent.contextKeys).every((key) => TypeValidators.Kind.is(key))) {
+  const contextKeysOrContext: Pick<internal.InputMigrationEvent, 'context' | 'contextKeys'> = {};
+
+  if (TypeValidators.Object.is(inEvent.context)) {
+    const context = Context.fromLDContext(inEvent.context);
+    if (context.valid) {
+      contextKeysOrContext.context = context;
+    }
+  } else if (TypeValidators.Object.is(inEvent.contextKeys)) {
+    if (
+      Object.keys(inEvent.contextKeys).every((key) => TypeValidators.Kind.is(key)) &&
+      Object.values(inEvent.contextKeys).every(
+        (value) => TypeValidators.String.is(value) && value !== '',
+      )
+    ) {
+      contextKeysOrContext.contextKeys = { ...inEvent.contextKeys };
+    }
+  }
+
+  if (!contextKeysOrContext.context && !contextKeysOrContext.contextKeys) {
     return undefined;
   }
 
   const samplingRatio = inEvent.samplingRatio ?? 1;
 
   if (!TypeValidators.Number.is(samplingRatio)) {
-    return undefined;
-  }
-
-  if (
-    !Object.values(inEvent.contextKeys).every(
-      (value) => TypeValidators.String.is(value) && value !== '',
-    )
-  ) {
     return undefined;
   }
 
@@ -259,7 +265,7 @@ export default function MigrationOpEventToInputEvent(
     kind: inEvent.kind,
     operation: inEvent.operation,
     creationDate: inEvent.creationDate,
-    contextKeys: { ...inEvent.contextKeys },
+    ...contextKeysOrContext,
     measurements: validateMeasurements(inEvent.measurements),
     evaluation,
     samplingRatio,

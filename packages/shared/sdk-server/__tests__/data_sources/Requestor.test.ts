@@ -49,7 +49,7 @@ describe('given a requestor', () => {
               throw new Error('Function not implemented.');
             },
             entries(): Iterable<[string, string]> {
-              throw new Error('Function not implemented.');
+              return testHeaders ? Object.entries(testHeaders) : [];
             },
             has(_name: string): boolean {
               throw new Error('Function not implemented.');
@@ -115,7 +115,9 @@ describe('given a requestor', () => {
   });
 
   it('stores and sends etags', async () => {
-    testHeaders.etag = 'abc123';
+    testHeaders = {
+      etag: 'abc123',
+    };
     testResponse = 'a response';
     const res1 = await promisify<{ err: any; body: any }>((cb) => {
       requestor.requestAllData((err, body) => cb({ err, body }));
@@ -133,5 +135,18 @@ describe('given a requestor', () => {
     const req2 = requestsMade[1];
     expect(req1.options.headers?.['if-none-match']).toBe(undefined);
     expect(req2.options.headers?.['if-none-match']).toBe((testHeaders.etag = 'abc123'));
+  });
+
+  it('passes response headers to callback', async () => {
+    testHeaders = {
+      header1: 'value1',
+      header2: 'value2',
+      header3: 'value3',
+    };
+    const res = await promisify<{ err: any; body: any; headers: any }>((cb) => {
+      requestor.requestAllData((err, body, headers) => cb({ err, body, headers }));
+    });
+
+    expect(res.headers).toEqual(testHeaders);
   });
 });

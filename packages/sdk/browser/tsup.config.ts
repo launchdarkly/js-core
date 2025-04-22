@@ -10,7 +10,7 @@ export default defineConfig({
   minify: true,
   format: ['esm', 'cjs'],
   splitting: false,
-  sourcemap: false,
+  sourcemap: true,
   clean: true,
   noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   dts: true,

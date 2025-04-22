@@ -2,6 +2,84 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.9.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.8.0...node-server-sdk-v9.9.0) (2025-04-16)
+
+
+### Features
+
+* Environment ID support for hooks ([#823](https://github.com/launchdarkly/js-core/issues/823)) ([63dc9f9](https://github.com/launchdarkly/js-core/commit/63dc9f9f1300c598e79be27909f8195ac66d54ef))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.14.0 to 2.15.0
+
+## [9.8.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.7...node-server-sdk-v9.8.0) (2025-04-08)
+
+
+### Features
+
+* Option to use gzip to compress event ([#814](https://github.com/launchdarkly/js-core/issues/814)) ([4e91431](https://github.com/launchdarkly/js-core/commit/4e914317d31378e2a1eaed5aa03e0ac6beac43d5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.13.0 to 2.14.0
+
+## [9.7.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.6...node-server-sdk-v9.7.7) (2025-03-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.12.1 to 2.13.0
+
+## [9.7.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.5...node-server-sdk-v9.7.6) (2025-03-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.12.0 to 2.12.1
+
+## [9.7.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.4...node-server-sdk-v9.7.5) (2025-03-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.11.1 to 2.12.0
+
+## [9.7.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.3...node-server-sdk-v9.7.4) (2025-02-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.11.0 to 2.11.1
+
+## [9.7.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.2...node-server-sdk-v9.7.3) (2025-01-22)
+
+
+### Bug Fixes
+
+* Fix typo in proxy-authorization header for basic authentication. ([#720](https://github.com/launchdarkly/js-core/issues/720)) ([220b6d6](https://github.com/launchdarkly/js-core/commit/220b6d6d34331d271ca30f0cae363c734fcc38bf)), closes [#718](https://github.com/launchdarkly/js-core/issues/718)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.10.0 to 2.11.0
+
 ## [9.7.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.1...node-server-sdk-v9.7.2) (2024-11-14)
 
 

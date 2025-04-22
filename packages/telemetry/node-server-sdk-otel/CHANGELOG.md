@@ -1,5 +1,87 @@
 # Changelog
 
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.8...node-server-sdk-otel-v1.2.0) (2025-04-16)
+
+
+### Features
+
+* Environment ID support for hooks ([#823](https://github.com/launchdarkly/js-core/issues/823)) ([63dc9f9](https://github.com/launchdarkly/js-core/commit/63dc9f9f1300c598e79be27909f8195ac66d54ef))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.8.0 to 9.9.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.9.0
+
+## [1.1.8](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.7...node-server-sdk-otel-v1.1.8) (2025-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.7.7 to 9.8.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.8.0
+
+## [1.1.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.6...node-server-sdk-otel-v1.1.7) (2025-03-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.7.6 to 9.7.7
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.7
+
+## [1.1.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.5...node-server-sdk-otel-v1.1.6) (2025-03-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.7.5 to 9.7.6
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.6
+
+## [1.1.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.4...node-server-sdk-otel-v1.1.5) (2025-03-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.7.4 to 9.7.5
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.5
+
+## [1.1.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.3...node-server-sdk-otel-v1.1.4) (2025-02-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.7.3 to 9.7.4
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.4
+
+## [1.1.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.2...node-server-sdk-otel-v1.1.3) (2025-01-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.7.2 to 9.7.3
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.3
+
 ## [1.1.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.1...node-server-sdk-otel-v1.1.2) (2024-11-14)
 
 

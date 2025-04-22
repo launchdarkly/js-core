@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import {
   DataKind,
   PersistentDataStore,
@@ -16,6 +18,7 @@ import TtlCache from '../cache/TtlCache';
 import { persistentStoreKinds } from './persistentStoreKinds';
 import sortDataSet from './sortDataSet';
 import UpdateQueue from './UpdateQueue';
+
 
 function cacheKey(kind: DataKind, key: string) {
   return `${kind.namespace}:${key}`;
@@ -266,8 +269,9 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
+    _?: internal.InitMetadata, // init metadata is not utilized in the persistence layer
+    _selector?: String, // TODO: SDK-1044 - Utilize selector
   ): void {
     if (basis) {
       this._queue.enqueue((cb) => {

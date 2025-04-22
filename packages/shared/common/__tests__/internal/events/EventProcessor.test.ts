@@ -671,9 +671,7 @@ describe('given an event processor', () => {
         key: 'eventkey',
         data: { thing: 'stuff' },
         creationDate: 1000,
-        contextKeys: {
-          user: 'userKey',
-        },
+        context: { ...user, kind: 'user' },
       },
     ]);
   });
@@ -701,9 +699,7 @@ describe('given an event processor', () => {
         key: 'eventkey',
         data: { thing: 'stuff' },
         creationDate: 1000,
-        contextKeys: {
-          user: 'anon-user',
-        },
+        context: { ...anonUser, kind: 'user' },
       },
     ]);
   });
@@ -733,9 +729,7 @@ describe('given an event processor', () => {
         key: 'eventkey',
         data: { thing: 'stuff' },
         creationDate: 1000,
-        contextKeys: {
-          user: 'userKey',
-        },
+        context: { ...user, kind: 'user' },
         metricValue: 1.5,
       },
     ]);

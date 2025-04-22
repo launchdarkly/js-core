@@ -21,6 +21,74 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * devDependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [2.7.4](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.3...cloudflare-server-sdk-v2.7.4) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.3 to 2.6.4
+
+## [2.7.3](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.2...cloudflare-server-sdk-v2.7.3) (2025-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.2 to 2.6.3
+
+## [2.7.2](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.1...cloudflare-server-sdk-v2.7.2) (2025-03-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.1 to 2.6.2
+
+## [2.7.1](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.0...cloudflare-server-sdk-v2.7.1) (2025-03-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.0 to 2.6.1
+
+## [2.7.0](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.6.5...cloudflare-server-sdk-v2.7.0) (2025-03-17)
+
+
+### Features
+
+* Add TTL caching for data store ([#801](https://github.com/launchdarkly/js-core/issues/801)) ([c1de485](https://github.com/launchdarkly/js-core/commit/c1de4850c81dff8ad52276c2bfc2a2aeb87bd2d9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.5.4 to 2.6.0
+
+## [2.6.5](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.6.4...cloudflare-server-sdk-v2.6.5) (2025-02-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.5.3 to 2.5.4
+
+## [2.6.4](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.6.3...cloudflare-server-sdk-v2.6.4) (2025-01-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.5.2 to 2.5.3
+
 ## [2.6.3](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.6.2...cloudflare-server-sdk-v2.6.3) (2024-12-12)
 
 

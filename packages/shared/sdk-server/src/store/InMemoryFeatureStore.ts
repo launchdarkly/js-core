@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../api/interfaces';
 import {
   LDFeatureStore,
@@ -7,10 +9,14 @@ import {
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 
+type InitMetadata = internal.InitMetadata;
+
 export default class InMemoryFeatureStore implements LDFeatureStore {
   private _allData: LDFeatureStoreDataStorage = {};
 
   private _initCalled = false;
+
+  private _initMetadata?: InitMetadata;
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
     const items = this._allData[kind.namespace];
@@ -36,8 +42,8 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
     callback?.(result);
   }
 
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this.applyChanges(true, allData, undefined, callback);
+  init(allData: LDFeatureStoreDataStorage, callback: () => void, initMetadata?: InitMetadata): void {
+    this.applyChanges(true, allData, callback, initMetadata);
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
@@ -49,7 +55,6 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
           [key]: item,
         },
       },
-      undefined,
       callback,
     );
   }
@@ -62,7 +67,6 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
           [data.key]: data,
         },
       },
-      undefined,
       callback,
     );
   }
@@ -70,9 +74,11 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
+    initMetadata?: InitMetadata,
+    selector?: String, // TODO: SDK-1044 - Utilize selector
   ): void {
+    this._initMetadata = initMetadata;
     if (basis) {
       this._initCalled = true;
       this._allData = data;
@@ -120,5 +126,9 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
 
   getDescription(): string {
     return 'memory';
+  }
+
+  getInitMetaData(): InitMetadata | undefined {
+    return this._initMetadata;
   }
 }

@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../api/interfaces';
 import {
   LDFeatureStore,
@@ -33,7 +35,7 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
     // adapt to applyChanges for common handling
-    this.applyChanges(true, allData, undefined, callback);
+    this.applyChanges(true, allData, callback);
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
@@ -46,7 +48,6 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
           [key]: item,
         },
       },
-      undefined,
       callback,
     );
   }
@@ -60,7 +61,6 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
           [data.key]: data,
         },
       },
-      undefined,
       callback,
     );
   }
@@ -68,13 +68,26 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
+    _initMetadata?: internal.InitMetadata, // init metadata is not utilized in the persistence layer
+    _selector?: String, // TODO: SDK-1044 - Utilize selector
   ): void {
-    this._memoryStore.applyChanges(basis, data, selector, () => {
-      // TODO: SDK-1047 conditional propgation to persistence based on parameter
-      this._nonTransPersistenceStore.applyChanges(basis, data, selector, callback);
-    });
+    this._memoryStore.applyChanges(
+      basis,
+      data,
+      () => {
+        // TODO: SDK-1047 conditional propagation to persistence based on parameter
+        this._nonTransPersistenceStore.applyChanges(
+          basis,
+          data,
+          callback,
+          _initMetadata,
+          _selector,
+        );
+      },
+      _initMetadata,
+      _selector,
+    );
 
     if (basis) {
       // basis causes memory store to become the active store

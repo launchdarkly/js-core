@@ -1,5 +1,77 @@
 # Changelog
 
+## [0.5.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.2...js-client-sdk-v0.5.3) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.5 to 1.12.6
+
+## [0.5.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.1...js-client-sdk-v0.5.2) (2025-04-15)
+
+
+### Bug Fixes
+
+* Handle default flush interval for browser SDK. ([#822](https://github.com/launchdarkly/js-core/issues/822)) ([2c1cc7a](https://github.com/launchdarkly/js-core/commit/2c1cc7a117fd011a329dfcc5332fddf7fd11eff9))
+
+## [0.5.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.0...js-client-sdk-v0.5.1) (2025-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.4 to 1.12.5
+
+## [0.5.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.4.1...js-client-sdk-v0.5.0) (2025-03-26)
+
+
+### Features
+
+* Support inline context for custom and migration events ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
+
+### Bug Fixes
+
+* Deprecate LDMigrationOpEvent.contextKeys in favor of LDMigrationOpEvent.context ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.3 to 1.12.4
+
+## [0.4.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.4.0...js-client-sdk-v0.4.1) (2025-02-06)
+
+
+### Bug Fixes
+
+* Ensure streaming connection is closed on SDK close. ([#774](https://github.com/launchdarkly/js-core/issues/774)) ([f58e746](https://github.com/launchdarkly/js-core/commit/f58e746a089fb0cd5f6169f6c246e1f6515f5047))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.2 to 1.12.3
+
+## [0.4.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.3...js-client-sdk-v0.4.0) (2025-01-22)
+
+
+### Features
+
+* Enable source maps with inlined sources for browser SDK. ([#734](https://github.com/launchdarkly/js-core/issues/734)) ([c2a87b1](https://github.com/launchdarkly/js-core/commit/c2a87b11d1eeb31bf0423e3d7dfc8e99fc940c99))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.1 to 1.12.2
+
 ## [0.3.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.3.2...js-client-sdk-v0.3.3) (2024-11-22)
 
 

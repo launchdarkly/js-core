@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    // Uses "." so it can load package.json.
+    "rootDir": ".",
+    "outDir": "dist",
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "Node16",
+    "moduleResolution": "node16",
+    "strict": true,
+    "noImplicitOverride": true,
+    // Needed for CommonJS modules: markdown-it, fs-extra
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true, // enables importers to jump to source
+    "resolveJsonModule": true,
+    "stripInternal": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
+}

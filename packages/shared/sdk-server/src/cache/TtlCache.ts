@@ -4,8 +4,6 @@ function isStale(record: CacheRecord): boolean {
 
 /**
  * Options for the TTL cache.
- *
- * @internal
  */
 export interface TtlCacheOptions {
   /**
@@ -26,8 +24,6 @@ interface CacheRecord {
 
 /**
  * A basic TTL cache with configurable TTL and check interval.
- *
- * @internal
  */
 export default class TtlCache {
   private _storage: Map<string, CacheRecord> = new Map();

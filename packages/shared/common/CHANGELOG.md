@@ -2,6 +2,44 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.16.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.15.0...js-sdk-common-v2.16.0) (2025-04-16)
+
+
+### Features
+
+* Environment ID support for hooks ([#823](https://github.com/launchdarkly/js-core/issues/823)) ([63dc9f9](https://github.com/launchdarkly/js-core/commit/63dc9f9f1300c598e79be27909f8195ac66d54ef))
+
+## [2.15.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.14.0...js-sdk-common-v2.15.0) (2025-04-08)
+
+
+### Features
+
+* Option to use gzip to compress event ([#814](https://github.com/launchdarkly/js-core/issues/814)) ([4e91431](https://github.com/launchdarkly/js-core/commit/4e914317d31378e2a1eaed5aa03e0ac6beac43d5))
+
+## [2.14.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.13.0...js-sdk-common-v2.14.0) (2025-03-26)
+
+
+### Features
+
+* Support inline context for custom and migration events ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
+
+### Bug Fixes
+
+* Deprecate LDMigrationOpEvent.contextKeys in favor of LDMigrationOpEvent.context ([6aadf04](https://github.com/launchdarkly/js-core/commit/6aadf0463968f89bc3df10023267244c2ade1b31))
+
+## [2.13.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.12.0...js-sdk-common-v2.13.0) (2025-01-22)
+
+
+### Features
+
+* Adds StreamingProcessor for FDv2 to sdk-server package. ([#707](https://github.com/launchdarkly/js-core/issues/707)) ([7f5c275](https://github.com/launchdarkly/js-core/commit/7f5c2750dcc8341d049d7e736ca21ec36e168703))
+
+
+### Bug Fixes
+
+* Remove outdated reference to geolocation. ([#719](https://github.com/launchdarkly/js-core/issues/719)) ([0eeb3b6](https://github.com/launchdarkly/js-core/commit/0eeb3b6472419d257bf52c4ab3ae33864eae1902))
+
 ## [2.12.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.11.0...js-sdk-common-v2.12.0) (2024-11-04)
 
 

@@ -96,6 +96,79 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.2.1 to 2.2.2
 
+## [2.6.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.3...js-server-sdk-common-edge-v2.6.4) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.14.0 to 2.15.0
+
+## [2.6.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.2...js-server-sdk-common-edge-v2.6.3) (2025-04-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.13.0 to 2.14.0
+
+## [2.6.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.1...js-server-sdk-common-edge-v2.6.2) (2025-03-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.12.1 to 2.13.0
+
+## [2.6.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.0...js-server-sdk-common-edge-v2.6.1) (2025-03-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.12.0 to 2.12.1
+
+## [2.6.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.5.4...js-server-sdk-common-edge-v2.6.0) (2025-03-17)
+
+
+### Features
+
+* Add TTL caching for data store ([#801](https://github.com/launchdarkly/js-core/issues/801)) ([c1de485](https://github.com/launchdarkly/js-core/commit/c1de4850c81dff8ad52276c2bfc2a2aeb87bd2d9))
+
+
+### Bug Fixes
+
+* Remove logging of SDK option configurations ([#806](https://github.com/launchdarkly/js-core/issues/806)) ([a76d196](https://github.com/launchdarkly/js-core/commit/a76d19690a7ef5932c36bfc974affc0a192c2d4f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.11.1 to 2.12.0
+
+## [2.5.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.5.3...js-server-sdk-common-edge-v2.5.4) (2025-02-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.11.0 to 2.11.1
+
+## [2.5.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.5.2...js-server-sdk-common-edge-v2.5.3) (2025-01-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.10.0 to 2.11.0
+
 ## [2.5.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.5.1...js-server-sdk-common-edge-v2.5.2) (2024-11-14)
 
 

@@ -510,6 +510,7 @@ describe.each(['caching', 'non-caching'])(
             },
           },
         },
+        undefined,
         'selector1',
       );
 
@@ -531,6 +532,7 @@ describe.each(['caching', 'non-caching'])(
             },
           },
         },
+        undefined,
         'selector1',
       );
 
@@ -549,6 +551,7 @@ describe.each(['caching', 'non-caching'])(
             },
           },
         },
+        undefined,
         'selector1',
       );
 
@@ -587,6 +590,7 @@ describe.each(['caching', 'non-caching'])(
             },
           },
         },
+        undefined,
         'selector',
       );
       expect(callbackCount).toEqual(3);
@@ -605,6 +609,7 @@ describe.each(['caching', 'non-caching'])(
             },
           },
         },
+        undefined,
         'selector',
       );
 
@@ -620,6 +625,7 @@ describe.each(['caching', 'non-caching'])(
             },
           },
         },
+        undefined,
         'selector',
       );
 

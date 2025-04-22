@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../api/interfaces';
 import {
   LDDataSourceUpdates,
@@ -12,6 +14,8 @@ import { Prerequisite } from '../evaluation/data/Prerequisite';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import DependencyTracker from './DependencyTracker';
 import NamespacedDataSet from './NamespacedDataSet';
+
+type InitMetadata = internal.InitMetadata;
 
 /**
  * This type allows computing the clause dependencies of either a flag or a segment.
@@ -66,8 +70,12 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
     private readonly _onChange: (key: string) => void,
   ) {}
 
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this.applyChanges(true, allData, undefined, callback); // basis is true for init. selector is undefined for FDv1 init
+  init(
+    allData: LDFeatureStoreDataStorage,
+    callback: () => void,
+    initMetadata?: InitMetadata,
+  ): void {
+    this.applyChanges(true, allData, callback, initMetadata); // basis is true for init. selector is undefined for FDv1 init
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
@@ -78,7 +86,6 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
           [data.key]: data,
         },
       },
-      undefined, // selector is undefined for FDv1 upsert
       callback,
     );
   }
@@ -86,58 +93,65 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined,
     callback: () => void,
+    initMetadata?: InitMetadata,
+    selector?: String,
   ): void {
     const checkForChanges = this._hasEventListeners();
     const doApplyChanges = (oldData: LDFeatureStoreDataStorage) => {
-      this._featureStore.applyChanges(basis, data, selector, () => {
-        // Defer change events so they execute after the callback.
-        Promise.resolve().then(() => {
-          if (basis) {
-            this._dependencyTracker.reset();
-          }
+      this._featureStore.applyChanges(
+        basis,
+        data,
+        () => {
+          // Defer change events so they execute after the callback.
+          Promise.resolve().then(() => {
+            if (basis) {
+              this._dependencyTracker.reset();
+            }
 
-          Object.entries(data).forEach(([namespace, items]) => {
-            Object.keys(items || {}).forEach((key) => {
-              const item = items[key];
-              this._dependencyTracker.updateDependenciesFrom(
-                namespace,
-                key,
-                computeDependencies(namespace, item),
-              );
-            });
-          });
-
-          if (checkForChanges) {
-            const updatedItems = new NamespacedDataSet<boolean>();
-            Object.keys(data).forEach((namespace) => {
-              const oldDataForKind = oldData[namespace];
-              const newDataForKind = data[namespace];
-              let iterateData;
-              if (basis) {
-                // for basis, need to iterate on all keys
-                iterateData = { ...oldDataForKind, ...newDataForKind };
-              } else {
-                // for non basis, only need to iterate on keys in incoming data
-                iterateData = { ...newDataForKind };
-              }
-              Object.keys(iterateData).forEach((key) => {
-                this.addIfModified(
+            Object.entries(data).forEach(([namespace, items]) => {
+              Object.keys(items || {}).forEach((key) => {
+                const item = items[key];
+                this._dependencyTracker.updateDependenciesFrom(
                   namespace,
                   key,
-                  oldDataForKind && oldDataForKind[key],
-                  newDataForKind && newDataForKind[key],
-                  updatedItems,
+                  computeDependencies(namespace, item),
                 );
               });
             });
 
-            this.sendChangeEvents(updatedItems);
-          }
-        });
-        callback?.();
-      });
+            if (checkForChanges) {
+              const updatedItems = new NamespacedDataSet<boolean>();
+              Object.keys(data).forEach((namespace) => {
+                const oldDataForKind = oldData[namespace];
+                const newDataForKind = data[namespace];
+                let iterateData;
+                if (basis) {
+                  // for basis, need to iterate on all keys
+                  iterateData = { ...oldDataForKind, ...newDataForKind };
+                } else {
+                  // for non basis, only need to iterate on keys in incoming data
+                  iterateData = { ...newDataForKind };
+                }
+                Object.keys(iterateData).forEach((key) => {
+                  this.addIfModified(
+                    namespace,
+                    key,
+                    oldDataForKind && oldDataForKind[key],
+                    newDataForKind && newDataForKind[key],
+                    updatedItems,
+                  );
+                });
+              });
+
+              this.sendChangeEvents(updatedItems);
+            }
+          });
+          callback?.();
+        },
+        initMetadata,
+        selector,
+      );
     };
 
     let oldData = {};

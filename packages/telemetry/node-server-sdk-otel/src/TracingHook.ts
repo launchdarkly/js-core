@@ -17,6 +17,7 @@ const FEATURE_FLAG_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.key`;
 const FEATURE_FLAG_PROVIDER_ATTR = `${FEATURE_FLAG_SCOPE}.provider_name`;
 const FEATURE_FLAG_CONTEXT_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.context.key`;
 const FEATURE_FLAG_VARIANT_ATTR = `${FEATURE_FLAG_SCOPE}.variant`;
+const FEATURE_FLAG_SET_ID = `${FEATURE_FLAG_SCOPE}.set.id`;
 
 const TRACING_HOOK_NAME = 'LaunchDarkly Tracing Hook';
 
@@ -49,12 +50,15 @@ export interface TracingHookOptions {
    * using `console`.
    */
   logger?: LDLogger;
+
+  environmentId?: string;
 }
 
 interface ValidatedHookOptions {
   spans: boolean;
   includeVariant: boolean;
   logger: LDLogger;
+  environmentId?: string;
 }
 
 type SpanTraceData = {
@@ -65,6 +69,7 @@ const defaultOptions: ValidatedHookOptions = {
   spans: false,
   includeVariant: false,
   logger: basicLogger({ name: TRACING_HOOK_NAME }),
+  environmentId: undefined,
 };
 
 function validateOptions(options?: TracingHookOptions): ValidatedHookOptions {
@@ -90,6 +95,16 @@ function validateOptions(options?: TracingHookOptions): ValidatedHookOptions {
     } else {
       validatedOptions.logger.error(
         OptionMessages.wrongOptionType('spans', 'boolean', typeof options?.spans),
+      );
+    }
+  }
+
+  if (options?.environmentId !== undefined) {
+    if (TypeValidators.String.is(options.environmentId)) {
+      validatedOptions.environmentId = options.environmentId;
+    } else {
+      validatedOptions.logger.error(
+        OptionMessages.wrongOptionType('environmentId', 'string', typeof options?.environmentId),
       );
     }
   }
@@ -163,6 +178,11 @@ export default class TracingHook implements integrations.Hook {
         [FEATURE_FLAG_PROVIDER_ATTR]: 'LaunchDarkly',
         [FEATURE_FLAG_CONTEXT_KEY_ATTR]: Context.fromLDContext(hookContext.context).canonicalKey,
       };
+      if (this._options.environmentId) {
+        eventAttributes[FEATURE_FLAG_SET_ID] = this._options.environmentId;
+      } else if (hookContext.environmentId) {
+        eventAttributes[FEATURE_FLAG_SET_ID] = hookContext.environmentId;
+      }
       if (this._options.includeVariant) {
         eventAttributes[FEATURE_FLAG_VARIANT_ATTR] = JSON.stringify(detail.value);
       }

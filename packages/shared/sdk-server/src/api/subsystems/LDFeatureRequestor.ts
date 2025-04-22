@@ -6,5 +6,5 @@
  * @ignore
  */
 export interface LDFeatureRequestor {
-  requestAllData: (cb: (err: any, body: any) => void) => void;
+  requestAllData: (cb: (err: any, body: any, headers: any) => void) => void;
 }
