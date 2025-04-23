@@ -2,7 +2,6 @@ import { EventListener, EventName, LDLogger } from '../../../src/api';
 import { Payload } from '../../../src/internal/fdv2/payloadProcessor';
 import { EventStream, PayloadStreamReader } from '../../../src/internal/fdv2/payloadStreamReader';
 
-
 class MockEventStream implements EventStream {
   private _listeners: Record<EventName, EventListener> = {};
 

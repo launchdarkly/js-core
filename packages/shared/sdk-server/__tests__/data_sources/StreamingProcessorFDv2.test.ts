@@ -84,7 +84,6 @@ describe('given a stream processor with mock event source', () => {
   });
 
   beforeEach(() => {
-
     info = basicPlatform.info;
 
     basicPlatform.requests = {
