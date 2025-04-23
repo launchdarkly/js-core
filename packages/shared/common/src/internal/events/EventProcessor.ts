@@ -230,7 +230,7 @@ export default class EventProcessor implements LDEventProcessor {
     this._queue = [];
 
     if (isMultiEventSummarizer(this._summarizer)) {
-      const summaries = await this._summarizer.getSummaries();
+      const summaries = this._summarizer.getSummaries();
 
       summaries.forEach((summary) => {
         if (Object.keys(summary.features).length) {
