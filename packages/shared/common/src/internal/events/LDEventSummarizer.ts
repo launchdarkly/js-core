@@ -45,7 +45,7 @@ export interface LDMultiEventSummarizer {
    * Gets the current summary of processed events.
    * @returns A summary of all processed feature flag events
    */
-  getSummaries(): SummarizedFlagsEvent[];
+  getSummaries(): Promise<SummarizedFlagsEvent[]>;
 }
 
 /**

@@ -1,15 +1,18 @@
-import { setupCrypto } from '../../../__tests__/setupCrypto';
+import { setupAsyncCrypto, setupCrypto } from '../../../__tests__/setupCrypto';
 import Context from '../../Context';
 import ContextFilter from '../../ContextFilter';
 import InputEvalEvent from './InputEvalEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
 import MultiEventSummarizer from './MultiEventSummarizer';
 
-describe('with mocked crypto and hasher', () => {
+// Test with both sync and async crypto implementations
+describe.each([
+  ['sync', setupCrypto()],
+  ['async', setupAsyncCrypto()],
+])('with mocked crypto and hasher/%s', (_name, crypto) => {
   let summarizer: MultiEventSummarizer;
 
   beforeEach(() => {
-    const crypto = setupCrypto();
     const contextFilter = new ContextFilter(false, []);
     summarizer = new MultiEventSummarizer(crypto, contextFilter);
   });
@@ -19,9 +22,8 @@ describe('with mocked crypto and hasher', () => {
     const event = new InputEvalEvent(true, context, 'flag-key', 'value', 'default', 1, 0, true);
 
     summarizer.summarizeEvent(event);
-    await new Promise(process.nextTick); // Wait for async operations
 
-    const summaries = summarizer.getSummaries();
+    const summaries = await summarizer.getSummaries();
     expect(summaries).toHaveLength(1);
   });
 
@@ -32,9 +34,8 @@ describe('with mocked crypto and hasher', () => {
 
     summarizer.summarizeEvent(event1);
     summarizer.summarizeEvent(event2);
-    await new Promise(process.nextTick);
 
-    const summaries = summarizer.getSummaries();
+    const summaries = await summarizer.getSummaries();
     expect(summaries).toHaveLength(1);
   });
 
@@ -43,9 +44,8 @@ describe('with mocked crypto and hasher', () => {
     const event = new InputIdentifyEvent(context);
 
     summarizer.summarizeEvent(event);
-    await new Promise(process.nextTick);
 
-    const summaries = summarizer.getSummaries();
+    const summaries = await summarizer.getSummaries();
     expect(summaries).toHaveLength(0);
   });
 
@@ -57,9 +57,8 @@ describe('with mocked crypto and hasher', () => {
 
     summarizer.summarizeEvent(event1);
     summarizer.summarizeEvent(event2);
-    await new Promise(process.nextTick);
 
-    const summaries = summarizer.getSummaries();
+    const summaries = await summarizer.getSummaries();
     expect(summaries).toHaveLength(2);
   });
 
@@ -68,10 +67,9 @@ describe('with mocked crypto and hasher', () => {
     const event = new InputEvalEvent(true, context, 'flag-key', 'value', 'default', 1, 0, true);
 
     summarizer.summarizeEvent(event);
-    await new Promise(process.nextTick);
 
-    const summariesA = summarizer.getSummaries();
-    const summariesB = summarizer.getSummaries();
+    const summariesA = await summarizer.getSummaries();
+    const summariesB = await summarizer.getSummaries();
     expect(summariesA).toHaveLength(1);
     expect(summariesB).toHaveLength(0);
   });

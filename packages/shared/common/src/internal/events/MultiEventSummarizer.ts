@@ -3,19 +3,20 @@ import ContextFilter from '../../ContextFilter';
 import EventSummarizer from './EventSummarizer';
 import { isFeature } from './guards';
 import InputEvent from './InputEvent';
-import { SummarizedFlagsEvent } from './LDEventSummarizer';
+import { LDMultiEventSummarizer, SummarizedFlagsEvent } from './LDEventSummarizer';
 
-export default class LDMultiEventSummarizer implements LDMultiEventSummarizer {
+export default class MultiEventSummarizer implements LDMultiEventSummarizer {
   constructor(
     private readonly _crypto: Crypto,
     private readonly _contextFilter: ContextFilter,
   ) {}
   private _summarizers: Record<string, EventSummarizer> = {};
+  private _pendingPromises: Promise<void>[] = [];
 
   summarizeEvent(event: InputEvent) {
-    // This will execute asynchronously, which means that a flush could happen before the event
-    // is summarized. When that happens, then the event will just be in the next batch of summaries.
-    (async () => {
+    // The event is summarized asynchronously, but the promise is created synchronously, this means that all events
+    // which have been requested to be summarized will be in the next flush.
+    const promise = (async () => {
       if (isFeature(event)) {
         const hash = await event.context.hash(this._crypto);
         if (!hash) {
@@ -33,9 +34,22 @@ export default class LDMultiEventSummarizer implements LDMultiEventSummarizer {
         summarizer.summarizeEvent(event);
       }
     })();
+    this._pendingPromises.push(promise);
+    promise.finally(() => {
+      const index = this._pendingPromises.indexOf(promise);
+      if (index !== -1) {
+        this._pendingPromises.splice(index, 1);
+      }
+    });
   }
 
-  getSummaries(): SummarizedFlagsEvent[] {
+  async getSummaries(): Promise<SummarizedFlagsEvent[]> {
+    // Wait for any pending summarizations to complete
+    // Additional tasks queued while waiting will not be waited for.
+    await Promise.all([...this._pendingPromises]);
+
+    // It is important not to put any async operations between caching the summarizers and clearing them.
+    // If we did then summerizers added during the async operation would be lost.
     const summarizersToFlush = this._summarizers;
     this._summarizers = {};
     return Object.values(summarizersToFlush).map((summarizer) => summarizer.getSummary());

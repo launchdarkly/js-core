@@ -13,7 +13,10 @@ import { isFeature, isIdentify, isMigration } from './guards';
 import InputEvent from './InputEvent';
 import InputIdentifyEvent from './InputIdentifyEvent';
 import InputMigrationEvent from './InputMigrationEvent';
-import { LDMultiEventSummarizer, SummarizedFlagsEvent } from './LDEventSummarizer';
+import LDEventSummarizer, {
+  LDMultiEventSummarizer,
+  SummarizedFlagsEvent,
+} from './LDEventSummarizer';
 import LDInvalidSDKKeyError from './LDInvalidSDKKeyError';
 import MultiEventSummarizer from './MultiEventSummarizer';
 import shouldSample from './sampling';
@@ -108,15 +111,13 @@ export interface EventProcessorOptions {
   diagnosticRecordingInterval: number;
 }
 
-function isMultiEventSummarizer(
-  summarizer: LDMultiEventSummarizer | EventSummarizer,
-): summarizer is LDMultiEventSummarizer {
+function isMultiEventSummarizer(summarizer: unknown): summarizer is LDMultiEventSummarizer {
   return (summarizer as LDMultiEventSummarizer).getSummaries !== undefined;
 }
 
 export default class EventProcessor implements LDEventProcessor {
   private _eventSender: EventSender;
-  private _summarizer;
+  private _summarizer: LDMultiEventSummarizer | LDEventSummarizer;
   private _queue: OutputEvent[] = [];
   private _lastKnownPastTime = 0;
   private _droppedEvents = 0;
@@ -230,7 +231,7 @@ export default class EventProcessor implements LDEventProcessor {
     this._queue = [];
 
     if (isMultiEventSummarizer(this._summarizer)) {
-      const summaries = this._summarizer.getSummaries();
+      const summaries = await this._summarizer.getSummaries();
 
       summaries.forEach((summary) => {
         if (Object.keys(summary.features).length) {
