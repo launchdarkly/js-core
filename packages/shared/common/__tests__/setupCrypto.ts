@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 import { Hasher } from '../src/api';
 
 class MockHasher implements Hasher {
@@ -15,6 +16,23 @@ class MockHasher implements Hasher {
   }
 }
 
+class MockAsyncHasher implements Hasher {
+  private _state: string[] = [];
+
+  update(value: string): Hasher {
+    this._state.push(value);
+    return this;
+  }
+
+  async asyncDigest(): Promise<string> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(this._state.join(''));
+      }, 1);
+    });
+  }
+}
+
 export const setupCrypto = () => {
   let counter = 0;
 
@@ -29,3 +47,8 @@ export const setupCrypto = () => {
     }),
   };
 };
+
+export const setupAsyncCrypto = () => ({
+  ...setupCrypto(),
+  createHash: jest.fn(() => new MockAsyncHasher()),
+});
