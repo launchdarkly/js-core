@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.15.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.14.0...js-server-sdk-common-v2.15.0) (2025-04-16)
+
+
+### Features
+
+* Environment ID support for hooks ([#823](https://github.com/launchdarkly/js-core/issues/823)) ([63dc9f9](https://github.com/launchdarkly/js-core/commit/63dc9f9f1300c598e79be27909f8195ac66d54ef))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.15.0 to 2.16.0
+
 ## [2.14.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.13.0...js-server-sdk-common-v2.14.0) (2025-04-08)
 
 

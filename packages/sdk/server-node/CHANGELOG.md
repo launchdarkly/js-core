@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.9.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.8.0...node-server-sdk-v9.9.0) (2025-04-16)
+
+
+### Features
+
+* Environment ID support for hooks ([#823](https://github.com/launchdarkly/js-core/issues/823)) ([63dc9f9](https://github.com/launchdarkly/js-core/commit/63dc9f9f1300c598e79be27909f8195ac66d54ef))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.14.0 to 2.15.0
+
 ## [9.8.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.7.7...node-server-sdk-v9.8.0) (2025-04-08)
 
 

@@ -1,4 +1,8 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../interfaces';
+
+type InitMetadata = internal.InitMetadata;
 
 /**
  * Represents an item which can be stored in the feature store.
@@ -92,8 +96,11 @@ export interface LDFeatureStore {
    *
    * @param callback
    *   Will be called when the store has been initialized.
+   *
+   * @param initMetadata
+   *   Optional metadata to initialize the feature store with.
    */
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void;
+  init(allData: LDFeatureStoreDataStorage, callback: () => void, initMetadata?: InitMetadata): void;
 
   /**
    * Delete an entity from the store.
@@ -158,4 +165,9 @@ export interface LDFeatureStore {
    * Get a description of the store.
    */
   getDescription?(): string;
+
+  /**
+   * Get the initialization metadata of the store.
+   */
+  getInitMetaData?(): InitMetadata | undefined;
 }

@@ -1,5 +1,9 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../interfaces';
 import { LDFeatureStoreDataStorage, LDKeyedFeatureStoreItem } from './LDFeatureStore';
+
+type InitMetadata = internal.InitMetadata;
 
 /**
  * Interface that a data source implementation will use to push data into the SDK.
@@ -19,8 +23,11 @@ export interface LDDataSourceUpdates {
    *
    * @param callback
    *   Will be called when the store has been initialized.
+   *
+   * @param initMetadata
+   *   Optional metadata to initialize the data source with.
    */
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void;
+  init(allData: LDFeatureStoreDataStorage, callback: () => void, initMetadata?: InitMetadata): void;
 
   /**
    * Updates or inserts an item in the specified collection. For updates, the object will only be

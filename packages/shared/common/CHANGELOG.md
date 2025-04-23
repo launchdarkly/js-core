@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.16.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.15.0...js-sdk-common-v2.16.0) (2025-04-16)
+
+
+### Features
+
+* Environment ID support for hooks ([#823](https://github.com/launchdarkly/js-core/issues/823)) ([63dc9f9](https://github.com/launchdarkly/js-core/commit/63dc9f9f1300c598e79be27909f8195ac66d54ef))
+
 ## [2.15.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.14.0...js-sdk-common-v2.15.0) (2025-04-08)
 
 
