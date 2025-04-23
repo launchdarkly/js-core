@@ -37,7 +37,7 @@ const events = {
     data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
   },
   'put-object': {
-    data: '{"kind": "mockKind", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
+    data: '{"kind": "flag", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
   },
   'payload-transferred': {
     data: '{"state": "mockState", "version": 1}',
@@ -66,11 +66,11 @@ const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
 
 describe('given a stream processor with mock event source', () => {
   let info: Info;
-  let streamingProcessor: subsystem.LDStreamProcessor;
+  let streamingProcessor: StreamingProcessorFDv2;
   let diagnosticsManager: internal.DiagnosticsManager;
-  let listener: internal.PayloadListener;
   let mockEventSource: any;
-  let mockErrorHandler: jest.Mock;
+  let mockDataCallback: jest.Mock;
+  let mockStatusCallback: jest.Mock;
   let simulateEvents: (e?: any) => void;
   let simulateError: (e: { status: number; message: string }) => boolean;
 
@@ -84,7 +84,6 @@ describe('given a stream processor with mock event source', () => {
   });
 
   beforeEach(() => {
-    mockErrorHandler = jest.fn();
 
     info = basicPlatform.info;
 
@@ -95,14 +94,13 @@ describe('given a stream processor with mock event source', () => {
       }),
     } as any;
     simulateEvents = (e: any = events) => {
+      // positions in these call arrays match order of handler attachment in payloadStreamReader
       mockEventSource.addEventListener.mock.calls[0][1](e['server-intent']); // server intent listener
       mockEventSource.addEventListener.mock.calls[1][1](e['put-object']); // put listener
       mockEventSource.addEventListener.mock.calls[3][1](e['payload-transferred']); // payload transferred listener
     };
     simulateError = (e: { status: number; message: string }): boolean =>
       mockEventSource.options.errorFilter(e);
-
-    listener = jest.fn();
 
     diagnosticsManager = new internal.DiagnosticsManager(sdkKey, basicPlatform, {});
     streamingProcessor = new StreamingProcessorFDv2(
@@ -112,18 +110,19 @@ describe('given a stream processor with mock event source', () => {
       },
       '/all',
       [],
-      listener,
       {
         authorization: 'my-sdk-key',
         'user-agent': 'TestUserAgent/2.0.2',
         'x-launchdarkly-wrapper': 'Rapper/1.2.3',
       },
       diagnosticsManager,
-      mockErrorHandler,
     );
 
     jest.spyOn(streamingProcessor, 'stop');
-    streamingProcessor.start();
+
+    mockDataCallback = jest.fn();
+    mockStatusCallback = jest.fn();
+    streamingProcessor.start(mockDataCallback, mockStatusCallback);
   });
 
   afterEach(() => {
@@ -152,17 +151,15 @@ describe('given a stream processor with mock event source', () => {
       },
       '/all',
       [],
-      listener,
       {
         authorization: 'my-sdk-key',
         'user-agent': 'TestUserAgent/2.0.2',
         'x-launchdarkly-wrapper': 'Rapper/1.2.3',
       },
       diagnosticsManager,
-      mockErrorHandler,
       22,
     );
-    streamingProcessor.start();
+    streamingProcessor.start(jest.fn(), jest.fn());
 
     expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
       `${serviceEndpoints.streaming}/all`,
@@ -211,7 +208,20 @@ describe('given a stream processor with mock event source', () => {
 
   it('executes payload listener', () => {
     simulateEvents();
-    expect(listener).toHaveBeenCalled();
+    expect(mockDataCallback).toHaveBeenNthCalledWith(1, true, {
+      basis: true,
+      id: `mockId`,
+      state: `mockState`,
+      updates: [
+        {
+          kind: `flag`,
+          key: `flagA`,
+          version: 123,
+          object: { objectFieldA: 'objectValueA' },
+        },
+      ],
+      version: 1,
+    });
   });
 
   it('passes error to callback if json data is malformed', async () => {
@@ -221,8 +231,11 @@ describe('given a stream processor with mock event source', () => {
       },
     });
 
-    expect(mockErrorHandler.mock.calls[0][0].kind).toEqual(DataSourceErrorKind.InvalidData);
-    expect(mockErrorHandler.mock.calls[0][0].message).toEqual('Malformed data in event stream');
+    expect(mockStatusCallback).toHaveBeenNthCalledWith(
+      2,
+      subsystem.DataSourceState.Interrupted,
+      new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed data in EventStream.'),
+    );
   });
 
   it('calls error handler if event.data prop is missing', async () => {
@@ -238,9 +251,12 @@ describe('given a stream processor with mock event source', () => {
         notData: '{"state": "mockState", "version": 1}',
       },
     });
-    expect(listener).not.toHaveBeenCalled();
-    expect(mockErrorHandler.mock.calls[0][0].kind).toEqual(DataSourceErrorKind.Unknown);
-    expect(mockErrorHandler.mock.calls[0][0].message).toMatch(/unexpected message/i);
+    expect(mockDataCallback).not.toHaveBeenCalled();
+    expect(mockStatusCallback).toHaveBeenNthCalledWith(
+      2,
+      subsystem.DataSourceState.Interrupted,
+      new LDStreamingError(DataSourceErrorKind.Unknown, 'Event from EventStream missing data.'),
+    );
   });
 
   it('closes and stops', async () => {
@@ -271,7 +287,8 @@ describe('given a stream processor with mock event source', () => {
       const willRetry = simulateError(testError);
 
       expect(willRetry).toBeTruthy();
-      expect(mockErrorHandler).not.toBeCalled();
+      expect(mockStatusCallback).toHaveBeenNthCalledWith(1, subsystem.DataSourceState.Initializing);
+      expect(mockStatusCallback).toHaveBeenNthCalledWith(2, subsystem.DataSourceState.Interrupted);
       expect(logger.warn).toBeCalledWith(
         expect.stringMatching(new RegExp(`${status}.*will retry`)),
       );
@@ -292,8 +309,15 @@ describe('given a stream processor with mock event source', () => {
       const willRetry = simulateError(testError);
 
       expect(willRetry).toBeFalsy();
-      expect(mockErrorHandler).toBeCalledWith(
-        new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
+      expect(mockStatusCallback).toHaveBeenNthCalledWith(
+        2,
+        subsystem.DataSourceState.Closed,
+        new LDStreamingError(
+          DataSourceErrorKind.Unknown,
+          testError.message,
+          testError.status,
+          true,
+        ),
       );
       expect(logger.error).toBeCalledWith(
         expect.stringMatching(new RegExp(`${status}.*permanently`)),

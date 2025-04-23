@@ -1,17 +1,29 @@
 /* eslint-disable no-underscore-dangle */
-import { EventListener, EventName, LDLogger } from '../../api';
+import { LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
-import { DeleteObject, PayloadTransferred, PutObject, ServerIntentData } from './proto';
-
-// Facade interface to contain only ability to add event listeners
-export interface EventStream {
-  addEventListener(type: EventName, listener: EventListener): void;
-}
+import {
+  DeleteObject,
+  PayloadIntent,
+  PayloadTransferred,
+  PutObject,
+  ServerIntentData,
+} from './proto';
 
 // Used to define object processing between deserialization and payload listener invocation.  This can be
 // used provide object sanitization logic.
 export interface ObjProcessors {
   [kind: string]: (object: any) => any;
+}
+
+// Represents a collection of events (one case where this is seen is in the polling response)
+export interface FDv2EventsCollection {
+  events: FDv2Event[];
+}
+
+// Represents a single event
+export interface FDv2Event {
+  event: string;
+  data: any;
 }
 
 // Represents information for one keyed object.
@@ -28,7 +40,7 @@ export interface Update {
 export interface Payload {
   id: string;
   version: number;
-  state: string;
+  state?: string;
   basis: boolean;
   updates: Update[];
 }
@@ -36,38 +48,29 @@ export interface Payload {
 export type PayloadListener = (payload: Payload) => void;
 
 /**
- * A FDv2 PayloadReader can be used to parse payloads from a stream of FDv2 events. It will send payloads
+ * A FDv2 PayloadProcessor can be used to parse payloads from a stream of FDv2 events. It will send payloads
  * to the PayloadListeners as the payloads are received. Invalid series of events may be dropped silently,
- * but the payload reader will continue to operate.
+ * but the payload processor will continue to operate.
  */
-export class PayloadReader {
+export class PayloadProcessor {
   private _listeners: PayloadListener[] = [];
 
   private _tempId?: string = undefined;
-  private _tempBasis?: boolean = undefined;
+  private _tempBasis: boolean = false;
   private _tempUpdates: Update[] = [];
 
   /**
-   * Creates a PayloadReader
+   * Creates a PayloadProcessor
    *
-   * @param eventStream event stream of FDv2 events
    * @param _objProcessors defines object processors for each object kind.
-   * @param _errorHandler that will be called with errors as they are encountered
+   * @param _errorHandler that will be called with parsing errors as they are encountered
    * @param _logger for logging
    */
   constructor(
-    eventStream: EventStream,
     private readonly _objProcessors: ObjProcessors,
     private readonly _errorHandler?: (errorKind: DataSourceErrorKind, message: string) => void,
     private readonly _logger?: LDLogger,
-  ) {
-    this._attachHandler(eventStream, 'server-intent', this._processServerIntent);
-    this._attachHandler(eventStream, 'put-object', this._processPutObject);
-    this._attachHandler(eventStream, 'delete-object', this._processDeleteObject);
-    this._attachHandler(eventStream, 'payload-transferred', this._processPayloadTransferred);
-    this._attachHandler(eventStream, 'goodbye', this._processGoodbye);
-    this._attachHandler(eventStream, 'error', this._processError);
-  }
+  ) {}
 
   addPayloadListener(listener: PayloadListener) {
     this._listeners.push(listener);
@@ -80,21 +83,41 @@ export class PayloadReader {
     }
   }
 
-  private _attachHandler(stream: EventStream, eventName: string, processor: (obj: any) => void) {
-    stream.addEventListener(eventName, async (event?: { data?: string }) => {
-      if (event?.data) {
-        this._logger?.debug(`Received ${eventName} event.  Data is ${event.data}`);
-        try {
-          processor(JSON.parse(event.data));
-        } catch {
-          this._logger?.error(
-            `Stream received data that was unable to be processed in "${eventName}" message`,
-          );
-          this._logger?.debug(`Data follows: ${event.data}`);
-          this._errorHandler?.(DataSourceErrorKind.InvalidData, 'Malformed data in event stream');
+  /**
+   * Gives the {@link PayloadProcessor} a series of events that it will statefully, incrementally process.
+   * This may lead to listeners being invoked as necessary.
+   * @param events to be processed (can be a single element)
+   */
+  processEvents(events: FDv2Event[]) {
+    events.forEach((event) => {
+      switch (event.event) {
+        case 'server-intent': {
+          this._processServerIntent(event.data);
+          break;
         }
-      } else {
-        this._errorHandler?.(DataSourceErrorKind.Unknown, 'Unexpected message from event stream');
+        case 'put-object': {
+          this._processPutObject(event.data);
+          break;
+        }
+        case 'delete-object': {
+          this._processDeleteObject(event.data);
+          break;
+        }
+        case 'payload-transferred': {
+          this._processPayloadTransferred(event.data);
+          break;
+        }
+        case 'goodbye': {
+          this._processGoodbye(event.data);
+          break;
+        }
+        case 'error': {
+          this._processError(event.data);
+          break;
+        }
+        default: {
+          // no-op, unrecognized
+        }
       }
     });
   }
@@ -105,7 +128,7 @@ export class PayloadReader {
 
   private _processServerIntent = (data: ServerIntentData) => {
     // clear state in prep for handling data
-    this._resetState();
+    this._resetAll();
 
     // if there's no payloads, return
     if (!data.payloads.length) {
@@ -119,8 +142,11 @@ export class PayloadReader {
         this._tempBasis = true;
         break;
       case 'xfer-changes':
+        this._tempBasis = false;
+        break;
       case 'none':
         this._tempBasis = false;
+        this._processIntentNone(payload);
         break;
       default:
         // unrecognized intent code, return
@@ -133,7 +159,7 @@ export class PayloadReader {
   private _processPutObject = (data: PutObject) => {
     // if the following properties haven't been provided by now, we should ignore the event
     if (
-      !this._tempId || // server intent hasn't been recieved yet.
+      !this._tempId || // server intent hasn't been received yet.
       !data.kind ||
       !data.key ||
       !data.version ||
@@ -144,7 +170,7 @@ export class PayloadReader {
 
     const obj = this._processObj(data.kind, data.object);
     if (!obj) {
-      this._logger?.warn(`Unable to prcoess object for kind: '${data.kind}'`);
+      this._logger?.warn(`Unable to process object for kind: '${data.kind}'`);
       // ignore unrecognized kinds
       return;
     }
@@ -173,15 +199,32 @@ export class PayloadReader {
     });
   };
 
+  private _processIntentNone = (intent: PayloadIntent) => {
+    // if the following properties aren't present ignore the event
+    if (!intent.id || !intent.target) {
+      return;
+    }
+
+    const payload: Payload = {
+      id: intent.id,
+      version: intent.target,
+      basis: false, // intent none is always not a basis
+      updates: [], // payload with no updates to hide the intent none concept from the consumer
+      // note: state is absent here as that only appears in payload transferred events
+    };
+
+    this._listeners.forEach((it) => it(payload));
+    this._resetAfterEmission();
+  };
+
   private _processPayloadTransferred = (data: PayloadTransferred) => {
     // if the following properties haven't been provided by now, we should reset
     if (
-      !this._tempId || // server intent hasn't been recieved yet.
+      !this._tempId || // server intent hasn't been received yet.
       !data.state ||
-      !data.version ||
-      this._tempBasis === undefined
+      !data.version
     ) {
-      this._resetState(); // a reset is best defensive action since payload transferred terminates a payload
+      this._resetAll(); // a reset is best defensive action since payload transferred terminates a payload
       return;
     }
 
@@ -194,26 +237,35 @@ export class PayloadReader {
     };
 
     this._listeners.forEach((it) => it(payload));
-    this._resetState();
+    this._resetAfterEmission();
   };
 
   private _processGoodbye = (data: any) => {
     this._logger?.info(
       `Goodbye was received from the LaunchDarkly connection with reason: ${data.reason}.`,
     );
-    this._resetState();
+    this._resetAll();
   };
 
   private _processError = (data: any) => {
     this._logger?.info(
-      `An issue was encountered receiving updates for payload ${this._tempId} with reason: ${data.reason}. Automatic retry will occur.`,
+      `An issue was encountered receiving updates for payload ${this._tempId} with reason: ${data.reason}.`,
     );
-    this._resetState();
+    this._resetAfterError();
   };
 
-  private _resetState() {
+  private _resetAfterEmission() {
+    this._tempBasis = false;
+    this._tempUpdates = [];
+  }
+
+  private _resetAfterError() {
+    this._tempUpdates = [];
+  }
+
+  private _resetAll() {
     this._tempId = undefined;
-    this._tempBasis = undefined;
+    this._tempBasis = false;
     this._tempUpdates = [];
   }
 }
