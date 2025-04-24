@@ -32,6 +32,7 @@ export type {
   LDLogLevel,
   LDMultiKindContext,
   LDSingleKindContext,
+  TrackSeriesContext,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**
