@@ -330,7 +330,7 @@ describe('given a multi context', () => {
 describe('given mock crypto', () => {
   const crypto = setupCrypto();
 
-  it('two equal contexts hash the same', async () => {
+  it('hashes two equal contexts the same', async () => {
     const a = Context.fromLDContext({
       kind: 'multi',
       org: {
@@ -373,7 +373,7 @@ describe('given mock crypto', () => {
     expect(await a.hash(crypto)).toEqual(await b.hash(crypto));
   });
 
-  it('legacy and non-legacy equivalent contexts hash the same', async () => {
+  it('hashes legacy and non-legacy equivalent contexts the same', async () => {
     const legacy = Context.fromLDContext({
       key: 'testKey',
       name: 'testName',
@@ -397,7 +397,7 @@ describe('given mock crypto', () => {
     expect(await legacy.hash(crypto)).toEqual(await nonLegacy.hash(crypto));
   });
 
-  it('single context and multi-context with one kind hash the same', async () => {
+  it('hashes single context and multi-context with one kind the same', async () => {
     const single = Context.fromLDContext({
       kind: 'org',
       key: 'testKey',
@@ -625,6 +625,36 @@ describe('given mock crypto', () => {
     expect(hashA).not.toBe(hashB);
   });
 
+  it('hashes _meta in attributes', async () => {
+    const a = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      nested: {
+        level1: {
+          level2: {
+            _meta: { test: 'a' },
+          },
+        },
+      },
+    });
+
+    const b = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      nested: {
+        level1: {
+          level2: {
+            _meta: { test: 'b' },
+          },
+        },
+      },
+    });
+
+    const hashA = await a.hash(crypto);
+    const hashB = await b.hash(crypto);
+    expect(hashA).not.toBe(hashB);
+  });
+
   it('produces the same value for the given context', async () => {
     // This isn't so much a test as it is a detection of change.
     // If this test failed, and you didn't expect it, then you probably need to make sure your
@@ -654,13 +684,14 @@ describe('given mock crypto', () => {
           level1: {
             level2: {
               value: 'deep',
+              _meta: { thisShouldBeInTheHash: true },
             },
           },
         },
       },
     });
     expect(await complexContext.hash(crypto)).toBe(
-      'customerbirdchickenkeynamenestedorganonymouscatdogkeynamenestedArraya/b/ccatcustom/dog01length201length24301length221testNametestKeylabcalicotruelevel1level2valuedeeptestNametestKeyhenparty parrot',
+      'customerbirdchickenkeynamenestedorganonymouscatdogkeynamenestedArraya/b/ccatcustom/dog01length201length24301length221testNametestKeylabcalicotruelevel1level2_metavaluedeepthisShouldBeInTheHashtruetestNametestKeyhenparty parrot',
     );
   });
 });

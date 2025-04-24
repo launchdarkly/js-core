@@ -514,10 +514,6 @@ export default class Context {
         Object.getOwnPropertyNames(target)
           .sort()
           .forEach((key) => {
-            // Handled using private attributes.
-            if (key === '_meta') {
-              return;
-            }
             hasher.update(key);
             stack.push({
               target: target[key],
