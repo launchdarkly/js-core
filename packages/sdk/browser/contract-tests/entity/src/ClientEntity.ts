@@ -3,6 +3,7 @@ import { initialize, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-clie
 import { CommandParams, CommandType, ValueType } from './CommandParams';
 import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
 import { makeLogger } from './makeLogger';
+import TestHook from './TestHook';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
@@ -62,6 +63,12 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
       id: options.tags.applicationId,
       version: options.tags.applicationVersion,
     };
+  }
+
+  if (options.hooks) {
+    cf.hooks = options.hooks.hooks.map(
+      (hook) => new TestHook(hook.name, hook.callbackUri, hook.data, hook.errors),
+    );
   }
 
   cf.fetchGoals = false;

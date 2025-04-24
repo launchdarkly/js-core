@@ -28,6 +28,7 @@ export type {
   IdentifySeriesData,
   IdentifySeriesResult,
   IdentifySeriesStatus,
+  TrackSeriesContext,
   LDInspection,
 } from './api';
 
