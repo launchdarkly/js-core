@@ -491,6 +491,7 @@ export default class Context {
           if (key === '_meta') {
             return;
           }
+          hasher.update(key);
           stack.push({
             target: context[key],
             visited: [context],
@@ -517,6 +518,7 @@ export default class Context {
             if (key === '_meta') {
               return;
             }
+            hasher.update(key);
             stack.push({
               target: target[key],
               visited: [...visited, target],

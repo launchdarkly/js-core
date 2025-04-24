@@ -24,7 +24,7 @@ export default function Welcome() {
 
   return (
     <View style={styles.container}>
-      <Text>Welcome to LaunchDarkly</Text>
+      <Text>Welcome to LaunchDarkly!!</Text>
       <Text>
         {flagKey}: {`${flagValue}`}
       </Text>

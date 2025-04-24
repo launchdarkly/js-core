@@ -8,8 +8,9 @@ import {
 
 import Welcome from './src/welcome';
 
-const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enabled, {
+const featureClient = new ReactNativeLDClient("mob-8b772ad8-5d5b-435f-982a-900fa5db47e6", AutoEnvAttributes.Enabled, {
   debug: true,
+  eventsUri: 'https://eb5d04264133.ngrok.app',
   applicationInfo: {
     id: 'ld-rn-test-app',
     version: '0.0.1',

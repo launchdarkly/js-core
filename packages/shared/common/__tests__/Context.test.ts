@@ -520,4 +520,147 @@ describe('given mock crypto', () => {
     // The hashes should be different because private attributes are included in the hash
     expect(hashWithPrivate).not.toEqual(hashWithoutPrivate);
   });
+
+  it('uses the keys the keys of attributes in the hash', async () => {
+    const a = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      a: 'b',
+    });
+
+    const b = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      b: 'b',
+    });
+
+    const hashA = await a.hash(crypto);
+    const hashB = await b.hash(crypto);
+    expect(hashA).not.toBe(hashB);
+  });
+
+  it('uses the keys of nested objects inside the hash', async () => {
+    const a = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      nested: {
+        level1: {
+          level2: {
+            value: 'deep',
+          },
+        },
+      },
+    });
+
+    const b = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      nested: {
+        sub1: {
+          sub2: {
+            value: 'deep',
+          },
+        },
+      },
+    });
+
+    const hashA = await a.hash(crypto);
+    const hashB = await b.hash(crypto);
+    expect(hashA).not.toBe(hashB);
+  });
+
+  it('it uses the values of nested array in calculations', async () => {
+    const a = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      array: [1, 2, 3],
+      nestedArray: [
+        [1, 2],
+        [3, 4],
+      ],
+    });
+
+    const b = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      array: [1, 2, 3],
+      nestedArray: [
+        [2, 1],
+        [3, 4],
+      ],
+    });
+
+    const hashA = await a.hash(crypto);
+    const hashB = await b.hash(crypto);
+    expect(hashA).not.toBe(hashB);
+  });
+
+  it('uses the values of nested objects inside the hash', async () => {
+    const a = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      nested: {
+        level1: {
+          level2: {
+            value: 'deep',
+          },
+        },
+      },
+    });
+
+    const b = Context.fromLDContext({
+      kind: 'user',
+      key: 'testKey',
+      nested: {
+        level1: {
+          level2: {
+            value: 'deeper',
+          },
+        },
+      },
+    });
+
+    const hashA = await a.hash(crypto);
+    const hashB = await b.hash(crypto);
+    expect(hashA).not.toBe(hashB);
+  });
+
+  it('produces the same value for the given context', async () => {
+    // This isn't so much a test as it is a detection of change.
+    // If this test failed, and you didn't expect it, then you probably need to make sure your
+    // change makes sense.
+    const complexContext = Context.fromLDContext({
+      kind: 'multi',
+      org: {
+        key: 'testKey',
+        name: 'testName',
+        cat: 'calico',
+        dog: 'lab',
+        anonymous: true,
+        nestedArray: [
+          [1, 2],
+          [3, 4],
+        ],
+        _meta: {
+          privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
+        },
+      },
+      customer: {
+        key: 'testKey',
+        name: 'testName',
+        bird: 'party parrot',
+        chicken: 'hen',
+        nested: {
+          level1: {
+            level2: {
+              value: 'deep',
+            },
+          },
+        },
+      },
+    });
+    expect(await complexContext.hash(crypto)).toBe(
+      'customerbirdchickenkeynamenestedorganonymouscatdogkeynamenestedArraya/b/ccatcustom/dog01length201length24301length221testNametestKeylabcalicotruelevel1level2valuedeeptestNametestKeyhenparty parrot',
+    );
+  });
 });
