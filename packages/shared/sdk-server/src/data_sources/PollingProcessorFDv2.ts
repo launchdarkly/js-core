@@ -3,6 +3,7 @@ import {
   httpErrorMessage,
   internal,
   isHttpRecoverable,
+  LDFlagDeliveryFallbackError,
   LDLogger,
   LDPollingError,
   subsystem as subsystemCommon,
@@ -10,8 +11,9 @@ import {
 
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
-import { processFlag, processSegment } from '../store/serialization';
+import { FlagsAndSegments, processFlag, processSegment } from '../store/serialization';
 import Requestor from './Requestor';
+import { PayloadProcessor } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
@@ -24,10 +26,18 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
 
   private _statusCallback?: (status: subsystemCommon.DataSourceState, err?: any) => void;
 
+  /**
+   * @param _requestor to fetch flags from cloud services
+   * @param _pollInterval in seconds controlling how frequently polling request is made
+   * @param _logger for logging
+   * @param _processResponseAsFDv1 defaults to false, but if set to true, this data source will process
+   * the response body as FDv1 and convert it into a FDv2 payload.
+   */
   constructor(
     private readonly _requestor: Requestor,
     private readonly _pollInterval: number = 30,
     private readonly _logger?: LDLogger,
+    private readonly _processResponseAsFDv1: boolean = false,
   ) {}
 
   private _poll(
@@ -47,6 +57,14 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
       if (err) {
         const { status } = err;
+        // this is a short term error and will be removed once FDv2 adoption is sufficient.
+        if (err instanceof LDFlagDeliveryFallbackError) {
+          this._logger?.error(err.message);
+          statusCallback(subsystemCommon.DataSourceState.Closed, err);
+          // It is not recoverable, return and do not trigger another poll.
+          return;
+        }
+
         if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
           this._logger?.error(message);
@@ -87,7 +105,6 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       }
 
       try {
-        const parsed = JSON.parse(body) as internal.FDv2EventsCollection;
         const payloadProcessor = new internal.PayloadProcessor(
           {
             flag: (flag: Flag) => {
@@ -112,7 +129,15 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
           dataCallback(payload.basis, payload);
         });
 
-        payloadProcessor.processEvents(parsed.events);
+        if (!this._processResponseAsFDv1) {
+          // FDv2 case
+          const parsed = JSON.parse(body) as internal.FDv2EventsCollection;
+          payloadProcessor.processEvents(parsed.events);
+        } else {
+          // FDv1 case
+          const parsed = JSON.parse(body) as FlagsAndSegments;
+          this._processFDv1FlagsAndSegments(payloadProcessor, parsed);
+        }
 
         // TODO: SDK-855 implement blocking duplicate data source state events in DataAvailability API
         statusCallback(subsystemCommon.DataSourceState.Valid);
@@ -132,6 +157,62 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
         this._poll(dataCallback, statusCallback);
       }, sleepFor);
     });
+  }
+
+  // helper function to transform FDv1 response data into events the PayloadProcessor can parse
+  private _processFDv1FlagsAndSegments(payloadProcessor: PayloadProcessor, data: FlagsAndSegments) {
+    payloadProcessor.processEvents([
+      {
+        event: `server-intent`,
+        data: {
+          payloads: [
+            {
+              id: `FDv1Fallback`,
+              target: 0,
+              code: `xfer-full`,
+            },
+          ],
+        },
+      },
+    ]);
+
+    Object.values(data?.flags || []).forEach((flag) => {
+      payloadProcessor.processEvents([
+        {
+          event: `put-object`,
+          data: {
+            kind: 'flag',
+            key: flag.key,
+            version: flag.version,
+            object: flag,
+          },
+        },
+      ]);
+    });
+
+    Object.values(data?.segments || []).forEach((segment) => {
+      payloadProcessor.processEvents([
+        {
+          event: `put-object`,
+          data: {
+            kind: 'segment',
+            key: segment.key,
+            version: segment.version,
+            object: segment,
+          },
+        },
+      ]);
+    });
+
+    payloadProcessor.processEvents([
+      {
+        event: `payload-transferred`,
+        data: {
+          state: `FDv1Fallback`,
+          version: 0,
+        },
+      },
+    ]);
   }
 
   start(

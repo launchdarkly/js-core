@@ -116,7 +116,7 @@ describe('given a stream processor with mock event source', () => {
         basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
       },
-      '/all',
+      '/sdk/stream',
       [],
       listeners,
       {
@@ -139,7 +139,7 @@ describe('given a stream processor with mock event source', () => {
 
   it('uses expected uri and eventSource init args', () => {
     expect(basicPlatform.requests.createEventSource).toBeCalledWith(
-      `${serviceEndpoints.streaming}/all`,
+      `${serviceEndpoints.streaming}/sdk/stream`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, undefined),
@@ -156,7 +156,7 @@ describe('given a stream processor with mock event source', () => {
         basicConfiguration: getBasicConfiguration(logger),
         platform: basicPlatform,
       },
-      '/all',
+      '/sdk/stream',
       [],
       listeners,
       {
@@ -171,7 +171,7 @@ describe('given a stream processor with mock event source', () => {
     streamingProcessor.start();
 
     expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
-      `${serviceEndpoints.streaming}/all`,
+      `${serviceEndpoints.streaming}/sdk/stream`,
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, undefined),

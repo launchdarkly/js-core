@@ -1,6 +1,7 @@
 import {
   DataSourceErrorKind,
   getPollingUri,
+  LDFlagDeliveryFallbackError,
   LDHeaders,
   LDPollingError,
   Options,
@@ -31,9 +32,10 @@ export default class Requestor implements LDFeatureRequestor {
     config: Configuration,
     private readonly _requests: Requests,
     baseHeaders: LDHeaders,
+    path: string = '/sdk/poll',
   ) {
     this._headers = { ...baseHeaders };
-    this._uri = getPollingUri(config.serviceEndpoints, '/sdk/latest-all', []);
+    this._uri = getPollingUri(config.serviceEndpoints, path, []);
   }
 
   /**
@@ -77,6 +79,15 @@ export default class Requestor implements LDFeatureRequestor {
     };
     try {
       const { res, body } = await this._requestWithETagCache(this._uri, options);
+      if (res.headers.get(`x-ld-fd-fallback`) === `true`) {
+        const err = new LDFlagDeliveryFallbackError(
+          DataSourceErrorKind.ErrorResponse,
+          `Response header indicates to fallback to FDv1.`,
+          res.status,
+        );
+        return cb(err, undefined);
+      }
+
       if (res.status !== 200 && res.status !== 304) {
         const err = new LDPollingError(
           DataSourceErrorKind.ErrorResponse,

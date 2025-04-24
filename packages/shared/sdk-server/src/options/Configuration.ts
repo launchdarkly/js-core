@@ -71,7 +71,7 @@ const validations: Record<string, TypeValidator> = {
   type: TypeValidators.String,
 };
 
-const DEFAULT_POLL_INTERVAL = 30;
+export const DEFAULT_POLL_INTERVAL = 30;
 const DEFAULT_STREAM_RECONNECT_DELAY = 1;
 
 const defaultStandardDataSourceOptions: StandardDataSourceOptions = {

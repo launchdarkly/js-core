@@ -47,7 +47,7 @@
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "2.10.0",
     "https-proxy-agent": "^5.0.1",
-    "launchdarkly-eventsource": "2.0.3"
+    "launchdarkly-eventsource": "2.2.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",

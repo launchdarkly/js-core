@@ -66,6 +66,7 @@
   "packageManager": "yarn@3.4.1",
   "//": "Pin jsonc-parser because v3.3.0 breaks rollup-plugin-esbuild",
   "resolutions": {
-    "jsonc-parser": "3.2.0"
+    "jsonc-parser": "3.2.0",
+    "parse5": "7.2.1"
   }
 }
