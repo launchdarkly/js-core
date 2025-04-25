@@ -95,6 +95,8 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       trackEventModifier: (event) => event,
       hooks: [],
       inspectors: [],
+      getImplementationHooks: () => [],
+      credentialType: 'clientSideId',
     };
     const mockedFetch = mockFetch('{"flagA": true}', 200);
     platform = {
