@@ -694,4 +694,22 @@ describe('given mock crypto', () => {
       'customerbirdchickenkeynamenestedorganonymouscatdogkeynamenestedArraya/b/ccatcustom/dog01length201length24301length221testNametestKeylabcalicotruelevel1level2_metavaluedeepthisShouldBeInTheHashtruetestNametestKeyhenparty parrot',
     );
   });
+
+  it('collisiontest', async () => {
+    const a = Context.fromLDContext({
+      kind: 'user',
+      key: 'bob',
+      a: 'bcd',
+    });
+
+    const b = Context.fromLDContext({
+      kind: 'user',
+      key: 'bob',
+      a: { b: { c: 'd' } },
+    });
+
+    const hashA = await a.hash(crypto);
+    const hashB = await b.hash(crypto);
+    expect(hashA).not.toBe(hashB);
+  });
 });
