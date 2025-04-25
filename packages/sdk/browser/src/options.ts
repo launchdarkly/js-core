@@ -6,6 +6,8 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { LDPlugin } from './LDPlugin';
+
 const DEFAULT_FLUSH_INTERVAL_SECONDS = 2;
 
 /**
@@ -52,6 +54,11 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * available, such as when running the SDK in a browser extension.
    */
   automaticBackgroundHandling?: boolean;
+
+  /**
+   * A list of plugins to be used with the SDK.
+   */
+  plugins?: LDPlugin[];
 }
 
 export interface ValidatedOptions {
@@ -59,18 +66,21 @@ export interface ValidatedOptions {
   eventUrlTransformer: (url: string) => string;
   streaming?: boolean;
   automaticBackgroundHandling?: boolean;
+  plugins: LDPlugin[];
 }
 
 const optDefaults = {
   fetchGoals: true,
   eventUrlTransformer: (url: string) => url,
   streaming: undefined,
+  plugins: [],
 };
 
 const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefined } = {
   fetchGoals: TypeValidators.Boolean,
   eventUrlTransformer: TypeValidators.Function,
   streaming: TypeValidators.Boolean,
+  plugins: TypeValidators.createTypeArray('LDPlugin', {}),
 };
 
 function withBrowserDefaults(opts: BrowserOptions): BrowserOptions {

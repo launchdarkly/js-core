@@ -10,6 +10,8 @@ import {
   LDFlagValue,
   LDHeaders,
   LDLogger,
+  LDPluginApplicationMetadata,
+  LDPluginEnvironmentMetadata,
   Platform,
   timedPromise,
   TypeValidators,
@@ -38,9 +40,9 @@ import LDEmitter, { EventName } from './LDEmitter';
 
 const { ClientMessages, ErrorKinds } = internal;
 
-const DEFAULT_IDENIFY_TIMEOUT_SECONDS = 5;
+const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
-export default class LDClientImpl implements LDClient {
+export default class LDClientImpl<TLDClient extends LDClient = LDClient> implements LDClient {
   private readonly _config: Configuration;
   private _uncheckedContext?: LDContext;
   private _checkedContext?: Context;
@@ -58,6 +60,7 @@ export default class LDClientImpl implements LDClient {
   private _eventSendingEnabled: boolean = false;
   private _baseHeaders: LDHeaders;
   protected dataManager: DataManager;
+  protected readonly environmentMetadata: LDPluginEnvironmentMetadata;
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
 
@@ -127,7 +130,49 @@ export default class LDClientImpl implements LDClient {
       this._diagnosticsManager,
     );
 
-    this._hookRunner = new HookRunner(this.logger, this._config.hooks);
+    const hooks: Hook[] = [...this._config.hooks];
+
+    const sdkData = this.platform.info.sdkData();
+
+    let applicationMetadata: LDPluginApplicationMetadata | undefined;
+
+    if (this._config.applicationInfo) {
+      if (this._config.applicationInfo.id) {
+        applicationMetadata = applicationMetadata ?? {};
+        applicationMetadata.id = this._config.applicationInfo.id;
+      }
+      if (this._config.applicationInfo.version) {
+        applicationMetadata = applicationMetadata ?? {};
+        applicationMetadata.version = this._config.applicationInfo.version;
+      }
+      if (this._config.applicationInfo.name) {
+        applicationMetadata = applicationMetadata ?? {};
+        applicationMetadata.name = this._config.applicationInfo.name;
+      }
+      if (this._config.applicationInfo.versionName) {
+        applicationMetadata = applicationMetadata ?? {};
+        applicationMetadata.versionName = this._config.applicationInfo.versionName;
+      }
+    }
+
+    this.environmentMetadata = {
+      sdk: {
+        name: sdkData.userAgentBase!,
+        version: sdkData.version!,
+        wrapperName: sdkData.wrapperName,
+        wrapperVersion: sdkData.wrapperVersion,
+      },
+      [this._config.credentialType]: this.sdkKey,
+    };
+    if (applicationMetadata) {
+      this.environmentMetadata.application = applicationMetadata;
+    }
+
+    this._config.getImplementationHooks(this.environmentMetadata).forEach((hook) => {
+      hooks.push(hook);
+    });
+
+    this._hookRunner = new HookRunner(this.logger, hooks);
     this._inspectorManager = new InspectorManager(this._config.inspectors, this.logger);
     if (this._inspectorManager.hasInspectors()) {
       this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
@@ -227,7 +272,7 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENIFY_TIMEOUT_SECONDS;
+    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
     const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
 
     // When noTimeout is specified, and a timeout is not secified, then this condition cannot

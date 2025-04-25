@@ -9,8 +9,10 @@ import {
   FlagManager,
   internal,
   LDClientImpl,
+  LDClientInternalOptions,
   LDEmitter,
   LDHeaders,
+  LDPluginEnvironmentMetadata,
 } from '@launchdarkly/js-client-sdk-common';
 
 import MobileDataManager from './MobileDataManager';
@@ -55,13 +57,17 @@ export default class ReactNativeLDClient extends LDClientImpl {
         destination: console.log,
       });
 
-    const internalOptions: internal.LDInternalOptions = {
+    const validatedRnOptions = validateOptions(options, logger);
+
+    const internalOptions: LDClientInternalOptions = {
       analyticsEventPath: `/mobile`,
       diagnosticEventPath: `/mobile/events/diagnostic`,
       highTimeoutThreshold: 15,
+      getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
+        internal.safeGetHooks(logger, _environmentMetadata, validatedRnOptions.plugins),
+      credentialType: 'mobileKey',
     };
 
-    const validatedRnOptions = validateOptions(options, logger);
     const platform = createPlatform(logger, validatedRnOptions.storage);
 
     super(
@@ -141,6 +147,12 @@ export default class ReactNativeLDClient extends LDClientImpl {
       },
       destination,
       new RNStateDetector(),
+    );
+    internal.safeRegisterPlugins(
+      logger,
+      this.environmentMetadata,
+      this,
+      validatedRnOptions.plugins,
     );
   }
 

@@ -7,6 +7,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { LDPlugin } from './LDPlugin';
 import RNOptions, { RNStorage } from './RNOptions';
 
 class ConnectionModeValidator implements TypeValidator {
@@ -24,6 +25,7 @@ export interface ValidatedOptions {
   automaticBackgroundHandling: boolean;
   storage?: RNStorage;
   initialConnectionMode: ConnectionMode;
+  plugins: LDPlugin[];
 }
 
 const optDefaults: ValidatedOptions = {
@@ -32,6 +34,7 @@ const optDefaults: ValidatedOptions = {
   automaticBackgroundHandling: true,
   storage: undefined,
   initialConnectionMode: 'streaming',
+  plugins: [],
 };
 
 const validators: { [Property in keyof RNOptions]: TypeValidator | undefined } = {
@@ -40,6 +43,7 @@ const validators: { [Property in keyof RNOptions]: TypeValidator | undefined } =
   automaticBackgroundHandling: TypeValidators.Boolean,
   storage: TypeValidators.Object,
   initialConnectionMode: new ConnectionModeValidator(),
+  plugins: TypeValidators.createTypeArray('LDPlugin[]', {}),
 };
 
 export function filterToBaseOptions(opts: RNOptions): LDOptions {

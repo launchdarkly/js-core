@@ -33,6 +33,11 @@ export type {
   LDMultiKindContext,
   LDSingleKindContext,
   TrackSeriesContext,
+  LDPluginBase,
+  LDPluginEnvironmentMetadata,
+  LDPluginSdkMetadata,
+  LDPluginApplicationMetadata,
+  LDPluginMetadata,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**

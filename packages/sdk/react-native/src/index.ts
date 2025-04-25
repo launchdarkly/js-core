@@ -12,4 +12,5 @@ export * from '@launchdarkly/js-client-sdk-common';
 
 export * from './hooks';
 export * from './provider';
+export * from './LDPlugin';
 export { ReactNativeLDClient, RNOptions as LDOptions, RNStorage };
