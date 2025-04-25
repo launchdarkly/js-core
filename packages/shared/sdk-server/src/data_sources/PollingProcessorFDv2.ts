@@ -13,7 +13,6 @@ import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { FlagsAndSegments, processFlag, processSegment } from '../store/serialization';
 import Requestor from './Requestor';
-import { PayloadProcessor } from '@launchdarkly/js-sdk-common/dist/esm/internal';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
@@ -160,7 +159,10 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
   }
 
   // helper function to transform FDv1 response data into events the PayloadProcessor can parse
-  private _processFDv1FlagsAndSegments(payloadProcessor: PayloadProcessor, data: FlagsAndSegments) {
+  private _processFDv1FlagsAndSegments(
+    payloadProcessor: internal.PayloadProcessor,
+    data: FlagsAndSegments,
+  ) {
     payloadProcessor.processEvents([
       {
         event: `server-intent`,
@@ -168,21 +170,21 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
           payloads: [
             {
               id: `FDv1Fallback`,
-              target: 0,
-              code: `xfer-full`,
+              target: 1,
+              intentCode: `xfer-full`,
             },
           ],
         },
       },
     ]);
 
-    Object.values(data?.flags || []).forEach((flag) => {
+    Object.entries(data?.flags || []).forEach(([key, flag]) => {
       payloadProcessor.processEvents([
         {
           event: `put-object`,
           data: {
             kind: 'flag',
-            key: flag.key,
+            key,
             version: flag.version,
             object: flag,
           },
@@ -190,13 +192,13 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       ]);
     });
 
-    Object.values(data?.segments || []).forEach((segment) => {
+    Object.entries(data?.segments || []).forEach(([key, segment]) => {
       payloadProcessor.processEvents([
         {
           event: `put-object`,
           data: {
             kind: 'segment',
-            key: segment.key,
+            key,
             version: segment.version,
             object: segment,
           },
@@ -209,7 +211,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
         event: `payload-transferred`,
         data: {
           state: `FDv1Fallback`,
-          version: 0,
+          version: 1,
         },
       },
     ]);
