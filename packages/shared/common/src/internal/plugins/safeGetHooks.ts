@@ -11,7 +11,9 @@ export function safeGetHooks<TClient, THook>(
   plugins.forEach((plugin) => {
     try {
       const pluginHooks = plugin.getHooks?.(environmentMetadata);
-      if (pluginHooks && pluginHooks.length > 0) {
+      if (pluginHooks === undefined) {
+        logger.error(`Plugin ${safeGetName(logger, plugin)} returned undefined from getHooks.`);
+      } else if (pluginHooks && pluginHooks.length > 0) {
         hooks.push(...pluginHooks);
       }
     } catch (error) {
