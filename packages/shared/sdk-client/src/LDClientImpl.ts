@@ -42,7 +42,7 @@ const { ClientMessages, ErrorKinds } = internal;
 
 const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
-export default class LDClientImpl<TLDClient extends LDClient = LDClient> implements LDClient {
+export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
   private _uncheckedContext?: LDContext;
   private _checkedContext?: Context;
