@@ -1,84 +1,8 @@
-import { jest } from '@jest/globals';
-
-import {
-  AutoEnvAttributes,
-  EventSourceCapabilities,
-  EventSourceInitDict,
-  LDLogger,
-  PlatformData,
-  Requests,
-  SdkData,
-} from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserClient } from '../src/BrowserClient';
-import { MockHasher } from './MockHasher';
+import { makeBasicPlatform } from './BrowserClient.mocks';
 import { goodBootstrapDataWithReasons } from './testBootstrapData';
-
-function mockResponse(value: string, statusCode: number) {
-  const response: Response = {
-    headers: {
-      // @ts-ignore
-      get: jest.fn(),
-      // @ts-ignore
-      keys: jest.fn(),
-      // @ts-ignore
-      values: jest.fn(),
-      // @ts-ignore
-      entries: jest.fn(),
-      // @ts-ignore
-      has: jest.fn(),
-    },
-    status: statusCode,
-    text: () => Promise.resolve(value),
-    json: () => Promise.resolve(JSON.parse(value)),
-  };
-  return Promise.resolve(response);
-}
-
-function mockFetch(value: string, statusCode: number = 200) {
-  const f = jest.fn();
-  // @ts-ignore
-  f.mockResolvedValue(mockResponse(value, statusCode));
-  return f;
-}
-
-function makeRequests(): Requests {
-  return {
-    // @ts-ignore
-    fetch: jest.fn((url: string, _options: any) => {
-      if (url.includes('/sdk/goals/')) {
-        return mockFetch(
-          JSON.stringify([
-            {
-              key: 'pageview',
-              kind: 'pageview',
-              urls: [{ kind: 'exact', url: 'http://browserclientintegration.com' }],
-            },
-            {
-              key: 'click',
-              kind: 'click',
-              selector: '.button',
-              urls: [{ kind: 'exact', url: 'http://browserclientintegration.com' }],
-            },
-          ]),
-          200,
-        )();
-      }
-      return mockFetch('{ "flagA": true }', 200)();
-    }),
-    // @ts-ignore
-    createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
-      throw new Error('Function not implemented.');
-    },
-    getEventSourceCapabilities(): EventSourceCapabilities {
-      return {
-        readTimeout: false,
-        headers: false,
-        customMethod: false,
-      };
-    },
-  };
-}
 
 describe('given a mock platform for a BrowserClient', () => {
   const logger: LDLogger = {
@@ -95,34 +19,7 @@ describe('given a mock platform for a BrowserClient', () => {
       writable: true,
     });
     jest.useFakeTimers().setSystemTime(new Date('2024-09-19'));
-    platform = {
-      requests: makeRequests(),
-      info: {
-        platformData(): PlatformData {
-          return {
-            name: 'node',
-          };
-        },
-        sdkData(): SdkData {
-          return {
-            name: 'browser-sdk',
-            version: '1.0.0',
-          };
-        },
-      },
-      crypto: {
-        createHash: () => new MockHasher(),
-        randomUUID: () => '123',
-      },
-      storage: {
-        get: async (_key: string) => null,
-        set: async (_key: string, _value: string) => {},
-        clear: async (_key: string) => {},
-      },
-      encoding: {
-        btoa: (str: string) => str,
-      },
-    };
+    platform = makeBasicPlatform();
   });
 
   it('includes urls in custom events', async () => {
