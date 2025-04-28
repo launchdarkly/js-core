@@ -4,6 +4,7 @@ import {
   HookMetadata,
   LDContext,
   LDLogger,
+  LDOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { LDPlugin } from '../src/LDPlugin';
@@ -160,4 +161,142 @@ it('registers multiple plugins and executes all hooks', async () => {
   expect(mockHook2.afterEvaluation).toHaveBeenCalled();
   expect(mockHook1.afterTrack).toHaveBeenCalled();
   expect(mockHook2.afterTrack).toHaveBeenCalled();
+});
+
+it('passes correct environmentMetadata to plugin getHooks and register functions', async () => {
+  const logger: LDLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
+  const mockHook: Hook = {
+    getMetadata(): HookMetadata {
+      return {
+        name: 'test-hook',
+      };
+    },
+    beforeEvaluation: jest.fn(() => ({})),
+    afterEvaluation: jest.fn(() => ({})),
+  };
+
+  const mockPlugin: LDPlugin = {
+    getMetadata: () => ({ name: 'test-plugin' }),
+    register: jest.fn(),
+    getHooks: jest.fn(() => [mockHook]),
+  };
+
+  const options: LDOptions = {
+    wrapperName: 'test-wrapper',
+    wrapperVersion: '2.0.0',
+    applicationInfo: {
+      id: 'test-app',
+      version: '3.0.0',
+    },
+  };
+
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Disabled, {
+    initialConnectionMode: 'polling',
+    logger,
+    diagnosticOptOut: true,
+    plugins: [mockPlugin],
+    ...options,
+  });
+
+  const platform = client.platform;
+  const sdkData = platform.info.sdkData();
+  expect(sdkData.name).toBeDefined();
+  expect(sdkData.version).toBeDefined();
+
+  // Verify getHooks was called with correct environmentMetadata
+  expect(mockPlugin.getHooks).toHaveBeenCalledWith({
+    sdk: {
+      name: sdkData.userAgentBase,
+      version: sdkData.version,
+      wrapperName: options.wrapperName,
+      wrapperVersion: options.wrapperVersion,
+    },
+    application: {
+      id: options.applicationInfo?.id,
+      version: options.applicationInfo?.version,
+    },
+    mobileKey: 'mobile-key',
+  });
+
+  // Verify register was called with correct environmentMetadata
+  expect(mockPlugin.register).toHaveBeenCalledWith(
+    expect.any(Object), // client
+    {
+      sdk: {
+        name: sdkData.name,
+        version: sdkData.version,
+        wrapperName: options.wrapperName,
+        wrapperVersion: options.wrapperVersion,
+      },
+      application: {
+        name: options.applicationInfo?.name,
+        version: options.applicationInfo?.version,
+      },
+      mobileKey: 'mobile-key',
+    }
+  );
+});
+
+it('passes correct environmentMetadata without optional fields', async () => {
+  const logger: LDLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
+  const mockHook: Hook = {
+    getMetadata(): HookMetadata {
+      return {
+        name: 'test-hook',
+      };
+    },
+    beforeEvaluation: jest.fn(() => ({})),
+    afterEvaluation: jest.fn(() => ({})),
+  };
+
+  const mockPlugin: LDPlugin = {
+    getMetadata: () => ({ name: 'test-plugin' }),
+    register: jest.fn(),
+    getHooks: jest.fn(() => [mockHook]),
+  };
+
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Disabled, {
+    initialConnectionMode: 'polling',
+    logger,
+    diagnosticOptOut: true,
+    plugins: [mockPlugin],
+  });
+
+  const platform = client.platform;
+  const sdkData = platform.info.sdkData();
+  expect(sdkData.name).toBeDefined();
+  expect(sdkData.version).toBeDefined();
+
+  // Verify getHooks was called with correct environmentMetadata
+  expect(mockPlugin.getHooks).toHaveBeenCalledWith({
+    sdk: {
+      name: sdkData.name,
+      version: sdkData.version,
+    },
+    mobileKey: 'mobile-key',
+  });
+
+  // Verify register was called with correct environmentMetadata
+  expect(mockPlugin.register).toHaveBeenCalledWith(
+    expect.any(Object), // client
+    {
+      sdk: {
+        name: sdkData.name,
+        version: sdkData.version,
+      },
+      mobileKey: 'mobile-key',
+    }
+  );
 });
