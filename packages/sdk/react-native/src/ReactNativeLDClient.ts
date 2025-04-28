@@ -62,7 +62,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
     };
 
     const validatedRnOptions = validateOptions(options, logger);
-    const platform = createPlatform(logger, validatedRnOptions.storage);
+    const platform = createPlatform(logger, options, validatedRnOptions.storage);
 
     super(
       sdkKey,
