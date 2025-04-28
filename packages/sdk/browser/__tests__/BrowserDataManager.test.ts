@@ -104,7 +104,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         createHash: () => new MockHasher(),
         randomUUID: () => '123',
       },
-      info: new BrowserInfo(),
+      info: new BrowserInfo({}),
       requests: {
         createEventSource: jest.fn((streamUri: string = '', options: any = {}) => ({
           streamUri,

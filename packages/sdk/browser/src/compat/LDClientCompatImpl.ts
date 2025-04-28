@@ -157,7 +157,7 @@ export default class LDClientCompatImpl implements LDClient {
     );
   }
 
-  geContext(): LDContext | undefined {
+  getContext(): LDContext | undefined {
     return this._client.getContext();
   }
 

@@ -55,7 +55,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     // TODO: Use the already-configured baseUri from the SDK config. SDK-560
     const baseUrl = options.baseUri ?? 'https://clientsdk.launchdarkly.com';
 
-    const platform = overridePlatform ?? new BrowserPlatform(logger);
+    const platform = overridePlatform ?? new BrowserPlatform(logger, options);
     // Only the browser-specific options are in validatedBrowserOptions.
     const validatedBrowserOptions = validateBrowserOptions(options, logger);
     // The base options are in baseOptionsWithDefaults.

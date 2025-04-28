@@ -16,9 +16,9 @@ import ReactNativeLDClient from '../src/ReactNativeLDClient';
 
 jest.mock('../src/platform', () => ({
   __esModule: true,
-  default: jest.fn((logger: LDLogger) => ({
+  default: jest.fn((logger: LDLogger, options: LDOptions) => ({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, options),
     requests: {
       createEventSource: jest.fn(),
       fetch: jest.fn(),

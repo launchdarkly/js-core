@@ -21,4 +21,4 @@ class FastlyPlatformInfo implements Info {
 
 const createPlatformInfo = () => new FastlyPlatformInfo();
 
-export default createPlatformInfo;
+export default createPlatformInfo

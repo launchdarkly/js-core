@@ -68,7 +68,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
       credentialType: 'mobileKey',
     };
 
-    const platform = createPlatform(logger, validatedRnOptions.storage);
+    const platform = createPlatform(logger, options, validatedRnOptions.storage);
 
     super(
       sdkKey,
