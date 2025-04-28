@@ -150,6 +150,7 @@ it('registers multiple plugins and executes all hooks', async () => {
   // Test that both hooks work
   await client.identify({ key: 'user-key', kind: 'user' });
   client.variation('flag-key', false);
+  client.track('event-key', { data: true }, 42);
 
   expect(mockHook1.beforeEvaluation).toHaveBeenCalled();
   expect(mockHook1.afterEvaluation).toHaveBeenCalled();
