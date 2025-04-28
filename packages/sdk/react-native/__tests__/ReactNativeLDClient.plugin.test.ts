@@ -6,11 +6,28 @@ import {
   LDLogger,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserClient } from '../src/BrowserClient';
 import { LDPlugin } from '../src/LDPlugin';
-import { makeBasicPlatform } from './BrowserClient.mocks';
+import PlatformCrypto from '../src/platform/crypto';
+import PlatformEncoding from '../src/platform/PlatformEncoding';
+import PlatformInfo from '../src/platform/PlatformInfo';
+import PlatformStorage from '../src/platform/PlatformStorage';
+import ReactNativeLDClient from '../src/ReactNativeLDClient';
 
-// Test for plugin registration
+jest.mock('../src/platform', () => ({
+  __esModule: true,
+  default: jest.fn((logger: LDLogger) => ({
+    crypto: new PlatformCrypto(),
+    info: new PlatformInfo(logger),
+    requests: {
+      createEventSource: jest.fn(),
+      fetch: jest.fn(),
+      getEventSourceCapabilities: jest.fn(),
+    },
+    encoding: new PlatformEncoding(),
+    storage: new PlatformStorage(logger),
+  })),
+}));
+
 it('registers plugins and executes hooks during initialization', async () => {
   const logger: LDLogger = {
     debug: jest.fn(),
@@ -38,19 +55,12 @@ it('registers plugins and executes hooks during initialization', async () => {
     getHooks: () => [mockHook],
   };
 
-  const platform = makeBasicPlatform();
-
-  const client = new BrowserClient(
-    'client-side-id',
-    AutoEnvAttributes.Disabled,
-    {
-      streaming: false,
-      logger,
-      diagnosticOptOut: true,
-      plugins: [mockPlugin],
-    },
-    platform,
-  );
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Disabled, {
+    initialConnectionMode: 'polling',
+    logger,
+    diagnosticOptOut: true,
+    plugins: [mockPlugin],
+  });
 
   // Verify the plugin was registered
   expect(mockPlugin.register).toHaveBeenCalled();
@@ -86,7 +96,6 @@ it('registers plugins and executes hooks during initialization', async () => {
   });
 });
 
-// Test for multiple plugins with hooks
 it('registers multiple plugins and executes all hooks', async () => {
   const logger: LDLogger = {
     debug: jest.fn(),
@@ -129,19 +138,12 @@ it('registers multiple plugins and executes all hooks', async () => {
     getHooks: () => [mockHook2],
   };
 
-  const platform = makeBasicPlatform();
-
-  const client = new BrowserClient(
-    'client-side-id',
-    AutoEnvAttributes.Disabled,
-    {
-      streaming: false,
-      logger,
-      diagnosticOptOut: true,
-      plugins: [mockPlugin1, mockPlugin2],
-    },
-    platform,
-  );
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Disabled, {
+    initialConnectionMode: 'polling',
+    logger,
+    diagnosticOptOut: true,
+    plugins: [mockPlugin1, mockPlugin2],
+  });
 
   // Verify plugins were registered
   expect(mockPlugin1.register).toHaveBeenCalled();
@@ -150,6 +152,7 @@ it('registers multiple plugins and executes all hooks', async () => {
   // Test that both hooks work
   await client.identify({ key: 'user-key', kind: 'user' });
   client.variation('flag-key', false);
+  client.track('event-key', { data: true }, 42);
 
   expect(mockHook1.beforeEvaluation).toHaveBeenCalled();
   expect(mockHook1.afterEvaluation).toHaveBeenCalled();
