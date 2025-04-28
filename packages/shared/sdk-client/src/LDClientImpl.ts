@@ -42,6 +42,13 @@ const { ClientMessages, ErrorKinds } = internal;
 
 const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
+/**
+ * Mutable utility type to allow building up a readonly object from a mutable one.
+ */
+type Mutable<T> = {
+  -readonly [P in keyof T]: Mutable<T[P]>;
+};
+
 export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
   private _uncheckedContext?: LDContext;
@@ -134,7 +141,7 @@ export default class LDClientImpl implements LDClient {
 
     const sdkData = this.platform.info.sdkData();
 
-    let applicationMetadata: LDPluginApplicationMetadata | undefined;
+    let applicationMetadata: Mutable<LDPluginApplicationMetadata> | undefined;
 
     if (this._config.applicationInfo) {
       if (this._config.applicationInfo.id) {
@@ -155,7 +162,7 @@ export default class LDClientImpl implements LDClient {
       }
     }
 
-    this.environmentMetadata = {
+    const environmentMetadata: Mutable<LDPluginEnvironmentMetadata> = {
       sdk: {
         name: sdkData.userAgentBase!,
         version: sdkData.version!,
@@ -165,8 +172,10 @@ export default class LDClientImpl implements LDClient {
       [this._config.credentialType]: this.sdkKey,
     };
     if (applicationMetadata) {
-      this.environmentMetadata.application = applicationMetadata;
+      environmentMetadata.application = applicationMetadata;
     }
+
+    this.environmentMetadata = environmentMetadata;
 
     this._config.getImplementationHooks(this.environmentMetadata).forEach((hook) => {
       hooks.push(hook);

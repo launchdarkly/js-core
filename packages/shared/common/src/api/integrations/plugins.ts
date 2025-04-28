@@ -17,22 +17,22 @@ export interface LDPluginSdkMetadata {
   /**
    * The name of the SDK.
    */
-  name: string;
+  readonly name: string;
 
   /**
    * The version of the SDK.
    */
-  version: string;
+  readonly version: string;
 
   /**
    * If this is a wrapper SDK, then this is the name of the wrapper.
    */
-  wrapperName?: string;
+  readonly wrapperName?: string;
 
   /**
    * If this is a wrapper SDK, then this is the version of the wrapper.
    */
-  wrapperVersion?: string;
+  readonly wrapperVersion?: string;
 }
 
 /**
@@ -47,7 +47,7 @@ export interface LDPluginApplicationMetadata {
    *
    * Example: `authentication-service`
    */
-  id?: string;
+  readonly id?: string;
   /**
    * A unique identifier representing the version of the application where the LaunchDarkly SDK is running.
    *
@@ -56,7 +56,7 @@ export interface LDPluginApplicationMetadata {
    *
    * Example: `1.0.0` (standard version string) or `abcdef` (sha prefix)
    */
-  version?: string;
+  readonly version?: string;
 
   /**
    * A human-friendly application name representing the application where the LaunchDarkly SDK is running.
@@ -64,7 +64,7 @@ export interface LDPluginApplicationMetadata {
    * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
    * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
    */
-  name?: string;
+  readonly name?: string;
 
   /**
    * A human-friendly name representing the version of the application where the LaunchDarkly SDK is running.
@@ -72,7 +72,7 @@ export interface LDPluginApplicationMetadata {
    * This can be specified as any string value as long as it only uses the following characters: ASCII letters,
    * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
    */
-  versionName?: string;
+  readonly versionName?: string;
 }
 
 /**
@@ -82,29 +82,29 @@ export interface LDPluginEnvironmentMetadata {
   /**
    * Metadata about the SDK that is running the plugin.
    */
-  sdk: LDPluginSdkMetadata;
+  readonly sdk: LDPluginSdkMetadata;
 
   /**
    * Metadata about the application where the LaunchDarkly SDK is running.
    *
    * Only present if any application information is available.
    */
-  application?: LDPluginApplicationMetadata;
+  readonly application?: LDPluginApplicationMetadata;
 
   /**
    * Present if the SDK is a client-side SDK running in a web environment.
    */
-  clientSideId?: string;
+  readonly clientSideId?: string;
 
   /**
    * Present if the SDK is a client-side SDK running in a mobile environment.
    */
-  mobileKey?: string;
+  readonly mobileKey?: string;
 
   /**
    * Present if the SDK is a server-side SDK.
    */
-  sdkKey?: string;
+  readonly sdkKey?: string;
 }
 
 /**
