@@ -125,7 +125,7 @@ export interface LDPluginBase<TClient, THook> {
    * The SDK initialization will typically not have been completed at this point, so the plugin should take appropriate
    * actions to ensure the SDK is ready before sending track events or evaluating flags.
    *
-   * @param client The SDK client instanec.
+   * @param client The SDK client instance.
    * @param environmentMetadata Information about the environment where the plugin is running.
    */
   register(client: TClient, environmentMetadata: LDPluginEnvironmentMetadata): void;
