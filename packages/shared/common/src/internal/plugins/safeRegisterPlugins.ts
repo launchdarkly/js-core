@@ -8,9 +8,27 @@ export function safeRegisterPlugins<TClient, THook>(
   client: TClient,
   plugins: LDPluginBase<TClient, THook>[],
 ): void {
+  function copyMetadata() {
+    const environmentMetadataCopy: LDPluginEnvironmentMetadata = {
+      sdk: { ...environmentMetadata.sdk },
+    };
+    if (environmentMetadata.application) {
+      environmentMetadataCopy.application = { ...environmentMetadata.application };
+    }
+    if (environmentMetadata.clientSideId) {
+      environmentMetadataCopy.clientSideId = environmentMetadata.clientSideId;
+    }
+    if (environmentMetadata.mobileKey) {
+      environmentMetadataCopy.mobileKey = environmentMetadata.mobileKey;
+    }
+    if (environmentMetadata.sdkKey) {
+      environmentMetadataCopy.sdkKey = environmentMetadata.sdkKey;
+    }
+    return environmentMetadataCopy;
+  }
   plugins.forEach((plugin) => {
     try {
-      plugin.register(client, environmentMetadata);
+      plugin.register(client, copyMetadata());
     } catch (error) {
       logger.error(`Exception thrown registering plugin ${safeGetName(logger, plugin)}.`);
     }

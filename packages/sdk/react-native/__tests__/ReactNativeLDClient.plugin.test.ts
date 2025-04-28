@@ -193,6 +193,8 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
     applicationInfo: {
       id: 'test-app',
       version: '3.0.0',
+      name: 'TestApp',
+      versionName: '3',
     },
   };
 
@@ -204,7 +206,7 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
     ...options,
   });
 
-  const platform = client.platform;
+  const { platform } = client;
   const sdkData = platform.info.sdkData();
   expect(sdkData.name).toBeDefined();
   expect(sdkData.version).toBeDefined();
@@ -220,6 +222,8 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
     application: {
       id: options.applicationInfo?.id,
       version: options.applicationInfo?.version,
+      name: options.applicationInfo?.name,
+      versionName: options.applicationInfo?.versionName,
     },
     mobileKey: 'mobile-key',
   });
@@ -229,17 +233,19 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
     expect.any(Object), // client
     {
       sdk: {
-        name: sdkData.name,
+        name: sdkData.userAgentBase,
         version: sdkData.version,
         wrapperName: options.wrapperName,
         wrapperVersion: options.wrapperVersion,
       },
       application: {
-        name: options.applicationInfo?.name,
+        id: options.applicationInfo?.id,
         version: options.applicationInfo?.version,
+        name: options.applicationInfo?.name,
+        versionName: options.applicationInfo?.versionName,
       },
       mobileKey: 'mobile-key',
-    }
+    },
   );
 });
 
@@ -274,7 +280,7 @@ it('passes correct environmentMetadata without optional fields', async () => {
     plugins: [mockPlugin],
   });
 
-  const platform = client.platform;
+  const { platform } = client;
   const sdkData = platform.info.sdkData();
   expect(sdkData.name).toBeDefined();
   expect(sdkData.version).toBeDefined();
@@ -282,7 +288,7 @@ it('passes correct environmentMetadata without optional fields', async () => {
   // Verify getHooks was called with correct environmentMetadata
   expect(mockPlugin.getHooks).toHaveBeenCalledWith({
     sdk: {
-      name: sdkData.name,
+      name: sdkData.userAgentBase,
       version: sdkData.version,
     },
     mobileKey: 'mobile-key',
@@ -293,10 +299,10 @@ it('passes correct environmentMetadata without optional fields', async () => {
     expect.any(Object), // client
     {
       sdk: {
-        name: sdkData.name,
+        name: sdkData.userAgentBase,
         version: sdkData.version,
       },
       mobileKey: 'mobile-key',
-    }
+    },
   );
 });

@@ -8,6 +8,7 @@ import {
 
 import { BrowserClient } from '../src/BrowserClient';
 import { LDPlugin } from '../src/LDPlugin';
+import { BrowserOptions } from '../src/options';
 import { makeBasicPlatform } from './BrowserClient.mocks';
 
 // Test for plugin registration
@@ -184,18 +185,21 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
     getHooks: jest.fn(() => [mockHook]),
   };
 
-  const options = {
+  const options: BrowserOptions = {
     wrapperName: 'test-wrapper',
     wrapperVersion: '2.0.0',
-    application: {
-      name: 'test-app',
+    applicationInfo: {
+      id: 'test-app',
+      name: 'TestApp',
       version: '3.0.0',
+      versionName: '3',
     },
   };
 
-  const platform = makeBasicPlatform();
+  const platform = makeBasicPlatform(options);
 
-  const client = new BrowserClient(
+  // eslint-disable-next-line no-new
+  new BrowserClient(
     'client-side-id',
     AutoEnvAttributes.Disabled,
     {
@@ -215,14 +219,16 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
   // Verify getHooks was called with correct environmentMetadata
   expect(mockPlugin.getHooks).toHaveBeenCalledWith({
     sdk: {
-      name: sdkData.name,
+      name: sdkData.userAgentBase,
       version: sdkData.version,
       wrapperName: options.wrapperName,
       wrapperVersion: options.wrapperVersion,
     },
     application: {
-      name: options.application.name,
-      version: options.application.version,
+      id: options.applicationInfo?.id,
+      name: options.applicationInfo?.name,
+      version: options.applicationInfo?.version,
+      versionName: options.applicationInfo?.versionName,
     },
     clientSideId: 'client-side-id',
   });
@@ -232,17 +238,19 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
     expect.any(Object), // client
     {
       sdk: {
-        name: sdkData.name,
+        name: sdkData.userAgentBase,
         version: sdkData.version,
         wrapperName: options.wrapperName,
         wrapperVersion: options.wrapperVersion,
       },
       application: {
-        name: options.application.name,
-        version: options.application.version,
+        id: options.applicationInfo?.id,
+        version: options.applicationInfo?.version,
+        name: options.applicationInfo?.name,
+        versionName: options.applicationInfo?.versionName,
       },
       clientSideId: 'client-side-id',
-    }
+    },
   );
 });
 
@@ -272,7 +280,8 @@ it('passes correct environmentMetadata without optional fields', async () => {
 
   const platform = makeBasicPlatform();
 
-  const client = new BrowserClient(
+  // eslint-disable-next-line no-new
+  new BrowserClient(
     'client-side-id',
     AutoEnvAttributes.Disabled,
     {
@@ -291,7 +300,7 @@ it('passes correct environmentMetadata without optional fields', async () => {
   // Verify getHooks was called with correct environmentMetadata
   expect(mockPlugin.getHooks).toHaveBeenCalledWith({
     sdk: {
-      name: sdkData.name,
+      name: sdkData.userAgentBase,
       version: sdkData.version,
     },
     clientSideId: 'client-side-id',
@@ -302,10 +311,10 @@ it('passes correct environmentMetadata without optional fields', async () => {
     expect.any(Object), // client
     {
       sdk: {
-        name: sdkData.name,
+        name: sdkData.userAgentBase,
         version: sdkData.version,
       },
       clientSideId: 'client-side-id',
-    }
+    },
   );
 });

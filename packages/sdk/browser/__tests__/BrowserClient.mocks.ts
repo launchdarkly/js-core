@@ -7,6 +7,7 @@ import {
   SdkData,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { BrowserOptions } from '../src/options';
 import { MockHasher } from './MockHasher';
 
 function mockResponse(value: string, statusCode: number) {
@@ -76,7 +77,7 @@ export function makeRequests(): Requests {
   };
 }
 
-export function makeBasicPlatform(): Platform {
+export function makeBasicPlatform(options?: BrowserOptions): Platform {
   return {
     requests: makeRequests(),
     info: {
@@ -86,10 +87,18 @@ export function makeBasicPlatform(): Platform {
         };
       },
       sdkData(): SdkData {
-        return {
+        const sdkData: SdkData = {
           name: 'browser-sdk',
           version: '1.0.0',
+          userAgentBase: 'MockBrowserSDK',
         };
+        if (options?.wrapperName) {
+          sdkData.wrapperName = options.wrapperName;
+        }
+        if (options?.wrapperVersion) {
+          sdkData.wrapperVersion = options.wrapperVersion;
+        }
+        return sdkData;
       },
     },
     crypto: {
