@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.13.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.12.6...js-client-sdk-common-v1.13.0) (2025-04-29)
+
+
+### Features
+
+* Add client-side SDK plugin support. ([#834](https://github.com/launchdarkly/js-core/issues/834)) ([a843a33](https://github.com/launchdarkly/js-core/commit/a843a33e97dcab706a0034bd1fd1e3d2f78a9262))
+* Add hook support for the track series. ([#827](https://github.com/launchdarkly/js-core/issues/827)) ([1519cb9](https://github.com/launchdarkly/js-core/commit/1519cb98b55f4e6a391da7adefddd8ac90e9258c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.16.0 to 2.17.0
+
 ## [1.12.6](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.12.5...js-client-sdk-common-v1.12.6) (2025-04-16)
 
 
