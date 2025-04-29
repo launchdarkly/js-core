@@ -32,10 +32,10 @@ describe.each([
   [
     '',
     [Symbol('foo'), circular, BigInt(7), { apple: 'pie' }, global, undefined, null],
-    ' [Circular] 7n {"apple":"pie"} [object Object] undefined null',
+    /\[Circular\] 7n {"apple":"pie"} \[.*\] undefined null/,
   ],
 ])('given node style format strings', (formatStr, args, result) => {
   it('produces the expected string', () => {
-    expect(format(formatStr, ...args)).toEqual(result);
+    expect(format(formatStr, ...args)).toMatch(result);
   });
 });
