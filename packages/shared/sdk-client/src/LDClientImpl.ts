@@ -10,7 +10,6 @@ import {
   LDFlagValue,
   LDHeaders,
   LDLogger,
-  LDPluginApplicationMetadata,
   LDPluginEnvironmentMetadata,
   Platform,
   timedPromise,
@@ -37,17 +36,11 @@ import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
 import InspectorManager from './inspection/InspectorManager';
 import LDEmitter, { EventName } from './LDEmitter';
+import { createPluginEnvironmentMetadata } from './plugins/createPluginEnvironmentMetadata';
 
 const { ClientMessages, ErrorKinds } = internal;
 
 const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
-
-/**
- * Mutable utility type to allow building up a readonly object from a mutable one.
- */
-type Mutable<T> = {
-  -readonly [P in keyof T]: Mutable<T[P]>;
-};
 
 export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
@@ -139,43 +132,11 @@ export default class LDClientImpl implements LDClient {
 
     const hooks: Hook[] = [...this._config.hooks];
 
-    const sdkData = this.platform.info.sdkData();
-
-    let applicationMetadata: Mutable<LDPluginApplicationMetadata> | undefined;
-
-    if (this._config.applicationInfo) {
-      if (this._config.applicationInfo.id) {
-        applicationMetadata = applicationMetadata ?? {};
-        applicationMetadata.id = this._config.applicationInfo.id;
-      }
-      if (this._config.applicationInfo.version) {
-        applicationMetadata = applicationMetadata ?? {};
-        applicationMetadata.version = this._config.applicationInfo.version;
-      }
-      if (this._config.applicationInfo.name) {
-        applicationMetadata = applicationMetadata ?? {};
-        applicationMetadata.name = this._config.applicationInfo.name;
-      }
-      if (this._config.applicationInfo.versionName) {
-        applicationMetadata = applicationMetadata ?? {};
-        applicationMetadata.versionName = this._config.applicationInfo.versionName;
-      }
-    }
-
-    const environmentMetadata: Mutable<LDPluginEnvironmentMetadata> = {
-      sdk: {
-        name: sdkData.userAgentBase!,
-        version: sdkData.version!,
-        wrapperName: sdkData.wrapperName,
-        wrapperVersion: sdkData.wrapperVersion,
-      },
-      [this._config.credentialType]: this.sdkKey,
-    };
-    if (applicationMetadata) {
-      environmentMetadata.application = applicationMetadata;
-    }
-
-    this.environmentMetadata = environmentMetadata;
+    this.environmentMetadata = createPluginEnvironmentMetadata(
+      this.sdkKey,
+      this.platform,
+      this._config,
+    );
 
     this._config.getImplementationHooks(this.environmentMetadata).forEach((hook) => {
       hooks.push(hook);
