@@ -110,6 +110,8 @@ export interface RNSpecificOptions {
 
   /**
    * A list of plugins to be used with the SDK.
+   *
+   * Plugin support is currently experimental and subject to change.
    */
   plugins?: LDPlugin[];
 }
