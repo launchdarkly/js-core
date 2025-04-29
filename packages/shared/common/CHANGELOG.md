@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.17.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.16.0...js-sdk-common-v2.17.0) (2025-04-29)
+
+
+### Features
+
+* Add client-side SDK plugin support. ([#834](https://github.com/launchdarkly/js-core/issues/834)) ([a843a33](https://github.com/launchdarkly/js-core/commit/a843a33e97dcab706a0034bd1fd1e3d2f78a9262))
+
 ## [2.16.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.15.0...js-sdk-common-v2.16.0) (2025-04-16)
 
 
