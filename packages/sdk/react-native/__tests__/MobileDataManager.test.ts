@@ -87,6 +87,8 @@ describe('given a MobileDataManager with mocked dependencies', () => {
       trackEventModifier: (event) => event,
       hooks: [],
       inspectors: [],
+      getImplementationHooks: () => [],
+      credentialType: 'mobileKey',
     };
     const mockedFetch = mockFetch('{"flagA": true}', 200);
     platform = {

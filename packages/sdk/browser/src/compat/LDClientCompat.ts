@@ -1,6 +1,6 @@
 import { LDContext, LDFlagSet } from '@launchdarkly/js-client-sdk-common';
 
-import { LDClient as LDCLientBrowser } from '../BrowserClient';
+import { LDClient as LDCLientBrowser } from '../LDClient';
 
 /**
  * Compatibility interface. This interface extends the base LDCLient interface with functions

@@ -138,7 +138,7 @@ describe('sdk-client identify timeout', () => {
         sendEvents: false,
       },
       makeTestDataManagerFactory(testSdkKey, mockPlatform),
-      { highTimeoutThreshold },
+      { highTimeoutThreshold, getImplementationHooks: () => [], credentialType: 'clientSideId' },
     );
     const customTimeout = 10;
     jest.advanceTimersByTimeAsync(customTimeout * 1000).then();
