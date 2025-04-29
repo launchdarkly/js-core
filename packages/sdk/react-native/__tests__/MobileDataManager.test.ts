@@ -91,7 +91,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     const mockedFetch = mockFetch('{"flagA": true}', 200);
     platform = {
       crypto: new PlatformCrypto(),
-      info: new PlatformInfo(config.logger),
+      info: new PlatformInfo(config.logger, {}),
       requests: {
         createEventSource: jest.fn((streamUri: string = '', options: any = {}) => ({
           streamUri,
