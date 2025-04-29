@@ -58,7 +58,7 @@ import FlagsStateBuilder from './FlagsStateBuilder';
 import HookRunner from './hooks/HookRunner';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
-import Configuration from './options/Configuration';
+import Configuration, { DEFAULT_POLL_INTERVAL } from './options/Configuration';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
@@ -260,7 +260,7 @@ export default class LDClientImpl implements LDClient {
             () =>
               new StreamingProcessorFDv2(
                 clientContext,
-                '/all',
+                '/sdk/stream',
                 [],
                 baseHeaders,
                 this._diagnosticsManager,
@@ -269,12 +269,13 @@ export default class LDClientImpl implements LDClient {
           );
         }
 
+        let pollingInterval = DEFAULT_POLL_INTERVAL;
         // if polling is configured, add polling synchronizer
         if (
           isStandardOptions(config.dataSystem.dataSource) ||
           isPollingOnlyOptions(config.dataSystem.dataSource)
         ) {
-          const pollingInterval = config.dataSystem.dataSource.pollInterval;
+          pollingInterval = config.dataSystem.dataSource.pollInterval ?? DEFAULT_POLL_INTERVAL;
           synchronizers.push(
             () =>
               new PollingProcessorFDv2(
@@ -285,7 +286,23 @@ export default class LDClientImpl implements LDClient {
           );
         }
 
-        this._dataSource = new CompositeDataSource(initializers, synchronizers, this.logger);
+        // This is short term handling and will be removed once FDv2 adoption is sufficient.
+        const fdv1FallbackSynchronizers = [
+          () =>
+            new PollingProcessorFDv2(
+              new Requestor(config, this._platform.requests, baseHeaders, "/sdk/latest-all"),
+              pollingInterval,
+              config.logger,
+              true,
+            ),
+        ];
+
+        this._dataSource = new CompositeDataSource(
+          initializers,
+          synchronizers,
+          fdv1FallbackSynchronizers,
+          this.logger,
+        );
         const payloadListener = createPayloadListener(dataSourceUpdates, this.logger, () => {
           this._initSuccess();
         });
@@ -294,8 +311,8 @@ export default class LDClientImpl implements LDClient {
           (_, payload) => {
             payloadListener(payload);
           },
-          (_, err) => {
-            if (err) {
+          (state, err) => {
+            if (state == subsystem.DataSourceState.Closed && err) {
               this._dataSourceErrorHandler(err);
             }
           },

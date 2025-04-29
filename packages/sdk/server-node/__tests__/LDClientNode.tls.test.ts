@@ -26,7 +26,7 @@ describe('When using a TLS connection', () => {
 
   it('can connect via HTTPS to a server with a self-signed certificate, if CA is specified', async () => {
     server = await TestHttpServer.startSecure();
-    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+    server.forMethodAndPath('get', '/sdk/poll', TestHttpHandlers.respondJson({}));
 
     client = new LDClientNode('sdk-key', {
       baseUri: server.url,
@@ -41,7 +41,7 @@ describe('When using a TLS connection', () => {
 
   it('cannot connect via HTTPS to a server with a self-signed certificate, using default config', async () => {
     server = await TestHttpServer.startSecure();
-    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+    server.forMethodAndPath('get', '/sdk/poll', TestHttpHandlers.respondJson({}));
 
     client = new LDClientNode('sdk-key', {
       baseUri: server.url,
@@ -64,7 +64,7 @@ describe('When using a TLS connection', () => {
     const events = new AsyncQueue<SSEItem>();
     events.add({ type: 'put', data: JSON.stringify(eventData) });
     server = await TestHttpServer.startSecure();
-    server.forMethodAndPath('get', '/stream/all', TestHttpHandlers.sseStream(events));
+    server.forMethodAndPath('get', '/stream/sdk/stream', TestHttpHandlers.sseStream(events));
 
     client = new LDClientNode('sdk-key', {
       baseUri: server.url,
@@ -83,7 +83,7 @@ describe('When using a TLS connection', () => {
   it('can use custom TLS options for posting events', async () => {
     server = await TestHttpServer.startSecure();
     server.forMethodAndPath('post', '/events/bulk', TestHttpHandlers.respond(200));
-    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson({}));
+    server.forMethodAndPath('get', '/sdk/poll', TestHttpHandlers.respondJson({}));
 
     client = new LDClientNode('sdk-key', {
       baseUri: server.url,
@@ -99,7 +99,7 @@ describe('When using a TLS connection', () => {
     await client.flush();
 
     const flagsRequest = await server.nextRequest();
-    expect(flagsRequest.path).toEqual('/sdk/latest-all');
+    expect(flagsRequest.path).toEqual('/sdk/poll');
 
     const eventsRequest = await server.nextRequest();
     expect(eventsRequest.path).toEqual('/events/bulk');

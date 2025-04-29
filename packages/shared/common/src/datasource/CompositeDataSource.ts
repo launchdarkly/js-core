@@ -8,6 +8,7 @@ import {
 } from '../api/subsystem/DataSystem/DataSource';
 import { Backoff, DefaultBackoff } from './Backoff';
 import { DataSourceList } from './dataSourceList';
+import { LDFlagDeliveryFallbackError } from './errors';
 
 const DEFAULT_FALLBACK_TIME_MS = 2 * 60 * 1000;
 const DEFAULT_RECOVERY_TIME_MS = 5 * 60 * 1000;
@@ -40,6 +41,7 @@ export class CompositeDataSource implements DataSource {
   private _initPhaseActive: boolean;
   private _initFactories: DataSourceList<LDDataSourceFactory>;
   private _syncFactories: DataSourceList<LDDataSourceFactory>;
+  private _fdv1Synchronizers: DataSourceList<LDDataSourceFactory>;
 
   private _stopped: boolean = true;
   private _externalTransitionPromise: Promise<TransitionRequest>;
@@ -49,10 +51,15 @@ export class CompositeDataSource implements DataSource {
   /**
    * @param initializers factories to create {@link DataSystemInitializer}s, in priority order.
    * @param synchronizers factories to create  {@link DataSystemSynchronizer}s, in priority order.
+   * @param fdv1Synchronizers factories to fallback to if we need to fallback to FDv1.
+   * @param _logger for logging
+   * @param _transitionConditions to control automated transition between datasources. Typically only used for testing.
+   * @param _backoff to control delay between transitions. Typically only used for testing.
    */
   constructor(
     initializers: LDDataSourceFactory[],
     synchronizers: LDDataSourceFactory[],
+    fdv1Synchronizers: LDDataSourceFactory[],
     private readonly _logger?: LDLogger,
     private readonly _transitionConditions: TransitionConditions = {
       [DataSourceState.Valid]: {
@@ -72,6 +79,7 @@ export class CompositeDataSource implements DataSource {
     this._initPhaseActive = initializers.length > 0; // init phase if we have initializers
     this._initFactories = new DataSourceList(false, initializers);
     this._syncFactories = new DataSourceList(true, synchronizers);
+    this._fdv1Synchronizers = new DataSourceList(true, fdv1Synchronizers);
   }
 
   async start(
@@ -132,9 +140,16 @@ export class CompositeDataSource implements DataSource {
               );
               if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
-                if (err.recoverable === false) {
+                if (err?.recoverable === false) {
                   // don't use this datasource's factory again
+                  this._logger?.debug(`Culling data source due to err ${err}`);
                   cullDSFactory?.();
+
+                  // this error indicates we should fallback to only using FDv1 synchronizers
+                  if (err instanceof LDFlagDeliveryFallbackError) {
+                    this._logger?.debug(`Falling back to FDv1`);
+                    this._syncFactories = this._fdv1Synchronizers;
+                  }
                 }
                 sanitizedStatusCallback(state, err);
                 this._consumeCancelToken(cancelScheduledTransition);
@@ -232,6 +247,7 @@ export class CompositeDataSource implements DataSource {
     this._initPhaseActive = this._initFactories.length() > 0; // init phase if we have initializers;
     this._initFactories.reset();
     this._syncFactories.reset();
+    this._fdv1Synchronizers.reset();
     this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
       this._externalTransitionResolve = tr;
     });

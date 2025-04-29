@@ -91,7 +91,7 @@ describe('given a requestor', () => {
       expect(body).toEqual(testResponse);
 
       expect(requestsMade.length).toBe(1);
-      expect(requestsMade[0].url).toBe('https://sdk.launchdarkly.com/sdk/latest-all');
+      expect(requestsMade[0].url).toBe('https://sdk.launchdarkly.com/sdk/poll');
       expect(requestsMade[0].options.headers?.authorization).toBe('sdkKey');
 
       done();

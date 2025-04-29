@@ -8,11 +8,11 @@ describe('given an event processor', () => {
     requestAllData: jest.fn(),
   };
   const longInterval = 100000;
-  const allEvents = {
+  const allFDv2Events = {
     events: [
       {
         event: 'server-intent',
-        data: { payloads: [{ code: 'xfer-full', id: 'mockId' }] },
+        data: { payloads: [{ intentCode: 'xfer-full', id: 'mockId' }] },
       },
       {
         event: 'put-object',
@@ -29,7 +29,13 @@ describe('given an event processor', () => {
       },
     ],
   };
-  const jsonData = JSON.stringify(allEvents);
+  const fdv2JsonData = JSON.stringify(allFDv2Events);
+
+  const allFDv1Data = {
+    flags: { flagA: { version: 456 } },
+    segments: { segmentA: { version: 789 } },
+  };
+  const fdv1JsonData = JSON.stringify(allFDv1Data);
 
   let processor: PollingProcessorFDv2;
   const mockDataCallback = jest.fn();
@@ -60,7 +66,7 @@ describe('given an event processor', () => {
   });
 
   it('calls callback on success', async () => {
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData));
     let dataCallback;
     await new Promise<void>((resolve) => {
       dataCallback = jest.fn(() => {
@@ -85,7 +91,51 @@ describe('given an event processor', () => {
       version: 1,
     });
   });
+
+  it('can process FDv1 data when configured to do so', async () => {
+    processor = new PollingProcessorFDv2(
+      requestor as unknown as Requestor,
+      longInterval,
+      new TestLogger(),
+      true,
+    );
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv1JsonData));
+    let dataCallback;
+    await new Promise<void>((resolve) => {
+      dataCallback = jest.fn(() => {
+        resolve();
+      });
+
+      processor.start(dataCallback, mockStatusCallback);
+    });
+
+    expect(dataCallback).toHaveBeenNthCalledWith(1, true, {
+      basis: true,
+      id: `FDv1Fallback`,
+      state: `FDv1Fallback`,
+      updates: [
+        {
+          kind: `flag`,
+          key: `flagA`,
+          version: 456,
+          object: { version: 456 },
+        },
+        {
+          kind: `segment`,
+          key: `segmentA`,
+          version: 789,
+          object: { version: 789 },
+        },
+      ],
+      version: 1,
+    });
+  });
 });
+
+const allFDv1Data = {
+  flags: { flag: { version: 456 } },
+  segments: { segment: { version: 789 } },
+};
 
 describe('given a polling processor with a short poll duration', () => {
   const requestor = {

@@ -6,6 +6,7 @@ import {
   httpErrorMessage,
   HttpErrorResponse,
   internal,
+  LDFlagDeliveryFallbackError,
   LDHeaders,
   LDLogger,
   LDStreamingError,
@@ -78,6 +79,17 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     err: HttpErrorResponse,
     statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
   ) {
+    // this is a short term error and will be removed once FDv2 adoption is sufficient.
+    if (err.headers?.[`x-ld-fd-fallback`] === `true`) {
+      const fallbackErr = new LDFlagDeliveryFallbackError(
+        DataSourceErrorKind.ErrorResponse,
+        `Response header indicates to fallback to FDv1`,
+        err.status,
+      );
+      statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
+      return false;
+    }
+
     if (!shouldRetry(err)) {
       this._logger?.error(httpErrorMessage(err, 'streaming request'));
       this._logConnectionResult(false);

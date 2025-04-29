@@ -36,4 +36,21 @@ export class LDStreamingError extends Error {
   }
 }
 
+/**
+ * This is a short term error and will be removed once FDv2 adoption is sufficient.
+ */
+export class LDFlagDeliveryFallbackError extends Error {
+  public readonly kind: DataSourceErrorKind;
+  public readonly code?: number;
+  public readonly recoverable: boolean;
+
+  constructor(kind: DataSourceErrorKind, message: string, code?: number) {
+    super(message);
+    this.kind = kind;
+    this.code = code;
+    this.name = 'LDFlagDeliveryFallbackError';
+    this.recoverable = false;
+  }
+}
+
 export type StreamingErrorHandler = (err: LDStreamingError) => void;
