@@ -168,7 +168,7 @@ export class AsyncTaskQueue<TTaskResult> {
 
   /**
    * Returns the number of pending tasks in the queue.
-   * Intended for use for testing purposes only.
+   * Intended for testing purposes only.
    *
    * @internal
    * @returns The number of pending tasks in the queue.
