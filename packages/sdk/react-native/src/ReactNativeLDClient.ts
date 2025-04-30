@@ -8,10 +8,14 @@ import {
   Encoding,
   FlagManager,
   internal,
+  LDClient,
   LDClientImpl,
   LDClientInternalOptions,
+  LDContext,
   LDEmitter,
   LDHeaders,
+  LDIdentifyOptions,
+  LDIdentifyResult,
   LDPluginEnvironmentMetadata,
 } from '@launchdarkly/js-client-sdk-common';
 

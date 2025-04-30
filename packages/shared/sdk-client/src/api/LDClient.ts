@@ -3,6 +3,7 @@ import { LDContext, LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sd
 import { Hook } from './integrations/Hooks';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
+import { LDIdentifyResult } from './LDIdentifyResult';
 
 /**
  * The basic interface for the LaunchDarkly client. Platform-specific SDKs may add some methods of their own.
@@ -91,6 +92,10 @@ export interface LDClient {
    * Changing the current context also causes all feature flag values to be reloaded. Until that has
    * finished, calls to {@link variation} will still return flag values for the previous context. You can
    * await the Promise to determine when the new flag values are available.
+   *
+   * If used with the `shedable` option set to true, then the identify operation will be shedable. This means that if
+   * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
+   * operations may be discarded.
    *
    * @param context
    *    The LDContext object.
@@ -328,4 +333,40 @@ export interface LDClient {
    * @param Hook The hook to add.
    */
   addHook(hook: Hook): void;
+}
+
+/**
+ * Interface that extends the LDClient interface to include the identifyResult method.
+ * 
+ * This is an independent interface for backwards compatibility. Adding this to the LDClient interface would require
+ * a breaking change.
+ */
+export interface LDClientIdentifyResult {
+  /**
+   * Identifies a context to LaunchDarkly and returns a promise which resolves to an object containing the result of
+   * the identify operation.
+   *
+   * Unlike the server-side SDKs, the client-side JavaScript SDKs maintain a current context state,
+   * which is set when you call `identify()`.
+   *
+   * Changing the current context also causes all feature flag values to be reloaded. Until that has
+   * finished, calls to {@link variation} will still return flag values for the previous context. You can
+   * await the Promise to determine when the new flag values are available.
+   *
+   * If used with the `shedable` option set to true, then the identify operation will be shedable. This means that if
+   * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
+   * operations may be discarded.
+   *
+   * @param context
+   *    The LDContext object.
+   * @param identifyOptions
+   *    Optional configuration. Please see {@link LDIdentifyOptions}.
+   * @returns
+   *    A promise which resolves to an object containing the result of the identify operation.
+   *    The promise returned from this method will not be rejected.
+   */
+    identifyResult(
+      pristineContext: LDContext,
+      identifyOptions?: LDIdentifyOptions,
+    ): Promise<LDIdentifyResult>;
 }

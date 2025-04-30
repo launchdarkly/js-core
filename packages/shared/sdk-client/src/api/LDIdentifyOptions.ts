@@ -33,4 +33,15 @@ export interface LDIdentifyOptions {
    * not be required.
    */
   noTimeout?: boolean;
+
+  /**
+   * If true, the identify operation will be shedable. This means that if multiple identify operations are done, without
+   * waiting for the previous one to complete, then intermediate results will be discarded. When false, identify
+   * operations will be queued and completed sequentially.
+   *
+   * By default operations will be queued and completed sequentially.
+   *
+   * Defaults to false.
+   */
+  shedable?: boolean;
 }

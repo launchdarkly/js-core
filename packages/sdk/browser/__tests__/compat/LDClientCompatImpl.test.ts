@@ -92,7 +92,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     const context: LDContext = { kind: 'user', key: 'new-user' };
     const mockFlags: LDFlagSet = { flag1: true, flag2: false };
 
-    mockBrowserClient.identify.mockResolvedValue();
+    mockBrowserClient.identify.mockResolvedValue(undefined);
     mockBrowserClient.allFlags.mockReturnValue(mockFlags);
 
     const result = await client.identify(context);

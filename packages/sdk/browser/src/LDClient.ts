@@ -1,4 +1,9 @@
-import { LDClient as CommonClient, LDContext } from '@launchdarkly/js-client-sdk-common';
+import {
+  LDClient as CommonClient,
+  LDClientIdentifyResult,
+  LDContext,
+  LDIdentifyResult,
+} from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 
@@ -34,7 +39,8 @@ export type LDClient = Omit<
   setStreaming(streaming?: boolean): void;
 
   /**
-   * Identifies a context to LaunchDarkly.
+   * Identifies a context to LaunchDarkly and returns a promise which resolves to an object containing the result of
+   * the identify operation.
    *
    * Unlike the server-side SDKs, the client-side JavaScript SDKs maintain a current context state,
    * which is set when you call `identify()`.
@@ -42,6 +48,10 @@ export type LDClient = Omit<
    * Changing the current context also causes all feature flag values to be reloaded. Until that has
    * finished, calls to {@link variation} will still return flag values for the previous context. You can
    * await the Promise to determine when the new flag values are available.
+   *
+   * This function will shed intermediate identify operations by default. For example, if you call identify 3 times in
+   * a row, without waiting for the previous one to complete, the middle call to identify may be discarded. To disable
+   * this set `shedable` to `false` in the `identifyOptions` parameter.
    *
    * @param context
    *    The LDContext object.
@@ -61,4 +71,4 @@ export type LDClient = Omit<
    * @ignore Implementation Note: Browser implementation has different options.
    */
   identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
-};
+} & LDClientIdentifyResult;
