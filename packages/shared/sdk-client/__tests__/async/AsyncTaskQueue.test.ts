@@ -157,3 +157,46 @@ it('handles mix of shedable and non-shedable tasks correctly', async () => {
   expect(task3).not.toHaveBeenCalled();
   expect(task4).toHaveBeenCalled();
 });
+
+it('executes tasks in order regardless of time to complete', async () => {
+  const queue = new AsyncTaskQueue<string>();
+  const timedPromise = (ms: number) =>
+    new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  const callOrder: string[] = [];
+  const task1 = jest.fn().mockImplementation(() => {
+    callOrder.push('task1Start');
+    return timedPromise(10).then(() => {
+      callOrder.push('task1End');
+      return 'test1';
+    });
+  });
+  const task2 = jest.fn().mockImplementation(() => {
+    callOrder.push('task2Start');
+    return timedPromise(5).then(() => {
+      callOrder.push('task2End');
+      return 'test2';
+    });
+  });
+  const task3 = jest.fn().mockImplementation(() => {
+    callOrder.push('task3Start');
+    return timedPromise(20).then(() => {
+      callOrder.push('task3End');
+      return 'test3';
+    });
+  });
+  const promise1 = queue.execute(task1, false);
+  const promise2 = queue.execute(task2, false);
+  const promise3 = queue.execute(task3, false);
+
+  await Promise.all([promise1, promise2, promise3]);
+  expect(callOrder).toEqual([
+    'task1Start',
+    'task1End',
+    'task2Start',
+    'task2End',
+    'task3Start',
+    'task3End',
+  ]);
+});
