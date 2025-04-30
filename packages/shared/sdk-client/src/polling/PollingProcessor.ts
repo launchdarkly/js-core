@@ -13,6 +13,10 @@ import { Flags } from '../types';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
+function reportClosed(logger?: LDLogger) {
+  logger?.debug(`Poll completed after the processor was closed. Skipping processing.`);
+}
+
 /**
  * @internal
  */
@@ -27,7 +31,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     private readonly _dataHandler: (flags: Flags) => void,
     private readonly _errorHandler?: PollingErrorHandler,
     private readonly _logger?: LDLogger,
-  ) {}
+  ) { }
 
   private async _poll() {
     if (this._stopped) {
@@ -50,6 +54,12 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     try {
       const res = await this._requestor.requestPayload();
       try {
+        // If the processor has been stopped, we discard the response.
+        // This response could be for a no longer active context.
+        if (this._stopped) {
+          reportClosed(this._logger);
+          return;
+        }
         const flags = JSON.parse(res);
         try {
           this._dataHandler?.(flags);
@@ -60,6 +70,12 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
         reportJsonError(res);
       }
     } catch (err) {
+      // If the processor has been stopped, we discard this error.
+      // The original caller would consider this connection no longer active.
+      if (this._stopped) {
+        reportClosed(this._logger);
+        return;
+      }
       const requestError = err as LDRequestError;
       if (requestError.status !== undefined) {
         if (!isHttpRecoverable(requestError.status)) {
