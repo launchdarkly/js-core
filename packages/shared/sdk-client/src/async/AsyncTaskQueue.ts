@@ -34,7 +34,7 @@ export type TaskResult<TTaskResult> = CompletedTask<TTaskResult> | ErroredTask |
  *  The promise is not directly the promise associated with the async function, because we will not execute the async function until some point in the future, if at all.
  * */
 interface PendingTask<TTaskResult> {
-  shedable: boolean;
+  sheddable: boolean;
   execute: () => void;
   shed: () => void;
   promise: Promise<TaskResult<TTaskResult>>;
@@ -47,13 +47,13 @@ const duplicateExecutionError = new Error(
 /**
  * Creates a pending task.
  * @param task The async function to execute.
- * @param shedable Whether the task can be shed from the queue.
+ * @param sheddable Whether the task can be shed from the queue.
  * @returns A pending task.
  */
 function makePending<TTaskResult>(
   task: () => Promise<TTaskResult>,
   _logger?: LDLogger,
-  shedable: boolean = false,
+  sheddable: boolean = false,
 ): PendingTask<TTaskResult> {
   let res: (value: TaskResult<TTaskResult>) => void;
 
@@ -82,7 +82,7 @@ function makePending<TTaskResult>(
       res({ status: 'shed' });
     },
     promise,
-    shedable,
+    sheddable,
   };
 }
 
@@ -98,7 +98,7 @@ function makePending<TTaskResult>(
  * This class will always begin execution of the first item added to the queue, at that point the item itself is not
  * queued, but active. If another request is made while that item is still active, then it is added to the queue.
  * A third request would then replace the second request if the second request had not yet become active, and it was
- * shedable.
+ * sheddable.
  *
  * Once a task is active the queue will complete it. It doesn't cancel tasks that it has started, but it can shed tasks
  * that have not started.
@@ -121,14 +121,14 @@ export class AsyncTaskQueue<TTaskResult> {
    * Execute a task using the queue.
    *
    * @param task The async function to execute.
-   * @param shedable Whether the task can be shed from the queue.
+   * @param sheddable Whether the task can be shed from the queue.
    * @returns A promise that resolves to the result of the task.
    */
   execute(
     task: () => Promise<TTaskResult>,
-    shedable: boolean = false,
+    sheddable: boolean = false,
   ): Promise<TaskResult<TTaskResult>> {
-    const pending = makePending(task, this._logger, shedable);
+    const pending = makePending(task, this._logger, sheddable);
 
     if (!this._activeTask) {
       this._activeTask = pending.promise.finally(() => {
@@ -137,8 +137,8 @@ export class AsyncTaskQueue<TTaskResult> {
       });
       pending.execute();
     } else {
-      // If the last pending task is shedable, we need to shed it before adding the new task.
-      if (this._queue[this._queue.length - 1]?.shedable) {
+      // If the last pending task is sheddable, we need to shed it before adding the new task.
+      if (this._queue[this._queue.length - 1]?.sheddable) {
         this._queue.pop()?.shed();
       }
       this._queue.push(pending);

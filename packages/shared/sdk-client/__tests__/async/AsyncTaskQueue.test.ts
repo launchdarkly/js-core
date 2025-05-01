@@ -1,9 +1,9 @@
 import { AsyncTaskQueue } from '../../src/async/AsyncTaskQueue';
 
-it.each([true, false])('executes the initial task it is given: shedable: %s', async (shedable) => {
+it.each([true, false])('executes the initial task it is given: sheddable: %s', async (sheddable) => {
   const queue = new AsyncTaskQueue<string>();
   const task = jest.fn().mockResolvedValue('test');
-  const result = await queue.execute(task, shedable);
+  const result = await queue.execute(task, sheddable);
   expect(queue.pendingCount()).toBe(0);
   expect(result).toEqual({
     status: 'complete',
@@ -13,13 +13,13 @@ it.each([true, false])('executes the initial task it is given: shedable: %s', as
 });
 
 it.each([true, false])(
-  'executes the next task in the queue when the previous task completes: shedable: %s',
-  async (shedable) => {
+  'executes the next task in the queue when the previous task completes: sheddable: %s',
+  async (sheddable) => {
     const queue = new AsyncTaskQueue<string>();
     const task1 = jest.fn().mockResolvedValue('test1');
     const task2 = jest.fn().mockResolvedValue('test2');
-    const promise1 = queue.execute(task1, shedable);
-    const promise2 = queue.execute(task2, shedable);
+    const promise1 = queue.execute(task1, sheddable);
+    const promise2 = queue.execute(task2, sheddable);
     // We have not awaited, so there has not been an opportunity to execute any tasks.
     expect(queue.pendingCount()).toBe(1);
 
@@ -37,7 +37,7 @@ it.each([true, false])(
   },
 );
 
-it('can shed pending shedable tasks', async () => {
+it('can shed pending sheddable tasks', async () => {
   const queue = new AsyncTaskQueue<string>();
   const task1 = jest.fn().mockResolvedValue('test1');
   const task2 = jest.fn().mockResolvedValue('test2');
@@ -63,7 +63,7 @@ it('can shed pending shedable tasks', async () => {
   expect(task3).toHaveBeenCalled();
 });
 
-it('does not shed pending non-shedable tasks', async () => {
+it('does not shed pending non-sheddable tasks', async () => {
   const queue = new AsyncTaskQueue<string>();
   const task1 = jest.fn().mockResolvedValue('test1');
   const task2 = jest.fn().mockResolvedValue('test2');
@@ -109,14 +109,14 @@ it('can handle errors from tasks', async () => {
   expect(task2).toHaveBeenCalled();
 });
 
-it('handles mix of shedable and non-shedable tasks correctly', async () => {
+it('handles mix of sheddable and non-sheddable tasks correctly', async () => {
   const queue = new AsyncTaskQueue<string>();
   const task1 = jest.fn().mockResolvedValue('test1');
   const task2 = jest.fn().mockResolvedValue('test2');
   const task3 = jest.fn().mockResolvedValue('test3');
   const task4 = jest.fn().mockResolvedValue('test4');
 
-  // Add tasks in order: shedable, non-shedable, shedable, non-shedable
+  // Add tasks in order: sheddable, non-sheddable, sheddable, non-sheddable
   const promise1 = queue.execute(task1, true);
   const promise2 = queue.execute(task2, false);
   const promise3 = queue.execute(task3, true);
@@ -135,7 +135,7 @@ it('handles mix of shedable and non-shedable tasks correctly', async () => {
     result: 'test1',
   });
 
-  // Second task should complete (not shedable)
+  // Second task should complete (not sheddable)
   expect(result2).toEqual({
     status: 'complete',
     result: 'test2',
