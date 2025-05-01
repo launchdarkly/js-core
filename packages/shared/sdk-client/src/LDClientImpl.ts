@@ -246,6 +246,8 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
+    // In order to manage customization in the derived classes it is important that `identify` MUST be implemented in
+    // terms of `identifyResult`. So that the logic of the identification process can be extended in one place.
     const result = await this.identifyResult(pristineContext, identifyOptions);
     if (result.status === 'error') {
       throw result.error;
