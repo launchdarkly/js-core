@@ -93,7 +93,7 @@ export interface LDClient {
    * finished, calls to {@link variation} will still return flag values for the previous context. You can
    * await the Promise to determine when the new flag values are available.
    *
-   * If used with the `shedable` option set to true, then the identify operation will be shedable. This means that if
+   * If used with the `sheddable` option set to true, then the identify operation will be sheddable. This means that if
    * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
    * operations may be discarded.
    *
@@ -337,7 +337,7 @@ export interface LDClient {
 
 /**
  * Interface that extends the LDClient interface to include the identifyResult method.
- * 
+ *
  * This is an independent interface for backwards compatibility. Adding this to the LDClient interface would require
  * a breaking change.
  */
@@ -353,7 +353,7 @@ export interface LDClientIdentifyResult {
    * finished, calls to {@link variation} will still return flag values for the previous context. You can
    * await the Promise to determine when the new flag values are available.
    *
-   * If used with the `shedable` option set to true, then the identify operation will be shedable. This means that if
+   * If used with the `sheddable` option set to true, then the identify operation will be sheddable. This means that if
    * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
    * operations may be discarded.
    *
@@ -365,8 +365,8 @@ export interface LDClientIdentifyResult {
    *    A promise which resolves to an object containing the result of the identify operation.
    *    The promise returned from this method will not be rejected.
    */
-    identifyResult(
-      pristineContext: LDContext,
-      identifyOptions?: LDIdentifyOptions,
-    ): Promise<LDIdentifyResult>;
+  identifyResult(
+    pristineContext: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult>;
 }

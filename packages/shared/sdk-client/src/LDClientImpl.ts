@@ -226,12 +226,12 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   /**
    * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
    *
-   * If used with the `shedable` option set to true, then the identify operation will be shedable. This means that if
+   * If used with the `sheddable` option set to true, then the identify operation will be sheddable. This means that if
    * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
    * operations may be discarded.
    *
-   * It is recommended to use the `identifyResult` method instead when the operation is shedable. In a future release,
-   * all identify operations will default to being shedable.
+   * It is recommended to use the `identifyResult` method instead when the operation is sheddable. In a future release,
+   * all identify operations will default to being sheddable.
    *
    * @param pristineContext The LDContext object to be identified.
    * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
@@ -314,7 +314,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             throw e;
           },
         );
-      }, identifyOptions?.shedable ?? false)
+      }, identifyOptions?.sheddable ?? false)
       .then((res) => {
         if (res.status === 'error') {
           return { status: 'error', error: res.error } as LDIdentifyError;
