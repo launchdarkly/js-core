@@ -2,7 +2,6 @@ import {
   LDClient as CommonClient,
   LDClientIdentifyResult,
   LDContext,
-  LDIdentifyResult,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';

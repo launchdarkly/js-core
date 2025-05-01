@@ -188,10 +188,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     );
   }
 
-  override async identify(
-    context: LDContext,
-    identifyOptions?: LDIdentifyOptions,
-  ): Promise<void> {
+  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     return super.identify(context, identifyOptions);
   }
 
