@@ -266,8 +266,8 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
+    _selector?: string, // select is not persisted nor do we have intention to persist it at the time of writing
   ): void {
     if (basis) {
       this._queue.enqueue((cb) => {

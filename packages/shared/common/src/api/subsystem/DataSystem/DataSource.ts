@@ -20,6 +20,7 @@ export interface DataSource {
   start(
     dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
+    selectorGetter?: () => string | undefined,
   ): void;
 
   /**

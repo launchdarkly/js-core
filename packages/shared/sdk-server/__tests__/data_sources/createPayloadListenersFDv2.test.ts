@@ -82,7 +82,7 @@ const changesTransferPayload = {
 
 describe('createPayloadListenerFDv2', () => {
   let dataSourceUpdates: LDDataSourceUpdates;
-  let basisRecieved: jest.Mock;
+  let basisReceived: jest.Mock;
 
   beforeEach(() => {
     dataSourceUpdates = {
@@ -90,7 +90,7 @@ describe('createPayloadListenerFDv2', () => {
       upsert: jest.fn(),
       applyChanges: jest.fn(),
     };
-    basisRecieved = jest.fn();
+    basisReceived = jest.fn();
   });
 
   afterEach(() => {
@@ -98,11 +98,12 @@ describe('createPayloadListenerFDv2', () => {
   });
 
   test('data source init is called', async () => {
-    const listener = createPayloadListener(dataSourceUpdates, logger, basisRecieved);
+    const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
     listener(fullTransferPayload);
 
     expect(logger.debug).toBeCalledWith(expect.stringMatching(/initializing/i));
-    expect(dataSourceUpdates.init).toBeCalledWith(
+    expect(dataSourceUpdates.applyChanges).toBeCalledWith(
+      true,
       {
         features: {
           flagkey: { key: 'flagkey', version: 1 },
@@ -111,33 +112,41 @@ describe('createPayloadListenerFDv2', () => {
           segkey: { key: 'segkey', version: 2 },
         },
       },
-      basisRecieved,
+      basisReceived,
+      'initial',
     );
   });
 
   test('data source upsert is called', async () => {
-    const listener = createPayloadListener(dataSourceUpdates, logger, basisRecieved);
+    const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
     listener(changesTransferPayload);
 
     expect(logger.debug).toBeCalledWith(expect.stringMatching(/updating/i));
-    expect(dataSourceUpdates.upsert).toHaveBeenCalledTimes(3);
-    expect(dataSourceUpdates.upsert).toHaveBeenNthCalledWith(
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledTimes(1);
+    expect(dataSourceUpdates.applyChanges).toHaveBeenNthCalledWith(
       1,
-      { namespace: 'features' },
-      { key: 'flagkey', version: 1 },
-      expect.anything(),
-    );
-    expect(dataSourceUpdates.upsert).toHaveBeenNthCalledWith(
-      2,
-      { namespace: 'segments' },
-      { key: 'segkey', version: 2 },
-      expect.anything(),
-    );
-    expect(dataSourceUpdates.upsert).toHaveBeenNthCalledWith(
-      3,
-      { namespace: 'features' },
-      { key: 'deletedFlag', version: 3, deleted: true },
-      expect.anything(),
+      false,
+      {
+        features: {
+          deletedFlag: {
+            key: 'deletedFlag',
+            deleted: true,
+            version: 3,
+          },
+          flagkey: {
+            key: 'flagkey',
+            version: 1,
+          },
+        },
+        segments: {
+          segkey: {
+            key: 'segkey',
+            version: 2,
+          },
+        },
+      },
+      basisReceived,
+      'changes',
     );
   });
 });

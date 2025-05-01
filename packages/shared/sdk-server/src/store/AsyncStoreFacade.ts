@@ -60,10 +60,10 @@ export default class AsyncStoreFacade {
   async applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined,
+    selector?: string,
   ): Promise<void> {
     return promisify((cb) => {
-      this._store.applyChanges(basis, data, selector, cb);
+      this._store.applyChanges(basis, data, cb, selector);
     });
   }
 

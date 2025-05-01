@@ -85,6 +85,7 @@ export class CompositeDataSource implements DataSource {
   async start(
     dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
+    selectorGetter?: () => string | undefined,
   ): Promise<void> {
     if (!this._stopped) {
       // don't allow multiple simultaneous runs
@@ -136,7 +137,7 @@ export class CompositeDataSource implements DataSource {
               // time in the future if this status remains for some duration (ex: Recover to primary synchronizer after the secondary
               // synchronizer has been Valid for some time).  These scheduled transitions are configurable in the constructor.
               this._logger?.debug(
-                `CompositeDataSource received state ${state} from underlying data source.`,
+                `CompositeDataSource received state ${state} from underlying data source.  Err is ${err}`,
               );
               if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
@@ -182,6 +183,7 @@ export class CompositeDataSource implements DataSource {
           currentDS.start(
             (basis, data) => callbackHandler.dataHandler(basis, data),
             (status, err) => callbackHandler.statusHandler(status, err),
+            selectorGetter,
           );
         } else {
           // we don't have a data source to use!

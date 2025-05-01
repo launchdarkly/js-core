@@ -42,6 +42,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
   private _poll(
     dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
+    selectorGetter?: () => string | undefined,
   ) {
     if (this._stopped) {
       return;
@@ -83,79 +84,82 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
         this._logger?.warn(message);
         // schedule poll
         this._timeoutHandle = setTimeout(() => {
-          this._poll(dataCallback, statusCallback);
+          this._poll(dataCallback, statusCallback, selectorGetter);
         }, sleepFor);
         return;
       }
-
-      if (!body) {
-        statusCallback(
-          subsystemCommon.DataSourceState.Interrupted,
-          new LDPollingError(
-            DataSourceErrorKind.ErrorResponse,
-            'Response missing body, will retry.',
-          ),
-        );
-        // schedule poll
-        this._timeoutHandle = setTimeout(() => {
-          this._poll(dataCallback, statusCallback);
-        }, sleepFor);
-        return;
-      }
-
-      try {
-        const payloadProcessor = new internal.PayloadProcessor(
-          {
-            flag: (flag: Flag) => {
-              processFlag(flag);
-              return flag;
+      if (body) {
+        try {
+          const payloadProcessor = new internal.PayloadProcessor(
+            {
+              flag: (flag: Flag) => {
+                processFlag(flag);
+                return flag;
+              },
+              segment: (segment: Segment) => {
+                processSegment(segment);
+                return segment;
+              },
             },
-            segment: (segment: Segment) => {
-              processSegment(segment);
-              return segment;
+            (errorKind: DataSourceErrorKind, message: string) => {
+              statusCallback(
+                subsystemCommon.DataSourceState.Interrupted,
+                new LDPollingError(errorKind, message),
+              );
             },
-          },
-          (errorKind: DataSourceErrorKind, message: string) => {
-            statusCallback(
-              subsystemCommon.DataSourceState.Interrupted,
-              new LDPollingError(errorKind, message),
-            );
-          },
-          this._logger,
-        );
+            this._logger,
+          );
 
-        payloadProcessor.addPayloadListener((payload) => {
-          dataCallback(payload.basis, payload);
-        });
+          payloadProcessor.addPayloadListener((payload) => {
+            dataCallback(payload.basis, payload);
+          });
 
-        if (!this._processResponseAsFDv1) {
-          // FDv2 case
-          const parsed = JSON.parse(body) as internal.FDv2EventsCollection;
-          payloadProcessor.processEvents(parsed.events);
-        } else {
-          // FDv1 case
-          const parsed = JSON.parse(body) as FlagsAndSegments;
-          this._processFDv1FlagsAndSegments(payloadProcessor, parsed);
+          this._logger?.debug(`Got body: ${body}`);
+
+          if (!this._processResponseAsFDv1) {
+            // FDv2 case
+            const parsed = JSON.parse(body) as internal.FDv2EventsCollection;
+            payloadProcessor.processEvents(parsed.events);
+          } else {
+            // FDv1 case
+            const parsed = JSON.parse(body) as FlagsAndSegments;
+            this._processFDv1FlagsAndSegments(payloadProcessor, parsed);
+          }
+
+          statusCallback(subsystemCommon.DataSourceState.Valid);
+        } catch {
+          // We could not parse this JSON. Report the problem and fallthrough to
+          // start another poll.
+          this._logger?.error('Response contained invalid data');
+          this._logger?.debug(`${err} - Body follows: ${body}`);
+          statusCallback(
+            subsystemCommon.DataSourceState.Interrupted,
+            new LDPollingError(
+              DataSourceErrorKind.InvalidData,
+              'Malformed data in polling response',
+            ),
+          );
         }
-
-        // TODO: SDK-855 implement blocking duplicate data source state events in DataAvailability API
-        statusCallback(subsystemCommon.DataSourceState.Valid);
-      } catch {
-        // We could not parse this JSON. Report the problem and fallthrough to
-        // start another poll.
-        this._logger?.error('Response contained invalid data');
-        this._logger?.debug(`${err} - Body follows: ${body}`);
-        statusCallback(
-          subsystemCommon.DataSourceState.Interrupted,
-          new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed data in polling response'),
-        );
       }
 
       // schedule poll
       this._timeoutHandle = setTimeout(() => {
-        this._poll(dataCallback, statusCallback);
+        this._poll(dataCallback, statusCallback, selectorGetter);
       }, sleepFor);
-    });
+    }, this._selectorAsQueryParams(selectorGetter?.()));
+  }
+
+  private _selectorAsQueryParams(selector: string | undefined): { key: string; value: string }[] {
+    if (!selector) {
+      return [];
+    }
+
+    return [
+      {
+        key: 'basis',
+        value: selector,
+      },
+    ];
   }
 
   // helper function to transform FDv1 response data into events the PayloadProcessor can parse
@@ -220,10 +224,11 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
   start(
     dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
+    selectorGetter?: () => string | undefined,
   ) {
     this._statusCallback = statusCallback; // hold reference for usage in stop()
     statusCallback(subsystemCommon.DataSourceState.Initializing);
-    this._poll(dataCallback, statusCallback);
+    this._poll(dataCallback, statusCallback, selectorGetter);
   }
 
   stop() {

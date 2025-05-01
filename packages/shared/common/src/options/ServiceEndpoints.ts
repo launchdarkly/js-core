@@ -54,7 +54,7 @@ export default class ServiceEndpoints {
   }
 }
 
-function getWithParams(uri: string, parameters: { key: string; value: string }[]) {
+function getWithParams(uri: string, parameters: { key: string; value: string }[] = []) {
   if (parameters.length === 0) {
     return uri;
   }
@@ -95,7 +95,7 @@ export function getStreamingUri(
 export function getPollingUri(
   endpoints: ServiceEndpoints,
   path: string,
-  parameters: { key: string; value: string }[],
+  parameters: { key: string; value: string }[] = [],
 ): string {
   const canonicalizedPath = canonicalizePath(path);
 
@@ -117,7 +117,7 @@ export function getPollingUri(
 export function getEventsUri(
   endpoints: ServiceEndpoints,
   path: string,
-  parameters: { key: string; value: string }[],
+  parameters: { key: string; value: string }[] = [],
 ): string {
   const canonicalizedPath = canonicalizePath(path);
 
