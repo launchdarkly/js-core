@@ -1,16 +1,19 @@
 import { AsyncTaskQueue } from '../../src/async/AsyncTaskQueue';
 
-it.each([true, false])('executes the initial task it is given: sheddable: %s', async (sheddable) => {
-  const queue = new AsyncTaskQueue<string>();
-  const task = jest.fn().mockResolvedValue('test');
-  const result = await queue.execute(task, sheddable);
-  expect(queue.pendingCount()).toBe(0);
-  expect(result).toEqual({
-    status: 'complete',
-    result: 'test',
-  });
-  expect(task).toHaveBeenCalled();
-});
+it.each([true, false])(
+  'executes the initial task it is given: sheddable: %s',
+  async (sheddable) => {
+    const queue = new AsyncTaskQueue<string>();
+    const task = jest.fn().mockResolvedValue('test');
+    const result = await queue.execute(task, sheddable);
+    expect(queue.pendingCount()).toBe(0);
+    expect(result).toEqual({
+      status: 'complete',
+      result: 'test',
+    });
+    expect(task).toHaveBeenCalled();
+  },
+);
 
 it.each([true, false])(
   'executes the next task in the queue when the previous task completes: sheddable: %s',
