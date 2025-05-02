@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 
 import {
-  DefaultLocationWatcher,
+  createLocationWatcher,
   LOCATION_WATCHER_INTERVAL_MS,
 } from '../../src/goals/LocationWatcher';
 
@@ -22,7 +22,7 @@ it('should call callback when URL changes', () => {
     writable: true,
   });
 
-  const watcher = new DefaultLocationWatcher(mockCallback);
+  const watcher = createLocationWatcher(mockCallback);
 
   Object.defineProperty(window, 'location', {
     value: { href: 'https://example.com/new-page' },
@@ -41,7 +41,7 @@ it('should not call callback when URL remains the same', () => {
     writable: true,
   });
 
-  const watcher = new DefaultLocationWatcher(mockCallback);
+  const watcher = createLocationWatcher(mockCallback);
 
   jest.advanceTimersByTime(LOCATION_WATCHER_INTERVAL_MS * 2);
 
@@ -56,7 +56,7 @@ it('should call callback on popstate event', () => {
     writable: true,
   });
 
-  const watcher = new DefaultLocationWatcher(mockCallback);
+  const watcher = createLocationWatcher(mockCallback);
 
   Object.defineProperty(window, 'location', {
     value: { href: 'https://example.com/new-page' },
@@ -75,7 +75,7 @@ it('should stop watching when close is called', () => {
     writable: true,
   });
 
-  const watcher = new DefaultLocationWatcher(mockCallback);
+  const watcher = createLocationWatcher(mockCallback);
 
   watcher.close();
 

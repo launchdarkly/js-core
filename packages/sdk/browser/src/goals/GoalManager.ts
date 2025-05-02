@@ -2,68 +2,69 @@ import { LDUnexpectedResponseError, Requests } from '@launchdarkly/js-client-sdk
 
 import { getHref } from '../BrowserApi';
 import { Goal } from './Goals';
-import GoalTracker from './GoalTracker';
-import { DefaultLocationWatcher, LocationWatcher } from './LocationWatcher';
+import createGoalTracker, { GoalTracker } from './GoalTracker';
+import { createLocationWatcher, LocationWatcher } from './LocationWatcher';
 
-export default class GoalManager {
-  private _goals?: Goal[] = [];
-  private _url: string;
-  private _watcher?: LocationWatcher;
-  private _tracker?: GoalTracker;
-  private _isTracking = false;
+export interface GoalManager {
+  initialize: () => Promise<void>;
+  startTracking: () => void;
+  close: () => void;
+}
 
-  constructor(
-    credential: string,
-    private readonly _requests: Requests,
-    baseUrl: string,
-    private readonly _reportError: (err: Error) => void,
-    private readonly _reportGoal: (url: string, goal: Goal) => void,
-    locationWatcherFactory: (cb: () => void) => LocationWatcher = (cb) =>
-      new DefaultLocationWatcher(cb),
-  ) {
-    // TODO: Generate URL in a better way.
-    this._url = `${baseUrl}/sdk/goals/${credential}`;
+export default function createGoalManager(
+  credential: string,
+  requests: Requests,
+  baseUrl: string,
+  reportError: (err: Error) => void,
+  reportGoal: (url: string, goal: Goal) => void,
+  locationWatcherFactory: (cb: () => void) => LocationWatcher = createLocationWatcher,
+): GoalManager {
+  let goals: Goal[] | undefined = [];
+  const url = `${baseUrl}/sdk/goals/${credential}`;
+  let tracker: GoalTracker | undefined;
+  let isTracking = false;
 
-    this._watcher = locationWatcherFactory(() => {
-      this._createTracker();
-    });
-  }
-
-  public async initialize(): Promise<void> {
-    await this._fetchGoals();
-    // If tracking has been started before goal fetching completes, we need to
-    // create the tracker so it can start watching for events.
-    this._createTracker();
-  }
-
-  public startTracking() {
-    this._isTracking = true;
-    this._createTracker();
-  }
-
-  private _createTracker() {
-    if (!this._isTracking) {
+  const createTracker = () => {
+    if (!isTracking) {
       return;
     }
-    this._tracker?.close();
-    if (this._goals && this._goals.length) {
-      this._tracker = new GoalTracker(this._goals, (goal) => {
-        this._reportGoal(getHref(), goal);
+    tracker?.close();
+    if (goals && goals.length) {
+      tracker = createGoalTracker(goals, (goal) => {
+        reportGoal(getHref(), goal);
       });
     }
-  }
+  };
 
-  private async _fetchGoals(): Promise<void> {
+  const watcher: LocationWatcher | undefined = locationWatcherFactory(() => {
+    createTracker();
+  });
+
+  const fetchGoals = async (): Promise<void> => {
     try {
-      const res = await this._requests.fetch(this._url);
-      this._goals = await res.json();
+      const res = await requests.fetch(url);
+      goals = await res.json();
     } catch (err) {
-      this._reportError(new LDUnexpectedResponseError(`Encountered error fetching goals: ${err}`));
+      reportError(new LDUnexpectedResponseError(`Encountered error fetching goals: ${err}`));
     }
-  }
+  };
 
-  close(): void {
-    this._watcher?.close();
-    this._tracker?.close();
-  }
+  return {
+    async initialize(): Promise<void> {
+      await fetchGoals();
+      // If tracking has been started before goal fetching completes, we need to
+      // create the tracker so it can start watching for events.
+      createTracker();
+    },
+
+    startTracking() {
+      isTracking = true;
+      createTracker();
+    },
+
+    close(): void {
+      watcher?.close();
+      tracker?.close();
+    },
+  };
 }

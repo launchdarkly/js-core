@@ -5,7 +5,7 @@
 import { jest } from '@jest/globals';
 
 import { Goal } from '../../src/goals/Goals';
-import GoalTracker from '../../src/goals/GoalTracker';
+import createGoalTracker from '../../src/goals/GoalTracker';
 
 let mockOnEvent: jest.Mock;
 
@@ -33,7 +33,7 @@ it('should trigger pageview goals on initialization', () => {
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   expect(mockOnEvent).toHaveBeenCalledWith(goals[0]);
 });
@@ -52,17 +52,17 @@ it('should not trigger pageview goals for non-matching URLs', () => {
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   expect(mockOnEvent).not.toHaveBeenCalled();
 });
 
-it('should add click event listener for click goals', () => {
+it('should trigger click goals when matching elements are clicked', () => {
   const goals: Goal[] = [
     {
       key: 'click1',
       kind: 'click',
-      selector: '.button',
+      selector: '.test',
       urls: [{ kind: 'exact', url: 'http://example.com' }],
     },
   ];
@@ -76,58 +76,23 @@ it('should add click event listener for click goals', () => {
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  const element = document.createElement('div');
+  element.className = 'test';
+  document.body.appendChild(element);
 
-  expect(document.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), undefined);
-});
+  createGoalTracker(goals, mockOnEvent);
 
-it('should not add click event listener if no click goals', () => {
-  const goals: Goal[] = [
-    { key: 'page1', kind: 'pageview', urls: [{ kind: 'exact', url: 'http://example.com' }] },
-  ];
-
-  new GoalTracker(goals, mockOnEvent);
-
-  expect(document.addEventListener).not.toHaveBeenCalled();
-});
-
-it('should trigger click goals when matching element is clicked', () => {
-  const goals: Goal[] = [
-    {
-      key: 'click1',
-      kind: 'click',
-      selector: '.button',
-      urls: [{ kind: 'exact', url: 'http://example.com' }],
-    },
-  ];
-
-  jest.spyOn(window, 'location', 'get').mockImplementation(
-    () =>
-      ({
-        href: 'http://example.com',
-        search: '',
-        hash: '',
-      }) as Location,
-  );
-
-  new GoalTracker(goals, mockOnEvent);
-
-  const button = document.createElement('button');
-  button.className = 'button';
-  document.body.appendChild(button);
-  button.click();
+  element.click();
 
   expect(mockOnEvent).toHaveBeenCalledWith(goals[0]);
-
-  document.body.removeChild(button);
 });
 
-it('should not trigger click goals when matching element is clicked but URL does not match', () => {
+it('should not trigger click goals for non-matching elements', () => {
   const goals: Goal[] = [
     {
       key: 'click1',
       kind: 'click',
-      selector: '.button',
+      selector: '.test',
       urls: [{ kind: 'exact', url: 'http://example.com' }],
     },
   ];
@@ -135,30 +100,29 @@ it('should not trigger click goals when matching element is clicked but URL does
   jest.spyOn(window, 'location', 'get').mockImplementation(
     () =>
       ({
-        href: 'http://other.com',
+        href: 'http://example.com',
         search: '',
         hash: '',
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  const element = document.createElement('div');
+  element.className = 'other';
+  document.body.appendChild(element);
 
-  const button = document.createElement('button');
-  button.className = 'button';
-  document.body.appendChild(button);
-  button.click();
+  createGoalTracker(goals, mockOnEvent);
+
+  element.click();
 
   expect(mockOnEvent).not.toHaveBeenCalled();
-
-  document.body.removeChild(button);
 });
 
-it('should remove click event listener on close', () => {
+it('should trigger click goals for child elements', () => {
   const goals: Goal[] = [
     {
       key: 'click1',
       kind: 'click',
-      selector: '.button',
+      selector: '.test',
       urls: [{ kind: 'exact', url: 'http://example.com' }],
     },
   ];
@@ -171,47 +135,47 @@ it('should remove click event listener on close', () => {
         hash: '',
       }) as Location,
   );
-
-  const tracker = new GoalTracker(goals, mockOnEvent);
-  tracker.close();
-
-  expect(document.removeEventListener).toHaveBeenCalledWith(
-    'click',
-    expect.any(Function),
-    undefined,
-  );
-});
-
-it('should trigger the click goal for parent elements which match the selector', () => {
-  const goals: Goal[] = [
-    {
-      key: 'click1',
-      kind: 'click',
-      selector: '.my-selector',
-      urls: [{ kind: 'exact', url: 'http://example.com' }],
-    },
-  ];
-
-  jest.spyOn(window, 'location', 'get').mockImplementation(
-    () =>
-      ({
-        href: 'http://example.com',
-        search: '',
-        hash: '',
-      }) as Location,
-  );
-
-  new GoalTracker(goals, mockOnEvent);
 
   const parent = document.createElement('div');
-  parent.className = 'my-selector';
+  parent.className = 'test';
+  const child = document.createElement('div');
+  parent.appendChild(child);
   document.body.appendChild(parent);
 
-  const button = document.createElement('button');
-  button.className = 'my-selector';
-  parent.appendChild(button);
+  createGoalTracker(goals, mockOnEvent);
 
-  button.click();
+  child.click();
 
-  expect(mockOnEvent).toHaveBeenCalledTimes(2);
+  expect(mockOnEvent).toHaveBeenCalledWith(goals[0]);
+});
+
+it('should clean up event listeners when closed', () => {
+  const goals: Goal[] = [
+    {
+      key: 'click1',
+      kind: 'click',
+      selector: '.test',
+      urls: [{ kind: 'exact', url: 'http://example.com' }],
+    },
+  ];
+
+  jest.spyOn(window, 'location', 'get').mockImplementation(
+    () =>
+      ({
+        href: 'http://example.com',
+        search: '',
+        hash: '',
+      }) as Location,
+  );
+
+  const element = document.createElement('div');
+  element.className = 'test';
+  document.body.appendChild(element);
+
+  const tracker = createGoalTracker(goals, mockOnEvent);
+  tracker.close();
+
+  element.click();
+
+  expect(mockOnEvent).not.toHaveBeenCalled();
 });

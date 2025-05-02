@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 
 import { LDUnexpectedResponseError, Requests } from '@launchdarkly/js-client-sdk-common';
 
-import GoalManager from '../../src/goals/GoalManager';
+import createGoalManager, { GoalManager } from '../../src/goals/GoalManager';
 import { Goal } from '../../src/goals/Goals';
 import { LocationWatcher } from '../../src/goals/LocationWatcher';
 
@@ -26,7 +26,7 @@ describe('given a GoalManager with mocked dependencies', () => {
       return mockLocationWatcher;
     });
 
-    goalManager = new GoalManager(
+    goalManager = createGoalManager(
       mockCredential,
       mockRequests,
       'polling',
