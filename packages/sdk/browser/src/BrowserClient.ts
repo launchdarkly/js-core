@@ -138,7 +138,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
         baseUrl,
         (err) => {
           // TODO: May need to emit. SDK-561
-          this.logger.error(`Error in goal manager: ${err}`);
+          this.logger.error(err.message);
         },
         (url: string, goal: Goal) => {
           const context = this.getInternalContext();
