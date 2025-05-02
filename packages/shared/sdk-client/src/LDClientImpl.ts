@@ -29,7 +29,7 @@ import {
 } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
-import { AsyncTaskQueue } from './async/AsyncTaskQueue';
+import { createAsyncTaskQueue } from './async/AsyncTaskQueue';
 import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
@@ -74,7 +74,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   protected readonly environmentMetadata: LDPluginEnvironmentMetadata;
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
-  private _identifyQueue: AsyncTaskQueue<void> = new AsyncTaskQueue<void>();
+  private _identifyQueue = createAsyncTaskQueue<void>();
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -252,7 +252,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (result.status === 'error') {
       throw result.error;
     } else if (result.status === 'timeout') {
-      const timeoutError = new LDTimeoutError(`identify timed out after ${result.timeout} seconds.`);
+      const timeoutError = new LDTimeoutError(
+        `identify timed out after ${result.timeout} seconds.`,
+      );
       this.logger.error(timeoutError.message);
       throw timeoutError;
     }
