@@ -252,7 +252,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (result.status === 'error') {
       throw result.error;
     } else if (result.status === 'timeout') {
-      throw new LDTimeoutError(`identify timed out after ${result.timeout} seconds.`);
+      const timeoutError = new LDTimeoutError(`identify timed out after ${result.timeout} seconds.`);
+      this.logger.error(timeoutError.message);
+      throw timeoutError;
     }
     // If completed or shed, then we are done.
   }
