@@ -199,8 +199,8 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     const identifyOptionsWithUpdatedDefaults = {
       ...identifyOptions,
     };
-    if (identifyOptions?.shedable === undefined) {
-      identifyOptionsWithUpdatedDefaults.shedable = true;
+    if (identifyOptions?.sheddable === undefined) {
+      identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
     this._goalManager?.startTracking();
