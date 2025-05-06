@@ -7,4 +7,7 @@ export const setupListeners = (setState: Dispatch<SetStateAction<ReactContext>>,
   jsSdk.on('change', () => {
     setState((prevState) => ({ ...prevState, jsSdk }));
   });
+  jsSdk.on('ready', () => {
+    setState((prevState) => ({ ...prevState, jsSdk }));
+  });
 };
