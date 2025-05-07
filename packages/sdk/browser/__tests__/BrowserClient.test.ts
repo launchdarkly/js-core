@@ -1,4 +1,4 @@
-import { AutoEnvAttributes, LDLogger } from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes, LDLogger, LDSingleKindContext } from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserClient } from '../src/BrowserClient';
 import { makeBasicPlatform } from './BrowserClient.mocks';
@@ -183,5 +183,98 @@ describe('given a mock platform for a BrowserClient', () => {
       value: ['a', 'b', 'c', 'd'],
       variationIndex: 1,
     });
+  });
+
+  it('can shed intermediate identifyResult calls', async () => {
+    const client = new BrowserClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    const promise1 = client.identifyResult({ key: 'user-key-1', kind: 'user' });
+    const promise2 = client.identifyResult({ key: 'user-key-2', kind: 'user' });
+    const promise3 = client.identifyResult({ key: 'user-key-3', kind: 'user' });
+
+    const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
+
+    expect(result1).toEqual({status: "completed"});
+    expect(result2).toEqual({status: "shed"});
+    expect(result3).toEqual({status: "completed"});
+    // With events and goals disabled the only fetch calls should be for polling requests.
+    expect(platform.requests.fetch.mock.calls.length).toBe(2);
+  });
+
+  it('completes identify calls in order', async () => {
+    const order: string[] = [];
+    const client = new BrowserClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false,
+        hooks: [{
+          afterIdentify: (hookContext, data, result) => {
+            if('kind' in hookContext.context && hookContext.context.kind !== 'multi') {
+              order.push((hookContext.context as LDSingleKindContext).key);
+            }
+            return data;
+          },
+          getMetadata: () => ({
+            name: 'test-hook',
+            version: '1.0.0',
+          }),
+        }]
+       },
+      platform,
+    );
+    
+
+
+    const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
+    const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
+    const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
+
+    await Promise.all([promise1, promise2, promise3]);
+    expect(order).toEqual(['user-key-1', 'user-key-3']);
+    
+  });
+
+  it('can shed intermediate identify calls', async () => {
+    const client = new BrowserClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
+    const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
+    const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
+
+    await Promise.all([promise1, promise2, promise3]);
+
+    // With events and goals disabled the only fetch calls should be for polling requests.
+    expect(platform.requests.fetch.mock.calls.length).toBe(2);
+  });
+
+  it('it does not shed non-shedable identify calls', async () => {
+    const client = new BrowserClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    const promise1 = client.identifyResult({ key: 'user-key-1', kind: 'user' }, { sheddable: false });
+    const promise2 = client.identifyResult({ key: 'user-key-2', kind: 'user' }, { sheddable: false });
+    const promise3 = client.identifyResult({ key: 'user-key-3', kind: 'user' }, { sheddable: false });
+
+    const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
+
+    expect(result1).toEqual({status: "completed"});
+    expect(result2).toEqual({status: "completed"});
+    expect(result3).toEqual({status: "completed"});
+    // With events and goals disabled the only fetch calls should be for polling requests.
+    expect(platform.requests.fetch.mock.calls.length).toBe(3);
   });
 });
