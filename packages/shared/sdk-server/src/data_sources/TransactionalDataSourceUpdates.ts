@@ -2,10 +2,10 @@ import { internal } from '@launchdarkly/js-sdk-common';
 
 import { DataKind } from '../api/interfaces';
 import {
-  LDDataSourceUpdates,
   LDFeatureStoreDataStorage,
   LDFeatureStoreItem,
   LDKeyedFeatureStoreItem,
+  LDTransactionalDataSourceUpdates,
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 import { Clause } from '../evaluation/data/Clause';
@@ -61,7 +61,7 @@ function computeDependencies(namespace: string, item: LDFeatureStoreItem) {
 /**
  * @internal
  */
-export default class DataSourceUpdates implements LDDataSourceUpdates {
+export default class TransactionalDataSourceUpdates implements LDTransactionalDataSourceUpdates {
   private readonly _dependencyTracker = new DependencyTracker();
 
   constructor(
