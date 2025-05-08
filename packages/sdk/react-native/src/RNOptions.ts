@@ -1,5 +1,7 @@
 import { ConnectionMode, LDOptions } from '@launchdarkly/js-client-sdk-common';
 
+import { LDPlugin } from './LDPlugin';
+
 /**
  * Interface for providing custom storage implementations for react Native.
  *
@@ -105,6 +107,13 @@ export interface RNSpecificOptions {
    * @defaultValue streaming.
    */
   initialConnectionMode?: ConnectionMode;
+
+  /**
+   * A list of plugins to be used with the SDK.
+   *
+   * Plugin support is currently experimental and subject to change.
+   */
+  plugins?: LDPlugin[];
 }
 
 export default interface RNOptions extends LDOptions, RNSpecificOptions {}

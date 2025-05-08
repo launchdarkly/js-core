@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.6.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.3...js-client-sdk-v0.6.0) (2025-04-29)
+
+
+### Features
+
+* Add client-side SDK plugin support. ([#834](https://github.com/launchdarkly/js-core/issues/834)) ([a843a33](https://github.com/launchdarkly/js-core/commit/a843a33e97dcab706a0034bd1fd1e3d2f78a9262))
+
+
+### Bug Fixes
+
+* Client SDKs should use wrapper information. ([#836](https://github.com/launchdarkly/js-core/issues/836)) ([1e0cf6a](https://github.com/launchdarkly/js-core/commit/1e0cf6a0f77f8cfe6a7a0e675fc6490ea52a5b07))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.12.6 to 1.13.0
+
 ## [0.5.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.2...js-client-sdk-v0.5.3) (2025-04-16)
 
 

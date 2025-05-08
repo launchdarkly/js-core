@@ -38,7 +38,7 @@ jest.mock('../src/platform', () => ({
   __esModule: true,
   default: jest.fn((logger: LDLogger) => ({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: jest.fn(),
       fetch: jest.fn(),
@@ -67,7 +67,7 @@ it('uses correct default diagnostic url', () => {
   };
   (createPlatform as jest.Mock).mockReturnValue({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: jest.fn(),
       fetch: mockedFetch,
@@ -95,7 +95,7 @@ it('uses correct default analytics event url', async () => {
   };
   (createPlatform as jest.Mock).mockReturnValue({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: createMockEventSource,
       fetch: mockedFetch,
@@ -127,7 +127,7 @@ it('uses correct default polling url', async () => {
   };
   (createPlatform as jest.Mock).mockReturnValue({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: jest.fn(),
       fetch: mockedFetch,
@@ -158,7 +158,7 @@ it('uses correct default streaming url', (done) => {
   };
   (createPlatform as jest.Mock).mockReturnValue({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: mockedCreateEventSource,
       fetch: jest.fn(),
@@ -198,7 +198,7 @@ it('includes authorization header for polling', async () => {
   };
   (createPlatform as jest.Mock).mockReturnValue({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: jest.fn(),
       fetch: mockedFetch,
@@ -223,6 +223,41 @@ it('includes authorization header for polling', async () => {
   );
 });
 
+it('includes x-launchdarkly-wrapper header for polling', async () => {
+  const mockedFetch = mockFetch('{"flagA": true}', 200);
+  const logger: LDLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
+  (createPlatform as jest.Mock).mockReturnValue({
+    crypto: new PlatformCrypto(),
+    info: new PlatformInfo(logger, { wrapperName: 'Rapper', wrapperVersion: '1.0.0' }),
+    requests: {
+      createEventSource: jest.fn(),
+      fetch: mockedFetch,
+      getEventSourceCapabilities: jest.fn(),
+    },
+    encoding: new PlatformEncoding(),
+    storage: new PlatformStorage(logger),
+  });
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, {
+    diagnosticOptOut: true,
+    sendEvents: false,
+    initialConnectionMode: 'polling',
+    automaticBackgroundHandling: false,
+  });
+  await client.identify({ kind: 'user', key: 'bob' });
+
+  expect(mockedFetch).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.objectContaining({
+      headers: expect.objectContaining({ 'x-launchdarkly-wrapper': 'Rapper/1.0.0' }),
+    }),
+  );
+});
+
 it('includes authorization header for streaming', (done) => {
   const mockedCreateEventSource = jest.fn();
   const logger: LDLogger = {
@@ -233,7 +268,7 @@ it('includes authorization header for streaming', (done) => {
   };
   (createPlatform as jest.Mock).mockReturnValue({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: mockedCreateEventSource,
       fetch: jest.fn(),
@@ -264,6 +299,47 @@ it('includes authorization header for streaming', (done) => {
     });
 });
 
+it('includes wrapper header for streaming', (done) => {
+  const mockedCreateEventSource = jest.fn();
+  const logger: LDLogger = {
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+    debug: jest.fn(),
+  };
+  (createPlatform as jest.Mock).mockReturnValue({
+    crypto: new PlatformCrypto(),
+    info: new PlatformInfo(logger, { wrapperName: 'Rapper', wrapperVersion: '1.0.0' }),
+    requests: {
+      createEventSource: mockedCreateEventSource,
+      fetch: jest.fn(),
+      getEventSourceCapabilities: jest.fn(),
+    },
+    encoding: new PlatformEncoding(),
+    storage: new PlatformStorage(logger),
+  });
+  const client = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled, {
+    diagnosticOptOut: true,
+    sendEvents: false,
+    initialConnectionMode: 'streaming',
+    automaticBackgroundHandling: false,
+  });
+
+  client
+    .identify({ kind: 'user', key: 'bob' }, { timeout: 0 })
+    .then(() => {})
+    .catch(() => {})
+    .then(() => {
+      expect(mockedCreateEventSource).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          headers: expect.objectContaining({ 'x-launchdarkly-wrapper': 'Rapper/1.0.0' }),
+        }),
+      );
+      done();
+    });
+});
+
 it('includes authorization header for events', async () => {
   const mockedFetch = mockFetch('{"flagA": true}', 200);
   const logger: LDLogger = {
@@ -274,7 +350,7 @@ it('includes authorization header for events', async () => {
   };
   (createPlatform as jest.Mock).mockReturnValue({
     crypto: new PlatformCrypto(),
-    info: new PlatformInfo(logger),
+    info: new PlatformInfo(logger, {}),
     requests: {
       createEventSource: jest.fn(),
       fetch: mockedFetch,

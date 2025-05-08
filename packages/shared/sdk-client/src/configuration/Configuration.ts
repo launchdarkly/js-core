@@ -4,6 +4,7 @@ import {
   internal,
   LDFlagSet,
   LDLogger,
+  LDPluginEnvironmentMetadata,
   NumberWithMinimum,
   OptionMessages,
   SafeLogger,
@@ -19,6 +20,8 @@ const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
 
 export interface LDClientInternalOptions extends internal.LDInternalOptions {
   trackEventModifier?: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
+  getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
+  credentialType: 'clientSideId' | 'mobileKey';
 }
 
 export interface Configuration {
@@ -55,6 +58,8 @@ export interface Configuration {
   readonly trackEventModifier: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
   readonly hooks: Hook[];
   readonly inspectors: LDInspection[];
+  readonly credentialType: 'clientSideId' | 'mobileKey';
+  readonly getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
 }
 
 const DEFAULT_POLLING: string = 'https://clientsdk.launchdarkly.com';
@@ -130,10 +135,21 @@ export default class ConfigurationImpl implements Configuration {
     event: internal.InputCustomEvent,
   ) => internal.InputCustomEvent;
 
+  public readonly credentialType: 'clientSideId' | 'mobileKey';
+  public readonly getImplementationHooks: (
+    environmentMetadata: LDPluginEnvironmentMetadata,
+  ) => Hook[];
+
   // Allow indexing Configuration by a string
   [index: string]: any;
 
-  constructor(pristineOptions: LDOptions = {}, internalOptions: LDClientInternalOptions = {}) {
+  constructor(
+    pristineOptions: LDOptions = {},
+    internalOptions: LDClientInternalOptions = {
+      getImplementationHooks: () => [],
+      credentialType: 'mobileKey',
+    },
+  ) {
     this.logger = ensureSafeLogger(pristineOptions.logger);
     const errors = this._validateTypesAndNames(pristineOptions);
     errors.forEach((e: string) => this.logger.warn(e));
@@ -152,6 +168,9 @@ export default class ConfigurationImpl implements Configuration {
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
     this.userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
     this.trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
+
+    this.credentialType = internalOptions.credentialType;
+    this.getImplementationHooks = internalOptions.getImplementationHooks;
   }
 
   private _validateTypesAndNames(pristineOptions: LDOptions): string[] {

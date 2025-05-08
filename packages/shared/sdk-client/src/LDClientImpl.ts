@@ -10,6 +10,7 @@ import {
   LDFlagValue,
   LDHeaders,
   LDLogger,
+  LDPluginEnvironmentMetadata,
   Platform,
   timedPromise,
   TypeValidators,
@@ -35,10 +36,11 @@ import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
 import InspectorManager from './inspection/InspectorManager';
 import LDEmitter, { EventName } from './LDEmitter';
+import { createPluginEnvironmentMetadata } from './plugins/createPluginEnvironmentMetadata';
 
 const { ClientMessages, ErrorKinds } = internal;
 
-const DEFAULT_IDENIFY_TIMEOUT_SECONDS = 5;
+const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
 export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
@@ -58,6 +60,7 @@ export default class LDClientImpl implements LDClient {
   private _eventSendingEnabled: boolean = false;
   private _baseHeaders: LDHeaders;
   protected dataManager: DataManager;
+  protected readonly environmentMetadata: LDPluginEnvironmentMetadata;
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
 
@@ -127,7 +130,19 @@ export default class LDClientImpl implements LDClient {
       this._diagnosticsManager,
     );
 
-    this._hookRunner = new HookRunner(this.logger, this._config.hooks);
+    const hooks: Hook[] = [...this._config.hooks];
+
+    this.environmentMetadata = createPluginEnvironmentMetadata(
+      this.sdkKey,
+      this.platform,
+      this._config,
+    );
+
+    this._config.getImplementationHooks(this.environmentMetadata).forEach((hook) => {
+      hooks.push(hook);
+    });
+
+    this._hookRunner = new HookRunner(this.logger, hooks);
     this._inspectorManager = new InspectorManager(this._config.inspectors, this.logger);
     if (this._inspectorManager.hasInspectors()) {
       this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
@@ -227,7 +242,7 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENIFY_TIMEOUT_SECONDS;
+    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
     const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
 
     // When noTimeout is specified, and a timeout is not secified, then this condition cannot

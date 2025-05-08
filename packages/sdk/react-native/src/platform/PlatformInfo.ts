@@ -4,7 +4,10 @@ import { name, version } from '../../package.json';
 import { ldApplication, ldDevice } from './autoEnv';
 
 export default class PlatformInfo implements Info {
-  constructor(private readonly _logger: LDLogger) {}
+  constructor(
+    private readonly _logger: LDLogger,
+    private readonly _config: { wrapperName?: string; wrapperVersion?: string },
+  ) {}
 
   platformData(): PlatformData {
     const data = {
@@ -18,11 +21,19 @@ export default class PlatformInfo implements Info {
   }
 
   sdkData(): SdkData {
-    const data = {
+    const data: SdkData = {
       name,
       version,
       userAgentBase: 'ReactNativeClient',
     };
+
+    if (this._config?.wrapperName) {
+      data.wrapperName = this._config.wrapperName;
+    }
+
+    if (this._config?.wrapperVersion) {
+      data.wrapperVersion = this._config.wrapperVersion;
+    }
 
     this._logger.debug(`sdkData: ${JSON.stringify(data, null, 2)}`);
     return data;
