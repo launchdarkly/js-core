@@ -1,13 +1,6 @@
 import { internal } from '@launchdarkly/js-sdk-common';
 
-import { DataKind } from '../interfaces';
-import {
-  LDFeatureStore,
-  LDFeatureStoreDataStorage,
-  LDFeatureStoreItem,
-  LDFeatureStoreKindData,
-  LDKeyedFeatureStoreItem,
-} from './LDFeatureStore';
+import { LDFeatureStore, LDFeatureStoreDataStorage } from './LDFeatureStore';
 
 type InitMetadata = internal.InitMetadata;
 
