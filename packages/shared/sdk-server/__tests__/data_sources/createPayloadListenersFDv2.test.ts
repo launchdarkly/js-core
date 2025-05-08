@@ -80,6 +80,13 @@ const changesTransferPayload = {
   ],
 };
 
+const changesTransferNone = {
+  id: 'payloadID',
+  version: 99,
+  basis: false,
+  updates: [],
+};
+
 describe('createPayloadListenerFDv2', () => {
   let dataSourceUpdates: LDDataSourceUpdates;
   let basisReceived: jest.Mock;
@@ -97,7 +104,7 @@ describe('createPayloadListenerFDv2', () => {
     jest.resetAllMocks();
   });
 
-  test('data source init is called', async () => {
+  test('data source updates called with basis true', async () => {
     const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
     listener(fullTransferPayload);
 
@@ -117,7 +124,7 @@ describe('createPayloadListenerFDv2', () => {
     );
   });
 
-  test('data source upsert is called', async () => {
+  test('data source updates called with basis false', async () => {
     const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
     listener(changesTransferPayload);
 
@@ -148,5 +155,13 @@ describe('createPayloadListenerFDv2', () => {
       basisReceived,
       'changes',
     );
+  });
+
+  test('data source updates not called when basis is false and changes are empty', async () => {
+    const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
+    listener(changesTransferNone);
+
+    expect(logger.debug).toBeCalledWith(expect.stringMatching(/ignoring/i));
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledTimes(0);
   });
 });
