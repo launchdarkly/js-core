@@ -10,6 +10,9 @@ import {
 export default class InMemoryFeatureStore implements LDFeatureStore {
   private _allData: LDFeatureStoreDataStorage = {};
 
+  // this tracks the last received selector, which may not be present
+  private _selector: string | undefined;
+
   private _initCalled = false;
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
@@ -37,7 +40,7 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this.applyChanges(true, allData, undefined, callback);
+    this.applyChanges(true, allData, callback, undefined);
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
@@ -49,8 +52,9 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
           [key]: item,
         },
       },
-      undefined,
       callback,
+      undefined,
+
     );
   }
 
@@ -62,16 +66,16 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
           [data.key]: data,
         },
       },
-      undefined,
       callback,
+      undefined,
     );
   }
 
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
+    selector?: string,
   ): void {
     if (basis) {
       this._initCalled = true;
@@ -106,6 +110,8 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
       this._allData = tempData;
     }
 
+    this._selector = selector;
+
     callback?.();
   }
 
@@ -120,5 +126,9 @@ export default class InMemoryFeatureStore implements LDFeatureStore {
 
   getDescription(): string {
     return 'memory';
+  }
+
+  getSelector(): string | undefined {
+    return this._selector;
   }
 }

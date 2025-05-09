@@ -33,7 +33,7 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
     // adapt to applyChanges for common handling
-    this.applyChanges(true, allData, undefined, callback);
+    this.applyChanges(true, allData, callback, undefined);
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
@@ -46,8 +46,8 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
           [key]: item,
         },
       },
-      undefined,
       callback,
+      undefined,
     );
   }
 
@@ -60,21 +60,26 @@ export default class TransactionalPersistentStore implements LDFeatureStore {
           [data.key]: data,
         },
       },
-      undefined,
       callback,
+      undefined,
     );
   }
 
   applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    selector: String | undefined, // TODO: SDK-1044 - Utilize selector
     callback: () => void,
+    selector?: string,
   ): void {
-    this._memoryStore.applyChanges(basis, data, selector, () => {
-      // TODO: SDK-1047 conditional propgation to persistence based on parameter
-      this._nonTransPersistenceStore.applyChanges(basis, data, selector, callback);
-    });
+    this._memoryStore.applyChanges(
+      basis,
+      data,
+      () => {
+        // TODO: SDK-1047 conditional propgation to persistence based on parameter
+        this._nonTransPersistenceStore.applyChanges(basis, data, callback, selector);
+      },
+      selector,
+    );
 
     if (basis) {
       // basis causes memory store to become the active store

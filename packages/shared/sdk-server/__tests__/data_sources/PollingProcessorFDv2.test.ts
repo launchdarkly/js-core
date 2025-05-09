@@ -130,12 +130,29 @@ describe('given an event processor', () => {
       version: 1,
     });
   });
-});
 
-const allFDv1Data = {
-  flags: { flag: { version: 456 } },
-  segments: { segment: { version: 789 } },
-};
+  it('uses selectorGetter when provided', async () => {
+    processor = new PollingProcessorFDv2(
+      requestor as unknown as Requestor,
+      longInterval,
+      new TestLogger(),
+      true,
+    );
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData));
+    let dataCallback;
+    await new Promise<void>((resolve) => {
+      dataCallback = jest.fn(() => {
+        resolve();
+      });
+
+      processor.start(dataCallback, mockStatusCallback, () => 'mockSelector');
+    });
+
+    expect(requestor.requestAllData).toHaveBeenNthCalledWith(1, expect.anything(), [
+      { key: 'basis', value: 'mockSelector' },
+    ]);
+  });
+});
 
 describe('given a polling processor with a short poll duration', () => {
   const requestor = {

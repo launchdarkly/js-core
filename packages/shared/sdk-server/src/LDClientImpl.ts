@@ -279,7 +279,13 @@ export default class LDClientImpl implements LDClient {
           synchronizers.push(
             () =>
               new PollingProcessorFDv2(
-                new Requestor(config, this._platform.requests, baseHeaders),
+                new Requestor(
+                  config,
+                  this._platform.requests,
+                  baseHeaders,
+                  undefined,
+                  config.logger,
+                ),
                 pollingInterval,
                 config.logger,
               ),
@@ -290,7 +296,13 @@ export default class LDClientImpl implements LDClient {
         const fdv1FallbackSynchronizers = [
           () =>
             new PollingProcessorFDv2(
-              new Requestor(config, this._platform.requests, baseHeaders, "/sdk/latest-all"),
+              new Requestor(
+                config,
+                this._platform.requests,
+                baseHeaders,
+                '/sdk/latest-all',
+                this.logger,
+              ),
               pollingInterval,
               config.logger,
               true,
@@ -312,10 +324,11 @@ export default class LDClientImpl implements LDClient {
             payloadListener(payload);
           },
           (state, err) => {
-            if (state == subsystem.DataSourceState.Closed && err) {
+            if (state === subsystem.DataSourceState.Closed && err) {
               this._dataSourceErrorHandler(err);
             }
           },
+          () => featureStore.getSelector?.(),
         );
       }
     } else {
