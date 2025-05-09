@@ -143,6 +143,30 @@ describe('given a stream processor with mock event source', () => {
     );
   });
 
+  it('uses selector when provided', () => {
+    streamingProcessor = new StreamingProcessorFDv2(
+      {
+        basicConfiguration: getBasicConfiguration(logger),
+        platform: basicPlatform,
+      },
+      '/sdk/stream',
+      [],
+      {
+        authorization: 'my-sdk-key',
+        'user-agent': 'TestUserAgent/2.0.2',
+        'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+      },
+      diagnosticsManager,
+      22,
+    );
+    streamingProcessor.start(jest.fn(), jest.fn(), () => 'mockSelector');
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/sdk/stream?basis=mockSelector`,
+      expect.anything(),
+    );
+  });
+
   it('sets streamInitialReconnectDelay correctly', () => {
     streamingProcessor = new StreamingProcessorFDv2(
       {
