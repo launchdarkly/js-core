@@ -16,10 +16,12 @@ export interface DataSource {
    * @param dataCallback that will be called when data arrives, may be called multiple times.
    * @param statusCallback that will be called when data source state changes or an unrecoverable error
    * has been encountered.
+   * @param selectorGetter that can be invoked to provide the FDv2 selector/basis if one exists
    */
   start(
     dataCallback: (basis: boolean, data: any) => void,
     statusCallback: (status: DataSourceState, err?: any) => void,
+    selectorGetter?: () => string | undefined,
   ): void;
 
   /**

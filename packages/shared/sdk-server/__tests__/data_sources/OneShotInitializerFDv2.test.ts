@@ -11,7 +11,7 @@ describe('given a one shot initializer', () => {
     events: [
       {
         event: 'server-intent',
-        data: { payloads: [{ code: 'xfer-full', id: 'mockId' }] },
+        data: { payloads: [{ intentCode: 'xfer-full', id: 'mockId' }] },
       },
       {
         event: 'put-object',

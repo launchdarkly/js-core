@@ -14,6 +14,9 @@ type InitMetadata = internal.InitMetadata;
 export default class InMemoryFeatureStore implements LDTransactionalFeatureStore {
   private _allData: LDFeatureStoreDataStorage = {};
 
+  // this tracks the last received selector, which may not be present
+  private _selector: string | undefined;
+
   private _initCalled = false;
 
   private _initMetadata?: InitMetadata;
@@ -80,7 +83,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
     data: LDFeatureStoreDataStorage,
     callback: () => void,
     initMetadata?: InitMetadata,
-    _selector?: String, // TODO: SDK-1044 - Utilize selector
+    selector?: string,
   ): void {
     if (basis) {
       this._initCalled = true;
@@ -116,6 +119,8 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
       this._allData = tempData;
     }
 
+    this._selector = selector;
+
     callback?.();
   }
 
@@ -134,5 +139,9 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
 
   getInitMetaData(): InitMetadata | undefined {
     return this._initMetadata;
+  }
+
+  getSelector(): string | undefined {
+    return this._selector;
   }
 }

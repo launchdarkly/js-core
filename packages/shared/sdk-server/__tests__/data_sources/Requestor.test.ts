@@ -98,6 +98,25 @@ describe('given a requestor', () => {
     });
   });
 
+  it('includes basis query param when provided', (done) => {
+    testResponse = 'a response';
+    requestor.requestAllData(
+      (err, body) => {
+        expect(err).toBeUndefined();
+        expect(body).toEqual(testResponse);
+
+        expect(requestsMade.length).toBe(1);
+        expect(requestsMade[0].url).toBe(
+          'https://sdk.launchdarkly.com/sdk/latest-all?basis=bogusSelector',
+        );
+        expect(requestsMade[0].options.headers?.authorization).toBe('sdkKey');
+
+        done();
+      },
+      [{ key: 'basis', value: 'bogusSelector' }],
+    );
+  });
+
   it('returns an error result for an http error', (done) => {
     testStatus = 401;
     requestor.requestAllData((err, _body) => {
