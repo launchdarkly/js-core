@@ -28,7 +28,9 @@ runs:
       run: |
         brotli ${{ inputs.target_file }}
         export PACK_SIZE=$(stat -c %s ${{ inputs.target_file }}.br)
+        export RAW_SIZE=$(stat -c %s ${{ inputs.target_file }})
         echo "PACK_SIZE=$PACK_SIZE" >> $GITHUB_ENV
+        echo "RAW_SIZE=$RAW_SIZE" >> $GITHUB_ENV
 
     - name: Find Size Comment
       # Only do commenting on non-forks. A fork does not have permissions for comments.
@@ -48,8 +50,9 @@ runs:
         body: |
           ${{ inputs.package_name }} size report
           This is the brotli compressed size of the ESM build.
-          Size: ${{ env.PACK_SIZE }} bytes
-          Size limit: ${{ inputs.size_limit }}
+          Compressed size: ${{ env.PACK_SIZE }} bytes
+          Compressed size limit: ${{ inputs.size_limit }}
+          Uncompressed size: ${{ env.RAW_SIZE }} bytes
 
     - name: Update comment
       if: steps.fc.outputs.comment-id != '' && github.event.pull_request.head.repo.full_name == github.repository
@@ -60,9 +63,9 @@ runs:
         body: |
           ${{ inputs.package_name }} size report
           This is the brotli compressed size of the ESM build.
-          Size: ${{ env.PACK_SIZE }} bytes
-          Size limit: ${{ inputs.size_limit }}
-
+          Compressed size: ${{ env.PACK_SIZE }} bytes
+          Compressed size limit: ${{ inputs.size_limit }}
+          Uncompressed size: ${{ env.RAW_SIZE }} bytes
     - name: Check package size limit
       shell: bash
       run: |

@@ -1,9 +1,9 @@
-import { AsyncTaskQueue } from '../../src/async/AsyncTaskQueue';
+import { createAsyncTaskQueue } from '../../src/async/AsyncTaskQueue';
 
 it.each([true, false])(
   'executes the initial task it is given: sheddable: %s',
   async (sheddable) => {
-    const queue = new AsyncTaskQueue<string>();
+    const queue = createAsyncTaskQueue<string>();
     const task = jest.fn().mockResolvedValue('test');
     const result = await queue.execute(task, sheddable);
     expect(queue.pendingCount()).toBe(0);
@@ -18,7 +18,7 @@ it.each([true, false])(
 it.each([true, false])(
   'executes the next task in the queue when the previous task completes: sheddable: %s',
   async (sheddable) => {
-    const queue = new AsyncTaskQueue<string>();
+    const queue = createAsyncTaskQueue<string>();
     const task1 = jest.fn().mockResolvedValue('test1');
     const task2 = jest.fn().mockResolvedValue('test2');
     const promise1 = queue.execute(task1, sheddable);
@@ -41,7 +41,7 @@ it.each([true, false])(
 );
 
 it('can shed pending sheddable tasks', async () => {
-  const queue = new AsyncTaskQueue<string>();
+  const queue = createAsyncTaskQueue<string>();
   const task1 = jest.fn().mockResolvedValue('test1');
   const task2 = jest.fn().mockResolvedValue('test2');
   const task3 = jest.fn().mockResolvedValue('test3');
@@ -67,7 +67,7 @@ it('can shed pending sheddable tasks', async () => {
 });
 
 it('does not shed pending non-sheddable tasks', async () => {
-  const queue = new AsyncTaskQueue<string>();
+  const queue = createAsyncTaskQueue<string>();
   const task1 = jest.fn().mockResolvedValue('test1');
   const task2 = jest.fn().mockResolvedValue('test2');
   const task3 = jest.fn().mockResolvedValue('test3');
@@ -94,7 +94,7 @@ it('does not shed pending non-sheddable tasks', async () => {
 });
 
 it('can handle errors from tasks', async () => {
-  const queue = new AsyncTaskQueue<string>();
+  const queue = createAsyncTaskQueue<string>();
   const task1 = jest.fn().mockRejectedValue(new Error('test'));
   const task2 = jest.fn().mockResolvedValue('test2');
   const promise1 = queue.execute(task1, true);
@@ -113,7 +113,7 @@ it('can handle errors from tasks', async () => {
 });
 
 it('handles mix of sheddable and non-sheddable tasks correctly', async () => {
-  const queue = new AsyncTaskQueue<string>();
+  const queue = createAsyncTaskQueue<string>();
   const task1 = jest.fn().mockResolvedValue('test1');
   const task2 = jest.fn().mockResolvedValue('test2');
   const task3 = jest.fn().mockResolvedValue('test3');
@@ -162,7 +162,7 @@ it('handles mix of sheddable and non-sheddable tasks correctly', async () => {
 });
 
 it('executes tasks in order regardless of time to complete', async () => {
-  const queue = new AsyncTaskQueue<string>();
+  const queue = createAsyncTaskQueue<string>();
   const timedPromise = (ms: number) =>
     new Promise((resolve) => {
       setTimeout(resolve, ms);
