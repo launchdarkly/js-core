@@ -3,6 +3,7 @@ import { CompositeDataSource } from './CompositeDataSource';
 import { DataSourceErrorKind } from './DataSourceErrorKinds';
 import {
   LDFileDataSourceError,
+  LDFlagDeliveryFallbackError,
   LDPollingError,
   LDStreamingError,
   StreamingErrorHandler,
@@ -14,6 +15,7 @@ export {
   DefaultBackoff,
   DataSourceErrorKind,
   LDFileDataSourceError,
+  LDFlagDeliveryFallbackError,
   LDPollingError,
   LDStreamingError,
   StreamingErrorHandler,

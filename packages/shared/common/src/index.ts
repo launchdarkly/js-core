@@ -7,6 +7,7 @@ import {
   DataSourceErrorKind,
   DefaultBackoff,
   LDFileDataSourceError,
+  LDFlagDeliveryFallbackError,
   LDPollingError,
   LDStreamingError,
   StreamingErrorHandler,
@@ -33,4 +34,5 @@ export {
   LDStreamingError,
   StreamingErrorHandler,
   LDFileDataSourceError,
+  LDFlagDeliveryFallbackError,
 };

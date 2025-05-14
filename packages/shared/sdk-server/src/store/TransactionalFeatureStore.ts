@@ -70,31 +70,37 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     basis: boolean,
     data: LDFeatureStoreDataStorage,
     callback: () => void,
-    _initMetadata?: internal.InitMetadata,
-    _selector?: String, // TODO: SDK-1044 - Utilize selector
+    initMetadata?: internal.InitMetadata,
+    selector?: string,
   ): void {
-    this._memoryStore.applyChanges(basis, data, () => {
-      // TODO: SDK-1047 conditional propgation to persistence based on parameter
-      if (basis) {
-        // basis causes memory store to become the active store
-        this._activeStore = this._memoryStore;
+    this._memoryStore.applyChanges(
+      basis,
+      data,
+      () => {
+        // TODO: SDK-1047 conditional propgation to persistence based on parameter
+        if (basis) {
+          // basis causes memory store to become the active store
+          this._activeStore = this._memoryStore;
 
-        this._nonTransPersistenceStore.init(data, callback);
-      } else {
-        const promises: Promise<void>[] = [];
-        Object.entries(data).forEach(([namespace, items]) => {
-          Object.keys(items || {}).forEach((key) => {
-            const item = items[key];
-            promises.push(
-              new Promise<void>((resolve) => {
-                this._nonTransPersistenceStore.upsert({ namespace }, { key, ...item }, resolve);
-              }),
-            );
+          this._nonTransPersistenceStore.init(data, callback);
+        } else {
+          const promises: Promise<void>[] = [];
+          Object.entries(data).forEach(([namespace, items]) => {
+            Object.keys(items || {}).forEach((key) => {
+              const item = items[key];
+              promises.push(
+                new Promise<void>((resolve) => {
+                  this._nonTransPersistenceStore.upsert({ namespace }, { key, ...item }, resolve);
+                }),
+              );
+            });
           });
-        });
-        Promise.all(promises).then(callback);
-      }
-    });
+          Promise.all(promises).then(callback);
+        }
+      },
+      initMetadata,
+      selector,
+    );
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {

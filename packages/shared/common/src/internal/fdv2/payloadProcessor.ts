@@ -137,7 +137,7 @@ export class PayloadProcessor {
     // at the time of writing this, it was agreed upon that SDKs could assume exactly 1 element in this list.  In the future, a negotiation of protocol version will be required to remove this assumption.
     const payload = data.payloads[0];
 
-    switch (payload?.code) {
+    switch (payload?.intentCode) {
       case 'xfer-full':
         this._tempBasis = true;
         break;
@@ -150,6 +150,7 @@ export class PayloadProcessor {
         break;
       default:
         // unrecognized intent code, return
+        this._logger?.warn(`Unable to process intent code '${payload?.intentCode}'.`);
         return;
     }
 

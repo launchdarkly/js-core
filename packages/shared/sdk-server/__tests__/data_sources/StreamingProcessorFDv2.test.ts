@@ -34,7 +34,7 @@ const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
 const events = {
   'server-intent': {
-    data: '{"payloads": [{"code": "xfer-full", "id": "mockId"}]}',
+    data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
   },
   'put-object': {
     data: '{"kind": "flag", "key": "flagA", "version": 123, "object": {"objectFieldA": "objectValueA"}}',
@@ -139,6 +139,30 @@ describe('given a stream processor with mock event source', () => {
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
       },
+    );
+  });
+
+  it('uses selector when provided', () => {
+    streamingProcessor = new StreamingProcessorFDv2(
+      {
+        basicConfiguration: getBasicConfiguration(logger),
+        platform: basicPlatform,
+      },
+      '/all',
+      [],
+      {
+        authorization: 'my-sdk-key',
+        'user-agent': 'TestUserAgent/2.0.2',
+        'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+      },
+      diagnosticsManager,
+      22,
+    );
+    streamingProcessor.start(jest.fn(), jest.fn(), () => 'mockSelector');
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      `${serviceEndpoints.streaming}/all?basis=mockSelector`,
+      expect.anything(),
     );
   });
 

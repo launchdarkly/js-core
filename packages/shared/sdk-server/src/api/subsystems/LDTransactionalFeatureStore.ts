@@ -30,4 +30,9 @@ export interface LDTransactionalFeatureStore extends LDFeatureStore {
     initMetadata?: internal.InitMetadata,
     selector?: String,
   ): void;
+
+  /**
+   * Gets the selector for the currently stored data.
+   */
+  getSelector?(): string | undefined;
 }

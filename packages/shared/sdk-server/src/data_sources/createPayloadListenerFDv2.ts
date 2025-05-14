@@ -1,10 +1,6 @@
 import { internal, LDLogger, VoidFunction } from '@launchdarkly/js-sdk-common';
 
-import {
-  LDDataSourceUpdates,
-  LDFeatureStoreDataStorage,
-  LDKeyedFeatureStoreItem,
-} from '../api/subsystems';
+import { LDFeatureStoreDataStorage, LDTransactionalDataSourceUpdates } from '../api/subsystems';
 
 const namespaceForKind = (kind: string) => {
   switch (kind) {
@@ -19,58 +15,55 @@ const namespaceForKind = (kind: string) => {
 
 export const createPayloadListener =
   (
-    dataSourceUpdates: LDDataSourceUpdates,
+    dataSourceUpdates: LDTransactionalDataSourceUpdates,
     logger?: LDLogger,
     basisReceived: VoidFunction = () => {},
   ) =>
   (payload: internal.Payload) => {
-    // This conversion from FDv2 updates to the existing types used with DataSourceUpdates should be temporary.  Eventually
-    // DataSourceUpdates will support update(...) taking in the list of updates.
     if (payload.basis) {
-      // convert basis to init param structure
-      // TODO: SDK-850 - remove conversion as part of FDv2 Persistence work
-      const converted: LDFeatureStoreDataStorage = {};
-      payload.updates.forEach((it: internal.Update) => {
-        const namespace = namespaceForKind(it.kind);
-        if (converted[namespace]) {
-          // entry for kind already exists, add key
-          converted[namespace][it.key] = {
-            version: it.version,
-            deleted: it.deleted,
-            ...it.object,
-          };
-        } else {
-          // entry for kind doesn't exist, add kind and key
-          converted[namespace] = {
-            [it.key]: {
-              version: it.version,
-              deleted: it.deleted,
-              ...it.object,
-            },
-          };
-        }
-      });
-
       logger?.debug('Initializing all data');
-      dataSourceUpdates.init(converted, basisReceived);
+    } else if (payload.updates.length > 0) {
+      logger?.debug('Applying updates');
     } else {
-      // convert data to upsert param
-      // TODO: SDK-850 - remove conversion as part of FDv2 Persistence work
-      payload.updates.forEach((it: internal.Update) => {
-        const converted: LDKeyedFeatureStoreItem = {
-          key: it.key,
+      logger?.debug('Payload had no updates, ignoring.');
+      return;
+    }
+
+    // convert to LDFeatureStoreDataStorage structure
+    const converted: LDFeatureStoreDataStorage = {};
+    payload.updates.forEach((it: internal.Update) => {
+      const namespace = namespaceForKind(it.kind);
+      if (converted[namespace]) {
+        // entry for kind already exists, add key
+        converted[namespace][it.key] = {
           version: it.version,
-          deleted: it.deleted,
+          ...(it.deleted && { deleted: it.deleted }),
           ...it.object,
         };
+      } else {
+        // entry for kind doesn't exist, add kind and key
+        converted[namespace] = {
+          [it.key]: {
+            version: it.version,
+            ...(it.deleted && { deleted: it.deleted }),
+            ...it.object,
+          },
+        };
+      }
 
-        if (it.deleted) {
-          logger?.debug(`Deleting ${it.key} in ${it.kind}`);
-        } else {
-          logger?.debug(`Updating ${it.key} in ${it.kind}`);
-        }
+      if (it.deleted) {
+        logger?.debug(`Deleting ${it.key} in ${it.kind}`);
+      } else {
+        logger?.debug(`Updating ${it.key} in ${it.kind}`);
+      }
+    });
 
-        dataSourceUpdates.upsert({ namespace: namespaceForKind(it.kind) }, converted, () => {});
-      });
-    }
+    // TODO: SDK-1209 - SUpport initMetadata in FDv2 datasources
+    dataSourceUpdates.applyChanges(
+      payload.basis,
+      converted,
+      basisReceived,
+      undefined,
+      payload.state,
+    );
   };
