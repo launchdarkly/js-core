@@ -139,15 +139,6 @@ If you need to get all flag values you can use the `flags` object. The `flags` o
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
 
-[browser-sdk-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/browser.yml/badge.svg
-[browser-sdk-ci]: https://github.com/launchdarkly/js-core/actions/workflows/browser.yml
-[browser-sdk-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/js-client-sdk.svg?style=flat-square
-[browser-sdk-npm-link]: https://www.npmjs.com/package/@launchdarkly/js-client-sdk
-[browser-sdk-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[browser-sdk-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/browser/docs/
-[browser-sdk-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/js-client-sdk.svg?style=flat-square
-[browser-sdk-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/js-client-sdk.svg?style=flat-square
-
 ## Credits
 
 - Original Svelte SDK code contributed by [Robinson Marquez](https://github.com/nosnibor89)
