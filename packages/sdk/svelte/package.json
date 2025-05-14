@@ -38,10 +38,11 @@
     "lint": "eslint . --ext .ts,.tsx",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "check": "yarn prettier && yarn lint && yarn build && yarn test",
-    "test": "playwright test",
-    "test:unit": "vitest",
-    "test:unit-ui": "vitest --ui",
-    "test:unit-coverage": "vitest --coverage"
+    "test": "vitest run",
+    "test:dev": "vitest dev",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test"
   },
   "peerDependencies": {
     "svelte": "^4.0.0"

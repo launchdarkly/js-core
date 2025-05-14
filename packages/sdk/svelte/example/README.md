@@ -1,12 +1,16 @@
-# LaunchDarkly Svelte SDK Example
+# LaunchDarkly Svelte Client SDK Example
 
-This project demonstrates the usage of the `@launchdarkly/svelte-client-sdk`. It showcases how to conditionally render content based on feature flags using the `LDFlag` component.
+This example project demonstrates the usage of the `@launchdarkly/svelte-client-sdk`. It showcases how to conditionally render content based on feature flags using the `LDFlag` component.
 
 ## Installing Dependencies and Setting Environment Variables
 
 First, install the project dependencies:
 
 ```bash
+# npm
+npm install
+
+# yarn
 yarn install
 ```
 
@@ -24,6 +28,10 @@ Note: The flag specified by `PUBLIC_LD_FLAG_KEY` must be a boolean flag.
 To run the project, use the following command:
 
 ```bash
+# npm
+npm run dev
+
+# yarn
 yarn dev
 ```
 
