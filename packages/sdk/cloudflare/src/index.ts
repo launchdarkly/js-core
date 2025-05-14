@@ -21,22 +21,36 @@ import {
 
 import createPlatformInfo from './createPlatformInfo';
 
-export * from '@launchdarkly/js-server-sdk-common-edge';
+export {
+  createMigration,
+  type Cache,
+  EdgeFeatureStore,
+  type EdgeProvider,
+  integrations,
+  type LDClient,
+  type LDContext,
+  type LDEvaluationDetail,
+  type LDEvaluationDetailTyped,
+  type LDMigration,
+  LDMigrationStage,
+  type LDMigrationOptions,
+  type LDMigrationOpEvent,
+  type LDMigrationVariation,
+  type LDWaitForInitializationOptions,
+} from '@launchdarkly/js-server-sdk-common-edge';
 
 export type TtlCacheOptions = internalServer.TtlCacheOptions;
 
 /**
  * The Launchdarkly Edge SDKs configuration options.
  */
-type LDOptions = {
+export type LDOptions = {
   /**
    * Optional TTL cache configuration which allows for caching feature flags in
    * memory.
    */
   cache?: TtlCacheOptions;
 } & LDOptionsCommon;
-
-export type { LDClient };
 
 /**
  * Creates an instance of the Cloudflare LaunchDarkly client.
