@@ -181,8 +181,8 @@ export interface Hook {
   beforeIdentify?(hookContext: IdentifySeriesContext, data: IdentifySeriesData): IdentifySeriesData;
 
   /**
-   * This method is called during the execution of the identify process before the operation
-   * completes, but after any context modifications are performed.
+   * This method is called during the execution of the identify process, after the operation
+   * completes.
    *
    * @param hookContext Contains information about the evaluation being performed. This is not
    *  mutable.
