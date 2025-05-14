@@ -3,6 +3,7 @@ import { LDClientContext, LDLogger, subsystem, VoidFunction } from '@launchdarkl
 import { Hook } from '../integrations/Hook';
 import { LDDataSourceUpdates, LDFeatureStore } from '../subsystems';
 import { LDBigSegmentsOptions } from './LDBigSegmentsOptions';
+import { LDDataSystemOptions } from './LDDataSystemOptions';
 import { LDProxyOptions } from './LDProxyOptions';
 import { LDTLSOptions } from './LDTLSOptions';
 
@@ -60,6 +61,8 @@ export interface LDOptions {
   /**
    * A component that stores feature flags and related data received from LaunchDarkly.
    *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
+   *
    * By default, this is an in-memory data structure. Database integrations are also
    * available, as described in the
    * [SDK features guide](https://docs.launchdarkly.com/sdk/concepts/data-stores).
@@ -69,6 +72,41 @@ export interface LDOptions {
    * configuration; this property accepts either.
    */
   featureStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
+
+  /**
+   * @experimental
+   * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
+   * versioning.  It is not suitable for production usage.
+   *
+   * Configuration options for the Data System that the SDK uses to get and maintain flags and other
+   * data from LaunchDarkly and other sources.
+   *
+   * Setting this option supersedes
+   *
+   * Example (Recommended):
+   * ```typescript
+   * let dataSystemOptions = {
+   *     dataSource: {
+   *         type: 'standard';
+   *         // options can be customized here, though defaults are recommended
+   *     },
+   * }
+   *
+   * Example (Polling with DynamoDB Persistent Store):
+   * ```typescript
+   * import { DynamoDBFeatureStore } from '@launchdarkly/node-server-sdk-dynamodb';
+   *
+   * let dataSystemOptions = {
+   *     dataSource: {
+   *         type: 'pollingOnly';
+   *         pollInterval: 300;
+   *     },
+   *     persistentStore: DynamoDBFeatureStore('your-table', { cacheTTL: 30 });
+   * }
+   * const client = init('my-sdk-key', { hooks: [new TracingHook()] });
+   * ```
+   */
+  dataSystem?: LDDataSystemOptions;
 
   /**
    * Additional parameters for configuring the SDK's Big Segments behavior.
@@ -86,7 +124,7 @@ export interface LDOptions {
   /**
    * A component that obtains feature flag data and puts it in the feature store.
    *
-   * By default, this is the client's default streaming or polling component.
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
    */
   updateProcessor?:
     | object
@@ -104,6 +142,8 @@ export interface LDOptions {
 
   /**
    * The time between polling requests, in seconds. Ignored in streaming mode.
+   *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
    */
   pollInterval?: number;
 
@@ -120,6 +160,8 @@ export interface LDOptions {
   /**
    * Whether streaming mode should be used to receive flag updates.
    *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
+   *
    * This is true by default. If you set it to false, the client will use polling.
    * Streaming should only be disabled on the advice of LaunchDarkly support.
    */
@@ -127,6 +169,8 @@ export interface LDOptions {
 
   /**
    * Sets the initial reconnect delay for the streaming connection, in seconds.
+   *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
    *
    * The streaming service uses a backoff algorithm (with jitter) every time the connection needs
    * to be reestablished. The delay for the first reconnection will start near this value, and then
@@ -138,6 +182,8 @@ export interface LDOptions {
 
   /**
    * Whether you are using the LaunchDarkly relay proxy in daemon mode.
+   *
+   * If you specify the {@link LDOptions#dataSystem}, this setting will be ignored.
    *
    * In this configuration, the client will not connect to LaunchDarkly to get feature flags,
    * but will instead get feature state from a database (Redis or another supported feature
@@ -151,7 +197,7 @@ export interface LDOptions {
   sendEvents?: boolean;
 
   /**
-   * Whether all context attributes (except the contexy key) should be marked as private, and
+   * Whether all context attributes (except the context key) should be marked as private, and
    * not sent to LaunchDarkly.
    *
    * By default, this is false.

@@ -2,6 +2,7 @@ import { LDLogger, subsystem } from '@launchdarkly/js-sdk-common';
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
 import { Hook } from '../api/integrations';
+import { LDDataSystemOptions } from '../api/options/LDDataSystemOptions';
 import { LDFeatureStore } from '../api/subsystems';
 
 /**
@@ -30,6 +31,7 @@ export interface ValidatedOptions {
   diagnosticOptOut: boolean;
   diagnosticRecordingInterval: number;
   featureStore: LDFeatureStore | ((options: LDOptions) => LDFeatureStore);
+  dataSystem: LDDataSystemOptions;
   tlsParams?: LDTLSOptions;
   updateProcessor?: subsystem.LDStreamProcessor;
   wrapperName?: string;
