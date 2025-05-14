@@ -6,6 +6,10 @@ import { LDFeatureStoreDataStorage } from './LDFeatureStore';
 type InitMetadata = internal.InitMetadata;
 
 /**
+ * @experimental
+ * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
+ * versioning.  It is not suitable for production usage.
+ *
  * Transactional version of {@link LDDataSourceUpdates} with support for {@link applyChanges}
  */
 export interface LDTransactionalDataSourceUpdates extends LDDataSourceUpdates {
