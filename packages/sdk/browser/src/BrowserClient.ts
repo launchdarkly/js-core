@@ -19,7 +19,7 @@ import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { registerStateDetection } from './BrowserStateDetector';
-import GoalManager from './goals/GoalManager';
+import createGoalManager, { GoalManager } from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import { LDClient } from './LDClient';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
@@ -132,7 +132,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     this.setEventSendingEnabled(true, false);
 
     if (validatedBrowserOptions.fetchGoals) {
-      this._goalManager = new GoalManager(
+      this._goalManager = createGoalManager(
         clientSideId,
         platform.requests,
         baseUrl,

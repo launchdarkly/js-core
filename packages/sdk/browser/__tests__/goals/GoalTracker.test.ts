@@ -5,7 +5,7 @@
 import { jest } from '@jest/globals';
 
 import { Goal } from '../../src/goals/Goals';
-import GoalTracker from '../../src/goals/GoalTracker';
+import createGoalTracker from '../../src/goals/GoalTracker';
 
 let mockOnEvent: jest.Mock;
 
@@ -33,7 +33,7 @@ it('should trigger pageview goals on initialization', () => {
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   expect(mockOnEvent).toHaveBeenCalledWith(goals[0]);
 });
@@ -52,7 +52,7 @@ it('should not trigger pageview goals for non-matching URLs', () => {
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   expect(mockOnEvent).not.toHaveBeenCalled();
 });
@@ -76,7 +76,7 @@ it('should add click event listener for click goals', () => {
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   expect(document.addEventListener).toHaveBeenCalledWith('click', expect.any(Function), undefined);
 });
@@ -86,7 +86,7 @@ it('should not add click event listener if no click goals', () => {
     { key: 'page1', kind: 'pageview', urls: [{ kind: 'exact', url: 'http://example.com' }] },
   ];
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   expect(document.addEventListener).not.toHaveBeenCalled();
 });
@@ -110,7 +110,7 @@ it('should trigger click goals when matching element is clicked', () => {
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   const button = document.createElement('button');
   button.className = 'button';
@@ -141,7 +141,7 @@ it('should not trigger click goals when matching element is clicked but URL does
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   const button = document.createElement('button');
   button.className = 'button';
@@ -172,7 +172,7 @@ it('should remove click event listener on close', () => {
       }) as Location,
   );
 
-  const tracker = new GoalTracker(goals, mockOnEvent);
+  const tracker = createGoalTracker(goals, mockOnEvent);
   tracker.close();
 
   expect(document.removeEventListener).toHaveBeenCalledWith(
@@ -201,7 +201,7 @@ it('should trigger the click goal for parent elements which match the selector',
       }) as Location,
   );
 
-  new GoalTracker(goals, mockOnEvent);
+  createGoalTracker(goals, mockOnEvent);
 
   const parent = document.createElement('div');
   parent.className = 'my-selector';

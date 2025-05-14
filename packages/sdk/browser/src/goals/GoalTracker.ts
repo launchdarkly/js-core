@@ -66,39 +66,41 @@ function findGoalsForClick(event: Event, clickGoals: ClickGoal[]) {
   return matches;
 }
 
+export interface GoalTracker {
+  close: () => void;
+}
+
 /**
- * Tracks the goals on an individual "page" (combination of route, query params, and hash).
+ * Creates a goal tracker for an individual "page" (combination of route, query params, and hash).
  */
-export default class GoalTracker {
-  private _cleanup?: () => void;
-  constructor(goals: Goal[], onEvent: EventHandler) {
-    const goalsMatchingUrl = goals.filter((goal) =>
-      goal.urls?.some((matcher) =>
-        matchesUrl(matcher, getHref(), getLocationSearch(), getLocationHash()),
-      ),
-    );
+export default function createGoalTracker(goals: Goal[], onEvent: EventHandler): GoalTracker {
+  let cleanup: (() => void) | undefined;
 
-    const pageviewGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'pageview');
-    const clickGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'click') as ClickGoal[];
+  const goalsMatchingUrl = goals.filter((goal) =>
+    goal.urls?.some((matcher) =>
+      matchesUrl(matcher, getHref(), getLocationSearch(), getLocationHash()),
+    ),
+  );
 
-    pageviewGoals.forEach((event) => onEvent(event));
+  const pageviewGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'pageview');
+  const clickGoals = goalsMatchingUrl.filter((goal) => goal.kind === 'click') as ClickGoal[];
 
-    if (clickGoals.length) {
-      // Click handler is not a member function in order to avoid having to bind it for the event
-      // handler and then track a reference to that bound handler.
-      const clickHandler = (event: Event) => {
-        findGoalsForClick(event, clickGoals).forEach((clickGoal) => {
-          onEvent(clickGoal);
-        });
-      };
-      this._cleanup = addDocumentEventListener('click', clickHandler);
-    }
+  pageviewGoals.forEach((event) => onEvent(event));
+
+  if (clickGoals.length) {
+    // Click handler is not a member function in order to avoid having to bind it for the event
+    // handler and then track a reference to that bound handler.
+    const clickHandler = (event: Event) => {
+      findGoalsForClick(event, clickGoals).forEach((clickGoal) => {
+        onEvent(clickGoal);
+      });
+    };
+    cleanup = addDocumentEventListener('click', clickHandler);
   }
 
-  /**
-   * Close the tracker which stops listening to any events.
-   */
-  close() {
-    this._cleanup?.();
-  }
+  return {
+    close: () => {
+      cleanup?.();
+    },
+  };
 }
