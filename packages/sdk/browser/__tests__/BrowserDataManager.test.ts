@@ -95,6 +95,8 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       trackEventModifier: (event) => event,
       hooks: [],
       inspectors: [],
+      getImplementationHooks: () => [],
+      credentialType: 'clientSideId',
     };
     const mockedFetch = mockFetch('{"flagA": true}', 200);
     platform = {
@@ -102,7 +104,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         createHash: () => new MockHasher(),
         randomUUID: () => '123',
       },
-      info: new BrowserInfo(),
+      info: new BrowserInfo({}),
       requests: {
         createEventSource: jest.fn((streamUri: string = '', options: any = {}) => ({
           streamUri,

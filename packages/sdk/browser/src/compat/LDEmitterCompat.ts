@@ -1,6 +1,6 @@
 import { LDEmitterEventName } from '@launchdarkly/js-client-sdk-common';
 
-import { LDClient } from '../BrowserClient';
+import { LDClient } from '../LDClient';
 
 type CompatOnlyEvents = 'ready' | 'failed' | 'initialized';
 export type CompatEventName = LDEmitterEventName | CompatOnlyEvents;

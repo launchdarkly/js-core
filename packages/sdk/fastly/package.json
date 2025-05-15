@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/fastly-server-sdk",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "packageManager": "yarn@3.4.1",
   "description": "Fastly LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/fastly",
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@fastly/js-compute": "^3.30.1",
-    "@launchdarkly/js-server-sdk-common": "2.15.0",
+    "@launchdarkly/js-server-sdk-common": "2.15.1",
     "crypto-js": "^4.2.0"
   },
   "devDependencies": {

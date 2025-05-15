@@ -35,7 +35,7 @@ describe.each([
     expect(summaries).toHaveLength(1);
   });
 
-  it('uses existing summarizer for same context hash', async () => {
+it('uses existing summarizer for same context hash', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'user1' });
     const event1 = new InputEvalEvent(true, context, 'flag-key', 'value1', 'default', 1, 0, true);
     const event2 = new InputEvalEvent(true, context, 'flag-key', 'value2', 'default', 1, 0, true);
