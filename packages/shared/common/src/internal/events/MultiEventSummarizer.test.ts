@@ -35,7 +35,7 @@ describe.each([
     expect(summaries).toHaveLength(1);
   });
 
-it('uses existing summarizer for same context hash', async () => {
+  it('uses existing summarizer for same context hash', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'user1' });
     const event1 = new InputEvalEvent(true, context, 'flag-key', 'value1', 'default', 1, 0, true);
     const event2 = new InputEvalEvent(true, context, 'flag-key', 'value2', 'default', 1, 0, true);
@@ -84,7 +84,7 @@ it('uses existing summarizer for same context hash', async () => {
 
   it('logs error when context cannot be hashed', async () => {
     const a: any = {};
-    const b: any = {a};
+    const b: any = { a };
     a.b = b;
 
     const context = Context.fromLDContext({ kind: 'user', key: 'user1', cyclic: a });
@@ -93,6 +93,8 @@ it('uses existing summarizer for same context hash', async () => {
     summarizer.summarizeEvent(event);
     await summarizer.getSummaries();
     expect(logger.error).toHaveBeenCalledTimes(1);
-    expect(logger.error).toHaveBeenCalledWith('Unable to hash context, likely the context contains a cycle.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Unable to hash context, likely the context contains a cycle.',
+    );
   });
 });
