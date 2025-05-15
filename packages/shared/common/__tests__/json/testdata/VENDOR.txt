@@ -1,0 +1,2 @@
+Test data originally from:
+https://github.com/cyberphone/json-canonicalization/tree/master/testdata

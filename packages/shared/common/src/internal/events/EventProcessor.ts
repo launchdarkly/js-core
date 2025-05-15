@@ -157,6 +157,7 @@ export default class EventProcessor implements LDEventProcessor {
       this._summarizer = new MultiEventSummarizer(
         clientContext.platform.crypto,
         this._contextFilter,
+        this._logger,
       );
     } else {
       this._summarizer = new EventSummarizer();

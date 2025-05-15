@@ -1,4 +1,4 @@
-import { Crypto } from '../../api';
+import { Crypto, LDLogger } from '../../api';
 import ContextFilter from '../../ContextFilter';
 import EventSummarizer from './EventSummarizer';
 import { isFeature } from './guards';
@@ -9,6 +9,7 @@ export default class MultiEventSummarizer implements LDMultiEventSummarizer {
   constructor(
     private readonly _crypto: Crypto,
     private readonly _contextFilter: ContextFilter,
+    private readonly _logger?: LDLogger,
   ) {}
   private _summarizers: Record<string, EventSummarizer> = {};
   private _pendingPromises: Promise<void>[] = [];
@@ -20,6 +21,11 @@ export default class MultiEventSummarizer implements LDMultiEventSummarizer {
       if (isFeature(event)) {
         const hash = await event.context.hash(this._crypto);
         if (!hash) {
+          if (event.context.valid) {
+            // The context appeared valid, but it could not be hashed.
+            // This is likely because of a cycle in the data.
+            this._logger?.error('Unable to hash context, likely the context contains a cycle.');
+          }
           return;
         }
         // It is important that async operations do not happen between checking that the summarizer

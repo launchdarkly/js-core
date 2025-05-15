@@ -373,50 +373,6 @@ describe('given mock crypto', () => {
     expect(await a.hash(crypto)).toEqual(await b.hash(crypto));
   });
 
-  it('hashes legacy and non-legacy equivalent contexts the same', async () => {
-    const legacy = Context.fromLDContext({
-      key: 'testKey',
-      name: 'testName',
-      custom: { cat: 'calico', dog: 'lab' },
-      anonymous: true,
-      privateAttributeNames: ['cat', 'dog'],
-    });
-
-    const nonLegacy = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      name: 'testName',
-      cat: 'calico',
-      dog: 'lab',
-      anonymous: true,
-      _meta: {
-        privateAttributes: ['cat', 'dog'],
-      },
-    });
-
-    expect(await legacy.hash(crypto)).toEqual(await nonLegacy.hash(crypto));
-  });
-
-  it('hashes single context and multi-context with one kind the same', async () => {
-    const single = Context.fromLDContext({
-      kind: 'org',
-      key: 'testKey',
-      name: 'testName',
-      value: 'testValue',
-    });
-
-    const multi = Context.fromLDContext({
-      kind: 'multi',
-      org: {
-        key: 'testKey',
-        name: 'testName',
-        value: 'testValue',
-      },
-    });
-
-    expect(await single.hash(crypto)).toEqual(await multi.hash(crypto));
-  });
-
   it('handles shared references without getting stuck', async () => {
     const sharedObject = { value: 'shared' };
     const context = Context.fromLDContext({
@@ -691,7 +647,7 @@ describe('given mock crypto', () => {
       },
     });
     expect(await complexContext.hash(crypto)).toBe(
-      'customerbirdchickenkeynamenestedorganonymouscatdogkeynamenestedArraya/b/ccatcustom/dog01length201length24301length221testNametestKeylabcalicotruelevel1level2_metavaluedeepthisShouldBeInTheHashtruetestNametestKeyhenparty parrot',
+      '{"_contexts":{"customer":{"bird":"party parrot","chicken":"hen","key":"testKey","name":"testName","nested":{"level1":{"level2":{"_meta":{"thisShouldBeInTheHash":true},"value":"deep"}}}},"org":{"_meta":{"privateAttributes":["/a/b/c","cat","custom/dog"]},"anonymous":true,"cat":"calico","dog":"lab","key":"testKey","name":"testName","nestedArray":[[1,2],[3,4]]}},"_isMulti":true,"_isUser":false,"_privateAttributeReferences":{"customer":[],"org":[{"_components":["a","b","c"],"isValid":true,"redactionName":"/a/b/c"},{"_components":["cat"],"isValid":true,"redactionName":"cat"},{"_components":["custom/dog"],"isValid":true,"redactionName":"custom/dog"}]},"_wasLegacy":false,"kind":"multi","valid":true}',
     );
   });
 
