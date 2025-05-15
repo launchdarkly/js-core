@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/cloudflare-server-sdk",
-  "version": "2.7.5",
+  "version": "2.7.6",
   "description": "Cloudflare LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare",
   "repository": {
