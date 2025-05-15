@@ -28,7 +28,7 @@ export interface LDAIMetricSummary {
    * Time to first token for this generation.
    */
   timeToFirstTokenMs?: number;
-  
+
   /**
    * Custom events tracked for this operation.
    */
@@ -37,12 +37,12 @@ export interface LDAIMetricSummary {
      * The name of the custom event.
      */
     name: string;
-    
+
     /**
      * Optional additional information associated with the event.
      */
     data?: any;
-    
+
     /**
      * Optional numeric value for analytics.
      */
