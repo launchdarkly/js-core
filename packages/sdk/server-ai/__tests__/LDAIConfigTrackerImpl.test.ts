@@ -113,6 +113,80 @@ it('tracks negative feedback', () => {
   );
 });
 
+it('tracks custom event with data', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    configKey,
+    variationKey,
+    version,
+    testContext,
+  );
+  const customData = { property: 'value', count: 42 };
+  tracker.trackCustomEvent('test-event', customData);
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:custom:test-event',
+    testContext,
+    { configKey, variationKey, version, custom: customData },
+    undefined,
+  );
+});
+
+it('tracks custom event with metric value', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    configKey,
+    variationKey,
+    version,
+    testContext,
+  );
+  tracker.trackCustomEvent('test-event', undefined, 123.45);
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:custom:test-event',
+    testContext,
+    { configKey, variationKey, version, custom: undefined },
+    123.45,
+  );
+});
+
+it('tracks custom event with both data and metric value', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    configKey,
+    variationKey,
+    version,
+    testContext,
+  );
+  const customData = { property: 'value' };
+  tracker.trackCustomEvent('test-event', customData, 123.45);
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:custom:test-event',
+    testContext,
+    { configKey, variationKey, version, custom: customData },
+    123.45,
+  );
+});
+
+it('tracks custom event with no data or metric value', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    configKey,
+    variationKey,
+    version,
+    testContext,
+  );
+  tracker.trackCustomEvent('test-event');
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:custom:test-event',
+    testContext,
+    { configKey, variationKey, version, custom: undefined },
+    undefined,
+  );
+});
+
 it('tracks success', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
@@ -429,6 +503,8 @@ it('summarizes tracked metrics', () => {
   });
   tracker.trackFeedback({ kind: LDFeedbackKind.Positive });
   tracker.trackSuccess();
+  tracker.trackCustomEvent('event1', { test: 'data' });
+  tracker.trackCustomEvent('event2', undefined, 42);
 
   const summary = tracker.getSummary();
 
@@ -443,6 +519,18 @@ it('summarizes tracked metrics', () => {
       kind: 'positive',
     },
     success: true,
+    customEvents: [
+      {
+        name: 'event1',
+        data: { test: 'data' },
+        metricValue: undefined
+      },
+      {
+        name: 'event2',
+        data: undefined,
+        metricValue: 42
+      }
+    ]
   });
 });
 

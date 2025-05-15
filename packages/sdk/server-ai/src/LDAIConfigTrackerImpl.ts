@@ -62,6 +62,20 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
   }
 
+  trackCustomEvent(eventName: string, data?: any, metricValue?: number): void {
+    if (!this._trackedMetrics.customEvents) {
+      this._trackedMetrics.customEvents = [];
+    }
+    this._trackedMetrics.customEvents.push({
+      name: eventName,
+      data,
+      metricValue,
+    });
+
+    const trackData = { ...this._getTrackData(), custom: data };
+    this._ldClient.track(`$ld:ai:custom:${eventName}`, this._context, trackData, metricValue);
+  }
+
   trackSuccess(): void {
     this._trackedMetrics.success = true;
     this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);

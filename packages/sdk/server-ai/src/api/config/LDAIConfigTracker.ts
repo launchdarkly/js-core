@@ -28,6 +28,26 @@ export interface LDAIMetricSummary {
    * Time to first token for this generation.
    */
   timeToFirstTokenMs?: number;
+  
+  /**
+   * Custom events tracked for this operation.
+   */
+  customEvents?: Array<{
+    /**
+     * The name of the custom event.
+     */
+    name: string;
+    
+    /**
+     * Optional additional information associated with the event.
+     */
+    data?: any;
+    
+    /**
+     * Optional numeric value for analytics.
+     */
+    metricValue?: number;
+  }>;
 }
 
 /**
@@ -66,6 +86,17 @@ export interface LDAIConfigTracker {
    * @param feedback Feedback about the generation.
    */
   trackFeedback(feedback: { kind: LDFeedbackKind }): void;
+
+  /**
+   * Track a custom event related to AI operations.
+   *
+   * This method allows for tracking arbitrary custom events specific to AI operations.
+   *
+   * @param eventName The name of the custom event.
+   * @param data Optional additional information to associate with the event.
+   * @param metricValue A numeric value that can be used for analytics. Can be omitted if not needed.
+   */
+  trackCustomEvent(eventName: string, data?: any, metricValue?: number): void;
 
   /**
    * Track the time to first token for this generation.
