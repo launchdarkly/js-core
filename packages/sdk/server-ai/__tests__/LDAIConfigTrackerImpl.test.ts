@@ -523,14 +523,14 @@ it('summarizes tracked metrics', () => {
       {
         name: 'event1',
         data: { test: 'data' },
-        metricValue: undefined
+        metricValue: undefined,
       },
       {
         name: 'event2',
         data: undefined,
-        metricValue: 42
-      }
-    ]
+        metricValue: 42,
+      },
+    ],
   });
 });
 
