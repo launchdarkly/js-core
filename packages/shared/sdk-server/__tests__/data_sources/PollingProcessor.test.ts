@@ -6,7 +6,7 @@ import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import TestLogger, { LogLevel } from '../Logger';
 
-describe('given an event processor', () => {
+describe('given a polling processor', () => {
   const requestor = {
     requestAllData: jest.fn(),
   };

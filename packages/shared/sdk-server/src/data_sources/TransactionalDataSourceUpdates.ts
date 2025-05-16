@@ -8,55 +8,10 @@ import {
   LDTransactionalDataSourceUpdates,
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
-import { Clause } from '../evaluation/data/Clause';
-import { Flag } from '../evaluation/data/Flag';
-import { Prerequisite } from '../evaluation/data/Prerequisite';
 import VersionedDataKinds from '../store/VersionedDataKinds';
+import { computeDependencies } from './DataSourceUpdates';
 import DependencyTracker from './DependencyTracker';
 import NamespacedDataSet from './NamespacedDataSet';
-
-type InitMetadata = internal.InitMetadata;
-
-/**
- * This type allows computing the clause dependencies of either a flag or a segment.
- */
-interface TypeWithRuleClauses {
-  prerequisites?: Prerequisite[];
-  rules?: [
-    {
-      // The shape of rules are different between flags and segments, but
-      // both have clauses of the same shape.
-      clauses?: Clause[];
-    },
-  ];
-}
-
-function computeDependencies(namespace: string, item: LDFeatureStoreItem) {
-  const ret = new NamespacedDataSet<boolean>();
-  const isFlag = namespace === VersionedDataKinds.Features.namespace;
-  const isSegment = namespace === VersionedDataKinds.Segments.namespace;
-  if (isFlag) {
-    const flag = item as Flag;
-    flag?.prerequisites?.forEach((prereq) => {
-      ret.set(namespace, prereq.key, true);
-    });
-  }
-
-  if (isFlag || isSegment) {
-    const itemWithRuleClauses = item as TypeWithRuleClauses;
-
-    itemWithRuleClauses?.rules?.forEach((rule) => {
-      rule.clauses?.forEach((clause) => {
-        if (clause.op === 'segmentMatch') {
-          clause.values.forEach((value) => {
-            ret.set(VersionedDataKinds.Segments.namespace, value, true);
-          });
-        }
-      });
-    });
-  }
-  return ret;
-}
 
 /**
  * @internal
@@ -73,7 +28,7 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
   init(
     allData: LDFeatureStoreDataStorage,
     callback: () => void,
-    initMetadata?: InitMetadata,
+    initMetadata?: internal.InitMetadata,
   ): void {
     this.applyChanges(true, allData, callback, initMetadata); // basis is true for init
   }
@@ -94,7 +49,7 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
     basis: boolean,
     data: LDFeatureStoreDataStorage,
     callback: () => void,
-    initMetadata?: InitMetadata,
+    initMetadata?: internal.InitMetadata,
     selector?: String,
   ): void {
     const checkForChanges = this._hasEventListeners();

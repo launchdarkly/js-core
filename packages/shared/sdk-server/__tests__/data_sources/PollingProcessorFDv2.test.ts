@@ -3,7 +3,7 @@ import PollingProcessorFDv2 from '../../src/data_sources/PollingProcessorFDv2';
 import Requestor from '../../src/data_sources/Requestor';
 import TestLogger, { LogLevel } from '../Logger';
 
-describe('given an event processor', () => {
+describe('given a polling processor', () => {
   const requestor = {
     requestAllData: jest.fn(),
   };

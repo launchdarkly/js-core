@@ -16,6 +16,8 @@ import Requestor from './Requestor';
  * @internal
  */
 export default class OneShotInitializerFDv2 implements subsystemCommon.DataSource {
+  private _stopped = false;
+
   constructor(
     private readonly _requestor: Requestor,
     private readonly _logger?: LDLogger,
@@ -29,6 +31,10 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
 
     this._logger?.debug('Performing initialization request to LaunchDarkly for feature flag data.');
     this._requestor.requestAllData((err, body) => {
+      if (this._stopped) {
+        return;
+      }
+
       if (err) {
         const { status } = err;
         const message = httpErrorMessage(err, 'initializer', 'initializer does not retry');
@@ -95,6 +101,6 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
   }
 
   stop() {
-    // no-op since requestor has no cancellation support
+    this._stopped = true;
   }
 }
