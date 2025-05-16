@@ -135,29 +135,39 @@ describe('given a polling processor with a short poll duration', () => {
     jest.resetAllMocks();
   });
 
-  it('polls repeatedly', (done) => {
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
+  it('polls repeatedly', async () => {
+    const expectedCalls = new Promise<void>((resolve) => {
+      let callCount = 0;
+      requestor.requestAllData = jest.fn((cb) => {
+        cb(undefined, jsonData);
+        callCount += 1;
+        if (callCount >= 5) {
+          resolve();
+        }
+      });
+    });
 
     processor.start(mockDataCallback, mockStatusCallback);
-    setTimeout(() => {
-      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(4);
-      done();
-    }, 500);
+    await expectedCalls;
   });
 
-  it.each<number | jest.DoneCallback>([400, 408, 429, 500, 503])(
+  it.each<number>([400, 408, 429, 500, 503])(
     'continues polling after recoverable error',
-    (status, done) => {
-      requestor.requestAllData = jest.fn((cb) =>
-        cb(
-          {
-            status,
-          },
-          undefined,
-        ),
-      );
+    async (status) => {
+      const expectedCalls = new Promise<void>((resolve) => {
+        let callCount = 0;
+        requestor.requestAllData = jest.fn((cb) => {
+          cb({ status }, undefined);
+          callCount += 1;
+          if (callCount >= 5) {
+            resolve();
+          }
+        });
+      });
 
       processor.start(mockDataCallback, mockStatusCallback);
+      await expectedCalls;
+
       expect(mockDataCallback).not.toHaveBeenCalled();
       expect(mockStatusCallback).toHaveBeenNthCalledWith(1, subsystem.DataSourceState.Initializing);
       expect(mockStatusCallback).toHaveBeenNthCalledWith(
@@ -169,19 +179,27 @@ describe('given a polling processor with a short poll duration', () => {
           status as number,
         ),
       );
-      setTimeout(() => {
-        expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
-        expect(testLogger.getCount(LogLevel.Error)).toBe(0);
-        expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
-        (done as jest.DoneCallback)();
-      }, 300);
+      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(testLogger.getCount(LogLevel.Error)).toBe(0);
+      expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
     },
   );
 
-  it('continues polling after receiving invalid JSON', (done) => {
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, '{sad'));
+  it('continues polling after receiving invalid JSON', async () => {
+    const expectedCalls = new Promise<void>((resolve) => {
+      let callCount = 0;
+      requestor.requestAllData = jest.fn((cb) => {
+        cb(undefined, '{sad');
+        callCount += 1;
+        if (callCount >= 5) {
+          resolve();
+        }
+      });
+    });
 
     processor.start(mockDataCallback, mockStatusCallback);
+    await expectedCalls;
+
     expect(mockDataCallback).not.toHaveBeenCalled();
     expect(mockStatusCallback).toHaveBeenNthCalledWith(1, subsystem.DataSourceState.Initializing);
     expect(mockStatusCallback).toHaveBeenNthCalledWith(
@@ -190,11 +208,8 @@ describe('given a polling processor with a short poll duration', () => {
       new LDPollingError(DataSourceErrorKind.ErrorResponse, `Malformed data in polling response`),
     );
 
-    setTimeout(() => {
-      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
-      expect(testLogger.getCount(LogLevel.Error)).toBeGreaterThan(2);
-      (done as jest.DoneCallback)();
-    }, 300);
+    expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(testLogger.getCount(LogLevel.Error)).toBeGreaterThan(2);
   });
 
   it.each<number | jest.DoneCallback>([401, 403])(

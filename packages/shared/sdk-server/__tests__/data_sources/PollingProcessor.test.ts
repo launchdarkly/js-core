@@ -116,14 +116,21 @@ describe('given a polling processor with a short poll duration', () => {
     jest.resetAllMocks();
   });
 
-  it('polls repeatedly', (done) => {
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
+  it('polls repeatedly', async () => {
+    const expectedCalls = new Promise<void>((resolve) => {
+      let callCount = 0;
+      requestor.requestAllData = jest.fn((cb) => {
+        cb(undefined, jsonData);
+        callCount += 1;
+        if (callCount >= 10) {
+          resolve();
+        }
+      });
 
-    processor.start();
-    setTimeout(() => {
-      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(4);
-      done();
-    }, 500);
+      processor.start();
+    });
+
+    await expectedCalls;
   });
 
   it.each<number | jest.DoneCallback>([400, 408, 429, 500, 503])(
