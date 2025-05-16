@@ -2,9 +2,9 @@ import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 
 import { internal } from '@launchdarkly/js-sdk-common';
 
-import { LDFeatureStore } from '../../src/api/subsystems';
+import { LDTransactionalFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
-import DataSourceUpdates from '../../src/data_sources/DataSourceUpdates';
+import DataSourceUpdates from '../../src/data_sources/TransactionalDataSourceUpdates';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 
@@ -13,21 +13,28 @@ type InitMetadata = internal.InitMetadata;
 it('passes initialization metadata to underlying feature store', () => {
   const metadata: InitMetadata = { environmentId: '12345' };
   const store = new InMemoryFeatureStore();
-  store.init = jest.fn();
+  store.applyChanges = jest.fn();
   const updates = new DataSourceUpdates(
     store,
     () => false,
     () => {},
   );
   updates.init({}, () => {}, metadata);
-  expect(store.init).toHaveBeenCalledTimes(1);
-  expect(store.init).toHaveBeenNthCalledWith(1, expect.any(Object), expect.any(Function), metadata);
+  expect(store.applyChanges).toHaveBeenCalledTimes(1);
+  expect(store.applyChanges).toHaveBeenNthCalledWith(
+    1,
+    true,
+    expect.any(Object),
+    expect.any(Function),
+    metadata,
+    undefined,
+  );
 });
 
 describe.each([true, false])(
   'given a DataSourceUpdates with in memory store and change listeners: %s',
   (listen) => {
-    let store: LDFeatureStore;
+    let store: LDTransactionalFeatureStore;
     let updates: DataSourceUpdates;
 
     const queue = new AsyncQueue<string>();

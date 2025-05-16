@@ -232,9 +232,10 @@ export default class LDClientImpl implements LDClient {
             this._config.streamInitialReconnectDelay,
           )
         : new PollingProcessor(
-            config,
             new Requestor(config, this._platform.requests, baseHeaders),
+            config.pollInterval,
             dataSourceUpdates,
+            config.logger,
             () => this._initSuccess(),
             (e) => this._dataSourceErrorHandler(e),
           );
