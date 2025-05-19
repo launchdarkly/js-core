@@ -51,6 +51,10 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
     const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
     this._requestor.requestAllData((err, body) => {
+      if (this._stopped) {
+        return;
+      }
+
       const elapsed = Date.now() - startTime;
       const sleepFor = Math.max(this._pollInterval * 1000 - elapsed, 0);
 
