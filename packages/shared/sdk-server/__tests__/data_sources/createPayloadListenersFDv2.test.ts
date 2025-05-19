@@ -1,6 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { LDDataSourceUpdates } from '../../src/api/subsystems';
+import { LDTransactionalDataSourceUpdates } from '../../src/api/subsystems';
 import { createPayloadListener } from '../../src/data_sources/createPayloadListenerFDv2';
 
 jest.mock('../../src/store/serialization');
@@ -81,13 +81,14 @@ const changesTransferPayload = {
 };
 
 describe('createPayloadListenerFDv2', () => {
-  let dataSourceUpdates: LDDataSourceUpdates;
+  let dataSourceUpdates: LDTransactionalDataSourceUpdates;
   let basisRecieved: jest.Mock;
 
   beforeEach(() => {
     dataSourceUpdates = {
       init: jest.fn(),
       upsert: jest.fn(),
+      applyChanges: jest.fn(),
     };
     basisRecieved = jest.fn();
   });
