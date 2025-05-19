@@ -10,7 +10,7 @@
  */
 export interface LDFeatureRequestor {
   requestAllData: (
-    cb: (err: any, body: any) => void,
+    cb: (err: any, body: any, headers: any) => void,
     queryParams?: { key: string; value: string }[],
   ) => void;
 }
