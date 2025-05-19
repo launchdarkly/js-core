@@ -1,6 +1,13 @@
+import Context from '../../Context';
+import ContextFilter from '../../ContextFilter';
 import { isFeature } from './guards';
 import InputEvalEvent from './InputEvalEvent';
 import InputEvent from './InputEvent';
+import LDEventSummarizer, {
+  FlagCounter,
+  FlagSummary,
+  SummarizedFlagsEvent,
+} from './LDEventSummarizer';
 import SummaryCounter from './SummaryCounter';
 
 function counterKey(event: InputEvalEvent) {
@@ -12,37 +19,7 @@ function counterKey(event: InputEvalEvent) {
 /**
  * @internal
  */
-export interface FlagCounter {
-  value: any;
-  count: number;
-  variation?: number;
-  version?: number;
-  unknown?: boolean;
-}
-
-/**
- * @internal
- */
-export interface FlagSummary {
-  default: any;
-  counters: FlagCounter[];
-  contextKinds: string[];
-}
-
-/**
- * @internal
- */
-export interface SummarizedFlagsEvent {
-  startDate: number;
-  endDate: number;
-  features: Record<string, FlagSummary>;
-  kind: 'summary';
-}
-
-/**
- * @internal
- */
-export default class EventSummarizer {
+export default class EventSummarizer implements LDEventSummarizer {
   private _startDate = 0;
 
   private _endDate = 0;
@@ -51,8 +28,18 @@ export default class EventSummarizer {
 
   private _contextKinds: Record<string, Set<string>> = {};
 
+  private _context?: Context;
+
+  constructor(
+    private readonly _singleContext: boolean = false,
+    private readonly _contextFilter?: ContextFilter,
+  ) {}
+
   summarizeEvent(event: InputEvent) {
     if (isFeature(event) && !event.excludeFromSummaries) {
+      if (!this._context) {
+        this._context = event.context;
+      }
       const countKey = counterKey(event);
       const counter = this._counters[countKey];
       let kinds = this._contextKinds[event.key];
@@ -116,15 +103,21 @@ export default class EventSummarizer {
       {},
     );
 
-    return {
+    const event: SummarizedFlagsEvent = {
       startDate: this._startDate,
       endDate: this._endDate,
       features,
       kind: 'summary',
+      context:
+        this._context !== undefined && this._singleContext
+          ? this._contextFilter?.filter(this._context)
+          : undefined,
     };
+    this._clearSummary();
+    return event;
   }
 
-  clearSummary() {
+  private _clearSummary() {
     this._startDate = 0;
     this._endDate = 0;
     this._counters = {};

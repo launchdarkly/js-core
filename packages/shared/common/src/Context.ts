@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line max-classes-per-file
 import type {
+  Crypto,
   LDContext,
   LDContextCommon,
   LDMultiKindContext,
@@ -9,6 +10,7 @@ import type {
 } from './api';
 import AttributeReference from './AttributeReference';
 import { isLegacyUser, isMultiKind, isSingleKind } from './internal/context';
+import { canonicalize } from './json/canonicalize';
 import { TypeValidators } from './validators';
 
 // The general strategy for the context is to transform the passed in context
@@ -464,5 +466,28 @@ export default class Context {
 
   public get legacy(): boolean {
     return this._wasLegacy;
+  }
+
+  public async hash(crypto: Crypto): Promise<string | undefined> {
+    if (!this.valid) {
+      return undefined;
+    }
+
+    try {
+      const canonicalized = canonicalize(this);
+
+      const hasher = crypto.createHash('sha256');
+      hasher.update(canonicalized);
+
+      if (hasher.digest) {
+        return hasher.digest('hex');
+      }
+
+      // The hasher must have either digest or asyncDigest.
+      const digest = await hasher.asyncDigest!('hex');
+      return digest;
+    } catch {
+      return undefined;
+    }
   }
 }
