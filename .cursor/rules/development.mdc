@@ -1,6 +1,6 @@
 ---
 description: Rules for building and understanding the repository.
-globs: 
+globs: *
 alwaysApply: true
 ---
 # General Development Guidelines

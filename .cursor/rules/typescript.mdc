@@ -1,6 +1,6 @@
 ---
 description:  Rules for typescript development.
-globs: 
+globs: *.ts
 alwaysApply: true
 ---
 # TypeScript Guidelines

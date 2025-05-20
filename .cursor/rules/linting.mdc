@@ -1,6 +1,6 @@
 ---
 description: Rules for finding and addressing linting issues.
-globs: 
+globs: *.ts
 alwaysApply: true
 ---
 # Linting Guidelines

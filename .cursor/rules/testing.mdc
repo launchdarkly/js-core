@@ -1,6 +1,6 @@
 ---
 description: Rules for running and developing tests.
-globs: 
+globs: *
 alwaysApply: true
 ---
 # Testing Guidelines

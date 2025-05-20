@@ -1,6 +1,6 @@
 ---
 description: Rules about dependencies.
-globs: 
+globs: *
 alwaysApply: true
 ---
 # Dependency Management Guidelines
