@@ -1,0 +1,53 @@
+---
+description: Rules for running and developing tests.
+globs: 
+alwaysApply: true
+---
+# Testing Guidelines
+
+## Test Structure
+- Unit tests should be implemented in a `__tests__` folder in the root of the package
+- The directory structure inside of `__tests__` should mirror that of the source directory
+- Tests should only be run for single projects
+
+## Test Naming and Organization
+- Test cases should be written using `it` and should read as a sentence including the `it`
+- Example: `it('does not load flags prior to start', async () => {/* test code */})`
+- Describe blocks should ONLY be used for common setup for a series of tests
+- Example: `describe('given a mock filesystem and memory feature store', { /* tests */})`
+- Combined test names should be understandable: `given a mock filesystem and memory feature store > it does not load flags prior to start`
+
+## Running Tests
+- Tests should be run using `yarn workspace <package name> test`
+- The package name can be found in the package.json file
+- Unit tests should be run for any packages that have been modified
+
+## Developing Tests
+- Describe blocks should only be used for shared test configuration
+- The describe block should describe the configuration being shared
+- If there is no shared configuration, do not use a describe block
+- Example of proper describe usage:
+  ```javascript
+  describe('given a mock filesystem and memory feature store', () => {
+    // Shared setup code here
+    
+    it('does not load flags prior to start', async () => {
+      // Test code
+    });
+    
+    it('loads flags after start', async () => {
+      // Test code
+    });
+  });
+  ```
+- Example of when not to use describe:
+  ```javascript
+  // No shared configuration, so no describe block needed
+  it('returns true when flag is enabled', () => {
+    // Test code
+  });
+  
+  it('returns false when flag is disabled', () => {
+    // Test code
+  });
+  ```

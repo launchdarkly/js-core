@@ -1,0 +1,20 @@
+---
+description:  Rules for typescript development.
+globs: 
+alwaysApply: true
+---
+# TypeScript Guidelines
+
+## TypeScript vs JavaScript
+- While we develop in TypeScript, aim for compiled JavaScript to not be substantially different than if written as JavaScript
+- Consider JavaScript consumers when making TypeScript decisions
+
+## TypeScript Best Practices
+- Avoid using TypeScript enumerations. Instead use unions of strings
+  - Bad: `enum ValueType { Bool = 'bool', Int = 'int' }`
+  - Good: `type ValueType = 'bool' | 'int'`
+- Prefer interfaces over classes when reasonable, especially if publicly exposed
+  - Bad: Using classes for simple data structures
+  - Good: Using interfaces with factory functions
+- Remember that `private` and `readonly` only affect TypeScript - JavaScript can still access and mutate
+- For private members that need to be minified, prefix with underscore

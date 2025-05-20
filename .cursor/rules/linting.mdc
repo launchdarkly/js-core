@@ -1,0 +1,63 @@
+---
+description: Rules for finding and addressing linting issues.
+globs: 
+alwaysApply: true
+---
+# Linting Guidelines
+
+## Running Lint Checks
+
+Lint checks can be run for any package using the following command:
+
+```bash
+yarn workspace <package name> lint
+```
+
+For example, to lint the common SDK package:
+
+```bash
+yarn workspace @launchdarkly/js-sdk-common lint
+```
+
+## Fixing Lint Issues
+
+Many lint issues can be automatically fixed using the `--fix` flag:
+
+```bash
+yarn workspace <package name> lint --fix
+```
+
+For example:
+
+```bash
+yarn workspace @launchdarkly/js-sdk-common lint --fix
+```
+
+## Manual Fixes
+
+If automatic fixes don't resolve all issues, you should fix them manually. Pay special attention to:
+
+- TypeScript type errors
+- ESLint rule violations
+- Code style inconsistencies
+
+## Mock Type Handling
+
+When working with mocks in tests, it's acceptable to use ESLint ignore or TypeScript ignore comments if typing issues arise. This is only appropriate for test mocks, not for implementation code.
+
+Example:
+
+```typescript
+// @ts-ignore - Mock implementation doesn't need full typing
+const mockClient = {
+  // mock implementation
+};
+```
+
+## Package Names
+
+Package names can be found in the respective `package.json` files. Always use the exact package name as specified there when running lint commands.
+
+## When to Run Lint
+
+- Run lint checks on any package you've modified
