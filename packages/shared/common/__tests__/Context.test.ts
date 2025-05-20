@@ -1,6 +1,5 @@
 import AttributeReference from '../src/AttributeReference';
 import Context from '../src/Context';
-import { setupCrypto } from './setupCrypto';
 
 // A sample of invalid characters.
 const invalidSampleChars = [
@@ -327,345 +326,121 @@ describe('given a multi context', () => {
   });
 });
 
-describe('given mock crypto', () => {
-  const crypto = setupCrypto();
+it('given a invalid context, canonicalUnfilteredJson should return undefined', () => {
+  // Force TS to accept our bad contexts
+  // @ts-ignore
+  const invalidContext = Context.fromLDContext({ kind: 'multi', bad: 'value' });
+  expect(invalidContext.valid).toBeFalsy();
+  expect(invalidContext.canonicalUnfilteredJson()).toBeUndefined();
+});
 
-  it('hashes two equal contexts the same', async () => {
-    const a = Context.fromLDContext({
-      kind: 'multi',
-      org: {
-        key: 'testKey',
-        name: 'testName',
-        cat: 'calico',
-        dog: 'lab',
-        anonymous: true,
-        _meta: {
-          privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
-        },
-      },
-      customer: {
-        key: 'testKey',
-        name: 'testName',
-        bird: 'party parrot',
-        chicken: 'hen',
-      },
-    });
+it('given a context with circular references, canonicalUnfilteredJson should return undefined', () => {
+  const circularObj: any = { key: 'test', kind: 'user' };
+  // Create a circular reference
+  circularObj.self = circularObj;
 
-    const b = Context.fromLDContext({
-      kind: 'multi',
-      org: {
-        key: 'testKey',
-        name: 'testName',
-        cat: 'calico',
-        dog: 'lab',
-        anonymous: true,
-        _meta: {
-          privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
-        },
-      },
-      customer: {
-        key: 'testKey',
-        name: 'testName',
-        bird: 'party parrot',
-        chicken: 'hen',
-      },
-    });
-    expect(await a.hash(crypto)).toEqual(await b.hash(crypto));
+  const context = Context.fromLDContext(circularObj);
+  expect(context.valid).toBeTruthy();
+  expect(context.canonicalUnfilteredJson()).toBeUndefined();
+});
+
+it('canonicalUnfilteredJson should cache results', () => {
+  const context = Context.fromLDContext({
+    key: 'test',
+    name: 'test name',
   });
 
-  it('handles shared references without getting stuck', async () => {
-    const sharedObject = { value: 'shared' };
-    const context = Context.fromLDContext({
-      kind: 'multi',
-      org: {
-        key: 'testKey',
-        shared: sharedObject,
-      },
-      user: {
-        key: 'testKey',
-        shared: sharedObject,
-      },
-    });
+  // Setup spy before first call to track if it's called
+  // Using require for mocking. Tests are ran in CJS.
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  /* eslint-disable global-require */
+  const canonicalizeModule = require('../src/internal/json/canonicalize');
+  const originalCanon = canonicalizeModule.canonicalize;
+  const mockCanon = jest.fn().mockImplementation(originalCanon);
 
-    const hash = await context.hash(crypto);
-    expect(hash).toBeDefined();
+  // Replace the canonicalize function
+  jest.spyOn(canonicalizeModule, 'canonicalize').mockImplementation(mockCanon);
+
+  try {
+    // First call should use the mocked canonicalize
+    const result1 = context.canonicalUnfilteredJson();
+    expect(result1).toBeDefined();
+    expect(mockCanon).toHaveBeenCalledTimes(1);
+
+    // Reset the mock to verify it's not called again
+    mockCanon.mockClear();
+
+    // Second call should use cached value and not call canonicalize again
+    const result2 = context.canonicalUnfilteredJson();
+    expect(result2).toBe(result1);
+    expect(mockCanon).not.toHaveBeenCalled();
+
+    // Verify the returned JSON looks valid
+    const parsed = JSON.parse(result1!);
+    expect(parsed.key).toBe('test');
+    expect(parsed.name).toBe('test name');
+  } finally {
+    // Always restore the original implementation
+    jest.spyOn(canonicalizeModule, 'canonicalize').mockImplementation(originalCanon);
+  }
+});
+
+it('should correctly canonicalize single-kind context', () => {
+  const context = Context.fromLDContext({
+    key: 'user-key',
+    name: 'Test User',
+    kind: 'user',
   });
 
-  it('returns undefined for contexts with cycles', async () => {
-    const cyclicObject: any = { value: 'cyclic' };
-    cyclicObject.self = cyclicObject;
+  const jsonResult = context.canonicalUnfilteredJson();
+  expect(jsonResult).toBeDefined();
 
-    const context = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      cyclic: cyclicObject,
-    });
+  // Make sure we can parse the result. JSON canonicalization is tested elsewhere.
+  const parsed = JSON.parse(jsonResult!);
+  expect(parsed.key).toBe('user-key');
+  expect(parsed.kind).toBe('user');
+  expect(parsed.name).toBe('Test User');
+});
 
-    expect(await context.hash(crypto)).toBeUndefined();
+it('should correctly canonicalize multi-kind context', () => {
+  const context = Context.fromLDContext({
+    kind: 'multi',
+    user: {
+      key: 'user-key',
+      name: 'Test User',
+    },
+    org: {
+      key: 'org-key',
+      name: 'Test Org',
+    },
   });
 
-  it('handles nested objects correctly', async () => {
-    const context = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      nested: {
-        level1: {
-          level2: {
-            value: 'deep',
-          },
-        },
-      },
-    });
+  const jsonResult = context.canonicalUnfilteredJson();
+  expect(jsonResult).toBeDefined();
 
-    const hash = await context.hash(crypto);
-    expect(hash).toBeDefined();
+  // Make sure we can parse the result. JSON canonicalization is tested elsewhere.
+  const parsed = JSON.parse(jsonResult!);
+  expect(parsed.kind).toBe('multi');
+  expect(parsed.org.key).toBe('org-key');
+  expect(parsed.user.key).toBe('user-key');
+});
+
+it('should handle complex nested objects in canonicalUnfilteredJson', () => {
+  const context = Context.fromLDContext({
+    key: 'test-key',
+    kind: 'user',
+    nested: {
+      array: [3, 1, 2],
+      value: 'test',
+    },
   });
 
-  it('handles arrays correctly', async () => {
-    const context = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      array: [1, 2, 3],
-      nestedArray: [
-        [1, 2],
-        [3, 4],
-      ],
-    });
+  const jsonResult = context.canonicalUnfilteredJson();
+  expect(jsonResult).toBeDefined();
 
-    const hash = await context.hash(crypto);
-    expect(hash).toBeDefined();
-  });
-
-  it('handles primitive values correctly', async () => {
-    const context = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      string: 'test',
-      number: 42,
-      boolean: true,
-      nullValue: null,
-      undefinedValue: undefined,
-    });
-
-    const hash = await context.hash(crypto);
-    expect(hash).toBeDefined();
-  });
-
-  it('includes private attributes in hash calculation', async () => {
-    const baseContext = {
-      kind: 'user',
-      key: 'testKey',
-      name: 'testName',
-      nested: {
-        value: 'testValue',
-      },
-    };
-
-    const contextWithPrivate = Context.fromLDContext({
-      ...baseContext,
-      _meta: {
-        privateAttributes: ['name', 'nested/value'],
-      },
-    });
-
-    const contextWithoutPrivate = Context.fromLDContext(baseContext);
-
-    const hashWithPrivate = await contextWithPrivate.hash(crypto);
-    const hashWithoutPrivate = await contextWithoutPrivate.hash(crypto);
-
-    // The hashes should be different because private attributes are included in the hash
-    expect(hashWithPrivate).not.toEqual(hashWithoutPrivate);
-  });
-
-  it('uses the keys the keys of attributes in the hash', async () => {
-    const a = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      a: 'b',
-    });
-
-    const b = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      b: 'b',
-    });
-
-    const hashA = await a.hash(crypto);
-    const hashB = await b.hash(crypto);
-    expect(hashA).not.toBe(hashB);
-  });
-
-  it('uses the keys of nested objects inside the hash', async () => {
-    const a = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      nested: {
-        level1: {
-          level2: {
-            value: 'deep',
-          },
-        },
-      },
-    });
-
-    const b = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      nested: {
-        sub1: {
-          sub2: {
-            value: 'deep',
-          },
-        },
-      },
-    });
-
-    const hashA = await a.hash(crypto);
-    const hashB = await b.hash(crypto);
-    expect(hashA).not.toBe(hashB);
-  });
-
-  it('it uses the values of nested array in calculations', async () => {
-    const a = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      array: [1, 2, 3],
-      nestedArray: [
-        [1, 2],
-        [3, 4],
-      ],
-    });
-
-    const b = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      array: [1, 2, 3],
-      nestedArray: [
-        [2, 1],
-        [3, 4],
-      ],
-    });
-
-    const hashA = await a.hash(crypto);
-    const hashB = await b.hash(crypto);
-    expect(hashA).not.toBe(hashB);
-  });
-
-  it('uses the values of nested objects inside the hash', async () => {
-    const a = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      nested: {
-        level1: {
-          level2: {
-            value: 'deep',
-          },
-        },
-      },
-    });
-
-    const b = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      nested: {
-        level1: {
-          level2: {
-            value: 'deeper',
-          },
-        },
-      },
-    });
-
-    const hashA = await a.hash(crypto);
-    const hashB = await b.hash(crypto);
-    expect(hashA).not.toBe(hashB);
-  });
-
-  it('hashes _meta in attributes', async () => {
-    const a = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      nested: {
-        level1: {
-          level2: {
-            _meta: { test: 'a' },
-          },
-        },
-      },
-    });
-
-    const b = Context.fromLDContext({
-      kind: 'user',
-      key: 'testKey',
-      nested: {
-        level1: {
-          level2: {
-            _meta: { test: 'b' },
-          },
-        },
-      },
-    });
-
-    const hashA = await a.hash(crypto);
-    const hashB = await b.hash(crypto);
-    expect(hashA).not.toBe(hashB);
-  });
-
-  it('produces the same value for the given context', async () => {
-    // This isn't so much a test as it is a detection of change.
-    // If this test failed, and you didn't expect it, then you probably need to make sure your
-    // change makes sense.
-    const complexContext = Context.fromLDContext({
-      kind: 'multi',
-      org: {
-        key: 'testKey',
-        name: 'testName',
-        cat: 'calico',
-        dog: 'lab',
-        anonymous: true,
-        nestedArray: [
-          [1, 2],
-          [3, 4],
-        ],
-        _meta: {
-          privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
-        },
-      },
-      customer: {
-        key: 'testKey',
-        name: 'testName',
-        bird: 'party parrot',
-        chicken: 'hen',
-        nested: {
-          level1: {
-            level2: {
-              value: 'deep',
-              _meta: { thisShouldBeInTheHash: true },
-            },
-          },
-        },
-      },
-    });
-    expect(await complexContext.hash(crypto)).toBe(
-      '{"_contexts":{"customer":{"bird":"party parrot","chicken":"hen","key":"testKey","name":"testName","nested":{"level1":{"level2":{"_meta":{"thisShouldBeInTheHash":true},"value":"deep"}}}},"org":{"_meta":{"privateAttributes":["/a/b/c","cat","custom/dog"]},"anonymous":true,"cat":"calico","dog":"lab","key":"testKey","name":"testName","nestedArray":[[1,2],[3,4]]}},"_isMulti":true,"_isUser":false,"_privateAttributeReferences":{"customer":[],"org":[{"_components":["a","b","c"],"isValid":true,"redactionName":"/a/b/c"},{"_components":["cat"],"isValid":true,"redactionName":"cat"},{"_components":["custom/dog"],"isValid":true,"redactionName":"custom/dog"}]},"_wasLegacy":false,"kind":"multi","valid":true}',
-    );
-  });
-
-  it('collisiontest', async () => {
-    const a = Context.fromLDContext({
-      kind: 'user',
-      key: 'bob',
-      a: 'bcd',
-    });
-
-    const b = Context.fromLDContext({
-      kind: 'user',
-      key: 'bob',
-      a: { b: { c: 'd' } },
-    });
-
-    const hashA = await a.hash(crypto);
-    const hashB = await b.hash(crypto);
-    expect(hashA).not.toBe(hashB);
-  });
+  const parsed = JSON.parse(jsonResult!);
+  expect(parsed.key).toBe('test-key');
+  expect(parsed.kind).toBe('user');
+  expect(parsed.nested.array).toEqual([3, 1, 2]);
+  expect(parsed.nested.value).toBe('test');
 });

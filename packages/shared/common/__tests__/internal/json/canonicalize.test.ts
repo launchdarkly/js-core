@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { canonicalize } from '../../src/json/canonicalize';
+import { canonicalize } from '../../../src/internal/json/canonicalize';
 
 // Get the test file pairs
 const testInputDir = path.join(__dirname, 'testdata', 'input');
