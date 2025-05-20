@@ -15,17 +15,9 @@ alwaysApply: true
 - Example: `it('does not load flags prior to start', async () => {/* test code */})`
 - Describe blocks should ONLY be used for common setup for a series of tests
 - Example: `describe('given a mock filesystem and memory feature store', { /* tests */})`
+- If there is no shared configuration, do not use a describe block
 - Combined test names should be understandable: `given a mock filesystem and memory feature store > it does not load flags prior to start`
 
-## Running Tests
-- Tests should be run using `yarn workspace <package name> test`
-- The package name can be found in the package.json file
-- Unit tests should be run for any packages that have been modified
-
-## Developing Tests
-- Describe blocks should only be used for shared test configuration
-- The describe block should describe the configuration being shared
-- If there is no shared configuration, do not use a describe block
 - Example of proper describe usage:
   ```javascript
   describe('given a mock filesystem and memory feature store', () => {
@@ -51,3 +43,10 @@ alwaysApply: true
     // Test code
   });
   ```
+
+## Running Tests
+- Tests should be run using `yarn workspace <package name> test`
+- The package name can be found in the package.json file
+- Unit tests should be run for any packages that have been modified
+
+
