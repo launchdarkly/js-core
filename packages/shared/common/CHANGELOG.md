@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.18.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.17.0...js-sdk-common-v2.18.0) (2025-05-21)
+
+
+### Features
+
+* Add support for per-context summary events. ([#859](https://github.com/launchdarkly/js-core/issues/859)) ([c9fa5c4](https://github.com/launchdarkly/js-core/commit/c9fa5c45f3ac2cbaad2f2e6312d5231c3f671d98))
+
 ## [2.17.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.16.0...js-sdk-common-v2.17.0) (2025-04-29)
 
 
