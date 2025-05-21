@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.6.0...js-client-sdk-v0.7.0) (2025-05-21)
+
+
+### Features
+
+* Add support for per-context summary events. ([#859](https://github.com/launchdarkly/js-core/issues/859)) ([c9fa5c4](https://github.com/launchdarkly/js-core/commit/c9fa5c45f3ac2cbaad2f2e6312d5231c3f671d98))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.13.0 to 1.14.0
+
 ## [0.6.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.5.3...js-client-sdk-v0.6.0) (2025-04-29)
 
 
