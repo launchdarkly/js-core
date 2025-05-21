@@ -290,6 +290,51 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(order).toEqual(['user-key-1', 'user-key-3']);
   });
 
+  it('completes awaited identify calls in order without shedding', async () => {
+    const order: string[] = [];
+    const client = new BrowserClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+        sendEvents: false,
+        fetchGoals: false,
+        hooks: [
+          {
+            afterIdentify: (hookContext, data, result) => {
+              if (result.status === 'shed') {
+                return data;
+              }
+              if ('kind' in hookContext.context && hookContext.context.kind !== 'multi') {
+                order.push((hookContext.context as LDSingleKindContext).key);
+              }
+
+              return data;
+            },
+            getMetadata: () => ({
+              name: 'test-hook',
+              version: '1.0.0',
+            }),
+          },
+        ],
+      },
+      platform,
+    );
+
+    const result1 = await client.identifyResult({ key: 'user-key-1', kind: 'user' });
+    const result2 = await client.identifyResult({ key: 'user-key-2', kind: 'user' });
+    const result3 = await client.identifyResult({ key: 'user-key-3', kind: 'user' });
+
+    expect(result1.status).toEqual('completed');
+    expect(result2.status).toEqual('completed');
+    expect(result3.status).toEqual('completed');
+
+    // user-key-2 is shed, so it is not included in the order
+    expect(order).toEqual(['user-key-1', 'user-key-2', 'user-key-3']);
+  });
+
   it('can shed intermediate identify calls', async () => {
     const client = new BrowserClient(
       'client-side-id',
