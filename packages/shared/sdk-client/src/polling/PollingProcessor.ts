@@ -31,7 +31,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     private readonly _dataHandler: (flags: Flags) => void,
     private readonly _errorHandler?: PollingErrorHandler,
     private readonly _logger?: LDLogger,
-  ) { }
+  ) {}
 
   private async _poll() {
     if (this._stopped) {
