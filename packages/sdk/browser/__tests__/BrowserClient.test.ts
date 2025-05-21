@@ -210,7 +210,7 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(platform.requests.fetch.mock.calls.length).toBe(2);
   });
 
-  it('completes identify calls in order', async () => {
+  it('calls beforeIdentify in order', async () => {
     const order: string[] = [];
     const client = new BrowserClient(
       'client-side-id',
@@ -223,10 +223,11 @@ describe('given a mock platform for a BrowserClient', () => {
         fetchGoals: false,
         hooks: [
           {
-            afterIdentify: (hookContext, data, _result) => {
+            beforeIdentify: (hookContext, data) => {
               if ('kind' in hookContext.context && hookContext.context.kind !== 'multi') {
                 order.push((hookContext.context as LDSingleKindContext).key);
               }
+
               return data;
             },
             getMetadata: () => ({
@@ -244,6 +245,48 @@ describe('given a mock platform for a BrowserClient', () => {
     const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
 
     await Promise.all([promise1, promise2, promise3]);
+    expect(order).toEqual(['user-key-1', 'user-key-2', 'user-key-3']);
+  });
+
+  it('completes identify calls in order', async () => {
+    const order: string[] = [];
+    const client = new BrowserClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+        sendEvents: false,
+        fetchGoals: false,
+        hooks: [
+          {
+            afterIdentify: (hookContext, data, result) => {
+              if (result.status === 'shed') {
+                return data;
+              }
+              if ('kind' in hookContext.context && hookContext.context.kind !== 'multi') {
+                order.push((hookContext.context as LDSingleKindContext).key);
+              }
+
+              return data;
+            },
+            getMetadata: () => ({
+              name: 'test-hook',
+              version: '1.0.0',
+            }),
+          },
+        ],
+      },
+      platform,
+    );
+
+    const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
+    const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
+    const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
+
+    await Promise.all([promise1, promise2, promise3]);
+    // user-key-2 is shed, so it is not included in the order
     expect(order).toEqual(['user-key-1', 'user-key-3']);
   });
 

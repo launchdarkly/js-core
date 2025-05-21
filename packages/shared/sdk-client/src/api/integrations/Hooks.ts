@@ -73,8 +73,11 @@ export interface IdentifySeriesData {
  *
  * An example in which an error may occur is lack of network connectivity
  * preventing the SDK from functioning.
+ * 
+ * The SDK may also shed an identify operation if it is not needed. In which case
+ * the status will be 'shed'.
  */
-export type IdentifySeriesStatus = 'completed' | 'error';
+export type IdentifySeriesStatus = 'completed' | 'error' | 'shed';
 
 /**
  * The result applies to a single identify operation. An operation may complete
@@ -183,6 +186,11 @@ export interface Hook {
   /**
    * This method is called during the execution of the identify process, after the operation
    * completes.
+   * 
+   * The beforeIdentify methods will be called in the order of the identify calls to the SDK,
+   * but afterIdentify may not be in the same order. This is because the SDK may shed an identify
+   * operation if it is not needed. This will result in the afterIdentify method potentially being
+   * called in a different order than beforeIdentify.
    *
    * @param hookContext Contains information about the evaluation being performed. This is not
    *  mutable.

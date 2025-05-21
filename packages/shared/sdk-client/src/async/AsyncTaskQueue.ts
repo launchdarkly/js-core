@@ -40,6 +40,26 @@ interface PendingTask<TTaskResult> {
   promise: Promise<TaskResult<TTaskResult>>;
 }
 
+export interface Task<TTaskResult, TBeforeResult> {
+  /**
+   * Method ran before the task is executed or shed.
+   */
+  before?: () => Promise<TBeforeResult>;
+
+  /**
+   * Execute the task. This is not ran if the task is shed.
+   * @returns The result of the task.
+   */
+
+  execute: (beforeResult?: TBeforeResult) => Promise<TTaskResult>;
+
+  /**
+   * Method ran after the task is executed or shed.
+   * @param result The result of the task.
+   */
+  after?: (result: TaskResult<TTaskResult>, beforeResult?: TBeforeResult) => void;
+}
+
 const duplicateExecutionError = new Error(
   'Task has already been executed or shed. This is likely an implementation error. The task will not be executed again.',
 );
@@ -50,16 +70,25 @@ const duplicateExecutionError = new Error(
  * @param sheddable Whether the task can be shed from the queue.
  * @returns A pending task.
  */
-function makePending<TTaskResult>(
-  task: () => Promise<TTaskResult>,
+function makePending<TTaskResult, TBeforeResult = undefined>(
+  task: Task<TTaskResult, TBeforeResult>,
   _logger?: LDLogger,
   sheddable: boolean = false,
 ): PendingTask<TTaskResult> {
-  let res: (value: TaskResult<TTaskResult>) => void;
+  let resolveTask: (value: TaskResult<TTaskResult>, beforeResult?: TBeforeResult) => void;
 
   const promise = new Promise<TaskResult<TTaskResult>>((resolve) => {
-    res = resolve;
+    resolveTask = (result, beforeResult) => {
+      try {
+        task.after?.(result, beforeResult);
+      } catch (error) {
+        _logger?.error(`Error in after callback: ${error}`);
+      }
+      resolve(result);
+    };
   });
+
+  const beforePromise = task.before ? task.before() : Promise.resolve(undefined);
 
   let executedOrShed = false;
   return {
@@ -69,9 +98,18 @@ function makePending<TTaskResult>(
         _logger?.error(duplicateExecutionError);
       }
       executedOrShed = true;
-      task()
-        .then((result) => res({ status: 'complete', result }))
-        .catch((error) => res({ status: 'error', error }));
+
+      beforePromise
+        .then((beforeResult) => {
+          task
+            .execute(beforeResult)
+            .then((result) => resolveTask({ status: 'complete', result }, beforeResult))
+            .catch((error) => resolveTask({ status: 'error', error }, beforeResult));
+        })
+        .catch((error) => {
+          _logger?.error(error);
+          resolveTask({ status: 'error', error }, undefined);
+        });
     },
     shed: () => {
       if (executedOrShed) {
@@ -79,7 +117,9 @@ function makePending<TTaskResult>(
         _logger?.error(duplicateExecutionError);
       }
       executedOrShed = true;
-      res({ status: 'shed' });
+      beforePromise.then((beforeResult) => {
+        resolveTask({ status: 'shed' }, beforeResult);
+      });
     },
     promise,
     sheddable,
@@ -142,8 +182,8 @@ export function createAsyncTaskQueue<TTaskResult>(logger?: LDLogger) {
      * @param sheddable Whether the task can be shed from the queue.
      * @returns A promise that resolves to the result of the task.
      */
-    execute(
-      task: () => Promise<TTaskResult>,
+    execute<TBeforeResult>(
+      task: Task<TTaskResult, TBeforeResult>,
       sheddable: boolean = false,
     ): Promise<TaskResult<TTaskResult>> {
       const pending = makePending(task, logger, sheddable);

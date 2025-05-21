@@ -279,48 +279,65 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     }
 
     const callSitePromise = this._identifyQueue
-      .execute(async () => {
-        let context = await ensureKey(pristineContext, this.platform);
-
-        if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
-          context = await addAutoEnv(context, this.platform, this._config);
-        }
-
-        const checkedContext = Context.fromLDContext(context);
-        if (!checkedContext.valid) {
-          const error = new Error('Context was unspecified or had no key');
-          this.emitter.emit('error', context, error);
-          return Promise.reject(error);
-        }
-        this._uncheckedContext = context;
-        this._checkedContext = checkedContext;
-
-        this._eventProcessor?.sendEvent(
-          this._eventFactoryDefault.identifyEvent(this._checkedContext),
-        );
-        const { identifyPromise, identifyResolve, identifyReject } = this._createIdentifyPromise();
-        this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
-
-        const afterIdentify = this._hookRunner.identify(context, identifyOptions?.timeout);
-
-        await this.dataManager.identify(
-          identifyResolve,
-          identifyReject,
-          checkedContext,
-          identifyOptions,
-        );
-
-        return identifyPromise.then(
-          (res) => {
-            afterIdentify({ status: 'completed' });
-            return res;
+      .execute(
+        {
+          before: async () => {
+            let context = await ensureKey(pristineContext, this.platform);
+            if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
+              context = await addAutoEnv(context, this.platform, this._config);
+            }
+            const checkedContext = Context.fromLDContext(context);
+            if (checkedContext.valid) {
+              const afterIdentify = this._hookRunner.identify(context, identifyOptions?.timeout);
+              return {
+                context,
+                checkedContext,
+                afterIdentify,
+              };
+            }
+            return {
+              context,
+              checkedContext,
+            };
           },
-          (e) => {
-            afterIdentify({ status: 'error' });
-            throw e;
+          execute: async (beforeResult) => {
+            const { context, checkedContext } = beforeResult!;
+            if (!checkedContext.valid) {
+              const error = new Error('Context was unspecified or had no key');
+              this.emitter.emit('error', context, error);
+              return Promise.reject(error);
+            }
+            this._uncheckedContext = context;
+            this._checkedContext = checkedContext;
+
+            this._eventProcessor?.sendEvent(
+              this._eventFactoryDefault.identifyEvent(this._checkedContext),
+            );
+            const { identifyPromise, identifyResolve, identifyReject } =
+              this._createIdentifyPromise();
+            this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
+
+            await this.dataManager.identify(
+              identifyResolve,
+              identifyReject,
+              checkedContext,
+              identifyOptions,
+            );
+
+            return identifyPromise;
           },
-        );
-      }, identifyOptions?.sheddable ?? false)
+          after: async (res, beforeResult) => {
+            if (res.status === 'complete') {
+              beforeResult?.afterIdentify?.({ status: 'completed' });
+            } else if (res.status === 'shed') {
+              beforeResult?.afterIdentify?.({ status: 'shed' });
+            } else if (res.status === 'error') {
+              beforeResult?.afterIdentify?.({ status: 'error' });
+            }
+          },
+        },
+        identifyOptions?.sheddable ?? false,
+      )
       .then((res) => {
         if (res.status === 'error') {
           return { status: 'error', error: res.error } as LDIdentifyError;
