@@ -15,8 +15,6 @@ import VersionedDataKinds from '../store/VersionedDataKinds';
 import DependencyTracker from './DependencyTracker';
 import NamespacedDataSet from './NamespacedDataSet';
 
-type InitMetadata = internal.InitMetadata;
-
 /**
  * This type allows computing the clause dependencies of either a flag or a segment.
  */
@@ -31,7 +29,7 @@ interface TypeWithRuleClauses {
   ];
 }
 
-function computeDependencies(namespace: string, item: LDFeatureStoreItem) {
+export function computeDependencies(namespace: string, item: LDFeatureStoreItem) {
   const ret = new NamespacedDataSet<boolean>();
   const isFlag = namespace === VersionedDataKinds.Features.namespace;
   const isSegment = namespace === VersionedDataKinds.Segments.namespace;
@@ -73,7 +71,7 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
   init(
     allData: LDFeatureStoreDataStorage,
     callback: () => void,
-    initMetadata?: InitMetadata,
+    initMetadata?: internal.InitMetadata,
   ): void {
     const checkForChanges = this._hasEventListeners();
     const doInit = (oldData?: LDFeatureStoreDataStorage) => {

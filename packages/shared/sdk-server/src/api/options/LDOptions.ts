@@ -268,23 +268,26 @@ export interface LDOptions {
      * ASCII digits, period, hyphen, underscore. A string containing any other characters will be ignored.
      */
     versionName?: string;
-
-    /**
-     * LaunchDarkly Server SDKs historically downloaded all flag configuration and segments for a particular environment
-     * during initialization.
-     *
-     * For some customers, this is an unacceptably large amount of data, and has contributed to performance issues
-     * within their products.
-     *
-     * Filtered environments aim to solve this problem. By allowing customers to specify subsets of an environment's
-     * flags using a filter key, SDKs will initialize faster and use less memory.
-     *
-     * This payload filter key only applies to the default streaming and polling data sources. It will not affect
-     * TestData or FileData data sources, nor will it be applied to any data source provided through the featureStore
-     * config property.
-     */
-    payloadFilterKey?: string;
   };
+
+  /**
+   * LaunchDarkly Server SDKs historically downloaded all flag configuration and segments for a particular environment
+   * during initialization.
+   *
+   * For some customers, this is an unacceptably large amount of data, and has contributed to performance issues
+   * within their products.
+   *
+   * Filtered environments aim to solve this problem. By allowing customers to specify subsets of an environment's
+   * flags using a filter key, SDKs will initialize faster and use less memory.
+   *
+   * This feature is releasing through a closed alpha and beta pipeline and may not be available for your account
+   * until public release.
+   *
+   * This payload filter key only applies to the default streaming and polling data sources. It will not affect
+   * TestData or FileData data sources, nor will it be applied to any data source provided through the featureStore
+   * config property.
+   */
+  payloadFilterKey?: string;
 
   /**
    * Initial set of hooks for the client.

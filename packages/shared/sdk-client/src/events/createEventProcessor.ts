@@ -17,6 +17,7 @@ const createEventProcessor = (
       undefined,
       diagnosticsManager,
       false,
+      true,
     );
   }
 

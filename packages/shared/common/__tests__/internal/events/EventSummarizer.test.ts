@@ -7,10 +7,6 @@ describe('given an event summarizer', () => {
   const summarizer = new EventSummarizer();
   const context = Context.fromLDContext({ key: 'key' });
 
-  beforeEach(() => {
-    summarizer.clearSummary();
-  });
-
   it('does nothing for an identify event.', () => {
     const beforeSummary = summarizer.getSummary();
     summarizer.summarizeEvent(new InputIdentifyEvent(context));
@@ -299,5 +295,26 @@ describe('given an event summarizer', () => {
       },
     };
     expect(data.features).toEqual(expectedFeatures);
+  });
+
+  it('automatically clears summaries after getSummary() is called', () => {
+    const event = {
+      kind: 'feature',
+      creationDate: 1000,
+      key: 'key1',
+      version: 11,
+      context,
+      variation: 1,
+      value: 100,
+      default: 111,
+    };
+
+    summarizer.summarizeEvent(event as any);
+    summarizer.getSummary();
+
+    const secondSummary = summarizer.getSummary();
+    expect(secondSummary.features).toEqual({});
+    expect(secondSummary.startDate).toBe(0);
+    expect(secondSummary.endDate).toBe(0);
   });
 });
