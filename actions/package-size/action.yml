@@ -42,7 +42,7 @@ runs:
 
     - name: Create comment
       if: steps.fc.outputs.comment-id == '' && github.event.pull_request.head.repo.full_name == github.repository
-      uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
+      uses: peter-evans/create-or-update-comment@70cab5820c914a684c6c1db2c5537c3279e31860
       with:
         issue-number: ${{ inputs.pr_number }}
         body: |
@@ -53,7 +53,7 @@ runs:
 
     - name: Update comment
       if: steps.fc.outputs.comment-id != '' && github.event.pull_request.head.repo.full_name == github.repository
-      uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043
+      uses: peter-evans/create-or-update-comment@70cab5820c914a684c6c1db2c5537c3279e31860
       with:
         comment-id: ${{ steps.fc.outputs.comment-id }}
         edit-mode: replace
