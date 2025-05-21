@@ -32,6 +32,9 @@ function getBasicConfiguration(inLogger: LDLogger) {
 
 const dateNowString = '2023-08-10';
 const sdkKey = 'my-sdk-key';
+const openHeaders = {
+  'x-ld-envid': 'envKey',
+};
 const events = {
   'server-intent': {
     data: '{"payloads": [{"intentCode": "xfer-full", "id": "mockId"}]}',
@@ -59,6 +62,7 @@ beforeEach(() => {
 const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
   streamUri,
   options,
+  onopen: jest.fn(),
   onclose: jest.fn(),
   addEventListener: jest.fn(),
   close: jest.fn(),
@@ -71,6 +75,7 @@ describe('given a stream processor with mock event source', () => {
   let mockEventSource: any;
   let mockDataCallback: jest.Mock;
   let mockStatusCallback: jest.Mock;
+  let simulateOpen: () => void;
   let simulateEvents: (e?: any) => void;
   let simulateError: (e: { status: number; message: string }) => boolean;
 
@@ -92,6 +97,11 @@ describe('given a stream processor with mock event source', () => {
         return mockEventSource;
       }),
     } as any;
+    simulateOpen = () => {
+      mockEventSource.onopen({
+        headers: openHeaders,
+      });
+    };
     simulateEvents = (e: any = events) => {
       // positions in these call arrays match order of handler attachment in payloadStreamReader
       mockEventSource.addEventListener.mock.calls[0][1](e['server-intent']); // server intent listener
@@ -230,20 +240,26 @@ describe('given a stream processor with mock event source', () => {
   });
 
   it('executes payload listener', () => {
+    simulateOpen();
     simulateEvents();
     expect(mockDataCallback).toHaveBeenNthCalledWith(1, true, {
-      basis: true,
-      id: `mockId`,
-      state: `mockState`,
-      updates: [
-        {
-          kind: `flag`,
-          key: `flagA`,
-          version: 123,
-          object: { objectFieldA: 'objectValueA' },
-        },
-      ],
-      version: 1,
+      initMetadata: {
+        environmentId: 'envKey',
+      },
+      payload: {
+        basis: true,
+        id: `mockId`,
+        state: `mockState`,
+        updates: [
+          {
+            kind: `flag`,
+            key: `flagA`,
+            version: 123,
+            object: { objectFieldA: 'objectValueA' },
+          },
+        ],
+        version: 1,
+      },
     });
   });
 

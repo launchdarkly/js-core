@@ -29,6 +29,10 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
   private _requests: Requests;
   private _connectionAttemptStartTime?: number;
 
+  // init metadata from start of connection will be held and then
+  // included with each payload update so consumers have access to it
+  private _initMetadata?: internal.InitMetadata;
+
   constructor(
     clientContext: ClientContext,
     private readonly _streamUriPath: string,
@@ -153,7 +157,7 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     );
     payloadReader.addPayloadListener((payload) => {
       this._logConnectionResult(true);
-      dataCallback(payload.basis, payload);
+      dataCallback(payload.basis, { initMetadata: this._initMetadata, payload });
     });
 
     eventSource.onclose = () => {
@@ -165,8 +169,9 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
       // The work is done by `errorFilter`.
     };
 
-    eventSource.onopen = () => {
+    eventSource.onopen = (e) => {
       this._logger?.info('Opened LaunchDarkly stream connection');
+      this._initMetadata = internal.initMetadataFromHeaders(e.headers);
       statusCallback(subsystemCommon.DataSourceState.Valid);
     };
 
