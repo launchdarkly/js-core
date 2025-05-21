@@ -1,16 +1,12 @@
-import { ClientContext } from '@launchdarkly/js-sdk-common';
-
 import { LDFeatureStore } from '../../src';
 import PollingProcessor from '../../src/data_sources/PollingProcessor';
 import Requestor from '../../src/data_sources/Requestor';
-import Configuration from '../../src/options/Configuration';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import { createBasicPlatform } from '../createBasicPlatform';
 import TestLogger, { LogLevel } from '../Logger';
 
-describe('given an event processor', () => {
+describe('given a polling processor', () => {
   const requestor = {
     requestAllData: jest.fn(),
   };
@@ -23,24 +19,19 @@ describe('given an event processor', () => {
 
   let store: LDFeatureStore;
   let storeFacade: AsyncStoreFacade;
-  let config: Configuration;
   let processor: PollingProcessor;
   let initSuccessHandler: jest.Mock;
 
   beforeEach(() => {
     store = new InMemoryFeatureStore();
     storeFacade = new AsyncStoreFacade(store);
-    config = new Configuration({
-      featureStore: store,
-      pollInterval: longInterval,
-      logger: new TestLogger(),
-    });
     initSuccessHandler = jest.fn();
 
     processor = new PollingProcessor(
-      config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, createBasicPlatform())),
+      longInterval,
+      store,
+      new TestLogger(),
       initSuccessHandler,
     );
   });
@@ -99,27 +90,22 @@ describe('given a polling processor with a short poll duration', () => {
   const jsonData = JSON.stringify(allData);
 
   let store: LDFeatureStore;
-  let config: Configuration;
+  let testLogger: TestLogger;
   let processor: PollingProcessor;
   let initSuccessHandler: jest.Mock;
   let errorHandler: jest.Mock;
 
   beforeEach(() => {
     store = new InMemoryFeatureStore();
-    config = new Configuration({
-      featureStore: store,
-      pollInterval: shortInterval,
-      logger: new TestLogger(),
-    });
+    testLogger = new TestLogger();
     initSuccessHandler = jest.fn();
     errorHandler = jest.fn();
 
-    // Configuration will not let us set this as low as needed for the test.
-    Object.defineProperty(config, 'pollInterval', { value: 0.1 });
     processor = new PollingProcessor(
-      config,
       requestor as unknown as Requestor,
-      config.featureStoreFactory(new ClientContext('', config, createBasicPlatform())),
+      shortInterval,
+      store,
+      testLogger,
       initSuccessHandler,
       errorHandler,
     );
@@ -130,14 +116,21 @@ describe('given a polling processor with a short poll duration', () => {
     jest.resetAllMocks();
   });
 
-  it('polls repeatedly', (done) => {
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
+  it('polls repeatedly', async () => {
+    const expectedCalls = new Promise<void>((resolve) => {
+      let callCount = 0;
+      requestor.requestAllData = jest.fn((cb) => {
+        cb(undefined, jsonData);
+        callCount += 1;
+        if (callCount >= 10) {
+          resolve();
+        }
+      });
 
-    processor.start();
-    setTimeout(() => {
-      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(4);
-      done();
-    }, 500);
+      processor.start();
+    });
+
+    await expectedCalls;
   });
 
   it.each<number | jest.DoneCallback>([400, 408, 429, 500, 503])(
@@ -158,7 +151,6 @@ describe('given a polling processor with a short poll duration', () => {
       expect(errorHandler).not.toBeCalled();
       setTimeout(() => {
         expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
-        const testLogger = config.logger as TestLogger;
         expect(testLogger.getCount(LogLevel.Error)).toBe(0);
         expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
         (done as jest.DoneCallback)();
@@ -176,7 +168,6 @@ describe('given a polling processor with a short poll duration', () => {
 
     setTimeout(() => {
       expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
-      const testLogger = config.logger as TestLogger;
       expect(testLogger.getCount(LogLevel.Error)).toBeGreaterThan(2);
       (done as jest.DoneCallback)();
     }, 300);
@@ -199,7 +190,6 @@ describe('given a polling processor with a short poll duration', () => {
 
       setTimeout(() => {
         expect(requestor.requestAllData.mock.calls.length).toBe(1);
-        const testLogger = config.logger as TestLogger;
         expect(testLogger.getCount(LogLevel.Error)).toBe(1);
         (done as jest.DoneCallback)();
       }, 300);

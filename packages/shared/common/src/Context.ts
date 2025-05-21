@@ -9,6 +9,7 @@ import type {
 } from './api';
 import AttributeReference from './AttributeReference';
 import { isLegacyUser, isMultiKind, isSingleKind } from './internal/context';
+import { canonicalize } from './internal/json/canonicalize';
 import { TypeValidators } from './validators';
 
 // The general strategy for the context is to transform the passed in context
@@ -169,6 +170,8 @@ export default class Context {
   private _contexts: Record<string, LDContextCommon> = {};
 
   private _privateAttributeReferences?: Record<string, AttributeReference[]>;
+
+  private _cachedCanonicalJson?: string;
 
   public readonly kind: string;
 
@@ -464,5 +467,27 @@ export default class Context {
 
   public get legacy(): boolean {
     return this._wasLegacy;
+  }
+
+  /**
+   * Get the serialized canonical JSON for this context. This is not filtered for use in events.
+   *
+   * This method will cache the result.
+   *
+   * @returns The serialized canonical JSON or undefined if it cannot be serialized.
+   */
+  public canonicalUnfilteredJson(): string | undefined {
+    if (!this.valid) {
+      return undefined;
+    }
+    if (this._cachedCanonicalJson) {
+      return this._cachedCanonicalJson;
+    }
+    try {
+      this._cachedCanonicalJson = canonicalize(Context.toLDContext(this));
+    } catch {
+      // Indicated by undefined being returned.
+    }
+    return this._cachedCanonicalJson;
   }
 }

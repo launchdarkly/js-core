@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "LaunchDarkly AI SDK for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-ai",
   "repository": {
@@ -29,7 +29,7 @@
     "mustache": "^4.2.0"
   },
   "devDependencies": {
-    "@launchdarkly/js-server-sdk-common": "2.15.1",
+    "@launchdarkly/js-server-sdk-common": "2.15.2",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.3",
     "@types/mustache": "^4.2.5",

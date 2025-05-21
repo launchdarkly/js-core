@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.15.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.15.1...js-server-sdk-common-v2.15.2) (2025-05-21)
+
+
+### Bug Fixes
+
+* corrected location of payloadFilterKey in LDOptions ([#863](https://github.com/launchdarkly/js-core/issues/863)) ([cc825d4](https://github.com/launchdarkly/js-core/commit/cc825d499b00a46cc887c1804088fbf4cdf082a0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.17.0 to 2.18.0
+
 ## [2.15.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.15.0...js-server-sdk-common-v2.15.1) (2025-04-29)
 
 
