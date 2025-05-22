@@ -1,0 +1,44 @@
+name: sdk/combined-browser
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-browser:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # Node versions to run on.
+        version: [18, 21]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/browser'
+          workspace_path: packages/sdk/combined-browser
+      - name: Check package size
+        if: github.event_name == 'pull_request' && matrix.version == '21'
+        uses: ./actions/package-size
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          target_file: 'packages/sdk/combined-browser/dist/index.js'
+          package_name: '@launchdarkly/browser'
+          pr_number: ${{ github.event.number }}
+          size_limit: 25000
