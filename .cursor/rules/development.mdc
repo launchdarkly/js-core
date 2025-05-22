@@ -1,0 +1,30 @@
+---
+description: Rules for building and understanding the repository.
+globs: *
+alwaysApply: true
+---
+# General Development Guidelines
+
+## Project Structure
+- This is a monorepo containing multiple JavaScript SDK packages
+- Packages are organized into categories:
+  - Shared packages (common code)
+  - SDK packages (platform-specific implementations)
+  - Store packages (persistent storage)
+  - Telemetry packages (monitoring)
+  - Tooling packages (development tools)
+
+## Build Requirements
+- Node environment version 16 required, this is a minimum.
+- yarn required
+- Some projects may have specific environment prerequisites
+
+## Build Process
+- Use `yarn` to install dependencies from project root
+- Use `yarn build` to build all projects
+- For single project builds:
+  ```
+  yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build
+  ```
+- Replace package name as needed
+- Running `yarn build` in individual packages won't rebuild dependencies
