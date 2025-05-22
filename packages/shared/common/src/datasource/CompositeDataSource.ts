@@ -288,6 +288,12 @@ export class CompositeDataSource implements DataSource {
         break;
       case 'fallback':
       default:
+        // if asked to fallback after using all init factories, switch to sync factories
+        if (this._initPhaseActive && this._initFactories.pos() >= this._initFactories.length()) {
+          this._initPhaseActive = false;
+          this._syncFactories.reset();
+        }
+
         if (this._initPhaseActive) {
           isPrimary = this._initFactories.pos() === 0;
           factory = this._initFactories.next();
