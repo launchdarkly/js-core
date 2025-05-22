@@ -16,6 +16,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/react-native-client-sdk](packages/sdk/react-native/README.md)   | [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]   | [React-Native][package-sdk-react-native-issues]   | [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]   |
 | [@launchdarkly/js-client-sdk](packages/sdk/browser/README.md)                  | [![NPM][sdk-browser-npm-badge]][sdk-browser-npm-link]             | [Browser][package-sdk-browser-issues]             | [![Actions Status][sdk-browser-ci-badge]][sdk-browser-ci]             |
 | [@launchdarkly/server-sdk-ai](packages/sdk/server-ai/README.md)                | [![NPM][sdk-server-ai-npm-badge]][sdk-server-ai-npm-link]         | [server-ai][package-sdk-server-ai-issues]         | [![Actions Status][sdk-server-ai-ci-badge]][sdk-server-ai-ci]         |
+<!--| [@launchdarkly/browser](packages/sdk/combined-browser/README.md)                  | [![NPM][sdk-combined-browser-npm-badge]][sdk-browser-npm-link]             | [Combined Browser][package-sdk-combined-browser-issues]             | [![Actions Status][sdk-combined-browser-ci-badge]][sdk-combined-browser-ci]             |-->
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
 | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -209,3 +210,13 @@ We encourage pull requests and other contributions from the community. Check out
 [browser-telemetry-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/browser-telemetry.svg?style=flat-square
 [browser-telemetry-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser-telemetry
 [browser-telemetry-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+telemetry%2Fbrowser-telemetry%22+
+[//]: # 'sdk/combined-browser'
+[sdk-browser-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml/badge.svg
+[sdk-browser-ci]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml
+[sdk-browser-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/browser.svg?style=flat-square
+[sdk-browser-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser
+[sdk-browser-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-browser-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/combined-browser/docs/
+[sdk-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/browser.svg?style=flat-square
+[sdk-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/browser.svg?style=flat-square
+[package-sdk-browser-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fcombined-browser%22+
