@@ -134,4 +134,5 @@ export interface Requests {
 export interface HttpErrorResponse {
   message: string;
   status?: number;
+  headers?: Record<string, string>;
 }

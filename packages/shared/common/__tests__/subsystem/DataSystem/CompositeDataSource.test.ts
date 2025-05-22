@@ -8,6 +8,8 @@ import {
   CompositeDataSource,
   TransitionConditions,
 } from '../../../src/datasource/CompositeDataSource';
+import { DataSourceErrorKind } from '../../../src/datasource/DataSourceErrorKinds';
+import { LDFlagDeliveryFallbackError } from '../../../src/datasource/errors';
 
 function makeDataSourceFactory(internal: DataSource): LDDataSourceFactory {
   return () => internal;
@@ -75,6 +77,7 @@ it('handles initializer getting basis, switching to synchronizer', async () => {
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
     [makeDataSourceFactory(mockSynchronizer1)],
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -169,6 +172,7 @@ it('handles initializer getting basis, switches to synchronizer 1, falls back to
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
     [makeDataSourceFactory(mockSynchronizer1), makeDataSourceFactory(mockSynchronizer2)],
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -270,6 +274,7 @@ it('removes synchronizer that reports unrecoverable error and loops on remaining
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
     [makeDataSourceFactory(mockSynchronizer1), makeDataSourceFactory(mockSynchronizer2)],
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -304,6 +309,117 @@ it('removes synchronizer that reports unrecoverable error and loops on remaining
   expect(statusCallback).toHaveBeenNthCalledWith(8, DataSourceState.Interrupted, expect.anything()); // sync2 recoverable error
   expect(statusCallback).toHaveBeenNthCalledWith(9, DataSourceState.Interrupted, expect.anything()); // sync2 recoverable error
   expect(statusCallback).toHaveBeenNthCalledWith(10, DataSourceState.Valid, undefined); // sync1 valid
+});
+
+it('falls back to FDv1 synchronizers when FDv1 fallback error is reported', async () => {
+  const mockInitializer1: DataSource = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          _dataCallback(true, { key: 'init1' });
+          _statusCallback(DataSourceState.Closed);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(
+            DataSourceState.Closed,
+            new LDFlagDeliveryFallbackError(
+              DataSourceErrorKind.ErrorResponse,
+              `Response header indicates to fallback to FDv1`,
+              403,
+            ),
+          );
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockSynchronizer2 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Closed, {
+            name: 'Error',
+            message: 'I should NOT be called due to FDv1 Fallback',
+          });
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockFDv1Data = { key: 'FDv1Data' };
+  const mockFDv1Synchronizer = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid, null); // this should lead to recovery
+          _dataCallback(false, mockFDv1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [makeDataSourceFactory(mockInitializer1)],
+    [makeDataSourceFactory(mockSynchronizer1), makeDataSourceFactory(mockSynchronizer2)],
+    [makeDataSourceFactory(mockFDv1Synchronizer)],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  let dataCallback;
+  const statusCallback = jest.fn();
+  await new Promise<void>((resolve) => {
+    dataCallback = jest.fn((_: boolean, data: any) => {
+      if (data === mockFDv1Data) {
+        resolve();
+      }
+    });
+
+    underTest.start(dataCallback, statusCallback);
+  });
+
+  expect(mockInitializer1.start).toHaveBeenCalledTimes(1);
+  expect(mockSynchronizer1.start).toHaveBeenCalledTimes(1);
+  expect(mockSynchronizer2.start).toHaveBeenCalledTimes(0); // this synchronizer should not be called because we fall back to FDv1 synchronizers instead
+  expect(mockFDv1Synchronizer.start).toHaveBeenCalledTimes(1);
+  expect(dataCallback).toHaveBeenCalledTimes(2);
+  expect(dataCallback).toHaveBeenNthCalledWith(1, true, { key: 'init1' });
+  expect(dataCallback).toHaveBeenNthCalledWith(2, false, { key: 'FDv1Data' });
+  expect(statusCallback).toHaveBeenCalledTimes(5);
+  expect(statusCallback).toHaveBeenNthCalledWith(1, DataSourceState.Initializing, undefined);
+  expect(statusCallback).toHaveBeenNthCalledWith(2, DataSourceState.Valid, undefined); // initializer got data
+  expect(statusCallback).toHaveBeenNthCalledWith(3, DataSourceState.Interrupted, undefined); // initializer closed
+  expect(statusCallback).toHaveBeenNthCalledWith(4, DataSourceState.Interrupted, expect.anything()); // sync1 fdv1 fallback error
+  expect(statusCallback).toHaveBeenNthCalledWith(5, DataSourceState.Valid, undefined); // sync1 valid
 });
 
 it('reports error when all initializers fail', async () => {
@@ -348,6 +464,7 @@ it('reports error when all initializers fail', async () => {
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1), makeDataSourceFactory(mockInitializer2)],
     [], // no synchronizers for this test
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -445,6 +562,7 @@ it('it reports DataSourceState Closed when all synchronizers report Closed with 
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
     [makeDataSourceFactory(mockSynchronizer1), makeDataSourceFactory(mockSynchronizer2)],
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -508,6 +626,7 @@ it('can be stopped when in thrashing synchronizer fallback loop', async () => {
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
     [makeDataSourceFactory(mockSynchronizer1)], // will continuously fallback onto itself
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -579,6 +698,7 @@ it('can be stopped and restarted', async () => {
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
     [makeDataSourceFactory(mockSynchronizer1)],
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -627,6 +747,7 @@ it('is well behaved with no initializers and no synchronizers configured', async
   const underTest = new CompositeDataSource(
     [],
     [],
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -671,6 +792,7 @@ it('is well behaved with no initializer and synchronizer configured', async () =
   const underTest = new CompositeDataSource(
     [],
     [makeDataSourceFactory(mockSynchronizer1)],
+    [],
     undefined,
     makeTestTransitionConditions(),
     makeZeroBackoff(),
@@ -711,6 +833,7 @@ it('is well behaved with an initializer and no synchronizers configured', async 
 
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
+    [],
     [],
     undefined,
     makeTestTransitionConditions(),
@@ -774,6 +897,7 @@ it('consumes cancellation tokens correctly', async () => {
   const underTest = new CompositeDataSource(
     [makeDataSourceFactory(mockInitializer1)],
     [makeDataSourceFactory(mockSynchronizer1)],
+    [],
     undefined,
     {
       // pass in transition condition so that it will thrash, generating cancellation tokens repeatedly

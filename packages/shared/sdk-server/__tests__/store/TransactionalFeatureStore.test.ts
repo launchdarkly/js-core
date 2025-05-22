@@ -33,6 +33,17 @@ describe('given a non transactional store', () => {
           key1: {
             version: 2,
           },
+          key2: {
+            version: 3,
+          },
+        },
+        segments: {
+          seg1: {
+            version: 4,
+          },
+          seg2: {
+            version: 5,
+          },
         },
       },
       undefined,
@@ -43,11 +54,39 @@ describe('given a non transactional store', () => {
         key: 'key1',
         version: 2,
       },
+      key2: {
+        key: 'key2',
+        version: 3,
+      },
+    });
+    expect(await nonTransactionalFacade.all(VersionedDataKinds.Segments)).toEqual({
+      seg1: {
+        key: 'seg1',
+        version: 4,
+      },
+      seg2: {
+        key: 'seg2',
+        version: 5,
+      },
     });
     expect(await transactionalFacade.all(VersionedDataKinds.Features)).toEqual({
       key1: {
         key: 'key1',
         version: 2,
+      },
+      key2: {
+        key: 'key2',
+        version: 3,
+      },
+    });
+    expect(await transactionalFacade.all(VersionedDataKinds.Segments)).toEqual({
+      seg1: {
+        key: 'seg1',
+        version: 4,
+      },
+      seg2: {
+        key: 'seg2',
+        version: 5,
       },
     });
   });
