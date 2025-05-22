@@ -3,13 +3,7 @@ import { internal } from '@launchdarkly/js-sdk-common';
 import { LDDataSourceUpdates } from './LDDataSourceUpdates';
 import { LDFeatureStoreDataStorage } from './LDFeatureStore';
 
-type InitMetadata = internal.InitMetadata;
-
 /**
- * @experimental
- * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
- * versioning.  It is not suitable for production usage.
- *
  * Transactional version of {@link LDDataSourceUpdates} with support for {@link applyChanges}
  */
 export interface LDTransactionalDataSourceUpdates extends LDDataSourceUpdates {
@@ -28,7 +22,7 @@ export interface LDTransactionalDataSourceUpdates extends LDDataSourceUpdates {
     basis: boolean,
     data: LDFeatureStoreDataStorage,
     callback: () => void,
-    initMetadata?: InitMetadata,
+    initMetadata?: internal.InitMetadata,
     selector?: String,
   ): void;
 }

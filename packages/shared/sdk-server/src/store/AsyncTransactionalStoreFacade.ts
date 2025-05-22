@@ -10,8 +10,6 @@ import {
 } from '../api/subsystems';
 import promisify from '../async/promisify';
 
-type InitMetadata = internal.InitMetadata;
-
 /**
  * Provides an async interface to a feature store.
  *
@@ -37,7 +35,10 @@ export default class AsyncTransactionalStoreFacade {
     });
   }
 
-  async init(allData: LDFeatureStoreDataStorage, initMetadata?: InitMetadata): Promise<void> {
+  async init(
+    allData: LDFeatureStoreDataStorage,
+    initMetadata?: internal.InitMetadata,
+  ): Promise<void> {
     return promisify((cb) => {
       this._store.init(allData, cb, initMetadata);
     });
@@ -64,7 +65,7 @@ export default class AsyncTransactionalStoreFacade {
   async applyChanges(
     basis: boolean,
     data: LDFeatureStoreDataStorage,
-    initMetadata?: InitMetadata,
+    initMetadata?: internal.InitMetadata,
     selector?: String,
   ): Promise<void> {
     return promisify((cb) => {
@@ -76,7 +77,7 @@ export default class AsyncTransactionalStoreFacade {
     this._store.close();
   }
 
-  getInitMetadata?(): InitMetadata | undefined {
+  getInitMetadata?(): internal.InitMetadata | undefined {
     return this._store.getInitMetaData?.();
   }
 }

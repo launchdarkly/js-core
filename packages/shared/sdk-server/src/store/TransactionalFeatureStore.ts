@@ -84,18 +84,29 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
 
           this._nonTransPersistenceStore.init(data, callback);
         } else {
-          const promises: Promise<void>[] = [];
+          const params: { dataKind: DataKind; item: LDKeyedFeatureStoreItem }[] = [];
           Object.entries(data).forEach(([namespace, items]) => {
             Object.keys(items || {}).forEach((key) => {
-              const item = items[key];
-              promises.push(
-                new Promise<void>((resolve) => {
-                  this._nonTransPersistenceStore.upsert({ namespace }, { key, ...item }, resolve);
-                }),
-              );
+              params.push({ dataKind: { namespace }, item: { key, ...items[key] } });
             });
           });
-          Promise.all(promises).then(callback);
+
+          params
+            .reduce(
+              (previousPromise, nextParams) =>
+                previousPromise.then(
+                  () =>
+                    new Promise((resolve) => {
+                      this._nonTransPersistenceStore.upsert(
+                        nextParams.dataKind,
+                        nextParams.item,
+                        resolve,
+                      );
+                    }),
+                ),
+              Promise.resolve(),
+            )
+            .then(callback);
         }
       },
       initMetadata,

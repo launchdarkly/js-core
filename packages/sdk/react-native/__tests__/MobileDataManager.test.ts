@@ -103,7 +103,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           close: eventSourceCloseMethod,
         })),
         fetch: mockedFetch,
-        getEventSourceCapabilities: jest.fn(),
+        getEventSourceCapabilities: jest.fn(() => ({
+          customMethod: true,
+        })),
       },
       storage: new PlatformStorage(config.logger),
       encoding: new PlatformEncoding(),
@@ -341,6 +343,211 @@ describe('given a MobileDataManager with mocked dependencies', () => {
 
     expect(logger.debug).toHaveBeenCalledWith(
       '[MobileDataManager] Identify called after data manager was closed.',
+    );
+  });
+
+  it('uses REPORT method and includes context in body when useReport is true', async () => {
+    const useReportConfig = { ...config, useReport: true };
+    mobileDataManager = new MobileDataManager(
+      platform,
+      flagManager,
+      'test-credential',
+      useReportConfig,
+      rnConfig,
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/context`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Ping for polling unsupported.');
+        },
+      }),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/meval`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          return `/mping`;
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        method: 'REPORT',
+        body: JSON.stringify(Context.toLDContext(context)),
+        headers: expect.objectContaining({
+          'content-type': 'application/json',
+        }),
+      }),
+    );
+  });
+
+  it('includes withReasons query parameter when withReasons is true', async () => {
+    const withReasonsConfig = { ...config, withReasons: true };
+    mobileDataManager = new MobileDataManager(
+      platform,
+      flagManager,
+      'test-credential',
+      withReasonsConfig,
+      rnConfig,
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/context`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Ping for polling unsupported.');
+        },
+      }),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/meval`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          return `/mping`;
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('?withReasons=true'),
+      expect.anything(),
+    );
+  });
+
+  it('uses GET method and does not include context in body when useReport is false', async () => {
+    const useReportConfig = { ...config, useReport: false };
+    mobileDataManager = new MobileDataManager(
+      platform,
+      flagManager,
+      'test-credential',
+      useReportConfig,
+      rnConfig,
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/context`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Ping for polling unsupported.');
+        },
+      }),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/meval`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          return `/mping`;
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        headers: expect.not.objectContaining({
+          'content-type': 'application/json',
+        }),
+      }),
+    );
+    expect((platform.requests.createEventSource as jest.Mock).mock.calls[0][1].method).not.toBe(
+      'REPORT',
+    );
+  });
+
+  it('does not include withReasons query parameter when withReasons is false', async () => {
+    const withReasonsConfig = { ...config, withReasons: false };
+    mobileDataManager = new MobileDataManager(
+      platform,
+      flagManager,
+      'test-credential',
+      withReasonsConfig,
+      rnConfig,
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/msdk/evalx/context`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Ping for polling unsupported.');
+        },
+      }),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return `/meval`;
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          return `/mping`;
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.not.stringContaining('withReasons=true'),
+      expect.anything(),
     );
   });
 });

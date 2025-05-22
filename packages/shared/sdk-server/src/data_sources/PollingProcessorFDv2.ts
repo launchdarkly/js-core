@@ -16,6 +16,78 @@ import Requestor from './Requestor';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
+function selectorAsQueryParams(selector: string | undefined): { key: string; value: string }[] {
+  if (!selector) {
+    return [];
+  }
+
+  return [
+    {
+      key: 'basis',
+      value: selector,
+    },
+  ];
+}
+
+// helper function to transform FDv1 response data into events the PayloadProcessor can parse
+function processFDv1FlagsAndSegments(
+  payloadProcessor: internal.PayloadProcessor,
+  data: FlagsAndSegments,
+) {
+  payloadProcessor.processEvents([
+    {
+      event: `server-intent`,
+      data: {
+        payloads: [
+          {
+            id: `FDv1Fallback`,
+            target: 1,
+            intentCode: `xfer-full`,
+          },
+        ],
+      },
+    },
+  ]);
+
+  Object.entries(data?.flags || []).forEach(([key, flag]) => {
+    payloadProcessor.processEvents([
+      {
+        event: `put-object`,
+        data: {
+          kind: 'flag',
+          key,
+          version: flag.version,
+          object: flag,
+        },
+      },
+    ]);
+  });
+
+  Object.entries(data?.segments || []).forEach(([key, segment]) => {
+    payloadProcessor.processEvents([
+      {
+        event: `put-object`,
+        data: {
+          kind: 'segment',
+          key,
+          version: segment.version,
+          object: segment,
+        },
+      },
+    ]);
+  });
+
+  payloadProcessor.processEvents([
+    {
+      event: `payload-transferred`,
+      data: {
+        state: `FDv1Fallback`,
+        version: 1,
+      },
+    },
+  ]);
+}
+
 /**
  * @internal
  */
@@ -26,7 +98,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
   private _statusCallback?: (status: subsystemCommon.DataSourceState, err?: any) => void;
 
   /**
-   * @param _requestor to fetch flags from cloud services
+   * @param _requestor to fetch flags
    * @param _pollInterval in seconds controlling how frequently polling request is made
    * @param _logger for logging
    * @param _processResponseAsFDv1 defaults to false, but if set to true, this data source will process
@@ -51,6 +123,10 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
     const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
     this._requestor.requestAllData((err, body) => {
+      if (this._stopped) {
+        return;
+      }
+
       const elapsed = Date.now() - startTime;
       const sleepFor = Math.max(this._pollInterval * 1000 - elapsed, 0);
 
@@ -123,7 +199,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
           } else {
             // FDv1 case
             const parsed = JSON.parse(body) as FlagsAndSegments;
-            this._processFDv1FlagsAndSegments(payloadProcessor, parsed);
+            processFDv1FlagsAndSegments(payloadProcessor, parsed);
           }
 
           statusCallback(subsystemCommon.DataSourceState.Valid);
@@ -146,79 +222,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       this._timeoutHandle = setTimeout(() => {
         this._poll(dataCallback, statusCallback, selectorGetter);
       }, sleepFor);
-    }, this._selectorAsQueryParams(selectorGetter?.()));
-  }
-
-  private _selectorAsQueryParams(selector: string | undefined): { key: string; value: string }[] {
-    if (!selector) {
-      return [];
-    }
-
-    return [
-      {
-        key: 'basis',
-        value: selector,
-      },
-    ];
-  }
-
-  // helper function to transform FDv1 response data into events the PayloadProcessor can parse
-  private _processFDv1FlagsAndSegments(
-    payloadProcessor: internal.PayloadProcessor,
-    data: FlagsAndSegments,
-  ) {
-    payloadProcessor.processEvents([
-      {
-        event: `server-intent`,
-        data: {
-          payloads: [
-            {
-              id: `FDv1Fallback`,
-              target: 1,
-              intentCode: `xfer-full`,
-            },
-          ],
-        },
-      },
-    ]);
-
-    Object.entries(data?.flags || []).forEach(([key, flag]) => {
-      payloadProcessor.processEvents([
-        {
-          event: `put-object`,
-          data: {
-            kind: 'flag',
-            key,
-            version: flag.version,
-            object: flag,
-          },
-        },
-      ]);
-    });
-
-    Object.entries(data?.segments || []).forEach(([key, segment]) => {
-      payloadProcessor.processEvents([
-        {
-          event: `put-object`,
-          data: {
-            kind: 'segment',
-            key,
-            version: segment.version,
-            object: segment,
-          },
-        },
-      ]);
-    });
-
-    payloadProcessor.processEvents([
-      {
-        event: `payload-transferred`,
-        data: {
-          state: `FDv1Fallback`,
-          version: 1,
-        },
-      },
-    ]);
+    }, selectorAsQueryParams(selectorGetter?.()));
   }
 
   start(

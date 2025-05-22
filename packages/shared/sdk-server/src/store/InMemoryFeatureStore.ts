@@ -9,8 +9,6 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 
-type InitMetadata = internal.InitMetadata;
-
 export default class InMemoryFeatureStore implements LDTransactionalFeatureStore {
   private _allData: LDFeatureStoreDataStorage = {};
 
@@ -19,7 +17,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
 
   private _initCalled = false;
 
-  private _initMetadata?: InitMetadata;
+  private _initMetadata?: internal.InitMetadata;
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
     const items = this._allData[kind.namespace];
@@ -48,7 +46,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
   init(
     allData: LDFeatureStoreDataStorage,
     callback: () => void,
-    initMetadata?: InitMetadata,
+    initMetadata?: internal.InitMetadata,
   ): void {
     this.applyChanges(true, allData, callback, initMetadata);
   }
@@ -82,7 +80,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
     basis: boolean,
     data: LDFeatureStoreDataStorage,
     callback: () => void,
-    initMetadata?: InitMetadata,
+    initMetadata?: internal.InitMetadata,
     selector?: string,
   ): void {
     if (basis) {
@@ -137,7 +135,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
     return 'memory';
   }
 
-  getInitMetaData(): InitMetadata | undefined {
+  getInitMetaData(): internal.InitMetadata | undefined {
     return this._initMetadata;
   }
 

@@ -35,7 +35,7 @@ export interface DataSource {
   ): void;
 
   /**
-   * May be called any number of times, if already stopped, has no effect.
+   * May be called any number of times, if already stopped, has no effect. Datasource will not make any additional callbacks after stop returns.
    */
   stop(): void;
 }

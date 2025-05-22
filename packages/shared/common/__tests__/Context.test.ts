@@ -325,3 +325,122 @@ describe('given a multi context', () => {
     expect(Context.toLDContext(input)).toEqual(expected);
   });
 });
+
+it('given a invalid context, canonicalUnfilteredJson should return undefined', () => {
+  // Force TS to accept our bad contexts
+  // @ts-ignore
+  const invalidContext = Context.fromLDContext({ kind: 'multi', bad: 'value' });
+  expect(invalidContext.valid).toBeFalsy();
+  expect(invalidContext.canonicalUnfilteredJson()).toBeUndefined();
+});
+
+it('given a context with circular references, canonicalUnfilteredJson should return undefined', () => {
+  const circularObj: any = { key: 'test', kind: 'user' };
+  // Create a circular reference
+  circularObj.self = circularObj;
+
+  const context = Context.fromLDContext(circularObj);
+  expect(context.valid).toBeTruthy();
+  expect(context.canonicalUnfilteredJson()).toBeUndefined();
+});
+
+it('canonicalUnfilteredJson should cache results', () => {
+  const context = Context.fromLDContext({
+    key: 'test',
+    name: 'test name',
+  });
+
+  // Setup spy before first call to track if it's called
+  // Using require for mocking. Tests are ran in CJS.
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  /* eslint-disable global-require */
+  const canonicalizeModule = require('../src/internal/json/canonicalize');
+  const originalCanon = canonicalizeModule.canonicalize;
+  const mockCanon = jest.fn().mockImplementation(originalCanon);
+
+  // Replace the canonicalize function
+  jest.spyOn(canonicalizeModule, 'canonicalize').mockImplementation(mockCanon);
+
+  try {
+    // First call should use the mocked canonicalize
+    const result1 = context.canonicalUnfilteredJson();
+    expect(result1).toBeDefined();
+    expect(mockCanon).toHaveBeenCalledTimes(1);
+
+    // Reset the mock to verify it's not called again
+    mockCanon.mockClear();
+
+    // Second call should use cached value and not call canonicalize again
+    const result2 = context.canonicalUnfilteredJson();
+    expect(result2).toBe(result1);
+    expect(mockCanon).not.toHaveBeenCalled();
+
+    // Verify the returned JSON looks valid
+    const parsed = JSON.parse(result1!);
+    expect(parsed.key).toBe('test');
+    expect(parsed.name).toBe('test name');
+  } finally {
+    // Always restore the original implementation
+    jest.spyOn(canonicalizeModule, 'canonicalize').mockImplementation(originalCanon);
+  }
+});
+
+it('should correctly canonicalize single-kind context', () => {
+  const context = Context.fromLDContext({
+    key: 'user-key',
+    name: 'Test User',
+    kind: 'user',
+  });
+
+  const jsonResult = context.canonicalUnfilteredJson();
+  expect(jsonResult).toBeDefined();
+
+  // Make sure we can parse the result. JSON canonicalization is tested elsewhere.
+  const parsed = JSON.parse(jsonResult!);
+  expect(parsed.key).toBe('user-key');
+  expect(parsed.kind).toBe('user');
+  expect(parsed.name).toBe('Test User');
+});
+
+it('should correctly canonicalize multi-kind context', () => {
+  const context = Context.fromLDContext({
+    kind: 'multi',
+    user: {
+      key: 'user-key',
+      name: 'Test User',
+    },
+    org: {
+      key: 'org-key',
+      name: 'Test Org',
+    },
+  });
+
+  const jsonResult = context.canonicalUnfilteredJson();
+  expect(jsonResult).toBeDefined();
+
+  // Make sure we can parse the result. JSON canonicalization is tested elsewhere.
+  const parsed = JSON.parse(jsonResult!);
+  expect(parsed.kind).toBe('multi');
+  expect(parsed.org.key).toBe('org-key');
+  expect(parsed.user.key).toBe('user-key');
+});
+
+it('should handle complex nested objects in canonicalUnfilteredJson', () => {
+  const context = Context.fromLDContext({
+    key: 'test-key',
+    kind: 'user',
+    nested: {
+      array: [3, 1, 2],
+      value: 'test',
+    },
+  });
+
+  const jsonResult = context.canonicalUnfilteredJson();
+  expect(jsonResult).toBeDefined();
+
+  const parsed = JSON.parse(jsonResult!);
+  expect(parsed.key).toBe('test-key');
+  expect(parsed.kind).toBe('user');
+  expect(parsed.nested.array).toEqual([3, 1, 2]);
+  expect(parsed.nested.value).toBe('test');
+});
