@@ -11,7 +11,13 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
+  noExternal: [
+    '@launchdarkly/js-sdk-common',
+    '@launchdarkly/js-client-sdk-common',
+    '@launchdarkly/observability',
+    '@launchdarkly/session-replay',
+    '@launchdarkly/js-client-sdk',
+  ],
   dts: true,
   metafile: true,
   esbuildOptions(opts) {

@@ -1,3 +1,15 @@
+/**
+ * This is the API reference for the LaunchDarkly Client-Side SDK for JavaScript with included Observability.
+ *
+ * This SDK is intended for use in browser environments. It includes the observability and session replay plugins.
+ *
+ * In typical usage, you will call {@link initialize} once at startup time to obtain an instance of
+ * {@link LDClient}, which provides access to all of the SDK's functionality.
+ *
+ * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
+ *
+ * @packageDocumentation
+ */
 import { initialize as initializeJsClient, LDClient, LDOptions } from '@launchdarkly/js-client-sdk';
 import Observability from '@launchdarkly/observability';
 import SessionReplay from '@launchdarkly/session-replay';
@@ -7,6 +19,9 @@ export * from '@launchdarkly/js-client-sdk';
 // TODO: Temporary until the type definitions are exported from the plugins.
 type ObserveOptions = ConstructorParameters<typeof Observability>[1];
 type RecordOptions = ConstructorParameters<typeof SessionReplay>[1];
+
+export { LDObserve } from '@launchdarkly/observability';
+export { LDRecord } from '@launchdarkly/session-replay';
 
 /**
  * Initialization options for the browser SDK and observability plugins.
