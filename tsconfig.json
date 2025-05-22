@@ -75,6 +75,9 @@
     },
     {
       "path": "./contract-tests/tsconfig.ref.json"
-    }
+    },
+    {
+      "path": "./packages/sdk/combined-browser/tsconfig.ref.json"
+    },
   ]
 }

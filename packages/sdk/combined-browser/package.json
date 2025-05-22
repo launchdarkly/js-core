@@ -1,0 +1,74 @@
+{
+  "name": "@launchdarkly/browser",
+  "version": "0.0.0",
+  "description": "LaunchDarkly SDK for JavaScript in Browsers with Observability",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/combined-browser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@3.4.1",
+  "keywords": [
+    "launchdarkly",
+    "feature flags",
+    "feature toggles",
+    "feature management",
+    "sdk"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "require": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsup",
+    "lint": "eslint . --ext .ts,.tsx",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "test": "npx jest --runInBand",
+    "coverage": "yarn test --coverage",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "0.7.0",
+    "@launchdarkly/observability": "0.1.13",
+    "@launchdarkly/session-replay": "0.1.13"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/jest": "^29.5.11",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "29.7.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.5",
+    "ts-jest": "^29.1.1",
+    "tsup": "^8.3.5",
+    "typedoc": "0.25.0",
+    "typescript": "^5.5.3"
+  }
+}
