@@ -33,12 +33,21 @@ const reportJsonError = (
   );
 };
 
+function reportEventClosed(eventName: string, logger?: LDLogger) {
+  logger?.debug(`Received ${eventName} event after processor was closed. Skipping processing.`);
+}
+
+function reportPingClosed(logger?: LDLogger) {
+  logger?.debug('Ping completed after processor was closed. Skipping processing.');
+}
+
 class StreamingProcessor implements subsystem.LDStreamProcessor {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
 
   private _eventSource?: EventSource;
   private _connectionAttemptStartTime?: number;
+  private _stopped = false;
 
   constructor(
     private readonly _plainContextString: string,
@@ -157,6 +166,13 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
 
     this._listeners.forEach(({ deserializeData, processJson }, eventName) => {
       eventSource.addEventListener(eventName, (event) => {
+        // If an event comes in after the processor has been stopped, we skip processing it.
+        // This event could be for a context which is no longer active.
+        if (this._stopped) {
+          reportEventClosed(eventName, this._logger);
+          return;
+        }
+
         this._logger?.debug(`Received ${eventName} event`);
 
         if (event?.data) {
@@ -186,6 +202,12 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
       try {
         const res = await this._pollingRequestor.requestPayload();
         try {
+          // If the ping completes after the processor has been stopped, then we discard it.
+          // This event could be for a context which is no longer active.
+          if (this._stopped) {
+            reportPingClosed(this._logger);
+            return;
+          }
           const payload = JSON.parse(res);
           try {
             // forward the payload on to the PUT listener
@@ -204,6 +226,12 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
           );
         }
       } catch (err) {
+        if (this._stopped) {
+          // If the ping errors after the processor has been stopped, then we discard it.
+          // The original caller would consider this connection no longer active.
+          reportPingClosed(this._logger);
+          return;
+        }
         const requestError = err as LDRequestError;
         this._errorHandler?.(
           new LDPollingError(
@@ -219,6 +247,7 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
   stop() {
     this._eventSource?.close();
     this._eventSource = undefined;
+    this._stopped = true;
   }
 
   close() {
