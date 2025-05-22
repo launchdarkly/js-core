@@ -11,14 +11,25 @@ import {
   LDHeaders,
   LDLogger,
   LDPluginEnvironmentMetadata,
+  LDTimeoutError,
   Platform,
-  timedPromise,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-import { Hook, LDClient, type LDOptions } from './api';
+import {
+  Hook,
+  LDClient,
+  LDClientIdentifyResult,
+  LDIdentifyError,
+  LDIdentifyResult,
+  LDIdentifyShed,
+  LDIdentifySuccess,
+  LDIdentifyTimeout,
+  type LDOptions,
+} from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
+import { createAsyncTaskQueue } from './async/AsyncTaskQueue';
 import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import { ensureKey } from './context/ensureKey';
@@ -42,7 +53,7 @@ const { ClientMessages, ErrorKinds } = internal;
 
 const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
-export default class LDClientImpl implements LDClient {
+export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private readonly _config: Configuration;
   private _uncheckedContext?: LDContext;
   private _checkedContext?: Context;
@@ -63,6 +74,7 @@ export default class LDClientImpl implements LDClient {
   protected readonly environmentMetadata: LDPluginEnvironmentMetadata;
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
+  private _identifyQueue = createAsyncTaskQueue<void>();
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -184,7 +196,7 @@ export default class LDClientImpl implements LDClient {
 
   getContext(): LDContext | undefined {
     // The LDContext returned here may have been modified by the SDK (for example: adding auto env attributes).
-    // We are returning an LDContext here to maintain a consistent represetnation of context to the consuming
+    // We are returning an LDContext here to maintain a consistent representation of context to the consuming
     // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
@@ -195,10 +207,7 @@ export default class LDClientImpl implements LDClient {
     return this._checkedContext;
   }
 
-  private _createIdentifyPromise(
-    timeout: number,
-    noTimeout: boolean,
-  ): {
+  private _createIdentifyPromise(): {
     identifyPromise: Promise<void>;
     identifyResolve: () => void;
     identifyReject: (err: Error) => void;
@@ -211,23 +220,18 @@ export default class LDClientImpl implements LDClient {
       rej = reject;
     });
 
-    if (noTimeout) {
-      return { identifyPromise: basePromise, identifyResolve: res, identifyReject: rej };
-    }
-
-    const timed = timedPromise(timeout, 'identify');
-    const raced = Promise.race([timed, basePromise]).catch((e) => {
-      if (e.message.includes('timed out')) {
-        this.logger.error(`identify error: ${e}`);
-      }
-      throw e;
-    });
-
-    return { identifyPromise: raced, identifyResolve: res, identifyReject: rej };
+    return { identifyPromise: basePromise, identifyResolve: res, identifyReject: rej };
   }
 
   /**
    * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
+   *
+   * If used with the `sheddable` option set to true, then the identify operation will be sheddable. This means that if
+   * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
+   * operations may be discarded.
+   *
+   * It is recommended to use the `identifyResult` method instead when the operation is sheddable. In a future release,
+   * all identify operations will default to being sheddable.
    *
    * @param pristineContext The LDContext object to be identified.
    * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
@@ -242,10 +246,29 @@ export default class LDClientImpl implements LDClient {
    * 3. A network error is encountered during initialization.
    */
   async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
+    // In order to manage customization in the derived classes it is important that `identify` MUST be implemented in
+    // terms of `identifyResult`. So that the logic of the identification process can be extended in one place.
+    const result = await this.identifyResult(pristineContext, identifyOptions);
+    if (result.status === 'error') {
+      throw result.error;
+    } else if (result.status === 'timeout') {
+      const timeoutError = new LDTimeoutError(
+        `identify timed out after ${result.timeout} seconds.`,
+      );
+      this.logger.error(timeoutError.message);
+      throw timeoutError;
+    }
+    // If completed or shed, then we are done.
+  }
+
+  async identifyResult(
+    pristineContext: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult> {
     const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
     const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
 
-    // When noTimeout is specified, and a timeout is not secified, then this condition cannot
+    // When noTimeout is specified, and a timeout is not specified, then this condition cannot
     // be encountered. (Our default would need to be greater)
     if (identifyTimeout > this._highTimeoutThreshold) {
       this.logger.warn(
@@ -255,47 +278,86 @@ export default class LDClientImpl implements LDClient {
       );
     }
 
-    let context = await ensureKey(pristineContext, this.platform);
+    const callSitePromise = this._identifyQueue
+      .execute(
+        {
+          before: async () => {
+            let context = await ensureKey(pristineContext, this.platform);
+            if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
+              context = await addAutoEnv(context, this.platform, this._config);
+            }
+            const checkedContext = Context.fromLDContext(context);
+            if (checkedContext.valid) {
+              const afterIdentify = this._hookRunner.identify(context, identifyOptions?.timeout);
+              return {
+                context,
+                checkedContext,
+                afterIdentify,
+              };
+            }
+            return {
+              context,
+              checkedContext,
+            };
+          },
+          execute: async (beforeResult) => {
+            const { context, checkedContext } = beforeResult!;
+            if (!checkedContext.valid) {
+              const error = new Error('Context was unspecified or had no key');
+              this.emitter.emit('error', context, error);
+              return Promise.reject(error);
+            }
+            this._uncheckedContext = context;
+            this._checkedContext = checkedContext;
 
-    if (this.autoEnvAttributes === AutoEnvAttributes.Enabled) {
-      context = await addAutoEnv(context, this.platform, this._config);
+            this._eventProcessor?.sendEvent(
+              this._eventFactoryDefault.identifyEvent(this._checkedContext),
+            );
+            const { identifyPromise, identifyResolve, identifyReject } =
+              this._createIdentifyPromise();
+            this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
+
+            await this.dataManager.identify(
+              identifyResolve,
+              identifyReject,
+              checkedContext,
+              identifyOptions,
+            );
+
+            return identifyPromise;
+          },
+          after: async (res, beforeResult) => {
+            if (res.status === 'complete') {
+              beforeResult?.afterIdentify?.({ status: 'completed' });
+            } else if (res.status === 'shed') {
+              beforeResult?.afterIdentify?.({ status: 'shed' });
+            } else if (res.status === 'error') {
+              beforeResult?.afterIdentify?.({ status: 'error' });
+            }
+          },
+        },
+        identifyOptions?.sheddable ?? false,
+      )
+      .then((res) => {
+        if (res.status === 'error') {
+          return { status: 'error', error: res.error } as LDIdentifyError;
+        }
+        if (res.status === 'shed') {
+          return { status: 'shed' } as LDIdentifyShed;
+        }
+        return { status: 'completed' } as LDIdentifySuccess;
+      });
+
+    if (noTimeout) {
+      return callSitePromise;
     }
 
-    const checkedContext = Context.fromLDContext(context);
-    if (!checkedContext.valid) {
-      const error = new Error('Context was unspecified or had no key');
-      this.emitter.emit('error', context, error);
-      return Promise.reject(error);
-    }
-    this._uncheckedContext = context;
-    this._checkedContext = checkedContext;
-
-    this._eventProcessor?.sendEvent(this._eventFactoryDefault.identifyEvent(this._checkedContext));
-    const { identifyPromise, identifyResolve, identifyReject } = this._createIdentifyPromise(
-      identifyTimeout,
-      noTimeout,
-    );
-    this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
-
-    const afterIdentify = this._hookRunner.identify(context, identifyOptions?.timeout);
-
-    await this.dataManager.identify(
-      identifyResolve,
-      identifyReject,
-      checkedContext,
-      identifyOptions,
-    );
-
-    return identifyPromise.then(
-      (res) => {
-        afterIdentify({ status: 'completed' });
-        return res;
-      },
-      (e) => {
-        afterIdentify({ status: 'error' });
-        throw e;
-      },
-    );
+    const timeoutPromise = new Promise<LDIdentifyTimeout>((resolve) => {
+      setTimeout(() => {
+        resolve({ status: 'timeout', timeout: identifyTimeout } as LDIdentifyTimeout);
+      }, identifyTimeout * 1000);
+    });
+    return Promise.race([callSitePromise, timeoutPromise]);
   }
 
   on(eventName: EventName, listener: Function): void {
