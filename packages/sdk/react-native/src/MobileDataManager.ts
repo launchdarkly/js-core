@@ -109,8 +109,8 @@ export default class MobileDataManager extends BaseDataManager {
       this.platform.encoding!,
       this.baseHeaders,
       [],
-      this.config.useReport,
       this.config.withReasons,
+      this.config.useReport,
     );
 
     this.updateProcessor?.close();

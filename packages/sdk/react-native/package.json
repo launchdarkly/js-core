@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-native-client-sdk",
-  "version": "10.10.1",
+  "version": "10.10.2",
   "description": "React Native LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native",
   "repository": {
