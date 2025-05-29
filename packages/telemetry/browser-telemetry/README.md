@@ -1,3 +1,7 @@
+> [!CAUTION]
+> This package is deprecated. The functionality provided by this package has been replaced by the [`@launchdarkly/observability`](https://github.com/launchdarkly/observability-sdk/tree/main/sdk/%40launchdarkly/observability) plugin. This package will continue to function, but migration to the new package is recommended.
+
+
 # Telemetry integration for LaunchDarkly browser SDKs.
 
 [![NPM][browser-telemetry-npm-badge]][browser-telemetry-npm-link]
