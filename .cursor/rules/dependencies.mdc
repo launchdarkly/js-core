@@ -1,0 +1,30 @@
+---
+description: Rules about dependencies.
+globs: *
+alwaysApply: true
+---
+# Dependency Management Guidelines
+
+## General Principles
+- Dependencies should be avoided unless absolutely necessary
+- Consider the following factors when evaluating dependencies:
+  - Size: Impact on final bundle size (especially important for browser SDK)
+  - Maintenance: Risk of becoming unmaintained or deprecated
+  - Security: Potential security vulnerabilities
+  - Compatibility: Support across all target platforms
+  - Conflicts: Potential conflicts with application dependencies
+
+## Package-Specific Guidelines
+- Most important to avoid dependencies in:
+  - common package
+  - sdk-client package
+  - sdk-server package
+- Individual SDK packages may have specific platform dependencies
+- Edge SDKs must use their provider's edge store and may require specific dependencies
+
+## Dependency Selection Criteria
+- Only use dependencies for functionality with:
+  - Highly-specified behavior
+  - Wide usage
+  - Active maintenance
+  - Large community support
