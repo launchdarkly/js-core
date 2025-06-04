@@ -11,17 +11,13 @@
  * @packageDocumentation
  */
 import { initialize as initializeJsClient, LDClient, LDOptions } from '@launchdarkly/js-client-sdk';
-import Observability from '@launchdarkly/observability';
-import SessionReplay from '@launchdarkly/session-replay';
+import Observability, { ObserveOptions } from '@launchdarkly/observability';
+import SessionReplay, { RecordOptions } from '@launchdarkly/session-replay';
 
 export * from '@launchdarkly/js-client-sdk';
 
-// TODO: Temporary until the type definitions are exported from the plugins.
-type ObserveOptions = ConstructorParameters<typeof Observability>[1];
-type RecordOptions = ConstructorParameters<typeof SessionReplay>[1];
-
-export { LDObserve } from '@launchdarkly/observability';
-export { LDRecord } from '@launchdarkly/session-replay';
+export { LDObserve, ObserveOptions } from '@launchdarkly/observability';
+export { LDRecord, RecordOptions } from '@launchdarkly/session-replay';
 
 /**
  * Initialization options for the browser SDK and observability plugins.
