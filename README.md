@@ -211,12 +211,12 @@ We encourage pull requests and other contributions from the community. Check out
 [browser-telemetry-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser-telemetry
 [browser-telemetry-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+telemetry%2Fbrowser-telemetry%22+
 [//]: # 'sdk/combined-browser'
-[sdk-browser-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml/badge.svg
-[sdk-browser-ci]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml
-[sdk-browser-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/browser.svg?style=flat-square
-[sdk-browser-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser
-[sdk-browser-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[sdk-browser-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/combined-browser/docs/
-[sdk-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/browser.svg?style=flat-square
-[sdk-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/browser.svg?style=flat-square
+[sdk-combined-browser-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml/badge.svg
+[sdk-combined-browser-ci]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml
+[sdk-combined-browser-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/browser.svg?style=flat-square
+[sdk-combined-browser-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser
+[sdk-combined-browser-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[sdk-combined-browser-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/combined-browser/docs/
+[sdk-combined-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/browser.svg?style=flat-square
+[sdk-combined-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/browser.svg?style=flat-square
 [package-sdk-browser-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fcombined-browser%22+
