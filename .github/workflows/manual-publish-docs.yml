@@ -23,6 +23,7 @@ on:
           - packages/sdk/browser
           - packages/sdk/server-ai
           - packages/telemetry/browser-telemetry
+          - packages/sdk/combined-browser
 name: Publish Documentation
 jobs:
   build-publish:
