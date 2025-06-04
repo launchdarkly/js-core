@@ -6,6 +6,15 @@ import { ItemDescriptor } from './ItemDescriptor';
 export default interface FlagStore {
   init(newFlags: { [key: string]: ItemDescriptor }): void;
   insertOrUpdate(key: string, update: ItemDescriptor): void;
+
+  /**
+   * Applies a set of changes atomically to the flag store.
+   * All changes will either succeed or fail together.
+   * @param basis If true, completely overwrites the current contents of the data store
+   * with the provided data.  If false, upserts the items in the provided data.
+   * @param changes An object containing flag key to ItemDescriptor mappings to be applied
+   */
+  applyChanges(basis: boolean, changes: { [key: string]: ItemDescriptor }): void;
   get(key: string): ItemDescriptor | undefined;
   getAll(): { [key: string]: ItemDescriptor };
 }
@@ -28,6 +37,22 @@ export class DefaultFlagStore implements FlagStore {
 
   insertOrUpdate(key: string, update: ItemDescriptor) {
     this._flags[key] = update;
+  }
+
+  applyChanges(basis: boolean, changes: { [key: string]: ItemDescriptor }) {
+    if (basis) {
+      this._flags = Object.entries(changes).reduce(
+        (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
+          acc[key] = flag;
+          return acc;
+        },
+        {},
+      );
+    } else {
+      Object.entries(changes).forEach(([key, flag]) => {
+        this._flags[key] = flag;
+      });
+    }
   }
 
   get(key: string): ItemDescriptor | undefined {

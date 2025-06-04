@@ -238,6 +238,39 @@ export class CompositeDataSource implements DataSource {
     this._reset();
   }
 
+  // /**
+  //  * Enables the given factory.
+  //  *
+  //  * @param factory the factory to enable
+  //  */
+  // async enableFactory(factory: LDDataSourceFactory) {
+
+  // }
+
+  // /**
+  //  * Disables the given factory. If the currently active datasource is from the
+  //  * given factory, the datasource will be stopped and this class will fallback to the next factory
+  //  * if available.
+  //  *
+  //  * @param factory the factory to disable
+  //  */
+  // async disableFactory(factory: LDDataSourceFactory) {
+    
+  // }
+
+  // /**
+  //  * Triggers recovery to the primary synchronizer. You may want to call this after enabling a factory.
+  //  *
+  //  * Ignored if called during initialization phase.
+  //  */
+  // async recover() {
+  //   if (!this._initPhaseActive) {
+  //     this._cancelTokens.forEach((cancel) => cancel());
+  //     this._cancelTokens = [];
+  //     this._externalTransitionResolve?.({ transition: 'recover' });
+  //   }
+  // }
+
   async stop() {
     this._cancelTokens.forEach((cancel) => cancel());
     this._cancelTokens = [];

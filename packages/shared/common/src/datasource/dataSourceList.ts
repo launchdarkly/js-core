@@ -2,7 +2,10 @@
  * Helper class for {@link CompositeDataSource} to manage iterating on data sources and removing them on the fly.
  */
 export class DataSourceList<T> {
+  // list of elements (includes enabled and disabled elements)
   private _list: T[];
+  // // list of disabled elements that will not be returned by next()
+  // private _disabled: T[];
   private _circular: boolean;
   private _pos: number;
 
@@ -44,6 +47,25 @@ export class DataSourceList<T> {
     this._list = [...input];
     this._pos = 0;
   }
+
+  // /**
+  //  * Disables the provided element from the list. If the disabled element was the head, head moves to next. Consider head may be undefined if list is empty after disable.
+  //  * @param element to disable
+  //  *
+  //  * @returns true if element was disabled
+  //  */
+  // disable(element: T): boolean {
+  //   // check that element is being tracked
+  //   if (this._list.includes(element)) {
+  //     // if element is not already disabled, add it to the disabled list
+  //     if (!this._disabled.includes(element)) {
+  //       this._disabled.push(element);
+  //     }
+  //     return true;
+  //   }
+
+  //   return false;
+  // }
 
   /**
    * Removes the provided element from the list. If the removed element was the head, head moves to next. Consider head may be undefined if list is empty after removal.

@@ -51,6 +51,15 @@ export default class FlagPersistence {
     return false;
   }
 
+  async applyChanges(
+    context: Context,
+    basis: boolean,
+    changes: { [key: string]: ItemDescriptor },
+  ): Promise<void> {
+    this._flagUpdater.applyChanges(context, basis, changes);
+    await this._storeCache(context);
+  }
+
   /**
    * Loads the flags from persistence for the provided context and gives those to the
    * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
