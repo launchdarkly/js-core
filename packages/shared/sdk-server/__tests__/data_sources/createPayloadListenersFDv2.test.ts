@@ -17,74 +17,89 @@ beforeEach(() => {
 });
 
 const fullTransferPayload = {
-  id: 'payloadID',
-  version: 99,
-  state: 'initial',
-  basis: true,
-  updates: [
-    {
-      kind: 'flag',
-      key: 'flagkey',
-      version: 1,
-      object: {
+  initMetadata: {
+    environmentId: 'envId',
+  },
+  payload: {
+    id: 'payloadID',
+    version: 99,
+    state: 'initial',
+    basis: true,
+    updates: [
+      {
+        kind: 'flag',
         key: 'flagkey',
         version: 1,
+        object: {
+          key: 'flagkey',
+          version: 1,
+        },
       },
-    },
-    {
-      kind: 'segment',
-      key: 'segkey',
-      version: 1,
-      object: {
+      {
+        kind: 'segment',
         key: 'segkey',
-        version: 2,
+        version: 1,
+        object: {
+          key: 'segkey',
+          version: 2,
+        },
       },
-    },
-  ],
+    ],
+  },
 };
 
 const changesTransferPayload = {
-  id: 'payloadID',
-  version: 99,
-  state: 'changes',
-  basis: false,
-  updates: [
-    {
-      kind: 'flag',
-      key: 'flagkey',
-      version: 1,
-      object: {
+  initMetadata: {
+    environmentId: 'envId',
+  },
+  payload: {
+    id: 'payloadID',
+    version: 99,
+    state: 'changes',
+    basis: false,
+    updates: [
+      {
+        kind: 'flag',
         key: 'flagkey',
         version: 1,
+        object: {
+          key: 'flagkey',
+          version: 1,
+        },
       },
-    },
-    {
-      kind: 'segment',
-      key: 'segkey',
-      version: 2,
-      object: {
+      {
+        kind: 'segment',
         key: 'segkey',
         version: 2,
+        object: {
+          key: 'segkey',
+          version: 2,
+        },
       },
-    },
-    {
-      kind: 'flag',
-      key: 'deletedFlag',
-      version: 3,
-      object: {
+      {
+        kind: 'flag',
         key: 'deletedFlag',
         version: 3,
+        object: {
+          key: 'deletedFlag',
+          version: 3,
+        },
+        deleted: true,
       },
-      deleted: true,
-    },
-  ],
+    ],
+  },
 };
 
 const changesTransferNone = {
-  id: 'payloadID',
-  version: 99,
-  basis: false,
-  updates: [],
+  initMetadata: {
+    environmentId: 'envId',
+  },
+  payload: {
+    id: 'payloadID',
+    version: 99,
+    basis: false,
+    updates: [],
+  },
 };
 
 describe('createPayloadListenerFDv2', () => {
@@ -120,7 +135,7 @@ describe('createPayloadListenerFDv2', () => {
         },
       },
       basisReceived,
-      undefined,
+      { environmentId: 'envId' },
       'initial',
     );
   });
@@ -154,7 +169,7 @@ describe('createPayloadListenerFDv2', () => {
         },
       },
       basisReceived,
-      undefined,
+      { environmentId: 'envId' },
       'changes',
     );
   });
