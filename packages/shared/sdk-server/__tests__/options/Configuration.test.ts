@@ -1,5 +1,6 @@
-import { LDOptions } from '../../src';
+import { DataSourceOptions, isStandardOptions, LDFeatureStore, LDOptions } from '../../src';
 import Configuration from '../../src/options/Configuration';
+import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import TestLogger, { LogLevel } from '../Logger';
 
 function withLogger(options: LDOptions): LDOptions {
@@ -13,7 +14,7 @@ function logger(options: LDOptions): TestLogger {
 describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without options', (input) => {
   it('should have default options', () => {
     // JavaScript is not going to stop you from calling this with whatever
-    // you want. So we need to tell TS to ingore our bad behavior.
+    // you want. So we need to tell TS to ignore our bad behavior.
     // @ts-ignore
     const config = new Configuration(input);
 
@@ -42,6 +43,7 @@ describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without opti
     expect(config.wrapperVersion).toBeUndefined();
     expect(config.hooks).toBeUndefined();
     expect(config.payloadFilterKey).toBeUndefined();
+    expect(config.dataSystem).toBeUndefined();
   });
 });
 
@@ -407,5 +409,67 @@ describe('when setting different options', () => {
           /Config option "hooks" should be of type Hook\[\], got string, using default value/,
       },
     ]);
+  });
+
+  it('drops invalid datasystem data source options and replaces with defaults', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: { dataSource: { bogus: 'myBogusOptions' } as unknown as DataSourceOptions },
+      }),
+    );
+    expect(isStandardOptions(config.dataSystem!.dataSource)).toEqual(true);
+    logger(config).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "dataSource" should be of type DataSourceOptions/,
+      },
+    ]);
+  });
+
+  it('validates the datasystem persistent store is a factory or object', () => {
+    const config1 = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: () => new InMemoryFeatureStore(),
+        },
+      }),
+    );
+    expect(isStandardOptions(config1.dataSystem!.dataSource)).toEqual(true);
+    expect(logger(config1).getCount()).toEqual(0);
+
+    const config2 = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: 'bogus type' as unknown as LDFeatureStore,
+        },
+      }),
+    );
+    expect(isStandardOptions(config2.dataSystem!.dataSource)).toEqual(true);
+    logger(config2).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "persistentStore" should be of type LDFeatureStore/,
+      },
+    ]);
+  });
+
+  it('provides reasonable defaults when datasystem is provided, but some options are missing', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {},
+      }),
+    );
+    expect(isStandardOptions(config.dataSystem!.dataSource)).toEqual(true);
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('provides reasonable defaults within the dataSystem.dataSource options when they are missing', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: { dataSource: { dataSourceOptionsType: 'standard' } },
+      }),
+    );
+    expect(isStandardOptions(config.dataSystem!.dataSource)).toEqual(true);
+    expect(logger(config).getCount()).toEqual(0);
   });
 });

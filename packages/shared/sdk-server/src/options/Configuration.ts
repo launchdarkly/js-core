@@ -14,7 +14,21 @@ import {
 
 import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '../api';
 import { Hook } from '../api/integrations';
-import { LDDataSourceUpdates, LDFeatureStore } from '../api/subsystems';
+import {
+  DataSourceOptions,
+  isPollingOnlyOptions,
+  isStandardOptions,
+  isStreamingOnlyOptions,
+  LDDataSystemOptions,
+  PollingDataSourceOptions,
+  StandardDataSourceOptions,
+  StreamingDataSourceOptions,
+} from '../api/options/LDDataSystemOptions';
+import {
+  LDDataSourceUpdates,
+  LDFeatureStore,
+  LDTransactionalFeatureStore,
+} from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ValidatedOptions } from './ValidatedOptions';
 
@@ -35,6 +49,7 @@ const validations: Record<string, TypeValidator> = {
   capacity: TypeValidators.Number,
   logger: TypeValidators.Object,
   featureStore: TypeValidators.ObjectOrFactory,
+  dataSystem: TypeValidators.Object,
   bigSegments: TypeValidators.Object,
   updateProcessor: TypeValidators.ObjectOrFactory,
   flushInterval: TypeValidators.Number,
@@ -58,6 +73,30 @@ const validations: Record<string, TypeValidator> = {
   payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
   enableEventCompression: TypeValidators.Boolean,
+  dataSourceOptionsType: TypeValidators.String,
+};
+
+export const DEFAULT_POLL_INTERVAL = 30;
+const DEFAULT_STREAM_RECONNECT_DELAY = 1;
+
+const defaultStandardDataSourceOptions: StandardDataSourceOptions = {
+  dataSourceOptionsType: 'standard',
+  streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
+  pollInterval: DEFAULT_POLL_INTERVAL,
+};
+
+const defaultStreamingDataSourceOptions: StreamingDataSourceOptions = {
+  dataSourceOptionsType: 'streamingOnly',
+  streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
+};
+
+const defaultPollingDataSourceOptions: PollingDataSourceOptions = {
+  dataSourceOptionsType: 'pollingOnly',
+  pollInterval: DEFAULT_POLL_INTERVAL,
+};
+
+const defaultDataSystemOptions = {
+  dataSource: defaultStandardDataSourceOptions,
 };
 
 /**
@@ -68,12 +107,12 @@ export const defaultValues: ValidatedOptions = {
   streamUri: 'https://stream.launchdarkly.com',
   eventsUri: ServiceEndpoints.DEFAULT_EVENTS,
   stream: true,
-  streamInitialReconnectDelay: 1,
+  streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
   sendEvents: true,
   timeout: 5,
   capacity: 10000,
   flushInterval: 5,
-  pollInterval: 30,
+  pollInterval: DEFAULT_POLL_INTERVAL,
   offline: false,
   useLdd: false,
   allAttributesPrivate: false,
@@ -84,14 +123,23 @@ export const defaultValues: ValidatedOptions = {
   diagnosticRecordingInterval: 900,
   featureStore: () => new InMemoryFeatureStore(),
   enableEventCompression: false,
+  dataSystem: defaultDataSystemOptions,
 };
 
-function validateTypesAndNames(options: LDOptions): {
+// General options type needed by validation algorithm.  Specific types can be asserted after use.
+type Options = {
+  [k: string]: any;
+};
+
+function validateTypesAndNames(
+  options: Options,
+  defaults: Options,
+): {
   errors: string[];
-  validatedOptions: ValidatedOptions;
+  validatedOptions: Options;
 } {
   const errors: string[] = [];
-  const validatedOptions: ValidatedOptions = { ...defaultValues };
+  const validatedOptions: Options = { ...defaults };
   Object.keys(options).forEach((optionName) => {
     // We need to tell typescript it doesn't actually know what options are.
     // If we don't then it complains we are doing crazy things with it.
@@ -125,7 +173,7 @@ function validateTypesAndNames(options: LDOptions): {
   return { errors, validatedOptions };
 }
 
-function validateEndpoints(options: LDOptions, validatedOptions: ValidatedOptions) {
+function validateEndpoints(options: LDOptions, validatedOptions: Options) {
   const { baseUri, streamUri, eventsUri } = options;
   const streamingEndpointSpecified = streamUri !== undefined && streamUri !== null;
   const pollingEndpointSpecified = baseUri !== undefined && baseUri !== null;
@@ -150,6 +198,74 @@ function validateEndpoints(options: LDOptions, validatedOptions: ValidatedOption
   if (!eventEndpointSpecified && validatedOptions.sendEvents) {
     validatedOptions.logger?.warn(OptionMessages.partialEndpoint('eventsUri'));
   }
+}
+
+function validateDataSystemOptions(options: Options): {
+  errors: string[];
+  validatedOptions: Options;
+} {
+  const allErrors: string[] = [];
+  const validatedOptions: Options = { ...options };
+
+  if (options.persistentStore && !TypeValidators.ObjectOrFactory.is(options.persistentStore)) {
+    validatedOptions.persistentStore = undefined; // default is to not use this
+    allErrors.push(
+      OptionMessages.wrongOptionType(
+        'persistentStore',
+        'LDFeatureStore',
+        typeof options.persistentStore,
+      ),
+    );
+  }
+
+  if (options.dataSource) {
+    let errors: string[];
+    let validatedDataSourceOptions: Options;
+    if (isStandardOptions(options.dataSource)) {
+      ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
+        options.dataSource,
+        defaultStandardDataSourceOptions,
+      ));
+    } else if (isStreamingOnlyOptions(options.dataSource)) {
+      ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
+        options.dataSource,
+        defaultStreamingDataSourceOptions,
+      ));
+    } else if (isPollingOnlyOptions(options.dataSource)) {
+      ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
+        options.dataSource,
+        defaultPollingDataSourceOptions,
+      ));
+    } else {
+      // provided datasource options don't fit any expected form, drop them and use defaults
+      validatedDataSourceOptions = defaultStandardDataSourceOptions;
+      errors = [
+        OptionMessages.wrongOptionType(
+          'dataSource',
+          'DataSourceOptions',
+          typeof options.dataSource,
+        ),
+      ];
+    }
+    validatedOptions.dataSource = validatedDataSourceOptions;
+    allErrors.push(...errors);
+  } else {
+    // use default datasource options if no datasource was specified
+    validatedOptions.dataSource = defaultStandardDataSourceOptions;
+  }
+
+  return { errors: allErrors, validatedOptions };
+}
+
+/**
+ * Configuration for the Data System
+ *
+ * @internal
+ */
+export interface DataSystemConfiguration {
+  dataSource?: DataSourceOptions;
+  featureStoreFactory: (clientContext: LDClientContext) => LDTransactionalFeatureStore;
+  useLdd?: boolean;
 }
 
 /**
@@ -206,6 +322,8 @@ export default class Configuration {
 
   public readonly featureStoreFactory: (clientContext: LDClientContext) => LDFeatureStore;
 
+  public readonly dataSystem?: DataSystemConfiguration;
+
   public readonly updateProcessorFactory?: (
     clientContext: LDClientContext,
     dataSourceUpdates: LDDataSourceUpdates,
@@ -227,12 +345,42 @@ export default class Configuration {
     // If there isn't a valid logger from the platform, then logs would go nowhere.
     this.logger = options.logger;
 
-    const { errors, validatedOptions } = validateTypesAndNames(options);
+    const { errors, validatedOptions: topLevelResult } = validateTypesAndNames(
+      options,
+      defaultValues,
+    );
+    const validatedOptions = topLevelResult as ValidatedOptions;
     errors.forEach((error) => {
       this.logger?.warn(error);
     });
 
     validateEndpoints(options, validatedOptions);
+
+    if (options.dataSystem) {
+      // validate the data system options, this will also apply reasonable defaults
+      const { errors: dsErrors, validatedOptions: dsResult } = validateDataSystemOptions(
+        options.dataSystem,
+      );
+      const validatedDSOptions = dsResult as LDDataSystemOptions;
+      this.dataSystem = {
+        dataSource: validatedDSOptions.dataSource,
+        useLdd: validatedDSOptions.useLdd,
+        // @ts-ignore
+        featureStoreFactory: (clientContext) => {
+          if (validatedDSOptions.persistentStore === undefined) {
+            // the persistent store provided was either undefined or invalid, default to memory store
+            return new InMemoryFeatureStore();
+          }
+          if (TypeValidators.Function.is(validatedDSOptions.persistentStore)) {
+            return validatedDSOptions.persistentStore(clientContext);
+          }
+          return validatedDSOptions.persistentStore;
+        },
+      };
+      dsErrors.forEach((error) => {
+        this.logger?.warn(error);
+      });
+    }
 
     this.serviceEndpoints = new ServiceEndpoints(
       validatedOptions.streamUri,
