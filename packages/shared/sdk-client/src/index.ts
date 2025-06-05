@@ -30,6 +30,12 @@ export type {
   IdentifySeriesStatus,
   TrackSeriesContext,
   LDInspection,
+  LDIdentifyResult,
+  LDIdentifySuccess,
+  LDIdentifyError,
+  LDIdentifyTimeout,
+  LDIdentifyShed,
+  LDClientIdentifyResult,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
