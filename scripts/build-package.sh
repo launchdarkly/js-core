@@ -14,16 +14,16 @@ pwd
 # each build output folder cjs and esm needs a package.json with
 # at least the correct type attribute set. We additionally set
 # name and version because the SDK logic uses those for analytics.
-CJS_PACKAGE_JSON=$( jq -n \
-                  --arg name "$NAME" \
-                  --arg version "$VERSION" \
-                  --arg type "commonjs" \
-                  '{ name: $name, version: $version, type: $type }' )
-ESM_PACKAGE_JSON=$( jq -n \
-                  --arg name "$NAME" \
-                  --arg version "$VERSION" \
-                  --arg type "module" \
-                  '{ name: $name, version: $version, type: $type }' )
+CJS_PACKAGE_JSON="{
+  \"name\": \"$NAME\",
+  \"version\": \"$VERSION\",
+  \"type\": \"commonjs\"
+}"
+ESM_PACKAGE_JSON="{
+  \"name\": \"$NAME\",
+  \"version\": \"$VERSION\",
+  \"type\": \"module\"
+}"
 
 tsc --module commonjs --outDir dist/cjs/
 echo "$CJS_PACKAGE_JSON" > dist/cjs/package.json
