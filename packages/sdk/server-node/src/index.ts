@@ -8,14 +8,10 @@
  *
  * @packageDocumentation
  */
-import {
-  BasicLogger,
-  BasicLoggerOptions,
-  LDLogger,
-  LDOptions,
-} from '@launchdarkly/js-server-sdk-common';
+import { BasicLogger, BasicLoggerOptions, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDClient } from './api/LDClient';
+import { LDOptions } from './api/LDOptions';
 import LDClientImpl from './LDClientNode';
 
 export * from '@launchdarkly/js-server-sdk-common';

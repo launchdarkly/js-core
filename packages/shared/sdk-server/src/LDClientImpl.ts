@@ -10,6 +10,7 @@ import {
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDLogger,
+  LDPluginEnvironmentMetadata,
   LDTimeoutError,
   Platform,
   subsystem,
@@ -32,6 +33,7 @@ import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
+import { createPluginEnvironmentMetadata } from './createPluginEnvironmentMetadata';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import PollingProcessor from './data_sources/PollingProcessor';
@@ -52,6 +54,7 @@ import HookRunner from './hooks/HookRunner';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration from './options/Configuration';
+import { ServerInternalOptions } from './options/ServerInternalOptions';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
@@ -129,6 +132,11 @@ export default class LDClientImpl implements LDClient {
 
   private _hookRunner: HookRunner;
 
+  /**
+   * Derived classes need to use this data to register plugins.
+   */
+  protected environmentMetadata: LDPluginEnvironmentMetadata;
+
   public get logger(): LDLogger | undefined {
     return this._logger;
   }
@@ -147,7 +155,7 @@ export default class LDClientImpl implements LDClient {
     private _platform: Platform,
     options: LDOptions,
     callbacks: LDClientCallbacks,
-    internalOptions?: internal.LDInternalOptions,
+    internalOptions?: ServerInternalOptions,
   ) {
     this._onError = callbacks.onError;
     this._onFailed = callbacks.onFailed;
@@ -156,7 +164,17 @@ export default class LDClientImpl implements LDClient {
     const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options, internalOptions);
 
-    this._hookRunner = new HookRunner(config.logger, config.hooks || []);
+    this.environmentMetadata = createPluginEnvironmentMetadata(_platform, _sdkKey, config);
+
+    const hooks: Hook[] = [];
+    if (config.hooks) {
+      hooks.push(...config.hooks);
+    }
+    config.getImplementationHooks(this.environmentMetadata).forEach((hook) => {
+      hooks.push(hook);
+    });
+
+    this._hookRunner = new HookRunner(config.logger, hooks);
 
     if (!_sdkKey && !config.offline) {
       throw new Error('You must configure the client with an SDK key');
