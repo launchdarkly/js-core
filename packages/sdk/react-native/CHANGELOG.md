@@ -1,5 +1,21 @@
 # Changelog
 
+## [10.10.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.10.2...react-native-client-sdk-v10.10.3) (2025-06-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.14.0 to 1.14.1
+
+## [10.10.2](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.10.1...react-native-client-sdk-v10.10.2) (2025-05-22)
+
+
+### Bug Fixes
+
+* Requestor initialized with wrong withReasons and useReport config ([#869](https://github.com/launchdarkly/js-core/issues/869)) ([2e095c5](https://github.com/launchdarkly/js-core/commit/2e095c5cc5790dd554d63745a5ebcbfb0f44139a))
+
 ## [10.10.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.10.0...react-native-client-sdk-v10.10.1) (2025-05-21)
 
 
