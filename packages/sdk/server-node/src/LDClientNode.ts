@@ -7,51 +7,22 @@ import {
   internal,
   LDClientImpl,
   LDPluginEnvironmentMetadata,
-  Platform,
   SafeLogger,
   TypeValidators,
 } from '@launchdarkly/js-server-sdk-common';
-import { LDClientCallbacks } from '@launchdarkly/js-server-sdk-common/dist/LDClientImpl';
-import { ServerInternalOptions } from '@launchdarkly/js-server-sdk-common/dist/options/ServerInternalOptions';
 
 import { BigSegmentStoreStatusProvider, LDClient } from './api';
 import { LDOptions } from './api/LDOptions';
 import { LDPlugin } from './api/LDPlugin';
 import BigSegmentStoreStatusProviderNode from './BigSegmentsStoreStatusProviderNode';
-import { Emits } from './Emits';
 import NodePlatform from './platform/NodePlatform';
-
-/**
- * @internal
- * Extend the base client implementation with an event emitter.
- *
- * The LDClientNode implementation must satisfy the LDClient interface,
- * which is why we extend the base client implementation with an event emitter
- * and then inherit from that. This adds everything we need to the implementation
- * to comply with the interface.
- *
- * This allows re-use of the `Emits` mixin for this and big segments.
- */
-class ClientBaseWithEmitter extends LDClientImpl {
-  emitter: EventEmitter;
-
-  constructor(
-    sdkKey: string,
-    platform: Platform,
-    options: LDOptions,
-    callbacks: LDClientCallbacks,
-    internalOptions?: ServerInternalOptions,
-  ) {
-    super(sdkKey, platform, options, callbacks, internalOptions);
-    this.emitter = new EventEmitter();
-  }
-}
 
 /**
  * @ignore
  */
-class LDClientNode extends Emits(ClientBaseWithEmitter) implements LDClient {
+class LDClientNode extends LDClientImpl implements LDClient {
   bigSegmentStoreStatusProvider: BigSegmentStoreStatusProvider;
+  emitter: EventEmitter;
 
   constructor(sdkKey: string, options: LDOptions) {
     const fallbackLogger = new BasicLogger({
@@ -109,16 +80,87 @@ class LDClientNode extends Emits(ClientBaseWithEmitter) implements LDClient {
           internal.safeGetHooks(logger, environmentMetadata, plugins),
       },
     );
-    // TODO: It would be good if we could re-arrange this emitter situation so we don't have to
-    // create two emitters. It isn't harmful, but it isn't ideal.
-    this.emitter = emitter;
 
+    this.emitter = emitter;
     this.bigSegmentStoreStatusProvider = new BigSegmentStoreStatusProviderNode(
       this.bigSegmentStatusProviderInternal,
     ) as BigSegmentStoreStatusProvider;
 
     internal.safeRegisterPlugins(logger, this.environmentMetadata, this, plugins);
   }
+
+  // #region: EventEmitter
+
+  on(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.on(eventName, listener);
+    return this;
+  }
+
+  addListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.addListener(eventName, listener);
+    return this;
+  }
+
+  once(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.once(eventName, listener);
+    return this;
+  }
+
+  removeListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.removeListener(eventName, listener);
+    return this;
+  }
+
+  off(eventName: string | symbol, listener: (...args: any) => void): this {
+    this.emitter.off(eventName, listener);
+    return this;
+  }
+
+  removeAllListeners(event?: string | symbol): this {
+    this.emitter.removeAllListeners(event);
+    return this;
+  }
+
+  setMaxListeners(n: number): this {
+    this.emitter.setMaxListeners(n);
+    return this;
+  }
+
+  getMaxListeners(): number {
+    return this.emitter.getMaxListeners();
+  }
+
+  listeners(eventName: string | symbol): Function[] {
+    return this.emitter.listeners(eventName);
+  }
+
+  rawListeners(eventName: string | symbol): Function[] {
+    return this.emitter.rawListeners(eventName);
+  }
+
+  emit(eventName: string | symbol, ...args: any[]): boolean {
+    return this.emitter.emit(eventName, args);
+  }
+
+  listenerCount(eventName: string | symbol): number {
+    return this.emitter.listenerCount(eventName);
+  }
+
+  prependListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.prependListener(eventName, listener);
+    return this;
+  }
+
+  prependOnceListener(eventName: string | symbol, listener: (...args: any[]) => void): this {
+    this.emitter.prependOnceListener(eventName, listener);
+    return this;
+  }
+
+  eventNames(): (string | symbol)[] {
+    return this.emitter.eventNames();
+  }
+
+  // #endregion
 }
 
 export default LDClientNode;
