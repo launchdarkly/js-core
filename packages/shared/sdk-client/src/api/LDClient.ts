@@ -366,7 +366,7 @@ export interface LDClientIdentifyResult {
    *    The promise returned from this method will not be rejected.
    */
   identifyResult(
-    pristineContext: LDContext,
+    context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
 }
