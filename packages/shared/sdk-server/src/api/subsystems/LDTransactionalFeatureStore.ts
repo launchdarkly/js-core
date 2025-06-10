@@ -2,7 +2,13 @@ import { internal } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureStore, LDFeatureStoreDataStorage } from './LDFeatureStore';
 
+type InitMetadata = internal.InitMetadata;
+
 /**
+ * @experimental
+ * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
+ * versioning.  It is not suitable for production usage.
+ *
  * Transactional version of {@link LDFeatureStore} with support for {@link applyChanges}
  */
 export interface LDTransactionalFeatureStore extends LDFeatureStore {

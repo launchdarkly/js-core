@@ -2,6 +2,7 @@
 import {
   cancelableTimedPromise,
   ClientContext,
+  CompositeDataSource,
   Context,
   defaultHeaders,
   internal,
@@ -26,17 +27,28 @@ import {
   LDMigrationStage,
   LDMigrationVariation,
   LDOptions,
+  LDTransactionalFeatureStore,
 } from './api';
 import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
+import {
+  isPollingOnlyOptions,
+  isStandardOptions,
+  isStreamingOnlyOptions,
+} from './api/options/LDDataSystemOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
+import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
+import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
 import PollingProcessor from './data_sources/PollingProcessor';
+import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
 import Requestor from './data_sources/Requestor';
 import StreamingProcessor from './data_sources/StreamingProcessor';
+import StreamingProcessorFDv2 from './data_sources/StreamingProcessorFDv2';
+import TransactionalDataSourceUpdates from './data_sources/TransactionalDataSourceUpdates';
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
@@ -51,7 +63,7 @@ import FlagsStateBuilder from './FlagsStateBuilder';
 import HookRunner from './hooks/HookRunner';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
-import Configuration from './options/Configuration';
+import Configuration, { DEFAULT_POLL_INTERVAL } from './options/Configuration';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
@@ -87,15 +99,313 @@ const STRING_VARIATION_DETAIL_METHOD_NAME = 'LDClient.stringVariationDetail';
 const JSON_VARIATION_DETAIL_METHOD_NAME = 'LDClient.jsonVariationDetail';
 const VARIATION_METHOD_DETAIL_NAME = 'LDClient.variationDetail';
 
+function constructFDv1(
+  sdkKey: string,
+  platform: Platform,
+  config: Configuration,
+  callbacks: LDClientCallbacks,
+  initSuccess: () => void,
+  dataSourceErrorHandler: (e: any) => void,
+): {
+  config: Configuration;
+  logger: LDLogger | undefined;
+  evaluator: Evaluator;
+  featureStore: LDFeatureStore;
+  updateProcessor: subsystem.LDStreamProcessor | undefined;
+  eventProcessor: subsystem.LDEventProcessor;
+  bigSegmentsManager: BigSegmentsManager;
+  hookRunner: HookRunner;
+  onError: (err: Error) => void;
+  onFailed: (err: Error) => void;
+  onReady: () => void;
+} {
+  const { onUpdate, hasEventListeners } = callbacks;
+
+  const hookRunner = new HookRunner(config.logger, config.hooks || []);
+
+  if (!sdkKey && !config.offline) {
+    throw new Error('You must configure the client with an SDK key');
+  }
+  const { logger } = config;
+  const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
+
+  const clientContext = new ClientContext(sdkKey, config, platform);
+  const featureStore = config.featureStoreFactory(clientContext);
+
+  const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
+
+  let diagnosticsManager: internal.DiagnosticsManager | undefined;
+  if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
+    diagnosticsManager = new internal.DiagnosticsManager(
+      sdkKey,
+      platform,
+      createDiagnosticsInitConfig(config, platform, featureStore),
+    );
+  }
+
+  let eventProcessor: subsystem.LDEventProcessor;
+  if (!config.sendEvents || config.offline) {
+    eventProcessor = new NullEventProcessor();
+  } else {
+    eventProcessor = new internal.EventProcessor(
+      config,
+      clientContext,
+      baseHeaders,
+      new ContextDeduplicator(config),
+      diagnosticsManager,
+    );
+  }
+
+  const bigSegmentsManager = new BigSegmentsManager(
+    config.bigSegments?.store?.(clientContext),
+    config.bigSegments ?? {},
+    config.logger,
+    platform.crypto,
+  );
+
+  const queries: Queries = {
+    getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
+      featureStore.get(VersionedDataKinds.Features, key, (item) => cb(item as Flag));
+    },
+    getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
+      featureStore.get(VersionedDataKinds.Segments, key, (item) => cb(item as Segment));
+    },
+    getBigSegmentsMembership(
+      userKey: string,
+    ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
+      return bigSegmentsManager.getUserMembership(userKey);
+    },
+  };
+  const evaluator = new Evaluator(platform, queries);
+
+  const listeners = createStreamListeners(dataSourceUpdates, logger, {
+    put: initSuccess,
+  });
+  const makeDefaultProcessor = () =>
+    config.stream
+      ? new StreamingProcessor(
+          clientContext,
+          '/all',
+          [],
+          listeners,
+          baseHeaders,
+          diagnosticsManager,
+          dataSourceErrorHandler,
+          config.streamInitialReconnectDelay,
+        )
+      : new PollingProcessor(
+          new Requestor(config, platform.requests, baseHeaders),
+          config.pollInterval,
+          dataSourceUpdates,
+          config.logger,
+          initSuccess,
+          dataSourceErrorHandler,
+        );
+
+  let updateProcessor: subsystem.LDStreamProcessor | undefined;
+  if (!(config.offline || config.useLdd)) {
+    updateProcessor =
+      config.updateProcessorFactory?.(
+        clientContext,
+        dataSourceUpdates,
+        initSuccess,
+        dataSourceErrorHandler,
+      ) ?? makeDefaultProcessor();
+  }
+
+  return {
+    config,
+    logger,
+    evaluator,
+    featureStore,
+    updateProcessor,
+    eventProcessor,
+    bigSegmentsManager,
+    hookRunner,
+    onError: callbacks.onError,
+    onFailed: callbacks.onFailed,
+    onReady: callbacks.onReady,
+  };
+}
+
+function constructFDv2(
+  sdkKey: string,
+  platform: Platform,
+  config: Configuration,
+  callbacks: LDClientCallbacks,
+  initSuccess: () => void,
+): {
+  config: Configuration;
+  logger: LDLogger | undefined;
+  evaluator: Evaluator;
+  featureStore: LDTransactionalFeatureStore;
+  dataSource: subsystem.DataSource | undefined;
+  payloadListener: ((payload: any) => void) | undefined;
+  eventProcessor: subsystem.LDEventProcessor;
+  bigSegmentsManager: BigSegmentsManager;
+  hookRunner: HookRunner;
+  onError: (err: Error) => void;
+  onFailed: (err: Error) => void;
+  onReady: () => void;
+} {
+  const { onUpdate, hasEventListeners } = callbacks;
+
+  const hookRunner = new HookRunner(config.logger, config.hooks || []);
+
+  if (!sdkKey && !config.offline) {
+    throw new Error('You must configure the client with an SDK key');
+  }
+
+  const { logger } = config;
+  const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
+
+  const clientContext = new ClientContext(sdkKey, config, platform);
+  const dataSystem = config.dataSystem!; // dataSystem must be defined to get into this construct function
+  const featureStore = dataSystem.featureStoreFactory(clientContext);
+
+  const dataSourceUpdates = new TransactionalDataSourceUpdates(
+    featureStore,
+    hasEventListeners,
+    onUpdate,
+  );
+
+  let diagnosticsManager: internal.DiagnosticsManager | undefined;
+  if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
+    diagnosticsManager = new internal.DiagnosticsManager(
+      sdkKey,
+      platform,
+      createDiagnosticsInitConfig(config, platform, featureStore),
+    );
+  }
+
+  let eventProcessor: internal.NullEventProcessor | internal.EventProcessor;
+  if (!config.sendEvents || config.offline) {
+    eventProcessor = new NullEventProcessor();
+  } else {
+    eventProcessor = new internal.EventProcessor(
+      config,
+      clientContext,
+      baseHeaders,
+      new ContextDeduplicator(config),
+      diagnosticsManager,
+    );
+  }
+
+  const bigSegmentsManager = new BigSegmentsManager(
+    config.bigSegments?.store?.(clientContext),
+    config.bigSegments ?? {},
+    config.logger,
+    platform.crypto,
+  );
+
+  const queries: Queries = {
+    getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
+      featureStore.get(VersionedDataKinds.Features, key, (item) => cb(item as Flag));
+    },
+    getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
+      featureStore.get(VersionedDataKinds.Segments, key, (item) => cb(item as Segment));
+    },
+    getBigSegmentsMembership(
+      userKey: string,
+    ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
+      return bigSegmentsManager.getUserMembership(userKey);
+    },
+  };
+  const evaluator = new Evaluator(platform, queries);
+
+  let dataSource: subsystem.DataSource | undefined;
+  let payloadListener: ((payload: any) => void) | undefined;
+  if (!(config.offline || config.dataSystem!.useLdd)) {
+    // make the FDv2 composite datasource with initializers/synchronizers
+    const initializers: subsystem.LDDataSourceFactory[] = [];
+
+    // use one shot initializer for performance and cost
+    initializers.push(
+      () =>
+        new OneShotInitializerFDv2(
+          new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+          config.logger,
+        ),
+    );
+
+    const synchronizers: subsystem.LDDataSourceFactory[] = [];
+    // if streaming is configured, add streaming synchronizer
+    if (isStandardOptions(dataSystem.dataSource) || isStreamingOnlyOptions(dataSystem.dataSource)) {
+      const reconnectDelay = dataSystem.dataSource.streamInitialReconnectDelay;
+      synchronizers.push(
+        () =>
+          new StreamingProcessorFDv2(
+            clientContext,
+            '/sdk/stream',
+            [],
+            baseHeaders,
+            diagnosticsManager,
+            reconnectDelay,
+          ),
+      );
+    }
+
+    let pollingInterval = DEFAULT_POLL_INTERVAL;
+    // if polling is configured, add polling synchronizer
+    if (isStandardOptions(dataSystem.dataSource) || isPollingOnlyOptions(dataSystem.dataSource)) {
+      pollingInterval = dataSystem.dataSource.pollInterval ?? DEFAULT_POLL_INTERVAL;
+      synchronizers.push(
+        () =>
+          new PollingProcessorFDv2(
+            new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', logger),
+            pollingInterval,
+            logger,
+          ),
+      );
+    }
+
+    // This is short term handling and will be removed once FDv2 adoption is sufficient.
+    const fdv1FallbackSynchronizers = [
+      () =>
+        new PollingProcessorFDv2(
+          new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+          pollingInterval,
+          config.logger,
+          true,
+        ),
+    ];
+
+    dataSource = new CompositeDataSource(
+      initializers,
+      synchronizers,
+      fdv1FallbackSynchronizers,
+      logger,
+    );
+    payloadListener = createPayloadListener(dataSourceUpdates, logger, initSuccess);
+  }
+
+  return {
+    config,
+    logger,
+    evaluator,
+    featureStore,
+    dataSource,
+    payloadListener,
+    eventProcessor,
+    bigSegmentsManager,
+    hookRunner,
+    onError: callbacks.onError,
+    onFailed: callbacks.onFailed,
+    onReady: callbacks.onReady,
+  };
+}
+
 /**
  * @ignore
  */
 export default class LDClientImpl implements LDClient {
   private _initState: InitState = InitState.Initializing;
 
-  private _featureStore: LDFeatureStore;
+  private _featureStore: LDFeatureStore | LDTransactionalFeatureStore;
 
   private _updateProcessor?: subsystem.LDStreamProcessor;
+
+  private _dataSource?: subsystem.DataSource;
 
   private _eventFactoryDefault = new EventFactory(false);
 
@@ -125,8 +435,6 @@ export default class LDClientImpl implements LDClient {
 
   private _onReady: () => void;
 
-  private _diagnosticsManager?: internal.DiagnosticsManager;
-
   private _hookRunner: HookRunner;
 
   public get logger(): LDLogger | undefined {
@@ -149,113 +457,80 @@ export default class LDClientImpl implements LDClient {
     callbacks: LDClientCallbacks,
     internalOptions?: internal.LDInternalOptions,
   ) {
-    this._onError = callbacks.onError;
-    this._onFailed = callbacks.onFailed;
-    this._onReady = callbacks.onReady;
-
-    const { onUpdate, hasEventListeners } = callbacks;
     const config = new Configuration(options, internalOptions);
 
-    this._hookRunner = new HookRunner(config.logger, config.hooks || []);
-
-    if (!_sdkKey && !config.offline) {
-      throw new Error('You must configure the client with an SDK key');
-    }
-    this._config = config;
-    this._logger = config.logger;
-    const baseHeaders = defaultHeaders(_sdkKey, _platform.info, config.tags);
-
-    const clientContext = new ClientContext(_sdkKey, config, _platform);
-    const featureStore = config.featureStoreFactory(clientContext);
-
-    const dataSourceUpdates = new DataSourceUpdates(featureStore, hasEventListeners, onUpdate);
-
-    if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
-      this._diagnosticsManager = new internal.DiagnosticsManager(
+    if (!config.dataSystem) {
+      // setup for FDv1
+      ({
+        config: this._config,
+        logger: this._logger,
+        evaluator: this._evaluator,
+        featureStore: this._featureStore,
+        updateProcessor: this._updateProcessor,
+        eventProcessor: this._eventProcessor,
+        bigSegmentsManager: this._bigSegmentsManager,
+        hookRunner: this._hookRunner,
+        onError: this._onError,
+        onFailed: this._onFailed,
+        onReady: this._onReady,
+      } = constructFDv1(
         _sdkKey,
         _platform,
-        createDiagnosticsInitConfig(config, _platform, featureStore),
-      );
-    }
-
-    if (!config.sendEvents || config.offline) {
-      this._eventProcessor = new NullEventProcessor();
-    } else {
-      this._eventProcessor = new internal.EventProcessor(
         config,
-        clientContext,
-        baseHeaders,
-        new ContextDeduplicator(config),
-        this._diagnosticsManager,
-      );
-    }
+        callbacks,
+        () => this._initSuccess(),
+        (e) => this._dataSourceErrorHandler(e),
+      ));
 
-    this._featureStore = featureStore;
+      this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
+        .statusProvider as BigSegmentStoreStatusProvider;
 
-    const manager = new BigSegmentsManager(
-      config.bigSegments?.store?.(clientContext),
-      config.bigSegments ?? {},
-      config.logger,
-      this._platform.crypto,
-    );
-    this._bigSegmentsManager = manager;
-    this.bigSegmentStatusProviderInternal = manager.statusProvider as BigSegmentStoreStatusProvider;
-
-    const queries: Queries = {
-      getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
-        featureStore.get(VersionedDataKinds.Features, key, (item) => cb(item as Flag));
-      },
-      getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
-        featureStore.get(VersionedDataKinds.Segments, key, (item) => cb(item as Segment));
-      },
-      getBigSegmentsMembership(
-        userKey: string,
-      ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
-        return manager.getUserMembership(userKey);
-      },
-    };
-    this._evaluator = new Evaluator(this._platform, queries);
-
-    const listeners = createStreamListeners(dataSourceUpdates, this._logger, {
-      put: () => this._initSuccess(),
-    });
-    const makeDefaultProcessor = () =>
-      config.stream
-        ? new StreamingProcessor(
-            clientContext,
-            '/all',
-            [],
-            listeners,
-            baseHeaders,
-            this._diagnosticsManager,
-            (e) => this._dataSourceErrorHandler(e),
-            this._config.streamInitialReconnectDelay,
-          )
-        : new PollingProcessor(
-            new Requestor(config, this._platform.requests, baseHeaders),
-            config.pollInterval,
-            dataSourceUpdates,
-            config.logger,
-            () => this._initSuccess(),
-            (e) => this._dataSourceErrorHandler(e),
-          );
-
-    if (!(config.offline || config.useLdd)) {
-      this._updateProcessor =
-        config.updateProcessorFactory?.(
-          clientContext,
-          dataSourceUpdates,
-          () => this._initSuccess(),
-          (e) => this._dataSourceErrorHandler(e),
-        ) ?? makeDefaultProcessor();
-    }
-
-    if (this._updateProcessor) {
-      this._updateProcessor.start();
+      if (this._updateProcessor) {
+        this._updateProcessor.start();
+      } else {
+        // Deferring the start callback should allow client construction to complete before we start
+        // emitting events. Allowing the client an opportunity to register events.
+        setTimeout(() => this._initSuccess(), 0);
+      }
     } else {
-      // Deferring the start callback should allow client construction to complete before we start
-      // emitting events. Allowing the client an opportunity to register events.
-      setTimeout(() => this._initSuccess(), 0);
+      // setup for FDv2
+      let transactionalStore: LDTransactionalFeatureStore;
+      let payloadListener: ((payload: any) => void) | undefined;
+      ({
+        config: this._config,
+        logger: this._logger,
+        evaluator: this._evaluator,
+        featureStore: transactionalStore,
+        dataSource: this._dataSource,
+        payloadListener,
+        eventProcessor: this._eventProcessor,
+        bigSegmentsManager: this._bigSegmentsManager,
+        hookRunner: this._hookRunner,
+        onError: this._onError,
+        onFailed: this._onFailed,
+        onReady: this._onReady,
+      } = constructFDv2(_sdkKey, _platform, config, callbacks, () => this._initSuccess()));
+      this._featureStore = transactionalStore;
+      this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
+        .statusProvider as BigSegmentStoreStatusProvider;
+
+      if (this._dataSource) {
+        this._dataSource.start(
+          (_, payload) => {
+            payloadListener?.(payload);
+          },
+          (state, err) => {
+            if (state === subsystem.DataSourceState.Closed && err) {
+              this._dataSourceErrorHandler(err);
+            }
+          },
+          () => transactionalStore.getSelector?.(),
+        );
+      } else {
+        // Deferring the start callback should allow client construction to complete before we start
+        // emitting events. Allowing the client an opportunity to register events.
+        setTimeout(() => this._initSuccess(), 0);
+      }
     }
   }
 
@@ -272,7 +547,10 @@ export default class LDClientImpl implements LDClient {
     // If there is no update processor, then there is functionally no initialization
     // so it is fine not to wait.
 
-    if (options?.timeout === undefined && this._updateProcessor !== undefined) {
+    if (
+      options?.timeout === undefined &&
+      (this._updateProcessor !== undefined || this._dataSource !== undefined)
+    ) {
       this._logger?.warn(
         'The waitForInitialization function was called without a timeout specified.' +
           ' In a future version a default timeout will be applied.',
@@ -281,7 +559,7 @@ export default class LDClientImpl implements LDClient {
     if (
       options?.timeout !== undefined &&
       options?.timeout > HIGH_TIMEOUT_THRESHOLD &&
-      this._updateProcessor !== undefined
+      (this._updateProcessor !== undefined || this._dataSource !== undefined)
     ) {
       this._logger?.warn(
         'The waitForInitialization function was called with a timeout greater than ' +
@@ -731,6 +1009,7 @@ export default class LDClientImpl implements LDClient {
   close(): void {
     this._eventProcessor.close();
     this._updateProcessor?.close();
+    this._dataSource?.stop();
     this._featureStore.close();
     this._bigSegmentsManager.close();
   }
