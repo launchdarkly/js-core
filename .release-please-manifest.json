@@ -11,11 +11,12 @@
   "packages/shared/akamai-edgeworker-sdk": "2.0.7",
   "packages/store/node-server-sdk-dynamodb": "6.2.11",
   "packages/store/node-server-sdk-redis": "4.2.11",
-  "packages/shared/sdk-client": "1.14.0",
-  "packages/sdk/react-native": "10.10.2",
+  "packages/shared/sdk-client": "1.14.1",
+  "packages/sdk/react-native": "10.10.3",
   "packages/telemetry/node-server-sdk-otel": "1.2.2",
-  "packages/sdk/browser": "0.7.0",
+  "packages/sdk/browser": "0.7.1",
   "packages/sdk/server-ai": "0.9.8",
-  "packages/telemetry/browser-telemetry": "1.0.8",
-  "packages/tooling/jest": "0.1.7"
+  "packages/telemetry/browser-telemetry": "1.0.9",
+  "packages/tooling/jest": "0.1.8",
+  "packages/sdk/combined-browser": "0.0.0"
 }

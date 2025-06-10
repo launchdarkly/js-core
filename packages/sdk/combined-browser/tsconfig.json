@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ES2017", "dom"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "strict": true,
+    "stripInternal": true,
+    "target": "ES2017",
+    "types": ["node", "jest"],
+    "allowJs": true
+  },
+  "include": ["src"],
+  "exclude": [
+    "vite.config.ts",
+    "__tests__",
+    "dist",
+    "docs",
+    "example",
+    "node_modules",
+    "babel.config.js",
+    "setup-jest.js",
+    "rollup.config.js",
+    "**/*.test.ts*"
+  ]
+}

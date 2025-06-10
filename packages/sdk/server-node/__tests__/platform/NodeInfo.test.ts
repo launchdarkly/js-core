@@ -42,7 +42,7 @@ describe('given an information instance with mock data', () => {
     versionSpy.mockReturnValue('0.0.0');
 
     const archSpy = jest.spyOn(os, 'arch');
-    archSpy.mockReturnValue('potato');
+    archSpy.mockReturnValue('s390x');
 
     global.process = {
       ...process,
@@ -54,7 +54,7 @@ describe('given an information instance with mock data', () => {
     expect(data.os).toBeDefined();
     expect(data.os?.name).toEqual('MacOS');
     expect(data.os?.version).toEqual('0.0.0');
-    expect(data.os?.arch).toEqual('potato');
+    expect(data.os?.arch).toEqual('s390x');
     expect(data.additional!.nodeVersion).toEqual('1.2.3');
   });
 

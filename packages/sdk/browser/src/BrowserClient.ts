@@ -11,6 +11,7 @@ import {
   LDEmitter,
   LDEmitterEventName,
   LDHeaders,
+  LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
@@ -188,8 +189,22 @@ export class BrowserClient extends LDClientImpl implements LDClient {
   }
 
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    await super.identify(context, identifyOptions);
+    return super.identify(context, identifyOptions);
+  }
+
+  override async identifyResult(
+    context: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult> {
+    const identifyOptionsWithUpdatedDefaults = {
+      ...identifyOptions,
+    };
+    if (identifyOptions?.sheddable === undefined) {
+      identifyOptionsWithUpdatedDefaults.sheddable = true;
+    }
+    const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
     this._goalManager?.startTracking();
+    return res;
   }
 
   setStreaming(streaming?: boolean): void {

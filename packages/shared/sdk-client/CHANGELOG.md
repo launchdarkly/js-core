@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.14.0...js-client-sdk-common-v1.14.1) (2025-06-03)
+
+
+### Bug Fixes
+
+* Discard events from closed connections. ([#867](https://github.com/launchdarkly/js-core/issues/867)) ([8119afe](https://github.com/launchdarkly/js-core/commit/8119afe855f0ae5760341bf73123dbb6a79dcf15))
+
 ## [1.14.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.13.0...js-client-sdk-common-v1.14.0) (2025-05-21)
 
 
