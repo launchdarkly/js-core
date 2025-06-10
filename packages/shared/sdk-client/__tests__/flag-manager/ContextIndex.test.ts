@@ -8,9 +8,9 @@ describe('ContextIndex tests', () => {
     indexUnderTest.notice('third', 3);
 
     expect(indexUnderTest.container.index.length).toEqual(3);
-    expect(indexUnderTest.container.index.at(0)).toEqual({ id: 'first', timestamp: 1 });
-    expect(indexUnderTest.container.index.at(1)).toEqual({ id: 'second', timestamp: 2 });
-    expect(indexUnderTest.container.index.at(2)).toEqual({ id: 'third', timestamp: 3 });
+    expect(indexUnderTest.container.index[0]).toEqual({ id: 'first', timestamp: 1 });
+    expect(indexUnderTest.container.index[1]).toEqual({ id: 'second', timestamp: 2 });
+    expect(indexUnderTest.container.index[2]).toEqual({ id: 'third', timestamp: 3 });
   });
 
   test('notice updates timestamp', async () => {
@@ -18,14 +18,14 @@ describe('ContextIndex tests', () => {
     indexUnderTest.notice('first', 1);
     indexUnderTest.notice('second', 2);
     expect(indexUnderTest.container.index.length).toEqual(2);
-    expect(indexUnderTest.container.index.at(0)).toEqual({ id: 'first', timestamp: 1 });
-    expect(indexUnderTest.container.index.at(1)).toEqual({ id: 'second', timestamp: 2 });
+    expect(indexUnderTest.container.index[0]).toEqual({ id: 'first', timestamp: 1 });
+    expect(indexUnderTest.container.index[1]).toEqual({ id: 'second', timestamp: 2 });
 
     indexUnderTest.notice('first', 3);
     indexUnderTest.notice('second', 4);
     expect(indexUnderTest.container.index.length).toEqual(2);
-    expect(indexUnderTest.container.index.at(0)).toEqual({ id: 'first', timestamp: 3 });
-    expect(indexUnderTest.container.index.at(1)).toEqual({ id: 'second', timestamp: 4 });
+    expect(indexUnderTest.container.index[0]).toEqual({ id: 'first', timestamp: 3 });
+    expect(indexUnderTest.container.index[1]).toEqual({ id: 'second', timestamp: 4 });
   });
 
   test('prune oldest down to maximum', async () => {
@@ -38,8 +38,8 @@ describe('ContextIndex tests', () => {
 
     indexUnderTest.prune(2);
     expect(indexUnderTest.container.index.length).toEqual(2);
-    expect(indexUnderTest.container.index.at(0)).toEqual({ id: 'first', timestamp: 50 });
-    expect(indexUnderTest.container.index.at(1)).toEqual({ id: 'fourth', timestamp: 51 });
+    expect(indexUnderTest.container.index[0]).toEqual({ id: 'first', timestamp: 50 });
+    expect(indexUnderTest.container.index[1]).toEqual({ id: 'fourth', timestamp: 51 });
   });
 
   test('prune oldest down to 0', async () => {
@@ -94,9 +94,9 @@ describe('ContextIndex tests', () => {
       '{"index":[{"id":"first","timestamp":1},{"id":"second","timestamp":2},{"id":"third","timestamp":3}]}';
     const indexUnderTest = ContextIndex.fromJson(input);
     expect(indexUnderTest.container.index.length).toEqual(3);
-    expect(indexUnderTest.container.index.at(0)).toEqual({ id: 'first', timestamp: 1 });
-    expect(indexUnderTest.container.index.at(1)).toEqual({ id: 'second', timestamp: 2 });
-    expect(indexUnderTest.container.index.at(2)).toEqual({ id: 'third', timestamp: 3 });
+    expect(indexUnderTest.container.index[0]).toEqual({ id: 'first', timestamp: 1 });
+    expect(indexUnderTest.container.index[1]).toEqual({ id: 'second', timestamp: 2 });
+    expect(indexUnderTest.container.index[2]).toEqual({ id: 'third', timestamp: 3 });
   });
 
   test('fromJson invalid', async () => {
