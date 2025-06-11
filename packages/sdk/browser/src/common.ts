@@ -38,6 +38,11 @@ export type {
   LDPluginSdkMetadata,
   LDPluginApplicationMetadata,
   LDPluginMetadata,
+  LDDataSystemOptions,
+  DataSourceOptions,
+  StandardDataSourceOptions,
+  StreamingDataSourceOptions,
+  PollingDataSourceOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**

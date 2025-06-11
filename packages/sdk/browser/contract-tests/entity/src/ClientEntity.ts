@@ -1,4 +1,10 @@
-import { initialize, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
+import {
+  DataSourceOptions,
+  initialize,
+  LDClient,
+  LDLogger,
+  LDOptions,
+} from '@launchdarkly/js-client-sdk';
 
 import { CommandParams, CommandType, ValueType } from './CommandParams';
 import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
@@ -43,6 +49,63 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     }
     cf.streaming = true;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+  }
+
+  if (options.dataSystem) {
+    const dataSourceStreamingOptions =
+      options.dataSystem.synchronizers?.primary?.streaming ??
+      options.dataSystem.synchronizers?.secondary?.streaming;
+    const dataSourcePollingOptions =
+      options.dataSystem.synchronizers?.primary?.polling ??
+      options.dataSystem.synchronizers?.secondary?.polling;
+
+    if (dataSourceStreamingOptions) {
+      cf.streaming = true;
+      cf.streamUri = dataSourceStreamingOptions.baseUri;
+      cf.streamInitialReconnectDelay = maybeTime(dataSourceStreamingOptions.initialRetryDelayMs);
+    }
+    if (dataSourcePollingOptions) {
+      cf.baseUri = dataSourcePollingOptions.baseUri;
+      cf.pollInterval = maybeTime(dataSourcePollingOptions.pollIntervalMs);
+    }
+
+    let dataSourceOptions: DataSourceOptions | undefined;
+    if (dataSourceStreamingOptions && dataSourcePollingOptions) {
+      dataSourceOptions = {
+        dataSourceOptionsType: 'standard',
+        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && {
+          streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs),
+        }),
+        ...(dataSourcePollingOptions.pollIntervalMs != null && {
+          pollInterval: dataSourcePollingOptions.pollIntervalMs,
+        }),
+      };
+    } else if (dataSourceStreamingOptions) {
+      dataSourceOptions = {
+        dataSourceOptionsType: 'streamingOnly',
+        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && {
+          streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs),
+        }),
+      };
+    } else if (dataSourcePollingOptions) {
+      dataSourceOptions = {
+        dataSourceOptionsType: 'pollingOnly',
+        ...(dataSourcePollingOptions.pollIntervalMs != null && {
+          pollInterval: dataSourcePollingOptions.pollIntervalMs,
+        }),
+      };
+    } else {
+      // No data source options were specified
+      dataSourceOptions = undefined;
+    }
+
+    if (options.dataSystem.payloadFilter) {
+      cf.payloadFilterKey = options.dataSystem.payloadFilter;
+    }
+
+    cf.dataSystem = {
+      dataSource: dataSourceOptions,
+    };
   }
 
   if (options.events) {

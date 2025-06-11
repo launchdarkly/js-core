@@ -34,6 +34,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
   inspectors: TypeValidators.createTypeArray('LDInspection', {}),
+  dataSystem: TypeValidators.Object, // TODO: add custom validator for dataSystem, maybe not necessary though
 };
 
 export default validators;

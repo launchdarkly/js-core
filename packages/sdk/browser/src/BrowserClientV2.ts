@@ -16,7 +16,7 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import { getHref } from './BrowserApi';
-import BrowserDataManager from './BrowserDataManager';
+import BrowserDataManagerV2 from './BrowserDataManagerV2';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
@@ -25,7 +25,7 @@ import { LDClient } from './LDClient';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
 
-export class BrowserClient extends LDClientImpl implements LDClient {
+export class BrowserClientV2 extends LDClientImpl implements LDClient {
   private readonly _goalManager?: GoalManager;
 
   constructor(
@@ -74,7 +74,7 @@ export class BrowserClient extends LDClientImpl implements LDClient {
         emitter: LDEmitter,
         diagnosticsManager?: internal.DiagnosticsManager,
       ) =>
-        new BrowserDataManager(
+        new BrowserDataManagerV2(
           platform,
           flagManager,
           clientSideId,
@@ -95,12 +95,15 @@ export class BrowserClient extends LDClientImpl implements LDClient {
           }),
           () => ({
             pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/eval/${clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
+              // TODO: double check these paths once FD team has updated their endpoints
+              return `/sdk/stream/eval/${clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
             },
             pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/eval/${clientSideId}`;
+              // TODO: double check these paths once FD team has updated their endpoints
+              return `/sdk/stream/eval/${clientSideId}`;
             },
             pathPing(_encoding: Encoding, _plainContextString: string): string {
+              // TODO: verify ping path is staying the same, seems like it would since it transfers no data
               return `/ping/${clientSideId}`;
             },
           }),

@@ -35,6 +35,12 @@ export interface FlagManager {
    */
   upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean>;
 
+  applyChanges(
+    context: Context,
+    basis: boolean,
+    changes: { [key: string]: ItemDescriptor },
+  ): Promise<void>;
+
   /**
    * Asynchronously load cached values from persistence.
    */
@@ -126,6 +132,14 @@ export default class DefaultFlagManager implements FlagManager {
 
   async upsert(context: Context, key: string, item: ItemDescriptor): Promise<boolean> {
     return (await this._flagPersistencePromise).upsert(context, key, item);
+  }
+
+  async applyChanges(
+    context: Context,
+    basis: boolean,
+    changes: { [key: string]: ItemDescriptor },
+  ): Promise<void> {
+    return (await this._flagPersistencePromise).applyChanges(context, basis, changes);
   }
 
   async loadCached(context: Context): Promise<boolean> {

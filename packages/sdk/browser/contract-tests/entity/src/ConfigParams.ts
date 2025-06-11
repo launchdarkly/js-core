@@ -18,6 +18,7 @@ export interface SDKConfigParams {
   clientSide?: SDKConfigClientSideParams;
   hooks?: SDKConfigHooksParams;
   wrapper?: SDKConfigWrapper;
+  dataSystem?: SDKDataSystemParams;
 }
 
 export interface SDKConfigTLSParams {
@@ -85,6 +86,33 @@ export interface SDKConfigHooksParams {
 export interface SDKConfigWrapper {
   name: string;
   version: string;
+}
+
+export interface SDKDataSystemParams {
+  initializers?: SDKDataSystemDataSourceParams;
+  synchronizers?: SDKDataSystemDataSourceParams;
+  payloadFilter?: string;
+}
+
+export interface SDKDataSystemDataSourceParams {
+  primary?: {
+    streaming?: SDKDataSourceStreamingParams;
+    polling?: SDKDataSourcePollingParams;
+  };
+  secondary?: {
+    streaming?: SDKDataSourceStreamingParams;
+    polling?: SDKDataSourcePollingParams;
+  };
+}
+
+export interface SDKDataSourceStreamingParams {
+  baseUri?: string;
+  initialRetryDelayMs?: number;
+}
+
+export interface SDKDataSourcePollingParams {
+  baseUri?: string;
+  pollIntervalMs?: number;
 }
 
 export type HookStage = 'beforeEvaluation' | 'afterEvaluation';

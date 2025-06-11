@@ -18,6 +18,11 @@ export type {
   LDEvaluationDetailTyped,
   LDClient,
   LDOptions,
+  LDDataSystemOptions,
+  DataSourceOptions,
+  StandardDataSourceOptions,
+  StreamingDataSourceOptions,
+  PollingDataSourceOptions,
   ConnectionMode,
   LDIdentifyOptions,
   Hook,
@@ -42,6 +47,7 @@ export type { Flag } from './types';
 
 export { DataSourcePaths } from './streaming';
 export { BaseDataManager } from './DataManager';
+export { BaseDataManagerV2 } from './DataManagerV2';
 export { makeRequestor, Requestor };
 
 export {

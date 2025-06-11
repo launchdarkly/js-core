@@ -1,6 +1,7 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { Hook } from './integrations/Hooks';
+import { LDDataSystemOptions } from './LDDataSystemOptions';
 import { LDInspection } from './LDInspection';
 
 export interface LDOptions {
@@ -191,6 +192,41 @@ export interface LDOptions {
    * The minimum polling interval is 30 seconds.
    */
   pollInterval?: number;
+
+  /**
+   * @experimental
+   * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
+   * versioning.  It is not suitable for production usage.
+   *
+   * Configuration options for the Data System that the SDK uses to get and maintain flags and other
+   * data from LaunchDarkly and other sources.
+   *
+   * Setting this option supersedes
+   *
+   * Example (Recommended):
+   * ```typescript
+   * let dataSystemOptions = {
+   *     dataSource: {
+   *         type: 'standard';
+   *         // options can be customized here, though defaults are recommended
+   *     },
+   * }
+   *
+   * Example (Polling with DynamoDB Persistent Store):
+   * ```typescript
+   * import { DynamoDBFeatureStore } from '@launchdarkly/node-server-sdk-dynamodb';
+   *
+   * let dataSystemOptions = {
+   *     dataSource: {
+   *         type: 'pollingOnly';
+   *         pollInterval: 300;
+   *     },
+   *     persistentStore: DynamoDBFeatureStore('your-table', { cacheTTL: 30 });
+   * }
+   * const client = init('my-sdk-key', { hooks: [new TracingHook()] });
+   * ```
+   */
+  dataSystem?: LDDataSystemOptions;
 
   /**
    * Directs the SDK to use the REPORT method for HTTP requests instead of GET. (Default: `false`)

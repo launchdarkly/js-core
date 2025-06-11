@@ -88,6 +88,33 @@ export default class FlagUpdater {
     return true;
   }
 
+  applyChanges(context: Context, basis: boolean, changes: { [key: string]: ItemDescriptor }) {
+    if (this._activeContextKey !== context.canonicalKey) {
+      this._logger.warn('Received an update for an inactive context.');
+      return;
+    }
+
+    const oldFlags = this._flagStore.getAll();
+    this._flagStore.applyChanges(basis, changes);
+
+    let changed: string[];
+    if (basis) {
+      changed = calculateChangedKeys(oldFlags, changes);
+    } else {
+      changed = Object.keys(changes);
+    }
+
+    if (changed.length > 0) {
+      this._changeCallbacks.forEach((callback) => {
+        try {
+          callback(context, changed, 'patch');
+        } catch (err) {
+          /* intentionally empty */
+        }
+      });
+    }
+  }
+
   on(callback: FlagsChangeCallback): void {
     this._changeCallbacks.push(callback);
   }

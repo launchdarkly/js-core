@@ -12,7 +12,7 @@
  */
 import { AutoEnvAttributes } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserClient } from './BrowserClient';
+import { BrowserClientV2 } from './BrowserClientV2';
 import { LDClient } from './LDClient';
 import { BrowserOptions as LDOptions } from './options';
 
@@ -38,5 +38,5 @@ export type { LDPlugin } from './LDPlugin';
  */
 export function initialize(clientSideId: string, options?: LDOptions): LDClient {
   // AutoEnvAttributes are not supported yet in the browser SDK.
-  return new BrowserClient(clientSideId, AutoEnvAttributes.Disabled, options);
+  return new BrowserClientV2(clientSideId, AutoEnvAttributes.Disabled, options);
 }

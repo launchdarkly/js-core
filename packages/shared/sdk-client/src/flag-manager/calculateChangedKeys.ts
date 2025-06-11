@@ -3,7 +3,7 @@ import { fastDeepEqual } from '@launchdarkly/js-sdk-common';
 export default function calculateChangedKeys(
   existingObject: { [k: string]: any },
   newObject: { [k: string]: any },
-) {
+): string[] {
   const changedKeys: string[] = [];
 
   // property deleted or updated
