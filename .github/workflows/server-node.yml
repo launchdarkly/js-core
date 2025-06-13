@@ -42,3 +42,14 @@ jobs:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
           extra_params: '--skip-from=./contract-tests/testharness-suppressions.txt'
+
+      - name: Clone and run contract tests from feat/fdv2 branch
+        run: |
+          mkdir -p /tmp/sdk-test-harness
+          cd /tmp/sdk-test-harness
+          git clone https://github.com/launchdarkly/sdk-test-harness.git .
+          git checkout feat/fdv2
+          go build -o test-harness .
+          ./test-harness -url http://localhost:8000 -debug -stop-service-at-end
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -363,7 +363,7 @@ function constructFDv2(
     const fdv1FallbackSynchronizers = [
       () =>
         new PollingProcessorFDv2(
-          new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+          new Requestor(config, platform.requests, baseHeaders, '/sdk/latest-all', config.logger),
           pollingInterval,
           config.logger,
           true,
