@@ -84,7 +84,6 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         statusCallback(subsystemCommon.DataSourceState.Valid);
 
         payloadProcessor.addPayloadListener((payload) => {
-          this._logger?.debug(`Todd was here, got payload: ${JSON.stringify(payload)}`);
           dataCallback(payload.basis, { initMetadata, payload });
         });
 
