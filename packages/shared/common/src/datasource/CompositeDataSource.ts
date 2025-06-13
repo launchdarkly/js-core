@@ -207,8 +207,8 @@ export class CompositeDataSource implements DataSource {
       currentDS?.stop();
 
       if (transitionRequest.err && transitionRequest.transition !== 'stop') {
-        // if the transition was due to an error, throttle the transition
-        const delay = this._backoff.fail();
+        // if the transition was due to an error we're not in the initializer phase, throttle the transition. Fallback between initializers is not throttled.
+        const delay = this._initPhaseActive ? 0 : this._backoff.fail();
         const { promise, cancel: cancelDelay } = this._cancellableDelay(delay);
         this._cancelTokens.push(cancelDelay);
         const delayedTransition = promise.then(() => {

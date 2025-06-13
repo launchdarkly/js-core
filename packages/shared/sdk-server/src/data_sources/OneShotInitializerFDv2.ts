@@ -30,7 +30,7 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
     statusCallback(subsystemCommon.DataSourceState.Initializing);
 
     this._logger?.debug('Performing initialization request to LaunchDarkly for feature flag data.');
-    this._requestor.requestAllData((err, body) => {
+    this._requestor.requestAllData((err, body, headers) => {
       if (this._stopped) {
         return;
       }
@@ -57,6 +57,8 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         return;
       }
 
+      const initMetadata = internal.initMetadataFromHeaders(headers);
+
       try {
         const parsed = JSON.parse(body) as internal.FDv2EventsCollection;
         const payloadProcessor = new internal.PayloadProcessor(
@@ -82,7 +84,7 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         statusCallback(subsystemCommon.DataSourceState.Valid);
 
         payloadProcessor.addPayloadListener((payload) => {
-          dataCallback(payload.basis, payload);
+          dataCallback(payload.basis, { initMetadata, payload });
         });
 
         payloadProcessor.processEvents(parsed.events);

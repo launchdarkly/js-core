@@ -60,18 +60,21 @@ describe('given a one shot initializer', () => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData));
     initializer.start(mockDataCallback, mockStatusCallback);
     expect(mockDataCallback).toHaveBeenNthCalledWith(1, true, {
-      basis: true,
-      id: `mockId`,
-      state: `mockState`,
-      updates: [
-        {
-          kind: `flag`,
-          key: `flagA`,
-          version: 123,
-          object: { objectFieldA: 'objectValueA' },
-        },
-      ],
-      version: 1,
+      initMetadata: undefined,
+      payload: {
+        basis: true,
+        id: `mockId`,
+        state: `mockState`,
+        updates: [
+          {
+            kind: `flag`,
+            key: `flagA`,
+            version: 123,
+            object: { objectFieldA: 'objectValueA' },
+          },
+        ],
+        version: 1,
+      },
     });
   });
 });

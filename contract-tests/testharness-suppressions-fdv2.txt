@@ -1,0 +1,14 @@
+streaming/validation/drop and reconnect if stream event has malformed JSON
+streaming/validation/drop and reconnect if stream event has well-formed JSON not matching schema
+streaming/requests/URL path is computed correctly/environment_filter_key="encoding_not_necessary"/base URI has no trailing slash/GET
+streaming/requests/URL path is computed correctly/environment_filter_key="encoding_not_necessary"/base URI has a trailing slash/GET
+polling/requests/URL path is computed correctly/environment_filter_key="encoding_not_necessary"/base URI has no trailing slash/GET
+polling/requests/URL path is computed correctly/environment_filter_key="encoding_not_necessary"/base URI has a trailing slash/GET
+
+streaming/fdv2/reconnection state management/initializes from polling initializer
+streaming/fdv2/reconnection state management/initializes from 2 polling initializers
+streaming/fdv2/reconnection state management/saves previously known state
+streaming/fdv2/reconnection state management/replaces previously known state
+streaming/fdv2/reconnection state management/updates previously known state
+streaming/fdv2/ignores model version
+streaming/fdv2/can discard partial events on errors
