@@ -45,10 +45,13 @@ class LDClientNode extends LDClientImpl implements LDClient {
       }
     }
 
+    const baseOptions = { ...options, logger };
+    delete baseOptions.plugins;
+
     super(
       sdkKey,
       new NodePlatform({ ...options, logger }),
-      { ...options, logger },
+      baseOptions,
       {
         onError: (err: Error) => {
           if (emitter.listenerCount('error')) {
