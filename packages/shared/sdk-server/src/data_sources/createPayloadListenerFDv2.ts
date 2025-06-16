@@ -13,13 +13,19 @@ const namespaceForKind = (kind: string) => {
   }
 };
 
+export interface DataCallbackContainer {
+  initMetadata?: internal.InitMetadata;
+  payload: internal.Payload;
+}
+
 export const createPayloadListener =
   (
     dataSourceUpdates: LDTransactionalDataSourceUpdates,
     logger?: LDLogger,
     basisReceived: VoidFunction = () => {},
   ) =>
-  (payload: internal.Payload) => {
+  (dataContainer: DataCallbackContainer) => {
+    const { initMetadata, payload } = dataContainer;
     if (payload.basis) {
       logger?.debug('Initializing all data');
     } else if (payload.updates.length > 0) {
@@ -63,7 +69,7 @@ export const createPayloadListener =
       payload.basis,
       converted,
       basisReceived,
-      undefined,
+      initMetadata,
       payload.state,
     );
   };

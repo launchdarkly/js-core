@@ -122,7 +122,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
 
     const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
-    this._requestor.requestAllData((err, body) => {
+    this._requestor.requestAllData((err, body, headers) => {
       if (this._stopped) {
         return;
       }
@@ -164,6 +164,9 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
         }, sleepFor);
         return;
       }
+
+      const initMetadata = internal.initMetadataFromHeaders(headers);
+
       if (body) {
         try {
           const payloadProcessor = new internal.PayloadProcessor(
@@ -187,7 +190,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
           );
 
           payloadProcessor.addPayloadListener((payload) => {
-            dataCallback(payload.basis, payload);
+            dataCallback(payload.basis, { initMetadata, payload });
           });
 
           this._logger?.debug(`Got body: ${body}`);

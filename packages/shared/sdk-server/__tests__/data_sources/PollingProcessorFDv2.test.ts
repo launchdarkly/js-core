@@ -8,6 +8,9 @@ describe('given a polling processor', () => {
     requestAllData: jest.fn(),
   };
   const longInterval = 100000;
+  const headers = {
+    'x-ld-envid': 'envKey',
+  };
   const allFDv2Events = {
     events: [
       {
@@ -66,7 +69,7 @@ describe('given a polling processor', () => {
   });
 
   it('calls callback on success', async () => {
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData));
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData, headers));
     let dataCallback;
     await new Promise<void>((resolve) => {
       dataCallback = jest.fn(() => {
@@ -77,18 +80,23 @@ describe('given a polling processor', () => {
     });
 
     expect(dataCallback).toHaveBeenNthCalledWith(1, true, {
-      basis: true,
-      id: `mockId`,
-      state: `mockState`,
-      updates: [
-        {
-          kind: `flag`,
-          key: `flagA`,
-          version: 123,
-          object: { objectFieldA: 'objectValueA' },
-        },
-      ],
-      version: 1,
+      initMetadata: {
+        environmentId: 'envKey',
+      },
+      payload: {
+        basis: true,
+        id: `mockId`,
+        state: `mockState`,
+        updates: [
+          {
+            kind: `flag`,
+            key: `flagA`,
+            version: 123,
+            object: { objectFieldA: 'objectValueA' },
+          },
+        ],
+        version: 1,
+      },
     });
   });
 
@@ -99,7 +107,7 @@ describe('given a polling processor', () => {
       new TestLogger(),
       true,
     );
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv1JsonData));
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv1JsonData, headers));
     let dataCallback;
     await new Promise<void>((resolve) => {
       dataCallback = jest.fn(() => {
@@ -110,24 +118,29 @@ describe('given a polling processor', () => {
     });
 
     expect(dataCallback).toHaveBeenNthCalledWith(1, true, {
-      basis: true,
-      id: `FDv1Fallback`,
-      state: `FDv1Fallback`,
-      updates: [
-        {
-          kind: `flag`,
-          key: `flagA`,
-          version: 456,
-          object: { version: 456 },
-        },
-        {
-          kind: `segment`,
-          key: `segmentA`,
-          version: 789,
-          object: { version: 789 },
-        },
-      ],
-      version: 1,
+      initMetadata: {
+        environmentId: 'envKey',
+      },
+      payload: {
+        basis: true,
+        id: `FDv1Fallback`,
+        state: `FDv1Fallback`,
+        updates: [
+          {
+            kind: `flag`,
+            key: `flagA`,
+            version: 456,
+            object: { version: 456 },
+          },
+          {
+            kind: `segment`,
+            key: `segmentA`,
+            version: 789,
+            object: { version: 789 },
+          },
+        ],
+        version: 1,
+      },
     });
   });
 
@@ -138,7 +151,7 @@ describe('given a polling processor', () => {
       new TestLogger(),
       true,
     );
-    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData));
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData, headers));
     let dataCallback;
     await new Promise<void>((resolve) => {
       dataCallback = jest.fn(() => {
@@ -159,6 +172,9 @@ describe('given a polling processor with a short poll duration', () => {
     requestAllData: jest.fn(),
   };
   const shortInterval = 0.1;
+  const headers = {
+    'x-ld-envid': 'envKey',
+  };
   const allEvents = {
     events: [
       {
@@ -206,7 +222,7 @@ describe('given a polling processor with a short poll duration', () => {
     const expectedCalls = new Promise<void>((resolve) => {
       let callCount = 0;
       requestor.requestAllData = jest.fn((cb) => {
-        cb(undefined, jsonData);
+        cb(undefined, jsonData, headers);
         callCount += 1;
         if (callCount >= 5) {
           resolve();
@@ -256,7 +272,7 @@ describe('given a polling processor with a short poll duration', () => {
     const expectedCalls = new Promise<void>((resolve) => {
       let callCount = 0;
       requestor.requestAllData = jest.fn((cb) => {
-        cb(undefined, '{sad');
+        cb(undefined, '{sad', headers);
         callCount += 1;
         if (callCount >= 5) {
           resolve();

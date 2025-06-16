@@ -38,6 +38,11 @@ export type {
   LDPluginSdkMetadata,
   LDPluginApplicationMetadata,
   LDPluginMetadata,
+  LDIdentifyResult,
+  LDIdentifySuccess,
+  LDIdentifyError,
+  LDIdentifyTimeout,
+  LDIdentifyShed,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**
