@@ -2,6 +2,7 @@ import got from 'got';
 
 import ld, {
   createMigration,
+  DataSourceOptions,
   LDClient,
   LDConcurrentExecution,
   LDContext,
@@ -32,6 +33,11 @@ interface SdkConfigOptions {
     baseUri: string;
     pollIntervalMs: number;
     filter?: string;
+  };
+  dataSystem?: {
+    initializers?: SDKDataSystemInitializerParams[];
+    synchronizers?: SDKDataSystemSynchronizerParams;
+    payloadFilter?: string;
   };
   events?: {
     allAttributesPrivate?: boolean;
@@ -65,6 +71,31 @@ interface SdkConfigOptions {
     name?: string;
     version?: string;
   };
+}
+
+export interface SDKDataSystemSynchronizerParams {
+  primary?: {
+    streaming?: SDKDataSourceStreamingParams;
+    polling?: SDKDataSourcePollingParams;
+  };
+  secondary?: {
+    streaming?: SDKDataSourceStreamingParams;
+    polling?: SDKDataSourcePollingParams;
+  };
+}
+
+export interface SDKDataSystemInitializerParams {
+  polling?: SDKDataSourcePollingParams;
+}
+
+export interface SDKDataSourceStreamingParams {
+  baseUri?: string;
+  initialRetryDelayMs?: number;
+}
+
+export interface SDKDataSourcePollingParams {
+  baseUri?: string;
+  pollIntervalMs?: number;
 }
 
 interface CommandParams {
@@ -128,8 +159,7 @@ export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions
     cf.streamUri = options.streaming.baseUri;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
     if (options.streaming.filter) {
-      cf.application = cf.application || {};
-      cf.application.payloadFilterKey = options.streaming.filter;
+      cf.payloadFilterKey = options.streaming.filter;
     }
   }
 
@@ -138,8 +168,7 @@ export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions
     cf.baseUri = options.polling.baseUri;
     cf.pollInterval = options.polling.pollIntervalMs / 1000;
     if (options.polling.filter) {
-      cf.application = cf.application || {};
-      cf.application.payloadFilterKey = options.polling.filter;
+      cf.payloadFilterKey = options.polling.filter;
     }
   }
 
@@ -190,6 +219,64 @@ export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions
     if (options.wrapper.version) {
       cf.wrapperVersion = options.wrapper.version;
     }
+  }
+
+  if (options.dataSystem) {
+    const dataSourceStreamingOptions: SDKDataSourceStreamingParams | undefined =
+      options.dataSystem.synchronizers?.primary?.streaming ??
+      options.dataSystem.synchronizers?.secondary?.streaming;
+    const dataSourcePollingOptions: SDKDataSourcePollingParams | undefined =
+      options.dataSystem.initializers?.[0]?.polling ??
+      options.dataSystem.synchronizers?.primary?.polling ??
+      options.dataSystem.synchronizers?.secondary?.polling;
+
+    if (dataSourceStreamingOptions) {
+      cf.streamUri = dataSourceStreamingOptions.baseUri;
+      cf.streamInitialReconnectDelay = maybeTime(dataSourceStreamingOptions.initialRetryDelayMs);
+    }
+    if (dataSourcePollingOptions) {
+      cf.stream = false;
+      cf.baseUri = dataSourcePollingOptions.baseUri;
+      cf.pollInterval = maybeTime(dataSourcePollingOptions.pollIntervalMs);
+    }
+
+    let dataSourceOptions: DataSourceOptions | undefined;
+    if (dataSourceStreamingOptions && dataSourcePollingOptions) {
+      dataSourceOptions = {
+        dataSourceOptionsType: 'standard',
+        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && {
+          streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs),
+        }),
+        ...(dataSourcePollingOptions.pollIntervalMs != null && {
+          pollInterval: dataSourcePollingOptions.pollIntervalMs,
+        }),
+      };
+    } else if (dataSourceStreamingOptions) {
+      dataSourceOptions = {
+        dataSourceOptionsType: 'streamingOnly',
+        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && {
+          streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs),
+        }),
+      };
+    } else if (dataSourcePollingOptions) {
+      dataSourceOptions = {
+        dataSourceOptionsType: 'pollingOnly',
+        ...(dataSourcePollingOptions.pollIntervalMs != null && {
+          pollInterval: dataSourcePollingOptions.pollIntervalMs,
+        }),
+      };
+    } else {
+      // No data source options were specified
+      dataSourceOptions = undefined;
+    }
+
+    if (options.dataSystem.payloadFilter) {
+      cf.payloadFilterKey = options.dataSystem.payloadFilter;
+    }
+
+    cf.dataSystem = {
+      dataSource: dataSourceOptions,
+    };
   }
 
   return cf;

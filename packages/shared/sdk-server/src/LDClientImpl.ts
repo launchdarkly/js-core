@@ -319,14 +319,16 @@ function constructFDv2(
     // make the FDv2 composite datasource with initializers/synchronizers
     const initializers: subsystem.LDDataSourceFactory[] = [];
 
-    // use one shot initializer for performance and cost
-    initializers.push(
-      () =>
-        new OneShotInitializerFDv2(
-          new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
-          config.logger,
-        ),
-    );
+    // use one shot initializer for performance and cost if we can do a combination of polling and streaming
+    if (isStandardOptions(dataSystem.dataSource)) {
+      initializers.push(
+        () =>
+          new OneShotInitializerFDv2(
+            new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+            config.logger,
+          ),
+      );
+    }
 
     const synchronizers: subsystem.LDDataSourceFactory[] = [];
     // if streaming is configured, add streaming synchronizer
@@ -363,7 +365,7 @@ function constructFDv2(
     const fdv1FallbackSynchronizers = [
       () =>
         new PollingProcessorFDv2(
-          new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+          new Requestor(config, platform.requests, baseHeaders, '/sdk/latest-all', config.logger),
           pollingInterval,
           config.logger,
           true,
