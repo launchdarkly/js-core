@@ -14,9 +14,13 @@ import {
 
 const FEATURE_FLAG_SCOPE = 'feature_flag';
 const FEATURE_FLAG_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.key`;
-const FEATURE_FLAG_PROVIDER_ATTR = `${FEATURE_FLAG_SCOPE}.provider_name`;
-const FEATURE_FLAG_CONTEXT_KEY_ATTR = `${FEATURE_FLAG_SCOPE}.context.key`;
-const FEATURE_FLAG_VARIANT_ATTR = `${FEATURE_FLAG_SCOPE}.variant`;
+const FEATURE_FLAG_PROVIDER_ATTR = `${FEATURE_FLAG_SCOPE}.provider.name`;
+const FEATURE_FLAG_CONTEXT_ID_ATTR = `${FEATURE_FLAG_SCOPE}.context.id`;
+const FEATURE_FLAG_RESULT_ATTR = `${FEATURE_FLAG_SCOPE}.result`;
+const FEATURE_FLAG_VALUE_ATTR = `${FEATURE_FLAG_RESULT_ATTR}.value`;
+const FEATURE_FLAG_VARIATION_INDEX_ATTR = `${FEATURE_FLAG_RESULT_ATTR}.variationIndex`;
+const FEATURE_FLAG_REASON_ATTR = `${FEATURE_FLAG_RESULT_ATTR}.reason`;
+const FEATURE_FLAG_IN_EXPERIMENT_ATTR = `${FEATURE_FLAG_REASON_ATTR}.inExperiment`;
 const FEATURE_FLAG_SET_ID = `${FEATURE_FLAG_SCOPE}.set.id`;
 
 const TRACING_HOOK_NAME = 'LaunchDarkly Tracing Hook';
@@ -42,8 +46,19 @@ export interface TracingHookOptions {
    * to span events and spans.
    *
    * The default is false.
+   *
+   * @deprecated This option is deprecated and will be removed in a future version.
+   * This has been replaced by `includeValue`. If both are set, `includeValue` will take precedence.
    */
   includeVariant?: boolean;
+
+  /**
+   * If set to true, then the tracing hook will add the evaluated flag value
+   * to span events and spans.
+   *
+   * The default is false.
+   */
+  includeValue?: boolean;
 
   /**
    * Set to use a custom logging configuration, otherwise the logging will be done
@@ -56,7 +71,7 @@ export interface TracingHookOptions {
 
 interface ValidatedHookOptions {
   spans: boolean;
-  includeVariant: boolean;
+  includeValue: boolean;
   logger: LDLogger;
   environmentId?: string;
 }
@@ -67,7 +82,7 @@ type SpanTraceData = {
 
 const defaultOptions: ValidatedHookOptions = {
   spans: false,
-  includeVariant: false,
+  includeValue: false,
   logger: basicLogger({ name: TRACING_HOOK_NAME }),
   environmentId: undefined,
 };
@@ -79,9 +94,17 @@ function validateOptions(options?: TracingHookOptions): ValidatedHookOptions {
     validatedOptions.logger = new SafeLogger(options.logger, defaultOptions.logger);
   }
 
-  if (options?.includeVariant !== undefined) {
+  if (options?.includeValue !== undefined) {
+    if (TypeValidators.Boolean.is(options.includeValue)) {
+      validatedOptions.includeValue = options.includeValue;
+    } else {
+      validatedOptions.logger.error(
+        OptionMessages.wrongOptionType('includeValue', 'boolean', typeof options?.includeValue),
+      );
+    }
+  } else if (options?.includeVariant !== undefined) {
     if (TypeValidators.Boolean.is(options.includeVariant)) {
-      validatedOptions.includeVariant = options.includeVariant;
+      validatedOptions.includeValue = options.includeVariant;
     } else {
       validatedOptions.logger.error(
         OptionMessages.wrongOptionType('includeVariant', 'boolean', typeof options?.includeVariant),
@@ -153,8 +176,8 @@ export default class TracingHook implements integrations.Hook {
       const { canonicalKey } = Context.fromLDContext(hookContext.context);
 
       const span = this._tracer.startSpan(hookContext.method, undefined, context.active());
-      span.setAttribute('feature_flag.context.key', canonicalKey);
-      span.setAttribute('feature_flag.key', hookContext.flagKey);
+      span.setAttribute(FEATURE_FLAG_CONTEXT_ID_ATTR, canonicalKey);
+      span.setAttribute(FEATURE_FLAG_KEY_ATTR, hookContext.flagKey);
 
       return { ...data, span };
     }
@@ -176,15 +199,21 @@ export default class TracingHook implements integrations.Hook {
       const eventAttributes: Attributes = {
         [FEATURE_FLAG_KEY_ATTR]: hookContext.flagKey,
         [FEATURE_FLAG_PROVIDER_ATTR]: 'LaunchDarkly',
-        [FEATURE_FLAG_CONTEXT_KEY_ATTR]: Context.fromLDContext(hookContext.context).canonicalKey,
+        [FEATURE_FLAG_CONTEXT_ID_ATTR]: Context.fromLDContext(hookContext.context).canonicalKey,
       };
+      if (typeof detail.variationIndex === 'number') {
+        eventAttributes[FEATURE_FLAG_VARIATION_INDEX_ATTR] = detail.variationIndex;
+      }
+      if (detail.reason.inExperiment) {
+        eventAttributes[FEATURE_FLAG_IN_EXPERIMENT_ATTR] = detail.reason.inExperiment;
+      }
       if (this._options.environmentId) {
         eventAttributes[FEATURE_FLAG_SET_ID] = this._options.environmentId;
       } else if (hookContext.environmentId) {
         eventAttributes[FEATURE_FLAG_SET_ID] = hookContext.environmentId;
       }
-      if (this._options.includeVariant) {
-        eventAttributes[FEATURE_FLAG_VARIANT_ATTR] = JSON.stringify(detail.value);
+      if (this._options.includeValue) {
+        eventAttributes[FEATURE_FLAG_VALUE_ATTR] = JSON.stringify(detail.value);
       }
       currentTrace.addEvent(FEATURE_FLAG_SCOPE, eventAttributes);
     }

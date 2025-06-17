@@ -74,30 +74,33 @@ describe('with a testing otel span collector', () => {
     const spanEvent = spans[0]!.events[0]!;
     expect(spanEvent.name).toEqual('feature_flag');
     expect(spanEvent.attributes!['feature_flag.key']).toEqual('test-bool');
-    expect(spanEvent.attributes!['feature_flag.provider_name']).toEqual('LaunchDarkly');
-    expect(spanEvent.attributes!['feature_flag.context.key']).toEqual('user-key');
-    expect(spanEvent.attributes!['feature_flag.variant']).toBeUndefined();
+    expect(spanEvent.attributes!['feature_flag.provider.name']).toEqual('LaunchDarkly');
+    expect(spanEvent.attributes!['feature_flag.context.id']).toEqual('user-key');
+    expect(spanEvent.attributes!['feature_flag.result.value']).toBeUndefined();
     expect(spanEvent.attributes!['feature_flag.set.id']).toBeUndefined();
   });
 
-  it('can include variant in span events', async () => {
-    const td = new integrations.TestData();
-    const client = init('bad-key', {
-      sendEvents: false,
-      updateProcessor: td.getFactory(),
-      hooks: [new TracingHook({ includeVariant: true })],
-    });
+  it.each(['includeVariant', 'includeValue'])(
+    'can include value in span events',
+    async (optKey) => {
+      const td = new integrations.TestData();
+      const client = init('bad-key', {
+        sendEvents: false,
+        updateProcessor: td.getFactory(),
+        hooks: [new TracingHook({ [optKey]: true })],
+      });
 
-    const tracer = trace.getTracer('trace-hook-test-tracer');
-    await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
-      await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
-      span.end();
-    });
+      const tracer = trace.getTracer('trace-hook-test-tracer');
+      await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
+        await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
+        span.end();
+      });
 
-    const spans = spanExporter.getFinishedSpans();
-    const spanEvent = spans[0]!.events[0]!;
-    expect(spanEvent.attributes!['feature_flag.variant']).toEqual('false');
-  });
+      const spans = spanExporter.getFinishedSpans();
+      const spanEvent = spans[0]!.events[0]!;
+      expect(spanEvent.attributes!['feature_flag.result.value']).toEqual('false');
+    },
+  );
 
   it('can include variation spans', async () => {
     const td = new integrations.TestData();
@@ -116,7 +119,7 @@ describe('with a testing otel span collector', () => {
     const spans = spanExporter.getFinishedSpans();
     const variationSpan = spans[0];
     expect(variationSpan.name).toEqual('LDClient.boolVariation');
-    expect(variationSpan.attributes['feature_flag.context.key']).toEqual('user-key');
+    expect(variationSpan.attributes['feature_flag.context.id']).toEqual('user-key');
   });
 
   it('can handle multi-context key requirements', async () => {
@@ -139,7 +142,7 @@ describe('with a testing otel span collector', () => {
 
     const spans = spanExporter.getFinishedSpans();
     const spanEvent = spans[0]!.events[0]!;
-    expect(spanEvent.attributes!['feature_flag.context.key']).toEqual('org:org-key:user:bob');
+    expect(spanEvent.attributes!['feature_flag.context.id']).toEqual('org:org-key:user:bob');
   });
 
   it('can include environmentId from options', async () => {
@@ -217,5 +220,103 @@ describe('with a testing otel span collector', () => {
     const spans = spanExporter.getFinishedSpans();
     const spanEvent = spans[0]!.events[0]!;
     expect(spanEvent.attributes!['feature_flag.set.id']).toEqual('id-from-options');
+  });
+
+  it('includes inExperiment attribute in span events', async () => {
+    const td = new integrations.TestData();
+    td.usePreconfiguredFlag({
+      key: 'test-bool',
+      version: 1,
+      on: true,
+      targets: [],
+      rules: [],
+      fallthrough: {
+        rollout: {
+          kind: 'experiment',
+          variations: [
+            {
+              weight: 100000,
+              variation: 0,
+            },
+          ],
+        },
+      },
+      variations: [true, false],
+    });
+    const client = init('bad-key', {
+      sendEvents: false,
+      updateProcessor: td.getFactory(),
+      hooks: [new TracingHook()],
+    });
+
+    const tracer = trace.getTracer('trace-hook-test-tracer');
+    await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
+      await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
+      span.end();
+    });
+
+    const spans = spanExporter.getFinishedSpans();
+    const spanEvent = spans[0]!.events[0]!;
+    expect(spanEvent.attributes!['feature_flag.result.reason.inExperiment']).toEqual(true);
+  });
+
+  it('includes variationIndex attribute in span events', async () => {
+    const td = new integrations.TestData();
+    td.usePreconfiguredFlag({
+      key: 'test-bool',
+      version: 1,
+      on: true,
+      targets: [],
+      rules: [],
+      fallthrough: {
+        variation: 1,
+      },
+      variations: [true, false],
+    });
+    const client = init('bad-key', {
+      sendEvents: false,
+      updateProcessor: td.getFactory(),
+      hooks: [new TracingHook()],
+    });
+
+    const tracer = trace.getTracer('trace-hook-test-tracer');
+    await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
+      await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
+      span.end();
+    });
+
+    const spans = spanExporter.getFinishedSpans();
+    const spanEvent = spans[0]!.events[0]!;
+    expect(spanEvent.attributes!['feature_flag.result.variationIndex']).toEqual(1);
+  });
+
+  it('does not include inExperiment attribute when not in experiment', async () => {
+    const td = new integrations.TestData();
+    td.usePreconfiguredFlag({
+      key: 'test-bool',
+      version: 1,
+      on: true,
+      targets: [],
+      rules: [],
+      fallthrough: {
+        variation: 0,
+      },
+      variations: [true, false],
+    });
+    const client = init('bad-key', {
+      sendEvents: false,
+      updateProcessor: td.getFactory(),
+      hooks: [new TracingHook()],
+    });
+
+    const tracer = trace.getTracer('trace-hook-test-tracer');
+    await tracer.startActiveSpan('test-span', { root: true }, async (span) => {
+      await client.boolVariation('test-bool', { kind: 'user', key: 'user-key' }, false);
+      span.end();
+    });
+
+    const spans = spanExporter.getFinishedSpans();
+    const spanEvent = spans[0]!.events[0]!;
+    expect(spanEvent.attributes!['feature_flag.result.reason.inExperiment']).toBeUndefined();
   });
 });
