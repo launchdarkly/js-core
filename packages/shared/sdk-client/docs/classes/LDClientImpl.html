@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDClientImpl | @launchdarkly/js-client-sdk-common - v1.14.1</title><meta name="description" content="Documentation for @launchdarkly/js-client-sdk-common"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDClientImpl | @launchdarkly/js-client-sdk-common - v1.15.0</title><meta name="description" content="Documentation for @launchdarkly/js-client-sdk-common"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -6,7 +6,7 @@
 <div id="tsd-toolbar-links"></div></div>
 <ul class="results">
 <li class="state loading">Preparing search index...</li>
-<li class="state failure">The search index is not available</li></ul><a href="../index.html" class="title">@launchdarkly/js-client-sdk-common - v1.14.1</a></div>
+<li class="state failure">The search index is not available</li></ul><a href="../index.html" class="title">@launchdarkly/js-client-sdk-common - v1.15.0</a></div>
 <div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
 <div class="container container-main">
 <div class="col-content">
@@ -15,6 +15,12 @@
 <li><a href="../index.html">@launchdarkly/js-client-sdk-common</a></li>
 <li><a href="LDClientImpl.html">LDClientImpl</a></li></ul>
 <h1>Class LDClientImpl</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Interface that extends the LDClient interface to include the identifyResult method.</p>
+<p>This is an independent interface for backwards compatibility. Adding this to the LDClient interface would require
+a breaking change.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
@@ -22,9 +28,10 @@
 <section class="tsd-panel">
 <h4>Implements</h4>
 <ul class="tsd-hierarchy">
-<li><span class="tsd-signature-type ">LDClient</span></li></ul></section><aside class="tsd-sources">
+<li><span class="tsd-signature-type ">LDClient</span></li>
+<li><a href="../interfaces/LDClientIdentifyResult.html" class="tsd-signature-type tsd-kind-interface">LDClientIdentifyResult</a></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L45">packages/shared/sdk-client/src/LDClientImpl.ts:45</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L56">packages/shared/sdk-client/src/LDClientImpl.ts:56</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -47,6 +54,7 @@
 <a href="LDClientImpl.html#_flagManager" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_flag<wbr/>Manager</span></a>
 <a href="LDClientImpl.html#_highTimeoutThreshold" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_high<wbr/>Timeout<wbr/>Threshold</span></a>
 <a href="LDClientImpl.html#_hookRunner" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_hook<wbr/>Runner</span></a>
+<a href="LDClientImpl.html#_identifyQueue" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_identify<wbr/>Queue</span></a>
 <a href="LDClientImpl.html#_inspectorManager" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_inspector<wbr/>Manager</span></a>
 <a href="LDClientImpl.html#_uncheckedContext" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_unchecked<wbr/>Context?</span></a>
 <a href="LDClientImpl.html#autoEnvAttributes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>auto<wbr/>Env<wbr/>Attributes</span></a>
@@ -72,6 +80,7 @@
 <a href="LDClientImpl.html#getContext" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Context</span></a>
 <a href="LDClientImpl.html#getInternalContext" class="tsd-index-link tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Internal<wbr/>Context</span></a>
 <a href="LDClientImpl.html#identify" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>identify</span></a>
+<a href="LDClientImpl.html#identifyResult" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>identify<wbr/>Result</span></a>
 <a href="LDClientImpl.html#jsonVariation" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>json<wbr/>Variation</span></a>
 <a href="LDClientImpl.html#jsonVariationDetail" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>json<wbr/>Variation<wbr/>Detail</span></a>
 <a href="LDClientImpl.html#numberVariation" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>number<wbr/>Variation</span></a>
@@ -113,124 +122,166 @@
 <h4 class="tsd-returns-title">Returns <a href="LDClientImpl.html" class="tsd-signature-type tsd-kind-class">LDClientImpl</a></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L70">packages/shared/sdk-client/src/LDClientImpl.ts:70</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L82">packages/shared/sdk-client/src/LDClientImpl.ts:82</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_baseHeaders" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_base<wbr/>Headers</span><a href="#_baseHeaders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_base<wbr/>Headers</span><span class="tsd-signature-symbol">:</span> <a href="../types/platform-1.LDHeaders.html" class="tsd-signature-type tsd-kind-type-alias">LDHeaders</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L61">packages/shared/sdk-client/src/LDClientImpl.ts:61</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L72">packages/shared/sdk-client/src/LDClientImpl.ts:72</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_checkedContext" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>_checked<wbr/>Context</span><a href="#_checkedContext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_checked<wbr/>Context</span><span class="tsd-signature-symbol">?:</span> <a href="platform-1.Context.html" class="tsd-signature-type tsd-kind-class">Context</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L48">packages/shared/sdk-client/src/LDClientImpl.ts:48</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L59">packages/shared/sdk-client/src/LDClientImpl.ts:59</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_config" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_config</span><a href="#_config" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_config</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/Configuration.html" class="tsd-signature-type tsd-kind-interface">Configuration</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L46">packages/shared/sdk-client/src/LDClientImpl.ts:46</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L57">packages/shared/sdk-client/src/LDClientImpl.ts:57</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_diagnosticsManager" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_diagnostics<wbr/>Manager</span><a href="#_diagnosticsManager" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_diagnostics<wbr/>Manager</span><span class="tsd-signature-symbol">?:</span> <a href="platform-1.internal.DiagnosticsManager.html" class="tsd-signature-type tsd-kind-class">DiagnosticsManager</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L49">packages/shared/sdk-client/src/LDClientImpl.ts:49</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L60">packages/shared/sdk-client/src/LDClientImpl.ts:60</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_eventFactoryDefault" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_event<wbr/>Factory<wbr/>Default</span><a href="#_eventFactoryDefault" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_event<wbr/>Factory<wbr/>Default</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">default</span><span class="tsd-signature-symbol"> = ...</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L55">packages/shared/sdk-client/src/LDClientImpl.ts:55</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L66">packages/shared/sdk-client/src/LDClientImpl.ts:66</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_eventFactoryWithReasons" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_event<wbr/>Factory<wbr/>With<wbr/>Reasons</span><a href="#_eventFactoryWithReasons" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_event<wbr/>Factory<wbr/>With<wbr/>Reasons</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">default</span><span class="tsd-signature-symbol"> = ...</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L56">packages/shared/sdk-client/src/LDClientImpl.ts:56</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L67">packages/shared/sdk-client/src/LDClientImpl.ts:67</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_eventProcessor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>_event<wbr/>Processor</span><a href="#_eventProcessor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_event<wbr/>Processor</span><span class="tsd-signature-symbol">?:</span> <a href="platform-1.internal.EventProcessor.html" class="tsd-signature-type tsd-kind-class">EventProcessor</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L50">packages/shared/sdk-client/src/LDClientImpl.ts:50</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L61">packages/shared/sdk-client/src/LDClientImpl.ts:61</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_eventSendingEnabled" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_event<wbr/>Sending<wbr/>Enabled</span><a href="#_eventSendingEnabled" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_event<wbr/>Sending<wbr/>Enabled</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L60">packages/shared/sdk-client/src/LDClientImpl.ts:60</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L71">packages/shared/sdk-client/src/LDClientImpl.ts:71</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_flagManager" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_flag<wbr/>Manager</span><a href="#_flagManager" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_flag<wbr/>Manager</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/FlagManager.html" class="tsd-signature-type tsd-kind-interface">FlagManager</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L58">packages/shared/sdk-client/src/LDClientImpl.ts:58</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L69">packages/shared/sdk-client/src/LDClientImpl.ts:69</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_highTimeoutThreshold" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_high<wbr/>Timeout<wbr/>Threshold</span><a href="#_highTimeoutThreshold" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_high<wbr/>Timeout<wbr/>Threshold</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 15</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L53">packages/shared/sdk-client/src/LDClientImpl.ts:53</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L64">packages/shared/sdk-client/src/LDClientImpl.ts:64</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_hookRunner" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_hook<wbr/>Runner</span><a href="#_hookRunner" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_hook<wbr/>Runner</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">default</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L64">packages/shared/sdk-client/src/LDClientImpl.ts:64</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L75">packages/shared/sdk-client/src/LDClientImpl.ts:75</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_identifyQueue" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_identify<wbr/>Queue</span><a href="#_identifyQueue" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_identify<wbr/>Queue</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-call-signature">execute</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TBeforeResult</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">task</span>, <span class="tsd-kind-parameter">sheddable</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">TaskResult</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-call-signature">pendingCount</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol"> = ...</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-method">execute</span><span class="tsd-signature-symbol">:</span>function</h5>
+<ul class="tsd-signatures">
+<li class="tsd-signature tsd-anchor-link" id="_identifyQueue.__type.execute.execute-1"><span class="tsd-kind-call-signature">execute</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">TBeforeResult</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">task</span>, <span class="tsd-kind-parameter">sheddable</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">TaskResult</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span><a href="#_identifyQueue.__type.execute.execute-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Execute a task using the queue.</p>
+</div>
+<section class="tsd-panel">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameter-list">
+<li>
+<h4><span class="tsd-kind-type-parameter">TBeforeResult</span></h4></li></ul></section>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">task</span>: <span class="tsd-signature-type ">Task</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type tsd-kind-type-parameter">TBeforeResult</span><span class="tsd-signature-symbol">&gt;</span></h5>
+<div class="tsd-comment tsd-typography"><p>The async function to execute.</p>
+</div></li>
+<li>
+<h5><span class="tsd-kind-parameter">sheddable</span>: <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = false</span></h5>
+<div class="tsd-comment tsd-typography"><p>Whether the task can be shed from the queue.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type ">TaskResult</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4><p>A promise that resolves to the result of the task.</p>
+
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/async/AsyncTaskQueue.ts#L185">packages/shared/sdk-client/src/async/AsyncTaskQueue.ts:185</a></li></ul></aside></li></ul></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-method">pending<wbr/>Count</span><span class="tsd-signature-symbol">:</span>function</h5>
+<ul class="tsd-signatures">
+<li class="tsd-signature tsd-anchor-link" id="_identifyQueue.__type.pendingCount.pendingCount-1"><span class="tsd-kind-call-signature">pending<wbr/>Count</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#_identifyQueue.__type.pendingCount.pendingCount-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description"><code class="tsd-tag ts-flagInternal">Internal</code> 
+<div class="tsd-comment tsd-typography"><p>Returns the number of pending tasks in the queue.
+Intended for testing purposes only.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><p>The number of pending tasks in the queue.</p>
+
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/async/AsyncTaskQueue.ts#L215">packages/shared/sdk-client/src/async/AsyncTaskQueue.ts:215</a></li></ul></aside></li></ul></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L77">packages/shared/sdk-client/src/LDClientImpl.ts:77</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_inspectorManager" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_inspector<wbr/>Manager</span><a href="#_inspectorManager" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_inspector<wbr/>Manager</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type ">default</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L65">packages/shared/sdk-client/src/LDClientImpl.ts:65</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L76">packages/shared/sdk-client/src/LDClientImpl.ts:76</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_uncheckedContext" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>_unchecked<wbr/>Context</span><a href="#_uncheckedContext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_unchecked<wbr/>Context</span><span class="tsd-signature-symbol">?:</span> <a href="../types/platform-1.LDContext.html" class="tsd-signature-type tsd-kind-type-alias">LDContext</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L47">packages/shared/sdk-client/src/LDClientImpl.ts:47</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L58">packages/shared/sdk-client/src/LDClientImpl.ts:58</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="autoEnvAttributes" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>auto<wbr/>Env<wbr/>Attributes</span><a href="#autoEnvAttributes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">auto<wbr/>Env<wbr/>Attributes</span><span class="tsd-signature-symbol">:</span> <a href="../enums/platform-1.AutoEnvAttributes.html" class="tsd-signature-type tsd-kind-enum">AutoEnvAttributes</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L72">packages/shared/sdk-client/src/LDClientImpl.ts:72</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L84">packages/shared/sdk-client/src/LDClientImpl.ts:84</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="dataManager" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>data<wbr/>Manager</span><a href="#dataManager" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">data<wbr/>Manager</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/DataManager.html" class="tsd-signature-type tsd-kind-interface">DataManager</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L62">packages/shared/sdk-client/src/LDClientImpl.ts:62</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L73">packages/shared/sdk-client/src/LDClientImpl.ts:73</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="emitter" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>emitter</span><a href="#emitter" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">emitter</span><span class="tsd-signature-symbol">:</span> <a href="LDEmitter.html" class="tsd-signature-type tsd-kind-class">LDEmitter</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L57">packages/shared/sdk-client/src/LDClientImpl.ts:57</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L68">packages/shared/sdk-client/src/LDClientImpl.ts:68</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="environmentMetadata" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>environment<wbr/>Metadata</span><a href="#environmentMetadata" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">environment<wbr/>Metadata</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/platform-1.LDPluginEnvironmentMetadata.html" class="tsd-signature-type tsd-kind-interface">LDPluginEnvironmentMetadata</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L63">packages/shared/sdk-client/src/LDClientImpl.ts:63</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L74">packages/shared/sdk-client/src/LDClientImpl.ts:74</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="logger" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>logger</span><a href="#logger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">logger</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/platform-1.LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a></div><aside class="tsd-sources">
 <p>Implementation of LDClient.logger</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L51">packages/shared/sdk-client/src/LDClientImpl.ts:51</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L62">packages/shared/sdk-client/src/LDClientImpl.ts:62</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="platform" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>platform</span><a href="#platform" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">platform</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/platform-1.Platform.html" class="tsd-signature-type tsd-kind-interface">Platform</a></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L73">packages/shared/sdk-client/src/LDClientImpl.ts:73</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L85">packages/shared/sdk-client/src/LDClientImpl.ts:85</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="sdkKey" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>sdk<wbr/>Key</span><a href="#sdkKey" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">sdk<wbr/>Key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L71">packages/shared/sdk-client/src/LDClientImpl.ts:71</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L83">packages/shared/sdk-client/src/LDClientImpl.ts:83</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_createIdentifyPromise" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_create<wbr/>Identify<wbr/>Promise</span><a href="#_createIdentifyPromise" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-private">
-<li class="tsd-signature tsd-anchor-link" id="_createIdentifyPromise._createIdentifyPromise-1"><span class="tsd-kind-call-signature">_create<wbr/>Identify<wbr/>Promise</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">timeout</span>, <span class="tsd-kind-parameter">noTimeout</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">identifyPromise</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">identifyReject</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">identifyResolve</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><a href="#_createIdentifyPromise._createIdentifyPromise-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="_createIdentifyPromise._createIdentifyPromise-1"><span class="tsd-kind-call-signature">_create<wbr/>Identify<wbr/>Promise</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">identifyPromise</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">identifyReject</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">identifyResolve</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><a href="#_createIdentifyPromise._createIdentifyPromise-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5><span class="tsd-kind-parameter">timeout</span>: <span class="tsd-signature-type">number</span></h5></li>
-<li>
-<h5><span class="tsd-kind-parameter">noTimeout</span>: <span class="tsd-signature-type">boolean</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">identifyPromise</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">identifyReject</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">identifyResolve</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h4>
 <ul class="tsd-parameters">
 <li class="tsd-parameter">
@@ -240,7 +291,7 @@
 <ul class="tsd-parameters">
 <li class="tsd-parameter-signature">
 <ul class="tsd-signatures">
-<li class="tsd-signature" id="_createIdentifyPromise._createIdentifyPromise-1.__type.identifyReject.__type-1.__type-2"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+<li class="tsd-signature" id="_createIdentifyPromise._createIdentifyPromise-1.__type-1.identifyReject.__type-2.__type-3"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -253,11 +304,11 @@
 <ul class="tsd-parameters">
 <li class="tsd-parameter-signature">
 <ul class="tsd-signatures">
-<li class="tsd-signature" id="_createIdentifyPromise._createIdentifyPromise-1.__type.identifyResolve.__type-3.__type-4"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+<li class="tsd-signature" id="_createIdentifyPromise._createIdentifyPromise-1.__type-1.identifyResolve.__type-4.__type-5"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 <li class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L198">packages/shared/sdk-client/src/LDClientImpl.ts:198</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L210">packages/shared/sdk-client/src/LDClientImpl.ts:210</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_handleInspectionChanged" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_handle<wbr/>Inspection<wbr/>Changed</span><a href="#_handleInspectionChanged" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-private">
@@ -272,7 +323,7 @@
 <h5><span class="tsd-kind-parameter">type</span>: <span class="tsd-signature-type ">FlagChangeType</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L522">packages/shared/sdk-client/src/LDClientImpl.ts:522</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L584">packages/shared/sdk-client/src/LDClientImpl.ts:584</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_typedEval" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_typed<wbr/>Eval</span><a href="#_typedEval" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-private">
@@ -307,7 +358,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]</span></h4></li></ul></li></ul></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="../types/LDEvaluationDetailTyped.html" class="tsd-signature-type tsd-kind-type-alias">LDEvaluationDetailTyped</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type tsd-kind-type-parameter">T</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L421">packages/shared/sdk-client/src/LDClientImpl.ts:421</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L483">packages/shared/sdk-client/src/LDClientImpl.ts:483</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_variationInternal" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_variation<wbr/>Internal</span><a href="#_variationInternal" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-private">
@@ -337,7 +388,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]</span></h4></li></ul></li></ul></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="../types/LDEvaluationDetail.html" class="tsd-signature-type tsd-kind-type-alias">LDEvaluationDetail</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L335">packages/shared/sdk-client/src/LDClientImpl.ts:335</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L397">packages/shared/sdk-client/src/LDClientImpl.ts:397</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="addHook" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>add<wbr/>Hook</span><a href="#addHook" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -351,7 +402,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.addHook</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L482">packages/shared/sdk-client/src/LDClientImpl.ts:482</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L544">packages/shared/sdk-client/src/LDClientImpl.ts:544</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="allFlags" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>all<wbr/>Flags</span><a href="#allFlags" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -360,7 +411,7 @@
 <h4 class="tsd-returns-title">Returns <a href="../interfaces/platform-1.LDFlagSet.html" class="tsd-signature-type tsd-kind-interface">LDFlagSet</a></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.allFlags</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L152">packages/shared/sdk-client/src/LDClientImpl.ts:152</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L164">packages/shared/sdk-client/src/LDClientImpl.ts:164</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="boolVariation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>bool<wbr/>Variation</span><a href="#boolVariation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -376,7 +427,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.boolVariation</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L432">packages/shared/sdk-client/src/LDClientImpl.ts:432</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L494">packages/shared/sdk-client/src/LDClientImpl.ts:494</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="boolVariationDetail" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>bool<wbr/>Variation<wbr/>Detail</span><a href="#boolVariationDetail" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -392,7 +443,7 @@
 <h4 class="tsd-returns-title">Returns <a href="../types/LDEvaluationDetailTyped.html" class="tsd-signature-type tsd-kind-type-alias">LDEvaluationDetailTyped</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.boolVariationDetail</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L457">packages/shared/sdk-client/src/LDClientImpl.ts:457</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L519">packages/shared/sdk-client/src/LDClientImpl.ts:519</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="close" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>close</span><a href="#close" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -401,7 +452,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.close</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L166">packages/shared/sdk-client/src/LDClientImpl.ts:166</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L178">packages/shared/sdk-client/src/LDClientImpl.ts:178</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="flush" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>flush</span><a href="#flush" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -410,7 +461,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">{ </span><br/><span>    </span><span class="tsd-kind-property">error</span><span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type ">Error</span><span class="tsd-signature-symbol">; </span><br/><span>    </span><span class="tsd-kind-property">result</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.flush</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L173">packages/shared/sdk-client/src/LDClientImpl.ts:173</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L185">packages/shared/sdk-client/src/LDClientImpl.ts:185</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="getContext" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Context</span><a href="#getContext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -419,7 +470,7 @@
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="../types/platform-1.LDContext.html" class="tsd-signature-type tsd-kind-type-alias">LDContext</a></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.getContext</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L185">packages/shared/sdk-client/src/LDClientImpl.ts:185</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L197">packages/shared/sdk-client/src/LDClientImpl.ts:197</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="getInternalContext" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>get<wbr/>Internal<wbr/>Context</span><a href="#getInternalContext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected">
@@ -427,13 +478,18 @@
 <li class="tsd-description">
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><a href="platform-1.Context.html" class="tsd-signature-type tsd-kind-class">Context</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L194">packages/shared/sdk-client/src/LDClientImpl.ts:194</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L206">packages/shared/sdk-client/src/LDClientImpl.ts:206</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="identify" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>identify</span><a href="#identify" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
 <li class="tsd-signature tsd-anchor-link" id="identify.identify-1"><span class="tsd-kind-call-signature">identify</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">pristineContext</span>, <span class="tsd-kind-parameter">identifyOptions</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#identify.identify-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Identifies a context to LaunchDarkly. See LDClient.identify.</p>
+<p>If used with the <code>sheddable</code> option set to true, then the identify operation will be sheddable. This means that if
+multiple identify operations are done, without waiting for the previous one to complete, then intermediate
+operations may be discarded.</p>
+<p>It is recommended to use the <code>identifyResult</code> method instead when the operation is sheddable. In a future release,
+all identify operations will default to being sheddable.</p>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -461,7 +517,41 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of LDClient.identify</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L244">packages/shared/sdk-client/src/LDClientImpl.ts:244</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L248">packages/shared/sdk-client/src/LDClientImpl.ts:248</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member"><a id="identifyResult" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>identify<wbr/>Result</span><a href="#identifyResult" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="tsd-signature tsd-anchor-link" id="identifyResult.identifyResult-1"><span class="tsd-kind-call-signature">identify<wbr/>Result</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">pristineContext</span>, <span class="tsd-kind-parameter">identifyOptions</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDIdentifyResult.html" class="tsd-signature-type tsd-kind-type-alias">LDIdentifyResult</a><span class="tsd-signature-symbol">&gt;</span><a href="#identifyResult.identifyResult-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Identifies a context to LaunchDarkly and returns a promise which resolves to an object containing the result of
+the identify operation.</p>
+<p>Unlike the server-side SDKs, the client-side JavaScript SDKs maintain a current context state,
+which is set when you call <code>identify()</code>.</p>
+<p>Changing the current context also causes all feature flag values to be reloaded. Until that has
+finished, calls to <a href="LDClientImpl.html#variation" class="tsd-kind-method">variation</a> will still return flag values for the previous context. You can
+await the Promise to determine when the new flag values are available.</p>
+<p>If used with the <code>sheddable</code> option set to true, then the identify operation will be sheddable. This means that if
+multiple identify operations are done, without waiting for the previous one to complete, then intermediate
+operations may be discarded.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">pristineContext</span>: <a href="../types/platform-1.LDContext.html" class="tsd-signature-type tsd-kind-type-alias">LDContext</a></h5>
+<div class="tsd-comment tsd-typography"><p>The LDContext object.</p>
+</div></li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">identifyOptions</span>: <a href="../interfaces/LDIdentifyOptions.html" class="tsd-signature-type tsd-kind-interface">LDIdentifyOptions</a></h5>
+<div class="tsd-comment tsd-typography"><p>Optional configuration. Please see <a href="../interfaces/LDIdentifyOptions.html" class="tsd-kind-interface">LDIdentifyOptions</a>.</p>
+</div><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type ">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDIdentifyResult.html" class="tsd-signature-type tsd-kind-type-alias">LDIdentifyResult</a><span class="tsd-signature-symbol">&gt;</span></h4><p>A promise which resolves to an object containing the result of the identify operation.
+   The promise returned from this method will not be rejected.</p>
+
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/LDClientIdentifyResult.html">LDClientIdentifyResult</a>.<a href="../interfaces/LDClientIdentifyResult.html#identifyResult">identifyResult</a></p>
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L264">packages/shared/sdk-client/src/LDClientImpl.ts:264</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="jsonVariation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>json<wbr/>Variation</span><a href="#jsonVariation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -477,7 +567,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">unknown</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.jsonVariation</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L439">packages/shared/sdk-client/src/LDClientImpl.ts:439</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L501">packages/shared/sdk-client/src/LDClientImpl.ts:501</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="jsonVariationDetail" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>json<wbr/>Variation<wbr/>Detail</span><a href="#jsonVariationDetail" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -493,7 +583,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <a href="../types/LDEvaluationDetailTyped.html" class="tsd-signature-type tsd-kind-type-alias">LDEvaluationDetailTyped</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.jsonVariationDetail</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L478">packages/shared/sdk-client/src/LDClientImpl.ts:478</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L540">packages/shared/sdk-client/src/LDClientImpl.ts:540</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="numberVariation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>number<wbr/>Variation</span><a href="#numberVariation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -509,7 +599,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.numberVariation</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L443">packages/shared/sdk-client/src/LDClientImpl.ts:443</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L505">packages/shared/sdk-client/src/LDClientImpl.ts:505</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="numberVariationDetail" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>number<wbr/>Variation<wbr/>Detail</span><a href="#numberVariationDetail" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -525,7 +615,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <a href="../types/LDEvaluationDetailTyped.html" class="tsd-signature-type tsd-kind-type-alias">LDEvaluationDetailTyped</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.numberVariationDetail</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L464">packages/shared/sdk-client/src/LDClientImpl.ts:464</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L526">packages/shared/sdk-client/src/LDClientImpl.ts:526</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="off" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>off</span><a href="#off" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -541,7 +631,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.off</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L305">packages/shared/sdk-client/src/LDClientImpl.ts:305</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L367">packages/shared/sdk-client/src/LDClientImpl.ts:367</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="on" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>on</span><a href="#on" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -557,7 +647,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.on</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L301">packages/shared/sdk-client/src/LDClientImpl.ts:301</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L363">packages/shared/sdk-client/src/LDClientImpl.ts:363</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="sendEvent" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>send<wbr/>Event</span><a href="#sendEvent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected">
@@ -570,7 +660,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h5><span class="tsd-kind-parameter">event</span>: <a href="../types/platform-1.internal.InputEvent.html" class="tsd-signature-type tsd-kind-type-alias">InputEvent</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L518">packages/shared/sdk-client/src/LDClientImpl.ts:518</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L580">packages/shared/sdk-client/src/LDClientImpl.ts:580</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-is-protected"><a id="setEventSendingEnabled" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagProtected">Protected</code> <span>set<wbr/>Event<wbr/>Sending<wbr/>Enabled</span><a href="#setEventSendingEnabled" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-is-protected">
@@ -592,7 +682,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L491">packages/shared/sdk-client/src/LDClientImpl.ts:491</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L553">packages/shared/sdk-client/src/LDClientImpl.ts:553</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="stringVariation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>string<wbr/>Variation</span><a href="#stringVariation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -608,7 +698,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.stringVariation</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L450">packages/shared/sdk-client/src/LDClientImpl.ts:450</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L512">packages/shared/sdk-client/src/LDClientImpl.ts:512</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="stringVariationDetail" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>string<wbr/>Variation<wbr/>Detail</span><a href="#stringVariationDetail" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -624,7 +714,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <a href="../types/LDEvaluationDetailTyped.html" class="tsd-signature-type tsd-kind-type-alias">LDEvaluationDetailTyped</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.stringVariationDetail</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L471">packages/shared/sdk-client/src/LDClientImpl.ts:471</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L533">packages/shared/sdk-client/src/LDClientImpl.ts:533</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="track" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>track</span><a href="#track" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -642,7 +732,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.track</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L309">packages/shared/sdk-client/src/LDClientImpl.ts:309</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L371">packages/shared/sdk-client/src/LDClientImpl.ts:371</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="variation" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>variation</span><a href="#variation" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -658,7 +748,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.variation</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L406">packages/shared/sdk-client/src/LDClientImpl.ts:406</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L468">packages/shared/sdk-client/src/LDClientImpl.ts:468</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="variationDetail" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>variation<wbr/>Detail</span><a href="#variationDetail" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -674,7 +764,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <h4 class="tsd-returns-title">Returns <a href="../types/LDEvaluationDetail.html" class="tsd-signature-type tsd-kind-type-alias">LDEvaluationDetail</a></h4><aside class="tsd-sources">
 <p>Implementation of LDClient.variationDetail</p>
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/e8f9b9a/packages/shared/sdk-client/src/LDClientImpl.ts#L415">packages/shared/sdk-client/src/LDClientImpl.ts:415</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/4e9ff6b/packages/shared/sdk-client/src/LDClientImpl.ts#L477">packages/shared/sdk-client/src/LDClientImpl.ts:477</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -706,6 +796,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <li><a href="#_flagManager" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_flag<wbr/>Manager</span></a></li>
 <li><a href="#_highTimeoutThreshold" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_high<wbr/>Timeout<wbr/>Threshold</span></a></li>
 <li><a href="#_hookRunner" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_hook<wbr/>Runner</span></a></li>
+<li><a href="#_identifyQueue" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_identify<wbr/>Queue</span></a></li>
 <li><a href="#_inspectorManager" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_inspector<wbr/>Manager</span></a></li>
 <li><a href="#_uncheckedContext" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_unchecked<wbr/>Context</span></a></li>
 <li><a href="#autoEnvAttributes" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>auto<wbr/>Env<wbr/>Attributes</span></a></li>
@@ -728,6 +819,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <li><a href="#getContext" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Context</span></a></li>
 <li><a href="#getInternalContext" class="tsd-is-protected"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>get<wbr/>Internal<wbr/>Context</span></a></li>
 <li><a href="#identify" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>identify</span></a></li>
+<li><a href="#identifyResult" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>identify<wbr/>Result</span></a></li>
 <li><a href="#jsonVariation" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>json<wbr/>Variation</span></a></li>
 <li><a href="#jsonVariationDetail" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>json<wbr/>Variation<wbr/>Detail</span></a></li>
 <li><a href="#numberVariation" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>number<wbr/>Variation</span></a></li>
@@ -742,7 +834,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <li><a href="#variation" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>variation</span></a></li>
 <li><a href="#variationDetail" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>variation<wbr/>Detail</span></a></li></ul></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>@launchdarkly/js-<wbr/>client-<wbr/>sdk-<wbr/>common -<wbr/> v1.14.1</span></a>
+<nav class="tsd-navigation"><a href="../index.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>@launchdarkly/js-<wbr/>client-<wbr/>sdk-<wbr/>common -<wbr/> v1.15.0</span></a>
 <ul class="tsd-small-nested-navigation">
 <li><a href="../index.html#ApplicationTags"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4194304"><rect fill="var(--color-icon-background)" stroke="#FF4D82" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M10.354 17V8.24H13.066C13.586 8.24 14.042 8.348 14.434 8.564C14.826 8.772 15.13 9.064 15.346 9.44C15.562 9.816 15.67 10.256 15.67 10.76C15.67 11.352 15.514 11.86 15.202 12.284C14.898 12.708 14.482 13 13.954 13.16L15.79 17H14.518L12.838 13.28H11.434V17H10.354ZM11.434 12.308H13.066C13.514 12.308 13.874 12.168 14.146 11.888C14.418 11.6 14.554 11.224 14.554 10.76C14.554 10.288 14.418 9.912 14.146 9.632C13.874 9.352 13.514 9.212 13.066 9.212H11.434V12.308Z" fill="var(--color-text)"></path></g></svg><span>Application<wbr/>Tags</span></a></li>
 <li><a href="../index.html#AttributeReference"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Attribute<wbr/>Reference</span></a></li>
@@ -866,8 +958,13 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <li><a href="../interfaces/IdentifySeriesData.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Identify<wbr/>Series<wbr/>Data</span></a></li>
 <li><a href="../interfaces/IdentifySeriesResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Identify<wbr/>Series<wbr/>Result</span></a></li>
 <li><a href="../interfaces/ItemDescriptor.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Item<wbr/>Descriptor</span></a></li>
+<li><a href="../interfaces/LDClientIdentifyResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDClient<wbr/>Identify<wbr/>Result</span></a></li>
 <li><a href="../interfaces/LDClientInternalOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDClient<wbr/>Internal<wbr/>Options</span></a></li>
+<li><a href="../interfaces/LDIdentifyError.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDIdentify<wbr/>Error</span></a></li>
 <li><a href="../interfaces/LDIdentifyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDIdentify<wbr/>Options</span></a></li>
+<li><a href="../interfaces/LDIdentifyShed.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDIdentify<wbr/>Shed</span></a></li>
+<li><a href="../interfaces/LDIdentifySuccess.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDIdentify<wbr/>Success</span></a></li>
+<li><a href="../interfaces/LDIdentifyTimeout.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDIdentify<wbr/>Timeout</span></a></li>
 <li><a href="../interfaces/LDOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDOptions</span></a></li>
 <li><a href="../interfaces/TrackSeriesContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Track<wbr/>Series<wbr/>Context</span></a></li>
 <li><a href="../types/ConnectionMode.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2097152"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>Connection<wbr/>Mode</span></a></li>
@@ -875,6 +972,7 @@ You can customize this timeout with <a href="../interfaces/LDIdentifyOptions.htm
 <li><a href="../types/LDEmitterEventName.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDEmitter<wbr/>Event<wbr/>Name</span></a></li>
 <li><a href="../types/LDEvaluationDetail.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDEvaluation<wbr/>Detail</span></a></li>
 <li><a href="../types/LDEvaluationDetailTyped.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDEvaluation<wbr/>Detail<wbr/>Typed</span></a></li>
+<li><a href="../types/LDIdentifyResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDIdentify<wbr/>Result</span></a></li>
 <li><a href="../types/LDInspection.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDInspection</span></a></li>
 <li><a href="../functions/makeRequestor.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-64"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)"></path></g></svg><span>make<wbr/>Requestor</span></a></li></ul></nav></div></div></div>
 <div class="tsd-generator">
