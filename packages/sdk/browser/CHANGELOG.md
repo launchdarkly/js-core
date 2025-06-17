@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.7.1...js-client-sdk-v0.8.0) (2025-06-17)
+
+
+### Features
+
+* Add support for an identify queue. ([#842](https://github.com/launchdarkly/js-core/issues/842)) ([78e9a5e](https://github.com/launchdarkly/js-core/commit/78e9a5e93cb4c06a19c0d7d63307dfd3407d4505))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.14.1 to 1.15.0
+
 ## [0.7.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.7.0...js-client-sdk-v0.7.1) (2025-06-03)
 
 
