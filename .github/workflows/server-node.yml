@@ -45,11 +45,11 @@ jobs:
           cd /tmp/sdk-test-harness
           git checkout feat/fdv2
           go build -o test-harness .
-          ./test-harness -url http://localhost:8000 -debug --skip-from=testharness-suppressions-fdv2.txt -stop-service-at-end
+          ./test-harness -url http://localhost:8000 -debug --skip-from=testharness-suppressions-fdv2.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.2
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
-          extra_params: '--skip-from=./contract-tests/testharness-suppressions.txt'
+          extra_params: '--skip-from=./contract-tests/testharness-suppressions.txt -stop-service-at-end'
