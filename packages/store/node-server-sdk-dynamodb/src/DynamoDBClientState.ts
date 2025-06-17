@@ -96,17 +96,13 @@ export default class DynamoDBClientState {
     table: string,
     key: Record<string, AttributeValue>,
   ): Promise<Record<string, AttributeValue> | undefined> {
-    try {
-      const res = await this._client.send(
-        new GetItemCommand({
-          TableName: table,
-          Key: key,
-        }),
-      );
-      return res.Item;
-    } catch (err) {
-      return undefined;
-    }
+    const res = await this._client.send(
+      new GetItemCommand({
+        TableName: table,
+        Key: key,
+      }),
+    );
+    return res.Item;
   }
 
   async put(params: PutItemCommandInput): Promise<void> {
