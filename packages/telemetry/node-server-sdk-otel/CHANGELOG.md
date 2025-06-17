@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.2.2...node-server-sdk-otel-v1.3.0) (2025-06-17)
+
+
+### Features
+
+* Update OTEL tracing hook with latest conventions. ([#887](https://github.com/launchdarkly/js-core/issues/887)) ([245f1a3](https://github.com/launchdarkly/js-core/commit/245f1a3a6ca670cf45c7b034c79733c98defdd77))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.9.2 to 9.10.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.10.0
+
 ## [1.2.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.2.1...node-server-sdk-otel-v1.2.2) (2025-05-21)
 
 

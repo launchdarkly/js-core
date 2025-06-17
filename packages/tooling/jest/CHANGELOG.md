@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.9](https://github.com/launchdarkly/js-core/compare/jest-v0.1.8...jest-v0.1.9) (2025-06-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/react-native-client-sdk bumped from ~10.10.3 to ~10.10.4
+
 ## [0.1.8](https://github.com/launchdarkly/js-core/compare/jest-v0.1.7...jest-v0.1.8) (2025-06-03)
 
 
