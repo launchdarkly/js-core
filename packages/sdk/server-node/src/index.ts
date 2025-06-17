@@ -8,17 +8,15 @@
  *
  * @packageDocumentation
  */
-import {
-  BasicLogger,
-  BasicLoggerOptions,
-  LDLogger,
-  LDOptions,
-} from '@launchdarkly/js-server-sdk-common';
+import { BasicLogger, BasicLoggerOptions, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDClient } from './api/LDClient';
+import { LDOptions } from './api/LDOptions';
 import LDClientImpl from './LDClientNode';
 
 export * from '@launchdarkly/js-server-sdk-common';
+// Override common options with node specific options.
+export { LDOptions };
 
 // To replace the exports from `export *` we need to name them.
 // So the below exports replace them with the Node specific variants.
