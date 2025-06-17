@@ -176,15 +176,20 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     key: string,
     callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
   ) {
-    const read = await this._state.get(this._tableName, {
-      namespace: stringValue(this._state.prefixedKey(kind.namespace)),
-      key: stringValue(key),
-    });
-    if (read) {
-      callback(this._unmarshalItem(read));
-    } else {
+    try {
+      const read = await this._state.get(this._tableName, {
+        namespace: stringValue(this._state.prefixedKey(kind.namespace)),
+        key: stringValue(key),
+      });
+      if (read) {
+        callback(this._unmarshalItem(read));
+      } else {
+        callback(undefined);
+      }
+    } catch (error) {
       callback(undefined);
     }
+    
   }
 
   async getAll(
