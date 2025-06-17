@@ -167,7 +167,11 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     // Always write the initialized token when we initialize.
     ops.push({ PutRequest: { Item: this._initializedToken() } });
 
-    await this._state.batchWrite(this._tableName, ops);
+    try {
+      await this._state.batchWrite(this._tableName, ops);
+    } catch (error) {
+      this._logger?.error(`Error writing to DynamoDB: ${error}`);
+    }
     callback();
   }
 
@@ -187,9 +191,9 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
         callback(undefined);
       }
     } catch (error) {
+      this._logger?.error(`Error reading ${kind.namespace}:${key}: ${error}`);
       callback(undefined);
     }
-    
   }
 
   async getAll(
