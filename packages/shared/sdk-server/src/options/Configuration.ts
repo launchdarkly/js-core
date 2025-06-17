@@ -1,8 +1,8 @@
 import {
   ApplicationTags,
-  internal,
   LDClientContext,
   LDLogger,
+  LDPluginEnvironmentMetadata,
   NumberWithMinimum,
   OptionMessages,
   ServiceEndpoints,
@@ -30,6 +30,7 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
+import { ServerInternalOptions } from './ServerInternalOptions';
 import { ValidatedOptions } from './ValidatedOptions';
 
 // Once things are internal to the implementation of the SDK we can depend on
@@ -337,7 +338,18 @@ export default class Configuration {
 
   public readonly enableEventCompression: boolean;
 
-  constructor(options: LDOptions = {}, internalOptions: internal.LDInternalOptions = {}) {
+  public readonly getImplementationHooks: (
+    environmentMetadata: LDPluginEnvironmentMetadata,
+  ) => Hook[];
+
+  public readonly applicationInfo?: {
+    id?: string;
+    version?: string;
+    name?: string;
+    versionName?: string;
+  };
+
+  constructor(options: LDOptions = {}, internalOptions: ServerInternalOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
     // eslint-disable-next-line no-param-reassign
@@ -436,5 +448,7 @@ export default class Configuration {
 
     this.hooks = validatedOptions.hooks;
     this.enableEventCompression = validatedOptions.enableEventCompression;
+    this.getImplementationHooks = internalOptions.getImplementationHooks ?? (() => []);
+    this.applicationInfo = validatedOptions.application;
   }
 }

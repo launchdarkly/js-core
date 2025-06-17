@@ -11,6 +11,7 @@ import {
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDLogger,
+  LDPluginEnvironmentMetadata,
   LDTimeoutError,
   Platform,
   subsystem,
@@ -39,6 +40,7 @@ import {
 } from './api/options/LDDataSystemOptions';
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
+import { createPluginEnvironmentMetadata } from './createPluginEnvironmentMetadata';
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
@@ -64,6 +66,7 @@ import HookRunner from './hooks/HookRunner';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
 import Configuration, { DEFAULT_POLL_INTERVAL } from './options/Configuration';
+import { ServerInternalOptions } from './options/ServerInternalOptions';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
@@ -106,6 +109,7 @@ function constructFDv1(
   callbacks: LDClientCallbacks,
   initSuccess: () => void,
   dataSourceErrorHandler: (e: any) => void,
+  hooks: Hook[],
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -121,7 +125,7 @@ function constructFDv1(
 } {
   const { onUpdate, hasEventListeners } = callbacks;
 
-  const hookRunner = new HookRunner(config.logger, config.hooks || []);
+  const hookRunner = new HookRunner(config.logger, hooks);
 
   if (!sdkKey && !config.offline) {
     throw new Error('You must configure the client with an SDK key');
@@ -234,6 +238,7 @@ function constructFDv2(
   config: Configuration,
   callbacks: LDClientCallbacks,
   initSuccess: () => void,
+  hooks: Hook[],
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -250,7 +255,7 @@ function constructFDv2(
 } {
   const { onUpdate, hasEventListeners } = callbacks;
 
-  const hookRunner = new HookRunner(config.logger, config.hooks || []);
+  const hookRunner = new HookRunner(config.logger, hooks);
 
   if (!sdkKey && !config.offline) {
     throw new Error('You must configure the client with an SDK key');
@@ -437,6 +442,11 @@ export default class LDClientImpl implements LDClient {
 
   private _hookRunner: HookRunner;
 
+  /**
+   * Derived classes need to use this data to register plugins.
+   */
+  protected environmentMetadata: LDPluginEnvironmentMetadata;
+
   public get logger(): LDLogger | undefined {
     return this._logger;
   }
@@ -455,9 +465,19 @@ export default class LDClientImpl implements LDClient {
     private _platform: Platform,
     options: LDOptions,
     callbacks: LDClientCallbacks,
-    internalOptions?: internal.LDInternalOptions,
+    internalOptions?: ServerInternalOptions,
   ) {
     const config = new Configuration(options, internalOptions);
+
+    this.environmentMetadata = createPluginEnvironmentMetadata(_platform, _sdkKey, config);
+
+    const hooks: Hook[] = [];
+    if (config.hooks) {
+      hooks.push(...config.hooks);
+    }
+    config.getImplementationHooks(this.environmentMetadata).forEach((hook) => {
+      hooks.push(hook);
+    });
 
     if (!config.dataSystem) {
       // setup for FDv1
@@ -480,6 +500,7 @@ export default class LDClientImpl implements LDClient {
         callbacks,
         () => this._initSuccess(),
         (e) => this._dataSourceErrorHandler(e),
+        hooks,
       ));
 
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
@@ -509,7 +530,7 @@ export default class LDClientImpl implements LDClient {
         onError: this._onError,
         onFailed: this._onFailed,
         onReady: this._onReady,
-      } = constructFDv2(_sdkKey, _platform, config, callbacks, () => this._initSuccess()));
+      } = constructFDv2(_sdkKey, _platform, config, callbacks, () => this._initSuccess(), hooks));
       this._featureStore = transactionalStore;
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
         .statusProvider as BigSegmentStoreStatusProvider;
