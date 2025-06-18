@@ -280,6 +280,51 @@ describe('given a store with basic data', () => {
     const result = await facade.get(dataKind.features, newFeature.key);
     expect(result).toEqual(descriptor);
   });
+
+  it('handles batchWrite error during init', async () => {
+    const mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const errorCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, mockLogger);
+    const errorFacade = new AsyncCoreFacade(errorCore);
+
+    // Mock batchWrite to throw an error
+    const error = new Error('Batch write failed');
+    jest.spyOn(state, 'batchWrite').mockRejectedValueOnce(error);
+
+    // Should not throw, but should complete the callback
+    await expect(errorFacade.init([])).resolves.not.toThrow();
+
+    // Verify error was logged
+    expect(mockLogger.error).toHaveBeenCalledWith(`Error writing to DynamoDB: ${error}`);
+  });
+
+  it('handles get error', async () => {
+    const mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const errorCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, mockLogger);
+    const errorFacade = new AsyncCoreFacade(errorCore);
+
+    // Mock get to throw an error
+    const error = new Error('Get failed');
+    jest.spyOn(state, 'get').mockRejectedValueOnce(error);
+
+    // Should return undefined when get fails
+    const result = await errorFacade.get(dataKind.features, 'some-key');
+    expect(result).toBeUndefined();
+
+    // Verify error was logged with correct namespace and key
+    expect(mockLogger.error).toHaveBeenCalledWith(`Error reading features:some-key: ${error}`);
+  });
 });
 
 it('it can calculate size', () => {

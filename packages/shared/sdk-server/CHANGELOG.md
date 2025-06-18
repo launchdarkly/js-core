@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.16.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.15.2...js-server-sdk-common-v2.16.0) (2025-06-17)
+
+
+### Features
+
+* Add plugin support for node. ([#880](https://github.com/launchdarkly/js-core/issues/880)) ([6b7bf7e](https://github.com/launchdarkly/js-core/commit/6b7bf7eca3b26c3d6e04736fee9ec2f137e743a5))
+
 ## [2.15.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.15.1...js-server-sdk-common-v2.15.2) (2025-05-21)
 
 

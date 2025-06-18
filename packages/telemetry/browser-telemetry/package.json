@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/browser-telemetry",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "packageManager": "yarn@3.4.1",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@launchdarkly/js-client-sdk": "0.7.1",
+    "@launchdarkly/js-client-sdk": "0.8.0",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/css-font-loading-module": "^0.0.13",
     "@types/jest": "^29.5.11",

@@ -102,7 +102,6 @@ export default class DynamoDBClientState {
         Key: key,
       }),
     );
-
     return res.Item;
   }
 
