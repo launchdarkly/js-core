@@ -129,6 +129,13 @@ it('tracks success', () => {
     { configKey, variationKey, version },
     1,
   );
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation:success',
+    testContext,
+    { configKey, variationKey, version },
+    1,
+  );
 });
 
 it('tracks OpenAI usage', async () => {
@@ -165,6 +172,20 @@ it('tracks OpenAI usage', async () => {
     testContext,
     { configKey, variationKey, version },
     1,
+  );
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation:success',
+    testContext,
+    { configKey, variationKey, version },
+    1,
+  );
+
+  expect(mockTrack).not.toHaveBeenCalledWith(
+    '$ld:ai:generation:error',
+    expect.anything(),
+    expect.anything(),
+    expect.anything(),
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
@@ -226,6 +247,13 @@ it('tracks error when OpenAI metrics function throws', async () => {
     { configKey, variationKey, version },
     1,
   );
+
+  expect(mockTrack).not.toHaveBeenCalledWith(
+    expect.stringMatching(/^\$ld:ai:tokens:/),
+    expect.anything(),
+    expect.anything(),
+    expect.anything(),
+  );
 });
 
 it('tracks Bedrock conversation with successful response', () => {
@@ -258,6 +286,20 @@ it('tracks Bedrock conversation with successful response', () => {
     testContext,
     { configKey, variationKey, version },
     1,
+  );
+
+  expect(mockTrack).toHaveBeenCalledWith(
+    '$ld:ai:generation:success',
+    testContext,
+    { configKey, variationKey, version },
+    1,
+  );
+
+  expect(mockTrack).not.toHaveBeenCalledWith(
+    '$ld:ai:generation:error',
+    expect.anything(),
+    expect.anything(),
+    expect.anything(),
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
@@ -318,6 +360,409 @@ it('tracks Bedrock conversation with error response', () => {
     { configKey, variationKey, version },
     1,
   );
+
+  expect(mockTrack).not.toHaveBeenCalledWith(
+    expect.stringMatching(/^\$ld:ai:tokens:/),
+    expect.anything(),
+    expect.anything(),
+    expect.anything(),
+  );
+});
+
+describe('Vercel AI SDK generateText', () => {
+  it('tracks Vercel AI SDK usage', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      testContext,
+    );
+    jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+    const TOTAL_TOKENS = 100;
+    const PROMPT_TOKENS = 49;
+    const COMPLETION_TOKENS = 51;
+
+    await tracker.trackVercelAISDKGenerateTextMetrics(async () => ({
+      usage: {
+        totalTokens: TOTAL_TOKENS,
+        promptTokens: PROMPT_TOKENS,
+        completionTokens: COMPLETION_TOKENS,
+      },
+    }));
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { configKey, variationKey, version },
+      1000,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:total',
+      testContext,
+      { configKey, variationKey, version },
+      TOTAL_TOKENS,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:input',
+      testContext,
+      { configKey, variationKey, version },
+      PROMPT_TOKENS,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:output',
+      testContext,
+      { configKey, variationKey, version },
+      COMPLETION_TOKENS,
+    );
+  });
+
+  it('tracks error when Vercel AI SDK metrics function throws', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      testContext,
+    );
+    jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+    const error = new Error('Vercel AI SDK API error');
+    await expect(
+      tracker.trackVercelAISDKGenerateTextMetrics(async () => {
+        throw error;
+      }),
+    ).rejects.toThrow(error);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { configKey, variationKey, version },
+      1000,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^\$ld:ai:tokens:/),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+});
+
+describe('Vercel AI SDK streamText', () => {
+  it('tracks Vercel AI SDK usage', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      testContext,
+    );
+    jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+    const TOTAL_TOKENS = 100;
+    const PROMPT_TOKENS = 49;
+    const COMPLETION_TOKENS = 51;
+
+    let resolveDone: ((value: boolean) => void) | undefined;
+    const donePromise = new Promise<boolean>((resolve) => {
+      resolveDone = resolve;
+    });
+
+    const finishReason = Promise.resolve('stop');
+    jest
+      .spyOn(finishReason, 'then')
+      .mockImplementationOnce((fn) => finishReason.then(fn).finally(() => resolveDone?.(true)));
+
+    tracker.trackVercelAISDKStreamTextMetrics(() => ({
+      finishReason,
+      usage: Promise.resolve({
+        totalTokens: TOTAL_TOKENS,
+        promptTokens: PROMPT_TOKENS,
+        completionTokens: COMPLETION_TOKENS,
+      }),
+    }));
+
+    await donePromise;
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { configKey, variationKey, version },
+      1000,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:total',
+      testContext,
+      { configKey, variationKey, version },
+      TOTAL_TOKENS,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:input',
+      testContext,
+      { configKey, variationKey, version },
+      PROMPT_TOKENS,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:output',
+      testContext,
+      { configKey, variationKey, version },
+      COMPLETION_TOKENS,
+    );
+  });
+
+  it('tracks error when Vercel AI SDK metrics function throws', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      testContext,
+    );
+    jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+    const error = new Error('Vercel AI SDK API error');
+    expect(() =>
+      tracker.trackVercelAISDKStreamTextMetrics(() => {
+        throw error;
+      }),
+    ).toThrow(error);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { configKey, variationKey, version },
+      1000,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^\$ld:ai:tokens:/),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('tracks error when Vercel AI SDK finishes because of an error', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      testContext,
+    );
+    jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+    tracker.trackVercelAISDKStreamTextMetrics(() => ({
+      finishReason: Promise.resolve('error'),
+    }));
+
+    await new Promise(process.nextTick);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { configKey, variationKey, version },
+      1000,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^\$ld:ai:tokens:/),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('tracks error when Vercel AI SDK finishReason promise rejects', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      testContext,
+    );
+    jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+    tracker.trackVercelAISDKStreamTextMetrics(() => ({
+      finishReason: Promise.reject(new Error('Vercel AI SDK API error')),
+    }));
+
+    await new Promise(process.nextTick);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { configKey, variationKey, version },
+      1000,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^\$ld:ai:tokens:/),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it('squashes error when Vercel AI SDK usage promise rejects', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      testContext,
+    );
+    jest.spyOn(global.Date, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(2000);
+
+    tracker.trackVercelAISDKStreamTextMetrics(() => ({
+      finishReason: Promise.resolve('stop'),
+      usage: Promise.reject(new Error('Vercel AI SDK API error')),
+    }));
+
+    await new Promise(process.nextTick);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { configKey, variationKey, version },
+      1000,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      { configKey, variationKey, version },
+      1,
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      expect.stringMatching(/^\$ld:ai:tokens:/),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
 });
 
 it('tracks tokens', () => {

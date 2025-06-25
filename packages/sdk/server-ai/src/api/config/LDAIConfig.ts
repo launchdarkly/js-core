@@ -1,3 +1,4 @@
+import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 
 /**
@@ -22,7 +23,7 @@ export interface LDModelConfig {
 
 export interface LDProviderConfig {
   /**
-   * The ID of the provider.
+   * The name of the provider.
    */
   name: string;
 }
@@ -65,6 +66,11 @@ export interface LDAIConfig {
   tracker: LDAIConfigTracker;
 
   /**
+   * A mapper which can be used to map configuration for selected supported providers.
+   */
+  mapper: LDAIConfigMapper;
+
+  /**
    * Whether the configuration is enabled.
    */
   enabled: boolean;
@@ -72,9 +78,9 @@ export interface LDAIConfig {
 
 /**
  * Default value for a `modelConfig`. This is the same as the LDAIConfig, but it does not include
- * a tracker and `enabled` is optional.
+ * a tracker or mapper, and `enabled` is optional.
  */
-export type LDAIDefaults = Omit<LDAIConfig, 'tracker' | 'enabled'> & {
+export type LDAIDefaults = Omit<LDAIConfig, 'tracker' | 'mapper' | 'enabled'> & {
   /**
    * Whether the configuration is enabled.
    *

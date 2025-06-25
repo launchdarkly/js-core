@@ -4,6 +4,7 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfig, LDAIDefaults, LDMessage, LDModelConfig, LDProviderConfig } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
+import { LDAIConfigMapperImpl } from './LDAIConfigMapperImpl';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 
@@ -52,7 +53,7 @@ export class LDAIClientImpl implements LDAIClient {
     );
     // eslint-disable-next-line no-underscore-dangle
     const enabled = !!value._ldMeta?.enabled;
-    const config: LDAIConfig = {
+    const config: Omit<LDAIConfig, 'mapper'> = {
       tracker,
       enabled,
     };
@@ -73,6 +74,9 @@ export class LDAIClientImpl implements LDAIClient {
       }));
     }
 
-    return config;
+    return {
+      ...config,
+      mapper: new LDAIConfigMapperImpl(config.model, config.provider, config.messages),
+    };
   }
 }

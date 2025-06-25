@@ -56,6 +56,7 @@ it('returns config with interpolated messagess', async () => {
       { role: 'user', content: 'Score: 42' },
     ],
     tracker: expect.any(Object),
+    mapper: expect.any(Object),
     enabled: true,
   });
 });
@@ -101,6 +102,7 @@ it('handles missing metadata in variation', async () => {
     model: { name: 'example-provider', parameters: { name: 'imagination' } },
     messages: [{ role: 'system', content: 'Hello' }],
     tracker: expect.any(Object),
+    mapper: expect.any(Object),
     enabled: false,
   });
 });
@@ -124,6 +126,7 @@ it('passes the default value to the underlying client', async () => {
     messages: defaultValue.messages,
     provider: defaultValue.provider,
     tracker: expect.any(Object),
+    mapper: expect.any(Object),
     enabled: false,
   });
 
