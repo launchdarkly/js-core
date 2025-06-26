@@ -1,5 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
+import { LDAIAgentDefaults } from '../src/api/agents';
 import { LDAIDefaults } from '../src/api/config';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
@@ -125,6 +126,125 @@ it('passes the default value to the underlying client', async () => {
     provider: defaultValue.provider,
     tracker: expect.any(Object),
     enabled: false,
+  });
+
+  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
+});
+
+it('returns agent config with interpolated instructions', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+  const key = 'test-flag';
+  const defaultValue: LDAIAgentDefaults = {
+    model: { name: 'test', parameters: { name: 'test-model' } },
+    instructions: 'You are a helpful assistant.',
+    enabled: true,
+  };
+
+  const mockVariation = {
+    model: {
+      name: 'example-model',
+      parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
+    },
+    provider: {
+      name: 'example-provider',
+    },
+    instructions: 'You are a helpful assistant. your name is {{name}} and your score is {{score}}',
+    _ldMeta: {
+      variationKey: 'v1',
+      enabled: true,
+    },
+  };
+
+  mockLdClient.variation.mockResolvedValue(mockVariation);
+
+  const variables = { name: 'John', score: 42 };
+  const result = await client.agents([key], testContext, defaultValue, variables);
+
+  expect(result).toEqual({
+    'test-flag': {
+      model: {
+        name: 'example-model',
+        parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
+      },
+      provider: {
+        name: 'example-provider',
+      },
+      instructions: 'You are a helpful assistant. your name is John and your score is 42',
+      tracker: expect.any(Object),
+      enabled: true,
+    },
+  });
+});
+
+it('includes context in variables for agent instructions interpolation', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+  const key = 'test-flag';
+  const defaultValue: LDAIAgentDefaults = {
+    model: { name: 'test', parameters: { name: 'test-model' } },
+    instructions: 'You are a helpful assistant.',
+  };
+
+  const mockVariation = {
+    instructions: 'You are a helpful assistant. your user key is {{ldctx.key}}',
+    _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+  };
+
+  mockLdClient.variation.mockResolvedValue(mockVariation);
+
+  const result = await client.agents([key], testContext, defaultValue);
+
+  expect(result[key].instructions).toBe('You are a helpful assistant. your user key is test-user');
+});
+
+it('handles missing metadata in agent variation', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+  const key = 'test-flag';
+  const defaultValue: LDAIAgentDefaults = {
+    model: { name: 'test', parameters: { name: 'test-model' } },
+    instructions: 'You are a helpful assistant.',
+  };
+
+  const mockVariation = {
+    model: { name: 'example-provider', parameters: { name: 'imagination' } },
+    instructions: 'Hello.',
+  };
+
+  mockLdClient.variation.mockResolvedValue(mockVariation);
+
+  const result = await client.agents([key], testContext, defaultValue);
+
+  expect(result).toEqual({
+    'test-flag': {
+      model: { name: 'example-provider', parameters: { name: 'imagination' } },
+      instructions: 'Hello.',
+      tracker: expect.any(Object),
+      enabled: false,
+    },
+  });
+});
+
+it('passes the default value to the underlying client for agents', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+  const key = 'non-existent-flag';
+  const defaultValue: LDAIAgentDefaults = {
+    model: { name: 'default-model', parameters: { name: 'default' } },
+    provider: { name: 'default-provider' },
+    instructions: 'Default instructions',
+    enabled: true,
+  };
+
+  mockLdClient.variation.mockResolvedValue(defaultValue);
+
+  const result = await client.agents([key], testContext, defaultValue);
+
+  expect(result).toEqual({
+    'non-existent-flag': {
+      model: defaultValue.model,
+      instructions: defaultValue.instructions,
+      provider: defaultValue.provider,
+      tracker: expect.any(Object),
+      enabled: false,
+    },
   });
 
   expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
