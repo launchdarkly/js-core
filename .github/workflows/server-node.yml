@@ -37,8 +37,19 @@ jobs:
         run: yarn contract-test-service-build
       - name: Launch the test service in the background
         run: yarn contract-test-service 2>&1 &
+      - name: Clone and run contract tests from feat/fdv2 branch
+        run: |
+          mkdir -p /tmp/sdk-test-harness
+          git clone https://github.com/launchdarkly/sdk-test-harness.git /tmp/sdk-test-harness
+          cp ./contract-tests/testharness-suppressions-fdv2.txt /tmp/sdk-test-harness/testharness-suppressions-fdv2.txt
+          cd /tmp/sdk-test-harness
+          git checkout feat/fdv2
+          go build -o test-harness .
+          ./test-harness -url http://localhost:8000 -debug --skip-from=testharness-suppressions-fdv2.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.2
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
-          extra_params: '--skip-from=./contract-tests/testharness-suppressions.txt'
+          extra_params: '--skip-from=./contract-tests/testharness-suppressions.txt -stop-service-at-end'
