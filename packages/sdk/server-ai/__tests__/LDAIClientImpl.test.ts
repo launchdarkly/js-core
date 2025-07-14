@@ -12,6 +12,10 @@ const mockLdClient: jest.Mocked<LDClientMin> = {
 
 const testContext: LDContext = { kind: 'user', key: 'test-user' };
 
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 it('returns config with interpolated messagess', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
@@ -131,9 +135,9 @@ it('passes the default value to the underlying client', async () => {
   expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
 });
 
-it('returns agent config with interpolated instructions', async () => {
+it('returns single agent config with interpolated instructions', async () => {
   const client = new LDAIClientImpl(mockLdClient);
-  const key = 'test-flag';
+  const key = 'test-agent';
   const defaultValue: LDAIAgentDefaults = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
@@ -148,57 +152,64 @@ it('returns agent config with interpolated instructions', async () => {
     provider: {
       name: 'example-provider',
     },
-    instructions: 'You are a helpful assistant. your name is {{name}} and your score is {{score}}',
+    instructions: 'You are a helpful assistant. Your name is {{name}} and your score is {{score}}',
     _ldMeta: {
       variationKey: 'v1',
       enabled: true,
+      mode: 'agent',
     },
   };
 
   mockLdClient.variation.mockResolvedValue(mockVariation);
 
   const variables = { name: 'John', score: 42 };
-  const result = await client.agents([key], testContext, defaultValue, variables);
+  const result = await client.agent(key, testContext, defaultValue, variables);
 
   expect(result).toEqual({
-    'test-flag': {
-      model: {
-        name: 'example-model',
-        parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
-      },
-      provider: {
-        name: 'example-provider',
-      },
-      instructions: 'You are a helpful assistant. your name is John and your score is 42',
-      tracker: expect.any(Object),
-      enabled: true,
+    model: {
+      name: 'example-model',
+      parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
     },
+    provider: {
+      name: 'example-provider',
+    },
+    instructions: 'You are a helpful assistant. Your name is John and your score is 42',
+    tracker: expect.any(Object),
+    enabled: true,
   });
+
+  // Verify tracking was called
+  expect(mockLdClient.track).toHaveBeenCalledWith(
+    '$ld:ai:agent:function:single',
+    testContext,
+    key,
+    1,
+  );
 });
 
 it('includes context in variables for agent instructions interpolation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
-  const key = 'test-flag';
+  const key = 'test-agent';
   const defaultValue: LDAIAgentDefaults = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
   };
 
   const mockVariation = {
-    instructions: 'You are a helpful assistant. your user key is {{ldctx.key}}',
+    instructions: 'You are a helpful assistant. Your user key is {{ldctx.key}}',
     _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
   };
 
   mockLdClient.variation.mockResolvedValue(mockVariation);
 
-  const result = await client.agents([key], testContext, defaultValue);
+  const result = await client.agent(key, testContext, defaultValue);
 
-  expect(result[key].instructions).toBe('You are a helpful assistant. your user key is test-user');
+  expect(result.instructions).toBe('You are a helpful assistant. Your user key is test-user');
 });
 
 it('handles missing metadata in agent variation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
-  const key = 'test-flag';
+  const key = 'test-agent';
   const defaultValue: LDAIAgentDefaults = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
@@ -211,21 +222,19 @@ it('handles missing metadata in agent variation', async () => {
 
   mockLdClient.variation.mockResolvedValue(mockVariation);
 
-  const result = await client.agents([key], testContext, defaultValue);
+  const result = await client.agent(key, testContext, defaultValue);
 
   expect(result).toEqual({
-    'test-flag': {
-      model: { name: 'example-provider', parameters: { name: 'imagination' } },
-      instructions: 'Hello.',
-      tracker: expect.any(Object),
-      enabled: false,
-    },
+    model: { name: 'example-provider', parameters: { name: 'imagination' } },
+    instructions: 'Hello.',
+    tracker: expect.any(Object),
+    enabled: false,
   });
 });
 
-it('passes the default value to the underlying client for agents', async () => {
+it('passes the default value to the underlying client for single agent', async () => {
   const client = new LDAIClientImpl(mockLdClient);
-  const key = 'non-existent-flag';
+  const key = 'non-existent-agent';
   const defaultValue: LDAIAgentDefaults = {
     model: { name: 'default-model', parameters: { name: 'default' } },
     provider: { name: 'default-provider' },
@@ -235,17 +244,114 @@ it('passes the default value to the underlying client for agents', async () => {
 
   mockLdClient.variation.mockResolvedValue(defaultValue);
 
-  const result = await client.agents([key], testContext, defaultValue);
+  const result = await client.agent(key, testContext, defaultValue);
 
   expect(result).toEqual({
-    'non-existent-flag': {
-      model: defaultValue.model,
-      instructions: defaultValue.instructions,
-      provider: defaultValue.provider,
-      tracker: expect.any(Object),
-      enabled: false,
-    },
+    model: defaultValue.model,
+    instructions: defaultValue.instructions,
+    provider: defaultValue.provider,
+    tracker: expect.any(Object),
+    enabled: false,
   });
 
   expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
+});
+
+it('returns multiple agents config with interpolated instructions', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+
+  const agentConfigs = [
+    {
+      agentKey: 'research-agent',
+      defaultConfig: {
+        model: { name: 'test', parameters: { name: 'test-model' } },
+        instructions: 'You are a research assistant.',
+        enabled: true,
+      },
+      variables: { topic: 'climate change' },
+    },
+    {
+      agentKey: 'writing-agent',
+      defaultConfig: {
+        model: { name: 'test', parameters: { name: 'test-model' } },
+        instructions: 'You are a writing assistant.',
+        enabled: true,
+      },
+      variables: { style: 'academic' },
+    },
+  ] as const;
+
+  const mockVariations = {
+    'research-agent': {
+      model: {
+        name: 'research-model',
+        parameters: { temperature: 0.3, maxTokens: 2048 },
+      },
+      provider: { name: 'openai' },
+      instructions: 'You are a research assistant specializing in {{topic}}.',
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+    },
+    'writing-agent': {
+      model: {
+        name: 'writing-model',
+        parameters: { temperature: 0.7, maxTokens: 1024 },
+      },
+      provider: { name: 'anthropic' },
+      instructions: 'You are a writing assistant with {{style}} style.',
+      _ldMeta: { variationKey: 'v2', enabled: true, mode: 'agent' },
+    },
+  };
+
+  mockLdClient.variation.mockImplementation((key) =>
+    Promise.resolve(mockVariations[key as keyof typeof mockVariations]),
+  );
+
+  const result = await client.agents(agentConfigs, testContext);
+
+  expect(result).toEqual({
+    'research-agent': {
+      model: {
+        name: 'research-model',
+        parameters: { temperature: 0.3, maxTokens: 2048 },
+      },
+      provider: { name: 'openai' },
+      instructions: 'You are a research assistant specializing in climate change.',
+      tracker: expect.any(Object),
+      enabled: true,
+    },
+    'writing-agent': {
+      model: {
+        name: 'writing-model',
+        parameters: { temperature: 0.7, maxTokens: 1024 },
+      },
+      provider: { name: 'anthropic' },
+      instructions: 'You are a writing assistant with academic style.',
+      tracker: expect.any(Object),
+      enabled: true,
+    },
+  });
+
+  // Verify tracking was called
+  expect(mockLdClient.track).toHaveBeenCalledWith(
+    '$ld:ai:agent:function:multiple',
+    testContext,
+    agentConfigs.length,
+    agentConfigs.length,
+  );
+});
+
+it('handles empty agent configs array', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+
+  const result = await client.agents([], testContext);
+
+  expect(result).toEqual({});
+
+  // Verify tracking was called with 0 agents
+  expect(mockLdClient.track).toHaveBeenCalledWith(
+    '$ld:ai:agent:function:multiple',
+    testContext,
+    0,
+    0,
+  );
 });

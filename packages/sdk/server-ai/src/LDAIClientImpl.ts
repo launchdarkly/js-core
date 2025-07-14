@@ -2,7 +2,7 @@ import * as Mustache from 'mustache';
 
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIAgent, LDAIAgentDefaults, LDAIAgents } from './api/agents';
+import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './api/agents';
 import {
   LDAIConfig,
   LDAIConfigTracker,
@@ -18,7 +18,7 @@ import { LDClientMin } from './LDClientMin';
 type Mode = 'completion' | 'agent';
 
 /**
- * Metadata assorted with a model configuration variation.
+ * Metadata associated with a model configuration variation.
  */
 interface LDMeta {
   variationKey: string;
@@ -107,6 +107,7 @@ export class LDAIClientImpl implements LDAIClient {
       tracker,
       enabled,
     };
+
     // We are going to modify the contents before returning them, so we make a copy.
     // This isn't a deep copy and the application developer should not modify the returned content.
     if (model) {
@@ -142,6 +143,7 @@ export class LDAIClientImpl implements LDAIClient {
       tracker,
       enabled,
     };
+
     // We are going to modify the contents before returning them, so we make a copy.
     // This isn't a deep copy and the application developer should not modify the returned content.
     if (model) {
@@ -162,18 +164,41 @@ export class LDAIClientImpl implements LDAIClient {
     return config;
   }
 
-  async agents<TKey extends string>(
-    agentKeys: readonly TKey[],
+  async agent(
+    key: string,
     context: LDContext,
     defaultValue: LDAIAgentDefaults,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIAgents<TKey>> {
-    const agents = {} as LDAIAgents<TKey>;
+  ): Promise<LDAIAgent> {
+    // Track agent usage
+    this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
+
+    return this._evaluateAgent(key, context, defaultValue, variables);
+  }
+
+  async agents<const TConfigs extends readonly LDAIAgentConfig[]>(
+    agentConfigs: TConfigs,
+    context: LDContext,
+  ): Promise<Record<TConfigs[number]['agentKey'], LDAIAgent>> {
+    // Track multiple agents usage
+    this._ldClient.track(
+      '$ld:ai:agent:function:multiple',
+      context,
+      agentConfigs.length,
+      agentConfigs.length,
+    );
+
+    const agents = {} as Record<TConfigs[number]['agentKey'], LDAIAgent>;
 
     await Promise.all(
-      agentKeys.map(async (agentKey) => {
-        const result = await this._evaluateAgent(agentKey, context, defaultValue, variables);
-        agents[agentKey] = result;
+      agentConfigs.map(async (config) => {
+        const agent = await this._evaluateAgent(
+          config.agentKey,
+          context,
+          config.defaultConfig,
+          config.variables,
+        );
+        agents[config.agentKey as TConfigs[number]['agentKey']] = agent;
       }),
     );
 
