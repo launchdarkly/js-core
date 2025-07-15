@@ -167,19 +167,22 @@ export class LDAIClientImpl implements LDAIClient {
   async agent(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentDefaults,
+    defaultValue?: LDAIAgentDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgent> {
     // Track agent usage
     this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
 
-    return this._evaluateAgent(key, context, defaultValue, variables);
+    // Use provided defaultValue or fallback to { enabled: false }
+    const resolvedDefaultValue = defaultValue ?? { enabled: false };
+
+    return this._evaluateAgent(key, context, resolvedDefaultValue, variables);
   }
 
-  async agents<const TConfigs extends readonly LDAIAgentConfig[]>(
-    agentConfigs: TConfigs,
+  async agents<const T extends readonly LDAIAgentConfig[]>(
+    agentConfigs: T,
     context: LDContext,
-  ): Promise<Record<TConfigs[number]['agentKey'], LDAIAgent>> {
+  ): Promise<Record<T[number]['key'], LDAIAgent>> {
     // Track multiple agents usage
     this._ldClient.track(
       '$ld:ai:agent:function:multiple',
@@ -188,17 +191,20 @@ export class LDAIClientImpl implements LDAIClient {
       agentConfigs.length,
     );
 
-    const agents = {} as Record<TConfigs[number]['agentKey'], LDAIAgent>;
+    const agents = {} as Record<T[number]['key'], LDAIAgent>;
 
     await Promise.all(
       agentConfigs.map(async (config) => {
+        // Use provided defaultValue or fallback to { enabled: false }
+        const defaultValue = config.defaultValue ?? { enabled: false };
+
         const agent = await this._evaluateAgent(
-          config.agentKey,
+          config.key,
           context,
-          config.defaultConfig,
+          defaultValue,
           config.variables,
         );
-        agents[config.agentKey as TConfigs[number]['agentKey']] = agent;
+        agents[config.key as T[number]['key']] = agent;
       }),
     );
 

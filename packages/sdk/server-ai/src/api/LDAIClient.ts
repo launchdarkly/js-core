@@ -73,8 +73,8 @@ export interface LDAIClient {
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
-   * @param defaultValue A fallback value containing model configuration and instructions. This will
-   * be used if the configuration is not available from LaunchDarkly.
+   * @param defaultValue A fallback value containing model configuration and instructions. If not
+   * provided, defaults to { enabled: false }.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
    * the instructions. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
@@ -88,12 +88,18 @@ export interface LDAIClient {
    * const key = "research_agent";
    * const context = {...};
    * const variables = { topic: 'climate change' };
-   * const defaultValue = {
+   *
+   * // With explicit defaultValue
+   * const agent = await client.agent(key, context, {
    *   enabled: true,
    *   instructions: 'You are a research assistant.',
-   * };
+   * }, variables);
    *
-   * const agent = await client.agent(key, context, defaultValue, variables);
+   * // Without defaultValue (defaults to { enabled: false })
+   * const simpleAgent = await client.agent(key, context, undefined, variables);
+   * // or even simpler:
+   * const simpleAgent2 = await client.agent(key, context);
+   *
    * const researchResult = agent.instructions; // Interpolated instructions
    * agent.tracker.trackSuccess();
    * ```
@@ -101,7 +107,7 @@ export interface LDAIClient {
   agent(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentDefaults,
+    defaultValue?: LDAIAgentDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgent>;
 
@@ -117,21 +123,26 @@ export interface LDAIClient {
    *
    * @returns A map of agent keys to their respective AI agents with customized `instructions` and `tracker`.
    * If a configuration cannot be accessed from LaunchDarkly, then the return value will include information
-   * from the respective `defaultConfig`. The returned `tracker` can be used to track AI operation metrics
+   * from the respective `defaultValue`. The returned `tracker` can be used to track AI operation metrics
    * (latency, token usage, etc.).
    *
    * @example
    * ```
    * const agentConfigs: LDAIAgentConfig[] = [
    *   {
-   *     agentKey: 'research_agent',
-   *     defaultConfig: { enabled: true, instructions: 'You are a research assistant.' },
+   *     key: 'research_agent',
+   *     defaultValue: { enabled: true, instructions: 'You are a research assistant.' },
    *     variables: { topic: 'climate change' }
    *   },
    *   {
-   *     agentKey: 'writing_agent',
-   *     defaultConfig: { enabled: true, instructions: 'You are a writing assistant.' },
+   *     key: 'writing_agent',
+   *     defaultValue: { enabled: true, instructions: 'You are a writing assistant.' },
    *     variables: { style: 'academic' }
+   *   },
+   *   {
+   *     key: 'simple_agent',
+   *     variables: { name: 'Helper' }
+   *     // defaultValue is optional, will default to { enabled: false }
    *   }
    * ] as const;
    * const context = {...};
@@ -141,8 +152,8 @@ export interface LDAIClient {
    * agents["research_agent"].tracker.trackSuccess();
    * ```
    */
-  agents<const TConfigs extends readonly LDAIAgentConfig[]>(
-    agentConfigs: TConfigs,
+  agents<const T extends readonly LDAIAgentConfig[]>(
+    agentConfigs: T,
     context: LDContext,
-  ): Promise<Record<TConfigs[number]['agentKey'], LDAIAgent>>;
+  ): Promise<Record<T[number]['key'], LDAIAgent>>;
 }

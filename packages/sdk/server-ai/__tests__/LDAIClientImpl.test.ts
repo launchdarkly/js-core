@@ -257,13 +257,71 @@ it('passes the default value to the underlying client for single agent', async (
   expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
 });
 
+it('handles single agent with optional defaultValue', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+  const key = 'test-agent';
+
+  const mockVariation = {
+    instructions: 'You are a helpful assistant named {{name}}.',
+    _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+  };
+
+  mockLdClient.variation.mockResolvedValue(mockVariation);
+
+  const variables = { name: 'Helper' };
+
+  // Test without providing defaultValue
+  const result = await client.agent(key, testContext, undefined, variables);
+
+  expect(result).toEqual({
+    instructions: 'You are a helpful assistant named Helper.',
+    tracker: expect.any(Object),
+    enabled: true,
+  });
+
+  // Verify tracking was called
+  expect(mockLdClient.track).toHaveBeenCalledWith(
+    '$ld:ai:agent:function:single',
+    testContext,
+    key,
+    1,
+  );
+
+  // Verify the agent was called with { enabled: false } as default
+  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, { enabled: false });
+});
+
+it('handles single agent without any optional parameters', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+  const key = 'simple-agent';
+
+  const mockVariation = {
+    instructions: 'Simple instructions.',
+    _ldMeta: { variationKey: 'v1', enabled: false, mode: 'agent' },
+  };
+
+  mockLdClient.variation.mockResolvedValue(mockVariation);
+
+  // Test with only required parameters
+  const result = await client.agent(key, testContext);
+
+  expect(result).toEqual({
+    instructions: 'Simple instructions.',
+    tracker: expect.any(Object),
+    enabled: false,
+  });
+
+  // Verify the agent was called with { enabled: false } as default and no variables
+  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, { enabled: false });
+});
+
 it('returns multiple agents config with interpolated instructions', async () => {
   const client = new LDAIClientImpl(mockLdClient);
 
   const agentConfigs = [
     {
-      agentKey: 'research-agent',
-      defaultConfig: {
+      key: 'research-agent',
+      defaultValue: {
         model: { name: 'test', parameters: { name: 'test-model' } },
         instructions: 'You are a research assistant.',
         enabled: true,
@@ -271,8 +329,8 @@ it('returns multiple agents config with interpolated instructions', async () => 
       variables: { topic: 'climate change' },
     },
     {
-      agentKey: 'writing-agent',
-      defaultConfig: {
+      key: 'writing-agent',
+      defaultValue: {
         model: { name: 'test', parameters: { name: 'test-model' } },
         instructions: 'You are a writing assistant.',
         enabled: true,
@@ -354,4 +412,59 @@ it('handles empty agent configs array', async () => {
     0,
     0,
   );
+});
+
+it('handles agents with optional defaultValue', async () => {
+  const client = new LDAIClientImpl(mockLdClient);
+
+  const agentConfigs = [
+    {
+      key: 'agent-with-default',
+      defaultValue: {
+        instructions: 'You are a helpful assistant.',
+        enabled: true,
+      },
+      variables: { name: 'Assistant' },
+    },
+    {
+      key: 'agent-without-default',
+      variables: { name: 'Helper' },
+      // No defaultValue provided - should default to { enabled: false }
+    },
+  ] as const;
+
+  const mockVariations = {
+    'agent-with-default': {
+      instructions: 'Hello {{name}}!',
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+    },
+    'agent-without-default': {
+      instructions: 'Hi {{name}}!',
+      _ldMeta: { variationKey: 'v2', enabled: false, mode: 'agent' },
+    },
+  };
+
+  mockLdClient.variation.mockImplementation((key) =>
+    Promise.resolve(mockVariations[key as keyof typeof mockVariations]),
+  );
+
+  const result = await client.agents(agentConfigs, testContext);
+
+  expect(result).toEqual({
+    'agent-with-default': {
+      instructions: 'Hello Assistant!',
+      tracker: expect.any(Object),
+      enabled: true,
+    },
+    'agent-without-default': {
+      instructions: 'Hi Helper!',
+      tracker: expect.any(Object),
+      enabled: false,
+    },
+  });
+
+  // Verify the agent without defaultValue was called with { enabled: false }
+  expect(mockLdClient.variation).toHaveBeenCalledWith('agent-without-default', testContext, {
+    enabled: false,
+  });
 });

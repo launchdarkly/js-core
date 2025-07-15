@@ -17,12 +17,12 @@ export interface LDAIAgentConfig {
   /**
    * The agent key to retrieve.
    */
-  agentKey: string;
+  key: string;
 
   /**
-   * Default configuration for the agent.
+   * Default configuration for the agent. If not provided, defaults to { enabled: false }.
    */
-  defaultConfig: LDAIAgentDefaults;
+  defaultValue?: LDAIAgentDefaults;
 
   /**
    * Variables for instructions interpolation.
