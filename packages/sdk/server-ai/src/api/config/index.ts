@@ -1,3 +1,3 @@
 export * from './LDAIConfig';
-export * from './LDAIConfigMapper';
+export * from './VercelAISDK';
 export { LDAIConfigTracker } from './LDAIConfigTracker';

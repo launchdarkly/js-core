@@ -1,5 +1,5 @@
-import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTracker } from './LDAIConfigTracker';
+import { VercelAISDKConfig, VercelAISDKMapOptions, VercelAISDKProvider } from './VercelAISDK';
 
 /**
  * Configuration related to the model.
@@ -66,21 +66,29 @@ export interface LDAIConfig {
   tracker: LDAIConfigTracker;
 
   /**
-   * A mapper which can be used to map configuration for selected supported providers.
-   */
-  mapper: LDAIConfigMapper;
-
-  /**
    * Whether the configuration is enabled.
    */
   enabled: boolean;
+
+  /**
+   * Maps this AI config to a format usable direcly in Vercel AI SDK generateText()
+   * and streamText() methods.
+   *
+   * @param provider A Vercel AI SDK Provider or a map of provider names to Vercel AI SDK Providers.
+   * @param options Optional mapping options.
+   * @returns A configuration directly usable in Vercel AI SDK generateText() and streamText()
+   */
+  toVercelAISDK: <TMod>(
+    provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+    options?: VercelAISDKMapOptions | undefined,
+  ) => VercelAISDKConfig<TMod>;
 }
 
 /**
  * Default value for a `modelConfig`. This is the same as the LDAIConfig, but it does not include
  * a tracker or mapper, and `enabled` is optional.
  */
-export type LDAIDefaults = Omit<LDAIConfig, 'tracker' | 'mapper' | 'enabled'> & {
+export type LDAIDefaults = Omit<LDAIConfig, 'tracker' | 'enabled' | 'toVercelAISDK'> & {
   /**
    * Whether the configuration is enabled.
    *

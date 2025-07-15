@@ -1,5 +1,4 @@
 import {
-  LDAIConfigMapper,
   LDMessage,
   LDModelConfig,
   LDProviderConfig,
@@ -8,7 +7,7 @@ import {
   VercelAISDKProvider,
 } from './api/config';
 
-export class LDAIConfigMapperImpl implements LDAIConfigMapper {
+export class LDAIConfigMapper {
   constructor(
     private _model?: LDModelConfig | undefined,
     private _provider?: LDProviderConfig | undefined,

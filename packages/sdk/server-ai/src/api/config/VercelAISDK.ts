@@ -18,10 +18,3 @@ export interface VercelAISDKConfig<TMod> {
   stopSequences?: string[] | undefined;
   seed?: number | undefined;
 }
-
-export interface LDAIConfigMapper {
-  toVercelAISDK: <TMod>(
-    provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-    options?: VercelAISDKMapOptions | undefined,
-  ) => VercelAISDKConfig<TMod>;
-}
