@@ -2,8 +2,18 @@ import * as Mustache from 'mustache';
 
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIConfig, LDAIDefaults, LDMessage, LDModelConfig, LDProviderConfig } from './api/config';
+import {
+  LDAIConfig,
+  LDAIDefaults,
+  LDMessage,
+  LDModelConfig,
+  LDProviderConfig,
+  VercelAISDKConfig,
+  VercelAISDKMapOptions,
+  VercelAISDKProvider,
+} from './api/config';
 import { LDAIClient } from './api/LDAIClient';
+import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 
@@ -52,7 +62,7 @@ export class LDAIClientImpl implements LDAIClient {
     );
     // eslint-disable-next-line no-underscore-dangle
     const enabled = !!value._ldMeta?.enabled;
-    const config: LDAIConfig = {
+    const config: Omit<LDAIConfig, 'toVercelAISDK'> = {
       tracker,
       enabled,
     };
@@ -73,6 +83,14 @@ export class LDAIClientImpl implements LDAIClient {
       }));
     }
 
-    return config;
+    const mapper = new LDAIConfigMapper(config.model, config.provider, config.messages);
+
+    return {
+      ...config,
+      toVercelAISDK: <TMod>(
+        provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+        options?: VercelAISDKMapOptions | undefined,
+      ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(provider, options),
+    };
   }
 }
