@@ -37,6 +37,11 @@ export class LDAIConfigMapper {
     } else {
       model = provider[this._provider?.name ?? '']?.(this._model?.name ?? '');
     }
+    if (!model) {
+      throw new Error(
+        'Vercel AI SDK model cannot be determined from the supplied provider parameter.',
+      );
+    }
 
     let messages: LDMessage[] | undefined;
     if (this._messages || options?.nonInterpolatedMessages) {

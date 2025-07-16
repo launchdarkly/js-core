@@ -74,9 +74,12 @@ export interface LDAIConfig {
    * Maps this AI config to a format usable direcly in Vercel AI SDK generateText()
    * and streamText() methods.
    *
+   * WARNING: this method can throw an exception if a Vercel AI SDK model cannot be determined.
+   *
    * @param provider A Vercel AI SDK Provider or a map of provider names to Vercel AI SDK Providers.
    * @param options Optional mapping options.
    * @returns A configuration directly usable in Vercel AI SDK generateText() and streamText()
+   * @throws {Error} if a Vercel AI SDK model cannot be determined from the given provider parameter.
    */
   toVercelAISDK: <TMod>(
     provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
