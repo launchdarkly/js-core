@@ -33,6 +33,4 @@ export interface LDAIAgentConfig {
 /**
  * Default values for an agent.
  */
-export type LDAIAgentDefaults = Omit<LDAIAgent, 'tracker' | 'enabled'> & {
-  enabled: boolean;
-};
+export type LDAIAgentDefaults = Omit<LDAIAgent, 'tracker'>;
