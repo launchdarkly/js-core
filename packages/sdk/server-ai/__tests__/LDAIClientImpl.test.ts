@@ -1,7 +1,12 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgentDefaults } from '../src/api/agents';
-import { LDAIDefaults, VercelAISDKProvider } from '../src/api/config';
+import {
+  LDAIDefaults,
+  VercelAISDKConfig,
+  VercelAISDKMapOptions,
+  VercelAISDKProvider,
+} from '../src/api/config';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
 
@@ -145,8 +150,8 @@ it('returns single agent config with interpolated instructions', async () => {
     enabled: true,
     toVercelAISDK: <TMod>(
       provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options,
-    ) => {
+      options?: VercelAISDKMapOptions,
+    ): VercelAISDKConfig<TMod> => {
       const modelProvider = typeof provider === 'function' ? provider : provider.test;
       return {
         model: modelProvider('test-model'),
@@ -213,8 +218,8 @@ it('includes context in variables for agent instructions interpolation', async (
     enabled: true,
     toVercelAISDK: <TMod>(
       provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options,
-    ) => {
+      options?: VercelAISDKMapOptions,
+    ): VercelAISDKConfig<TMod> => {
       const modelProvider = typeof provider === 'function' ? provider : provider.test;
       return {
         model: modelProvider('test-model'),
@@ -249,8 +254,8 @@ it('handles missing metadata in agent variation', async () => {
     enabled: true,
     toVercelAISDK: <TMod>(
       provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options,
-    ) => {
+      options?: VercelAISDKMapOptions,
+    ): VercelAISDKConfig<TMod> => {
       const modelProvider = typeof provider === 'function' ? provider : provider.test;
       return {
         model: modelProvider('test-model'),
@@ -292,8 +297,8 @@ it('passes the default value to the underlying client for single agent', async (
     enabled: true,
     toVercelAISDK: <TMod>(
       provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options,
-    ) => {
+      options?: VercelAISDKMapOptions,
+    ): VercelAISDKConfig<TMod> => {
       const modelProvider =
         typeof provider === 'function' ? provider : provider['default-provider'];
       return {
@@ -336,8 +341,8 @@ it('returns multiple agents config with interpolated instructions', async () => 
         enabled: true,
         toVercelAISDK: <TMod>(
           provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-          options,
-        ) => {
+          options?: VercelAISDKMapOptions,
+        ): VercelAISDKConfig<TMod> => {
           const modelProvider = typeof provider === 'function' ? provider : provider.test;
           return {
             model: modelProvider('test-model'),
@@ -360,8 +365,8 @@ it('returns multiple agents config with interpolated instructions', async () => 
         enabled: true,
         toVercelAISDK: <TMod>(
           provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-          options,
-        ) => {
+          options?: VercelAISDKMapOptions,
+        ): VercelAISDKConfig<TMod> => {
           const modelProvider = typeof provider === 'function' ? provider : provider.test;
           return {
             model: modelProvider('test-model'),
