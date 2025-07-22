@@ -12,10 +12,6 @@ const mockLdClient: jest.Mocked<LDClientMin> = {
 
 const testContext: LDContext = { kind: 'user', key: 'test-user' };
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 it('returns config with interpolated messagess', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
@@ -28,7 +24,7 @@ it('returns config with interpolated messagess', async () => {
   const mockVariation = {
     model: {
       name: 'example-model',
-      parameters: { name: 'imagination', temperature: 0.7 },
+      parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
     },
     provider: {
       name: 'example-provider',
@@ -51,7 +47,7 @@ it('returns config with interpolated messagess', async () => {
   expect(result).toEqual({
     model: {
       name: 'example-model',
-      parameters: { name: 'imagination', temperature: 0.7 },
+      parameters: { name: 'imagination', temperature: 0.7, maxTokens: 4096 },
     },
     provider: {
       name: 'example-provider',
