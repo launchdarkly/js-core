@@ -20,9 +20,9 @@ export interface LDAIAgentConfig {
   key: string;
 
   /**
-   * Default configuration for the agent. If not provided, defaults to { enabled: false }.
+   * Default configuration for the agent.
    */
-  defaultValue?: LDAIAgentDefaults;
+  defaultValue: LDAIAgentDefaults;
 
   /**
    * Variables for instructions interpolation.
@@ -31,14 +31,8 @@ export interface LDAIAgentConfig {
 }
 
 /**
- * Default value for an agent configuration. This is the same as the LDAIAgent, but it does not include
- * a tracker and `enabled` is optional.
+ * Default values for an agent.
  */
 export type LDAIAgentDefaults = Omit<LDAIAgent, 'tracker' | 'enabled'> & {
-  /**
-   * Whether the agent configuration is enabled.
-   *
-   * @default false
-   */
-  enabled?: boolean;
+  enabled: boolean;
 };

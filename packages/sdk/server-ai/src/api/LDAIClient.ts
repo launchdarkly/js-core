@@ -73,8 +73,7 @@ export interface LDAIClient {
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
-   * @param defaultValue A fallback value containing model configuration and instructions. If not
-   * provided, defaults to { enabled: false }.
+   * @param defaultValue A fallback value containing model configuration and instructions.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
    * the instructions. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
@@ -88,17 +87,10 @@ export interface LDAIClient {
    * const key = "research_agent";
    * const context = {...};
    * const variables = { topic: 'climate change' };
-   *
-   * // With explicit defaultValue
    * const agent = await client.agent(key, context, {
    *   enabled: true,
    *   instructions: 'You are a research assistant.',
    * }, variables);
-   *
-   * // Without defaultValue (defaults to { enabled: false })
-   * const simpleAgent = await client.agent(key, context, undefined, variables);
-   * // or even simpler:
-   * const simpleAgent2 = await client.agent(key, context);
    *
    * const researchResult = agent.instructions; // Interpolated instructions
    * agent.tracker.trackSuccess();
@@ -107,7 +99,7 @@ export interface LDAIClient {
   agent(
     key: string,
     context: LDContext,
-    defaultValue?: LDAIAgentDefaults,
+    defaultValue: LDAIAgentDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgent>;
 
@@ -128,7 +120,7 @@ export interface LDAIClient {
    *
    * @example
    * ```
-   * const agentConfigs: LDAIAgentConfig[] = [
+   * const agentConfigs = [
    *   {
    *     key: 'research_agent',
    *     defaultValue: { enabled: true, instructions: 'You are a research assistant.' },
@@ -138,11 +130,6 @@ export interface LDAIClient {
    *     key: 'writing_agent',
    *     defaultValue: { enabled: true, instructions: 'You are a writing assistant.' },
    *     variables: { style: 'academic' }
-   *   },
-   *   {
-   *     key: 'simple_agent',
-   *     variables: { name: 'Helper' }
-   *     // defaultValue is optional, will default to { enabled: false }
    *   }
    * ] as const;
    * const context = {...};

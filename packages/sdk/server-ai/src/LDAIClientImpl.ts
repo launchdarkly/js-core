@@ -188,28 +188,16 @@ export class LDAIClientImpl implements LDAIClient {
   async agent(
     key: string,
     context: LDContext,
-    defaultValue?: LDAIAgentDefaults,
+    defaultValue: LDAIAgentDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgent> {
     // Track agent usage
     this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
 
-    // Use provided defaultValue or create a default one with toVercelAISDK
-    const resolvedDefaultValue: LDAIAgentDefaults = defaultValue ?? {
-      enabled: false,
-      model: { name: 'default-model' },
-      toVercelAISDK: <TMod>(
-        sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      ): VercelAISDKConfig<TMod> => ({
-        model: sdkProvider as unknown as TMod,
-        messages: [],
-      }),
-    };
-
-    return this._evaluateAgent(key, context, resolvedDefaultValue, variables);
+    return this._evaluateAgent(key, context, defaultValue, variables);
   }
 
-  async agents<const T extends readonly LDAIAgentConfig[]>(
+  async agents<const T extends readonly (LDAIAgentConfig & { defaultValue: LDAIAgentDefaults })[]>(
     agentConfigs: T,
     context: LDContext,
   ): Promise<Record<T[number]['key'], LDAIAgent>> {
@@ -225,22 +213,10 @@ export class LDAIClientImpl implements LDAIClient {
 
     await Promise.all(
       agentConfigs.map(async (config) => {
-        // Use provided defaultValue or create a default one with toVercelAISDK
-        const defaultValue: LDAIAgentDefaults = config.defaultValue ?? {
-          enabled: false,
-          model: { name: 'default-model' },
-          toVercelAISDK: <TMod>(
-            sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-          ): VercelAISDKConfig<TMod> => ({
-            model: sdkProvider as unknown as TMod,
-            messages: [],
-          }),
-        };
-
         const agent = await this._evaluateAgent(
           config.key,
           context,
-          defaultValue,
+          config.defaultValue,
           config.variables,
         );
         agents[config.key as T[number]['key']] = agent;

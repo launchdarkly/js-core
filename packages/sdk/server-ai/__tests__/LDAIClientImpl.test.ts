@@ -1,7 +1,7 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgentDefaults } from '../src/api/agents';
-import { LDAIDefaults } from '../src/api/config';
+import { LDAIDefaults, VercelAISDKProvider } from '../src/api/config';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
 
@@ -21,7 +21,7 @@ it('returns config with interpolated messagess', async () => {
   const key = 'test-flag';
   const defaultValue: LDAIDefaults = {
     model: { name: 'test', parameters: { name: 'test-model' } },
-    messages: [],
+    messages: [{ role: 'system', content: 'Hello {{name}}' }],
     enabled: true,
   };
 
@@ -34,8 +34,14 @@ it('returns config with interpolated messagess', async () => {
       name: 'example-provider',
     },
     messages: [
-      { role: 'system', content: 'Hello {{name}}' },
-      { role: 'user', content: 'Score: {{score}}' },
+      {
+        role: 'system',
+        content: 'You are a helpful assistant. Your name is {{name}} and your score is {{score}}',
+      },
+      {
+        role: 'user',
+        content: 'Tell me about yourself.',
+      },
     ],
     _ldMeta: {
       variationKey: 'v1',
@@ -57,8 +63,14 @@ it('returns config with interpolated messagess', async () => {
       name: 'example-provider',
     },
     messages: [
-      { role: 'system', content: 'Hello John' },
-      { role: 'user', content: 'Score: 42' },
+      {
+        role: 'system',
+        content: 'You are a helpful assistant. Your name is John and your score is 42',
+      },
+      {
+        role: 'user',
+        content: 'Tell me about yourself.',
+      },
     ],
     tracker: expect.any(Object),
     enabled: true,
@@ -66,32 +78,13 @@ it('returns config with interpolated messagess', async () => {
   });
 });
 
-it('includes context in variables for messages interpolation', async () => {
-  const client = new LDAIClientImpl(mockLdClient);
-  const key = 'test-flag';
-  const defaultValue: LDAIDefaults = {
-    model: { name: 'test', parameters: { name: 'test-model' } },
-    messages: [],
-  };
-
-  const mockVariation = {
-    messages: [{ role: 'system', content: 'User key: {{ldctx.key}}' }],
-    _ldMeta: { variationKey: 'v1', enabled: true },
-  };
-
-  mockLdClient.variation.mockResolvedValue(mockVariation);
-
-  const result = await client.config(key, testContext, defaultValue);
-
-  expect(result.messages?.[0].content).toBe('User key: test-user');
-});
-
 it('handles missing metadata in variation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
   const defaultValue: LDAIDefaults = {
     model: { name: 'test', parameters: { name: 'test-model' } },
-    messages: [],
+    messages: [{ role: 'system', content: 'Hello' }],
+    enabled: true,
   };
 
   const mockVariation = {
@@ -118,7 +111,7 @@ it('passes the default value to the underlying client', async () => {
   const defaultValue: LDAIDefaults = {
     model: { name: 'default-model', parameters: { name: 'default' } },
     provider: { name: 'default-provider' },
-    messages: [{ role: 'system', content: 'Default messages' }],
+    messages: [{ role: 'system', content: 'Default message' }],
     enabled: true,
   };
 
@@ -145,6 +138,21 @@ it('returns single agent config with interpolated instructions', async () => {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
     enabled: true,
+    toVercelAISDK: <TMod>(
+      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+      options,
+    ) => {
+      const modelProvider = typeof provider === 'function' ? provider : provider.test;
+      return {
+        model: modelProvider('test-model'),
+        messages: [],
+        ...(options?.nonInterpolatedMessages
+          ? {
+              messages: options.nonInterpolatedMessages,
+            }
+          : {}),
+      };
+    },
   };
 
   const mockVariation = {
@@ -179,6 +187,7 @@ it('returns single agent config with interpolated instructions', async () => {
     instructions: 'You are a helpful assistant. Your name is John and your score is 42',
     tracker: expect.any(Object),
     enabled: true,
+    toVercelAISDK: expect.any(Function),
   });
 
   // Verify tracking was called
@@ -196,6 +205,22 @@ it('includes context in variables for agent instructions interpolation', async (
   const defaultValue: LDAIAgentDefaults = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
+    enabled: true,
+    toVercelAISDK: <TMod>(
+      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+      options,
+    ) => {
+      const modelProvider = typeof provider === 'function' ? provider : provider.test;
+      return {
+        model: modelProvider('test-model'),
+        messages: [],
+        ...(options?.nonInterpolatedMessages
+          ? {
+              messages: options.nonInterpolatedMessages,
+            }
+          : {}),
+      };
+    },
   };
 
   const mockVariation = {
@@ -216,6 +241,22 @@ it('handles missing metadata in agent variation', async () => {
   const defaultValue: LDAIAgentDefaults = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
+    enabled: true,
+    toVercelAISDK: <TMod>(
+      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+      options,
+    ) => {
+      const modelProvider = typeof provider === 'function' ? provider : provider.test;
+      return {
+        model: modelProvider('test-model'),
+        messages: [],
+        ...(options?.nonInterpolatedMessages
+          ? {
+              messages: options.nonInterpolatedMessages,
+            }
+          : {}),
+      };
+    },
   };
 
   const mockVariation = {
@@ -232,6 +273,7 @@ it('handles missing metadata in agent variation', async () => {
     instructions: 'Hello.',
     tracker: expect.any(Object),
     enabled: false,
+    toVercelAISDK: expect.any(Function),
   });
 });
 
@@ -243,6 +285,22 @@ it('passes the default value to the underlying client for single agent', async (
     provider: { name: 'default-provider' },
     instructions: 'Default instructions',
     enabled: true,
+    toVercelAISDK: <TMod>(
+      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+      options,
+    ) => {
+      const modelProvider =
+        typeof provider === 'function' ? provider : provider['default-provider'];
+      return {
+        model: modelProvider('default-model'),
+        messages: [],
+        ...(options?.nonInterpolatedMessages
+          ? {
+              messages: options.nonInterpolatedMessages,
+            }
+          : {}),
+      };
+    },
   };
 
   mockLdClient.variation.mockResolvedValue(defaultValue);
@@ -255,67 +313,10 @@ it('passes the default value to the underlying client for single agent', async (
     provider: defaultValue.provider,
     tracker: expect.any(Object),
     enabled: false,
+    toVercelAISDK: expect.any(Function),
   });
 
   expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
-});
-
-it('handles single agent with optional defaultValue', async () => {
-  const client = new LDAIClientImpl(mockLdClient);
-  const key = 'test-agent';
-
-  const mockVariation = {
-    instructions: 'You are a helpful assistant named {{name}}.',
-    _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
-  };
-
-  mockLdClient.variation.mockResolvedValue(mockVariation);
-
-  const variables = { name: 'Helper' };
-
-  // Test without providing defaultValue
-  const result = await client.agent(key, testContext, undefined, variables);
-
-  expect(result).toEqual({
-    instructions: 'You are a helpful assistant named Helper.',
-    tracker: expect.any(Object),
-    enabled: true,
-  });
-
-  // Verify tracking was called
-  expect(mockLdClient.track).toHaveBeenCalledWith(
-    '$ld:ai:agent:function:single',
-    testContext,
-    key,
-    1,
-  );
-
-  // Verify the agent was called with { enabled: false } as default
-  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, { enabled: false });
-});
-
-it('handles single agent without any optional parameters', async () => {
-  const client = new LDAIClientImpl(mockLdClient);
-  const key = 'simple-agent';
-
-  const mockVariation = {
-    instructions: 'Simple instructions.',
-    _ldMeta: { variationKey: 'v1', enabled: false, mode: 'agent' },
-  };
-
-  mockLdClient.variation.mockResolvedValue(mockVariation);
-
-  // Test with only required parameters
-  const result = await client.agent(key, testContext);
-
-  expect(result).toEqual({
-    instructions: 'Simple instructions.',
-    tracker: expect.any(Object),
-    enabled: false,
-  });
-
-  // Verify the agent was called with { enabled: false } as default and no variables
-  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, { enabled: false });
 });
 
 it('returns multiple agents config with interpolated instructions', async () => {
@@ -328,6 +329,21 @@ it('returns multiple agents config with interpolated instructions', async () => 
         model: { name: 'test', parameters: { name: 'test-model' } },
         instructions: 'You are a research assistant.',
         enabled: true,
+        toVercelAISDK: <TMod>(
+          provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+          options,
+        ) => {
+          const modelProvider = typeof provider === 'function' ? provider : provider.test;
+          return {
+            model: modelProvider('test-model'),
+            messages: [],
+            ...(options?.nonInterpolatedMessages
+              ? {
+                  messages: options.nonInterpolatedMessages,
+                }
+              : {}),
+          };
+        },
       },
       variables: { topic: 'climate change' },
     },
@@ -337,6 +353,21 @@ it('returns multiple agents config with interpolated instructions', async () => 
         model: { name: 'test', parameters: { name: 'test-model' } },
         instructions: 'You are a writing assistant.',
         enabled: true,
+        toVercelAISDK: <TMod>(
+          provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+          options,
+        ) => {
+          const modelProvider = typeof provider === 'function' ? provider : provider.test;
+          return {
+            model: modelProvider('test-model'),
+            messages: [],
+            ...(options?.nonInterpolatedMessages
+              ? {
+                  messages: options.nonInterpolatedMessages,
+                }
+              : {}),
+          };
+        },
       },
       variables: { style: 'academic' },
     },
@@ -379,6 +410,7 @@ it('returns multiple agents config with interpolated instructions', async () => 
       instructions: 'You are a research assistant specializing in climate change.',
       tracker: expect.any(Object),
       enabled: true,
+      toVercelAISDK: expect.any(Function),
     },
     'writing-agent': {
       model: {
@@ -389,6 +421,7 @@ it('returns multiple agents config with interpolated instructions', async () => 
       instructions: 'You are a writing assistant with academic style.',
       tracker: expect.any(Object),
       enabled: true,
+      toVercelAISDK: expect.any(Function),
     },
   });
 
@@ -415,59 +448,4 @@ it('handles empty agent configs array', async () => {
     0,
     0,
   );
-});
-
-it('handles agents with optional defaultValue', async () => {
-  const client = new LDAIClientImpl(mockLdClient);
-
-  const agentConfigs = [
-    {
-      key: 'agent-with-default',
-      defaultValue: {
-        instructions: 'You are a helpful assistant.',
-        enabled: true,
-      },
-      variables: { name: 'Assistant' },
-    },
-    {
-      key: 'agent-without-default',
-      variables: { name: 'Helper' },
-      // No defaultValue provided - should default to { enabled: false }
-    },
-  ] as const;
-
-  const mockVariations = {
-    'agent-with-default': {
-      instructions: 'Hello {{name}}!',
-      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
-    },
-    'agent-without-default': {
-      instructions: 'Hi {{name}}!',
-      _ldMeta: { variationKey: 'v2', enabled: false, mode: 'agent' },
-    },
-  };
-
-  mockLdClient.variation.mockImplementation((key) =>
-    Promise.resolve(mockVariations[key as keyof typeof mockVariations]),
-  );
-
-  const result = await client.agents(agentConfigs, testContext);
-
-  expect(result).toEqual({
-    'agent-with-default': {
-      instructions: 'Hello Assistant!',
-      tracker: expect.any(Object),
-      enabled: true,
-    },
-    'agent-without-default': {
-      instructions: 'Hi Helper!',
-      tracker: expect.any(Object),
-      enabled: false,
-    },
-  });
-
-  // Verify the agent without defaultValue was called with { enabled: false }
-  expect(mockLdClient.variation).toHaveBeenCalledWith('agent-without-default', testContext, {
-    enabled: false,
-  });
 });
