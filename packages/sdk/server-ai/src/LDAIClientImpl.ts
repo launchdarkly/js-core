@@ -10,8 +10,12 @@ import {
   LDMessage,
   LDModelConfig,
   LDProviderConfig,
+  VercelAISDKConfig,
+  VercelAISDKMapOptions,
+  VercelAISDKProvider,
 } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
+import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 
@@ -103,7 +107,8 @@ export class LDAIClientImpl implements LDAIClient {
       defaultValue,
     );
 
-    const agent: LDAIAgent = {
+    const mapper = new LDAIConfigMapper(model, provider, undefined);
+    const agent: Omit<LDAIAgent, 'toVercelAISDK'> = {
       tracker,
       enabled,
     };
@@ -124,7 +129,13 @@ export class LDAIClientImpl implements LDAIClient {
       agent.instructions = this._interpolateTemplate(instructions, allVariables);
     }
 
-    return agent;
+    return {
+      ...agent,
+      toVercelAISDK: <TMod>(
+        sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+        options?: VercelAISDKMapOptions | undefined,
+      ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(sdkProvider, options),
+    };
   }
 
   async config(
@@ -133,13 +144,15 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
-    const { tracker, enabled, model, provider, messages } = await this._evaluate(
-      key,
-      context,
-      defaultValue,
-    );
+    const {
+      tracker,
+      enabled,
+      model,
+      provider: configProvider,
+      messages,
+    } = await this._evaluate(key, context, defaultValue);
 
-    const config: LDAIConfig = {
+    const config: Omit<LDAIConfig, 'toVercelAISDK'> = {
       tracker,
       enabled,
     };
@@ -149,8 +162,8 @@ export class LDAIClientImpl implements LDAIClient {
     if (model) {
       config.model = { ...model };
     }
-    if (provider) {
-      config.provider = { ...provider };
+    if (configProvider) {
+      config.provider = { ...configProvider };
     }
     const allVariables = { ...variables, ldctx: context };
 
@@ -161,7 +174,15 @@ export class LDAIClientImpl implements LDAIClient {
       }));
     }
 
-    return config;
+    const mapper = new LDAIConfigMapper(config.model, config.provider, config.messages);
+
+    return {
+      ...config,
+      toVercelAISDK: <TMod>(
+        sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+        options?: VercelAISDKMapOptions | undefined,
+      ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(sdkProvider, options),
+    };
   }
 
   async agent(
@@ -173,8 +194,17 @@ export class LDAIClientImpl implements LDAIClient {
     // Track agent usage
     this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
 
-    // Use provided defaultValue or fallback to { enabled: false }
-    const resolvedDefaultValue = defaultValue ?? { enabled: false };
+    // Use provided defaultValue or create a default one with toVercelAISDK
+    const resolvedDefaultValue: LDAIAgentDefaults = defaultValue ?? {
+      enabled: false,
+      model: { name: 'default-model' },
+      toVercelAISDK: <TMod>(
+        sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+      ): VercelAISDKConfig<TMod> => ({
+        model: sdkProvider as unknown as TMod,
+        messages: [],
+      }),
+    };
 
     return this._evaluateAgent(key, context, resolvedDefaultValue, variables);
   }
@@ -195,8 +225,17 @@ export class LDAIClientImpl implements LDAIClient {
 
     await Promise.all(
       agentConfigs.map(async (config) => {
-        // Use provided defaultValue or fallback to { enabled: false }
-        const defaultValue = config.defaultValue ?? { enabled: false };
+        // Use provided defaultValue or create a default one with toVercelAISDK
+        const defaultValue: LDAIAgentDefaults = config.defaultValue ?? {
+          enabled: false,
+          model: { name: 'default-model' },
+          toVercelAISDK: <TMod>(
+            sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+          ): VercelAISDKConfig<TMod> => ({
+            model: sdkProvider as unknown as TMod,
+            messages: [],
+          }),
+        };
 
         const agent = await this._evaluateAgent(
           config.key,

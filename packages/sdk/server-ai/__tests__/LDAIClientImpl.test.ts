@@ -62,6 +62,7 @@ it('returns config with interpolated messagess', async () => {
     ],
     tracker: expect.any(Object),
     enabled: true,
+    toVercelAISDK: expect.any(Function),
   });
 });
 
@@ -107,6 +108,7 @@ it('handles missing metadata in variation', async () => {
     messages: [{ role: 'system', content: 'Hello' }],
     tracker: expect.any(Object),
     enabled: false,
+    toVercelAISDK: expect.any(Function),
   });
 });
 
@@ -130,6 +132,7 @@ it('passes the default value to the underlying client', async () => {
     provider: defaultValue.provider,
     tracker: expect.any(Object),
     enabled: false,
+    toVercelAISDK: expect.any(Function),
   });
 
   expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
