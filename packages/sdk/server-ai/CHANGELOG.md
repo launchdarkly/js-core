@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.10.1...server-sdk-ai-v0.11.0) (2025-07-23)
+
+
+### Features
+
+* Adding agent support for AI Configs ([#893](https://github.com/launchdarkly/js-core/issues/893)) ([bf95b92](https://github.com/launchdarkly/js-core/commit/bf95b92946e93b54e1eda7ffef96039b2b42b9aa))
+
 ## [0.10.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.10.0...server-sdk-ai-v0.10.1) (2025-07-23)
 
 
