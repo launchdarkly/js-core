@@ -22,8 +22,6 @@ export class CallbackHandler {
       return;
     }
 
-    // TODO: SDK-1044 track selector for future synchronizer to use
-    // report data up
     this._dataCallback(basis, data);
   }
 

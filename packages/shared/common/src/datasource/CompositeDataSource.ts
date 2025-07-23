@@ -36,7 +36,6 @@ interface TransitionRequest {
  */
 export class CompositeDataSource implements DataSource {
   // TODO: SDK-856 async notification if initializer takes too long
-  // TODO: SDK-1044 utilize selector from initializers
 
   private _initPhaseActive: boolean;
   private _initFactories: DataSourceList<LDDataSourceFactory>;
