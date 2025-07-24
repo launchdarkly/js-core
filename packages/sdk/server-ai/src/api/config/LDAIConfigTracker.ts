@@ -134,6 +134,55 @@ export interface LDAIConfigTracker {
   ): TRes;
 
   /**
+   * Track a Vercel AI SDK generateText operation.
+   *
+   * This function will track the duration of the operation, the token usage, and the success or error status.
+   *
+   * If the provided function throws, then this method will also throw.
+   * In the case the provided function throws, this function will record the duration and an error.
+   * A failed operation will not have any token usage data.
+   *
+   * @param func Function which executes the operation.
+   * @returns The result of the operation.
+   */
+  trackVercelAISDKGenerateTextMetrics<
+    TRes extends {
+      usage?: {
+        totalTokens?: number;
+        promptTokens?: number;
+        completionTokens?: number;
+      };
+    },
+  >(
+    func: () => Promise<TRes>,
+  ): Promise<TRes>;
+
+  /**
+   * Track a Vercel AI SDK streamText operation.
+   *
+   * This function will track the duration of the operation, the token usage, and the success or error status.
+   *
+   * If the provided function throws, then this method will also throw.
+   * In the case the provided function throws, this function will record the duration and an error.
+   * A failed operation will not have any token usage data.
+   *
+   * @param func Function which executes the operation.
+   * @returns The result of the operation.
+   */
+  trackVercelAISDKStreamTextMetrics<
+    TRes extends {
+      finishReason?: Promise<string>;
+      usage?: Promise<{
+        totalTokens?: number;
+        promptTokens?: number;
+        completionTokens?: number;
+      }>;
+    },
+  >(
+    func: () => TRes,
+  ): TRes;
+
+  /**
    * Get a summary of the tracked metrics.
    */
   getSummary(): LDAIMetricSummary;

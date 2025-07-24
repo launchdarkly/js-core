@@ -2,8 +2,13 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from './api/config';
 import { LDAIMetricSummary } from './api/config/LDAIConfigTracker';
-import { createBedrockTokenUsage, LDFeedbackKind, LDTokenUsage } from './api/metrics';
-import { createOpenAiUsage } from './api/metrics/OpenAiUsage';
+import {
+  createBedrockTokenUsage,
+  createOpenAiUsage,
+  createVercelAISDKTokenUsage,
+  LDFeedbackKind,
+  LDTokenUsage,
+} from './api/metrics';
 import { LDClientMin } from './LDClientMin';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
@@ -119,6 +124,72 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       this.trackTokens(createBedrockTokenUsage(res.usage));
     }
     return res;
+  }
+
+  async trackVercelAISDKGenerateTextMetrics<
+    TRes extends {
+      usage?: {
+        totalTokens?: number;
+        promptTokens?: number;
+        completionTokens?: number;
+      };
+    },
+  >(func: () => Promise<TRes>): Promise<TRes> {
+    try {
+      const result = await this.trackDurationOf(func);
+      this.trackSuccess();
+      if (result.usage) {
+        this.trackTokens(createVercelAISDKTokenUsage(result.usage));
+      }
+      return result;
+    } catch (err) {
+      this.trackError();
+      throw err;
+    }
+  }
+
+  trackVercelAISDKStreamTextMetrics<
+    TRes extends {
+      finishReason?: Promise<string>;
+      usage?: Promise<{
+        totalTokens?: number;
+        promptTokens?: number;
+        completionTokens?: number;
+      }>;
+    },
+  >(func: () => TRes): TRes {
+    const startTime = Date.now();
+    try {
+      const result = func();
+      result.finishReason
+        ?.then(async (finishReason) => {
+          const endTime = Date.now();
+          this.trackDuration(endTime - startTime);
+          if (finishReason === 'error') {
+            this.trackError();
+          } else {
+            this.trackSuccess();
+            if (result.usage) {
+              try {
+                this.trackTokens(createVercelAISDKTokenUsage(await result.usage));
+              } catch {
+                // Intentionally squashing this error
+              }
+            }
+          }
+        })
+        .catch(() => {
+          const endTime = Date.now();
+          this.trackDuration(endTime - startTime);
+          this.trackError();
+        });
+      return result;
+    } catch (err) {
+      const endTime = Date.now();
+      this.trackDuration(endTime - startTime);
+      this.trackError();
+      throw err;
+    }
   }
 
   trackTokens(tokens: LDTokenUsage): void {

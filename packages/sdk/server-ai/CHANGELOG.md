@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.10.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.10.0...server-sdk-ai-v0.10.1) (2025-07-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.16.0 to 2.16.1
+  * peerDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.x to 2.16.1
+
+## [0.10.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.9.9...server-sdk-ai-v0.10.0) (2025-07-16)
+
+
+### Features
+
+* Adding Vercel AI SDK mapper ([#895](https://github.com/launchdarkly/js-core/issues/895)) ([0befee0](https://github.com/launchdarkly/js-core/commit/0befee0888d0af03b01c0cf6f46eacc80a3ce8e8))
+
 ## [0.9.9](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.9.8...server-sdk-ai-v0.9.9) (2025-06-17)
 
 

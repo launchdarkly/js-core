@@ -1,10 +1,10 @@
 import * as http from 'http';
 import * as https from 'https';
-import * as createHttpsProxyAgent from 'https-proxy-agent';
-import { HttpsProxyAgentOptions } from 'https-proxy-agent';
+import { HttpsProxyAgent, HttpsProxyAgentOptions } from 'https-proxy-agent';
 // No types for the event source.
 // @ts-ignore
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
+import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
@@ -52,11 +52,13 @@ function processProxyOptions(
   proxyOptions: LDProxyOptions,
   additional: https.AgentOptions = {},
 ): https.Agent | http.Agent {
-  const protocol = proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http';
-  const parsedOptions: HttpsProxyAgentOptions & { [index: string]: any } = {
+  const proxyUrl = formatUrl({
+    protocol: proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http:',
+    slashes: true,
+    hostname: proxyOptions.host,
     port: proxyOptions.port,
-    host: proxyOptions.host,
-    protocol,
+  });
+  const parsedOptions: HttpsProxyAgentOptions<string> = {
     ...additional,
   };
   if (proxyOptions.auth) {
@@ -67,12 +69,12 @@ function processProxyOptions(
 
   // Node does not take kindly to undefined keys.
   Object.keys(parsedOptions).forEach((key) => {
-    if (parsedOptions[key] === undefined) {
-      delete parsedOptions[key];
+    if (parsedOptions[key as keyof HttpsProxyAgentOptions<string>] === undefined) {
+      delete parsedOptions[key as keyof HttpsProxyAgentOptions<string>];
     }
   });
 
-  return createHttpsProxyAgent(parsedOptions);
+  return new HttpsProxyAgent(proxyUrl, parsedOptions);
 }
 
 function createAgent(
