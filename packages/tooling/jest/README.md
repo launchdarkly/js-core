@@ -28,9 +28,6 @@ Then in `jest.config.js` add `@launchdarkly/jest/{framework}` to setupFiles:
 ```js
 // jest.config.js
 module.exports = {
-  // for react
-  setupFiles: ['@launchdarkly/jest/react'],
-
   // for react-native
   setupFiles: ['@launchdarkly/jest/react-native'],
 };
@@ -38,7 +35,24 @@ module.exports = {
 
 ## Quickstart
 
-TODO:
+describe('Welcome component test', () => {
+  afterEach(() => {
+    resetLDMocks();
+  });
+
+  test('mock boolean flag correctly', () => {
+    mockFlags({ 'my-boolean-flag': true });
+    render(<Welcome />);
+    expect(screen.getByText('Flag value is true')).toBeTruthy();
+  });
+
+  test('mock ldClient correctly', () => {
+    const current = useLDClient();
+
+    current?.track('event');
+    expect(current.track).toHaveBeenCalledTimes(1);
+  });
+});
 
 ## Developing this package
 
