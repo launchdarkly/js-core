@@ -15,6 +15,7 @@ export interface EdgeProvider {
 export class EdgeFeatureStore implements LDFeatureStore {
   private readonly _rootKey: string;
   private _kvData: string | null = null;
+  private _deserializedData: LDFeatureStoreDataStorage | null = null;
 
   constructor(
     private readonly _edgeProvider: EdgeProvider,
@@ -26,15 +27,38 @@ export class EdgeFeatureStore implements LDFeatureStore {
   }
 
   /**
-   * This function is used to lazy load the KV data from the edge provider. This is necessary because Fastly Compute
-   * has a limit of 32 backend requests (including requests to fetch the KV data).
-   * https://docs.fastly.com/products/compute-resource-limits
+   * This function is used to lazy load and deserialize the KV data from the edge provider.
+   * The deserialized data is cached to avoid repeated parsing of the same data during a request.
    */
-  private async _getKVData(): Promise<string | null | undefined> {
-    if (!this._kvData) {
-      this._kvData = await this._edgeProvider.get(this._rootKey);
+  private async _getKVData(): Promise<LDFeatureStoreDataStorage | null> {
+    if (!this._deserializedData) {
+      this._logger.debug('No cached data found, loading from KV store');
+      if (!this._kvData) {
+        this._kvData = await this._edgeProvider.get(this._rootKey);
+      }
+      
+      if (!this._kvData) {
+        this._logger.debug('No data found in KV store');
+        return null;
+      }
+
+      this._logger.debug('Deserializing KV store data');
+      const deserialized = deserializePoll(this._kvData);
+      if (!deserialized) {
+        this._logger.debug('Failed to deserialize KV store data');
+        return null;
+      }
+
+      // Convert FlagsAndSegments to LDFeatureStoreDataStorage format
+      this._deserializedData = {
+        features: deserialized.flags,
+        segments: deserialized.segments,
+      };
+      this._logger.debug('Successfully cached deserialized data');
+    } else {
+      this._logger.debug('Using cached deserialized data');
     }
-    return this._kvData;
+    return this._deserializedData;
   }
 
   async get(
@@ -47,23 +71,18 @@ export class EdgeFeatureStore implements LDFeatureStore {
     this._logger.debug(`Requesting ${dataKey} from ${this._rootKey}.${kindKey}`);
 
     try {
-      const i = await this._getKVData();
+      const data = await this._getKVData();
 
-      if (!i) {
+      if (!data) {
         throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
-
-      const item = deserializePoll(i);
-      if (!item) {
-        throw new Error(`Error deserializing ${kindKey}`);
       }
 
       switch (namespace) {
         case 'features':
-          callback(item.flags[dataKey]);
+          callback(data.features[dataKey]);
           break;
         case 'segments':
-          callback(item.segments[dataKey]);
+          callback(data.segments[dataKey]);
           break;
         default:
           callback(null);
@@ -79,22 +98,17 @@ export class EdgeFeatureStore implements LDFeatureStore {
     const kindKey = namespace === 'features' ? 'flags' : namespace;
     this._logger.debug(`Requesting all from ${this._rootKey}.${kindKey}`);
     try {
-      const i = await this._getKVData();
-      if (!i) {
+      const data = await this._getKVData();
+      if (!data) {
         throw new Error(`${this._rootKey}.${kindKey} is not found in KV.`);
-      }
-
-      const item = deserializePoll(i);
-      if (!item) {
-        throw new Error(`Error deserializing ${kindKey}`);
       }
 
       switch (namespace) {
         case 'features':
-          callback(item.flags);
+          callback(data.features);
           break;
         case 'segments':
-          callback(item.segments);
+          callback(data.segments);
           break;
         default:
           callback({});
@@ -106,8 +120,9 @@ export class EdgeFeatureStore implements LDFeatureStore {
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
-    const config = await this._getKVData();
-    const result = config !== null;
+    this._logger.debug('Checking if store is initialized and caching data');
+    const data = await this._getKVData();
+    const result = data !== null;
     this._logger.debug(`Is ${this._rootKey} initialized? ${result}`);
     callback(result);
   }
