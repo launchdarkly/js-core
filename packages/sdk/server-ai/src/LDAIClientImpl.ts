@@ -77,6 +77,8 @@ export class LDAIClientImpl implements LDAIClient {
       value._ldMeta?.variationKey ?? '',
       // eslint-disable-next-line no-underscore-dangle
       value._ldMeta?.version ?? 1,
+      value.model?.name ?? '',
+      value.provider?.name ?? '',
       context,
     );
 
