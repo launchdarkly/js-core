@@ -138,13 +138,6 @@ it('tracks success', () => {
   tracker.trackSuccess();
 
   expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:generation',
-    testContext,
-    { configKey, variationKey, version, modelName, providerName },
-    1,
-  );
-
-  expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:success',
     testContext,
     { configKey, variationKey, version, modelName, providerName },
@@ -181,13 +174,6 @@ it('tracks OpenAI usage', async () => {
     testContext,
     { configKey, variationKey, version, modelName, providerName },
     1000,
-  );
-
-  expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:generation',
-    testContext,
-    { configKey, variationKey, version, modelName, providerName },
-    1,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
@@ -253,13 +239,6 @@ it('tracks error when OpenAI metrics function throws', async () => {
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:generation',
-    testContext,
-    { configKey, variationKey, version, modelName, providerName },
-    1,
-  );
-
-  expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:error',
     testContext,
     { configKey, variationKey, version, modelName, providerName },
@@ -300,13 +279,6 @@ it('tracks Bedrock conversation with successful response', () => {
   };
 
   tracker.trackBedrockConverseMetrics(response);
-
-  expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:generation',
-    testContext,
-    { configKey, variationKey, version, modelName, providerName },
-    1,
-  );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:success',
@@ -368,13 +340,7 @@ it('tracks Bedrock conversation with error response', () => {
 
   tracker.trackBedrockConverseMetrics(response);
 
-  expect(mockTrack).toHaveBeenCalledTimes(2);
-  expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:generation',
-    testContext,
-    { configKey, variationKey, version, modelName, providerName },
-    1,
-  );
+  expect(mockTrack).toHaveBeenCalledTimes(1);
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:error',
@@ -421,13 +387,6 @@ describe('Vercel AI SDK generateText', () => {
       testContext,
       { configKey, variationKey, version, modelName, providerName },
       1000,
-    );
-
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:generation',
-      testContext,
-      { configKey, variationKey, version, modelName, providerName },
-      1,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
@@ -493,13 +452,6 @@ describe('Vercel AI SDK generateText', () => {
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:generation',
-      testContext,
-      { configKey, variationKey, version, modelName, providerName },
-      1,
-    );
-
-    expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:error',
       testContext,
       { configKey, variationKey, version, modelName, providerName },
@@ -558,13 +510,6 @@ describe('Vercel AI SDK streamText', () => {
       testContext,
       { configKey, variationKey, version, modelName, providerName },
       1000,
-    );
-
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:generation',
-      testContext,
-      { configKey, variationKey, version, modelName, providerName },
-      1,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
@@ -630,13 +575,6 @@ describe('Vercel AI SDK streamText', () => {
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:generation',
-      testContext,
-      { configKey, variationKey, version, modelName, providerName },
-      1,
-    );
-
-    expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:error',
       testContext,
       { configKey, variationKey, version, modelName, providerName },
@@ -674,13 +612,6 @@ describe('Vercel AI SDK streamText', () => {
       testContext,
       { configKey, variationKey, version, modelName, providerName },
       1000,
-    );
-
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:generation',
-      testContext,
-      { configKey, variationKey, version, modelName, providerName },
-      1,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
@@ -724,13 +655,6 @@ describe('Vercel AI SDK streamText', () => {
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:generation',
-      testContext,
-      { configKey, variationKey, version, modelName, providerName },
-      1,
-    );
-
-    expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:error',
       testContext,
       { configKey, variationKey, version, modelName, providerName },
@@ -769,13 +693,6 @@ describe('Vercel AI SDK streamText', () => {
       testContext,
       { configKey, variationKey, version, modelName, providerName },
       1000,
-    );
-
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:generation',
-      testContext,
-      { configKey, variationKey, version, modelName, providerName },
-      1,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
@@ -973,13 +890,6 @@ it('tracks error', () => {
     testContext,
   );
   tracker.trackError();
-
-  expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:generation',
-    testContext,
-    { configKey, variationKey, version, modelName, providerName },
-    1,
-  );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:error',
