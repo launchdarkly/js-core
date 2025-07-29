@@ -24,7 +24,13 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     private _context: LDContext,
   ) {}
 
-  private _getTrackData(): { variationKey: string; configKey: string; version: number; modelName: string; providerName: string } {
+  private _getTrackData(): {
+    variationKey: string;
+    configKey: string;
+    version: number;
+    modelName: string;
+    providerName: string;
+  } {
     return {
       variationKey: this._variationKey,
       configKey: this._configKey,
