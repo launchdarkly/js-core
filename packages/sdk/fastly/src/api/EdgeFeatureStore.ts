@@ -121,14 +121,22 @@ export class EdgeFeatureStore implements LDFeatureStore {
   }
 
   async initialized(callback: (isInitialized: boolean) => void = noop): Promise<void> {
-    const deserialized = await this._getKVData();
-    const result = deserialized !== null;
-    this._logger.debug(`Is ${this._rootKey} initialized? ${result}`);
-    callback(result);
+    try {
+      const deserialized = await this._getKVData();
+      const result = deserialized !== null;
+      this._logger.debug(`Is ${this._rootKey} initialized? ${result}`);
+      callback(result);
+    } catch (err) {
+      this._logger.error(err);
+      this._logger.debug(`Is ${this._rootKey} initialized? false`);
+      callback(false);
+    }
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this._getKVData();
+    this._getKVData().catch((err) => {
+      this._logger.error(err);
+    });
     callback();
   }
 
