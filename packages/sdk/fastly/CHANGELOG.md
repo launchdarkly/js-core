@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.1.9...fastly-server-sdk-v0.2.0) (2025-08-01)
+
+
+### Features
+
+* Improve KV data caching and deserialization ([#903](https://github.com/launchdarkly/js-core/issues/903)) ([ae47860](https://github.com/launchdarkly/js-core/commit/ae4786096c34829745070ed2a69a6d964be46e4d))
+
 ## [0.1.9](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.1.8...fastly-server-sdk-v0.1.9) (2025-07-23)
 
 
