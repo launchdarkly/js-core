@@ -144,6 +144,8 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
+    this._ldClient.track('$ld:ai:config:function:single', context, key, 1);
+
     const {
       tracker,
       enabled,
