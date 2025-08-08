@@ -35,23 +35,31 @@ module.exports = {
 
 ## Quickstart
 
-describe('Welcome component test', () => {
-  afterEach(() => {
-    resetLDMocks();
-  });
+// Welcome.test.tsx
+import React from 'react';
+import { render } from '@testing-library/react-native';
+import {
+  mockFlags,
+  resetLDMocks,
+  getLDClient,
+} from '@launchdarkly/js-core/tooling/jest';
+import Welcome from './Welcome';
 
-  test('mock boolean flag correctly', () => {
-    mockFlags({ 'my-boolean-flag': true });
-    render(<Welcome />);
-    expect(screen.getByText('Flag value is true')).toBeTruthy();
-  });
+afterEach(() => {
+  resetLDMocks();
+});
 
-  test('mock ldClient correctly', () => {
-    const current = useLDClient();
+test('evaluates a boolean flag', () => {
+  mockFlags({ 'my-boolean-flag': true });
+  const { getByText } = render(<Welcome />);
+  expect(getByText('Flag value is true')).toBeTruthy();
+});
 
-    current?.track('event');
-    expect(current.track).toHaveBeenCalledTimes(1);
-  });
+test('captures a track call', () => {
+  const client = getLDClient(); // mocked client from LD jest tooling
+  client.track('event-name', { foo: 'bar' });
+  expect(client.track).toHaveBeenCalledWith('event-name', { foo: 'bar' });
+  expect(client.track).toHaveBeenCalledTimes(1);
 });
 
 ## Developing this package
