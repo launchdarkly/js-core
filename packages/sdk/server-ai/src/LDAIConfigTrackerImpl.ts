@@ -19,14 +19,24 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     private _configKey: string,
     private _variationKey: string,
     private _version: number,
+    private _modelName: string,
+    private _providerName: string,
     private _context: LDContext,
   ) {}
 
-  private _getTrackData(): { variationKey: string; configKey: string; version: number } {
+  private _getTrackData(): {
+    variationKey: string;
+    configKey: string;
+    version: number;
+    modelName: string;
+    providerName: string;
+  } {
     return {
       variationKey: this._variationKey,
       configKey: this._configKey,
       version: this._version,
+      modelName: this._modelName,
+      providerName: this._providerName,
     };
   }
 
@@ -69,13 +79,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
 
   trackSuccess(): void {
     this._trackedMetrics.success = true;
-    this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
     this._ldClient.track('$ld:ai:generation:success', this._context, this._getTrackData(), 1);
   }
 
   trackError(): void {
     this._trackedMetrics.success = false;
-    this._ldClient.track('$ld:ai:generation', this._context, this._getTrackData(), 1);
     this._ldClient.track('$ld:ai:generation:error', this._context, this._getTrackData(), 1);
   }
 

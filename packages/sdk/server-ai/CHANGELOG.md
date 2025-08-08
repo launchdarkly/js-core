@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.11.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.10.1...server-sdk-ai-v0.11.0) (2025-08-01)
+
+
+### Features
+
+* Adding agent support for AI Configs ([#893](https://github.com/launchdarkly/js-core/issues/893)) ([bf95b92](https://github.com/launchdarkly/js-core/commit/bf95b92946e93b54e1eda7ffef96039b2b42b9aa))
+* Update AI tracker to include model & provider name for metrics generation ([#901](https://github.com/launchdarkly/js-core/issues/901)) ([9474862](https://github.com/launchdarkly/js-core/commit/94748621034ed6b1a74060ee0c536bf96a3cd43d))
+
+
+### Bug Fixes
+
+* Remove deprecated track generation event ([#902](https://github.com/launchdarkly/js-core/issues/902)) ([40f8593](https://github.com/launchdarkly/js-core/commit/40f859386087a443948214e9b535527f125ffa39))
+
 ## [0.10.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.10.0...server-sdk-ai-v0.10.1) (2025-07-23)
 
 
