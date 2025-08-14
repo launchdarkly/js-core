@@ -65,6 +65,14 @@ it('returns config with interpolated messagess', async () => {
     enabled: true,
     toVercelAISDK: expect.any(Function),
   });
+
+  // Verify tracking was called
+  expect(mockLdClient.track).toHaveBeenCalledWith(
+    '$ld:ai:config:function:single',
+    testContext,
+    key,
+    1,
+  );
 });
 
 it('includes context in variables for messages interpolation', async () => {
