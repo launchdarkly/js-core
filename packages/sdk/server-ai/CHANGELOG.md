@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.0...server-sdk-ai-v0.11.1) (2025-08-19)
+
+
+### Bug Fixes
+
+* Add usage tracking to config method ([#904](https://github.com/launchdarkly/js-core/issues/904)) ([7f0a54c](https://github.com/launchdarkly/js-core/commit/7f0a54c4d880c8bc784fee0d4a2bc9155e96c1b7))
+
 ## [0.11.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.10.1...server-sdk-ai-v0.11.0) (2025-08-01)
 
 
