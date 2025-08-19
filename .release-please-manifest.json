@@ -15,7 +15,7 @@
   "packages/sdk/react-native": "10.10.5",
   "packages/telemetry/node-server-sdk-otel": "1.3.1",
   "packages/sdk/browser": "0.8.1",
-  "packages/sdk/server-ai": "0.11.0",
+  "packages/sdk/server-ai": "0.11.1",
   "packages/telemetry/browser-telemetry": "1.0.11",
   "packages/tooling/jest": "0.1.10",
   "packages/sdk/combined-browser": "0.0.0"
