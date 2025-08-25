@@ -33,4 +33,4 @@ export interface LDAIAgentConfig {
 /**
  * Default values for an agent.
  */
-export type LDAIAgentDefaults = Omit<LDAIAgent, 'tracker'>;
+export type LDAIAgentDefaults = Omit<LDAIAgent, 'tracker' | 'toVercelAISDK'>;
