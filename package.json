@@ -73,6 +73,7 @@
   "//": "Pin jsonc-parser because v3.3.0 breaks rollup-plugin-esbuild",
   "resolutions": {
     "jsonc-parser": "3.2.0",
-    "parse5": "7.2.1"
+    "parse5": "7.2.1",
+    "@types/node": "24.1.0"
   }
 }
