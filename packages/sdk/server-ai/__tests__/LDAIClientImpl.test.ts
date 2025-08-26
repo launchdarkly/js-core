@@ -1,12 +1,7 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgentDefaults } from '../src/api/agents';
-import {
-  LDAIDefaults,
-  VercelAISDKConfig,
-  VercelAISDKMapOptions,
-  VercelAISDKProvider,
-} from '../src/api/config';
+import { LDAIDefaults } from '../src/api/config';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
 
@@ -17,7 +12,7 @@ const mockLdClient: jest.Mocked<LDClientMin> = {
 
 const testContext: LDContext = { kind: 'user', key: 'test-user' };
 
-it('returns config with interpolated messagess', async () => {
+it('returns config with interpolated messages', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
   const defaultValue: LDAIDefaults = {
@@ -156,21 +151,6 @@ it('returns single agent config with interpolated instructions', async () => {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
     enabled: true,
-    toVercelAISDK: <TMod>(
-      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options?: VercelAISDKMapOptions,
-    ): VercelAISDKConfig<TMod> => {
-      const modelProvider = typeof provider === 'function' ? provider : provider.test;
-      return {
-        model: modelProvider('test-model'),
-        messages: [],
-        ...(options?.nonInterpolatedMessages
-          ? {
-              messages: options.nonInterpolatedMessages,
-            }
-          : {}),
-      };
-    },
   };
 
   const mockVariation = {
@@ -205,7 +185,6 @@ it('returns single agent config with interpolated instructions', async () => {
     instructions: 'You are a helpful assistant. Your name is John and your score is 42',
     tracker: expect.any(Object),
     enabled: true,
-    toVercelAISDK: expect.any(Function),
   });
 
   // Verify tracking was called
@@ -224,21 +203,6 @@ it('includes context in variables for agent instructions interpolation', async (
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
     enabled: true,
-    toVercelAISDK: <TMod>(
-      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options?: VercelAISDKMapOptions,
-    ): VercelAISDKConfig<TMod> => {
-      const modelProvider = typeof provider === 'function' ? provider : provider.test;
-      return {
-        model: modelProvider('test-model'),
-        messages: [],
-        ...(options?.nonInterpolatedMessages
-          ? {
-              messages: options.nonInterpolatedMessages,
-            }
-          : {}),
-      };
-    },
   };
 
   const mockVariation = {
@@ -260,21 +224,6 @@ it('handles missing metadata in agent variation', async () => {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
     enabled: true,
-    toVercelAISDK: <TMod>(
-      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options?: VercelAISDKMapOptions,
-    ): VercelAISDKConfig<TMod> => {
-      const modelProvider = typeof provider === 'function' ? provider : provider.test;
-      return {
-        model: modelProvider('test-model'),
-        messages: [],
-        ...(options?.nonInterpolatedMessages
-          ? {
-              messages: options.nonInterpolatedMessages,
-            }
-          : {}),
-      };
-    },
   };
 
   const mockVariation = {
@@ -291,7 +240,6 @@ it('handles missing metadata in agent variation', async () => {
     instructions: 'Hello.',
     tracker: expect.any(Object),
     enabled: false,
-    toVercelAISDK: expect.any(Function),
   });
 });
 
@@ -303,22 +251,6 @@ it('passes the default value to the underlying client for single agent', async (
     provider: { name: 'default-provider' },
     instructions: 'Default instructions',
     enabled: true,
-    toVercelAISDK: <TMod>(
-      provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-      options?: VercelAISDKMapOptions,
-    ): VercelAISDKConfig<TMod> => {
-      const modelProvider =
-        typeof provider === 'function' ? provider : provider['default-provider'];
-      return {
-        model: modelProvider('default-model'),
-        messages: [],
-        ...(options?.nonInterpolatedMessages
-          ? {
-              messages: options.nonInterpolatedMessages,
-            }
-          : {}),
-      };
-    },
   };
 
   mockLdClient.variation.mockResolvedValue(defaultValue);
@@ -331,7 +263,6 @@ it('passes the default value to the underlying client for single agent', async (
     provider: defaultValue.provider,
     tracker: expect.any(Object),
     enabled: false,
-    toVercelAISDK: expect.any(Function),
   });
 
   expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
@@ -347,21 +278,6 @@ it('returns multiple agents config with interpolated instructions', async () => 
         model: { name: 'test', parameters: { name: 'test-model' } },
         instructions: 'You are a research assistant.',
         enabled: true,
-        toVercelAISDK: <TMod>(
-          provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-          options?: VercelAISDKMapOptions,
-        ): VercelAISDKConfig<TMod> => {
-          const modelProvider = typeof provider === 'function' ? provider : provider.test;
-          return {
-            model: modelProvider('test-model'),
-            messages: [],
-            ...(options?.nonInterpolatedMessages
-              ? {
-                  messages: options.nonInterpolatedMessages,
-                }
-              : {}),
-          };
-        },
       },
       variables: { topic: 'climate change' },
     },
@@ -371,21 +287,6 @@ it('returns multiple agents config with interpolated instructions', async () => 
         model: { name: 'test', parameters: { name: 'test-model' } },
         instructions: 'You are a writing assistant.',
         enabled: true,
-        toVercelAISDK: <TMod>(
-          provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-          options?: VercelAISDKMapOptions,
-        ): VercelAISDKConfig<TMod> => {
-          const modelProvider = typeof provider === 'function' ? provider : provider.test;
-          return {
-            model: modelProvider('test-model'),
-            messages: [],
-            ...(options?.nonInterpolatedMessages
-              ? {
-                  messages: options.nonInterpolatedMessages,
-                }
-              : {}),
-          };
-        },
       },
       variables: { style: 'academic' },
     },
@@ -428,7 +329,6 @@ it('returns multiple agents config with interpolated instructions', async () => 
       instructions: 'You are a research assistant specializing in climate change.',
       tracker: expect.any(Object),
       enabled: true,
-      toVercelAISDK: expect.any(Function),
     },
     'writing-agent': {
       model: {
@@ -439,7 +339,6 @@ it('returns multiple agents config with interpolated instructions', async () => 
       instructions: 'You are a writing assistant with academic style.',
       tracker: expect.any(Object),
       enabled: true,
-      toVercelAISDK: expect.any(Function),
     },
   });
 
