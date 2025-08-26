@@ -88,6 +88,7 @@ it('includes context in variables for messages interpolation', async () => {
   const result = await client.config(key, testContext, defaultValue);
 
   expect(result.messages?.[0].content).toBe('User key: test-user');
+  expect(result.toVercelAISDK).toEqual(expect.any(Function));
 });
 
 it('handles missing metadata in variation', async () => {
