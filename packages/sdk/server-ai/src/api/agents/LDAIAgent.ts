@@ -3,7 +3,7 @@ import { LDAIConfig } from '../config';
 /**
  * AI Config agent and tracker.
  */
-export interface LDAIAgent extends Omit<LDAIConfig, 'messages'> {
+export interface LDAIAgent extends Omit<LDAIConfig, 'messages' | 'toVercelAISDK'> {
   /**
    * Instructions for the agent.
    */
