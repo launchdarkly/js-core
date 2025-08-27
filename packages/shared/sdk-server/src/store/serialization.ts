@@ -245,16 +245,17 @@ function tryParse(data: string): any {
  * @param payload Payload data from launchdarkly.
  * @returns The revived and processed data.
  */
-export function reviveFullPayload(payload: FlagsAndSegments): FlagsAndSegments {
-  Object.values(payload?.flags || []).forEach((flag) => {
+export function reviveFullPayload(payload: Record<string, any>): FlagsAndSegments {
+  const flagsAndSegments = payload as FlagsAndSegments;
+  Object.values(flagsAndSegments?.flags || []).forEach((flag) => {
     processFlag(flag);
   });
 
-  Object.values(payload?.segments || []).forEach((segment) => {
+  Object.values(flagsAndSegments?.segments || []).forEach((segment) => {
     processSegment(segment);
   });
 
-  return payload;
+  return flagsAndSegments;
 }
 
 /**
