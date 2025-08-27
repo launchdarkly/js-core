@@ -238,7 +238,12 @@ function tryParse(data: string): any {
 }
 
 /**
- * @internal
+ * This function is intended for usage inside LaunchDarkly SDKs.
+ * This function should NOT be used by customer applications.
+ * This function may be changed or removed without a major version.
+ *
+ * @param payload Payload data from launchdarkly.
+ * @returns The revived and processed data.
  */
 export function reviveFullPayload(payload: FlagsAndSegments): FlagsAndSegments {
   Object.values(payload?.flags || []).forEach((flag) => {
