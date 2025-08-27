@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.1...server-sdk-ai-v0.11.2) (2025-08-26)
+
+
+### Bug Fixes
+
+* **ai-sdk:** Remove Vercel mapping method from LD ([#911](https://github.com/launchdarkly/js-core/issues/911)) ([f71a457](https://github.com/launchdarkly/js-core/commit/f71a45774eb3fc0fd0ac6a93b1443843d14712d2))
+
 ## [0.11.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.0...server-sdk-ai-v0.11.1) (2025-08-19)
 
 
