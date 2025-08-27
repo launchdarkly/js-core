@@ -240,6 +240,21 @@ function tryParse(data: string): any {
 /**
  * @internal
  */
+export function reviveFullPayload(payload: FlagsAndSegments): FlagsAndSegments {
+  Object.values(payload?.flags || []).forEach((flag) => {
+    processFlag(flag);
+  });
+
+  Object.values(payload?.segments || []).forEach((segment) => {
+    processSegment(segment);
+  });
+
+  return payload;
+}
+
+/**
+ * @internal
+ */
 export function deserializeAll(data: string): AllData | undefined {
   // The reviver lacks the context of where a different key exists, being as it
   // starts at the deepest level and works outward. As a result attributes are
@@ -253,13 +268,7 @@ export function deserializeAll(data: string): AllData | undefined {
     return undefined;
   }
 
-  Object.values(parsed?.data?.flags || []).forEach((flag) => {
-    processFlag(flag);
-  });
-
-  Object.values(parsed?.data?.segments || []).forEach((segment) => {
-    processSegment(segment);
-  });
+  reviveFullPayload(parsed?.data);
   return parsed;
 }
 
@@ -278,13 +287,7 @@ export function deserializePoll(data: string): FlagsAndSegments | undefined {
     return undefined;
   }
 
-  Object.values(parsed?.flags || []).forEach((flag) => {
-    processFlag(flag);
-  });
-
-  Object.values(parsed?.segments || []).forEach((segment) => {
-    processSegment(segment);
-  });
+  reviveFullPayload(parsed);
   return parsed;
 }
 
