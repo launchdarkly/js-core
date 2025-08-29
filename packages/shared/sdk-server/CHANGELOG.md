@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.16.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.16.1...js-server-sdk-common-v2.16.2) (2025-08-29)
+
+
+### Bug Fixes
+
+* Improve serialization/deserialization overhead with EdgeFeatureStore ([#914](https://github.com/launchdarkly/js-core/issues/914)) ([76d614f](https://github.com/launchdarkly/js-core/commit/76d614f8b036750275cec90ac5b5d68322bf912e))
+
 ## [2.16.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.16.0...js-server-sdk-common-v2.16.1) (2025-07-23)
 
 

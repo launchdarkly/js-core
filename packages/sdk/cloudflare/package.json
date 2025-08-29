@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/cloudflare-server-sdk",
-  "version": "2.7.9",
+  "version": "2.7.10",
   "description": "Cloudflare LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare",
   "repository": {
@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
-    "@launchdarkly/js-server-sdk-common-edge": "2.6.8",
+    "@launchdarkly/js-server-sdk-common-edge": "2.6.9",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
