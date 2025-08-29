@@ -1,7 +1,7 @@
 import AsyncStoreFacade from './AsyncStoreFacade';
 import AsyncTransactionalStoreFacade from './AsyncTransactionalStoreFacade';
 import PersistentDataStoreWrapper from './PersistentDataStoreWrapper';
-import { deserializePoll } from './serialization';
+import { deserializePoll, reviveFullPayload } from './serialization';
 import TransactionalFeatureStore from './TransactionalFeatureStore';
 
 export {
@@ -10,4 +10,5 @@ export {
   PersistentDataStoreWrapper,
   TransactionalFeatureStore,
   deserializePoll,
+  reviveFullPayload,
 };

@@ -49,11 +49,10 @@ export type { LDClient };
 export const init = (sdkKey: string, edgeConfig: EdgeConfigClient, options: LDOptions = {}) => {
   const logger = options.logger ?? BasicLogger.get();
 
-  // vercel does not support string gets so we have to stringify it
   const edgeProvider: EdgeProvider = {
     get: async (rootKey: string) => {
-      const json = await edgeConfig.get(rootKey);
-      return json ? JSON.stringify(json) : null;
+      const json = await edgeConfig.get<Record<string, any>>(rootKey);
+      return json || null;
     },
   };
 

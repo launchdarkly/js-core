@@ -6,12 +6,12 @@ import type {
   LDFeatureStoreKindData,
   LDLogger,
 } from '@launchdarkly/js-server-sdk-common';
-import { deserializePoll, noop } from '@launchdarkly/js-server-sdk-common';
+import { deserializePoll, noop, reviveFullPayload } from '@launchdarkly/js-server-sdk-common';
 
 import Cache from './cache';
 
 export interface EdgeProvider {
-  get: (rootKey: string) => Promise<string | null | undefined>;
+  get: (rootKey: string) => Promise<string | Record<string, any> | null | undefined>;
 }
 
 export class EdgeFeatureStore implements LDFeatureStore {
@@ -96,7 +96,11 @@ export class EdgeFeatureStore implements LDFeatureStore {
       throw new Error(`${this._rootKey} is not found in KV.`);
     }
 
-    payload = deserializePoll(providerData);
+    payload =
+      typeof providerData === 'string'
+        ? deserializePoll(providerData)
+        : reviveFullPayload(providerData);
+
     if (!payload) {
       throw new Error(`Error deserializing ${this._rootKey}`);
     }
