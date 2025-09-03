@@ -238,6 +238,27 @@ function tryParse(data: string): any {
 }
 
 /**
+ * This function is intended for usage inside LaunchDarkly SDKs.
+ * This function should NOT be used by customer applications.
+ * This function may be changed or removed without a major version.
+ *
+ * @param payload Payload data from launchdarkly.
+ * @returns The revived and processed data.
+ */
+export function reviveFullPayload(payload: Record<string, any>): FlagsAndSegments {
+  const flagsAndSegments = payload as FlagsAndSegments;
+  Object.values(flagsAndSegments?.flags || []).forEach((flag) => {
+    processFlag(flag);
+  });
+
+  Object.values(flagsAndSegments?.segments || []).forEach((segment) => {
+    processSegment(segment);
+  });
+
+  return flagsAndSegments;
+}
+
+/**
  * @internal
  */
 export function deserializeAll(data: string): AllData | undefined {
@@ -253,13 +274,7 @@ export function deserializeAll(data: string): AllData | undefined {
     return undefined;
   }
 
-  Object.values(parsed?.data?.flags || []).forEach((flag) => {
-    processFlag(flag);
-  });
-
-  Object.values(parsed?.data?.segments || []).forEach((segment) => {
-    processSegment(segment);
-  });
+  reviveFullPayload(parsed?.data);
   return parsed;
 }
 
@@ -278,13 +293,7 @@ export function deserializePoll(data: string): FlagsAndSegments | undefined {
     return undefined;
   }
 
-  Object.values(parsed?.flags || []).forEach((flag) => {
-    processFlag(flag);
-  });
-
-  Object.values(parsed?.segments || []).forEach((segment) => {
-    processSegment(segment);
-  });
+  reviveFullPayload(parsed);
   return parsed;
 }
 

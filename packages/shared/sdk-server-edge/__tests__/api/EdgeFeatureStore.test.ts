@@ -18,7 +18,6 @@ describe('EdgeFeatureStore', () => {
   let asyncFeatureStore: AsyncStoreFacade;
 
   beforeEach(() => {
-    mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
     featureStore = new EdgeFeatureStore(mockEdgeProvider, sdkKey, 'MockEdgeProvider', mockLogger);
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
   });
@@ -27,7 +26,11 @@ describe('EdgeFeatureStore', () => {
     jest.resetAllMocks();
   });
 
-  describe('get', () => {
+  describe('get (string payload)', () => {
+    beforeEach(() => {
+      mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
+    });
+
     test('get flag', async () => {
       const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
 
@@ -62,7 +65,83 @@ describe('EdgeFeatureStore', () => {
     });
   });
 
-  describe('all', () => {
+  describe('get (object payload)', () => {
+    beforeEach(() => {
+      mockGet.mockImplementation(() => Promise.resolve(testData));
+    });
+
+    test('get flag', async () => {
+      const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
+
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(flag).toMatchObject(testData.flags.testFlag1);
+    });
+
+    test('invalid flag key', async () => {
+      const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'invalid');
+
+      expect(flag).toBeUndefined();
+    });
+
+    test('get segment', async () => {
+      const segment = await asyncFeatureStore.get({ namespace: 'segments' }, 'testSegment1');
+
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(segment).toMatchObject(testData.segments.testSegment1);
+    });
+
+    test('invalid segment key', async () => {
+      const segment = await asyncFeatureStore.get({ namespace: 'segments' }, 'invalid');
+
+      expect(segment).toBeUndefined();
+    });
+
+    test('invalid kv key', async () => {
+      mockGet.mockImplementation(() => Promise.resolve(null));
+      const flag = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
+
+      expect(flag).toBeNull();
+    });
+  });
+
+  describe('all (string payload)', () => {
+    beforeEach(() => {
+      mockGet.mockImplementation(() => Promise.resolve(JSON.stringify(testData)));
+    });
+
+    test('all flags', async () => {
+      const flags = await asyncFeatureStore.all({ namespace: 'features' });
+
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(flags).toMatchObject(testData.flags);
+    });
+
+    test('all segments', async () => {
+      const segment = await asyncFeatureStore.all({ namespace: 'segments' });
+
+      expect(mockGet).toHaveBeenCalledWith(kvKey);
+      expect(segment).toMatchObject(testData.segments);
+    });
+
+    test('invalid DataKind', async () => {
+      const flag = await asyncFeatureStore.all({ namespace: 'InvalidDataKind' });
+
+      expect(flag).toEqual({});
+    });
+
+    test('invalid kv key', async () => {
+      mockGet.mockImplementation(() => Promise.resolve(null));
+      const segment = await asyncFeatureStore.all({ namespace: 'segments' });
+
+      expect(segment).toEqual({});
+    });
+  });
+
+  describe('all (object payload)', () => {
+    beforeEach(() => {
+      mockGet.mockImplementation(() => Promise.resolve(testData));
+    });
+
     test('all flags', async () => {
       const flags = await asyncFeatureStore.all({ namespace: 'features' });
 

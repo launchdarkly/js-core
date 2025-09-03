@@ -109,8 +109,7 @@ export class LDAIClientImpl implements LDAIClient {
       defaultValue,
     );
 
-    const mapper = new LDAIConfigMapper(model, provider, undefined);
-    const agent: Omit<LDAIAgent, 'toVercelAISDK'> = {
+    const agent: LDAIAgent = {
       tracker,
       enabled,
     };
@@ -131,13 +130,7 @@ export class LDAIClientImpl implements LDAIClient {
       agent.instructions = this._interpolateTemplate(instructions, allVariables);
     }
 
-    return {
-      ...agent,
-      toVercelAISDK: <TMod>(
-        sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-        options?: VercelAISDKMapOptions | undefined,
-      ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(sdkProvider, options),
-    };
+    return agent;
   }
 
   async config(
@@ -146,6 +139,8 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
+    this._ldClient.track('$ld:ai:config:function:single', context, key, 1);
+
     const {
       tracker,
       enabled,
