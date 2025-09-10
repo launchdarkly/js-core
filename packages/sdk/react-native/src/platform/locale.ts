@@ -1,12 +1,15 @@
 import { NativeModules, Platform } from 'react-native';
-
 /**
- * Ripped from:
- * https://dev.to/medaimane/localization-and-internationalization-in-react-native-reaching-global-audiences-3acj
+ * Apps opted into Fabric (the new architecture of React Native) 
+ * may not have access to the SettingsManager.settings.AppleLocale property.
+ * It is now common to use the `getConstants` method to access these constant properties with Fabric enabled apps.
  */
-const locale =
-  Platform.OS === 'ios'
-    ? NativeModules.SettingsManager?.settings?.AppleLocale // iOS
-    : NativeModules.I18nManager?.localeIdentifier;
+const getAppleLocale = () => {
+  const settings = NativeModules.SettingsManager?.settings ?? NativeModules.SettingsManager?.getConstants()?.settings;
+  return settings?.AppleLocale;
+}
 
-export default locale;
+export default Platform.select({
+    ios: getAppleLocale(),
+    android: NativeModules.I18nManager?.localeIdentifier,
+})
