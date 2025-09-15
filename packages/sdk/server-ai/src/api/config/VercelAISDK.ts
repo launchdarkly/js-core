@@ -10,6 +10,7 @@ export interface VercelAISDKConfig<TMod> {
   model: TMod;
   messages?: LDMessage[] | undefined;
   maxTokens?: number | undefined;
+  maxOutputTokens?: number | undefined;
   temperature?: number | undefined;
   topP?: number | undefined;
   topK?: number | undefined;
