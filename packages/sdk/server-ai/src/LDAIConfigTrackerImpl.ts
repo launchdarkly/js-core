@@ -138,7 +138,9 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     TRes extends {
       usage?: {
         totalTokens?: number;
+        inputTokens?: number;
         promptTokens?: number;
+        outputTokens?: number;
         completionTokens?: number;
       };
     },
@@ -161,7 +163,9 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       finishReason?: Promise<string>;
       usage?: Promise<{
         totalTokens?: number;
+        inputTokens?: number;
         promptTokens?: number;
+        outputTokens?: number;
         completionTokens?: number;
       }>;
     },
