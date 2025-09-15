@@ -1,0 +1,46 @@
+{
+  "name": "@launchdarkly/hello-vercel-ai",
+  "version": "0.1.0",
+  "description": "LaunchDarkly AI SDK for Node.js with Vercel AI",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/index.js",
+    "lint": "npx eslint . --ext .ts",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "lint:fix": "yarn run lint --fix",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+  },
+  "keywords": [
+    "launchdarkly",
+    "ai",
+    "llm"
+  ],
+  "author": "LaunchDarkly",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ai-sdk/openai": "2.0.30",
+    "@launchdarkly/node-server-sdk": "9.7.1",
+    "@launchdarkly/server-sdk-ai": "0.11.3",
+    "ai": "5.0.0",
+    "dotenv": "16.5.0",
+    "lodash": "4.17.21",
+    "openai": "4.96.2",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "20.1.4",
+    "@types/lodash": "4.17.16",
+    "@types/node": "22.15.3",
+    "typescript": "5.8.3"
+  },
+  "directories": {
+    "example": "example"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/launchdarkly/js-core"
+  }
+}
