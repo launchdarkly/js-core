@@ -52,6 +52,7 @@ export class LDAIConfigMapper {
       model,
       messages,
       maxTokens: this._findParameter('max_tokens', 'maxTokens'),
+      maxOutputTokens: this._findParameter('max_tokens', 'maxTokens'),
       temperature: this._findParameter('temperature'),
       topP: this._findParameter('top_p', 'topP'),
       topK: this._findParameter('top_k', 'topK'),
