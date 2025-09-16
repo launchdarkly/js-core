@@ -12,18 +12,19 @@ import type { EdgeConfigClient } from '@vercel/edge-config';
 
 import {
   BasicLogger,
-  EdgeFeatureStore,
-  EdgeProvider,
   init as initEdge,
   LDClient,
   LDOptions,
 } from '@launchdarkly/js-server-sdk-common-edge';
 
+import type { EdgeProvider } from './api';
+import { EdgeFeatureStore } from './api';
 import createPlatformInfo from './createPlatformInfo';
 
 export * from '@launchdarkly/js-server-sdk-common-edge';
 
-export type { LDClient };
+export { EdgeFeatureStore };
+export type { EdgeProvider, LDClient };
 
 /**
  * Creates an instance of the Vercel LaunchDarkly client.

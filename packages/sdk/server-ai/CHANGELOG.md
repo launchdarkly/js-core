@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.4](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.3...server-sdk-ai-v0.11.4) (2025-09-15)
+
+
+### Bug Fixes
+
+* Support Vercel v5 AI SDK token usage ([#926](https://github.com/launchdarkly/js-core/issues/926)) ([0d059a4](https://github.com/launchdarkly/js-core/commit/0d059a43050eaaaba84262d5e16cf875ccb409ea))
+
 ## [0.11.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.2...server-sdk-ai-v0.11.3) (2025-08-29)
 
 
