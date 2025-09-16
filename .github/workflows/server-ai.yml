@@ -11,7 +11,7 @@ on:
       - '**.md'
 
 jobs:
-  build-test-node-server-otel:
+  build-test-server-sdk-ai:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { openai } from '@ai-sdk/openai';
 import { generateText, streamText } from 'ai';
+
 import { init, type LDClient, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
@@ -64,6 +65,8 @@ async function main() {
     const streamResult = aiConfig.tracker.trackVercelAISDKStreamTextMetrics(() =>
       streamText(aiConfig.toVercelAISDK(openai)),
     );
+
+    // eslint-disable-next-line no-restricted-syntax
     for await (const textPart of streamResult.textStream) {
       process.stdout.write(textPart);
     }
