@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.11.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.10.5...react-native-client-sdk-v10.11.0) (2025-09-16)
+
+
+### Features
+
+* Update react native async local storage to v2. ([#930](https://github.com/launchdarkly/js-core/issues/930)) ([4888b33](https://github.com/launchdarkly/js-core/commit/4888b33f28cedb22426b13a02697b1c25a2711d1))
+
 ## [10.10.5](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.10.4...react-native-client-sdk-v10.10.5) (2025-07-23)
 
 
