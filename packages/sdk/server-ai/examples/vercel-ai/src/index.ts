@@ -15,11 +15,6 @@ if (!sdkKey) {
   process.exit(1);
 }
 
-if (!aiConfigKey) {
-  console.error('*** Please set the LAUNCHDARKLY_AI_CONFIG_KEY env first');
-  process.exit(1);
-}
-
 let client: LDClient | undefined;
 
 async function main() {
