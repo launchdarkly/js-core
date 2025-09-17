@@ -51,14 +51,19 @@ async function main() {
   // Example of using generateText (non-streaming)
   console.log('\n*** Generating text:');
   try {
+    const userMessage = {
+      role: 'user' as const,
+      content: 'What can you help me with?',
+    };
+
     const result = await aiConfig.tracker.trackVercelAISDKGenerateTextMetrics(() =>
-      generateText(aiConfig.toVercelAISDK(openai)),
+      generateText(aiConfig.toVercelAISDK(openai, { nonInterpolatedMessages: [userMessage] })),
     );
     console.log('Response:', result.text);
 
     process.stdout.write('Streaming Response: ');
     const streamResult = aiConfig.tracker.trackVercelAISDKStreamTextMetrics(() =>
-      streamText(aiConfig.toVercelAISDK(openai)),
+      streamText(aiConfig.toVercelAISDK(openai, { nonInterpolatedMessages: [userMessage] })),
     );
 
     // eslint-disable-next-line no-restricted-syntax
