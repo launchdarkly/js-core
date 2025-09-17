@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.4...server-sdk-ai-v0.12.0) (2025-09-17)
+
+
+### Features
+
+* Add Vercel example for AI SDK ([#927](https://github.com/launchdarkly/js-core/issues/927)) ([f0b9b5d](https://github.com/launchdarkly/js-core/commit/f0b9b5dd2a5ad63c180324a529c2851b1f7523a9))
+
 ## [0.11.4](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.3...server-sdk-ai-v0.11.4) (2025-09-15)
 
 
