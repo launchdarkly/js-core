@@ -1,0 +1,6 @@
+{
+  "preset": "../../tooling/jest/jest-config.js",
+  "displayName": "node-server-sdk-mongodb unit tests",
+  "rootDir": "./",
+  "testMatch": ["<rootDir>/__tests__/**/*.(test|spec).ts"]
+}
