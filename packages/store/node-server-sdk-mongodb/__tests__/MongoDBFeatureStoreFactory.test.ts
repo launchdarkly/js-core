@@ -23,7 +23,7 @@ describe('MongoDBFeatureStoreFactory', () => {
 
     const store = factory(mockContext);
     expect(store).toBeInstanceOf(MongoDBFeatureStore);
-    
+
     store.close();
   });
 
@@ -39,7 +39,7 @@ describe('MongoDBFeatureStoreFactory', () => {
 
     const store = factory(mockContext);
     expect(store).toBeInstanceOf(MongoDBFeatureStore);
-    
+
     store.close();
   });
 
@@ -60,7 +60,7 @@ describe('MongoDBFeatureStoreFactory', () => {
 
     const store = factory(mockContext);
     expect(store).toBeInstanceOf(MongoDBFeatureStore);
-    
+
     store.close();
   });
 
@@ -78,7 +78,7 @@ describe('MongoDBFeatureStoreFactory', () => {
 
     const store = factory(mockContext);
     expect(store).toBeInstanceOf(MongoDBFeatureStore);
-    
+
     store.close();
   });
 });

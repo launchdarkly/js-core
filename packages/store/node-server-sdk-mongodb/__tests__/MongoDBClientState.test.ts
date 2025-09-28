@@ -98,7 +98,7 @@ describe('MongoDBClientState', () => {
       const startTime = Date.now();
       await expect(clientState.getDatabase()).rejects.toThrow();
       const endTime = Date.now();
-      
+
       // Should have retried at least twice with delays
       expect(endTime - startTime).toBeGreaterThan(100);
     }, 10000);
@@ -121,7 +121,7 @@ describe('MongoDBClientState', () => {
       const startTime = Date.now();
       await expect(clientState.getDatabase()).rejects.toThrow();
       const endTime = Date.now();
-      
+
       // Should fail faster with custom settings
       expect(endTime - startTime).toBeLessThan(500);
     }, 5000);

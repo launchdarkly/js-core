@@ -20,10 +20,10 @@ async function clearTestData(prefix?: string): Promise<void> {
   const client = new MongoClient('mongodb://localhost:27017');
   await client.connect();
   const db = client.db(TEST_DATABASE);
-  
+
   const metadataCollectionName = prefix ? `${prefix}${COLLECTION_BIG_SEGMENTS_METADATA}` : COLLECTION_BIG_SEGMENTS_METADATA;
   const userCollectionName = prefix ? `${prefix}${COLLECTION_BIG_SEGMENTS_USER}` : COLLECTION_BIG_SEGMENTS_USER;
-  
+
   await db.collection(metadataCollectionName).deleteMany({});
   await db.collection(userCollectionName).deleteMany({});
   await client.close();
@@ -37,10 +37,10 @@ async function setMetadata(
   const client = new MongoClient('mongodb://localhost:27017');
   await client.connect();
   const db = client.db(TEST_DATABASE);
-  
+
   const metadataCollectionName = prefix ? `${prefix}${COLLECTION_BIG_SEGMENTS_METADATA}` : COLLECTION_BIG_SEGMENTS_METADATA;
   const metadataCollection = db.collection(metadataCollectionName);
-  
+
   if (metadata.lastUpToDate) {
     await metadataCollection.replaceOne(
       { _id: METADATA_KEY },
@@ -48,7 +48,7 @@ async function setMetadata(
       { upsert: true }
     );
   }
-  
+
   await client.close();
 }
 
@@ -62,26 +62,26 @@ async function setSegments(
   const client = new MongoClient('mongodb://localhost:27017');
   await client.connect();
   const db = client.db(TEST_DATABASE);
-  
+
   const userCollectionName = prefix ? `${prefix}${COLLECTION_BIG_SEGMENTS_USER}` : COLLECTION_BIG_SEGMENTS_USER;
   const userCollection = db.collection(userCollectionName);
-  
+
   const userData: any = { [FIELD_USER_HASH]: userHashKey };
-  
+
   if (included.length > 0) {
     userData[FIELD_INCLUDED] = included;
   }
-  
+
   if (excluded.length > 0) {
     userData[FIELD_EXCLUDED] = excluded;
   }
-  
+
   await userCollection.replaceOne(
     { [FIELD_USER_HASH]: userHashKey },
     userData,
     { upsert: true }
   );
-  
+
   await client.close();
 }
 
@@ -153,10 +153,10 @@ describe.each([undefined, 'app1_'])('MongoDB big segment store', (prefixParam) =
       const client = new MongoClient('mongodb://localhost:27017');
       await client.connect();
       const db = client.db(TEST_DATABASE);
-      
+
       const userCollectionName = prefix ? `${prefix}${COLLECTION_BIG_SEGMENTS_USER}` : COLLECTION_BIG_SEGMENTS_USER;
       const userCollection = db.collection(userCollectionName);
-      
+
       await userCollection.insertOne({ [FIELD_USER_HASH]: FAKE_HASH });
       await client.close();
 
@@ -229,7 +229,7 @@ describe.each([undefined, 'app1_'])('MongoDB big segment store', (prefixParam) =
       // Should work with default localhost URI
       const meta = await defaultStore.getMetadata();
       expect(meta).toEqual({});
-      
+
       defaultStore.close();
     });
 
@@ -241,7 +241,7 @@ describe.each([undefined, 'app1_'])('MongoDB big segment store', (prefixParam) =
       // This will use the default 'launchdarkly' database
       const meta = await defaultDbStore.getMetadata();
       expect(meta).toEqual({});
-      
+
       defaultDbStore.close();
     });
   });

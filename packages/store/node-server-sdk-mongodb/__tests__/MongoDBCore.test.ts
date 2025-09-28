@@ -135,7 +135,7 @@ describe('MongoDBCore', () => {
           core.getAll(mockDataKind, (results) => {
             expect(results).toBeDefined();
             expect(results!.length).toBe(2);
-            
+
             const resultMap = new Map(results!.map(r => [r.key, r.item]));
             expect(resultMap.get('key1')).toEqual(item1);
             expect(resultMap.get('key2')).toEqual(item2);

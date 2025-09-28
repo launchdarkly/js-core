@@ -16,10 +16,10 @@ import TtlFromOptions from './TtlFromOptions';
 
 /**
  * Integration between the LaunchDarkly SDK and MongoDB.
- * 
+ *
  * This feature store implementation stores LaunchDarkly feature flags and segments
  * in MongoDB collections, providing persistent storage for your feature flag data.
- * 
+ *
  * Features:
  * - Automatic collection management based on data kinds (features, segments, etc.)
  * - Optimistic concurrency control using version numbers
@@ -32,7 +32,7 @@ export default class MongoDBFeatureStore implements LDFeatureStore {
 
   /**
    * Creates a new MongoDB feature store.
-   * 
+   *
    * @param options MongoDB configuration options
    * @param logger Optional logger instance
    */

@@ -15,14 +15,14 @@ async function clearTestData(prefix?: string): Promise<void> {
   const client = new MongoClient('mongodb://localhost:27017');
   await client.connect();
   const db = client.db(TEST_DATABASE);
-  
+
   const collections = ['features', 'segments', 'initialized'];
-  
+
   for (const collectionName of collections) {
     const actualCollectionName = prefix ? `${prefix}${collectionName}` : collectionName;
     await db.collection(actualCollectionName).deleteMany({});
   }
-  
+
   await client.close();
 }
 
@@ -202,7 +202,7 @@ describe.each([undefined, 'testing_'])('MongoDB Feature Store', (prefixParam) =>
       const ver1 = { key: feature1.key, version: feature1.version + 1 };
       const ver2 = { key: feature1.key, version: feature1.version + 2 };
       const promises: Promise<any>[] = [];
-      
+
       // Deliberately do not wait for the first upsert to complete before starting the second,
       // so their operations will be interleaved unless we're correctly handling version conflicts
       promises.push(facade.upsert(dataKind.features, ver2));
@@ -296,7 +296,7 @@ describe.each([undefined, 'testing_'])('MongoDB Feature Store', (prefixParam) =>
 
     it('respects cache TTL setting', async () => {
       const feature = { key: 'cached_feature', version: 1 };
-      
+
       await facade.init({
         features: { cached_feature: feature },
         segments: {},

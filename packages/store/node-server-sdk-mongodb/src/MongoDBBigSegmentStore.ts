@@ -40,7 +40,7 @@ export const FIELD_EXCLUDED = 'excluded';
 
 /**
  * A MongoDB implementation of the LaunchDarkly BigSegmentStore interface.
- * 
+ *
  * This store manages big segment data in MongoDB collections. It uses two collections:
  * - One for metadata about when the big segments were last synchronized
  * - One for user membership data (which segments include/exclude specific users)
@@ -50,7 +50,7 @@ export default class MongoDBBigSegmentStore implements interfaces.BigSegmentStor
 
   /**
    * Creates a new MongoDB big segment store.
-   * 
+   *
    * @param options Optional MongoDB configuration options
    * @param _logger Optional logger instance (reserved for future use)
    */
@@ -60,19 +60,19 @@ export default class MongoDBBigSegmentStore implements interfaces.BigSegmentStor
 
   /**
    * Retrieves metadata about the big segments store, specifically the last update timestamp.
-   * 
+   *
    * @returns Promise resolving to metadata object containing lastUpToDate timestamp, or empty object if no metadata exists
    */
   async getMetadata(): Promise<interfaces.BigSegmentStoreMetadata | undefined> {
     try {
       const metadataCollection = await this._state.getCollection(COLLECTION_BIG_SEGMENTS_METADATA);
-      
+
       const metadata = await metadataCollection.findOne({ _id: METADATA_KEY });
-      
+
       if (metadata && metadata[FIELD_LAST_UP_TO_DATE]) {
         return { lastUpToDate: metadata[FIELD_LAST_UP_TO_DATE] };
       }
-      
+
       return {};
     } catch (error) {
       this._logger?.error(`MongoDB big segment store getMetadata error: ${error}`);
@@ -82,7 +82,7 @@ export default class MongoDBBigSegmentStore implements interfaces.BigSegmentStor
 
   /**
    * Retrieves the big segment membership information for a specific user.
-   * 
+   *
    * @param userHash The hashed user key to look up
    * @returns Promise resolving to membership object (segment refs mapped to boolean inclusion status), or undefined if user not found
    */
@@ -91,22 +91,22 @@ export default class MongoDBBigSegmentStore implements interfaces.BigSegmentStor
   ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
     try {
       const userCollection = await this._state.getCollection(COLLECTION_BIG_SEGMENTS_USER);
-      
+
       const userData = await userCollection.findOne({ [FIELD_USER_HASH]: userHash });
-      
+
       if (!userData) {
         return undefined;
       }
 
       const membership: interfaces.BigSegmentStoreMembership = {};
-      
+
       // Process excluded segment references
       if (userData[FIELD_EXCLUDED] && Array.isArray(userData[FIELD_EXCLUDED])) {
         userData[FIELD_EXCLUDED].forEach((segmentRef: string) => {
           membership[segmentRef] = false;
         });
       }
-      
+
       // Process included segment references
       if (userData[FIELD_INCLUDED] && Array.isArray(userData[FIELD_INCLUDED])) {
         userData[FIELD_INCLUDED].forEach((segmentRef: string) => {

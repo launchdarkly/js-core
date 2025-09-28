@@ -63,12 +63,12 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
     try {
       // Read existing items for all namespaces to determine what to delete
       const existingItems = new Set<string>();
-      
+
       for (const collection of allData) {
         const { namespace } = collection.key;
         const mongoCollection = await this._state.getCollection(namespace);
         const existingDocs = await mongoCollection.find({}, { projection: { _id: 1 } }).toArray();
-        
+
         for (const doc of existingDocs) {
           existingItems.add(`${namespace}:${doc._id}`);
         }
@@ -76,7 +76,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
 
       // Process new data and mark items that should remain
       const itemsToKeep = new Set<string>();
-      
+
       for (const collection of allData) {
         const { namespace } = collection.key;
         const items = collection.item;
@@ -120,7 +120,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
       for (const collection of allData) {
         const { namespace } = collection.key;
         const mongoCollection = await this._state.getCollection(namespace);
-        
+
         const itemsToDelete: string[] = [];
         for (const existingItem of existingItems) {
           if (existingItem.startsWith(`${namespace}:`) && !itemsToKeep.has(existingItem)) {
@@ -144,7 +144,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
     } catch (error) {
       this._logger?.error(`Error initializing MongoDB store: ${error}`);
     }
-    
+
     callback();
   }
 

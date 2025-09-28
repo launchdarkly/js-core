@@ -22,7 +22,7 @@ describe('MongoDBBigSegmentStoreFactory', () => {
 
     const store = factory(mockContext);
     expect(store).toBeInstanceOf(MongoDBBigSegmentStore);
-    
+
     store.close();
   });
 
@@ -38,7 +38,7 @@ describe('MongoDBBigSegmentStoreFactory', () => {
 
     const store = factory(mockContext);
     expect(store).toBeInstanceOf(MongoDBBigSegmentStore);
-    
+
     store.close();
   });
 
@@ -59,7 +59,7 @@ describe('MongoDBBigSegmentStoreFactory', () => {
 
     const store = factory(mockContext);
     expect(store).toBeInstanceOf(MongoDBBigSegmentStore);
-    
+
     store.close();
   });
 });

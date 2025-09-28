@@ -63,7 +63,7 @@ const client = init('YOUR_SDK_KEY', {
     database: 'launchdarkly',
     prefix: 'ld_'
   }),
-  // Use MongoDB for big segments  
+  // Use MongoDB for big segments
   bigSegments: {
     store: MongoDBBigSegmentStore({
       uri: 'mongodb://localhost:27017',
@@ -181,7 +181,7 @@ const client = ld.init('YOUR_SDK_KEY', {
 The MongoDB big segment store includes built-in error handling and retry logic:
 
 - **Connection errors**: Automatic retry with exponential backoff
-- **Network timeouts**: Configurable timeout and retry settings  
+- **Network timeouts**: Configurable timeout and retry settings
 - **Transient errors**: Automatic retry for temporary MongoDB issues
 - **Connection pooling**: Efficient connection reuse
 
