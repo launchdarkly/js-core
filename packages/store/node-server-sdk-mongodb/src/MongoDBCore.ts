@@ -5,6 +5,26 @@ import MongoDBClientState from './MongoDBClientState';
 /**
  * @internal
  */
+interface FeatureDocument {
+  _id: string;
+  namespace: string;
+  version: number;
+  item?: string;
+  deleted?: boolean;
+}
+
+/**
+ * @internal
+ */
+interface InitializedDocument {
+  _id: string;
+  initialized: boolean;
+  timestamp: Date;
+}
+
+/**
+ * @internal
+ */
 export const COLLECTION_FEATURES = 'features';
 
 /**
@@ -66,7 +86,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
 
       for (const collection of allData) {
         const { namespace } = collection.key;
-        const mongoCollection = await this._state.getCollection(namespace);
+        const mongoCollection = await this._state.getCollection<FeatureDocument>(namespace);
         const existingDocs = await mongoCollection.find({}, { projection: { _id: 1 } }).toArray();
 
         for (const doc of existingDocs) {
@@ -80,7 +100,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
       for (const collection of allData) {
         const { namespace } = collection.key;
         const items = collection.item;
-        const mongoCollection = await this._state.getCollection(namespace);
+        const mongoCollection = await this._state.getCollection<FeatureDocument>(namespace);
 
         // Prepare bulk operations for this namespace
         const bulkOps: any[] = [];
@@ -89,11 +109,11 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
           const itemKey = `${namespace}:${keyedItem.key}`;
           itemsToKeep.add(itemKey);
 
-          const doc: any = {
-            _id: keyedItem.key,
-            namespace,
-            version: keyedItem.item.version,
-          };
+        const doc: FeatureDocument = {
+          _id: keyedItem.key,
+          namespace,
+          version: keyedItem.item.version,
+        };
 
           if (keyedItem.item.deleted) {
             doc.deleted = true;
@@ -119,7 +139,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
       // Delete items that are no longer present in the new data
       for (const collection of allData) {
         const { namespace } = collection.key;
-        const mongoCollection = await this._state.getCollection(namespace);
+        const mongoCollection = await this._state.getCollection<FeatureDocument>(namespace);
 
         const itemsToDelete: string[] = [];
         for (const existingItem of existingItems) {
@@ -134,10 +154,10 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
       }
 
       // Set the initialized flag
-      const initCollection = await this._state.getCollection(COLLECTION_INITIALIZED);
+      const initCollection = await this._state.getCollection<InitializedDocument>(COLLECTION_INITIALIZED);
       await initCollection.replaceOne(
         { _id: this._initedKey },
-        { _id: this._initedKey, initialized: true, timestamp: new Date() },
+        { initialized: true, timestamp: new Date() } as any,
         { upsert: true }
       );
 
@@ -154,7 +174,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
     callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
   ): Promise<void> {
     try {
-      const collection = await this._state.getCollection(kind.namespace);
+      const collection = await this._state.getCollection<FeatureDocument>(kind.namespace);
       const doc = await collection.findOne({ _id: key });
 
       if (doc) {
@@ -180,7 +200,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
     ) => void,
   ): Promise<void> {
     try {
-      const collection = await this._state.getCollection(kind.namespace);
+      const collection = await this._state.getCollection<FeatureDocument>(kind.namespace);
       const docs = await collection.find({ deleted: { $ne: true } }).toArray();
 
       const results: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] = [];
@@ -213,9 +233,9 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
     ) => void,
   ): Promise<void> {
     try {
-      const collection = await this._state.getCollection(kind.namespace);
+      const collection = await this._state.getCollection<FeatureDocument>(kind.namespace);
 
-      const doc: any = {
+      const doc: FeatureDocument = {
         _id: key,
         namespace: kind.namespace,
         version: descriptor.version,
@@ -256,7 +276,7 @@ export default class MongoDBCore implements interfaces.PersistentDataStore {
 
   async initialized(callback: (isInitialized: boolean) => void): Promise<void> {
     try {
-      const collection = await this._state.getCollection(COLLECTION_INITIALIZED);
+      const collection = await this._state.getCollection<InitializedDocument>(COLLECTION_INITIALIZED);
       const doc = await collection.findOne({ _id: this._initedKey });
       callback(!!doc?.initialized);
     } catch (error) {

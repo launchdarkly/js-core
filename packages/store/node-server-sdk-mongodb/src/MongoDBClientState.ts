@@ -1,4 +1,4 @@
-import { Collection, Db, MongoClient, MongoServerError } from 'mongodb';
+import { Collection, Db, Document, MongoClient, MongoServerError } from 'mongodb';
 
 import LDMongoDBOptions from './LDMongoDBOptions';
 
@@ -45,7 +45,7 @@ export default class MongoDBClientState {
   /**
    * Gets a MongoDB collection by name.
    */
-  public async getCollection<T = any>(name: string): Promise<Collection<T>> {
+  public async getCollection<T extends Document = Document>(name: string): Promise<Collection<T>> {
     const db = await this.getDatabase();
     return db.collection<T>(this.prefixedCollection(name));
   }

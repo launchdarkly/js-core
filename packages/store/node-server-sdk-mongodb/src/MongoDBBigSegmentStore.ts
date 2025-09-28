@@ -6,6 +6,24 @@ import MongoDBClientState from './MongoDBClientState';
 /**
  * @internal
  */
+interface MetadataDocument {
+  _id: string;
+  [FIELD_LAST_UP_TO_DATE]?: number;
+}
+
+/**
+ * @internal
+ */
+interface UserDocument {
+  _id?: string;
+  [FIELD_USER_HASH]: string;
+  [FIELD_INCLUDED]?: string[];
+  [FIELD_EXCLUDED]?: string[];
+}
+
+/**
+ * @internal
+ */
 export const COLLECTION_BIG_SEGMENTS_METADATA = 'big_segments_metadata';
 
 /**
@@ -65,14 +83,14 @@ export default class MongoDBBigSegmentStore implements interfaces.BigSegmentStor
    */
   async getMetadata(): Promise<interfaces.BigSegmentStoreMetadata | undefined> {
     try {
-      const metadataCollection = await this._state.getCollection(COLLECTION_BIG_SEGMENTS_METADATA);
-
+      const metadataCollection = await this._state.getCollection<MetadataDocument>(COLLECTION_BIG_SEGMENTS_METADATA);
+      
       const metadata = await metadataCollection.findOne({ _id: METADATA_KEY });
-
+      
       if (metadata && metadata[FIELD_LAST_UP_TO_DATE]) {
         return { lastUpToDate: metadata[FIELD_LAST_UP_TO_DATE] };
       }
-
+      
       return {};
     } catch (error) {
       this._logger?.error(`MongoDB big segment store getMetadata error: ${error}`);
@@ -90,23 +108,23 @@ export default class MongoDBBigSegmentStore implements interfaces.BigSegmentStor
     userHash: string,
   ): Promise<interfaces.BigSegmentStoreMembership | undefined> {
     try {
-      const userCollection = await this._state.getCollection(COLLECTION_BIG_SEGMENTS_USER);
-
+      const userCollection = await this._state.getCollection<UserDocument>(COLLECTION_BIG_SEGMENTS_USER);
+      
       const userData = await userCollection.findOne({ [FIELD_USER_HASH]: userHash });
-
+      
       if (!userData) {
         return undefined;
       }
 
       const membership: interfaces.BigSegmentStoreMembership = {};
-
+      
       // Process excluded segment references
       if (userData[FIELD_EXCLUDED] && Array.isArray(userData[FIELD_EXCLUDED])) {
         userData[FIELD_EXCLUDED].forEach((segmentRef: string) => {
           membership[segmentRef] = false;
         });
       }
-
+      
       // Process included segment references
       if (userData[FIELD_INCLUDED] && Array.isArray(userData[FIELD_INCLUDED])) {
         userData[FIELD_INCLUDED].forEach((segmentRef: string) => {
