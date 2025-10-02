@@ -1,5 +1,10 @@
 {
   "packages": {
+    "packages/ai-providers/server-ai-langchain": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0-alpha.0",
+      "prerelease": true
+    },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {},
     "packages/shared/sdk-server": {},
