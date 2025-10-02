@@ -1,0 +1,24 @@
+{
+  "name": "langchain-chat-example",
+  "version": "1.0.0",
+  "description": "Example demonstrating LaunchDarkly AI SDK with LangChain",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/index.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.78",
+    "@langchain/google-genai": "^0.2.18",
+    "@launchdarkly/node-server-sdk": "^9.0.0",
+    "@launchdarkly/server-sdk-ai": "0.11.4",
+    "@launchdarkly/server-sdk-ai-langchain": "0.1.0",
+    "dotenv": "^16.0.0",
+    "langchain": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
