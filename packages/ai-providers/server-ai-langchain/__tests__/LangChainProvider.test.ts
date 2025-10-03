@@ -1,6 +1,11 @@
-import { AIMessage, HumanMessage, SystemMessage } from 'langchain/schema';
+import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 
 import { LangChainProvider } from '../src/LangChainProvider';
+
+// Mock LangChain dependencies
+jest.mock('langchain/chat_models/universal', () => ({
+  initChatModel: jest.fn(),
+}));
 
 describe('LangChainProvider', () => {
   describe('convertMessagesToLangChain', () => {
@@ -49,7 +54,7 @@ describe('LangChainProvider', () => {
       const messages = [{ role: 'unknown' as any, content: 'Test message' }];
 
       expect(() => LangChainProvider.convertMessagesToLangChain(messages)).toThrow(
-        'Unsupported message role: unknown'
+        'Unsupported message role: unknown',
       );
     });
 
@@ -57,6 +62,55 @@ describe('LangChainProvider', () => {
       const result = LangChainProvider.convertMessagesToLangChain([]);
 
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe('createAIMetrics', () => {
+    it('creates metrics with success=true and token usage', () => {
+      const mockResponse = new AIMessage('Test response');
+      mockResponse.response_metadata = {
+        tokenUsage: {
+          totalTokens: 100,
+          promptTokens: 50,
+          completionTokens: 50,
+        },
+      };
+
+      const result = LangChainProvider.createAIMetrics(mockResponse);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 50,
+          output: 50,
+        },
+      });
+    });
+
+    it('creates metrics with success=true and no usage when metadata is missing', () => {
+      const mockResponse = new AIMessage('Test response');
+
+      const result = LangChainProvider.createAIMetrics(mockResponse);
+
+      expect(result).toEqual({
+        success: true,
+        usage: undefined,
+      });
+    });
+  });
+
+  describe('mapProvider', () => {
+    it('maps gemini to google-genai', () => {
+      expect(LangChainProvider.mapProvider('gemini')).toBe('google-genai');
+      expect(LangChainProvider.mapProvider('Gemini')).toBe('google-genai');
+      expect(LangChainProvider.mapProvider('GEMINI')).toBe('google-genai');
+    });
+
+    it('returns provider name unchanged for unmapped providers', () => {
+      expect(LangChainProvider.mapProvider('openai')).toBe('openai');
+      expect(LangChainProvider.mapProvider('anthropic')).toBe('anthropic');
+      expect(LangChainProvider.mapProvider('unknown')).toBe('unknown');
     });
   });
 });

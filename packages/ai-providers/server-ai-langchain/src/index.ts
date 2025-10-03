@@ -7,5 +7,4 @@
  * @packageDocumentation
  */
 
-export * from './LangChainTrackedChat';
 export * from './LangChainProvider';
