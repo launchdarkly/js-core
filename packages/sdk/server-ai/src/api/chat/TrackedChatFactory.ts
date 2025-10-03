@@ -1,6 +1,7 @@
 import { LDAIConfig } from '../config/LDAIConfig';
 import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
-import { BaseTrackedChat } from './BaseTrackedChat';
+import { AIProvider } from '../providers/AIProvider';
+import { TrackedChat } from './TrackedChat';
 
 /**
  * Factory for creating TrackedChat instances based on the provider configuration.
@@ -14,54 +15,51 @@ export class TrackedChatFactory {
   static async create(
     aiConfig: LDAIConfig,
     tracker: LDAIConfigTracker,
-  ): Promise<BaseTrackedChat | undefined> {
+  ): Promise<TrackedChat | undefined> {
+    const provider = await this._createAIProvider(aiConfig);
+    if (!provider) {
+      return undefined;
+    }
+
+    return new TrackedChat(aiConfig, tracker, provider);
+  }
+
+  /**
+   * Create an AIProvider instance based on the AI configuration.
+   * This method attempts to load provider-specific implementations dynamically.
+   */
+  private static async _createAIProvider(aiConfig: LDAIConfig): Promise<AIProvider | undefined> {
     const providerName = aiConfig.provider?.name?.toLowerCase();
-    let trackedChat: BaseTrackedChat | undefined;
 
     // Try specific implementations for the provider
     switch (providerName) {
       case 'openai':
-        trackedChat = undefined;
-        break;
+        // TODO: Return OpenAI AIProvider implementation when available
+        return undefined;
       case 'bedrock':
-        trackedChat = undefined;
-        break;
+        // TODO: Return Bedrock AIProvider implementation when available
+        return undefined;
       default:
-        trackedChat = undefined;
+        // Try LangChain as fallback
+        return this._createLangChainProvider(aiConfig);
     }
-
-    // If no specific implementation worked, try LangChain as fallback
-    if (!trackedChat) {
-      trackedChat = await this._createLangChainTrackedChat(aiConfig, tracker);
-    }
-
-    // If LangChain didn't work, try Vercel as fallback
-    if (!trackedChat) {
-      // TODO: Return Vercel AI SDK implementation when available
-      // trackedChat = this._createVercelTrackedChat(aiConfig, tracker);
-    }
-
-    return trackedChat;
   }
 
   /**
-   * Create a LangChain TrackedChat instance if the LangChain provider is available.
+   * Create a LangChain AIProvider instance if the LangChain provider is available.
    */
-  private static async _createLangChainTrackedChat(
+  private static async _createLangChainProvider(
     aiConfig: LDAIConfig,
-    tracker: LDAIConfigTracker,
-  ): Promise<BaseTrackedChat | undefined> {
+  ): Promise<AIProvider | undefined> {
     try {
       // Try to dynamically import the LangChain provider
       // This will work if @launchdarkly/server-sdk-ai-langchain is installed
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, import/no-extraneous-dependencies
-      const { LangChainTrackedChat, LangChainProvider } = require('@launchdarkly/server-sdk-ai-langchain');
+      // eslint-disable-next-line import/no-extraneous-dependencies, global-require
+      const { LangChainProvider } = require('@launchdarkly/server-sdk-ai-langchain');
 
-      // Build the LLM during factory creation to catch errors early
-      const llm = await LangChainProvider.createLangChainModel(aiConfig);
-      return new LangChainTrackedChat(aiConfig, tracker, llm);
+      return LangChainProvider.create(aiConfig);
     } catch (error) {
-      // If the LangChain provider is not available or LLM creation fails, return undefined
+      // If the LangChain provider is not available or creation fails, return undefined
       return undefined;
     }
   }

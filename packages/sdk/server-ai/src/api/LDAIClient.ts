@@ -1,7 +1,7 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './agents';
-import { BaseTrackedChat } from './chat';
+import { TrackedChat } from './chat';
 import { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
 
 /**
@@ -186,5 +186,5 @@ export interface LDAIClient {
     context: LDContext,
     defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
-  ): Promise<BaseTrackedChat | undefined>;
+  ): Promise<TrackedChat | undefined>;
 }

@@ -1,0 +1,35 @@
+import { ChatResponse } from '../chat/types';
+import { LDAIConfig, LDMessage } from '../config/LDAIConfig';
+
+/**
+ * Abstract base class for AI providers that implement chat model functionality.
+ * This class provides the contract that all provider implementations must follow
+ * to integrate with LaunchDarkly's tracking and configuration capabilities.
+ *
+ * Following the AICHAT spec recommendation to use base classes with non-abstract methods
+ * for better extensibility and backwards compatibility.
+ */
+export abstract class AIProvider {
+  /**
+   * Invoke the chat model with an array of messages.
+   * This method should convert messages to provider format, invoke the model,
+   * and return a ChatResponse with the result and metrics.
+   *
+   * @param messages Array of LDMessage objects representing the conversation
+   * @returns Promise that resolves to a ChatResponse containing the model's response
+   */
+  abstract invokeModel(messages: LDMessage[]): Promise<ChatResponse>;
+
+  /**
+   * Static method that constructs an instance of the provider.
+   * Each provider implementation must provide their own static create method
+   * that accepts an AIConfig and returns a configured instance.
+   *
+   * @param aiConfig The LaunchDarkly AI configuration
+   * @returns Promise that resolves to a configured provider instance
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static async create(aiConfig: LDAIConfig): Promise<AIProvider> {
+    throw new Error('Provider implementations must override the static create method');
+  }
+}
