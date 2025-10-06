@@ -11,7 +11,7 @@ on:
       - '**.md'
 
 jobs:
-  build-test-node-server-otel:
+  build-test-server-sdk-ai:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,3 +35,8 @@ jobs:
           yarn workspaces focus @launchdarkly/hello-openai
           yarn workspace @launchdarkly/hello-openai lint
           yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-openai' run build
+      - name: Build Vercel AI example
+        run: |
+          yarn workspaces focus @launchdarkly/hello-vercel-ai
+          yarn workspace @launchdarkly/hello-vercel-ai lint
+          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-vercel-ai' run build
