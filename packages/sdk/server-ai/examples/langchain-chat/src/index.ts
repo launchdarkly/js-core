@@ -13,7 +13,7 @@ if (!sdkKey) {
 }
 
 // Initialize LaunchDarkly client
-const ldClient = init(sdkKey, { eventsUri: 'https://fd9486c18583.ngrok-free.app' });
+const ldClient = init(sdkKey);
 
 // Set up the context properties. This context should appear on your LaunchDarkly contexts dashboard
 // soon after you run the demo.

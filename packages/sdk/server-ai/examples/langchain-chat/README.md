@@ -5,8 +5,8 @@ This example demonstrates how to use the LaunchDarkly AI SDK with LangChain for 
 ## Prerequisites
 
 1. A LaunchDarkly account and SDK key
-2. An OpenAI API key (for the LangChain integration)
-3. Node.js 16 or later
+1. An OpenAI API key (for the LangChain integration)
+1. Node.js 16 or later
 
 ## Setup
 
@@ -15,7 +15,7 @@ This example demonstrates how to use the LaunchDarkly AI SDK with LangChain for 
    yarn install
    ```
 
-2. Set up environment variables:
+1. Set up environment variables:
    ```bash
    cp .env.example .env
    ```
@@ -27,7 +27,7 @@ This example demonstrates how to use the LaunchDarkly AI SDK with LangChain for 
    LAUNCHDARKLY_AI_CONFIG_KEY=sample-ai-chat-config
    ```
 
-3. Create an AI Config in LaunchDarkly with the key `sample-ai-config`:
+1. Create an AI Config in LaunchDarkly with the key `sample-ai-config`:
    ```json
    {
      "_ldMeta": {
@@ -62,10 +62,10 @@ yarn start
 
 This will:
 1. Initialize the LaunchDarkly client
-2. Create a chat configuration using the AI Config
-3. Send a message to the AI and display the response
-4. Continue the conversation with a follow-up question
-5. Automatically track interaction metrics (duration, tokens, success/error)
+1. Create a chat configuration using the AI Config
+1. Send a message to the AI and display the response
+1. Continue the conversation with a follow-up question
+1. Automatically track interaction metrics (duration, tokens, success/error)
 
 ## Features Demonstrated
 
