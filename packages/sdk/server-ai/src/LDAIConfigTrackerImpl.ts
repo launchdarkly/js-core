@@ -92,27 +92,31 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     metricsExtractor: (result: TRes) => LDAIMetrics,
     func: () => Promise<TRes>,
   ): Promise<TRes> {
+    let result: TRes;
+
     try {
-      const result = await this.trackDurationOf(func);
-      const metrics = metricsExtractor(result);
-
-      // Track success/error based on metrics
-      if (metrics.success) {
-        this.trackSuccess();
-      } else {
-        this.trackError();
-      }
-
-      // Track token usage if available
-      if (metrics.usage) {
-        this.trackTokens(metrics.usage);
-      }
-
-      return result;
+      result = await this.trackDurationOf(func);
     } catch (err) {
       this.trackError();
       throw err;
     }
+
+    // Extract metrics after successful AI call
+    const metrics = metricsExtractor(result);
+
+    // Track success/error based on metrics
+    if (metrics.success) {
+      this.trackSuccess();
+    } else {
+      this.trackError();
+    }
+
+    // Track token usage if available
+    if (metrics.usage) {
+      this.trackTokens(metrics.usage);
+    }
+
+    return result;
   }
 
   async trackOpenAIMetrics<
