@@ -17,7 +17,7 @@ export class TrackedChat {
     protected readonly tracker: LDAIConfigTracker,
     protected readonly provider: AIProvider,
   ) {
-    this.messages = aiConfig.messages || [];
+    this.messages = [];
   }
 
   /**
@@ -32,10 +32,14 @@ export class TrackedChat {
     };
     this.messages.push(userMessage);
 
+    // Prepend config messages to conversation history for model invocation
+    const configMessages = this.aiConfig.messages || [];
+    const allMessages = [...configMessages, ...this.messages];
+
     // Delegate to provider-specific implementation with tracking
     const response = await this.tracker.trackMetricsOf(
       (result: ChatResponse) => result.metrics,
-      () => this.provider.invokeModel(this.messages),
+      () => this.provider.invokeModel(allMessages),
     );
 
     // Add the assistant response to the conversation history
@@ -64,5 +68,33 @@ export class TrackedChat {
    */
   getProvider(): AIProvider {
     return this.provider;
+  }
+
+  /**
+   * Append messages to the conversation history.
+   * Adds messages to the conversation history without invoking the model,
+   * which is useful for managing multi-turn conversations or injecting context.
+   *
+   * @param messages Array of messages to append to the conversation history
+   */
+  appendMessages(messages: LDMessage[]): void {
+    this.messages.push(...messages);
+  }
+
+  /**
+   * Get all messages in the conversation history.
+   *
+   * @param includeConfigMessages Whether to include the config messages from the AIConfig.
+   *                              Defaults to false.
+   * @returns Array of messages. When includeConfigMessages is true, returns both config
+   *          messages and conversation history with config messages prepended. When false,
+   *          returns only the conversation history messages.
+   */
+  getMessages(includeConfigMessages: boolean = false): LDMessage[] {
+    if (includeConfigMessages) {
+      const configMessages = this.aiConfig.messages || [];
+      return [...configMessages, ...this.messages];
+    }
+    return [...this.messages];
   }
 }
