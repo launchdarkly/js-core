@@ -1,0 +1,22 @@
+name = "cloudflare-ai-example"
+main = "dist/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespaces for LaunchDarkly data
+# Make sure this ID matches the namespace in your LaunchDarkly Cloudflare KV integration
+kv_namespaces = kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREVIEW_KV_ID" }]
+
+# Replace with your LaunchDarkly client-side ID
+[vars]
+LD_CLIENT_ID = "LD_CLIENT_ID"
+
+# Cloudflare AI binding
+[ai]
+binding = "AI"
+
+[build]
+command = "npx tsc"
+
+[observability]
+enabled = true

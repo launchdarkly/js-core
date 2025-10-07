@@ -1,0 +1,20 @@
+{
+  "name": "cloudflare-ai-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@launchdarkly/cloudflare-server-sdk": "workspace:*",
+    "@launchdarkly/cloudflare-server-sdk-ai": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230321.0",
+    "typescript": "^5.1.6",
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "module": "ES6",
+    "target": "ES2017",
+    "lib": ["es2020"],
+    "types": ["@cloudflare/workers-types", "jest", "node"],
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "stripInternal": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+
