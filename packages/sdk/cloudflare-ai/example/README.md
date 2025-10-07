@@ -1,6 +1,6 @@
-# Cloudflare Workers AI + LaunchDarkly Example
+# Cloudflare Workers AI + LaunchDarkly: Random Joke Example
 
-This example demonstrates using LaunchDarkly AI Configs with Cloudflare Workers AI to generate jokes dynamically.
+This example shows how to use LaunchDarkly AI Configs with Cloudflare Workers AI to generate a random joke when you curl the endpoint with a user ID.
 
 ## Prerequisites
 
@@ -72,77 +72,33 @@ LD_CLIENT_ID = "LD_CLIENT_ID"
 binding = "AI"
 ```
 
-### 4. Create LaunchDarkly AI Config
+### 4. Create LaunchDarkly AI Config (Random Joke)
 
-In your LaunchDarkly dashboard, create an AI Config that will control your Cloudflare Workers AI model. Follow the [official LaunchDarkly documentation](https://launchdarkly.com/docs/home/ai-configs/create) for creating AI Configs.
+Create an AI Config that the worker will use to generate a random joke.
 
-#### Step 1: Add a Custom Model for Cloudflare Workers AI
+1) In LaunchDarkly, go to **AI Configs → Create AI Config**
+- **Key**: `random-joke` (required — the worker uses this key)
+- Click **Create AI Config**
 
-Since Cloudflare Workers AI models are not yet built into LaunchDarkly's model list, you'll need to add a custom model first.
+2) Choose a Cloudflare model
+- You can use any model from Cloudflare's list. If it's not pre-listed in LaunchDarkly, add a custom model:
+  - Go to **Project settings → AI model configs → Add custom model**
+  - **Model ID**: paste a Workers AI model ID (e.g. `@cf/meta/llama-3.1-8b-instruct-fast`)
+  - **Provider**: `Cloudflare Workers AI` (or Custom)
+  - Save
 
-1. **Navigate to Project Settings**
-   - Go to https://app.launchdarkly.com
-   - Click your project dropdown
-   - Select **Project settings**
-   - Select **AI model configs**
+3) Set parameters (optional but recommended)
+- `temperature`: `0.7` to `0.9`
+- `max_tokens`: `120` to `200`
 
-2. **Create a Custom Model**
-   - Click **Add custom model**
-   - Complete the "Add custom model" dialog:
-     - **Model name**: Enter a descriptive name like `Llama 3.1 8B Instruct Fast`
-     - **Model ID**: Enter the Cloudflare model ID, e.g., `@cf/meta/llama-3.1-8b-instruct-fast`
-     - **Model type**: Select **Chat**
-     - **Provider**: Select **Custom** or enter `Cloudflare Workers AI`
-   - Click **Save**
+4) Add messages (your prompt)
+- System: `You are a witty comedian who tells a single short joke.`
+- User: `Tell a random joke.`
 
-Refer to the [LaunchDarkly documentation for creating custom models](https://launchdarkly.com/docs/home/ai-configs/create-model-config#complete-the-add-custom-model-dialog) for more details.
+5) Targeting
+- Enable targeting for your environment and serve the variation to all users.
 
-**Popular Cloudflare Workers AI Models to Add:**
-
-| Model Name | Model ID | Use Case |
-|------------|----------|----------|
-| Llama 3.1 8B Instruct Fast | `@cf/meta/llama-3.1-8b-instruct-fast` | Quick responses, simple tasks |
-| Llama 3.3 70B Instruct | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Complex reasoning, better quality |
-| Llama 3.1 70B Instruct | `@cf/meta/llama-3.1-70b-instruct` | High quality production |
-| Qwen 2.5 14B Instruct | `@cf/qwen/qwen-2.5-14b-instruct` | Balanced performance |
-
-See [Cloudflare Workers AI Models](https://developers.cloudflare.com/workers-ai/models/) for the complete list.
-
-#### Step 2: Create the AI Config
-
-1. **Create a new AI Config**
-   - In LaunchDarkly, click **AI Configs**
-   - Click **Create AI Config**
-   - **Name**: `joke-ai-config`
-   - Click **Create AI Config**
-
-2. **Create a Variation**
-   - Select the **Variations** tab
-   - Enter a variation **Name**, e.g., `Joke Generator`
-   - Click **Select a model** and choose the custom Cloudflare model you created
-   - Click **Add parameters** to configure model parameters:
-     - **Model parameters**:
-       - `temperature`: `0.8` (controls creativity, 0.0-1.0)
-       - `max_tokens`: `200` (maximum response length)
-
-3. **Add Messages**
-   - Select message role: **system**
-   - Enter message content: `You are a funny comedian who tells short jokes.`
-   - Click **+ Add another message**
-   - Select message role: **user**
-   - Enter message content: `Tell me a {{joke_type}} joke{{topic_section}}.`
-     - The `{{joke_type}}` and `{{topic_section}}` variables are provided at runtime by the example
-   - Click **Review and save**
-
-Refer to the [LaunchDarkly documentation for creating variations](https://launchdarkly.com/docs/home/ai-configs/create-variation) for more details.
-
-#### Step 3: Configure Targeting
-
-   **Set up targeting rules**
-   - In your AI Config, go to the **Targeting** tab
-   - Enable targeting for your environment
-   - Set the default rule to serve your variation to all users
-   - Click **Review and save**
+Refer to: [Cloudflare AI Models](https://developers.cloudflare.com/workers-ai/models/) for the full model list, and [LD AI Config docs](https://launchdarkly.com/docs/home/ai-configs/create) for configuration details.
 
 
 
@@ -155,20 +111,10 @@ yarn start
 
 ## Testing
 
-Test the worker:
+Call the worker with a `userId`:
 
 ```bash
-# Default joke about programming
-curl "http://localhost:8787"
-
-# Custom topic
-curl "http://localhost:8787?topic=cats"
-
-# With specific user ID
-curl "http://localhost:8787?userId=user-123&topic=dogs"
-
-# Specify joke type
-curl "http://localhost:8787?joke_type=knock-knock&topic=penguins"
+curl "http://localhost:8787?userId=user-123"
 ```
 
 Expected response:
@@ -176,8 +122,7 @@ Expected response:
 ```json
 {
   "success": true,
-  "userId": "anonymous-user",
-  "topic": "programming",
+  "userId": "user-123",
   "model": "@cf/meta/llama-3.1-8b-instruct-fast",
   "provider": "cloudflare-workers-ai",
   "joke": "Why do programmers prefer dark mode? Because light attracts bugs!",
@@ -187,39 +132,24 @@ Expected response:
 
 ## How It Works
 
-1. **Initialize Clients**: Creates LaunchDarkly and AI clients
-2. **Get AI Config**: Retrieves `joke-ai-config` from LaunchDarkly with variables `{ joke_type, topic_section }`
-3. **Variable Interpolation**: Fills `{{joke_type}}` and `{{topic_section}}` in messages
-4. **Call AI Model**: Map to Workers AI via `config.toWorkersAI(env.AI)` and run with metrics using `await config.tracker.trackWorkersAIMetrics(() => env.AI.run(wc.model, wc))`
-5. **Flush Events**: Uses `ctx.waitUntil(ldClient.flush().finally(() => ldClient.close()))`
+1. Initialize clients: LaunchDarkly + AI client
+2. Get AI Config: retrieves `random-joke` from LaunchDarkly
+3. Call model: `wc = config.toWorkersAI(env.AI)` then `await config.tracker.trackWorkersAIMetrics(() => env.AI.run(wc.model, wc))`
+4. Flush events: `ctx.waitUntil(ldClient.flush().finally(() => ldClient.close()))`
 
 ## LaunchDarkly Features
 
-### Multiple Variations
+### Variations and Rollouts
 
-Create multiple variations in your AI Config to test different:
-- Models (fast vs. high-quality)
-- Prompt styles
-- Temperature and parameter settings
-- System instructions
+- Create multiple variations to compare models, temperatures, and styles
+- Target specific users or segments; do percentage rollouts
+- All changes sync automatically to Cloudflare KV
 
-### Dynamic Prompts
+### Metrics and AI Config Analytics
 
-Update prompts through the LaunchDarkly UI without redeploying:
-- Modify system messages
-- Change user prompts
-- Add or remove conversation context
-- Use variable interpolation with `{{variableName}}` syntax
-
-### Targeted Rollouts
-
-Use LaunchDarkly's targeting features to control who sees which variation:
-- Target specific users or segments
-- Percentage rollouts (e.g., 10% of users get new model)
-- Geographic targeting
-- Custom attribute targeting
-
-All changes are made through the LaunchDarkly dashboard and sync automatically to your Cloudflare Workers.
+- The SDK records `$ld:ai:generation`, `$ld:ai:tokens`, `$ld:ai:duration`, and `$ld:ai:ttft` events
+- Events include `aiConfigKey`, `variationKey`, `version`, `model`, and `provider`
+- This links Live events to your AI Config analytics in LaunchDarkly
 
 ## Deployment
 
@@ -230,12 +160,12 @@ yarn deploy
 
 ## Model Options
 
-You can use any Cloudflare Workers AI model with their full model ID:
+Pick any Workers AI model ID:
 
-- `@cf/meta/llama-3.1-8b-instruct-fast` - Fast, good quality
-- `@cf/meta/llama-3.3-70b-instruct-fp8-fast` - High quality, slower
-- `@cf/mistralai/mistral-7b-instruct-v0.1` - Alternative option
-- `@cf/qwen/qwq-32b` - Advanced reasoning
+- `@cf/meta/llama-3.1-8b-instruct-fast` — fast, good quality
+- `@cf/meta/llama-3.3-70b-instruct-fp8-fast` — higher quality
+- `@cf/mistralai/mistral-7b-instruct-v0.1` — alternative
+- `@cf/qwen/qwq-32b` — advanced reasoning
 
-See [Cloudflare AI Models](https://developers.cloudflare.com/workers-ai/models/) for full list.
+See: [Cloudflare AI Models](https://developers.cloudflare.com/workers-ai/models/)
 

@@ -12,9 +12,6 @@ export default {
     try {
       const url = new URL(request.url);
       const userId = url.searchParams.get('userId') || 'anonymous-user';
-      const topic = url.searchParams.get('topic') || 'programming';
-      const jokeType = url.searchParams.get('joke_type') || 'general';
-      const topicSection = topic ? ` about ${topic}` : '';
 
       const ldClient = init(env.LD_CLIENT_ID, env.LD_KV, { sendEvents: true });
       await ldClient.waitForInitialization();
@@ -28,12 +25,11 @@ export default {
       };
 
       const config = await aiClient.config(
-        'joke-ai-config',
+        'random-joke',
         context,
         {
           enabled: false,
         },
-        { joke_type: jokeType, topic_section: topicSection },
       );
 
       if (!config.enabled) {
@@ -62,7 +58,6 @@ export default {
         JSON.stringify({
           success: true,
           userId,
-          topic,
           model: config.model?.name,
           provider: config.provider?.name || 'cloudflare-workers-ai',
           joke: (response as any)?.response || (response as any),
