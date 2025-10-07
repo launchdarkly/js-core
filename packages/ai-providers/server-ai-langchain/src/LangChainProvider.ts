@@ -3,16 +3,95 @@ import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages
 import { initChatModel } from 'langchain/chat_models/universal';
 
 import {
+  AIProvider,
+  ChatResponse,
   LDAIConfig,
-  LDAIConfigTracker,
+  LDAIMetrics,
   LDMessage,
   LDTokenUsage,
 } from '@launchdarkly/server-sdk-ai';
 
 /**
- * LangChain provider utilities and helper functions.
+ * LangChain implementation of AIProvider.
+ * This provider integrates LangChain models with LaunchDarkly's tracking capabilities.
  */
-export class LangChainProvider {
+export class LangChainProvider extends AIProvider {
+  private _llm: BaseChatModel;
+
+  constructor(llm: BaseChatModel) {
+    super();
+    this._llm = llm;
+  }
+
+  // =============================================================================
+  // MAIN FACTORY METHOD
+  // =============================================================================
+
+  /**
+   * Static factory method to create a LangChain AIProvider from an AI configuration.
+   */
+  static async create(aiConfig: LDAIConfig): Promise<LangChainProvider> {
+    const llm = await LangChainProvider.createLangChainModel(aiConfig);
+    return new LangChainProvider(llm);
+  }
+
+  // =============================================================================
+  // INSTANCE METHODS (AIProvider Implementation)
+  // =============================================================================
+
+  /**
+   * Invoke the LangChain model with an array of messages.
+   */
+  async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
+    // Convert LDMessage[] to LangChain messages
+    const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages);
+
+    // Get the LangChain response
+    const response: AIMessage = await this._llm.invoke(langchainMessages);
+
+    // Handle different content types from LangChain
+    let content: string;
+    if (typeof response.content === 'string') {
+      content = response.content;
+    } else if (Array.isArray(response.content)) {
+      // Handle complex content (e.g., with images)
+      content = response.content
+        .map((item: any) => {
+          if (typeof item === 'string') return item;
+          if (item.type === 'text') return item.text;
+          return '';
+        })
+        .join('');
+    } else {
+      content = String(response.content);
+    }
+
+    // Create the assistant message
+    const assistantMessage: LDMessage = {
+      role: 'assistant',
+      content,
+    };
+
+    // Extract metrics including token usage and success status
+    const metrics = LangChainProvider.createAIMetrics(response);
+
+    return {
+      message: assistantMessage,
+      metrics,
+    };
+  }
+
+  /**
+   * Get the underlying LangChain model instance.
+   */
+  getChatModel(): BaseChatModel {
+    return this._llm;
+  }
+
+  // =============================================================================
+  // STATIC UTILITY METHODS
+  // =============================================================================
+
   /**
    * Map LaunchDarkly provider names to LangChain provider names.
    * This method enables seamless integration between LaunchDarkly's standardized
@@ -29,21 +108,35 @@ export class LangChainProvider {
   }
 
   /**
-   * Create token usage information from a LangChain provider response.
-   * This method extracts token usage information from LangChain responses
-   * and returns a LaunchDarkly TokenUsage object.
+   * Create AI metrics information from a LangChain provider response.
+   * This method extracts token usage information and success status from LangChain responses
+   * and returns a LaunchDarkly AIMetrics object.
+   *
+   * @example
+   * ```typescript
+   * // Use with tracker.trackMetricsOf for automatic tracking
+   * const response = await tracker.trackMetricsOf(
+   *   (result: AIMessage) => LangChainProvider.createAIMetrics(result),
+   *   () => llm.invoke(messages)
+   * );
+   * ```
    */
-  static createTokenUsage(langChainResponse: AIMessage): LDTokenUsage | undefined {
-    if (!langChainResponse?.response_metadata?.tokenUsage) {
-      return undefined;
+  static createAIMetrics(langChainResponse: AIMessage): LDAIMetrics {
+    // Extract token usage if available
+    let usage: LDTokenUsage | undefined;
+    if (langChainResponse?.response_metadata?.tokenUsage) {
+      const { tokenUsage } = langChainResponse.response_metadata;
+      usage = {
+        total: tokenUsage.totalTokens || 0,
+        input: tokenUsage.promptTokens || 0,
+        output: tokenUsage.completionTokens || 0,
+      };
     }
 
-    const { tokenUsage } = langChainResponse.response_metadata;
-
+    // LangChain responses that complete successfully are considered successful
     return {
-      total: tokenUsage.totalTokens || 0,
-      input: tokenUsage.promptTokens || 0,
-      output: tokenUsage.completionTokens || 0,
+      success: true,
+      usage,
     };
   }
 
@@ -70,38 +163,6 @@ export class LangChainProvider {
   }
 
   /**
-   * Track metrics for a LangChain callable execution.
-   * This helper method enables developers to work directly with LangChain callables
-   * while ensuring consistent tracking behavior.
-   */
-  static async trackMetricsOf(
-    tracker: LDAIConfigTracker,
-    callable: () => Promise<AIMessage>,
-  ): Promise<AIMessage> {
-    return tracker.trackDurationOf(async () => {
-      try {
-        const result = await callable();
-
-        // Extract and track token usage if available
-        const tokenUsage = this.createTokenUsage(result);
-        if (tokenUsage) {
-          tracker.trackTokens({
-            total: tokenUsage.total,
-            input: tokenUsage.input,
-            output: tokenUsage.output,
-          });
-        }
-
-        tracker.trackSuccess();
-        return result;
-      } catch (error) {
-        tracker.trackError();
-        throw error;
-      }
-    });
-  }
-
-  /**
    * Create a LangChain model from an AI configuration.
    * This public helper method enables developers to initialize their own LangChain models
    * using LaunchDarkly AI configurations.
@@ -116,7 +177,7 @@ export class LangChainProvider {
 
     // Use LangChain's universal initChatModel to support multiple providers
     return initChatModel(modelName, {
-      modelProvider: this.mapProvider(provider),
+      modelProvider: LangChainProvider.mapProvider(provider),
       ...parameters,
     });
   }
