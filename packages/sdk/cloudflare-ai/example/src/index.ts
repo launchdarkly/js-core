@@ -20,7 +20,7 @@ export default {
       await ldClient.waitForInitialization();
 
       // Pass KV namespace and client ID so AI SDK can read AI Configs directly
-      const aiClient = initAi(ldClient, env.LD_CLIENT_ID, env.LD_KV);
+      const aiClient = initAi(ldClient, { clientSideID: env.LD_CLIENT_ID, kvNamespace: env.LD_KV });
 
       const context = {
         kind: 'user',
@@ -50,7 +50,8 @@ export default {
         );
       }
 
-      const response = await (config as any).runWithWorkersAI(env.AI);
+      const wc = (config as any).toWorkersAI(env.AI);
+      const response = await env.AI.run(wc.model, wc);
 
       // Ensure events are flushed after the response is returned
       ctx.waitUntil(ldClient.flush().finally(() => ldClient.close()));

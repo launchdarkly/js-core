@@ -1,3 +1,5 @@
+import type { Ai } from '@cloudflare/workers-types';
+
 import type { LDAIConfigTracker } from './LDAIConfigTracker';
 
 /**
@@ -5,8 +7,8 @@ import type { LDAIConfigTracker } from './LDAIConfigTracker';
  */
 export interface LDModelConfig {
   /**
-   * The model ID or name.
-   * Can be a friendly name like "llama-3.3-70b" or full Cloudflare ID like "@cf/meta/llama-3.3-70b-instruct-fp8-fast".
+   * The Workers AI model identifier as expected by Cloudflare, for example:
+   * "@cf/meta/llama-3.3-70b-instruct-fp8-fast".
    */
   name: string;
 
@@ -49,7 +51,7 @@ export interface LDMessage {
 /**
  * Options for mapping to Cloudflare Workers AI format.
  */
-export interface CloudflareAIMapOptions {
+export interface WorkersAIMapOptions {
   /**
    * Override the model name.
    */
@@ -69,7 +71,7 @@ export interface CloudflareAIMapOptions {
 /**
  * Configuration format for Cloudflare Workers AI API.
  */
-export interface CloudflareAIConfig {
+export type WorkersAIConfig = {
   /**
    * The Cloudflare Workers AI model ID.
    */
@@ -119,7 +121,7 @@ export interface CloudflareAIConfig {
    * Additional parameters.
    */
   [key: string]: unknown;
-}
+};
 
 /**
  * AI configuration from LaunchDarkly with tracker and conversion methods.
@@ -156,7 +158,7 @@ export interface LDAIConfig {
    * @param options Optional mapping options.
    * @returns Configuration ready to use with Cloudflare Workers AI.
    */
-  toCloudflareWorkersAI(options?: CloudflareAIMapOptions): CloudflareAIConfig;
+  toWorkersAI(binding: Ai, options?: WorkersAIMapOptions): WorkersAIConfig;
 
   /**
    * Convenience helper that maps to Cloudflare Workers AI config, runs the model via
@@ -166,16 +168,13 @@ export interface LDAIConfig {
    * @param options Optional mapping options for Cloudflare Workers AI
    * @returns Provider-specific response from Workers AI
    */
-  runWithWorkersAI<T = unknown>(aiBinding: any, options?: CloudflareAIMapOptions): Promise<T>;
+  // Cloudflare convenience runner is provided separately; no inline runner here.
 }
 
 /**
  * Default AI configuration (without tracker and conversion methods).
  */
-export type LDAIDefaults = Omit<
-  LDAIConfig,
-  'tracker' | 'enabled' | 'toCloudflareWorkersAI' | 'runWithWorkersAI'
-> & {
+export type LDAIDefaults = Omit<LDAIConfig, 'tracker' | 'enabled' | 'toWorkersAI'> & {
   /**
    * Whether the configuration is enabled. Defaults to false.
    */

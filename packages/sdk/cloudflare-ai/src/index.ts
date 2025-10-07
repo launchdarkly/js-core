@@ -26,15 +26,13 @@ import type { LDClientMin } from './LDClientMin';
  */
 export function initAi(
   ldClient: LDClientMin,
-  clientSideID?: string,
-  kvNamespace?: KVNamespace,
+  options?: { clientSideID?: string; kvNamespace?: KVNamespace },
 ): LDAIClient {
-  // Store KV access info associated with this client if provided
-  if (clientSideID && kvNamespace) {
-    setClientKVMeta(ldClient, clientSideID, kvNamespace);
+  if (options?.clientSideID && options?.kvNamespace) {
+    setClientKVMeta(ldClient, options.clientSideID, options.kvNamespace);
   }
   return new LDAIClientImpl(ldClient);
 }
 
 export * from './api';
-export { CloudflareAIModelMapper } from './CloudflareAIModelMapper';
+// No public mapper export; mapping is handled inline.

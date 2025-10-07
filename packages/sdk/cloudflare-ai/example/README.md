@@ -192,7 +192,7 @@ Expected response:
 1. **Initialize Clients**: Creates LaunchDarkly and AI clients
 2. **Get AI Config**: Retrieves `joke-ai-config` from LaunchDarkly with variables `{ joke_type, topic_section }`
 3. **Variable Interpolation**: Fills `{{joke_type}}` and `{{topic_section}}` in messages
-4. **Call AI Model**: Uses `config.runWithWorkersAI(env.AI)` to run the model and auto-track metrics
+4. **Call AI Model**: Uses `env.AI.run(wc.model, wc)` to run the model
 5. **Flush Events**: Uses `ctx.waitUntil(ldClient.flush().finally(() => ldClient.close()))`
 
 ## LaunchDarkly Features

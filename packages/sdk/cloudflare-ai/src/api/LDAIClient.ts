@@ -1,5 +1,6 @@
 import { LDContext } from '@launchdarkly/cloudflare-server-sdk';
 
+import type { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './agents/LDAIAgent';
 import type { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
 
 /**
@@ -17,16 +18,17 @@ export interface LDAIClient {
    *
    * @example
    * ```typescript
+   * const context = { kind: 'user', key: 'example-user-key', name: 'Sandy' };
    * const config = await aiClient.config(
    *   'chat-assistant',
-   *   { kind: 'user', key: 'user-123' },
-   *   { enabled: false },
-   *   { username: 'Alice' }
+   *   context,
+   *   {},
+   *   { myVariable: 'My User Defined Variable' }
    * );
    *
    * if (config.enabled) {
-   *   const cfConfig = config.toCloudflareWorkersAI();
-   *   const response = await env.AI.run(cfConfig.model, cfConfig);
+   *   const wc = config.toWorkersAI(env.AI);
+   *   const response = await env.AI.run(wc.model, wc);
    *   config.tracker.trackSuccess();
    * }
    * ```
@@ -37,4 +39,22 @@ export interface LDAIClient {
     defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig>;
+
+  /**
+   * Retrieves and processes a single AI Config agent including customized instructions.
+   */
+  agent(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIAgentDefaults,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIAgent>;
+
+  /**
+   * Retrieves and processes multiple AI Config agents and returns a map of key to agent.
+   */
+  agents<TConfigs extends readonly LDAIAgentConfig[]>(
+    agentConfigs: TConfigs,
+    context: LDContext,
+  ): Promise<Record<TConfigs[number]['key'], LDAIAgent>>;
 }

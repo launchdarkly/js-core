@@ -1,5 +1,11 @@
 # LaunchDarkly AI SDK for Cloudflare Workers
 
+[![NPM][cf-ai-sdk-npm-badge]][cf-ai-sdk-npm-link]
+[![Actions Status][cf-ai-sdk-ci-badge]][cf-ai-sdk-ci]
+[![Documentation][cf-ai-sdk-ghp-badge]][cf-ai-sdk-ghp-link]
+[![NPM][cf-ai-sdk-dm-badge]][cf-ai-sdk-npm-link]
+[![NPM][cf-ai-sdk-dt-badge]][cf-ai-sdk-npm-link]
+
 # ⛔️⛔️⛔️⛔️
 
 > [!CAUTION]
@@ -11,33 +17,19 @@
 
 [LaunchDarkly](https://www.launchdarkly.com) is a feature management platform that serves over 100 billion feature flags daily to help teams build better software, faster. [Get started](https://docs.launchdarkly.com/home/getting-started) using LaunchDarkly today!
 
-## Prerequisites
+[![Twitter Follow](https://img.shields.io/twitter/follow/launchdarkly.svg?style=social&label=Follow&maxAge=2592000)](https://twitter.com/intent/follow?screen_name=launchdarkly)
 
-### Required: LaunchDarkly Cloudflare KV Integration
+## Quick Setup
 
-**This SDK requires the [LaunchDarkly Cloudflare KV integration](https://docs.launchdarkly.com/integrations/cloudflare) to be enabled.** The integration automatically syncs your feature flag data to Cloudflare KV storage, which the SDK then reads for fast, edge-based flag evaluation.
+This assumes that you have already installed the LaunchDarkly Cloudflare server SDK and enabled the Cloudflare KV integration.
 
-To enable the integration:
-1. Go to [LaunchDarkly Integrations](https://app.launchdarkly.com/settings/integrations)
-2. Find and enable the **Cloudflare KV** integration
-3. Connect it to your Cloudflare account and KV namespace
-4. Select the LaunchDarkly environment you want to sync
+1. Install this package with `npm` or `yarn`:
 
-Once enabled, your flags will automatically sync to Cloudflare KV within seconds of any changes.
-
-## Install
-
-Install the AI SDK alongside the Cloudflare server SDK:
-
-```bash
-# npm
-npm i @launchdarkly/cloudflare-server-sdk @launchdarkly/cloudflare-server-sdk-ai
-
-# yarn
-yarn add @launchdarkly/cloudflare-server-sdk @launchdarkly/cloudflare-server-sdk-ai
+```shell
+npm install @launchdarkly/cloudflare-server-sdk-ai --save
 ```
 
-Then enable the Node.js compatibility flag and bind Workers AI in your `wrangler.toml`:
+2. Ensure Workers AI is bound and Node.js compatibility is enabled in `wrangler.toml`:
 
 ```toml
 compatibility_flags = ["nodejs_compat"]
@@ -46,48 +38,7 @@ compatibility_flags = ["nodejs_compat"]
 binding = "AI"
 ```
 
-## Quick Setup
-
-This assumes that you have already installed the LaunchDarkly Cloudflare server SDK and enabled the Cloudflare KV integration.
-
-1. Install this package with `npm`:
-
-```bash
-npm install @launchdarkly/cloudflare-server-sdk-ai
-```
-
-2. Create an AI SDK instance:
-
-```typescript
-// The ldClient instance should be created based on the instructions in the Cloudflare SDK.
-// If available, pass your client-side ID and KV namespace so the AI SDK
-// can read AI Configs directly from Cloudflare KV.
-const aiClient = initAi(ldClient, env.LD_CLIENT_ID, env.LD_KV);
-```
-
-3. Evaluate a model configuration:
-
-```typescript
-const config = await aiClient.config(
-  'my-ai-config',
-  { kind: 'user', key: 'user-123' },
-  { enabled: false },
-  { username: 'Alice' }
-);
-```
-
-For a complete working example, please refer to the example folder.
-
-## Features
-
-- **AI Configuration Management**: Manage AI model configurations through LaunchDarkly
-- **Dynamic Model Selection**: Choose models based on user context and targeting rules
-- **Template-based Prompts**: Use variable interpolation in prompts with Mustache templates
-- **Comprehensive Metrics**: Track success, duration, token usage, and user feedback
-- **Cloudflare Workers AI Integration**: Seamless mapping to Cloudflare Workers AI format
-- **Full TypeScript Support**: Complete type definitions for all APIs
-
-## Usage Example
+3. Create an AI SDK instance and evaluate a model configuration:
 
 ```typescript
 import { init } from '@launchdarkly/cloudflare-server-sdk';
@@ -99,20 +50,36 @@ export default {
     const ldClient = init(env.LD_CLIENT_ID, env.LD_KV, { sendEvents: true });
     await ldClient.waitForInitialization();
 
-    // Initialize the AI client with optional KV access
-    const aiClient = initAi(ldClient, env.LD_CLIENT_ID, env.LD_KV);
+    // Initialize the AI client (pass options to enable KV fast‑path)
+    const aiClient = initAi(ldClient, { clientSideID: env.LD_CLIENT_ID, kvNamespace: env.LD_KV });
+
+    // Set up the context properties
+    const context = {
+      kind: 'user',
+      key: 'example-user-key',
+      name: 'Sandy',
+    };
 
     // Get AI configuration
-    const config = await aiClient.config(
+    const aiConfig = await aiClient.config(
       'my-ai-config',
-      { kind: 'user', key: 'user-123' },
-      { enabled: false },
-      { username: 'Alice' }
+      context,
+      {
+        model: {
+          name: 'my-default-model',
+        },
+        enabled: true,
+      },
+      {
+        myVariable: 'My User Defined Variable',
+      },
     );
+    const { tracker } = aiConfig;
 
-    if (config.enabled) {
-      // Run the AI model and automatically record metrics
-      const response = await config.runWithWorkersAI(env.AI);
+    if (aiConfig.enabled) {
+      // Map to Workers AI and run
+      const wc = aiConfig.toWorkersAI(env.AI);
+      const response = await env.AI.run(wc.model, wc);
 
       // Ensure events are flushed after respond
       ctx.waitUntil(ldClient.flush().finally(() => ldClient.close()));
@@ -125,111 +92,59 @@ export default {
 };
 ```
 
-## Supported Models
-
-Use the full Cloudflare Workers AI model IDs in your LaunchDarkly AI configurations. Examples:
-
-- `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
-- `@cf/meta/llama-3.1-70b-instruct`
-- `@cf/meta/llama-3.1-8b-instruct-fast`
-- `@cf/openai/gpt-oss-120b`
-- `@cf/mistralai/mistral-7b-instruct-v0.1`
-- `@cf/qwen/qwq-32b`
-- `@cf/google/gemma-3-12b-it`
-
-For a complete list of available models, see the [Cloudflare Workers AI Models documentation](https://developers.cloudflare.com/workers-ai/models/).
-
-## Configuration
-
-### LaunchDarkly Dashboard
-
-Create an AI Config in your LaunchDarkly dashboard:
-
-```json
-{
-  "model": {
-    "name": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-    "parameters": {
-      "temperature": 0.7,
-      "max_tokens": 1000
-    }
-  },
-  "provider": {
-    "name": "cloudflare-workers-ai"
-  },
-  "messages": [
-    {
-      "role": "system",
-      "content": "You are a helpful assistant for {{company}}."
-    },
-    {
-      "role": "user",
-      "content": "{{userQuery}}"
-    }
-  ]
-}
-```
-
-### Variable Interpolation
-
-Pass variables to customize prompts:
-
-```typescript
-const config = await aiClient.config(
-  'chat-config',
-  context,
-  defaultValue,
-  {
-    company: 'Acme Corp',
-    userQuery: 'How do I reset my password?'
-  }
-);
-```
+For a complete working example, see the `example/` directory.
 
 ## API Reference
 
-### `initAi(ldClient)`
+### `initAi(ldClient, options?)`
 
 Initializes the AI client.
 
 **Parameters:**
 - `ldClient`: LaunchDarkly Cloudflare client instance
+- `options` (optional): `{ clientSideID?: string; kvNamespace?: KVNamespace }`
+  - If both `clientSideID` and `kvNamespace` are provided, the KV fast‑path is enabled.
 
 **Returns:** `LDAIClient`
 
-### `aiClient.config(key, context, defaultValue, variables)`
+### `aiClient.config(key, context, defaultValue, variables?)`
 
 Retrieves an AI configuration from LaunchDarkly.
 
 **Parameters:**
 - `key`: Configuration key in LaunchDarkly
 - `context`: LaunchDarkly context for evaluation
-- `defaultValue`: Fallback configuration
-- `variables`: Optional variables for prompt interpolation
+- `defaultValue`: Fallback configuration used only if evaluation data is unavailable
+- `variables` (optional): Variables for Mustache interpolation in `messages[].content`
 
 **Returns:** `Promise<LDAIConfig>`
 
-### `config.toCloudflareWorkersAI(options)`
+### `aiClient.agent(key, context, defaultValue, variables?)`
+
+Evaluates an AI Agent and returns interpolated `instructions` plus tracker and optional model/provider.
+
+**Parameters:** same shape as `config`, with `defaultValue` of type `LDAIAgentDefaults`.
+
+**Returns:** `Promise<LDAIAgent>`
+
+### `aiClient.agents(agentConfigs, context)`
+
+Evaluates multiple agents and returns a map of key to `LDAIAgent`.
+
+### `config.toWorkersAI(binding, options)`
 
 Converts the configuration to Cloudflare Workers AI format.
 
 **Parameters:**
-- `options`: Optional conversion options
+- `binding`: Workers AI binding (`env.AI`)
+- `options` (optional):
   - `modelOverride`: Override the model
   - `stream`: Enable streaming
   - `additionalParams`: Additional parameters
 
-**Returns:** `CloudflareAIConfig`
+**Returns:** `WorkersAIConfig`
 
-### `config.runWithWorkersAI(aiBinding, options)`
-
-Runs the model via the Workers AI binding and automatically records metrics.
-
-**Parameters:**
-- `aiBinding`: Cloudflare Workers AI binding (for example, `env.AI`)
-- `options`: Optional conversion options (same as `toCloudflareWorkersAI`)
-
-**Returns:** Provider-specific response from Workers AI
+<!-- Optional convenience runner removed; call env.AI.run directly -->
 
 ### Metrics Tracking
 
@@ -240,61 +155,67 @@ config.tracker.trackMetrics({
   durationMs: 150,
   success: true,
   usage: {
-    inputTokens: 50,
-    outputTokens: 100,
-    totalTokens: 150
+    input: 50,
+    output: 100,
+    total: 150
   }
 });
 config.tracker.trackFeedback('positive');
 ```
 
-Note: `runWithWorkersAI` automatically records duration and token usage when possible.
-
-## Advanced Usage
-
-### Dynamic Model Selection
-
-Use LaunchDarkly targeting rules to serve different models based on user attributes:
+Workers AI helpers:
 
 ```typescript
-const config = await aiClient.config(
-  'adaptive-model',
-  {
-    kind: 'user',
-    key: userId,
-    tier: 'premium'
-  },
-  defaultValue
-);
+// Non-streaming
+const result = await config.tracker.trackWorkersAIMetrics(async () => env.AI.run(wc.model, wc));
+
+// Streaming
+const stream = config.tracker.trackWorkersAIStreamMetrics(() => env.AI.run(wc.model, { ...wc, stream: true }));
 ```
 
-### A/B Testing
+Token usage normalization: Workers AI responses might include either `{ usage: { prompt_tokens, completion_tokens, total_tokens } }` or `{ usage: { input_tokens, output_tokens, total_tokens } }`. The SDK maps both to `{ input, output, total }`.
 
-Compare different models or prompts:
+## Supported Models
+
+Use full Workers AI model IDs in your LaunchDarkly AI configurations, for example:
+
+- `@cf/meta/llama-3.3-70b-instruct-fp8-fast`
+- `@cf/openai/gpt-oss-120b`
+- `@cf/mistralai/mistral-7b-instruct-v0.1`
+
+See the Workers AI model catalog for more options: [Cloudflare Workers AI Models](https://developers.cloudflare.com/workers-ai/models/).
+
+## Roles and messages
+
+Supported roles in `messages` are `system`, `user`, and `assistant`. Example:
 
 ```typescript
-const config = await aiClient.config('ab-test-config', context, defaultValue);
-
-const cfConfig = config.toCloudflareWorkersAI();
-const response = await env.AI.run(cfConfig.model, cfConfig);
-
-config.tracker.trackMetrics({
-  durationMs: duration,
-  success: true,
-  usage: response.usage
+const config = await aiClient.config('welcome_prompt', ctx, { enabled: true, model: { name: '@cf/meta/llama-3-8b-instruct' } }, {
+  username: 'Sandy',
 });
+
+// Messages are interpolated with Mustache
+// e.g., "Hello {{username}}" -> "Hello Sandy"
+const wc = config.toWorkersAI(env.AI);
+const res = await env.AI.run(wc.model, wc);
 ```
 
-### Streaming Responses
+## Agents API
 
 ```typescript
-const cfConfig = config.toCloudflareWorkersAI({ stream: true });
-const stream = await env.AI.run(cfConfig.model, cfConfig);
+const research = await aiClient.agent('research_agent', ctx, { enabled: true, instructions: 'You are a research assistant for {{topic}}.' }, { topic: 'climate change' });
+
+if (research.enabled) {
+  const wc = research.toWorkersAI(env.AI);
+  const res = await env.AI.run(wc.model, wc);
+  research.tracker.trackSuccess();
+}
+
+const agents = await aiClient.agents([
+  { key: 'research_agent', defaultValue: { enabled: true, instructions: 'You are a research assistant.' }, variables: { topic: 'climate change' } },
+  { key: 'writing_agent', defaultValue: { enabled: true, instructions: 'You are a writing assistant.' }, variables: { style: 'academic' } },
+] as const, ctx);
 ```
-
-## Examples
-
-See the `example/` directory for a complete working example with setup instructions.
 
 ## Contributing
 
@@ -314,4 +235,13 @@ We encourage pull requests and other contributions from the community. Check out
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[cf-ai-sdk-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/cloudflare-ai.yml/badge.svg
+[cf-ai-sdk-ci]: https://github.com/launchdarkly/js-core/actions/workflows/cloudflare-ai.yml
+[cf-ai-sdk-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/cloudflare-server-sdk-ai.svg?style=flat-square
+[cf-ai-sdk-npm-link]: https://www.npmjs.com/package/@launchdarkly/cloudflare-server-sdk-ai
+[cf-ai-sdk-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[cf-ai-sdk-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/cloudflare-ai/docs/
+[cf-ai-sdk-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/cloudflare-server-sdk-ai.svg?style=flat-square
+[cf-ai-sdk-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/cloudflare-server-sdk-ai.svg?style=flat-square
 

@@ -1,4 +1,14 @@
+import type { Ai } from '@cloudflare/workers-types';
+
 import type { LDFeedbackKind, LDTokenUsage } from '../metrics';
+
+export interface LDAIMetricSummary {
+  durationMs?: number;
+  tokens?: LDTokenUsage;
+  success?: boolean;
+  feedback?: { kind: LDFeedbackKind };
+  timeToFirstTokenMs?: number;
+}
 
 /**
  * Tracker for AI configuration metrics and analytics.
@@ -48,4 +58,37 @@ export interface LDAIConfigTracker {
    * @param timeToFirstTokenMs Milliseconds until first token.
    */
   trackTimeToFirstToken(timeToFirstTokenMs: number): void;
+
+  trackDurationOf<T>(func: () => Promise<T>): Promise<T>;
+
+  trackWorkersAIMetrics<
+    T extends {
+      usage?: {
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        total_tokens?: number;
+        input_tokens?: number;
+        output_tokens?: number;
+      };
+    },
+  >(
+    func: () => Promise<T>,
+  ): Promise<T>;
+
+  trackWorkersAIStreamMetrics<
+    T extends {
+      usage?: Promise<{
+        prompt_tokens?: number;
+        completion_tokens?: number;
+        total_tokens?: number;
+        input_tokens?: number;
+        output_tokens?: number;
+      }>;
+      finishReason?: Promise<string>;
+    },
+  >(
+    func: () => T,
+  ): T;
+
+  getSummary(): LDAIMetricSummary;
 }

@@ -2,19 +2,19 @@ import mustache from 'mustache';
 
 import { LDContext } from '@launchdarkly/cloudflare-server-sdk';
 
+import type { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './api/agents/LDAIAgent';
 import type {
-  CloudflareAIConfig,
-  CloudflareAIMapOptions,
   LDAIConfig,
   LDAIDefaults,
   LDMessage,
   LDModelConfig,
   LDProviderConfig,
+  WorkersAIConfig,
+  WorkersAIMapOptions,
 } from './api/config/LDAIConfig';
 import type { LDAIConfigTracker } from './api/config/LDAIConfigTracker';
 import type { LDAIClient } from './api/LDAIClient';
 import { getClientKVMeta } from './ClientKVMeta';
-import { CloudflareAIModelMapper } from './CloudflareAIModelMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import type { LDClientMin } from './LDClientMin';
 
@@ -57,6 +57,37 @@ export class LDAIClientImpl implements LDAIClient {
 
   private _interpolateTemplate(template: string, variables: Record<string, unknown>): string {
     return mustache.render(template, variables, undefined, { escape: (item: any) => item });
+  }
+
+  private _mapWorkersAIParameters(params: Record<string, unknown>): Record<string, unknown> {
+    const mapped: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(params)) {
+      const k = key.toLowerCase();
+      if (k === 'maxtokens' || k === 'max_tokens') mapped.max_tokens = value;
+      else if (k === 'topp' || k === 'top_p') mapped.top_p = value;
+      else if (k === 'topk' || k === 'top_k') mapped.top_k = value;
+      else if (k === 'frequencypenalty' || k === 'frequency_penalty')
+        mapped.frequency_penalty = value;
+      else if (k === 'presencepenalty' || k === 'presence_penalty') mapped.presence_penalty = value;
+      else if (k === 'temperature') mapped.temperature = value;
+      else mapped[key] = value;
+    }
+    return mapped;
+  }
+
+  private _toWorkersAI(
+    model: LDModelConfig | undefined,
+    messages: LDMessage[] | undefined,
+    options?: WorkersAIMapOptions,
+  ): WorkersAIConfig {
+    const out: WorkersAIConfig = { model: options?.modelOverride || model?.name || '' };
+    if (messages && messages.length > 0) {
+      out.messages = messages.map((m) => ({ role: m.role, content: m.content }));
+    }
+    if (model?.parameters) Object.assign(out, this._mapWorkersAIParameters(model.parameters));
+    if (options?.stream !== undefined) out.stream = options.stream;
+    if (options?.additionalParams) Object.assign(out, options.additionalParams);
+    return out;
   }
 
   /**
@@ -162,7 +193,7 @@ export class LDAIClientImpl implements LDAIClient {
       defaultValue,
     );
 
-    const config: Omit<LDAIConfig, 'toCloudflareWorkersAI' | 'runWithWorkersAI'> = {
+    const config: Omit<LDAIConfig, 'toWorkersAI'> = {
       tracker,
       enabled,
     };
@@ -186,47 +217,57 @@ export class LDAIClientImpl implements LDAIClient {
 
     return {
       ...config,
-      toCloudflareWorkersAI: (options?: CloudflareAIMapOptions): CloudflareAIConfig =>
-        CloudflareAIModelMapper.toCloudflareWorkersAI(
-          { model: config.model, messages: config.messages },
-          options,
-        ),
-      async runWithWorkersAI<T = unknown>(
-        aiBinding: any,
-        options?: CloudflareAIMapOptions,
-      ): Promise<T> {
-        const cfConfig = CloudflareAIModelMapper.toCloudflareWorkersAI(
-          { model: config.model, messages: config.messages },
-          options,
-        );
-
-        const start = Date.now();
-        try {
-          const result: any = await aiBinding.run(cfConfig.model, cfConfig);
-          const duration = Date.now() - start;
-
-          config.tracker.trackMetrics({
-            durationMs: duration,
-            success: true,
-            usage: {
-              inputTokens: result?.usage?.input_tokens || 0,
-              outputTokens: result?.usage?.output_tokens || 0,
-              totalTokens: result?.usage?.total_tokens || 0,
-            },
-          });
-
-          return result as T;
-        } catch (err) {
-          const duration = Date.now() - start;
-          try {
-            config.tracker.trackMetrics({ durationMs: duration, success: false });
-            (config.tracker as any).trackError?.();
-          } catch (_) {
-            // ignore
-          }
-          throw err;
-        }
-      },
+      toWorkersAI: (_binding, options?: WorkersAIMapOptions): WorkersAIConfig =>
+        this._toWorkersAI(config.model, config.messages, options),
     };
+  }
+
+  async agent(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIAgentDefaults,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIAgent> {
+    this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
+
+    const { tracker, enabled, model, provider, messages } = await this._evaluate(
+      key,
+      context,
+      defaultValue as any,
+    );
+
+    const allVariables = { ...variables, ldctx: context };
+    const instructionsRaw = (defaultValue?.instructions ?? '') as string;
+    const instructions = instructionsRaw
+      ? this._interpolateTemplate(instructionsRaw, allVariables)
+      : undefined;
+
+    const agent: Omit<LDAIAgent, 'toWorkersAI'> = {
+      tracker,
+      enabled,
+      model,
+      provider,
+      instructions,
+    };
+
+    return {
+      ...agent,
+      toWorkersAI: (_binding, options?: WorkersAIMapOptions): WorkersAIConfig =>
+        this._toWorkersAI(agent.model, messages, options),
+    } as LDAIAgent;
+  }
+
+  async agents<TConfigs extends readonly LDAIAgentConfig[]>(
+    agentConfigs: TConfigs,
+    context: LDContext,
+  ): Promise<Record<TConfigs[number]['key'], LDAIAgent>> {
+    const results = await Promise.all(
+      agentConfigs.map((cfg) => this.agent(cfg.key, context, cfg.defaultValue, cfg.variables)),
+    );
+    const map = {} as Record<string, LDAIAgent>;
+    agentConfigs.forEach((cfg, idx) => {
+      map[cfg.key] = results[idx];
+    });
+    return map as Record<TConfigs[number]['key'], LDAIAgent>;
   }
 }

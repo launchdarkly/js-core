@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `initAi(ldClient, clientSideID?, kvNamespace?)` initializer
 - `aiClient.config(key, context, defaultValue, variables?)`
 - `config.toCloudflareWorkersAI(options?)` for mapping to Workers AI format
-- `config.runWithWorkersAI(env.AI, options?)` convenience with auto-metrics
+<!-- Removed optional runWithWorkersAI convenience; use env.AI.run directly -->
 - Template interpolation for messages using variables
 - Metrics tracking: success, duration, token usage, optional error tracking
 - Example Cloudflare Worker and setup docs
