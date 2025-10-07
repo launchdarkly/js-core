@@ -20,88 +20,76 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   ) {}
 
   trackSuccess(): void {
-    this._ldClient.track('$ld:ai:generation', this._context, this._createBaseMetadata(), 1);
+    this._ldClient.track('$ld:ai:generation:success', this._context, this._createBaseMetadata(), 1);
     this._tracked.success = true;
   }
 
   trackError(): void {
-    this._ldClient.track(
-      '$ld:ai:generation',
-      this._context,
-      { ...this._createBaseMetadata(), success: false },
-      0,
-    );
+    this._ldClient.track('$ld:ai:generation:error', this._context, this._createBaseMetadata(), 1);
     this._tracked.success = false;
   }
 
   trackDuration(durationMs: number): void {
     this._ldClient.track(
-      '$ld:ai:duration',
+      '$ld:ai:duration:total',
       this._context,
-      {
-        ...this._createBaseMetadata(),
-        durationMs,
-      },
+      this._createBaseMetadata(),
       durationMs,
     );
     this._tracked.durationMs = durationMs;
   }
 
   trackMetrics(metrics: { durationMs: number; usage?: LDTokenUsage; success: boolean }): void {
-    const metadata = {
-      ...this._createBaseMetadata(),
-      durationMs: metrics.durationMs,
-      success: metrics.success,
-    };
-
-    if (metrics.usage) {
-      Object.assign(metadata, {
-        inputTokens: metrics.usage.input,
-        outputTokens: metrics.usage.output,
-        totalTokens: metrics.usage.total,
-      });
-      this._tracked.tokens = metrics.usage;
-    }
-
     this._tracked.durationMs = metrics.durationMs;
-    this._tracked.success = metrics.success;
-
-    this._ldClient.track('$ld:ai:generation', this._context, metadata, 1);
-
+    this.trackDuration(metrics.durationMs);
+    if (metrics.success) {
+      this.trackSuccess();
+    } else {
+      this.trackError();
+    }
     if (metrics.usage) {
-      this._ldClient.track('$ld:ai:tokens', this._context, metadata, metrics.usage.total);
+      this.trackTokens(metrics.usage);
     }
   }
 
   trackTokens(usage: LDTokenUsage): void {
-    const metadata = {
-      ...this._createBaseMetadata(),
-      inputTokens: usage.input,
-      outputTokens: usage.output,
-      totalTokens: usage.total,
-    };
-    this._ldClient.track('$ld:ai:tokens', this._context, metadata, usage.total);
+    const metadata = this._createBaseMetadata();
+    if (usage.total > 0) {
+      this._ldClient.track('$ld:ai:tokens:total', this._context, metadata, usage.total);
+    }
+    if (usage.input > 0) {
+      this._ldClient.track('$ld:ai:tokens:input', this._context, metadata, usage.input);
+    }
+    if (usage.output > 0) {
+      this._ldClient.track('$ld:ai:tokens:output', this._context, metadata, usage.output);
+    }
     this._tracked.tokens = usage;
   }
 
   trackFeedback(kind: LDFeedbackKind): void {
-    this._ldClient.track(
-      '$ld:ai:feedback',
-      this._context,
-      {
-        ...this._createBaseMetadata(),
-        feedback: kind,
-      },
-      kind === 'positive' ? 1 : 0,
-    );
+    if (kind === 'positive') {
+      this._ldClient.track(
+        '$ld:ai:feedback:user:positive',
+        this._context,
+        this._createBaseMetadata(),
+        1,
+      );
+    } else if (kind === 'negative') {
+      this._ldClient.track(
+        '$ld:ai:feedback:user:negative',
+        this._context,
+        this._createBaseMetadata(),
+        1,
+      );
+    }
     this._tracked.feedback = { kind } as any;
   }
 
   trackTimeToFirstToken(timeToFirstTokenMs: number): void {
     this._ldClient.track(
-      '$ld:ai:ttft',
+      '$ld:ai:tokens:ttf',
       this._context,
-      { ...this._createBaseMetadata(), timeToFirstTokenMs },
+      this._createBaseMetadata(),
       timeToFirstTokenMs,
     );
     this._tracked.timeToFirstTokenMs = timeToFirstTokenMs;
@@ -195,11 +183,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
 
   private _createBaseMetadata(): Record<string, unknown> {
     return {
-      aiConfigKey: this._configKey,
+      configKey: this._configKey,
       variationKey: this._variationKey,
       version: this._version,
-      model: this._modelName,
-      provider: this._providerName,
+      modelName: this._modelName,
+      providerName: this._providerName,
     };
   }
 }
