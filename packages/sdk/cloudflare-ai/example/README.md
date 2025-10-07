@@ -91,8 +91,7 @@ Create an AI Config that the worker will use to generate a random joke.
 - `temperature`: `0.7` to `0.9`
 - `max_tokens`: `120` to `200`
 
-4) Add messages (your prompt)
-- System: `You are a witty comedian who tells a single short joke.`
+4) Add message (your prompt)
 - User: `Tell a random joke.`
 
 5) Targeting
