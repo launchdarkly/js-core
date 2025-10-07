@@ -1,4 +1,4 @@
-import { LDFeedbackKind, LDTokenUsage } from '../metrics';
+import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from '../metrics';
 
 /**
  * Metrics which have been tracked.
@@ -86,6 +86,25 @@ export interface LDAIConfigTracker {
    * @returns The result of the function.
    */
   trackDurationOf(func: () => Promise<any>): Promise<any>;
+
+  /**
+   * Track metrics for a generic AI operation.
+   *
+   * This function will track the duration of the operation, extract metrics using the provided
+   * metrics extractor function, and track success or error status accordingly.
+   *
+   * If the provided function throws, then this method will also throw.
+   * In the case the provided function throws, this function will record the duration and an error.
+   * A failed operation will not have any token usage data.
+   *
+   * @param metricsExtractor Function that extracts LDAIMetrics from the operation result
+   * @param func Function which executes the operation
+   * @returns The result of the operation
+   */
+  trackMetricsOf<TRes>(
+    metricsExtractor: (result: TRes) => LDAIMetrics,
+    func: () => Promise<TRes>,
+  ): Promise<TRes>;
 
   /**
    * Track an OpenAI operation.

@@ -1,6 +1,9 @@
+import { LDLogger } from '@launchdarkly/js-server-sdk-common';
+
 import { LDAIConfig } from '../config/LDAIConfig';
 import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
-import { BaseTrackedChat } from './BaseTrackedChat';
+import { AIProvider } from '../providers/AIProvider';
+import { TrackedChat } from './TrackedChat';
 
 /**
  * Factory for creating TrackedChat instances based on the provider configuration.
@@ -10,58 +13,82 @@ export class TrackedChatFactory {
    * Create a TrackedChat instance based on the AI configuration.
    * This method attempts to load provider-specific implementations dynamically.
    * Returns undefined if the provider is not supported.
+   *
+   * @param aiConfig The AI configuration
+   * @param tracker The tracker for AI operations
+   * @param logger Optional logger for logging provider initialization
    */
   static async create(
     aiConfig: LDAIConfig,
     tracker: LDAIConfigTracker,
-  ): Promise<BaseTrackedChat | undefined> {
+    logger?: LDLogger,
+  ): Promise<TrackedChat | undefined> {
+    const provider = await this._createAIProvider(aiConfig, logger);
+    if (!provider) {
+      logger?.warn(
+        `Provider is not supported or failed to initialize: ${aiConfig.provider?.name ?? 'unknown'}`,
+      );
+      return undefined;
+    }
+
+    logger?.debug(`Successfully created TrackedChat for provider: ${aiConfig.provider?.name}`);
+    return new TrackedChat(aiConfig, tracker, provider);
+  }
+
+  /**
+   * Create an AIProvider instance based on the AI configuration.
+   * This method attempts to load provider-specific implementations dynamically.
+   */
+  private static async _createAIProvider(
+    aiConfig: LDAIConfig,
+    logger?: LDLogger,
+  ): Promise<AIProvider | undefined> {
     const providerName = aiConfig.provider?.name?.toLowerCase();
-    let trackedChat: BaseTrackedChat | undefined;
+    logger?.debug(`Attempting to create AI provider: ${providerName ?? 'unknown'}`);
+    let provider: AIProvider | undefined;
 
     // Try specific implementations for the provider
     switch (providerName) {
       case 'openai':
-        trackedChat = undefined;
+        // TODO: Return OpenAI AIProvider implementation when available
+        provider = undefined;
         break;
       case 'bedrock':
-        trackedChat = undefined;
+        // TODO: Return Bedrock AIProvider implementation when available
+        provider = undefined;
         break;
       default:
-        trackedChat = undefined;
+        provider = undefined;
     }
 
-    // If no specific implementation worked, try LangChain as fallback
-    if (!trackedChat) {
-      trackedChat = await this._createLangChainTrackedChat(aiConfig, tracker);
+    // If no specific implementation worked, try the multi-provider packages
+    if (!provider) {
+      provider = await this._createLangChainProvider(aiConfig, logger);
     }
 
-    // If LangChain didn't work, try Vercel as fallback
-    if (!trackedChat) {
-      // TODO: Return Vercel AI SDK implementation when available
-      // trackedChat = this._createVercelTrackedChat(aiConfig, tracker);
-    }
-
-    return trackedChat;
+    return provider;
   }
 
   /**
-   * Create a LangChain TrackedChat instance if the LangChain provider is available.
+   * Create a LangChain AIProvider instance if the LangChain provider is available.
    */
-  private static async _createLangChainTrackedChat(
+  private static async _createLangChainProvider(
     aiConfig: LDAIConfig,
-    tracker: LDAIConfigTracker,
-  ): Promise<BaseTrackedChat | undefined> {
+    logger?: LDLogger,
+  ): Promise<AIProvider | undefined> {
     try {
+      logger?.debug('Attempting to load LangChain provider');
       // Try to dynamically import the LangChain provider
       // This will work if @launchdarkly/server-sdk-ai-langchain is installed
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, import/no-extraneous-dependencies
-      const { LangChainTrackedChat, LangChainProvider } = require('@launchdarkly/server-sdk-ai-langchain');
+      // eslint-disable-next-line import/no-extraneous-dependencies, global-require
+      const { LangChainProvider } = require('@launchdarkly/server-sdk-ai-langchain');
 
-      // Build the LLM during factory creation to catch errors early
-      const llm = await LangChainProvider.createLangChainModel(aiConfig);
-      return new LangChainTrackedChat(aiConfig, tracker, llm);
+      const provider = await LangChainProvider.create(aiConfig);
+      logger?.debug('Successfully created LangChain provider');
+      return provider;
     } catch (error) {
-      // If the LangChain provider is not available or LLM creation fails, return undefined
+      // If the LangChain provider is not available or creation fails, return undefined
+      logger?.error(`Error creating LangChain provider: ${error}`);
       return undefined;
     }
   }
