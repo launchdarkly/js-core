@@ -63,9 +63,7 @@ Edit `wrangler.toml` and replace:
 ```toml
 compatibility_flags = ["nodejs_compat"]
 
-kv_namespaces = [
-  { binding = "LD_KV", id = "abc123...", preview_id = "def456..." }
-]
+kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREVIEW_KV_ID" }]
 
 [vars]
 LD_CLIENT_ID = "LD_CLIENT_ID"
@@ -192,7 +190,7 @@ Expected response:
 1. **Initialize Clients**: Creates LaunchDarkly and AI clients
 2. **Get AI Config**: Retrieves `joke-ai-config` from LaunchDarkly with variables `{ joke_type, topic_section }`
 3. **Variable Interpolation**: Fills `{{joke_type}}` and `{{topic_section}}` in messages
-4. **Call AI Model**: Uses `env.AI.run(wc.model, wc)` to run the model
+4. **Call AI Model**: Map to Workers AI via `config.toWorkersAI(env.AI)` and run with metrics using `await config.tracker.trackWorkersAIMetrics(() => env.AI.run(wc.model, wc))`
 5. **Flush Events**: Uses `ctx.waitUntil(ldClient.flush().finally(() => ldClient.close()))`
 
 ## LaunchDarkly Features

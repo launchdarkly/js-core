@@ -50,8 +50,10 @@ export default {
         );
       }
 
-      const wc = (config as any).toWorkersAI(env.AI);
-      const response = await env.AI.run(wc.model, wc);
+      const wc = config.toWorkersAI(env.AI);
+      // Workers AI bindings have many possible outputs; cast to a minimal type that includes optional usage.
+      type WorkersAIResultWithUsage = { usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; input_tokens?: number; output_tokens?: number } } | unknown;
+      const response = (await config.tracker.trackWorkersAIMetrics(() => env.AI.run(wc.model as any, wc as any))) as WorkersAIResultWithUsage;
 
       // Ensure events are flushed after the response is returned
       ctx.waitUntil(ldClient.flush().finally(() => ldClient.close()));
@@ -63,7 +65,7 @@ export default {
           topic,
           model: config.model?.name,
           provider: config.provider?.name || 'cloudflare-workers-ai',
-          joke: (response as any).response || response,
+          joke: (response as any)?.response || (response as any),
           enabled: config.enabled,
         }),
         {
