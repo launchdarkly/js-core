@@ -83,7 +83,7 @@ export class TrackedChatFactory {
       // eslint-disable-next-line import/no-extraneous-dependencies, global-require
       const { LangChainProvider } = require('@launchdarkly/server-sdk-ai-langchain');
 
-      const provider = await LangChainProvider.create(aiConfig);
+      const provider = await LangChainProvider.create(aiConfig, logger);
       logger?.debug('Successfully created LangChain provider');
       return provider;
     } catch (error) {
