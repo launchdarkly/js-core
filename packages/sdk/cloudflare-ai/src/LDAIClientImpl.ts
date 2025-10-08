@@ -61,6 +61,7 @@ export class LDAIClientImpl implements LDAIClient {
 
   private _mapWorkersAIParameters(params: Record<string, unknown>): Record<string, unknown> {
     const mapped: Record<string, unknown> = {};
+    // eslint-disable-next-line no-restricted-syntax
     for (const [key, value] of Object.entries(params)) {
       const k = key.toLowerCase();
       if (k === 'maxtokens' || k === 'max_tokens') mapped.max_tokens = value;

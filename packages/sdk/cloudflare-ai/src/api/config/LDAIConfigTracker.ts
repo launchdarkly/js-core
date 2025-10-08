@@ -1,5 +1,3 @@
-import type { Ai } from '@cloudflare/workers-types';
-
 import type { LDFeedbackKind, LDTokenUsage } from '../metrics';
 
 export interface LDAIMetricSummary {
