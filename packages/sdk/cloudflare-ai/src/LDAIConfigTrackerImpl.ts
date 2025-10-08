@@ -183,11 +183,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
 
   private _createBaseMetadata(): Record<string, unknown> {
     return {
-      configKey: this._configKey,
+      aiConfigKey: this._configKey,
       variationKey: this._variationKey,
       version: this._version,
-      modelName: this._modelName,
-      providerName: this._providerName,
+      model: this._modelName,
+      provider: this._providerName,
     };
   }
 }

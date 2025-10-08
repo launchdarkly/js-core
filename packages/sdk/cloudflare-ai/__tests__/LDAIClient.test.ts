@@ -70,7 +70,7 @@ describe('LDAIClient', () => {
         { myVariable: 'My User Defined Variable' } as any,
       );
 
-      expect(config.messages?.[0].content).toBe('Hello Alice!');
+      expect(config.messages?.[0].content).toBe('Hello Sandy!');
     });
 
     it('tracks config usage', async () => {
@@ -88,8 +88,8 @@ describe('LDAIClient', () => {
       );
 
       expect(mockLDClient.track).toHaveBeenCalledWith(
-        '$ld:ai:config:function:single',
-        { kind: 'user', key: 'user-123' },
+        '$ld:ai:generation',
+        { kind: 'user', key: 'example-user-key' },
         'test-config',
         1,
       );
@@ -157,7 +157,7 @@ describe('LDAIClient', () => {
       config.tracker.trackSuccess();
 
       expect(mockLDClient.track).toHaveBeenCalledWith(
-        '$ld:ai:generation',
+        '$ld:ai:generation:success',
         { kind: 'user', key: 'example-user-key', name: 'Sandy' },
         expect.objectContaining({
           aiConfigKey: 'test-config',

@@ -186,7 +186,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfig> {
-    this._ldClient.track('$ld:ai:config:function:single', context, key, 1);
+    this._ldClient.track('$ld:ai:generation', this._sanitizeContext(context), key, 1);
 
     const { tracker, enabled, model, provider, messages } = await this._evaluate(
       key,
@@ -207,7 +207,7 @@ export class LDAIClientImpl implements LDAIClient {
       config.provider = { ...provider };
     }
 
-    const allVariables = { ...variables, ldctx: context };
+    const allVariables = this._createTemplateVariables(context, variables);
 
     if (messages) {
       config.messages = messages.map((entry: LDMessage) => ({
@@ -229,7 +229,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIAgentDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgent> {
-    this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
+    this._ldClient.track('$ld:ai:agent:function:single', this._sanitizeContext(context), key, 1);
 
     const { tracker, enabled, model, provider, messages } = await this._evaluate(
       key,
@@ -237,7 +237,7 @@ export class LDAIClientImpl implements LDAIClient {
       defaultValue as any,
     );
 
-    const allVariables = { ...variables, ldctx: context };
+    const allVariables = this._createTemplateVariables(context, variables);
     const instructionsRaw = (defaultValue?.instructions ?? '') as string;
     const instructions = instructionsRaw
       ? this._interpolateTemplate(instructionsRaw, allVariables)
@@ -270,5 +270,67 @@ export class LDAIClientImpl implements LDAIClient {
       map[cfg.key] = results[idx];
     });
     return map as Record<TConfigs[number]['key'], LDAIAgent>;
+  }
+
+  private _sanitizeContext(context: LDContext): LDContext {
+    if (!context || typeof context !== 'object') {
+      return context;
+    }
+
+    const ctx = context as Record<string, unknown>;
+    const kind = typeof ctx.kind === 'string' ? (ctx.kind as string) : undefined;
+
+    if (kind && kind !== 'multi') {
+      const sanitized: Record<string, unknown> = { kind };
+      if (typeof ctx.key === 'string') {
+        sanitized.key = ctx.key;
+      }
+      return sanitized as LDContext;
+    }
+
+    if (kind === 'multi') {
+      const sanitized: Record<string, unknown> = { kind: 'multi' };
+      Object.keys(ctx).forEach((k) => {
+        if (k === 'kind') {
+          return;
+        }
+        const value = ctx[k];
+        if (!value || typeof value !== 'object') {
+          return;
+        }
+        const sub = value as Record<string, unknown>;
+        const subKind = typeof sub.kind === 'string' ? (sub.kind as string) : undefined;
+        if (!subKind) {
+          return;
+        }
+        const sanitizedSub: Record<string, unknown> = { kind: subKind };
+        if (typeof sub.key === 'string') {
+          sanitizedSub.key = sub.key;
+        }
+        sanitized[k] = sanitizedSub;
+      });
+      return sanitized as LDContext;
+    }
+
+    return context;
+  }
+
+  private _createTemplateVariables(
+    context: LDContext,
+    variables?: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const contextVars: Record<string, unknown> = {};
+    if (context && typeof context === 'object') {
+      Object.assign(contextVars, context as Record<string, unknown>);
+      if ('name' in context) {
+        contextVars.username = (context as any).name;
+      }
+    }
+
+    return {
+      ...contextVars,
+      ...variables,
+      ldctx: context,
+    };
   }
 }
