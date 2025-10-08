@@ -2,6 +2,7 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { initChatModel } from 'langchain/chat_models/universal';
 
+import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 import {
   AIProvider,
   ChatResponse,
@@ -18,8 +19,8 @@ import {
 export class LangChainProvider extends AIProvider {
   private _llm: BaseChatModel;
 
-  constructor(llm: BaseChatModel) {
-    super();
+  constructor(llm: BaseChatModel, logger?: LDLogger) {
+    super(logger);
     this._llm = llm;
   }
 
@@ -30,9 +31,9 @@ export class LangChainProvider extends AIProvider {
   /**
    * Static factory method to create a LangChain AIProvider from an AI configuration.
    */
-  static async create(aiConfig: LDAIConfig): Promise<LangChainProvider> {
+  static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<LangChainProvider> {
     const llm = await LangChainProvider.createLangChainModel(aiConfig);
-    return new LangChainProvider(llm);
+    return new LangChainProvider(llm, logger);
   }
 
   // =============================================================================
@@ -44,26 +45,21 @@ export class LangChainProvider extends AIProvider {
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
     // Convert LDMessage[] to LangChain messages
-    const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages);
+    const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages, this.logger);
 
     // Get the LangChain response
     const response: AIMessage = await this._llm.invoke(langchainMessages);
 
-    // Handle different content types from LangChain
-    let content: string;
+    // Extract text content from the response
+    let content: string = '';
     if (typeof response.content === 'string') {
       content = response.content;
-    } else if (Array.isArray(response.content)) {
-      // Handle complex content (e.g., with images)
-      content = response.content
-        .map((item: any) => {
-          if (typeof item === 'string') return item;
-          if (item.type === 'text') return item.text;
-          return '';
-        })
-        .join('');
     } else {
-      content = String(response.content);
+      // Log warning for non-string content (likely multimodal)
+      this.logger?.warn(
+        `Multimodal response not supported, expecting a string. Content type: ${typeof response.content}, Content:`,
+        JSON.stringify(response.content, null, 2),
+      );
     }
 
     // Create the assistant message
