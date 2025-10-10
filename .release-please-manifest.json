@@ -1,5 +1,5 @@
 {
-  "packages/ai-providers/server-ai-langchain": "0.1.0-alpha.0",
+  "packages/ai-providers/server-ai-langchain": "0.0.0",
   "packages/sdk/akamai-base": "3.0.10",
   "packages/sdk/akamai-edgekv": "1.4.12",
   "packages/sdk/browser": "0.8.1",
