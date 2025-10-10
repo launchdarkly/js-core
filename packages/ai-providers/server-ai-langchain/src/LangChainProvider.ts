@@ -45,7 +45,7 @@ export class LangChainProvider extends AIProvider {
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
     // Convert LDMessage[] to LangChain messages
-    const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages, this.logger);
+    const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages);
 
     // Get the LangChain response
     const response: AIMessage = await this._llm.invoke(langchainMessages);
