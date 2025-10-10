@@ -237,15 +237,15 @@ export class LDAIClientImpl implements LDAIClient {
     // Track chat initialization
     this._ldClient.track('$ld:ai:config:function:initChat', context, key, 1);
 
-    const config = await this.config(key, context, defaultValue, variables);
+    const aiConfig = await this.config(key, context, defaultValue, variables);
 
     // Return undefined if the configuration is disabled
-    if (!config.enabled) {
+    if (!aiConfig.enabled) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
       return undefined;
     }
 
     // Create the TrackedChat instance based on the provider
-    return TrackedChatFactory.create(config, config.tracker, this._logger);
+    return TrackedChatFactory.create(aiConfig, aiConfig.tracker, this._logger);
   }
 }
