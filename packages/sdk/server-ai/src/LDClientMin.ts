@@ -1,4 +1,4 @@
-import { LDContext, LDFlagValue } from '@launchdarkly/js-server-sdk-common';
+import { LDContext, LDFlagValue, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * Interface which represents the required interface components for a sever SDK
@@ -13,4 +13,6 @@ export interface LDClientMin {
   ): Promise<LDFlagValue>;
 
   track(key: string, context: LDContext, data?: any, metricValue?: number): void;
+
+  readonly logger?: LDLogger;
 }

@@ -6,6 +6,7 @@ import {
   createBedrockTokenUsage,
   createOpenAiUsage,
   createVercelAISDKTokenUsage,
+  LDAIMetrics,
   LDFeedbackKind,
   LDTokenUsage,
 } from './api/metrics';
@@ -85,6 +86,37 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackError(): void {
     this._trackedMetrics.success = false;
     this._ldClient.track('$ld:ai:generation:error', this._context, this._getTrackData(), 1);
+  }
+
+  async trackMetricsOf<TRes>(
+    metricsExtractor: (result: TRes) => LDAIMetrics,
+    func: () => Promise<TRes>,
+  ): Promise<TRes> {
+    let result: TRes;
+
+    try {
+      result = await this.trackDurationOf(func);
+    } catch (err) {
+      this.trackError();
+      throw err;
+    }
+
+    // Extract metrics after successful AI call
+    const metrics = metricsExtractor(result);
+
+    // Track success/error based on metrics
+    if (metrics.success) {
+      this.trackSuccess();
+    } else {
+      this.trackError();
+    }
+
+    // Track token usage if available
+    if (metrics.usage) {
+      this.trackTokens(metrics.usage);
+    }
+
+    return result;
   }
 
   async trackOpenAIMetrics<

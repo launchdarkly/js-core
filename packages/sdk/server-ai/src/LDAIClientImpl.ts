@@ -1,8 +1,9 @@
 import * as Mustache from 'mustache';
 
-import { LDContext } from '@launchdarkly/js-server-sdk-common';
+import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './api/agents';
+import { TrackedChat, TrackedChatFactory } from './api/chat';
 import {
   LDAIConfig,
   LDAIConfigTracker,
@@ -57,7 +58,11 @@ interface EvaluationResult {
 }
 
 export class LDAIClientImpl implements LDAIClient {
-  constructor(private _ldClient: LDClientMin) {}
+  private _logger?: LDLogger;
+
+  constructor(private _ldClient: LDClientMin) {
+    this._logger = _ldClient.logger;
+  }
 
   private _interpolateTemplate(template: string, variables: Record<string, unknown>): string {
     return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
@@ -221,5 +226,26 @@ export class LDAIClientImpl implements LDAIClient {
     );
 
     return agents;
+  }
+
+  async initChat(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIDefaults,
+    variables?: Record<string, unknown>,
+  ): Promise<TrackedChat | undefined> {
+    // Track chat initialization
+    this._ldClient.track('$ld:ai:config:function:initChat', context, key, 1);
+
+    const aiConfig = await this.config(key, context, defaultValue, variables);
+
+    // Return undefined if the configuration is disabled
+    if (!aiConfig.enabled) {
+      this._logger?.info(`Chat configuration is disabled: ${key}`);
+      return undefined;
+    }
+
+    // Create the TrackedChat instance based on the provider
+    return TrackedChatFactory.create(aiConfig, aiConfig.tracker, this._logger);
   }
 }
