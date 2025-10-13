@@ -1,9 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfig } from '../config/LDAIConfig';
-import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
-import { AIProvider } from '../providers/AIProvider';
-import { TrackedChat } from './TrackedChat';
+import { AIProvider } from './AIProvider';
 
 /**
  * List of supported AI providers.
@@ -21,41 +19,19 @@ export const SUPPORTED_AI_PROVIDERS = [
 export type SupportedAIProvider = (typeof SUPPORTED_AI_PROVIDERS)[number];
 
 /**
- * Factory for creating TrackedChat instances based on the provider configuration.
+ * Factory for creating AIProvider instances based on the provider configuration.
  */
-export class TrackedChatFactory {
+export class AIProviderFactory {
   /**
-   * Create a TrackedChat instance based on the AI configuration.
+   * Create an AIProvider instance based on the AI configuration.
    * This method attempts to load provider-specific implementations dynamically.
    * Returns undefined if the provider is not supported.
    *
    * @param aiConfig The AI configuration
-   * @param tracker The tracker for AI operations
    * @param logger Optional logger for logging provider initialization
    * @param defaultAiProvider Optional default AI provider to use
    */
   static async create(
-    aiConfig: LDAIConfig,
-    tracker: LDAIConfigTracker,
-    logger?: LDLogger,
-    defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined> {
-    const provider = await this._createAIProvider(aiConfig, logger, defaultAiProvider);
-    if (!provider) {
-      logger?.warn(
-        `Provider is not supported or failed to initialize: ${aiConfig.provider?.name ?? 'unknown'}`,
-      );
-      return undefined;
-    }
-
-    return new TrackedChat(aiConfig, tracker, provider);
-  }
-
-  /**
-   * Create an AIProvider instance based on the AI configuration.
-   * This method attempts to load provider-specific implementations dynamically.
-   */
-  private static async _createAIProvider(
     aiConfig: LDAIConfig,
     logger?: LDLogger,
     defaultAiProvider?: SupportedAIProvider,
@@ -74,6 +50,10 @@ export class TrackedChatFactory {
       }
     }
 
+    // If no provider was successfully created, log a warning
+    logger?.warn(
+      `Provider is not supported or failed to initialize: ${aiConfig.provider?.name ?? 'unknown'}`,
+    );
     return undefined;
   }
 
