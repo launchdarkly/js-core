@@ -3,7 +3,7 @@ import * as Mustache from 'mustache';
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './api/agents';
-import { SupportedAIProvider, TrackedChat, TrackedChatFactory } from './api/chat';
+import { TrackedChat } from './api/chat';
 import {
   LDAIConfig,
   LDAIConfigTracker,
@@ -16,6 +16,7 @@ import {
   VercelAISDKProvider,
 } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
+import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
@@ -246,7 +247,13 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    // Create the TrackedChat instance based on the provider
-    return TrackedChatFactory.create(aiConfig, aiConfig.tracker, this._logger, defaultAiProvider);
+    // Create the AIProvider instance
+    const provider = await AIProviderFactory.create(aiConfig, this._logger, defaultAiProvider);
+    if (!provider) {
+      return undefined;
+    }
+
+    // Create the TrackedChat instance with the provider
+    return new TrackedChat(aiConfig, aiConfig.tracker, provider);
   }
 }
