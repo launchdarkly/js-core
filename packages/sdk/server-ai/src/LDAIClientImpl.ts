@@ -3,7 +3,7 @@ import * as Mustache from 'mustache';
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './api/agents';
-import { TrackedChat, TrackedChatFactory } from './api/chat';
+import { SupportedAIProvider, TrackedChat, TrackedChatFactory } from './api/chat';
 import {
   LDAIConfig,
   LDAIConfigTracker,
@@ -233,6 +233,7 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     defaultValue: LDAIDefaults,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     // Track chat initialization
     this._ldClient.track('$ld:ai:config:function:initChat', context, key, 1);
@@ -246,6 +247,6 @@ export class LDAIClientImpl implements LDAIClient {
     }
 
     // Create the TrackedChat instance based on the provider
-    return TrackedChatFactory.create(aiConfig, aiConfig.tracker, this._logger);
+    return TrackedChatFactory.create(aiConfig, aiConfig.tracker, this._logger, defaultAiProvider);
   }
 }
