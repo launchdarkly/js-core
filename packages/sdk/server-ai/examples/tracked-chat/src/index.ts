@@ -1,9 +1,7 @@
 /* eslint-disable no-console */
 import {
-  basicLogger,
   init,
   type LDContext,
-  LDOptions,
 } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
