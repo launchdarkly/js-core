@@ -33,8 +33,8 @@
     "packages/sdk/server-ai",
     "packages/sdk/server-ai/examples/bedrock",
     "packages/sdk/server-ai/examples/openai",
+    "packages/sdk/server-ai/examples/tracked-chat",
     "packages/sdk/server-ai/examples/vercel-ai",
-    "packages/sdk/server-ai/examples/langchain-chat",
     "packages/telemetry/browser-telemetry",
     "contract-tests",
     "packages/sdk/combined-browser"

@@ -1,5 +1,11 @@
 /* eslint-disable no-console */
-import { init, type LDContext } from '@launchdarkly/node-server-sdk';
+import {
+  basicLogger,
+  init,
+  type LDContext,
+  LDLogger,
+  LDOptions,
+} from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
 // Environment variables
@@ -12,8 +18,13 @@ if (!sdkKey) {
   process.exit(1);
 }
 
+const logger = basicLogger({ level: 'debug', destination: console.log });
+const options: LDOptions = {
+  logger,
+};
+
 // Initialize LaunchDarkly client
-const ldClient = init(sdkKey);
+const ldClient = init(sdkKey, options);
 
 // Set up the context properties. This context should appear on your LaunchDarkly contexts dashboard
 // soon after you run the demo.

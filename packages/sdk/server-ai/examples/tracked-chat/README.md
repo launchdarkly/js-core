@@ -1,11 +1,11 @@
-# LangChain Chat Example
+# Tracked Chat Example
 
-This example demonstrates how to use the LaunchDarkly AI SDK with LangChain for chat interactions.
+This example demonstrates how to use the LaunchDarkly AI SDK chat functionality with multiple providers for tracked chat interactions.
 
 ## Prerequisites
 
 1. A LaunchDarkly account and SDK key
-1. An OpenAI API key (for the LangChain integration)
+1. An OpenAI API key (for the AI provider)
 1. Node.js 16 or later
 
 ## Setup
@@ -72,5 +72,5 @@ This will:
 - **AI Config Integration**: Using LaunchDarkly to configure AI models and prompts
 - **Variable Interpolation**: Using Mustache templates with runtime variables
 - **Chat Conversations**: Multi-turn conversations with message history
-- **Provider Integration**: Using LangChain as the AI provider
+- **Provider Integration**: Using multiple AI providers through the LaunchDarkly AI SDK
 - **Metrics Tracking**: Automatic tracking of token usage and performance
