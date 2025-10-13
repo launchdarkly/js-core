@@ -90,17 +90,20 @@ export class TrackedChatFactory {
     }
 
     // If no defaultAiProvider is set, try all providers in order
-    const providers: SupportedAIProvider[] = [];
+    const providerSet = new Set<SupportedAIProvider>();
 
     // First try the specific provider if it's supported
     if (providerName && SUPPORTED_AI_PROVIDERS.includes(providerName as SupportedAIProvider)) {
-      providers.push(providerName as SupportedAIProvider);
+      providerSet.add(providerName as SupportedAIProvider);
     }
 
-    // Then try multi-provider packages
-    providers.push('langchain', 'vercel');
+    // Then try multi-provider packages, but avoid duplicates
+    const multiProviderPackages: SupportedAIProvider[] = ['langchain', 'vercel'];
+    for (const provider of multiProviderPackages) {
+      providerSet.add(provider);
+    }
 
-    return providers;
+    return Array.from(providerSet);
   }
 
   /**
