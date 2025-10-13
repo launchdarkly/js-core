@@ -45,7 +45,7 @@ jobs:
     if: ${{ needs.release-please.outputs.package-common-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -65,7 +65,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -85,7 +85,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -105,7 +105,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -125,7 +125,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -145,7 +145,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -165,7 +165,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-fastly-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -185,7 +185,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -205,7 +205,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -225,7 +225,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -245,7 +245,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -265,7 +265,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -285,7 +285,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -305,7 +305,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -329,7 +329,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -351,7 +351,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -371,7 +371,7 @@ jobs:
     if: ${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -391,7 +391,7 @@ jobs:
     if: false #${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-universal-release == 'true' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -411,7 +411,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -431,7 +431,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-telemetry-released == 'true' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -451,7 +451,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-combined-browser-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
@@ -471,7 +471,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-langchain-released == 'true'}}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
