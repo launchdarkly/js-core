@@ -3,20 +3,18 @@ import { OpenAI } from 'openai';
 import { OpenAIProvider } from '../src/OpenAIProvider';
 
 // Mock OpenAI
-jest.mock('openai', () => {
-  return {
-    OpenAI: jest.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: jest.fn().mockResolvedValue({
-            choices: [{ message: { content: 'Test response' } }],
-            usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
-          }),
-        },
+jest.mock('openai', () => ({
+  OpenAI: jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn().mockResolvedValue({
+          choices: [{ message: { content: 'Test response' } }],
+          usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+        }),
       },
-    })),
-  };
-});
+    },
+  })),
+}));
 
 describe('OpenAIProvider', () => {
   let mockOpenAI: jest.Mocked<OpenAI>;
@@ -26,7 +24,6 @@ describe('OpenAIProvider', () => {
     mockOpenAI = new OpenAI() as jest.Mocked<OpenAI>;
     provider = new OpenAIProvider(mockOpenAI, 'gpt-3.5-turbo', {});
   });
-
 
   describe('createAIMetrics', () => {
     it('creates metrics with success=true and token usage', () => {
@@ -101,9 +98,7 @@ describe('OpenAIProvider', () => {
 
       (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
 
-      const messages = [
-        { role: 'user' as const, content: 'Hello!' },
-      ];
+      const messages = [{ role: 'user' as const, content: 'Hello!' }];
 
       const result = await provider.invokeModel(messages);
 
@@ -128,7 +123,7 @@ describe('OpenAIProvider', () => {
       });
     });
 
-    it('throws error when no content in response', async () => {
+    it('returns unsuccessful response when no content in response', async () => {
       const mockResponse = {
         choices: [
           {
@@ -141,25 +136,66 @@ describe('OpenAIProvider', () => {
 
       (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
 
-      const messages = [
-        { role: 'user' as const, content: 'Hello!' },
-      ];
+      const messages = [{ role: 'user' as const, content: 'Hello!' }];
 
-      await expect(provider.invokeModel(messages)).rejects.toThrow('No content in OpenAI response');
+      const result = await provider.invokeModel(messages);
+
+      expect(result).toEqual({
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+          usage: undefined,
+        },
+      });
     });
 
-    it('handles empty choices array', async () => {
+    it('returns unsuccessful response when choices array is empty', async () => {
       const mockResponse = {
         choices: [],
       };
 
       (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
 
-      const messages = [
-        { role: 'user' as const, content: 'Hello!' },
-      ];
+      const messages = [{ role: 'user' as const, content: 'Hello!' }];
 
-      await expect(provider.invokeModel(messages)).rejects.toThrow('No content in OpenAI response');
+      const result = await provider.invokeModel(messages);
+
+      expect(result).toEqual({
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+          usage: undefined,
+        },
+      });
+    });
+
+    it('returns unsuccessful response when choices is undefined', async () => {
+      const mockResponse = {
+        // choices is missing entirely
+      };
+
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
+
+      const messages = [{ role: 'user' as const, content: 'Hello!' }];
+
+      const result = await provider.invokeModel(messages);
+
+      expect(result).toEqual({
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+          usage: undefined,
+        },
+      });
     });
   });
 

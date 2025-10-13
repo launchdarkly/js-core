@@ -19,7 +19,12 @@ export class OpenAIProvider extends AIProvider {
   private _modelName: string;
   private _parameters: Record<string, unknown>;
 
-  constructor(client: OpenAI, modelName: string, parameters: Record<string, unknown>, logger?: LDLogger) {
+  constructor(
+    client: OpenAI,
+    modelName: string,
+    parameters: Record<string, unknown>,
+    logger?: LDLogger,
+  ) {
     super(logger);
     this._client = client;
     this._modelName = modelName;
@@ -53,24 +58,26 @@ export class OpenAIProvider extends AIProvider {
     // Call OpenAI chat completions API
     const response = await this._client.chat.completions.create({
       model: this._modelName,
-      messages: messages,
+      messages,
       ...this._parameters,
     });
 
-    // Extract the first choice content
-    const choice = response.choices[0];
-    if (!choice?.message?.content) {
-      throw new Error('No content in OpenAI response');
+    // Generate metrics early (assumes success by default)
+    const metrics = OpenAIProvider.createAIMetrics(response);
+
+    // Safely extract the first choice content using optional chaining
+    const content = response?.choices?.[0]?.message?.content || '';
+
+    if (!content) {
+      this.logger?.warn('OpenAI response has no content available');
+      metrics.success = false;
     }
 
     // Create the assistant message
     const assistantMessage: LDMessage = {
       role: 'assistant',
-      content: choice.message.content,
+      content,
     };
-
-    // Extract metrics including token usage and success status
-    const metrics = OpenAIProvider.createAIMetrics(response);
 
     return {
       message: assistantMessage,
@@ -84,7 +91,6 @@ export class OpenAIProvider extends AIProvider {
   getClient(): OpenAI {
     return this._client;
   }
-
 
   // =============================================================================
   // STATIC UTILITY METHODS
@@ -107,11 +113,10 @@ export class OpenAIProvider extends AIProvider {
       };
     }
 
-    // OpenAI responses that complete successfully are considered successful
+    // OpenAI responses that complete successfully are considered successful by default
     return {
       success: true,
       usage,
     };
   }
-
 }
