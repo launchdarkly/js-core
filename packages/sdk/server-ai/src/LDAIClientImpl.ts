@@ -4,7 +4,6 @@ import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './api/agents';
 import { TrackedChat } from './api/chat';
-import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import {
   LDAIConfig,
   LDAIConfigTracker,
@@ -17,6 +16,7 @@ import {
   VercelAISDKProvider,
 } from './api/config';
 import { LDAIClient } from './api/LDAIClient';
+import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';

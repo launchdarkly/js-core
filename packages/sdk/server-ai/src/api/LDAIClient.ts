@@ -2,8 +2,8 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './agents';
 import { TrackedChat } from './chat';
-import { SupportedAIProvider } from './providers';
 import { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
+import { SupportedAIProvider } from './providers';
 
 /**
  * Interface for performing AI operations using LaunchDarkly.
