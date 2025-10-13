@@ -27,7 +27,7 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/server-sdk-ai": "0.11.4",
+    "@launchdarkly/server-sdk-ai": "^0.12.0",
     "openai": "^4.0.0"
   },
   "devDependencies": {
