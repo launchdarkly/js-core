@@ -6,6 +6,21 @@ import { AIProvider } from '../providers/AIProvider';
 import { TrackedChat } from './TrackedChat';
 
 /**
+ * List of supported AI providers.
+ */
+export const SUPPORTED_AI_PROVIDERS = [
+  'openai',
+  // Multi-provider packages should be last in the list
+  'langchain',
+  'vercel',
+] as const;
+
+/**
+ * Type representing the supported AI providers.
+ */
+export type SupportedAIProvider = (typeof SUPPORTED_AI_PROVIDERS)[number];
+
+/**
  * Factory for creating TrackedChat instances based on the provider configuration.
  */
 export class TrackedChatFactory {
@@ -17,13 +32,15 @@ export class TrackedChatFactory {
    * @param aiConfig The AI configuration
    * @param tracker The tracker for AI operations
    * @param logger Optional logger for logging provider initialization
+   * @param defaultAiProvider Optional default AI provider to use
    */
   static async create(
     aiConfig: LDAIConfig,
     tracker: LDAIConfigTracker,
     logger?: LDLogger,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
-    const provider = await this._createAIProvider(aiConfig, logger);
+    const provider = await this._createAIProvider(aiConfig, logger, defaultAiProvider);
     if (!provider) {
       logger?.warn(
         `Provider is not supported or failed to initialize: ${aiConfig.provider?.name ?? 'unknown'}`,
@@ -31,7 +48,6 @@ export class TrackedChatFactory {
       return undefined;
     }
 
-    logger?.debug(`Successfully created TrackedChat for provider: ${aiConfig.provider?.name}`);
     return new TrackedChat(aiConfig, tracker, provider);
   }
 
@@ -42,53 +58,114 @@ export class TrackedChatFactory {
   private static async _createAIProvider(
     aiConfig: LDAIConfig,
     logger?: LDLogger,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<AIProvider | undefined> {
     const providerName = aiConfig.provider?.name?.toLowerCase();
-    logger?.debug(`Attempting to create AI provider: ${providerName ?? 'unknown'}`);
-    let provider: AIProvider | undefined;
+    // Determine which providers to try based on defaultAiProvider
+    const providersToTry = this._getProvidersToTry(defaultAiProvider, providerName);
 
-    // Try specific implementations for the provider
-    switch (providerName) {
-      case 'openai':
-        // TODO: Return OpenAI AIProvider implementation when available
-        provider = undefined;
-        break;
-      case 'bedrock':
-        // TODO: Return Bedrock AIProvider implementation when available
-        provider = undefined;
-        break;
-      default:
-        provider = undefined;
+    // Try each provider in order
+    // eslint-disable-next-line no-restricted-syntax
+    for (const providerType of providersToTry) {
+      // eslint-disable-next-line no-await-in-loop
+      const provider = await this._tryCreateProvider(providerType, aiConfig, logger);
+      if (provider) {
+        return provider;
+      }
     }
 
-    // If no specific implementation worked, try the multi-provider packages
-    if (!provider) {
-      provider = await this._createLangChainProvider(aiConfig, logger);
-    }
-
-    return provider;
+    return undefined;
   }
 
   /**
-   * Create a LangChain AIProvider instance if the LangChain provider is available.
+   * Determine which providers to try based on defaultAiProvider and providerName.
    */
-  private static async _createLangChainProvider(
+  private static _getProvidersToTry(
+    defaultAiProvider?: SupportedAIProvider,
+    providerName?: string,
+  ): SupportedAIProvider[] {
+    // If defaultAiProvider is set, only try that specific provider
+    if (defaultAiProvider) {
+      return [defaultAiProvider];
+    }
+
+    // If no defaultAiProvider is set, try all providers in order
+    const providerSet = new Set<SupportedAIProvider>();
+
+    // First try the specific provider if it's supported
+    if (providerName && SUPPORTED_AI_PROVIDERS.includes(providerName as SupportedAIProvider)) {
+      providerSet.add(providerName as SupportedAIProvider);
+    }
+
+    // Then try multi-provider packages, but avoid duplicates
+    const multiProviderPackages: SupportedAIProvider[] = ['langchain', 'vercel'];
+    multiProviderPackages.forEach((provider) => {
+      providerSet.add(provider);
+    });
+
+    return Array.from(providerSet);
+  }
+
+  /**
+   * Try to create a provider of the specified type.
+   */
+  private static async _tryCreateProvider(
+    providerType: SupportedAIProvider,
+    aiConfig: LDAIConfig,
+    logger?: LDLogger,
+  ): Promise<AIProvider | undefined> {
+    switch (providerType) {
+      case 'openai':
+        return this._createProvider(
+          '@launchdarkly/server-sdk-ai-openai',
+          'OpenAIProvider',
+          aiConfig,
+          logger,
+        );
+      case 'langchain':
+        return this._createProvider(
+          '@launchdarkly/server-sdk-ai-langchain',
+          'LangChainProvider',
+          aiConfig,
+          logger,
+        );
+      case 'vercel':
+        return this._createProvider(
+          '@launchdarkly/server-sdk-ai-vercel',
+          'VercelProvider',
+          aiConfig,
+          logger,
+        );
+      default:
+        return undefined;
+    }
+  }
+
+  /**
+   * Create a provider instance dynamically.
+   */
+  private static async _createProvider(
+    packageName: string,
+    providerClassName: string,
     aiConfig: LDAIConfig,
     logger?: LDLogger,
   ): Promise<AIProvider | undefined> {
     try {
-      logger?.debug('Attempting to load LangChain provider');
-      // Try to dynamically import the LangChain provider
-      // This will work if @launchdarkly/server-sdk-ai-langchain is installed
-      // eslint-disable-next-line import/no-extraneous-dependencies, global-require
-      const { LangChainProvider } = require('@launchdarkly/server-sdk-ai-langchain');
+      // Try to dynamically import the provider
+      // This will work if the package is installed
+      // eslint-disable-next-line import/no-extraneous-dependencies, global-require, import/no-dynamic-require
+      const { [providerClassName]: ProviderClass } = require(packageName);
 
-      const provider = await LangChainProvider.create(aiConfig, logger);
-      logger?.debug('Successfully created LangChain provider');
+      const provider = await ProviderClass.create(aiConfig, logger);
+      logger?.debug(
+        `Successfully created AIProvider for: ${aiConfig.provider?.name} with package ${packageName}`,
+      );
       return provider;
     } catch (error) {
-      // If the LangChain provider is not available or creation fails, return undefined
-      logger?.error(`Error creating LangChain provider: ${error}`);
+      // If the provider is not available or creation fails, return undefined
+      logger?.warn(
+        `Error creating AIProvider for: ${aiConfig.provider?.name} with package ${packageName}: ${error}`,
+      );
       return undefined;
     }
   }
