@@ -6,6 +6,8 @@
 ### Features
 
 * Add support for TrackedChats in the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for OpenAI AIProvider to the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for LangChain AIProvider to the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
 * Add support for Vercel AIProvider to the AI SDK ([#946](https://github.com/launchdarkly/js-core/issues/946)) ([8553f24](https://github.com/launchdarkly/js-core/commit/8553f2482a3437975b63992f622b4396cc4ac7e7))
 
 
