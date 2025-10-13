@@ -99,9 +99,9 @@ export class TrackedChatFactory {
 
     // Then try multi-provider packages, but avoid duplicates
     const multiProviderPackages: SupportedAIProvider[] = ['langchain', 'vercel'];
-    for (const provider of multiProviderPackages) {
+    multiProviderPackages.forEach((provider) => {
       providerSet.add(provider);
-    }
+    });
 
     return Array.from(providerSet);
   }
@@ -116,11 +116,26 @@ export class TrackedChatFactory {
   ): Promise<AIProvider | undefined> {
     switch (providerType) {
       case 'openai':
-        return this._createProvider('@launchdarkly/server-sdk-ai-openai', 'OpenAIProvider', aiConfig, logger);
+        return this._createProvider(
+          '@launchdarkly/server-sdk-ai-openai',
+          'OpenAIProvider',
+          aiConfig,
+          logger,
+        );
       case 'langchain':
-        return this._createProvider('@launchdarkly/server-sdk-ai-langchain', 'LangChainProvider', aiConfig, logger);
+        return this._createProvider(
+          '@launchdarkly/server-sdk-ai-langchain',
+          'LangChainProvider',
+          aiConfig,
+          logger,
+        );
       case 'vercel':
-        return this._createProvider('@launchdarkly/server-sdk-ai-vercel', 'VercelProvider', aiConfig, logger);
+        return this._createProvider(
+          '@launchdarkly/server-sdk-ai-vercel',
+          'VercelProvider',
+          aiConfig,
+          logger,
+        );
       default:
         return undefined;
     }
@@ -154,5 +169,4 @@ export class TrackedChatFactory {
       return undefined;
     }
   }
-
 }
