@@ -50,6 +50,9 @@ export class LangChainProvider extends AIProvider {
     // Get the LangChain response
     const response: AIMessage = await this._llm.invoke(langchainMessages);
 
+    // Generate metrics early (assumes success by default)
+    const metrics = LangChainProvider.createAIMetrics(response);
+
     // Extract text content from the response
     let content: string = '';
     if (typeof response.content === 'string') {
@@ -60,6 +63,8 @@ export class LangChainProvider extends AIProvider {
         `Multimodal response not supported, expecting a string. Content type: ${typeof response.content}, Content:`,
         JSON.stringify(response.content, null, 2),
       );
+      // Update metrics to reflect content loss
+      metrics.success = false;
     }
 
     // Create the assistant message
@@ -67,9 +72,6 @@ export class LangChainProvider extends AIProvider {
       role: 'assistant',
       content,
     };
-
-    // Extract metrics including token usage and success status
-    const metrics = LangChainProvider.createAIMetrics(response);
 
     return {
       message: assistantMessage,
@@ -108,6 +110,7 @@ export class LangChainProvider extends AIProvider {
    * This method extracts token usage information and success status from LangChain responses
    * and returns a LaunchDarkly AIMetrics object.
    *
+   * @param langChainResponse The response from the LangChain model
    * @example
    * ```typescript
    * // Use with tracker.trackMetricsOf for automatic tracking
@@ -129,7 +132,7 @@ export class LangChainProvider extends AIProvider {
       };
     }
 
-    // LangChain responses that complete successfully are considered successful
+    // LangChain responses that complete successfully are considered successful by default
     return {
       success: true,
       usage,

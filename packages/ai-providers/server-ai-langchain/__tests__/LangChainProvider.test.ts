@@ -7,6 +7,14 @@ jest.mock('langchain/chat_models/universal', () => ({
   initChatModel: jest.fn(),
 }));
 
+// Mock logger
+const mockLogger = {
+  warn: jest.fn(),
+  info: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+};
+
 describe('LangChainProvider', () => {
   describe('convertMessagesToLangChain', () => {
     it('converts system messages to SystemMessage', () => {
@@ -97,6 +105,61 @@ describe('LangChainProvider', () => {
         success: true,
         usage: undefined,
       });
+    });
+  });
+
+  describe('invokeModel', () => {
+    let mockLLM: any;
+    let provider: LangChainProvider;
+
+    beforeEach(() => {
+      mockLLM = {
+        invoke: jest.fn(),
+      };
+      provider = new LangChainProvider(mockLLM, mockLogger);
+      jest.clearAllMocks();
+    });
+
+    it('returns success=true for string content', async () => {
+      const mockResponse = new AIMessage('Test response');
+      mockLLM.invoke.mockResolvedValue(mockResponse);
+
+      const messages = [{ role: 'user' as const, content: 'Hello' }];
+      const result = await provider.invokeModel(messages);
+
+      expect(result.metrics.success).toBe(true);
+      expect(result.message.content).toBe('Test response');
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('returns success=false for non-string content and logs warning', async () => {
+      const mockResponse = new AIMessage({ type: 'image', data: 'base64data' } as any);
+      mockLLM.invoke.mockResolvedValue(mockResponse);
+
+      const messages = [{ role: 'user' as const, content: 'Hello' }];
+      const result = await provider.invokeModel(messages);
+
+      expect(result.metrics.success).toBe(false);
+      expect(result.message.content).toBe('');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Multimodal response not supported, expecting a string. Content type: object, Content:',
+        JSON.stringify({ type: 'image', data: 'base64data' }, null, 2),
+      );
+    });
+
+    it('returns success=false for array content and logs warning', async () => {
+      const mockResponse = new AIMessage(['text', { type: 'image', data: 'base64data' }] as any);
+      mockLLM.invoke.mockResolvedValue(mockResponse);
+
+      const messages = [{ role: 'user' as const, content: 'Hello' }];
+      const result = await provider.invokeModel(messages);
+
+      expect(result.metrics.success).toBe(false);
+      expect(result.message.content).toBe('');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Multimodal response not supported, expecting a string. Content type: object, Content:',
+        JSON.stringify(['text', { type: 'image', data: 'base64data' }], null, 2),
+      );
     });
   });
 
