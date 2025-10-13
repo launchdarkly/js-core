@@ -78,12 +78,12 @@
       ]
     },
     "packages/tooling/jest": {
-      "bump-minor-pre-major": true,
+      "bump-minor-pre-major": true
     },
     "packages/telemetry/browser-telemetry": {}
   },
   "packages/sdk/combined-browser": {
-    "bump-minor-pre-major": true,
+    "bump-minor-pre-major": true
   },
   "plugins": [
     {
