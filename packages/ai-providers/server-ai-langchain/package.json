@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-langchain",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "LaunchDarkly AI SDK LangChain Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-langchain",
   "repository": {
