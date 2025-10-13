@@ -898,3 +898,158 @@ it('tracks error', () => {
     1,
   );
 });
+
+describe('trackMetricsOf', () => {
+  it('tracks success and token usage from metrics', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const mockResult = { response: 'test' };
+    const mockMetrics = {
+      success: true,
+      usage: { total: 100, input: 50, output: 50 },
+    };
+
+    const metricsExtractor = jest.fn().mockReturnValue(mockMetrics);
+    const operation = jest.fn().mockResolvedValue(mockResult);
+
+    const result = await tracker.trackMetricsOf(metricsExtractor, operation);
+
+    expect(result).toBe(mockResult);
+    expect(metricsExtractor).toHaveBeenCalledWith(mockResult);
+    expect(operation).toHaveBeenCalled();
+
+    // Should track success
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      { configKey, variationKey, version, modelName, providerName },
+      1,
+    );
+
+    // Should track token usage
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:total',
+      testContext,
+      { configKey, variationKey, version, modelName, providerName },
+      100,
+    );
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:input',
+      testContext,
+      { configKey, variationKey, version, modelName, providerName },
+      50,
+    );
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tokens:output',
+      testContext,
+      { configKey, variationKey, version, modelName, providerName },
+      50,
+    );
+  });
+
+  it('tracks failure when metrics indicate failure', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const mockResult = { response: 'test' };
+    const mockMetrics = {
+      success: false,
+    };
+
+    const metricsExtractor = jest.fn().mockReturnValue(mockMetrics);
+    const operation = jest.fn().mockResolvedValue(mockResult);
+
+    await tracker.trackMetricsOf(metricsExtractor, operation);
+
+    // Should track error
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      testContext,
+      { configKey, variationKey, version, modelName, providerName },
+      1,
+    );
+  });
+
+  it('tracks failure when operation throws', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const error = new Error('Operation failed');
+    const metricsExtractor = jest.fn();
+    const operation = jest.fn().mockRejectedValue(error);
+
+    await expect(tracker.trackMetricsOf(metricsExtractor, operation)).rejects.toThrow(error);
+
+    // Should track error
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:error',
+      testContext,
+      { configKey, variationKey, version, modelName, providerName },
+      1,
+    );
+
+    // Should not call metrics extractor when operation fails
+    expect(metricsExtractor).not.toHaveBeenCalled();
+  });
+
+  it('tracks metrics without token usage', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const mockResult = { response: 'test' };
+    const mockMetrics = {
+      success: true,
+      // No usage provided
+    };
+
+    const metricsExtractor = jest.fn().mockReturnValue(mockMetrics);
+    const operation = jest.fn().mockResolvedValue(mockResult);
+
+    await tracker.trackMetricsOf(metricsExtractor, operation);
+
+    // Should track success but not token usage
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      { configKey, variationKey, version, modelName, providerName },
+      1,
+    );
+
+    // Should not track token usage
+    expect(mockTrack).not.toHaveBeenCalledWith(
+      '$ld:ai:tokens:total',
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Number),
+    );
+  });
+});

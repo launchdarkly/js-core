@@ -1,7 +1,9 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './agents';
+import { TrackedChat } from './chat';
 import { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
+import { SupportedAIProvider } from './providers';
 
 /**
  * Interface for performing AI operations using LaunchDarkly.
@@ -143,4 +145,48 @@ export interface LDAIClient {
     agentConfigs: T,
     context: LDContext,
   ): Promise<Record<T[number]['key'], LDAIAgent>>;
+
+  /**
+   * Initializes and returns a new TrackedChat instance for chat interactions.
+   * This method serves as the primary entry point for creating TrackedChat instances from configuration.
+   *
+   * @param key The key identifying the AI chat configuration to use.
+   * @param context The standard LDContext used when evaluating flags.
+   * @param defaultValue A default value representing a standard AI chat config result.
+   * @param variables Dictionary of values for instruction interpolation.
+   * @returns A promise that resolves to the TrackedChat instance, or null if the configuration is disabled.
+   *
+   * @example
+   * ```
+   * const key = "customer_support_chat";
+   * const context = {...};
+   * const defaultValue = {
+   *   config: {
+   *     enabled: false,
+   *     model: { name: "gpt-4" },
+   *     messages: [
+   *       { role: "system", content: "You are a helpful customer support agent." }
+   *     ]
+   *   }
+   * };
+   * const variables = { customerName: 'John' };
+   *
+   * const chat = await client.initChat(key, context, defaultValue, variables);
+   * if (chat) {
+   *   const response = await chat.invoke("I need help with my order");
+   *   console.log(response.message.content);
+   *
+   *   // Access configuration and tracker if needed
+   *   console.log('Model:', chat.getConfig().model?.name);
+   *   chat.getTracker().trackSuccess();
+   * }
+   * ```
+   */
+  initChat(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIDefaults,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<TrackedChat | undefined>;
 }

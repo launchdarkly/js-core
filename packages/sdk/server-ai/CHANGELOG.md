@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.12.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.4...server-sdk-ai-v0.12.0) (2025-10-13)
+
+
+### Features
+
+* Add support for TrackedChats in the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for OpenAI AIProvider to the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for LangChain AIProvider to the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for Vercel AIProvider to the AI SDK ([#946](https://github.com/launchdarkly/js-core/issues/946)) ([8553f24](https://github.com/launchdarkly/js-core/commit/8553f2482a3437975b63992f622b4396cc4ac7e7))
+
 ## [0.11.4](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.3...server-sdk-ai-v0.11.4) (2025-09-15)
 
 
