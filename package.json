@@ -2,6 +2,7 @@
   "name": "@launchdarkly/js-core",
   "workspaces": [
     "packages/ai-providers/server-ai-langchain",
+    "packages/ai-providers/server-ai-openai",
     "packages/ai-providers/server-ai-vercel",
     "packages/shared/common",
     "packages/shared/sdk-client",
