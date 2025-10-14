@@ -46,13 +46,4 @@ This will:
 1. Initialize the LaunchDarkly client
 1. Create a chat configuration using the AI Config
 1. Send a message to the AI and display the response
-1. Continue the conversation with a follow-up question
 1. Automatically track interaction metrics (duration, tokens, success/error)
-
-## Features Demonstrated
-
-- **AI Config Integration**: Using LaunchDarkly to configure AI models and prompts
-- **Variable Interpolation**: Using Mustache templates with runtime variables
-- **Chat Conversations**: Multi-turn conversations with message history
-- **Provider Integration**: Using multiple AI providers through the LaunchDarkly AI SDK
-- **Metrics Tracking**: Automatic tracking of token usage and performance

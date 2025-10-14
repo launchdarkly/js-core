@@ -58,7 +58,7 @@ async function main(): Promise<void> {
   // Example of using the chat functionality
   console.log('\n*** Starting chat conversation:');
   try {
-    const userInput = 'Hello! Can you help me understand what LaunchDarkly is?';
+    const userInput = 'Hello! Can you help me understand how your company can help me?';
     console.log('User Input:', userInput);
 
     const response = await chat.invoke(userInput);
