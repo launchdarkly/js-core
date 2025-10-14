@@ -11,6 +11,9 @@
 > [!CAUTION]
 > This library is a alpha version and should not be considered ready for production use while this message is visible.
 
+> [!NOTE]
+> This provider currently uses OpenAI's completion API. We plan to migrate to the responses API in a future release to take advantage of improved functionality and performance.
+
 # ☝️☝️☝️☝️☝️☝️
 
 ## LaunchDarkly overview
