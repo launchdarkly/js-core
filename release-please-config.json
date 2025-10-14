@@ -1,5 +1,17 @@
 {
   "packages": {
+    "packages/ai-providers/server-ai-langchain": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
+    "packages/ai-providers/server-ai-vercel": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
+    "packages/ai-providers/server-ai-openai": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {},
     "packages/shared/sdk-server": {},
@@ -78,14 +90,12 @@
       ]
     },
     "packages/tooling/jest": {
-      "bump-minor-pre-major": true,
-      "release-as": "0.1.0"
+      "bump-minor-pre-major": true
     },
     "packages/telemetry/browser-telemetry": {}
   },
   "packages/sdk/combined-browser": {
-    "bump-minor-pre-major": true,
-    "release-as": "0.0.1"
+    "bump-minor-pre-major": true
   },
   "plugins": [
     {
