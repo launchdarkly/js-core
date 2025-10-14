@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.1.0...server-sdk-ai-langchain-v0.1.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* Improve documentation for AI SDK and AIProvider ([#958](https://github.com/launchdarkly/js-core/issues/958)) ([17d595a](https://github.com/launchdarkly/js-core/commit/17d595aff301998030cfb62724b8eb37fea9adbf))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.12.0 to ^0.12.1
+
 ## 0.1.0 (2025-10-13)
 
 ### Features
