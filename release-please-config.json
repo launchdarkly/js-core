@@ -5,6 +5,11 @@
       "release-as": "0.1.0",
       "prerelease": true
     },
+    "packages/ai-providers/server-ai-vercel": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0",
+      "prerelease": true
+    },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {},
     "packages/shared/sdk-server": {},

@@ -35,6 +35,7 @@ on:
           - packages/tooling/jest
           - packages/sdk/browser
           - packages/sdk/server-ai
+          - packages/ai-providers/server-ai-vercel
           - packages/telemetry/browser-telemetry
           - packages/sdk/combined-browser
       prerelease:
