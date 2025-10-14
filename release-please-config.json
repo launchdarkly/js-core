@@ -86,6 +86,16 @@
           "type": "json",
           "path": "examples/openai/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/vercel-ai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
         }
       ]
     },
