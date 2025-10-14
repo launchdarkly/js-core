@@ -27,32 +27,14 @@ This example demonstrates how to use the LaunchDarkly AI SDK chat functionality 
    LAUNCHDARKLY_AI_CONFIG_KEY=sample-ai-chat-config
    ```
 
-1. Create an AI Config in LaunchDarkly with the key `sample-ai-config`:
-   ```json
-   {
-     "_ldMeta": {
-       "variationKey": "1234",
-       "enabled": true,
-       "version": 1
-     },
-     "messages": [
-       {
-         "content": "You are a helpful assistant for {{customerName}}. You should be friendly and informative.",
-         "role": "system"
-       }
-     ],
-     "model": {
-       "name": "gpt-3.5-turbo",
-       "parameters": {
-         "temperature": 0.7,
-         "maxTokens": 1000
-       }
-     },
-     "provider": {
-       "name": "langchain"
-     }
-   }
-   ```
+1. Create an AI Config in LaunchDarkly:
+   - Navigate to the AI Configs section in your LaunchDarkly dashboard
+   - Create a new AI Config with the key `sample-ai-config`
+   - Add a variation with the following settings:
+     - **Model Selection**: Select "OpenAI" as the provider and "gpt-3.5-turbo" as the model
+     - **Messages**: Add a system message with the content: "You are a helpful assistant for {{companyName}}. You should be friendly and informative."
+     - Save the variation
+   - Update the default target rule to use the newly created variation
 
 ## Running the Example
 

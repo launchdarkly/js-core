@@ -1,8 +1,5 @@
 /* eslint-disable no-console */
-import {
-  init,
-  type LDContext,
-} from '@launchdarkly/node-server-sdk';
+import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
 // Environment variables
@@ -50,7 +47,7 @@ async function main(): Promise<void> {
 
   // Get AI chat configuration from LaunchDarkly
   const chat = await aiClient.initChat(aiConfigKey, context, defaultValue, {
-    myVariable: 'My User Defined Variable',
+    companyName: 'LaunchDarkly',
   });
 
   if (!chat) {
