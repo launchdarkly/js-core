@@ -36,18 +36,138 @@ npm install @launchdarkly/server-sdk-ai --save
 const aiClient = initAi(ldClient);
 ```
 
-3. Evaluate a model configuration:
+## Setting Default AI Configurations
+
+When retrieving AI configurations, you need to provide default values that will be used if the configuration is not available from LaunchDarkly:
+
+### Fully Configured Default
 
 ```typescript
-const config = await aiClient.config(
-  aiConfigKey!,
-  context,
-  { enabled: false },
-  { myVariable: 'My User Defined Variable' },
-);
+const defaultConfig = {
+  enabled: true,
+  model: { 
+    name: 'gpt-4',
+    parameters: { temperature: 0.7, maxTokens: 1000 }
+  },
+  messages: [
+    { role: 'system', content: 'You are a helpful assistant.' }
+  ]
+};
 ```
 
-For an example of how to use the config please refer to the examples folder.
+### Disabled Default
+
+```typescript
+const defaultConfig = {
+  enabled: false
+};
+```
+
+## Retrieving AI Configurations
+
+The `config` method retrieves AI configurations from LaunchDarkly with support for dynamic variables and fallback values:
+
+```typescript
+const aiConfig = await aiClient.config(
+  aiConfigKey,
+  context,
+  defaultConfig,
+  { myVariable: 'My User Defined Variable' } // Variables for template interpolation
+);
+
+// Ensure configuration is enabled
+if (aiConfig.enabled) {
+  const { messages, model, tracker } = aiConfig;
+  // Use with your AI provider
+}
+```
+
+## TrackedChat for Conversational AI
+
+`TrackedChat` provides a high-level interface for conversational AI with automatic conversation management and metrics tracking:
+
+- Automatically configures models based on AI configuration
+- Maintains conversation history across multiple interactions
+- Automatically tracks token usage, latency, and success rates
+- Works with any supported AI provider (see [AI Providers](https://github.com/launchdarkly/js-core#ai-providers) for available packages)
+
+### Using TrackedChat
+
+```typescript
+// Use the same defaultConfig from the retrieval section above
+const chat = await aiClient.initChat(
+  'customer-support-chat',
+  context,
+  defaultConfig,
+  { customerName: 'John' }
+);
+
+if (chat) {
+  // Simple conversation flow - metrics are automatically tracked by invoke()
+  const response1 = await chat.invoke("I need help with my order");
+  console.log(response1.message.content);
+  
+  const response2 = await chat.invoke("What's the status?");
+  console.log(response2.message.content);
+  
+  // Access conversation history
+  const messages = chat.getMessages();
+  console.log(`Conversation has ${messages.length} messages`);
+}
+```
+
+## Advanced Usage with Providers
+
+For more control, you can use the configuration directly with AI providers. We recommend using [LaunchDarkly AI Provider packages](https://github.com/launchdarkly/js-core#ai-providers) when available:
+
+### Using AI Provider Packages
+
+```typescript
+import { LangChainProvider } from '@launchdarkly/server-sdk-ai-langchain';
+
+const aiConfig = await aiClient.config(aiConfigKey, context, defaultValue);
+
+// Create LangChain model from configuration
+const llm = await LangChainProvider.createLangChainModel(aiConfig);
+
+// Use with tracking
+const response = await aiConfig.tracker.trackMetricsOf(
+  (result) => LangChainProvider.createAIMetrics(result),
+  () => llm.invoke(messages)
+);
+
+console.log('AI Response:', response.content);
+```
+
+### Using Custom Providers
+
+```typescript
+import { LDAIMetrics } from '@launchdarkly/server-sdk-ai';
+
+const aiConfig = await aiClient.config(aiConfigKey, context, defaultValue);
+
+// Define custom metrics mapping for your provider
+const mapCustomProviderMetrics = (response: any): LDAIMetrics => ({
+  success: true,
+  usage: {
+    total: response.usage?.total_tokens || 0,
+    input: response.usage?.prompt_tokens || 0,
+    output: response.usage?.completion_tokens || 0,
+  }
+});
+
+// Use with custom provider and tracking
+const result = await aiConfig.tracker.trackMetricsOf(
+  mapCustomProviderMetrics,
+  () => customProvider.generate({
+    messages: aiConfig.messages || [],
+    model: aiConfig.model?.name || 'custom-model',
+    temperature: aiConfig.model?.parameters?.temperature ?? 0.5,
+  })
+);
+
+console.log('AI Response:', result.content);
+```
 
 ## Contributing
 
