@@ -27,6 +27,8 @@ This package provides Vercel AI SDK integration for the LaunchDarkly AI SDK. The
 
 ```shell
 npm install @launchdarkly/server-sdk-ai @launchdarkly/server-sdk-ai-vercel --save
+# or
+yarn add @launchdarkly/server-sdk-ai @launchdarkly/server-sdk-ai-vercel
 ```
 
 2. Create a chat session and use it:
@@ -48,7 +50,7 @@ const defaultConfig = {
 const chat = await aiClient.initChat('my-chat-config', context, defaultConfig);
 
 if (chat) {
-  const response = await chat.invoke("What is the capital of France?");
+  const response = await chat.invoke('What is the capital of France?');
   console.log(response.message.content);
 }
 ```
