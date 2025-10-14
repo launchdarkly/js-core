@@ -38,6 +38,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | AI Providers                                                                              | npm                                                           | issues                                      | tests                                                               |
 | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
 | [@launchdarkly/server-sdk-ai-langchain](packages/ai-providers/server-ai-langchain/README.md) | [![NPM][server-ai-langchain-npm-badge]][server-ai-langchain-npm-link] | [server-ai-langchain][package-ai-providers-server-ai-langchain-issues] | [![Actions Status][server-ai-langchain-ci-badge]][server-ai-langchain-ci] |
+| [@launchdarkly/server-sdk-ai-openai](packages/ai-providers/server-ai-openai/README.md) | [![NPM][server-ai-openai-npm-badge]][server-ai-openai-npm-link] | [server-ai-openai][package-ai-providers-server-ai-openai-issues] | [![Actions Status][server-ai-openai-ci-badge]][server-ai-openai-ci] |
 | [@launchdarkly/server-sdk-ai-vercel](packages/ai-providers/server-ai-vercel/README.md) | [![NPM][server-ai-vercel-npm-badge]][server-ai-vercel-npm-link] | [server-ai-vercel][package-ai-providers-server-ai-vercel-issues] | [![Actions Status][server-ai-vercel-ci-badge]][server-ai-vercel-ci] |
 
 ## Organization
@@ -231,6 +232,12 @@ We encourage pull requests and other contributions from the community. Check out
 [server-ai-langchain-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/server-sdk-ai-langchain.svg?style=flat-square
 [server-ai-langchain-npm-link]: https://www.npmjs.com/package/@launchdarkly/server-sdk-ai-langchain
 [package-ai-providers-server-ai-langchain-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+ai-providers%2Fserver-ai-langchain%22+
+[//]: # 'ai-providers/server-ai-openai'
+[server-ai-openai-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-openai.yml/badge.svg
+[server-ai-openai-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-openai.yml
+[server-ai-openai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/server-sdk-ai-openai.svg?style=flat-square
+[server-ai-openai-npm-link]: https://www.npmjs.com/package/@launchdarkly/server-sdk-ai-openai
+[package-ai-providers-server-ai-openai-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+ai-providers%2Fserver-ai-openai%22+
 [//]: # 'ai-providers/server-ai-vercel'
 [server-ai-vercel-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-vercel.yml/badge.svg
 [server-ai-vercel-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-vercel.yml
