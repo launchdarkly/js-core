@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.1.0...server-sdk-ai-langchain-v0.1.0) (2025-10-14)
+
+
+### Bug Fixes
+
+* Make unit test less brittle and add CI ([#953](https://github.com/launchdarkly/js-core/issues/953)) ([a2236a9](https://github.com/launchdarkly/js-core/commit/a2236a9d455c60901b870dfe4beb8cffcfab986f))
+
 ## 0.1.0 (2025-10-13)
 
 
