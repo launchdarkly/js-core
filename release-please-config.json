@@ -4,6 +4,10 @@
       "bump-minor-pre-major": true,
       "prerelease": true
     },
+    "packages/ai-providers/server-ai-vercel": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {},
     "packages/shared/sdk-server": {},

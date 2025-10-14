@@ -1,0 +1,1 @@
+export { VercelProvider } from './VercelProvider';
