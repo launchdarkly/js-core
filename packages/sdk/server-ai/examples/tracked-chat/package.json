@@ -13,9 +13,9 @@
     "@langchain/google-genai": "^0.2.18",
     "@launchdarkly/node-server-sdk": "^9.0.0",
     "@launchdarkly/server-sdk-ai": "0.12.1",
-    "@launchdarkly/server-sdk-ai-langchain": "0.1.1",
-    "@launchdarkly/server-sdk-ai-openai": "0.1.0",
-    "@launchdarkly/server-sdk-ai-vercel": "0.1.0",
+    "@launchdarkly/server-sdk-ai-langchain": "^0.1.0",
+    "@launchdarkly/server-sdk-ai-openai": "^0.1.0",
+    "@launchdarkly/server-sdk-ai-vercel": "^0.1.0",
     "dotenv": "^16.0.0",
     "langchain": "^0.1.0"
   },
