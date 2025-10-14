@@ -27,6 +27,8 @@ This assumes that you have already installed the LaunchDarkly Node.js (server-si
 
 ```shell
 npm install @launchdarkly/server-sdk-ai --save
+# or
+yarn add @launchdarkly/server-sdk-ai
 ```
 
 2. Create an AI SDK instance:
@@ -104,7 +106,7 @@ const chat = await aiClient.initChat(
 
 if (chat) {
   // Simple conversation flow - metrics are automatically tracked by invoke()
-  const response1 = await chat.invoke("I need help with my order");
+  const response1 = await chat.invoke('I need help with my order');
   console.log(response1.message.content);
   
   const response2 = await chat.invoke("What's the status?");

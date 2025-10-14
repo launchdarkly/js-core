@@ -27,6 +27,8 @@ This package provides LangChain integration for the LaunchDarkly AI SDK. The sim
 
 ```shell
 npm install @launchdarkly/server-sdk-ai @launchdarkly/server-sdk-ai-langchain --save
+# or
+yarn add @launchdarkly/server-sdk-ai @launchdarkly/server-sdk-ai-langchain
 ```
 
 2. Create a chat session and use it:
@@ -48,7 +50,7 @@ const defaultConfig = {
 const chat = await aiClient.initChat('my-chat-config', context, defaultConfig);
 
 if (chat) {
-  const response = await chat.invoke("What is the capital of France?");
+  const response = await chat.invoke('What is the capital of France?');
   console.log(response.message.content);
 }
 ```
@@ -68,7 +70,7 @@ const llm = await LangChainProvider.createLangChainModel(aiConfig);
 
 // Convert LaunchDarkly messages to LangChain format and add user message
 const configMessages = aiConfig.messages || [];
-const userMessage = new HumanMessage("What is the capital of France?");
+const userMessage = new HumanMessage('What is the capital of France?');
 const allMessages = [...LangChainProvider.convertMessagesToLangChain(configMessages), userMessage];
 
 // Track the model call with LaunchDarkly tracking
