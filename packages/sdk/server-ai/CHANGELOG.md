@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.0...server-sdk-ai-v0.12.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* Improve documentation for AI SDK and AIProvider ([#958](https://github.com/launchdarkly/js-core/issues/958)) ([17d595a](https://github.com/launchdarkly/js-core/commit/17d595aff301998030cfb62724b8eb37fea9adbf))
+
 ## [0.12.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.4...server-sdk-ai-v0.12.0) (2025-10-13)
 
 
