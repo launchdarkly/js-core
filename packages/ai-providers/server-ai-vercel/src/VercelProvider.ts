@@ -1,5 +1,5 @@
-import { generateText } from 'ai';
 import { LanguageModelV2 } from '@ai-sdk/provider';
+import { generateText } from 'ai';
 
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 import {
@@ -19,11 +19,7 @@ export class VercelProvider extends AIProvider {
   private _model: LanguageModelV2;
   private _parameters: Record<string, unknown>;
 
-  constructor(
-    model: LanguageModelV2,
-    parameters: Record<string, unknown>,
-    logger?: LDLogger,
-  ) {
+  constructor(model: LanguageModelV2, parameters: Record<string, unknown>, logger?: LDLogger) {
     super(logger);
     this._model = model;
     this._parameters = parameters;

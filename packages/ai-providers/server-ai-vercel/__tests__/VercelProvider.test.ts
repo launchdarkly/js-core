@@ -1,3 +1,5 @@
+import { generateText } from 'ai';
+
 import { VercelProvider } from '../src/VercelProvider';
 
 // Mock Vercel AI SDK
@@ -70,7 +72,6 @@ describe('VercelProvider', () => {
 
   describe('invokeModel', () => {
     it('invokes Vercel AI generateText and returns response', async () => {
-      const { generateText } = require('ai');
       const mockResponse = {
         text: 'Hello! How can I help you today?',
         usage: {
@@ -82,9 +83,7 @@ describe('VercelProvider', () => {
 
       (generateText as jest.Mock).mockResolvedValue(mockResponse);
 
-      const messages = [
-        { role: 'user' as const, content: 'Hello!' },
-      ];
+      const messages = [{ role: 'user' as const, content: 'Hello!' }];
 
       const result = await provider.invokeModel(messages);
 
@@ -110,16 +109,13 @@ describe('VercelProvider', () => {
     });
 
     it('handles response without usage data', async () => {
-      const { generateText } = require('ai');
       const mockResponse = {
         text: 'Hello! How can I help you today?',
       };
 
       (generateText as jest.Mock).mockResolvedValue(mockResponse);
 
-      const messages = [
-        { role: 'user' as const, content: 'Hello!' },
-      ];
+      const messages = [{ role: 'user' as const, content: 'Hello!' }];
 
       const result = await provider.invokeModel(messages);
 
@@ -172,7 +168,7 @@ describe('VercelProvider', () => {
       };
 
       await expect(VercelProvider.createVercelModel(mockAiConfig)).rejects.toThrow(
-        'Unsupported Vercel AI provider: unsupported'
+        'Unsupported Vercel AI provider: unsupported',
       );
     });
   });
