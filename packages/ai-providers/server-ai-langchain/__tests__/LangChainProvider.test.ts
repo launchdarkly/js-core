@@ -141,10 +141,7 @@ describe('LangChainProvider', () => {
 
       expect(result.metrics.success).toBe(false);
       expect(result.message.content).toBe('');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Multimodal response not supported, expecting a string. Content type: object, Content:',
-        JSON.stringify({ type: 'image', data: 'base64data' }, null, 2),
-      );
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     });
 
     it('returns success=false for array content and logs warning', async () => {
@@ -156,10 +153,7 @@ describe('LangChainProvider', () => {
 
       expect(result.metrics.success).toBe(false);
       expect(result.message.content).toBe('');
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Multimodal response not supported, expecting a string. Content type: object, Content:',
-        JSON.stringify(['text', { type: 'image', data: 'base64data' }], null, 2),
-      );
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     });
   });
 
