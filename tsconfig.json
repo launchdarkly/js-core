@@ -81,6 +81,9 @@
     },
     {
       "path": "./packages/ai-providers/server-ai-langchain/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/ai-providers/server-ai-openai/tsconfig.ref.json"
     }
   ]
 }
