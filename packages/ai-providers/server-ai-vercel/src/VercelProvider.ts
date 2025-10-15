@@ -1,12 +1,11 @@
-import { LanguageModelV2 } from '@ai-sdk/provider';
-import { generateText } from 'ai';
+import { generateText, LanguageModel } from 'ai';
 
-import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 import {
   AIProvider,
   ChatResponse,
   LDAIConfig,
   LDAIMetrics,
+  LDLogger,
   LDMessage,
   LDTokenUsage,
 } from '@launchdarkly/server-sdk-ai';
@@ -16,10 +15,10 @@ import {
  * This provider integrates Vercel AI SDK with LaunchDarkly's tracking capabilities.
  */
 export class VercelProvider extends AIProvider {
-  private _model: LanguageModelV2;
+  private _model: LanguageModel;
   private _parameters: Record<string, unknown>;
 
-  constructor(model: LanguageModelV2, parameters: Record<string, unknown>, logger?: LDLogger) {
+  constructor(model: LanguageModel, parameters: Record<string, unknown>, logger?: LDLogger) {
     super(logger);
     this._model = model;
     this._parameters = parameters;
@@ -47,6 +46,8 @@ export class VercelProvider extends AIProvider {
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
     // Call Vercel AI generateText
+    // Type assertion: our MinLanguageModel is compatible with the expected LanguageModel interface
+    // The generateText function will work with any object that has the required properties
     const result = await generateText({
       model: this._model,
       messages,
@@ -71,7 +72,7 @@ export class VercelProvider extends AIProvider {
   /**
    * Get the underlying Vercel AI model instance.
    */
-  getModel(): LanguageModelV2 {
+  getModel(): LanguageModel {
     return this._model;
   }
 
@@ -98,16 +99,18 @@ export class VercelProvider extends AIProvider {
    * Create AI metrics information from a Vercel AI response.
    * This method extracts token usage information and success status from Vercel AI responses
    * and returns a LaunchDarkly AIMetrics object.
+   * Supports both v4 and v5 field names for backward compatibility.
    */
   static createAIMetrics(vercelResponse: any): LDAIMetrics {
     // Extract token usage if available
     let usage: LDTokenUsage | undefined;
     if (vercelResponse?.usage) {
-      const { promptTokens, completionTokens, totalTokens } = vercelResponse.usage;
+      const { totalTokens, inputTokens, promptTokens, outputTokens, completionTokens } =
+        vercelResponse.usage;
       usage = {
         total: totalTokens || 0,
-        input: promptTokens || 0,
-        output: completionTokens || 0,
+        input: inputTokens || promptTokens || 0,
+        output: outputTokens || completionTokens || 0,
       };
     }
 
@@ -125,7 +128,7 @@ export class VercelProvider extends AIProvider {
    * @param aiConfig The LaunchDarkly AI configuration
    * @returns A Promise that resolves to a configured Vercel AI model
    */
-  static async createVercelModel(aiConfig: LDAIConfig): Promise<LanguageModelV2> {
+  static async createVercelModel(aiConfig: LDAIConfig): Promise<LanguageModel> {
     const providerName = VercelProvider.mapProvider(aiConfig.provider?.name || '');
     const modelName = aiConfig.model?.name || '';
     // Parameters are not used in model creation but kept for future use
@@ -143,28 +146,28 @@ export class VercelProvider extends AIProvider {
         }
       case 'anthropic':
         try {
-          const { anthropic } = await import('@ai-sdk/anthropic' as any);
+          const { anthropic } = await import('@ai-sdk/anthropic');
           return anthropic(modelName);
         } catch (error) {
           throw new Error(`Failed to load @ai-sdk/anthropic: ${error}`);
         }
       case 'google':
         try {
-          const { google } = await import('@ai-sdk/google' as any);
+          const { google } = await import('@ai-sdk/google');
           return google(modelName);
         } catch (error) {
           throw new Error(`Failed to load @ai-sdk/google: ${error}`);
         }
       case 'cohere':
         try {
-          const { cohere } = await import('@ai-sdk/cohere' as any);
+          const { cohere } = await import('@ai-sdk/cohere');
           return cohere(modelName);
         } catch (error) {
           throw new Error(`Failed to load @ai-sdk/cohere: ${error}`);
         }
       case 'mistral':
         try {
-          const { mistral } = await import('@ai-sdk/mistral' as any);
+          const { mistral } = await import('@ai-sdk/mistral');
           return mistral(modelName);
         } catch (error) {
           throw new Error(`Failed to load @ai-sdk/mistral: ${error}`);

@@ -68,6 +68,52 @@ describe('VercelProvider', () => {
         },
       });
     });
+
+    it('supports v5 field names (inputTokens, outputTokens)', () => {
+      const mockResponse = {
+        usage: {
+          inputTokens: 40,
+          outputTokens: 60,
+          totalTokens: 100,
+        },
+      };
+
+      const result = VercelProvider.createAIMetrics(mockResponse);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 40,
+          output: 60,
+        },
+      });
+    });
+
+    it('prefers v5 field names over v4 when both are present', () => {
+      const mockResponse = {
+        usage: {
+          // v4 field names
+          promptTokens: 10,
+          completionTokens: 20,
+          // v5 field names (should be preferred)
+          inputTokens: 40,
+          outputTokens: 60,
+          totalTokens: 100,
+        },
+      };
+
+      const result = VercelProvider.createAIMetrics(mockResponse);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 40, // inputTokens preferred over promptTokens
+          output: 60, // outputTokens preferred over completionTokens
+        },
+      });
+    });
   });
 
   describe('invokeModel', () => {
