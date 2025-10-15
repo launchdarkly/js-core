@@ -57,6 +57,25 @@ if (chat) {
 
 For more information about using the LaunchDarkly AI SDK, see the [LaunchDarkly AI SDK documentation](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-ai/README.md).
 
+## Langchain Provider Installation
+
+> **Important**: You will need to install additional provider packages for the specific AI models you want to use. LangChain requires separate packages for each provider.
+
+When creating a new LangChain model, LaunchDarkly uses an AI Config and the `initChatModel` provided by LangChain to create a model instance. You should install all LangChain providers for each provider you plan to use in your AI Config to ensure they can be properly instantiated.
+
+### Installing a LangChain Provider
+
+To use specific AI models, install the corresponding provider package:
+
+```shell
+# For OpenAI models
+npm install @langchain/openai --save
+# or
+yarn add @langchain/openai
+```
+
+For a complete list of available providers and installation instructions, see the [LangChain JavaScript Integrations documentation](https://js.langchain.com/docs/integrations/chat/).
+
 ## Advanced Usage
 
 For more control, you can use the LangChain provider package directly with LaunchDarkly configurations:
