@@ -46,8 +46,8 @@
     "typescript": "5.1.6"
   },
   "peerDependencies": {
-    "@launchdarkly/server-sdk-ai": "^0.12.2",
     "@langchain/core": "^0.2.0 || ^0.3.0",
+    "@launchdarkly/server-sdk-ai": "^0.12.2",
     "langchain": "^0.2.0 || ^0.3.0"
   }
 }
