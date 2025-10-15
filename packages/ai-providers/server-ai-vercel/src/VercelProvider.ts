@@ -1,8 +1,8 @@
 import { LanguageModelV2 } from '@ai-sdk/provider';
 import { generateText } from 'ai';
 
-import {
-  AIProvider,
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
+import type {
   ChatResponse,
   LDAIConfig,
   LDAIMetrics,

@@ -26,9 +26,6 @@
   ],
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
-  "dependencies": {
-    "@launchdarkly/server-sdk-ai": "^0.12.1"
-  },
   "devDependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/cohere": "^2.0.0",
@@ -55,6 +52,7 @@
     "typescript": "5.1.6"
   },
   "peerDependencies": {
+    "@launchdarkly/server-sdk-ai": "^0.12.2",
     "@ai-sdk/openai": "^2.0.0",
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/cohere": "^2.0.0",

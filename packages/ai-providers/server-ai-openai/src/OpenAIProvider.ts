@@ -1,7 +1,7 @@
 import { OpenAI } from 'openai';
 
-import {
-  AIProvider,
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
+import type {
   ChatResponse,
   LDAIConfig,
   LDAIMetrics,

@@ -2,8 +2,8 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { initChatModel } from 'langchain/chat_models/universal';
 
-import {
-  AIProvider,
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
+import type {
   ChatResponse,
   LDAIConfig,
   LDAIMetrics,
