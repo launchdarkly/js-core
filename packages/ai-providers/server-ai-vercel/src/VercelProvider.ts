@@ -108,9 +108,9 @@ export class VercelProvider extends AIProvider {
       const { totalTokens, inputTokens, promptTokens, outputTokens, completionTokens } =
         vercelResponse.usage;
       usage = {
-        total: totalTokens || 0,
-        input: inputTokens || promptTokens || 0,
-        output: outputTokens || completionTokens || 0,
+        total: totalTokens ?? 0,
+        input: inputTokens ?? promptTokens ?? 0,
+        output: outputTokens ?? completionTokens ?? 0,
       };
     }
 
