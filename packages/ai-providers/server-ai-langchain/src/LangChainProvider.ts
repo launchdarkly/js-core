@@ -2,12 +2,12 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { initChatModel } from 'langchain/chat_models/universal';
 
-import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 import {
   AIProvider,
   ChatResponse,
   LDAIConfig,
   LDAIMetrics,
+  LDLogger,
   LDMessage,
   LDTokenUsage,
 } from '@launchdarkly/server-sdk-ai';
