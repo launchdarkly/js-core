@@ -69,7 +69,9 @@ To use specific AI models, install the corresponding provider package:
 
 ```shell
 # For OpenAI models
-npm install @ai-sdk/openai
+npm install @ai-sdk/openai --save
+# or
+yarn add @ai-sdk/openai
 ```
 
 For a complete list of available providers and installation instructions, see the [Vercel AI SDK Providers documentation](https://sdk.vercel.ai/providers).

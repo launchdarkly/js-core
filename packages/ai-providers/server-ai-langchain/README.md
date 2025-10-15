@@ -69,7 +69,9 @@ To use specific AI models, install the corresponding provider package:
 
 ```shell
 # For OpenAI models
-npm install @langchain/openai
+npm install @langchain/openai --save
+# or
+yarn add @langchain/openai
 ```
 
 For a complete list of available providers and installation instructions, see the [LangChain JavaScript Integrations documentation](https://js.langchain.com/docs/integrations/chat/).
