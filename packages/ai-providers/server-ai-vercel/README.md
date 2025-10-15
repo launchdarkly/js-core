@@ -57,6 +57,23 @@ if (chat) {
 
 For more information about using the LaunchDarkly AI SDK, see the [LaunchDarkly AI SDK documentation](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-ai/README.md).
 
+## Vercel AI Provider Installation
+
+> **Important**: You will need to install additional provider packages for the specific AI models you want to use. The Vercel AI SDK requires separate packages for each provider.
+
+When creating a new Vercel AI model, LaunchDarkly uses an AI Config and the Vercel AI SDK's provider system to create a model instance. You should install all Vercel AI provider packages for each provider you plan to use in your AI Config to ensure they can be properly instantiated.
+
+### Installing a Vercel AI Provider
+
+To use specific AI models, install the corresponding provider package:
+
+```shell
+# For OpenAI models
+npm install @ai-sdk/openai
+```
+
+For a complete list of available providers and installation instructions, see the [Vercel AI SDK Providers documentation](https://sdk.vercel.ai/providers).
+
 ## Advanced Usage
 
 For more control, you can use the Vercel AI provider package directly with LaunchDarkly configurations:
