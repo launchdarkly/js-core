@@ -28,6 +28,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@launchdarkly/js-server-sdk-common": "2.16.2",
+    "@launchdarkly/server-sdk-ai": "^0.12.2",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.3",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
