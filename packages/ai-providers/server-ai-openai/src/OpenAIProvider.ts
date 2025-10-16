@@ -1,11 +1,11 @@
 import { OpenAI } from 'openai';
 
-import { LDLogger } from '@launchdarkly/js-server-sdk-common';
-import {
-  AIProvider,
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
+import type {
   ChatResponse,
   LDAIConfig,
   LDAIMetrics,
+  LDLogger,
   LDMessage,
   LDTokenUsage,
 } from '@launchdarkly/server-sdk-ai';
