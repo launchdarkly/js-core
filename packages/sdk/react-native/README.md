@@ -61,7 +61,11 @@ const userContext = { kind: 'user', key: 'test-user-1' };
 
 const App = () => {
   useEffect(() => {
-    featureClient.identify(userContext).catch((e) => console.error(e));
+    featureClient.identify(userContext).then((result) => {
+      if (result.status === 'error') {
+        console.error(result.error);
+      }
+    });
   }, []);
 
   return (

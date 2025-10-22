@@ -11,7 +11,6 @@ import {
   LDHeaders,
   LDLogger,
   LDPluginEnvironmentMetadata,
-  LDTimeoutError,
   Platform,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -19,7 +18,6 @@ import {
 import {
   Hook,
   LDClient,
-  LDClientIdentifyResult,
   LDIdentifyError,
   LDIdentifyResult,
   LDIdentifyShed,
@@ -43,6 +41,7 @@ import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
+import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
 import InspectorManager from './inspection/InspectorManager';
@@ -53,7 +52,7 @@ const { ClientMessages, ErrorKinds } = internal;
 
 const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
-export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
+export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
   private _uncheckedContext?: LDContext;
   private _checkedContext?: Context;
@@ -223,45 +222,13 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     return { identifyPromise: basePromise, identifyResolve: res, identifyReject: rej };
   }
 
-  /**
-   * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
-   *
-   * If used with the `sheddable` option set to true, then the identify operation will be sheddable. This means that if
-   * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
-   * operations may be discarded.
-   *
-   * It is recommended to use the `identifyResult` method instead when the operation is sheddable. In a future release,
-   * all identify operations will default to being sheddable.
-   *
-   * @param pristineContext The LDContext object to be identified.
-   * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
-   * @returns A Promise which resolves when the flag values for the specified
-   * context are available. It rejects when:
-   *
-   * 1. The context is unspecified or has no key.
-   *
-   * 2. The identify timeout is exceeded. In client SDKs this defaults to 5s.
-   * You can customize this timeout with {@link LDIdentifyOptions | identifyOptions}.
-   *
-   * 3. A network error is encountered during initialization.
-   */
-  async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    // In order to manage customization in the derived classes it is important that `identify` MUST be implemented in
-    // terms of `identifyResult`. So that the logic of the identification process can be extended in one place.
-    const result = await this.identifyResult(pristineContext, identifyOptions);
-    if (result.status === 'error') {
-      throw result.error;
-    } else if (result.status === 'timeout') {
-      const timeoutError = new LDTimeoutError(
-        `identify timed out after ${result.timeout} seconds.`,
-      );
-      this.logger.error(timeoutError.message);
-      throw timeoutError;
-    }
-    // If completed or shed, then we are done.
+  protected setBootstrap(pristineContext: LDContext, newFlags: { [key: string]: ItemDescriptor }) {
+    this._uncheckedContext = pristineContext;
+    this._checkedContext = Context.fromLDContext(this._uncheckedContext);
+    this._flagManager.setBootstrap(this._checkedContext, newFlags);
   }
 
-  async identifyResult(
+  identify(
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {

@@ -57,13 +57,13 @@ describe('given a LDClientCompatImpl client with mocked browser client that is i
 
   beforeEach(() => {
     jest.useFakeTimers();
-    mockBrowserClient.identify.mockImplementation(() => Promise.resolve());
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
     client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });
   });
 
   it('should resolve waitForInitialization when the client is already initialized', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
@@ -81,7 +81,9 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     mockBrowserClient.identify.mockImplementation(
       () =>
         new Promise((r) => {
-          setTimeout(r, 100);
+          setTimeout(() => {
+            r({ status: 'completed' });
+          }, 100);
         }),
     );
     client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });
@@ -92,7 +94,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     const context: LDContext = { kind: 'user', key: 'new-user' };
     const mockFlags: LDFlagSet = { flag1: true, flag2: false };
 
-    mockBrowserClient.identify.mockResolvedValue();
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
     mockBrowserClient.allFlags.mockReturnValue(mockFlags);
 
     const result = await client.identify(context);
@@ -107,7 +109,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     const mockFlags: LDFlagSet = { flag1: true, flag2: false };
 
     mockBrowserClient.allFlags.mockReturnValue(mockFlags);
-    mockBrowserClient.identify.mockImplementation(() => Promise.resolve());
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
     // Starting advancing the timers for the nest call. The wrapped promises
     // do not resolve sychronously.
     jest.advanceTimersToNextTimerAsync();
@@ -115,6 +117,79 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     client.identify(context, undefined, (err, flags) => {
       expect(err).toBeNull();
       expect(flags).toEqual(mockFlags);
+      done();
+    });
+  });
+
+  it('should return a rejected promise from identify when an error occurs and no callback is provided', async () => {
+    jest.advanceTimersToNextTimer();
+    const context: LDContext = { kind: 'user', key: 'new-user' };
+    const mockFlags: LDFlagSet = { flag1: true, flag2: false };
+
+    mockBrowserClient.identify.mockResolvedValue({
+      status: 'error',
+      error: new Error('test-error'),
+    });
+    mockBrowserClient.allFlags.mockReturnValue(mockFlags);
+
+    await expect(client.identify(context)).rejects.toThrow('test-error');
+
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(context, { hash: undefined });
+  });
+
+  it('should call the callback when provided to identify and an error occurs', (done) => {
+    jest.advanceTimersToNextTimer();
+    const context: LDContext = { kind: 'user', key: 'new-user' };
+    const mockFlags: LDFlagSet = { flag1: true, flag2: false };
+
+    mockBrowserClient.allFlags.mockReturnValue(mockFlags);
+    mockBrowserClient.identify.mockResolvedValue({
+      status: 'error',
+      error: new Error('test-error'),
+    });
+    // Starting advancing the timers for the nest call. The wrapped promises
+    // do not resolve sychronously.
+    jest.advanceTimersToNextTimerAsync();
+
+    client.identify(context, undefined, (err, flags) => {
+      expect(err).toEqual(expect.objectContaining({ message: 'test-error' }));
+      expect(flags).toBeNull();
+      done();
+    });
+  });
+
+  it('should return a rejected promise from identify when a timeout occurs and no callback is provided', async () => {
+    jest.advanceTimersToNextTimer();
+    const context: LDContext = { kind: 'user', key: 'new-user' };
+    const mockFlags: LDFlagSet = { flag1: true, flag2: false };
+
+    mockBrowserClient.identify.mockResolvedValue({
+      status: 'timeout',
+      timeout: 5,
+    });
+    mockBrowserClient.allFlags.mockReturnValue(mockFlags);
+
+    await expect(client.identify(context)).rejects.toThrow(/timed out/);
+
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(context, { hash: undefined });
+  });
+
+  it('should call the callback when provided to identify and a timeout occurs', (done) => {
+    jest.advanceTimersToNextTimer();
+    const context: LDContext = { kind: 'user', key: 'new-user' };
+    const mockFlags: LDFlagSet = { flag1: true, flag2: false };
+
+    mockBrowserClient.allFlags.mockReturnValue(mockFlags);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'timeout', timeout: 5 });
+    // Starting advancing the timers for the nest call. The wrapped promises
+    // do not resolve sychronously.
+    jest.advanceTimersToNextTimerAsync();
+
+    client.identify(context, undefined, (err, flags) => {
+      expect(err).toEqual(
+        expect.objectContaining({ message: expect.stringContaining('timed out') }),
+      );
+      expect(flags).toBeNull();
       done();
     });
   });
@@ -161,7 +236,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
 
   it('should resolve waitForInitialization when the client is initialized', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
@@ -172,7 +247,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
 
   it('should resolve second waitForInitialization immediately', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
@@ -184,7 +259,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
 
   it('should resolve waitUntilReady immediately if the client is already initialized', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitUntilReady()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
@@ -409,7 +484,9 @@ it('forwards bootstrap and hash to BrowserClient identify call', async () => {
   mockBrowserClient.identify.mockImplementation(
     () =>
       new Promise((r) => {
-        setTimeout(r, 100);
+        setTimeout(() => {
+          r({ status: 'completed' });
+        }, 100);
       }),
   );
   const bootstrapData = { flagKey: { version: 1, variation: 0, value: true } };
@@ -437,8 +514,8 @@ describe('given a LDClientCompatImpl client with mocked browser client which fai
     jest.useFakeTimers();
     mockBrowserClient.identify.mockImplementation(
       () =>
-        new Promise((r, reject) => {
-          setTimeout(() => reject(new Error('Identify failed')), 100);
+        new Promise((r) => {
+          setTimeout(() => r({ status: 'error', error: new Error('Identify failed') }), 100);
         }),
     );
     client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });

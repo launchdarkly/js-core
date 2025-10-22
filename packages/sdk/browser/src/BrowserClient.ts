@@ -3,6 +3,7 @@ import {
   base64UrlEncode,
   BasicLogger,
   Configuration,
+  Context,
   Encoding,
   FlagManager,
   internal,
@@ -16,6 +17,7 @@ import {
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { readFlagsFromBootstrap } from './bootstrap';
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
@@ -28,6 +30,7 @@ import BrowserPlatform from './platform/BrowserPlatform';
 
 export class BrowserClient extends LDClientImpl implements LDClient {
   private readonly _goalManager?: GoalManager;
+  private _identifyAttempted = false;
 
   constructor(
     clientSideId: string,
@@ -188,21 +191,22 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     );
   }
 
-  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    return super.identify(context, identifyOptions);
-  }
-
-  override async identifyResult(
+  override async identify(
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
+    if (!this._identifyAttempted && identifyOptions?.bootstrap) {
+      this.setBootstrap(context, readFlagsFromBootstrap(this.logger, identifyOptions.bootstrap));
+    }
+    this._identifyAttempted = true;
+
     const identifyOptionsWithUpdatedDefaults = {
       ...identifyOptions,
     };
     if (identifyOptions?.sheddable === undefined) {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
-    const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
+    const res = await super.identify(context, identifyOptionsWithUpdatedDefaults);
     this._goalManager?.startTracking();
     return res;
   }
