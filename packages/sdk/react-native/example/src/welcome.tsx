@@ -13,7 +13,11 @@ export default function Welcome() {
   const onIdentify = () => {
     ldc
       .identify({ kind: 'user', key: userKey }, { timeout: 5 })
-      .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
+      .then((result) => {
+        if (result.status === 'error') {
+          console.error(`error identifying ${userKey}: ${result.error}`);
+        }
+      })
   };
 
   const setConnectionMode = (m: ConnectionMode) => {

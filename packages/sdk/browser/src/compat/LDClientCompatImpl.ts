@@ -52,16 +52,16 @@ export default class LDClientCompatImpl implements LDClient {
     bootstrap?: LDFlagSet,
     hash?: string,
   ): Promise<void> {
-    try {
-      await this._client.identify(context, { noTimeout: true, bootstrap, hash });
+    const result = await this._client.identify(context, { noTimeout: true, bootstrap, hash });
+    if (result.status === 'error') {
+      this._rejectionReason = result.error;
+      this._initState = 'failure';
+      this._initReject?.(result.error);
+      this._emitter.emit('failed', result.error);
+    } else {
       this._initState = 'success';
       this._initResolve?.();
       this._emitter.emit('initialized');
-    } catch (err) {
-      this._rejectionReason = err as Error;
-      this._initState = 'failure';
-      this._initReject?.(err as Error);
-      this._emitter.emit('failed', err);
     }
     // Ready will always be emitted in addition to either 'initialized' or 'failed'.
     this._emitter.emit('ready');
@@ -137,7 +137,16 @@ export default class LDClientCompatImpl implements LDClient {
     onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> | undefined {
     return wrapPromiseCallback(
-      this._client.identify(context, { hash }).then(() => this.allFlags()),
+      this._client
+        .identify(context, { hash })
+        .then((result) => {
+          if (result.status === 'error') {
+            throw result.error;
+          } else if (result.status === 'timeout') {
+            throw new LDTimeoutError(`identify timed out after ${result.timeout} seconds.`);
+          }
+        })
+        .then(() => this.allFlags()),
       onDone,
     ) as Promise<LDFlagSet> | undefined;
     // The typing here is a little funny. The wrapPromiseCallback can technically return

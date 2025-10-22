@@ -189,27 +189,6 @@ describe('given a mock platform for a BrowserClient', () => {
     });
   });
 
-  it('can shed intermediate identifyResult calls', async () => {
-    const client = new BrowserClient(
-      'client-side-id',
-      AutoEnvAttributes.Disabled,
-      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
-      platform,
-    );
-
-    const promise1 = client.identifyResult({ key: 'user-key-1', kind: 'user' });
-    const promise2 = client.identifyResult({ key: 'user-key-2', kind: 'user' });
-    const promise3 = client.identifyResult({ key: 'user-key-3', kind: 'user' });
-
-    const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
-
-    expect(result1).toEqual({ status: 'completed' });
-    expect(result2).toEqual({ status: 'shed' });
-    expect(result3).toEqual({ status: 'completed' });
-    // With events and goals disabled the only fetch calls should be for polling requests.
-    expect(platform.requests.fetch.mock.calls.length).toBe(2);
-  });
-
   it('calls beforeIdentify in order', async () => {
     const order: string[] = [];
     const client = new BrowserClient(
@@ -323,9 +302,9 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
-    const result1 = await client.identifyResult({ key: 'user-key-1', kind: 'user' });
-    const result2 = await client.identifyResult({ key: 'user-key-2', kind: 'user' });
-    const result3 = await client.identifyResult({ key: 'user-key-3', kind: 'user' });
+    const result1 = await client.identify({ key: 'user-key-1', kind: 'user' });
+    const result2 = await client.identify({ key: 'user-key-2', kind: 'user' });
+    const result3 = await client.identify({ key: 'user-key-3', kind: 'user' });
 
     expect(result1.status).toEqual('completed');
     expect(result2.status).toEqual('completed');
@@ -347,8 +326,11 @@ describe('given a mock platform for a BrowserClient', () => {
     const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
     const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
 
-    await Promise.all([promise1, promise2, promise3]);
+    const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
 
+    expect(result1).toEqual({ status: 'completed' });
+    expect(result2).toEqual({ status: 'shed' });
+    expect(result3).toEqual({ status: 'completed' });
     // With events and goals disabled the only fetch calls should be for polling requests.
     expect(platform.requests.fetch.mock.calls.length).toBe(2);
   });
@@ -361,18 +343,9 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
-    const promise1 = client.identifyResult(
-      { key: 'user-key-1', kind: 'user' },
-      { sheddable: false },
-    );
-    const promise2 = client.identifyResult(
-      { key: 'user-key-2', kind: 'user' },
-      { sheddable: false },
-    );
-    const promise3 = client.identifyResult(
-      { key: 'user-key-3', kind: 'user' },
-      { sheddable: false },
-    );
+    const promise1 = client.identify({ key: 'user-key-1', kind: 'user' }, { sheddable: false });
+    const promise2 = client.identify({ key: 'user-key-2', kind: 'user' }, { sheddable: false });
+    const promise3 = client.identify({ key: 'user-key-3', kind: 'user' }, { sheddable: false });
 
     const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
 

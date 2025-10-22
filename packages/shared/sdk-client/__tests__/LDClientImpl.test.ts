@@ -256,7 +256,10 @@ describe('sdk-client object', () => {
   test('identify error invalid context', async () => {
     const carContext: LDContext = { kind: 'car', key: '' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrow(/no key/);
+    await expect(ldc.identify(carContext)).resolves.toEqual({
+      status: 'error',
+      error: expect.objectContaining({ message: expect.stringContaining('no key') }),
+    });
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(ldc.getContext()).toBeUndefined();
   });
@@ -272,7 +275,10 @@ describe('sdk-client object', () => {
 
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    await expect(ldc.identify(carContext)).resolves.toEqual({
+      status: 'error',
+      error: expect.objectContaining({ message: 'test-error' }),
+    });
     expect(logger.error).toHaveBeenCalledTimes(2);
     expect(logger.error).toHaveBeenNthCalledWith(1, expect.stringMatching(/^error:.*test-error/));
     expect(logger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('Received error 404'));
@@ -392,7 +398,10 @@ describe('sdk-client object', () => {
     const spyListener = jest.fn();
     ldc.on('dataSourceStatus', spyListener);
     const changePromise = onDataSourceChangePromise(2);
-    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    await expect(ldc.identify(carContext)).resolves.toEqual({
+      status: 'error',
+      error: expect.objectContaining({ message: 'test-error' }),
+    });
     await changePromise;
 
     expect(spyListener).toHaveBeenCalledTimes(2);

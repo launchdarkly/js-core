@@ -12,8 +12,7 @@ import { LDClient as LDCLientBrowser } from '../LDClient';
  * incorrect. Any function which optionally returned a promise based on a callback had incorrect
  * typings. Those have been corrected in this implementation.
  */
-export interface LDClient
-  extends Omit<LDCLientBrowser, 'close' | 'flush' | 'identify' | 'identifyResult'> {
+export interface LDClient extends Omit<LDCLientBrowser, 'close' | 'flush' | 'identify'> {
   /**
    * Identifies a context to LaunchDarkly.
    *
