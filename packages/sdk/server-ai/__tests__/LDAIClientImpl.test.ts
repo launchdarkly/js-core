@@ -127,7 +127,14 @@ it('passes the default value to the underlying client', async () => {
     enabled: true,
   };
 
-  mockLdClient.variation.mockResolvedValue(defaultValue);
+  const expectedLDFlagValue = {
+    _ldMeta: { enabled: true },
+    model: defaultValue.model,
+    messages: defaultValue.messages,
+    provider: defaultValue.provider,
+  };
+
+  mockLdClient.variation.mockResolvedValue(expectedLDFlagValue);
 
   const result = await client.config(key, testContext, defaultValue);
 
@@ -136,11 +143,11 @@ it('passes the default value to the underlying client', async () => {
     messages: defaultValue.messages,
     provider: defaultValue.provider,
     tracker: expect.any(Object),
-    enabled: false,
+    enabled: defaultValue.enabled,
     toVercelAISDK: expect.any(Function),
   });
 
-  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
+  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, expectedLDFlagValue);
 });
 
 // New agent-related tests
@@ -253,7 +260,14 @@ it('passes the default value to the underlying client for single agent', async (
     enabled: true,
   };
 
-  mockLdClient.variation.mockResolvedValue(defaultValue);
+  const expectedLDFlagValue = {
+    _ldMeta: { enabled: defaultValue.enabled },
+    model: defaultValue.model,
+    provider: defaultValue.provider,
+    instructions: defaultValue.instructions,
+  };
+
+  mockLdClient.variation.mockResolvedValue(expectedLDFlagValue);
 
   const result = await client.agent(key, testContext, defaultValue);
 
@@ -262,10 +276,10 @@ it('passes the default value to the underlying client for single agent', async (
     instructions: defaultValue.instructions,
     provider: defaultValue.provider,
     tracker: expect.any(Object),
-    enabled: false,
+    enabled: defaultValue.enabled,
   });
 
-  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, defaultValue);
+  expect(mockLdClient.variation).toHaveBeenCalledWith(key, testContext, expectedLDFlagValue);
 });
 
 it('returns multiple agents config with interpolated instructions', async () => {

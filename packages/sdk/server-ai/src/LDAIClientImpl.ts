@@ -69,12 +69,32 @@ export class LDAIClientImpl implements LDAIClient {
     return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
   }
 
+  private static _toLDFlagValue(defaultValue: LDAIDefaults | LDAIAgentDefaults): {
+    _ldMeta: { enabled: boolean };
+    model?: LDModelConfig;
+    messages?: LDMessage[];
+    provider?: LDProviderConfig;
+    instructions?: string;
+  } {
+    return {
+      _ldMeta: { enabled: defaultValue.enabled ?? false },
+      model: defaultValue.model,
+      messages: 'messages' in defaultValue ? defaultValue.messages : undefined,
+      provider: defaultValue.provider,
+      instructions: 'instructions' in defaultValue ? defaultValue.instructions : undefined,
+    };
+  }
+
   private async _evaluate(
     key: string,
     context: LDContext,
     defaultValue: LDAIDefaults,
   ): Promise<EvaluationResult> {
-    const value: VariationContent = await this._ldClient.variation(key, context, defaultValue);
+    // Convert default value to LDFlagValue format
+    // eslint-disable-next-line no-underscore-dangle
+    const ldFlagValue = LDAIClientImpl._toLDFlagValue(defaultValue);
+
+    const value: VariationContent = await this._ldClient.variation(key, context, ldFlagValue);
 
     const tracker = new LDAIConfigTrackerImpl(
       this._ldClient,
@@ -109,11 +129,13 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIAgentDefaults,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgent> {
-    const { tracker, enabled, model, provider, instructions } = await this._evaluate(
-      key,
-      context,
-      defaultValue,
-    );
+    const {
+      tracker,
+      enabled,
+      model,
+      provider: configProvider,
+      instructions,
+    } = await this._evaluate(key, context, defaultValue);
 
     const agent: LDAIAgent = {
       tracker,
@@ -126,8 +148,8 @@ export class LDAIClientImpl implements LDAIClient {
       agent.model = { ...model };
     }
 
-    if (provider) {
-      agent.provider = { ...provider };
+    if (configProvider) {
+      agent.provider = { ...configProvider };
     }
 
     const allVariables = { ...variables, ldctx: context };
