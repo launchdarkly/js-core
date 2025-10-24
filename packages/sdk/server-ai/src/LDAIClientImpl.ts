@@ -69,7 +69,7 @@ export class LDAIClientImpl implements LDAIClient {
     return Mustache.render(template, variables, undefined, { escape: (item: any) => item });
   }
 
-  private _toLDFlagValue(defaultValue: LDAIDefaults | LDAIAgentDefaults): {
+  private static _toLDFlagValue(defaultValue: LDAIDefaults | LDAIAgentDefaults): {
     _ldMeta: { enabled: boolean };
     model?: LDModelConfig;
     messages?: LDMessage[];
@@ -91,7 +91,8 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIDefaults,
   ): Promise<EvaluationResult> {
     // Convert default value to LDFlagValue format
-    const ldFlagValue = this._toLDFlagValue(defaultValue);
+    // eslint-disable-next-line no-underscore-dangle
+    const ldFlagValue = LDAIClientImpl._toLDFlagValue(defaultValue);
 
     const value: VariationContent = await this._ldClient.variation(key, context, ldFlagValue);
 
