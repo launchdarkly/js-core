@@ -12,7 +12,7 @@
     "@langchain/core": "^0.3.78",
     "@langchain/google-genai": "^0.2.18",
     "@launchdarkly/node-server-sdk": "^9.0.0",
-    "@launchdarkly/server-sdk-ai": "0.12.2",
+    "@launchdarkly/server-sdk-ai": "0.12.3",
     "@launchdarkly/server-sdk-ai-langchain": "^0.1.0",
     "@launchdarkly/server-sdk-ai-openai": "^0.1.0",
     "@launchdarkly/server-sdk-ai-vercel": "^0.1.0",
