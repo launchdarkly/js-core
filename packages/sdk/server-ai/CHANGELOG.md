@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.2...server-sdk-ai-v0.12.3) (2025-10-24)
+
+
+### Bug Fixes
+
+* Fix default configs always being disabled ([#965](https://github.com/launchdarkly/js-core/issues/965)) ([30e2305](https://github.com/launchdarkly/js-core/commit/30e23056e58a2ca5c5b33ad76db12731f19d01c3))
+
 ## [0.12.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.1...server-sdk-ai-v0.12.2) (2025-10-16)
 
 
