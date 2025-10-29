@@ -1,0 +1,23 @@
+{
+  "name": "judge-evaluation-example",
+  "version": "1.0.0",
+  "description": "Example demonstrating LaunchDarkly AI SDK judge functionality for evaluating AI responses",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/index.js"
+  },
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "^9.0.0",
+    "@launchdarkly/server-sdk-ai": "0.12.2",
+    "@launchdarkly/server-sdk-ai-langchain": "^0.1.0",
+    "@launchdarkly/server-sdk-ai-openai": "^0.1.0",
+    "@launchdarkly/server-sdk-ai-vercel": "^0.1.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
