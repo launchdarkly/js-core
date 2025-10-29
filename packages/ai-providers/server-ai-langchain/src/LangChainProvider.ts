@@ -10,6 +10,7 @@ import type {
   LDLogger,
   LDMessage,
   LDTokenUsage,
+  StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
 /**
@@ -75,6 +76,38 @@ export class LangChainProvider extends AIProvider {
 
     return {
       message: assistantMessage,
+      metrics,
+    };
+  }
+
+  /**
+   * Invoke the LangChain model with structured output support.
+   */
+  async invokeStructuredModel(
+    messages: LDMessage[],
+    responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse> {
+    // Convert LDMessage[] to LangChain messages
+    const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages);
+
+    // Get the LangChain response
+    const response = await this._llm
+      .withStructuredOutput(responseStructure)
+      .invoke(langchainMessages);
+
+    // Using structured output doesn't support metrics
+    const metrics = {
+      success: true,
+      usage: {
+        total: 0,
+        input: 0,
+        output: 0,
+      },
+    };
+
+    return {
+      data: response,
+      rawResponse: JSON.stringify(response),
       metrics,
     };
   }
