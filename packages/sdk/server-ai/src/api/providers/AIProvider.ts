@@ -1,7 +1,8 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
-import { LDAIConfig, LDMessage } from '../config/LDAIConfig';
+import { LDAIConfigKind, LDMessage } from '../config/types';
+import { StructuredResponse } from '../judge/types';
 
 /**
  * Abstract base class for AI providers that implement chat model functionality.
@@ -28,6 +29,20 @@ export abstract class AIProvider {
   abstract invokeModel(messages: LDMessage[]): Promise<ChatResponse>;
 
   /**
+   * Invoke the chat model with structured output support.
+   * This method should convert messages to provider format, invoke the model with
+   * structured output configuration, and return a structured response.
+   *
+   * @param messages Array of LDMessage objects representing the conversation
+   * @param outputs Dictionary of output configurations keyed by output name
+   * @returns Promise that resolves to a structured response
+   */
+  abstract invokeStructuredModel(
+    messages: LDMessage[],
+    responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse>;
+
+  /**
    * Static method that constructs an instance of the provider.
    * Each provider implementation must provide their own static create method
    * that accepts an AIConfig and returns a configured instance.
@@ -37,7 +52,7 @@ export abstract class AIProvider {
    * @returns Promise that resolves to a configured provider instance
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<AIProvider> {
+  static async create(aiConfig: LDAIConfigKind, logger?: LDLogger): Promise<AIProvider> {
     throw new Error('Provider implementations must override the static create method');
   }
 }

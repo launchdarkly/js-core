@@ -1,4 +1,4 @@
-import { LDMessage } from '../config/LDAIConfig';
+import { LDMessage } from '../config/types';
 import { LDAIMetrics } from '../metrics/LDAIMetrics';
 
 /**

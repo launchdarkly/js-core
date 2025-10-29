@@ -1,4 +1,4 @@
-import { type LDMessage } from './LDAIConfig';
+import { type LDMessage } from './types';
 
 export type VercelAISDKProvider<TMod> = (modelName: string) => TMod;
 

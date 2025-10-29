@@ -1,5 +1,5 @@
-import { LDAIConfig, LDMessage } from '../config/LDAIConfig';
 import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
+import { LDAIConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
 import { ChatResponse } from './types';
 

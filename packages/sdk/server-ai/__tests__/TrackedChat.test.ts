@@ -1,7 +1,7 @@
 import { TrackedChat } from '../src/api/chat/TrackedChat';
 import { ChatResponse } from '../src/api/chat/types';
-import { LDAIConfig, LDMessage } from '../src/api/config/LDAIConfig';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
+import { LDAIConfig, LDMessage } from '../src/api/config/types';
 import { AIProvider } from '../src/api/providers/AIProvider';
 
 describe('TrackedChat', () => {
