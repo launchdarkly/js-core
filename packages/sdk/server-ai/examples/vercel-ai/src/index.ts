@@ -40,7 +40,9 @@ async function main() {
   const aiClient = initAi(client);
 
   // Get AI configuration from LaunchDarkly
-  const aiConfig = await aiClient.config(aiConfigKey, context, { model: { name: 'gpt-4' } });
+  const aiConfig = await aiClient.completionConfig(aiConfigKey, context, {
+    model: { name: 'gpt-4' },
+  });
 
   if (!aiConfig.enabled || !aiConfig.tracker) {
     console.log('*** AI configuration is not enabled');
