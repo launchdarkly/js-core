@@ -28,9 +28,6 @@ Then in `jest.config.js` add `@launchdarkly/jest/{framework}` to setupFiles:
 ```js
 // jest.config.js
 module.exports = {
-  // for react
-  setupFiles: ['@launchdarkly/jest/react'],
-
   // for react-native
   setupFiles: ['@launchdarkly/jest/react-native'],
 };
@@ -38,7 +35,32 @@ module.exports = {
 
 ## Quickstart
 
-TODO:
+// Welcome.test.tsx
+import React from 'react';
+import { render } from '@testing-library/react-native';
+import {
+  mockFlags,
+  resetLDMocks,
+  getLDClient,
+} from '@launchdarkly/js-core/tooling/jest';
+import Welcome from './Welcome';
+
+afterEach(() => {
+  resetLDMocks();
+});
+
+test('evaluates a boolean flag', () => {
+  mockFlags({ 'my-boolean-flag': true });
+  const { getByText } = render(<Welcome />);
+  expect(getByText('Flag value is true')).toBeTruthy();
+});
+
+test('captures a track call', () => {
+  const client = getLDClient(); // mocked client from LD jest tooling
+  client.track('event-name', { foo: 'bar' });
+  expect(client.track).toHaveBeenCalledWith('event-name', { foo: 'bar' });
+  expect(client.track).toHaveBeenCalledTimes(1);
+});
 
 ## Developing this package
 
