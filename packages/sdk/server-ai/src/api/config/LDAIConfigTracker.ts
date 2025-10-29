@@ -1,3 +1,4 @@
+import { EvalScore } from '../judge/types';
 import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from '../metrics';
 
 /**
@@ -73,6 +74,13 @@ export interface LDAIConfigTracker {
    * @param timeToFirstTokenMs The duration in milliseconds.
    */
   trackTimeToFirstToken(timeToFirstTokenMs: number): void;
+
+  /**
+   * Track evaluation scores for multiple metrics.
+   *
+   * @param scores Record mapping metric keys to their evaluation scores
+   */
+  trackEvalScores(scores: Record<string, EvalScore>): void;
 
   /**
    * Track the duration of execution of the provided function.
