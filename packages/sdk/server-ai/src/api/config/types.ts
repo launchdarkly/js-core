@@ -49,28 +49,17 @@ export interface LDJudgeConfiguration {
 /**
  * Base AI Config interface without mode-specific fields.
  */
-export interface LDAIConfigBase {
-  /**
-   * Optional model configuration.
-   */
-  model?: LDModelConfig;
-
-  /**
-   * Optional configuration for the provider.
-   */
-  provider?: LDProviderConfig;
-
+export interface LDAIConfigBase extends Omit<LDAIConfigBaseDefault, 'enabled'> {
   /**
    * Whether the configuration is enabled.
    */
   enabled: boolean;
 
   /**
-   * The mode of the AI Config. Defaults to 'completion' for regular AI Configs.
-   * Set to 'judge' for AI Configs that evaluate other AI Configs.
-   * Set to 'agent' for AI Config agents.
+   * A tracker which can be used to generate analytics.
+   * Undefined for disabled configs.
    */
-  mode?: 'completion' | 'agent' | 'judge';
+  tracker?: LDAIConfigTracker;
 
   /**
    * Maps this AI config to a format usable direcly in Vercel AI SDK generateText()
@@ -90,10 +79,82 @@ export interface LDAIConfigBase {
 }
 
 /**
+ * Base AI Config interface for default implementations with optional enabled property.
+ */
+export interface LDAIConfigBaseDefault {
+  /**
+   * Optional model configuration.
+   */
+  model?: LDModelConfig;
+
+  /**
+   * Optional configuration for the provider.
+   */
+  provider?: LDProviderConfig;
+
+  /**
+   * Whether the configuration is enabled. Defaults to false when not provided.
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Default implementation types for AI Configs with optional enabled property.
+ */
+
+/**
+ * Default Judge-specific AI Config with required evaluation metric key.
+ */
+export interface LDAIJudgeConfigDefault extends LDAIConfigBaseDefault {
+  /**
+   * Optional prompt data for judge configurations.
+   */
+  messages?: LDMessage[];
+  /**
+   * Evaluation metric keys for judge configurations.
+   * The keys of the metrics that this judge can evaluate.
+   */
+  evaluationMetricKeys: string[];
+}
+
+/**
+ * Default Agent-specific AI Config with instructions.
+ */
+export interface LDAIAgentConfigDefault extends LDAIConfigBaseDefault {
+  /**
+   * Instructions for the agent.
+   */
+  instructions?: string;
+  /**
+   * Judge configuration for AI Configs being evaluated.
+   * References judge AI Configs that should evaluate this AI Config.
+   */
+  judgeConfiguration?: LDJudgeConfiguration;
+}
+
+/**
+ * Default Completion AI Config (default mode).
+ */
+export interface LDAIConversationConfigDefault extends LDAIConfigBaseDefault {
+  /**
+   * Optional prompt data for completion configurations.
+   */
+  messages?: LDMessage[];
+  /**
+   * Judge configuration for AI Configs being evaluated.
+   * References judge AI Configs that should evaluate this AI Config.
+   */
+  judgeConfiguration?: LDJudgeConfiguration;
+}
+
+/**
+ * Non-default implementation types for AI Configs with required enabled property and tracker.
+ */
+
+/**
  * Judge-specific AI Config with required evaluation metric key.
  */
 export interface LDAIJudgeConfig extends LDAIConfigBase {
-  mode: 'judge';
   /**
    * Optional prompt data for judge configurations.
    */
@@ -109,7 +170,6 @@ export interface LDAIJudgeConfig extends LDAIConfigBase {
  * Agent-specific AI Config with instructions.
  */
 export interface LDAIAgentConfig extends LDAIConfigBase {
-  mode: 'agent';
   /**
    * Instructions for the agent.
    */
@@ -124,8 +184,7 @@ export interface LDAIAgentConfig extends LDAIConfigBase {
 /**
  * Completion AI Config (default mode).
  */
-export interface LDAIConfig extends LDAIConfigBase {
-  mode?: 'completion';
+export interface LDAIConversationConfig extends LDAIConfigBase {
   /**
    * Optional prompt data for completion configurations.
    */
@@ -154,47 +213,15 @@ export interface LDMessage {
 /**
  * Union type for all AI Config variants.
  */
-export type LDAIConfigKind = LDAIConfig | LDAIAgentConfig | LDAIJudgeConfig;
+export type LDAIConfigKind = LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig;
 
 /**
- * Return type for config method - includes both tracker and config.
+ * Union type for all default AI Config variants.
  */
-export interface LDTrackedConfig {
-  /** A tracker which can be used to generate analytics. */
-  tracker: LDAIConfigTracker;
-  /** The AI configuration. */
-  config: LDAIConfig;
-}
-
-/**
- * Return type for agent method - includes both tracker and agent config.
- */
-export interface LDTrackedAgent {
-  /** A tracker which can be used to generate analytics. */
-  tracker: LDAIConfigTracker;
-  /** The agent configuration. */
-  agent: LDAIAgentConfig;
-}
-
-/**
- * Return type for judge method - includes both tracker and judge config.
- */
-export interface LDTrackedJudge {
-  /** A tracker which can be used to generate analytics. */
-  tracker: LDAIConfigTracker;
-  /** The judge configuration. */
-  judge: LDAIJudgeConfig;
-}
-
-/**
- * Return type for agents method - includes both tracker and agent configs.
- */
-export interface LDTrackedAgents {
-  /** A tracker which can be used to generate analytics. */
-  tracker: LDAIConfigTracker;
-  /** Dictionary of agent configurations by key. */
-  agents: Record<string, LDAIAgentConfig>;
-}
+export type LDAIConfigKindDefault =
+  | LDAIConversationConfigDefault
+  | LDAIAgentConfigDefault
+  | LDAIJudgeConfigDefault;
 
 /**
  * Configuration for a single agent request.
@@ -208,7 +235,7 @@ export interface LDAIAgentRequestConfig {
   /**
    * Default configuration for the agent.
    */
-  defaultValue: LDAIAgentConfig;
+  defaultValue: LDAIAgentConfigDefault;
 
   /**
    * Variables for instructions interpolation.
@@ -219,7 +246,7 @@ export interface LDAIAgentRequestConfig {
 /**
  * AI Config agent interface (extends agent config without tracker and toVercelAISDK).
  */
-export interface LDAIAgent extends Omit<LDAIAgentConfig, 'toVercelAISDK'> {
+export interface LDAIAgent extends Omit<LDAIAgentConfig, 'toVercelAISDK' | 'tracker'> {
   /**
    * Instructions for the agent.
    */

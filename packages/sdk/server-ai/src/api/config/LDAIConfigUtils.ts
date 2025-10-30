@@ -1,7 +1,8 @@
+import { LDAIConfigTracker } from './LDAIConfigTracker';
 import {
   LDAIAgentConfig,
-  LDAIConfig,
-  LDAIConfigKind,
+  LDAIConfigKindDefault,
+  LDAIConversationConfig,
   LDAIJudgeConfig,
   LDJudgeConfiguration,
   LDMessage,
@@ -37,17 +38,21 @@ export interface LDAIConfigFlagValue {
  */
 export class LDAIConfigUtils {
   /**
-   * Converts an AI configuration to a LaunchDarkly flag value format.
+   * Converts a default AI configuration to a LaunchDarkly flag value format.
    *
-   * @param config The AI configuration to convert
+   * @param config The default AI configuration to convert
+   * @param mode The mode for the configuration
    * @returns The flag value structure for LaunchDarkly
    */
-  static toFlagValue(config: LDAIConfigKind): LDAIConfigFlagValue {
+  static toFlagValue(
+    config: LDAIConfigKindDefault,
+    mode: 'completion' | 'agent' | 'judge',
+  ): LDAIConfigFlagValue {
     return {
       _ldMeta: {
         variationKey: '', // Not available when converting from config
         enabled: config.enabled ?? false,
-        mode: config.mode ?? 'completion',
+        mode,
       },
       model: config.model,
       messages: 'messages' in config ? config.messages : undefined,
@@ -63,21 +68,57 @@ export class LDAIConfigUtils {
    * Converts a LaunchDarkly flag value to the appropriate AI configuration type.
    *
    * @param flagValue The flag value from LaunchDarkly
+   * @param tracker The tracker to add to the config
    * @returns The appropriate AI configuration type
    */
-  static fromFlagValue(flagValue: LDAIConfigFlagValue): LDAIConfigKind {
-    // Determine the specific config type based on mode
+  static fromFlagValue(
+    flagValue: LDAIConfigFlagValue,
+    tracker: LDAIConfigTracker,
+  ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
+    // Determine the actual mode from flag value
     // eslint-disable-next-line no-underscore-dangle
-    switch (flagValue._ldMeta?.mode) {
+    const flagValueMode = flagValue._ldMeta?.mode;
+
+    // Convert to appropriate config type based on actual mode
+    switch (flagValueMode) {
       case 'agent':
-        return this.toAgentConfig(flagValue);
-
+        return this.toAgentConfig(flagValue, tracker);
       case 'judge':
-        return this.toJudgeConfig(flagValue);
-
+        return this.toJudgeConfig(flagValue, tracker);
       case 'completion':
       default:
-        return this.toCompletionConfig(flagValue);
+        return this.toCompletionConfig(flagValue, tracker);
+    }
+  }
+
+  /**
+   * Creates a disabled configuration of the specified mode.
+   *
+   * @param mode The mode for the disabled config
+   * @returns A disabled config of the appropriate type
+   */
+  static createDisabledConfig(
+    mode: 'completion' | 'agent' | 'judge',
+  ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
+    switch (mode) {
+      case 'agent':
+        return {
+          enabled: false,
+          tracker: undefined,
+        } as LDAIAgentConfig;
+      case 'judge':
+        return {
+          enabled: false,
+          tracker: undefined,
+          evaluationMetricKeys: [],
+        } as LDAIJudgeConfig;
+      case 'completion':
+      default:
+        // Default to completion config for completion mode or any unexpected mode
+        return {
+          enabled: false,
+          tracker: undefined,
+        } as LDAIConversationConfig;
     }
   }
 
@@ -100,12 +141,16 @@ export class LDAIConfigUtils {
    * Creates a completion config from flag value data.
    *
    * @param flagValue The flag value from LaunchDarkly
+   * @param tracker The tracker to add to the config
    * @returns A completion configuration
    */
-  static toCompletionConfig(flagValue: LDAIConfigFlagValue): LDAIConfig {
+  static toCompletionConfig(
+    flagValue: LDAIConfigFlagValue,
+    tracker: LDAIConfigTracker,
+  ): LDAIConversationConfig {
     return {
       ...this._toBaseConfig(flagValue),
-      mode: 'completion' as const,
+      tracker,
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
     };
@@ -115,12 +160,16 @@ export class LDAIConfigUtils {
    * Creates an agent config from flag value data.
    *
    * @param flagValue The flag value from LaunchDarkly
+   * @param tracker The tracker to add to the config
    * @returns An agent configuration
    */
-  static toAgentConfig(flagValue: LDAIConfigFlagValue): LDAIAgentConfig {
+  static toAgentConfig(
+    flagValue: LDAIConfigFlagValue,
+    tracker: LDAIConfigTracker,
+  ): LDAIAgentConfig {
     return {
       ...this._toBaseConfig(flagValue),
-      mode: 'agent' as const,
+      tracker,
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
     };
@@ -130,25 +179,18 @@ export class LDAIConfigUtils {
    * Creates a judge config from flag value data.
    *
    * @param flagValue The flag value from LaunchDarkly
+   * @param tracker The tracker to add to the config
    * @returns A judge configuration
    */
-  static toJudgeConfig(flagValue: LDAIConfigFlagValue): LDAIJudgeConfig {
-    if (!flagValue.evaluationMetricKeys || flagValue.evaluationMetricKeys.length === 0) {
-      // Return a disabled judge config instead of throwing
-      return {
-        ...this._toBaseConfig(flagValue),
-        enabled: false,
-        mode: 'judge' as const,
-        messages: flagValue.messages,
-        evaluationMetricKeys: [], // Use empty array for disabled config
-      };
-    }
-
+  static toJudgeConfig(
+    flagValue: LDAIConfigFlagValue,
+    tracker: LDAIConfigTracker,
+  ): LDAIJudgeConfig {
     return {
       ...this._toBaseConfig(flagValue),
-      mode: 'judge' as const,
+      tracker,
       messages: flagValue.messages,
-      evaluationMetricKeys: flagValue.evaluationMetricKeys,
+      evaluationMetricKeys: flagValue.evaluationMetricKeys || [],
     };
   }
 }
