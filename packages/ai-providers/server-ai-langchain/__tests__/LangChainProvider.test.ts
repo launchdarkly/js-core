@@ -155,6 +155,66 @@ describe('LangChainProvider', () => {
       expect(result.message.content).toBe('');
       expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     });
+
+    it('returns success=false when model invocation throws an error', async () => {
+      const error = new Error('Model invocation failed');
+      mockLLM.invoke.mockRejectedValue(error);
+
+      const messages = [{ role: 'user' as const, content: 'Hello' }];
+      const result = await provider.invokeModel(messages);
+
+      expect(result.metrics.success).toBe(false);
+      expect(result.message.content).toBe('');
+      expect(result.message.role).toBe('assistant');
+      expect(mockLogger.error).toHaveBeenCalledWith('LangChain model invocation failed:', error);
+    });
+  });
+
+  describe('invokeStructuredModel', () => {
+    let mockLLM: any;
+    let provider: LangChainProvider;
+
+    beforeEach(() => {
+      mockLLM = {
+        withStructuredOutput: jest.fn(),
+      };
+      provider = new LangChainProvider(mockLLM, mockLogger);
+      jest.clearAllMocks();
+    });
+
+    it('returns success=true for successful invocation', async () => {
+      const mockResponse = { result: 'structured data' };
+      const mockInvoke = jest.fn().mockResolvedValue(mockResponse);
+      mockLLM.withStructuredOutput.mockReturnValue({ invoke: mockInvoke });
+
+      const messages = [{ role: 'user' as const, content: 'Hello' }];
+      const responseStructure = { type: 'object', properties: {} };
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(result.metrics.success).toBe(true);
+      expect(result.data).toEqual(mockResponse);
+      expect(result.rawResponse).toBe(JSON.stringify(mockResponse));
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
+
+    it('returns success=false when structured model invocation throws an error', async () => {
+      const error = new Error('Structured invocation failed');
+      const mockInvoke = jest.fn().mockRejectedValue(error);
+      mockLLM.withStructuredOutput.mockReturnValue({ invoke: mockInvoke });
+
+      const messages = [{ role: 'user' as const, content: 'Hello' }];
+      const responseStructure = { type: 'object', properties: {} };
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(result.metrics.success).toBe(false);
+      expect(result.data).toEqual({});
+      expect(result.rawResponse).toBe('');
+      expect(result.metrics.usage).toEqual({ total: 0, input: 0, output: 0 });
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'LangChain structured model invocation failed:',
+        error,
+      );
+    });
   });
 
   describe('mapProvider', () => {
