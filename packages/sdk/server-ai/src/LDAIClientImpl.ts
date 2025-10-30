@@ -5,16 +5,14 @@ import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 import { TrackedChat } from './api/chat';
 import {
   LDAIAgentConfig,
+  LDAIAgentConfigDefault,
   LDAIAgentRequestConfig,
-  LDAIConfig,
-  LDAIConfigKind,
-  LDAIConfigTracker,
+  LDAIConfigKindDefault,
+  LDAIConversationConfig,
+  LDAIConversationConfigDefault,
   LDAIJudgeConfig,
+  LDAIJudgeConfigDefault,
   LDMessage,
-  LDTrackedAgent,
-  LDTrackedAgents,
-  LDTrackedConfig,
-  LDTrackedJudge,
   VercelAISDKConfig,
   VercelAISDKMapOptions,
   VercelAISDKProvider,
@@ -26,14 +24,6 @@ import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
-
-/**
- * The result of evaluating a configuration.
- */
-interface EvaluationResult {
-  tracker: LDAIConfigTracker;
-  config: LDAIConfigKind;
-}
 
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
@@ -49,13 +39,24 @@ export class LDAIClientImpl implements LDAIClient {
   private async _evaluate(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConfigKind,
-    variables?: Record<string, any>,
-  ): Promise<EvaluationResult> {
+    defaultValue: LDAIConfigKindDefault,
+    mode: 'completion' | 'agent' | 'judge',
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig> {
     // Convert default value to LDFlagValue format
-    const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue);
+    const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
     const value: LDAIConfigFlagValue = await this._ldClient.variation(key, context, ldFlagValue);
+
+    // Validate mode match
+    // eslint-disable-next-line no-underscore-dangle
+    const flagMode = value._ldMeta?.mode;
+    if (flagMode !== mode) {
+      this._logger?.warn(
+        `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
+      );
+      return LDAIConfigUtils.createDisabledConfig(mode);
+    }
 
     const tracker = new LDAIConfigTrackerImpl(
       this._ldClient,
@@ -69,133 +70,96 @@ export class LDAIClientImpl implements LDAIClient {
       context,
     );
 
-    // Convert the flag value directly to the appropriate config type
-    const config = LDAIConfigUtils.fromFlagValue(value);
+    // Convert the flag value to the appropriate config type
+    const config = LDAIConfigUtils.fromFlagValue(value, tracker);
 
-    // Apply variable interpolation if variables are provided
-    if (variables) {
-      const allVariables = { ...variables, ldctx: context };
+    // Apply variable interpolation (always needed for ldctx)
+    return this._applyInterpolation(config, context, variables);
+  }
 
-      // Apply variable interpolation to messages if they exist
-      if ('messages' in config && config.messages) {
-        config.messages = config.messages.map((entry: LDMessage) => ({
+  private _applyInterpolation(
+    config: LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig,
+    context: LDContext,
+    variables?: Record<string, unknown>,
+  ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
+    const allVariables = { ...variables, ldctx: context };
+
+    // Apply variable interpolation to messages if they exist
+    if ('messages' in config && config.messages) {
+      return {
+        ...config,
+        messages: config.messages.map((entry: LDMessage) => ({
           ...entry,
           content: this._interpolateTemplate(entry.content, allVariables),
-        }));
-      }
-
-      // Apply variable interpolation to instructions if they exist
-      if ('instructions' in config && config.instructions) {
-        config.instructions = this._interpolateTemplate(config.instructions, allVariables);
-      }
+        })),
+      };
     }
 
+    // Apply variable interpolation to instructions if they exist
+    if ('instructions' in config && config.instructions) {
+      return {
+        ...config,
+        instructions: this._interpolateTemplate(config.instructions, allVariables),
+      };
+    }
+
+    return config;
+  }
+
+  private _addVercelAISDKSupport(config: LDAIConversationConfig): LDAIConversationConfig {
+    const { messages } = config;
+    const mapper = new LDAIConfigMapper(config.model, config.provider, messages);
+
     return {
-      tracker,
-      config,
+      ...config,
+      toVercelAISDK: <TMod>(
+        sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
+        options?: VercelAISDKMapOptions | undefined,
+      ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(sdkProvider, options),
     };
   }
 
   async config(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConfigKind,
+    defaultValue: LDAIConversationConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDTrackedConfig> {
+  ): Promise<LDAIConversationConfig> {
     this._ldClient.track('$ld:ai:config:function:single', context, key, 1);
 
-    const { tracker, config } = await this._evaluate(key, context, defaultValue, variables);
-
-    // Cast to LDAIConfig since config method only accepts completion configs
-    const completionConfig = config as LDAIConfig;
-
-    // Create the mapper for toVercelAISDK functionality
-    const messages = 'messages' in completionConfig ? completionConfig.messages : undefined;
-    const mapper = new LDAIConfigMapper(
-      completionConfig.model,
-      completionConfig.provider,
-      messages,
-    );
-
-    return {
-      tracker,
-      config: {
-        ...completionConfig,
-        toVercelAISDK: <TMod>(
-          sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-          options?: VercelAISDKMapOptions | undefined,
-        ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(sdkProvider, options),
-      },
-    };
+    const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
+    return this._addVercelAISDKSupport(config as LDAIConversationConfig);
   }
 
   async judge(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfig,
+    defaultValue: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDTrackedJudge> {
+  ): Promise<LDAIJudgeConfig> {
     this._ldClient.track('$ld:ai:judge:function:single', context, key, 1);
 
-    const { tracker, config } = await this._evaluate(key, context, defaultValue, variables);
-
-    // Cast to judge config since this method only accepts judge configs
-    const judgeConfig = config as LDAIJudgeConfig;
-
-    // Create the mapper for toVercelAISDK functionality
-    const messages = 'messages' in judgeConfig ? judgeConfig.messages : undefined;
-    const mapper = new LDAIConfigMapper(judgeConfig.model, judgeConfig.provider, messages);
-
-    return {
-      tracker,
-      judge: {
-        ...judgeConfig,
-        toVercelAISDK: <TMod>(
-          sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-          options?: VercelAISDKMapOptions | undefined,
-        ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(sdkProvider, options),
-      },
-    };
+    const config = await this._evaluate(key, context, defaultValue, 'judge', variables);
+    return config as LDAIJudgeConfig;
   }
 
   async agent(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentConfig,
+    defaultValue: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDTrackedAgent> {
+  ): Promise<LDAIAgentConfig> {
     // Track agent usage
     this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
 
-    const { tracker, config } = await this._evaluate(key, context, defaultValue, variables);
-
-    // Check if we have an agent config, log warning and return disabled config if not
-    if (config.mode !== 'agent') {
-      this._logger?.warn(
-        `Configuration is not an agent (mode: ${config.mode}), returning disabled config`,
-      );
-      return {
-        tracker,
-        agent: {
-          ...config,
-          enabled: false,
-          mode: 'agent' as const,
-        } as LDAIAgentConfig,
-      };
-    }
-
-    const agent = config as LDAIAgentConfig;
-
-    return {
-      tracker,
-      agent,
-    };
+    const config = await this._evaluate(key, context, defaultValue, 'agent', variables);
+    return config as LDAIAgentConfig;
   }
 
   async agents<const T extends readonly LDAIAgentRequestConfig[]>(
     agentConfigs: T,
     context: LDContext,
-  ): Promise<LDTrackedAgents> {
+  ): Promise<Record<T[number]['key'], LDAIAgentConfig>> {
     // Track multiple agents usage
     this._ldClient.track(
       '$ld:ai:agent:function:multiple',
@@ -205,75 +169,40 @@ export class LDAIClientImpl implements LDAIClient {
     );
 
     const agents = {} as Record<T[number]['key'], LDAIAgentConfig>;
-    let tracker: LDAIConfigTracker | undefined;
 
     await Promise.all(
       agentConfigs.map(async (config) => {
-        const result = await this._evaluate(
+        const agent = await this._evaluate(
           config.key,
           context,
           config.defaultValue,
+          'agent',
           config.variables,
         );
-
-        // Check if we have an agent config, log warning and return disabled config if not
-        if (result.config.mode !== 'agent') {
-          this._logger?.warn(
-            `Configuration ${config.key} is not an agent (mode: ${result.config.mode}), returning disabled config`,
-          );
-          agents[config.key as T[number]['key']] = {
-            ...result.config,
-            enabled: false,
-            mode: 'agent' as const,
-          } as LDAIAgentConfig;
-          if (!tracker) {
-            tracker = result.tracker;
-          }
-          return;
-        }
-
-        const agent = result.config as LDAIAgentConfig;
-        agents[config.key as T[number]['key']] = agent;
-        if (!tracker) {
-          tracker = result.tracker;
-        }
+        agents[config.key as T[number]['key']] = agent as LDAIAgentConfig;
       }),
     );
 
-    return {
-      tracker: tracker!,
-      agents,
-    };
+    return agents;
   }
 
   async initChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConfig,
+    defaultValue: LDAIConversationConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     // Track chat initialization
     this._ldClient.track('$ld:ai:config:function:initChat', context, key, 1);
 
-    const result = await this.config(key, context, defaultValue, variables);
+    const config = await this.config(key, context, defaultValue, variables);
 
     // Return undefined if the configuration is disabled
-    if (!result.config.enabled) {
+    if (!config.enabled || !config.tracker) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
       return undefined;
     }
-
-    // Check if we have a completion config, log warning and return undefined if not
-    if (result.config.mode && result.config.mode !== 'completion') {
-      this._logger?.warn(
-        `Configuration ${key} is not a completion config (mode: ${result.config.mode}), returning undefined`,
-      );
-      return undefined;
-    }
-
-    // Cast to LDAIConfig since initChat only accepts completion configs
-    const config = result.config as LDAIConfig;
 
     // Create the AIProvider instance
     const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
@@ -282,13 +211,13 @@ export class LDAIClientImpl implements LDAIClient {
     }
 
     // Create the TrackedChat instance with the provider
-    return new TrackedChat(config, result.tracker, provider);
+    return new TrackedChat(config, config.tracker, provider);
   }
 
   async initJudge(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfig,
+    defaultValue: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined> {
@@ -297,38 +226,22 @@ export class LDAIClientImpl implements LDAIClient {
 
     try {
       // Retrieve the judge AI Config using the new judge method
-      const result = await this.judge(key, context, defaultValue, variables);
+      const judgeConfig = await this.judge(key, context, defaultValue, variables);
 
       // Return undefined if the configuration is disabled
-      if (!result.judge.enabled) {
+      if (!judgeConfig.enabled || !judgeConfig.tracker) {
         this._logger?.info(`Judge configuration is disabled: ${key}`);
         return undefined;
       }
 
-      // Validate that this is a judge configuration
-      if (result.judge.mode !== 'judge') {
-        this._logger?.warn(`Configuration ${key} is not a judge (mode: ${result.judge.mode})`);
-        return undefined;
-      }
-
-      // Validate that the judge configuration has the required evaluation metric keys
-      if (!result.judge.evaluationMetricKeys || result.judge.evaluationMetricKeys.length === 0) {
-        this._logger?.error(`Judge configuration ${key} is missing required evaluationMetricKeys`);
-        return undefined;
-      }
-
       // Create the AIProvider instance
-      const provider = await AIProviderFactory.create(
-        result.judge,
-        this._logger,
-        defaultAiProvider,
-      );
+      const provider = await AIProviderFactory.create(judgeConfig, this._logger, defaultAiProvider);
       if (!provider) {
         return undefined;
       }
 
       // Create and return the Judge instance
-      return new Judge(result.judge, result.tracker, provider, this._logger);
+      return new Judge(judgeConfig, judgeConfig.tracker, provider, this._logger);
     } catch (error) {
       this._logger?.error(`Failed to initialize judge ${key}:`, error);
       return undefined;

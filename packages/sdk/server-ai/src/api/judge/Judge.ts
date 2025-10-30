@@ -49,14 +49,19 @@ export class Judge {
         return undefined;
       }
 
+      // Check if judge configuration has evaluation metric keys
+      if (
+        !this._aiConfig.evaluationMetricKeys ||
+        this._aiConfig.evaluationMetricKeys.length === 0
+      ) {
+        this._logger?.warn('Judge configuration is missing required evaluationMetricKeys');
+        return undefined;
+      }
+
       // Check if judge configuration has messages before proceeding
       if (!this._aiConfig.messages) {
         this._logger?.warn('Judge configuration must include messages');
-        return {
-          evals: {},
-          success: false,
-          error: 'Judge configuration must include messages',
-        };
+        return undefined;
       }
 
       // Construct evaluation messages by combining judge's config messages with input/output

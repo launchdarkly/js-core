@@ -3,14 +3,12 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 import { TrackedChat } from './chat';
 import {
   LDAIAgentConfig,
+  LDAIAgentConfigDefault,
   LDAIAgentRequestConfig,
-  LDAIConfig,
-  LDAIConfigKind,
+  LDAIConversationConfig,
+  LDAIConversationConfigDefault,
   LDAIJudgeConfig,
-  LDTrackedAgent,
-  LDTrackedAgents,
-  LDTrackedConfig,
-  LDTrackedJudge,
+  LDAIJudgeConfigDefault,
 } from './config';
 import { Judge } from './judge/Judge';
 import { SupportedAIProvider } from './providers';
@@ -75,9 +73,9 @@ export interface LDAIClient {
   config(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConfigKind,
+    defaultValue: LDAIConversationConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDTrackedConfig>;
+  ): Promise<LDAIConversationConfig>;
 
   /**
    * Retrieves and processes a single AI Config agent based on the provided key, LaunchDarkly context,
@@ -115,9 +113,9 @@ export interface LDAIClient {
   agent(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentConfig,
+    defaultValue: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDTrackedAgent>;
+  ): Promise<LDAIAgentConfig>;
 
   /**
    * Retrieves and processes a Judge AI Config based on the provided key, LaunchDarkly context,
@@ -149,9 +147,9 @@ export interface LDAIClient {
   judge(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfig,
+    defaultValue: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDTrackedJudge>;
+  ): Promise<LDAIJudgeConfig>;
 
   /**
    * Retrieves and processes multiple AI Config agents based on the provided agent configurations
@@ -202,7 +200,7 @@ export interface LDAIClient {
   agents<const T extends readonly LDAIAgentRequestConfig[]>(
     agentConfigs: T,
     context: LDContext,
-  ): Promise<LDTrackedAgents>;
+  ): Promise<Record<T[number]['key'], LDAIAgentConfig>>;
 
   /**
    * Initializes and returns a new TrackedChat instance for chat interactions.
@@ -242,7 +240,7 @@ export interface LDAIClient {
   initChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConfig,
+    defaultValue: LDAIConversationConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined>;
@@ -280,7 +278,7 @@ export interface LDAIClient {
   initJudge(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfig,
+    defaultValue: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined>;

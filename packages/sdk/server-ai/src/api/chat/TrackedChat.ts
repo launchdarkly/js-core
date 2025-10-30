@@ -1,5 +1,5 @@
 import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
-import { LDAIConfig, LDMessage } from '../config/types';
+import { LDAIConversationConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
 import { ChatResponse } from './types';
 
@@ -13,7 +13,7 @@ export class TrackedChat {
   protected messages: LDMessage[];
 
   constructor(
-    protected readonly aiConfig: LDAIConfig,
+    protected readonly aiConfig: LDAIConversationConfig,
     protected readonly tracker: LDAIConfigTracker,
     protected readonly provider: AIProvider,
   ) {
@@ -51,7 +51,7 @@ export class TrackedChat {
   /**
    * Get the underlying AI configuration used to initialize this TrackedChat.
    */
-  getConfig(): LDAIConfig {
+  getConfig(): LDAIConversationConfig {
     return this.aiConfig;
   }
 
