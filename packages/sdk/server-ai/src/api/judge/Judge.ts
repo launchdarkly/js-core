@@ -1,4 +1,6 @@
-import { internal, LDLogger } from '@launchdarkly/js-server-sdk-common';
+import * as Mustache from 'mustache';
+
+import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
 import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
@@ -34,33 +36,39 @@ export class Judge {
    *
    * @param input The input prompt or question that was provided to the AI
    * @param output The AI-generated response to be evaluated
-   * @param samplingRatio Sampling ratio (0-1) to determine if evaluation should be processed (defaults to 1)
+   * @param samplingRate Sampling rate (0-1) to determine if evaluation should be processed (defaults to 1)
    * @returns Promise that resolves to evaluation results or undefined if not sampled
    */
   async evaluate(
     input: string,
     output: string,
-    samplingRatio: number = 1,
+    samplingRate: number = 1,
   ): Promise<JudgeResponse | undefined> {
     try {
-      // Apply sampling
-      if (!internal.shouldSample(samplingRatio)) {
-        this._logger?.debug(`Judge evaluation skipped due to sampling ratio: ${samplingRatio}`);
-        return undefined;
-      }
-
       // Check if judge configuration has evaluation metric keys
       if (
         !this._aiConfig.evaluationMetricKeys ||
         this._aiConfig.evaluationMetricKeys.length === 0
       ) {
-        this._logger?.warn('Judge configuration is missing required evaluationMetricKeys');
+        this._logger?.warn(
+          'Judge configuration is missing required evaluationMetricKeys',
+          this._aiConfigTracker.getTrackData(),
+        );
         return undefined;
       }
 
       // Check if judge configuration has messages before proceeding
       if (!this._aiConfig.messages) {
-        this._logger?.warn('Judge configuration must include messages');
+        this._logger?.warn(
+          'Judge configuration must include messages',
+          this._aiConfigTracker.getTrackData(),
+        );
+        return undefined;
+      }
+
+      // Apply sampling
+      if (Math.random() > samplingRate) {
+        this._logger?.debug(`Judge evaluation skipped due to sampling rate: ${samplingRate}`);
         return undefined;
       }
 
@@ -73,23 +81,23 @@ export class Judge {
         () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
       );
 
-      // Parse the structured response
-      const evals = this._parseEvaluationResponse(
-        this._aiConfig.evaluationMetricKeys,
-        response.data,
-      );
+      let { success } = response.metrics;
 
-      if (evals === null) {
-        return {
-          evals: {},
-          success: false,
-          error: 'Failed to parse evaluation response: invalid data format',
-        };
+      // Parse the structured response
+      const evals = this._parseEvaluationResponse(response.data);
+
+      // Return null if no valid evaluations were found
+      if (Object.keys(evals).length !== this._aiConfig.evaluationMetricKeys.length) {
+        this._logger?.warn(
+          'Judge evaluation did not return all evaluations',
+          this._aiConfigTracker.getTrackData(),
+        );
+        success = false;
       }
 
       return {
         evals,
-        success: true,
+        success,
       };
     } catch (error) {
       this._logger?.error('Judge evaluation failed:', error);
@@ -115,7 +123,7 @@ export class Judge {
     samplingRatio: number = 1,
   ): Promise<JudgeResponse | undefined> {
     // Convert messages to text and extract output from response
-    const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\n');
+    const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\r\n');
     const output = response.message.content;
 
     // Delegate to standard evaluate method
@@ -160,42 +168,33 @@ export class Judge {
   }
 
   /**
-   * Interpolates message content with variables.
+   * Interpolates message content with variables using Mustache templating.
    */
   private _interpolateMessage(content: string, variables: Record<string, string>): string {
-    let interpolated = content;
-
-    // Simple variable interpolation - in a real implementation, this would use a proper template engine
-    Object.entries(variables).forEach(([key, value]) => {
-      const placeholder = `{{${key}}}`;
-      interpolated = interpolated.replace(new RegExp(placeholder, 'g'), value);
-    });
-
-    return interpolated;
+    return Mustache.render(content, variables, undefined, { escape: (item: any) => item });
   }
 
   /**
    * Parses the structured evaluation response from the AI provider.
    */
-  private _parseEvaluationResponse(
-    evaluationMetricKeys: string[],
-    data: Record<string, unknown>,
-  ): Record<string, EvalScore> | null {
-    // Validate that the data has the required evaluations structure
-    if (!data.evaluations || typeof data.evaluations !== 'object') {
-      this._logger?.error('Invalid response: missing or invalid evaluations object');
-      return null;
-    }
-
+  private _parseEvaluationResponse(data: Record<string, unknown>): Record<string, EvalScore> {
     const evaluations = data.evaluations as Record<string, unknown>;
     const results: Record<string, EvalScore> = {};
+    // Validate that the data has the required evaluations structure
+    if (!data.evaluations || typeof data.evaluations !== 'object') {
+      this._logger?.warn('Invalid response: missing or invalid evaluations object');
+      return results;
+    }
 
     // Process each expected evaluation metric key
-    evaluationMetricKeys.forEach((metricKey) => {
+    this._aiConfig.evaluationMetricKeys.forEach((metricKey) => {
       const evaluation = evaluations[metricKey];
 
       if (!evaluation || typeof evaluation !== 'object') {
-        this._logger?.warn(`Missing evaluation for metric key: ${metricKey}`);
+        this._logger?.warn(
+          `Missing evaluation for metric key: ${metricKey}`,
+          this._aiConfigTracker.getTrackData(),
+        );
         return;
       }
 
@@ -203,15 +202,19 @@ export class Judge {
 
       // Validate score
       if (typeof evalData.score !== 'number' || evalData.score < 0 || evalData.score > 1) {
-        this._logger?.error(
-          `Invalid score for ${metricKey}: ${evalData.score}. Score must be a number between 0 and 1`,
+        this._logger?.warn(
+          `Invalid score evaluated for ${metricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
+          this._aiConfigTracker.getTrackData(),
         );
         return;
       }
 
       // Validate reasoning
       if (typeof evalData.reasoning !== 'string') {
-        this._logger?.error(`Invalid reasoning for ${metricKey}: reasoning must be a string`);
+        this._logger?.warn(
+          `Invalid reasoning evaluated for ${metricKey}: ${evalData.reasoning}. Reasoning must be a string`,
+          this._aiConfigTracker.getTrackData(),
+        );
         return;
       }
 
@@ -221,12 +224,6 @@ export class Judge {
         reasoning: evalData.reasoning,
       };
     });
-
-    // Return null if no valid evaluations were found
-    if (Object.keys(results).length === 0) {
-      this._logger?.error('No valid evaluations found in response');
-      return null;
-    }
 
     return results;
   }

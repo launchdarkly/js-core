@@ -1,21 +1,35 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIAgentDefaults } from '../src/api/agents';
-import { LDAIDefaults } from '../src/api/config';
+import {
+  LDAIAgentConfigDefault,
+  LDAIConversationConfigDefault,
+  LDAIJudgeConfigDefault,
+} from '../src/api/config/types';
+import { Judge } from '../src/api/judge/Judge';
+import { AIProviderFactory } from '../src/api/providers/AIProviderFactory';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
+
+// Mock Judge and AIProviderFactory
+jest.mock('../src/api/judge/Judge');
+jest.mock('../src/api/providers/AIProviderFactory');
 
 const mockLdClient: jest.Mocked<LDClientMin> = {
   variation: jest.fn(),
   track: jest.fn(),
 };
 
+// Reset mocks before each test
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 const testContext: LDContext = { kind: 'user', key: 'test-user' };
 
 it('returns config with interpolated messages', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDAIDefaults = {
+  const defaultValue: LDAIConversationConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
     enabled: true,
@@ -36,6 +50,7 @@ it('returns config with interpolated messages', async () => {
     _ldMeta: {
       variationKey: 'v1',
       enabled: true,
+      mode: 'completion',
     },
   };
 
@@ -73,14 +88,14 @@ it('returns config with interpolated messages', async () => {
 it('includes context in variables for messages interpolation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDAIDefaults = {
+  const defaultValue: LDAIConversationConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
   };
 
   const mockVariation = {
     messages: [{ role: 'system', content: 'User key: {{ldctx.key}}' }],
-    _ldMeta: { variationKey: 'v1', enabled: true },
+    _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
   };
 
   mockLdClient.variation.mockResolvedValue(mockVariation);
@@ -94,7 +109,7 @@ it('includes context in variables for messages interpolation', async () => {
 it('handles missing metadata in variation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDAIDefaults = {
+  const defaultValue: LDAIConversationConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
   };
@@ -108,11 +123,10 @@ it('handles missing metadata in variation', async () => {
 
   const result = await client.config(key, testContext, defaultValue);
 
+  // When metadata/mode is missing, a disabled config is returned
   expect(result).toEqual({
-    model: { name: 'example-provider', parameters: { name: 'imagination' } },
-    messages: [{ role: 'system', content: 'Hello' }],
-    tracker: expect.any(Object),
     enabled: false,
+    tracker: undefined,
     toVercelAISDK: expect.any(Function),
   });
 });
@@ -120,7 +134,7 @@ it('handles missing metadata in variation', async () => {
 it('passes the default value to the underlying client', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'non-existent-flag';
-  const defaultValue: LDAIDefaults = {
+  const defaultValue: LDAIConversationConfigDefault = {
     model: { name: 'default-model', parameters: { name: 'default' } },
     provider: { name: 'default-provider' },
     messages: [{ role: 'system', content: 'Default messages' }],
@@ -128,7 +142,7 @@ it('passes the default value to the underlying client', async () => {
   };
 
   const expectedLDFlagValue = {
-    _ldMeta: { enabled: true },
+    _ldMeta: { enabled: true, mode: 'completion', variationKey: '' },
     model: defaultValue.model,
     messages: defaultValue.messages,
     provider: defaultValue.provider,
@@ -154,7 +168,7 @@ it('passes the default value to the underlying client', async () => {
 it('returns single agent config with interpolated instructions', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-agent';
-  const defaultValue: LDAIAgentDefaults = {
+  const defaultValue: LDAIAgentConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
     enabled: true,
@@ -206,7 +220,7 @@ it('returns single agent config with interpolated instructions', async () => {
 it('includes context in variables for agent instructions interpolation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-agent';
-  const defaultValue: LDAIAgentDefaults = {
+  const defaultValue: LDAIAgentConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
     enabled: true,
@@ -227,7 +241,7 @@ it('includes context in variables for agent instructions interpolation', async (
 it('handles missing metadata in agent variation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-agent';
-  const defaultValue: LDAIAgentDefaults = {
+  const defaultValue: LDAIAgentConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     instructions: 'You are a helpful assistant.',
     enabled: true,
@@ -242,18 +256,17 @@ it('handles missing metadata in agent variation', async () => {
 
   const result = await client.agent(key, testContext, defaultValue);
 
+  // When metadata/mode is missing, a disabled config is returned
   expect(result).toEqual({
-    model: { name: 'example-provider', parameters: { name: 'imagination' } },
-    instructions: 'Hello.',
-    tracker: expect.any(Object),
     enabled: false,
+    tracker: undefined,
   });
 });
 
 it('passes the default value to the underlying client for single agent', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'non-existent-agent';
-  const defaultValue: LDAIAgentDefaults = {
+  const defaultValue: LDAIAgentConfigDefault = {
     model: { name: 'default-model', parameters: { name: 'default' } },
     provider: { name: 'default-provider' },
     instructions: 'Default instructions',
@@ -261,7 +274,7 @@ it('passes the default value to the underlying client for single agent', async (
   };
 
   const expectedLDFlagValue = {
-    _ldMeta: { enabled: defaultValue.enabled },
+    _ldMeta: { enabled: defaultValue.enabled, mode: 'agent', variationKey: '' },
     model: defaultValue.model,
     provider: defaultValue.provider,
     instructions: defaultValue.instructions,
@@ -379,4 +392,225 @@ it('handles empty agent configs array', async () => {
     0,
     0,
   );
+});
+
+// New judge-related tests
+describe('judge method', () => {
+  it('retrieves judge configuration successfully', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance', 'accuracy'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    const mockJudgeConfig = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance', 'accuracy'],
+      messages: [{ role: 'system' as const, content: 'You are a judge.' }],
+      tracker: {} as any,
+      toVercelAISDK: jest.fn(),
+    };
+
+    // Mock the _evaluate method
+    const evaluateSpy = jest.spyOn(client as any, '_evaluate');
+    evaluateSpy.mockResolvedValue(mockJudgeConfig);
+
+    const result = await client.judge(key, testContext, defaultValue);
+
+    expect(mockLdClient.track).toHaveBeenCalledWith(
+      '$ld:ai:judge:function:single',
+      testContext,
+      key,
+      1,
+    );
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(result).toBe(mockJudgeConfig);
+  });
+
+  it('handles variables parameter', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+    const variables = { metric: 'relevance' };
+
+    const mockJudgeConfig = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance'],
+      messages: [{ role: 'system' as const, content: 'You are a judge.' }],
+      tracker: {} as any,
+      toVercelAISDK: jest.fn(),
+    };
+
+    const evaluateSpy = jest.spyOn(client as any, '_evaluate');
+    evaluateSpy.mockResolvedValue(mockJudgeConfig);
+
+    const result = await client.judge(key, testContext, defaultValue, variables);
+
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', variables);
+    expect(result).toBe(mockJudgeConfig);
+  });
+});
+
+describe('initJudge method', () => {
+  let mockProvider: jest.Mocked<any>;
+  let mockJudge: jest.Mocked<Judge>;
+
+  beforeEach(() => {
+    mockProvider = {
+      invokeStructuredModel: jest.fn(),
+    };
+
+    mockJudge = {
+      evaluate: jest.fn(),
+      evaluateMessages: jest.fn(),
+    } as any;
+
+    // Mock AIProviderFactory.create
+    (AIProviderFactory.create as jest.Mock).mockResolvedValue(mockProvider);
+
+    // Mock Judge constructor
+    (Judge as jest.MockedClass<typeof Judge>).mockImplementation(() => mockJudge);
+  });
+
+  it('initializes judge successfully', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance', 'accuracy'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    const mockJudgeConfig = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance', 'accuracy'],
+      messages: [{ role: 'system' as const, content: 'You are a judge.' }],
+      tracker: {} as any,
+      toVercelAISDK: jest.fn(),
+    };
+
+    // Mock the judge method
+    const judgeSpy = jest.spyOn(client, 'judge');
+    judgeSpy.mockResolvedValue(mockJudgeConfig);
+
+    const result = await client.initJudge(key, testContext, defaultValue);
+
+    expect(mockLdClient.track).toHaveBeenCalledWith(
+      '$ld:ai:judge:function:initJudge',
+      testContext,
+      key,
+      1,
+    );
+    expect(judgeSpy).toHaveBeenCalledWith(key, testContext, defaultValue, undefined);
+    expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
+    expect(Judge).toHaveBeenCalledWith(
+      mockJudgeConfig,
+      mockJudgeConfig.tracker,
+      mockProvider,
+      undefined,
+    );
+    expect(result).toBe(mockJudge);
+  });
+
+  it('returns undefined when judge configuration is disabled', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: false,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    const mockJudgeConfig = {
+      enabled: false, // This should be false to test disabled case
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance'],
+      messages: [{ role: 'system' as const, content: 'You are a judge.' }],
+      tracker: undefined, // No tracker for disabled config
+      toVercelAISDK: jest.fn(),
+    };
+
+    const judgeSpy = jest.spyOn(client, 'judge');
+    judgeSpy.mockResolvedValue(mockJudgeConfig);
+
+    const result = await client.initJudge(key, testContext, defaultValue);
+
+    expect(result).toBeUndefined();
+    expect(AIProviderFactory.create).not.toHaveBeenCalled();
+    expect(Judge).not.toHaveBeenCalled();
+  });
+
+  it('returns undefined when AIProviderFactory.create fails', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    const mockJudgeConfig = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance'],
+      messages: [{ role: 'system' as const, content: 'You are a judge.' }],
+      tracker: {} as any,
+      toVercelAISDK: jest.fn(),
+    };
+
+    const judgeSpy = jest.spyOn(client, 'judge');
+    judgeSpy.mockResolvedValue(mockJudgeConfig);
+
+    (AIProviderFactory.create as jest.Mock).mockResolvedValue(undefined);
+
+    const result = await client.initJudge(key, testContext, defaultValue);
+
+    expect(result).toBeUndefined();
+    expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
+    expect(Judge).not.toHaveBeenCalled();
+  });
+
+  it('handles errors gracefully', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['relevance'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    const error = new Error('Judge configuration error');
+    const judgeSpy = jest.spyOn(client, 'judge');
+    judgeSpy.mockRejectedValue(error);
+
+    const result = await client.initJudge(key, testContext, defaultValue);
+
+    expect(result).toBeUndefined();
+  });
 });

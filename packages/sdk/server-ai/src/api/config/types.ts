@@ -256,14 +256,4 @@ export interface LDAIAgent extends Omit<LDAIAgentConfig, 'toVercelAISDK' | 'trac
 /**
  * Mode type for AI configurations.
  */
-export type Mode = 'completion' | 'agent' | 'judge';
-
-/**
- * Metadata for LaunchDarkly variations.
- */
-export interface LDMeta {
-  variationKey: string;
-  enabled: boolean;
-  version?: number;
-  mode?: Mode;
-}
+export type LDAIConfigMode = 'completion' | 'agent' | 'judge';

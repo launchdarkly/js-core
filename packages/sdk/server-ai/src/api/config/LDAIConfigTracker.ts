@@ -36,6 +36,14 @@ export interface LDAIMetricSummary {
  */
 export interface LDAIConfigTracker {
   /**
+   * Get the data for tracking.
+   */
+  getTrackData(): {
+    variationKey: string;
+    configKey: string;
+    version: number;
+  };
+  /**
    * Track the duration of generation.
    *
    * Ideally this would not include overhead time such as network communication.
