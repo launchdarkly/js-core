@@ -232,8 +232,15 @@ export class LDAIClientImpl implements LDAIClient {
     this._ldClient.track(TRACK_JUDGE_INIT, context, key, 1);
 
     try {
+      // Add standard judge variables to incoming variables
+      const extendedVariables = {
+        ...variables,
+        message_history: '{{message_history}}',
+        response_to_evaluate: '{{response_to_evaluate}}',
+      };
+
       // Retrieve the judge AI Config using the new judge method
-      const judgeConfig = await this.judge(key, context, defaultValue, variables);
+      const judgeConfig = await this.judge(key, context, defaultValue, extendedVariables);
 
       // Return undefined if the configuration is disabled
       if (!judgeConfig.enabled || !judgeConfig.tracker) {
