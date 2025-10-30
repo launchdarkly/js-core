@@ -8,6 +8,7 @@ import type {
   LDLogger,
   LDMessage,
   LDTokenUsage,
+  StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
 /**
@@ -81,6 +82,55 @@ export class OpenAIProvider extends AIProvider {
 
     return {
       message: assistantMessage,
+      metrics,
+    };
+  }
+
+  /**
+   * Invoke the OpenAI model with structured output support.
+   */
+  async invokeStructuredModel(
+    messages: LDMessage[],
+    responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse> {
+    // Call OpenAI chat completions API with structured output
+    const response = await this._client.chat.completions.create({
+      model: this._modelName,
+      messages,
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'structured_output',
+          schema: responseStructure,
+          strict: true,
+        },
+      },
+      ...this._parameters,
+    });
+
+    // Generate metrics early (assumes success by default)
+    const metrics = OpenAIProvider.createAIMetrics(response);
+
+    // Safely extract the first choice content using optional chaining
+    const content = response?.choices?.[0]?.message?.content || '';
+
+    if (!content) {
+      this.logger?.warn('OpenAI structured response has no content available');
+      metrics.success = false;
+    }
+
+    // Parse the structured JSON response
+    let data: Record<string, unknown> = {};
+    try {
+      data = JSON.parse(content);
+    } catch (error) {
+      this.logger?.warn('Failed to parse structured response as JSON:', error);
+      metrics.success = false;
+    }
+
+    return {
+      data,
+      rawResponse: content,
       metrics,
     };
   }
