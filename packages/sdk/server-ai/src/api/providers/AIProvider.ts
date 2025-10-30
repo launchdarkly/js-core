@@ -1,7 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
-import { LDAIConfigKind, LDMessage } from '../config/types';
+import { LDAIConfig, LDMessage } from '../config/types';
 import { StructuredResponse } from '../judge/types';
 
 /**
@@ -23,24 +23,60 @@ export abstract class AIProvider {
    * This method should convert messages to provider format, invoke the model,
    * and return a ChatResponse with the result and metrics.
    *
+   * Default implementation takes no action and returns a placeholder response.
+   * Provider implementations should override this method.
+   *
    * @param messages Array of LDMessage objects representing the conversation
    * @returns Promise that resolves to a ChatResponse containing the model's response
    */
-  abstract invokeModel(messages: LDMessage[]): Promise<ChatResponse>;
+  async invokeModel(_messages: LDMessage[]): Promise<ChatResponse> {
+    this.logger?.warn('invokeModel not implemented by this provider');
+    return {
+      message: {
+        role: 'assistant',
+        content: '',
+      },
+      metrics: {
+        success: false,
+        usage: {
+          total: 0,
+          input: 0,
+          output: 0,
+        },
+      },
+    };
+  }
 
   /**
    * Invoke the chat model with structured output support.
    * This method should convert messages to provider format, invoke the model with
    * structured output configuration, and return a structured response.
    *
+   * Default implementation takes no action and returns a placeholder response.
+   * Provider implementations should override this method.
+   *
    * @param messages Array of LDMessage objects representing the conversation
-   * @param outputs Dictionary of output configurations keyed by output name
+   * @param responseStructure Dictionary of output configurations keyed by output name
    * @returns Promise that resolves to a structured response
    */
-  abstract invokeStructuredModel(
-    messages: LDMessage[],
-    responseStructure: Record<string, unknown>,
-  ): Promise<StructuredResponse>;
+  async invokeStructuredModel(
+    _messages: LDMessage[],
+    _responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse> {
+    this.logger?.warn('invokeStructuredModel not implemented by this provider');
+    return {
+      data: {},
+      rawResponse: '',
+      metrics: {
+        success: false,
+        usage: {
+          total: 0,
+          input: 0,
+          output: 0,
+        },
+      },
+    };
+  }
 
   /**
    * Static method that constructs an instance of the provider.
@@ -52,7 +88,7 @@ export abstract class AIProvider {
    * @returns Promise that resolves to a configured provider instance
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static async create(aiConfig: LDAIConfigKind, logger?: LDLogger): Promise<AIProvider> {
+  static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<AIProvider> {
     throw new Error('Provider implementations must override the static create method');
   }
 }
