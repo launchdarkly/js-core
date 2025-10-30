@@ -7,7 +7,8 @@ import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
   LDAIAgentRequestConfig,
-  LDAIConfigKindDefault,
+  LDAIConfigDefaultKind,
+  LDAIConfigKind,
   LDAIConversationConfig,
   LDAIConversationConfigDefault,
   LDAIJudgeConfig,
@@ -39,10 +40,10 @@ export class LDAIClientImpl implements LDAIClient {
   private async _evaluate(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConfigKindDefault,
+    defaultValue: LDAIConfigDefaultKind,
     mode: 'completion' | 'agent' | 'judge',
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig> {
+  ): Promise<LDAIConfigKind> {
     // Convert default value to LDFlagValue format
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 

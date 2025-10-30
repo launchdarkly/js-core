@@ -49,7 +49,7 @@ export interface LDJudgeConfiguration {
 /**
  * Base AI Config interface without mode-specific fields.
  */
-export interface LDAIConfigBase extends Omit<LDAIConfigBaseDefault, 'enabled'> {
+export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {
   /**
    * Whether the configuration is enabled.
    */
@@ -81,7 +81,7 @@ export interface LDAIConfigBase extends Omit<LDAIConfigBaseDefault, 'enabled'> {
 /**
  * Base AI Config interface for default implementations with optional enabled property.
  */
-export interface LDAIConfigBaseDefault {
+export interface LDAIConfigDefault {
   /**
    * Optional model configuration.
    */
@@ -105,7 +105,7 @@ export interface LDAIConfigBaseDefault {
 /**
  * Default Judge-specific AI Config with required evaluation metric key.
  */
-export interface LDAIJudgeConfigDefault extends LDAIConfigBaseDefault {
+export interface LDAIJudgeConfigDefault extends LDAIConfigDefault {
   /**
    * Optional prompt data for judge configurations.
    */
@@ -120,7 +120,7 @@ export interface LDAIJudgeConfigDefault extends LDAIConfigBaseDefault {
 /**
  * Default Agent-specific AI Config with instructions.
  */
-export interface LDAIAgentConfigDefault extends LDAIConfigBaseDefault {
+export interface LDAIAgentConfigDefault extends LDAIConfigDefault {
   /**
    * Instructions for the agent.
    */
@@ -135,7 +135,7 @@ export interface LDAIAgentConfigDefault extends LDAIConfigBaseDefault {
 /**
  * Default Completion AI Config (default mode).
  */
-export interface LDAIConversationConfigDefault extends LDAIConfigBaseDefault {
+export interface LDAIConversationConfigDefault extends LDAIConfigDefault {
   /**
    * Optional prompt data for completion configurations.
    */
@@ -154,7 +154,7 @@ export interface LDAIConversationConfigDefault extends LDAIConfigBaseDefault {
 /**
  * Judge-specific AI Config with required evaluation metric key.
  */
-export interface LDAIJudgeConfig extends LDAIConfigBase {
+export interface LDAIJudgeConfig extends LDAIConfig {
   /**
    * Optional prompt data for judge configurations.
    */
@@ -169,7 +169,7 @@ export interface LDAIJudgeConfig extends LDAIConfigBase {
 /**
  * Agent-specific AI Config with instructions.
  */
-export interface LDAIAgentConfig extends LDAIConfigBase {
+export interface LDAIAgentConfig extends LDAIConfig {
   /**
    * Instructions for the agent.
    */
@@ -184,7 +184,7 @@ export interface LDAIAgentConfig extends LDAIConfigBase {
 /**
  * Completion AI Config (default mode).
  */
-export interface LDAIConversationConfig extends LDAIConfigBase {
+export interface LDAIConversationConfig extends LDAIConfig {
   /**
    * Optional prompt data for completion configurations.
    */
@@ -218,7 +218,7 @@ export type LDAIConfigKind = LDAIConversationConfig | LDAIAgentConfig | LDAIJudg
 /**
  * Union type for all default AI Config variants.
  */
-export type LDAIConfigKindDefault =
+export type LDAIConfigDefaultKind =
   | LDAIConversationConfigDefault
   | LDAIAgentConfigDefault
   | LDAIJudgeConfigDefault;

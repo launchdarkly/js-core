@@ -1,7 +1,7 @@
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 import {
   LDAIAgentConfig,
-  LDAIConfigKindDefault,
+  LDAIConfigDefaultKind,
   LDAIConversationConfig,
   LDAIJudgeConfig,
   LDJudgeConfiguration,
@@ -45,7 +45,7 @@ export class LDAIConfigUtils {
    * @returns The flag value structure for LaunchDarkly
    */
   static toFlagValue(
-    config: LDAIConfigKindDefault,
+    config: LDAIConfigDefaultKind,
     mode: 'completion' | 'agent' | 'judge',
   ): LDAIConfigFlagValue {
     return {
