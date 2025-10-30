@@ -1,10 +1,11 @@
-import { generateText } from 'ai';
+import { generateObject, generateText } from 'ai';
 
 import { VercelProvider } from '../src/VercelProvider';
 
 // Mock Vercel AI SDK
 jest.mock('ai', () => ({
   generateText: jest.fn(),
+  generateObject: jest.fn(),
 }));
 
 describe('VercelProvider', () => {
@@ -116,6 +117,76 @@ describe('VercelProvider', () => {
     });
   });
 
+  describe('convertToZodSchema', () => {
+    it('converts simple object structure to Zod schema', () => {
+      const responseStructure = {
+        name: 'string',
+        age: 0,
+        isActive: true,
+      };
+
+      const schema = VercelProvider.convertToZodSchema(responseStructure);
+
+      expect(schema).toBeDefined();
+      expect(typeof schema.parse).toBe('function');
+    });
+
+    it('converts nested object structure to Zod schema', () => {
+      const responseStructure = {
+        user: {
+          name: 'string',
+          age: 0,
+        },
+        settings: {
+          theme: 'string',
+          notifications: true,
+        },
+      };
+
+      const schema = VercelProvider.convertToZodSchema(responseStructure);
+
+      expect(schema).toBeDefined();
+      expect(typeof schema.parse).toBe('function');
+    });
+
+    it('converts array structure to Zod schema', () => {
+      const responseStructure = {
+        items: ['string'],
+        numbers: [0],
+        booleans: [true],
+      };
+
+      const schema = VercelProvider.convertToZodSchema(responseStructure);
+
+      expect(schema).toBeDefined();
+      expect(typeof schema.parse).toBe('function');
+    });
+
+    it('handles empty array structure', () => {
+      const responseStructure = {
+        items: [],
+      };
+
+      const schema = VercelProvider.convertToZodSchema(responseStructure);
+
+      expect(schema).toBeDefined();
+      expect(typeof schema.parse).toBe('function');
+    });
+
+    it('handles null and undefined values', () => {
+      const responseStructure = {
+        nullable: null,
+        undefined,
+        string: 'string',
+      };
+
+      const schema = VercelProvider.convertToZodSchema(responseStructure);
+
+      expect(schema).toBeDefined();
+      expect(typeof schema.parse).toBe('function');
+    });
+  });
+
   describe('invokeModel', () => {
     it('invokes Vercel AI generateText and returns response', async () => {
       const mockResponse = {
@@ -170,6 +241,91 @@ describe('VercelProvider', () => {
           role: 'assistant',
           content: 'Hello! How can I help you today?',
         },
+        metrics: {
+          success: true,
+          usage: undefined,
+        },
+      });
+    });
+  });
+
+  describe('invokeStructuredModel', () => {
+    it('invokes Vercel AI generateObject and returns structured response', async () => {
+      const mockResponse = {
+        object: {
+          name: 'John Doe',
+          age: 30,
+          isActive: true,
+        },
+        usage: {
+          promptTokens: 10,
+          completionTokens: 15,
+          totalTokens: 25,
+        },
+      };
+
+      (generateObject as jest.Mock).mockResolvedValue(mockResponse);
+
+      const messages = [{ role: 'user' as const, content: 'Generate user data' }];
+      const responseStructure = {
+        name: 'string',
+        age: 0,
+        isActive: true,
+      };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(generateObject).toHaveBeenCalledWith({
+        model: mockModel,
+        messages: [{ role: 'user', content: 'Generate user data' }],
+        schema: expect.any(Object), // Zod schema
+      });
+
+      expect(result).toEqual({
+        data: {
+          name: 'John Doe',
+          age: 30,
+          isActive: true,
+        },
+        rawResponse: JSON.stringify({
+          name: 'John Doe',
+          age: 30,
+          isActive: true,
+        }),
+        metrics: {
+          success: true,
+          usage: {
+            total: 25,
+            input: 10,
+            output: 15,
+          },
+        },
+      });
+    });
+
+    it('handles structured response without usage data', async () => {
+      const mockResponse = {
+        object: {
+          result: 'success',
+        },
+      };
+
+      (generateObject as jest.Mock).mockResolvedValue(mockResponse);
+
+      const messages = [{ role: 'user' as const, content: 'Generate result' }];
+      const responseStructure = {
+        result: 'string',
+      };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(result).toEqual({
+        data: {
+          result: 'success',
+        },
+        rawResponse: JSON.stringify({
+          result: 'success',
+        }),
         metrics: {
           success: true,
           usage: undefined,
