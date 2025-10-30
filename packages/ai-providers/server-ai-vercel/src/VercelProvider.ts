@@ -1,4 +1,5 @@
-import { generateText, LanguageModel } from 'ai';
+import { generateObject, generateText, LanguageModel } from 'ai';
+import { z } from 'zod';
 
 import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type {
@@ -8,6 +9,7 @@ import type {
   LDLogger,
   LDMessage,
   LDTokenUsage,
+  StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
 /**
@@ -70,6 +72,34 @@ export class VercelProvider extends AIProvider {
   }
 
   /**
+   * Invoke the Vercel AI model with structured output support.
+   */
+  async invokeStructuredModel(
+    messages: LDMessage[],
+    responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse> {
+    // Convert responseStructure to Zod schema
+    const schema = VercelProvider.convertToZodSchema(responseStructure);
+
+    // Call Vercel AI generateObject
+    const result = await generateObject({
+      model: this._model,
+      messages,
+      schema,
+      ...this._parameters,
+    });
+
+    // Extract metrics including token usage and success status
+    const metrics = VercelProvider.createAIMetrics(result);
+
+    return {
+      data: result.object,
+      rawResponse: JSON.stringify(result.object),
+      metrics,
+    };
+  }
+
+  /**
    * Get the underlying Vercel AI model instance.
    */
   getModel(): LanguageModel {
@@ -119,6 +149,72 @@ export class VercelProvider extends AIProvider {
       success: true,
       usage,
     };
+  }
+
+  /**
+   * Convert a response structure object to a Zod schema.
+   * This method recursively converts a generic object structure to a Zod schema
+   * that can be used with Vercel AI SDK's generateObject function.
+   *
+   * @param responseStructure The structure object to convert
+   * @returns A Zod schema representing the structure
+   */
+  static convertToZodSchema(responseStructure: Record<string, unknown>): z.ZodSchema {
+    const shape: Record<string, z.ZodSchema> = {};
+
+    Object.entries(responseStructure).forEach(([key, value]) => {
+      // eslint-disable-next-line no-underscore-dangle
+      shape[key] = VercelProvider._convertValueToZodSchema(value);
+    });
+
+    return z.object(shape);
+  }
+
+  /**
+   * Convert a single value to a Zod schema.
+   * This is a helper method for convertToZodSchema that handles different value types.
+   *
+   * @param value The value to convert
+   * @returns A Zod schema for the value
+   */
+  private static _convertValueToZodSchema(value: unknown): z.ZodSchema {
+    if (value === null || value === undefined) {
+      return z.any();
+    }
+
+    if (typeof value === 'string') {
+      return z.string();
+    }
+
+    if (typeof value === 'number') {
+      return z.number();
+    }
+
+    if (typeof value === 'boolean') {
+      return z.boolean();
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        return z.array(z.any());
+      }
+      // Use the first element to determine the array type
+      // eslint-disable-next-line no-underscore-dangle
+      const elementSchema = VercelProvider._convertValueToZodSchema(value[0]);
+      return z.array(elementSchema);
+    }
+
+    if (typeof value === 'object') {
+      const shape: Record<string, z.ZodSchema> = {};
+      Object.entries(value).forEach(([key, val]) => {
+        // eslint-disable-next-line no-underscore-dangle
+        shape[key] = VercelProvider._convertValueToZodSchema(val);
+      });
+      return z.object(shape);
+    }
+
+    // Fallback for any other type
+    return z.any();
   }
 
   /**
