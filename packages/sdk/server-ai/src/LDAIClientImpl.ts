@@ -9,6 +9,7 @@ import {
   LDAIAgentRequestConfig,
   LDAIConfigDefaultKind,
   LDAIConfigKind,
+  LDAIConfigMode,
   LDAIConversationConfig,
   LDAIConversationConfigDefault,
   LDAIJudgeConfig,
@@ -26,6 +27,16 @@ import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 
+/**
+ * Tracking event keys for AI SDK usage metrics.
+ */
+const TRACK_CONFIG_SINGLE = '$ld:ai:config:function:single';
+const TRACK_CONFIG_INIT_CHAT = '$ld:ai:config:function:initChat';
+const TRACK_JUDGE_SINGLE = '$ld:ai:judge:function:single';
+const TRACK_JUDGE_INIT = '$ld:ai:judge:function:initJudge';
+const TRACK_AGENT_SINGLE = '$ld:ai:agent:function:single';
+const TRACK_AGENT_MULTIPLE = '$ld:ai:agent:function:multiple';
+
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
 
@@ -41,7 +52,7 @@ export class LDAIClientImpl implements LDAIClient {
     key: string,
     context: LDContext,
     defaultValue: LDAIConfigDefaultKind,
-    mode: 'completion' | 'agent' | 'judge',
+    mode: LDAIConfigMode,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfigKind> {
     // Convert default value to LDFlagValue format
@@ -126,7 +137,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIConversationConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConversationConfig> {
-    this._ldClient.track('$ld:ai:config:function:single', context, key, 1);
+    this._ldClient.track(TRACK_CONFIG_SINGLE, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
     return this._addVercelAISDKSupport(config as LDAIConversationConfig);
@@ -138,7 +149,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIJudgeConfig> {
-    this._ldClient.track('$ld:ai:judge:function:single', context, key, 1);
+    this._ldClient.track(TRACK_JUDGE_SINGLE, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'judge', variables);
     return config as LDAIJudgeConfig;
@@ -151,7 +162,7 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
     // Track agent usage
-    this._ldClient.track('$ld:ai:agent:function:single', context, key, 1);
+    this._ldClient.track(TRACK_AGENT_SINGLE, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'agent', variables);
     return config as LDAIAgentConfig;
@@ -162,12 +173,7 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
   ): Promise<Record<T[number]['key'], LDAIAgentConfig>> {
     // Track multiple agents usage
-    this._ldClient.track(
-      '$ld:ai:agent:function:multiple',
-      context,
-      agentConfigs.length,
-      agentConfigs.length,
-    );
+    this._ldClient.track(TRACK_AGENT_MULTIPLE, context, agentConfigs.length, agentConfigs.length);
 
     const agents = {} as Record<T[number]['key'], LDAIAgentConfig>;
 
@@ -195,7 +201,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     // Track chat initialization
-    this._ldClient.track('$ld:ai:config:function:initChat', context, key, 1);
+    this._ldClient.track(TRACK_CONFIG_INIT_CHAT, context, key, 1);
 
     const config = await this.config(key, context, defaultValue, variables);
 
@@ -223,7 +229,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined> {
     // Track judge initialization
-    this._ldClient.track('$ld:ai:judge:function:initJudge', context, key, 1);
+    this._ldClient.track(TRACK_JUDGE_INIT, context, key, 1);
 
     try {
       // Retrieve the judge AI Config using the new judge method

@@ -2,6 +2,7 @@ import { LDAIConfigTracker } from './LDAIConfigTracker';
 import {
   LDAIAgentConfig,
   LDAIConfigDefaultKind,
+  LDAIConfigMode,
   LDAIConversationConfig,
   LDAIJudgeConfig,
   LDJudgeConfiguration,
@@ -21,7 +22,7 @@ export interface LDAIConfigFlagValue {
     variationKey?: string;
     enabled: boolean;
     version?: number;
-    mode?: 'completion' | 'agent' | 'judge';
+    mode?: LDAIConfigMode;
   };
   model?: LDModelConfig;
   messages?: LDMessage[];
@@ -44,24 +45,33 @@ export class LDAIConfigUtils {
    * @param mode The mode for the configuration
    * @returns The flag value structure for LaunchDarkly
    */
-  static toFlagValue(
-    config: LDAIConfigDefaultKind,
-    mode: 'completion' | 'agent' | 'judge',
-  ): LDAIConfigFlagValue {
-    return {
+  static toFlagValue(config: LDAIConfigDefaultKind, mode: LDAIConfigMode): LDAIConfigFlagValue {
+    const flagValue: LDAIConfigFlagValue = {
       _ldMeta: {
         variationKey: '', // Not available when converting from config
         enabled: config.enabled ?? false,
         mode,
       },
       model: config.model,
-      messages: 'messages' in config ? config.messages : undefined,
-      provider: config.provider,
-      instructions: 'instructions' in config ? config.instructions : undefined,
-      evaluationMetricKeys:
-        'evaluationMetricKeys' in config ? config.evaluationMetricKeys : undefined,
-      judgeConfiguration: 'judgeConfiguration' in config ? config.judgeConfiguration : undefined,
     };
+
+    if ('messages' in config && config.messages !== undefined) {
+      flagValue.messages = config.messages;
+    }
+    if (config.provider !== undefined) {
+      flagValue.provider = config.provider;
+    }
+    if ('instructions' in config && config.instructions !== undefined) {
+      flagValue.instructions = config.instructions;
+    }
+    if ('evaluationMetricKeys' in config && config.evaluationMetricKeys !== undefined) {
+      flagValue.evaluationMetricKeys = config.evaluationMetricKeys;
+    }
+    if ('judgeConfiguration' in config && config.judgeConfiguration !== undefined) {
+      flagValue.judgeConfiguration = config.judgeConfiguration;
+    }
+
+    return flagValue;
   }
 
   /**
@@ -98,7 +108,7 @@ export class LDAIConfigUtils {
    * @returns A disabled config of the appropriate type
    */
   static createDisabledConfig(
-    mode: 'completion' | 'agent' | 'judge',
+    mode: LDAIConfigMode,
   ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
     switch (mode) {
       case 'agent':
