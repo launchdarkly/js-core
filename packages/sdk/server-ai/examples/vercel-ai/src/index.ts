@@ -59,18 +59,15 @@ async function main() {
     console.log('\n*** Generating text:');
 
     // Convert config to Vercel AI SDK format
-    const vercelConfig = VercelProvider.toVercelAISDK(
-      aiConfig,
-      openai,
-      { nonInterpolatedMessages: [userMessage] },
-    );
+    const vercelConfig = VercelProvider.toVercelAISDK(aiConfig, openai, {
+      nonInterpolatedMessages: [userMessage],
+    });
 
     // Track metrics using trackMetricsOf with VercelProvider.createAIMetrics
-    const result = await aiConfig.tracker.trackMetricsOf(
-      VercelProvider.createAIMetrics,
-      () => generateText(vercelConfig),
+    const result = await aiConfig.tracker.trackMetricsOf(VercelProvider.createAIMetrics, () =>
+      generateText(vercelConfig),
     );
-    
+
     console.log('Response:', result.text);
   } catch (err) {
     console.error('Error:', err);
@@ -86,12 +83,10 @@ async function main() {
     // Example of using generateText (non-streaming)
     console.log('\n*** Streaming text:');
     // Convert config to Vercel AI SDK format
-    const vercelConfig = VercelProvider.toVercelAISDK(
-      aiConfig,
-      openai,
-      { nonInterpolatedMessages: [userMessage] },
-    );
-    
+    const vercelConfig = VercelProvider.toVercelAISDK(aiConfig, openai, {
+      nonInterpolatedMessages: [userMessage],
+    });
+
     // Track streaming metrics using trackStreamMetricsOf with provider's extractor
     // Stream is returned immediately (synchronously), metrics tracked in background
     const streamResult = aiConfig.tracker.trackStreamMetricsOf(
