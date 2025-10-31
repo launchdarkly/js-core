@@ -38,4 +38,3 @@ export interface VercelAISDKConfig<TMod> extends VercelAIModelParameters {
   model: TMod;
   messages?: LDMessage[] | undefined;
 }
-

@@ -46,7 +46,7 @@ export class VercelProvider extends AIProvider {
    * This method auto-detects the provider and creates the model.
    * Note: Messages from the AI config are not included in the provider - messages
    * should be passed at invocation time via invokeModel().
-   * 
+   *
    * @param aiConfig The LaunchDarkly AI configuration
    * @param logger Optional logger
    * @returns A Promise that resolves to a configured VercelProvider
@@ -169,7 +169,7 @@ export class VercelProvider extends AIProvider {
 
   /**
    * Map LaunchDarkly model parameters to Vercel AI SDK parameters.
-   * 
+   *
    * Parameter mappings:
    * - max_tokens → maxTokens
    * - max_completion_tokens → maxOutputTokens
