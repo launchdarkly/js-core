@@ -114,7 +114,7 @@ export interface LDAIJudgeConfigDefault extends LDAIConfigDefault {
    * Evaluation metric keys for judge configurations.
    * The keys of the metrics that this judge can evaluate.
    */
-  evaluationMetricKeys: string[];
+  evaluationMetricKeys?: string[];
 }
 
 /**
