@@ -1,5 +1,9 @@
+import { LDLogger } from '@launchdarkly/js-server-sdk-common';
+
 import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
 import { LDAIConversationConfig, LDMessage } from '../config/types';
+import { Judge } from '../judge/Judge';
+import { JudgeResponse } from '../judge/types';
 import { AIProvider } from '../providers/AIProvider';
 import { ChatResponse } from './types';
 
@@ -11,13 +15,19 @@ import { ChatResponse } from './types';
  */
 export class TrackedChat {
   protected messages: LDMessage[];
+  protected judges: Record<string, Judge>;
+  private readonly _logger?: LDLogger;
 
   constructor(
     protected readonly aiConfig: LDAIConversationConfig,
     protected readonly tracker: LDAIConfigTracker,
     protected readonly provider: AIProvider,
+    judges?: Record<string, Judge>,
+    logger?: LDLogger,
   ) {
     this.messages = [];
+    this.judges = judges || {};
+    this._logger = logger;
   }
 
   /**
@@ -45,7 +55,61 @@ export class TrackedChat {
     // Add the assistant response to the conversation history
     this.messages.push(response.message);
 
+    // Start judge evaluations if configured
+    if (
+      this.aiConfig.judgeConfiguration?.judges &&
+      this.aiConfig.judgeConfiguration.judges.length > 0
+    ) {
+      response.evaluations = this._evaluateWithJudges(this.messages, response);
+    }
+
     return response;
+  }
+
+  /**
+   * Evaluates the response with all configured judges.
+   * Returns a promise that resolves to an array of evaluation results.
+   *
+   * @param messages Array of messages representing the conversation history
+   * @param response The AI response to be evaluated
+   * @returns Promise resolving to array of judge evaluation results
+   */
+  private async _evaluateWithJudges(
+    messages: LDMessage[],
+    response: ChatResponse,
+  ): Promise<Array<JudgeResponse | undefined>> {
+    const judgeConfigs = this.aiConfig.judgeConfiguration!.judges;
+
+    // Start all judge evaluations in parallel
+    const evaluationPromises = judgeConfigs.map(async (judgeConfig) => {
+      const judge = this.judges[judgeConfig.key];
+      if (!judge) {
+        this._logger?.warn(
+          `Judge configuration is not enabled: ${judgeConfig.key}`,
+          this.tracker.getTrackData(),
+        );
+        return undefined;
+      }
+
+      const evalResult = await judge.evaluateMessages(
+        messages,
+        response,
+        judgeConfig.samplingRate,
+      );
+
+      // Track scores if evaluation was successful
+      if (evalResult && evalResult.success) {
+        this.tracker.trackEvalScores(evalResult.evals);
+      }
+
+      return evalResult;
+    });
+
+    // Use Promise.allSettled to ensure all evaluations complete
+    // even if some fail
+    const results = await Promise.allSettled(evaluationPromises);
+
+    return results.map((result) => (result.status === 'fulfilled' ? result.value : undefined));
   }
 
   /**
@@ -68,6 +132,14 @@ export class TrackedChat {
    */
   getProvider(): AIProvider {
     return this.provider;
+  }
+
+  /**
+   * Get the judges associated with this TrackedChat.
+   * Returns a record of judge instances keyed by their configuration keys.
+   */
+  getJudges(): Record<string, Judge> {
+    return this.judges;
   }
 
   /**

@@ -217,8 +217,25 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    // Create the TrackedChat instance with the provider
-    return new TrackedChat(config, config.tracker, provider);
+    // Initialize judges if they are configured
+    const judges: Record<string, Judge> = {};
+    if (config.judgeConfiguration?.judges) {
+      for (const judgeConfig of config.judgeConfiguration.judges) {
+        const judge = await this.initJudge(
+          judgeConfig.key,
+          context,
+          { enabled: false },
+          variables,
+          defaultAiProvider,
+        );
+        if (judge) {
+          judges[judgeConfig.key] = judge;
+        }
+      }
+    }
+
+    // Create the TrackedChat instance with the provider, judges, and logger
+    return new TrackedChat(config, config.tracker, provider, judges, this._logger);
   }
 
   async initJudge(
@@ -232,7 +249,19 @@ export class LDAIClientImpl implements LDAIClient {
     this._ldClient.track(TRACK_JUDGE_INIT, context, key, 1);
 
     try {
-      // Add standard judge variables to incoming variables
+      // Logging warnings if reserved keys are present
+      if (variables?.message_history !== undefined) {
+        this._logger?.warn(
+          "The variable 'message_history' is reserved by the judge and will be ignored."
+        );
+      }
+      if (variables?.response_to_evaluate !== undefined) {
+        this._logger?.warn(
+          "The variable 'response_to_evaluate' is reserved by the judge and will be ignored."
+        );
+      }
+
+      // Add overwrite standard judge variables to incoming variables
       const extendedVariables = {
         ...variables,
         message_history: '{{message_history}}',
