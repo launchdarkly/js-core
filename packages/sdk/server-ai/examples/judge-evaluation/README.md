@@ -23,8 +23,16 @@ yarn build
 
 Before running the example, make sure to set the following environment variables:
 
-- `LAUNCHDARKLY_SDK_KEY`: Your LaunchDarkly SDK key
-- `LAUNCHDARKLY_JUDGE_KEY`: Your judge AI Config key (defaults to 'relevance-judge' if not set)
+1. Copy the example environment file:
+   ```bash
+   cp env.example .env
+   ```
+
+2. Edit `.env` and set the following environment variables:
+   - `LAUNCHDARKLY_SDK_KEY`: Your LaunchDarkly SDK key (required)
+   - `LAUNCHDARKLY_AI_CONFIG_KEY`: Your AI Config key (defaults to 'sample-ai-config')
+   - `LAUNCHDARKLY_JUDGE_KEY`: Your judge AI Config key (defaults to 'ld-ai-judge-accuracy')
+   - `OPENAI_API_KEY`: Your OpenAI API key (required if using OpenAI provider)
 
 ## Usage
 
