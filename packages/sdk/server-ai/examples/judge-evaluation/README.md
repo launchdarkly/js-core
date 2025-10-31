@@ -19,13 +19,28 @@ And then
 yarn build
 ```
 
+## AI Config Setup
+
+Make sure you have an AI Config configured in LaunchDarkly with `mode: "judge"`:
+
+1. Install Judges in your AI Configs
+1. Create an AI Config in LaunchDarkly:
+   - Navigate to the AI Configs section in your LaunchDarkly dashboard
+   - Create a new AI Config with the key `sample-ai-config`
+   - Add a variation with the following settings:
+     - **Model Selection**: Select "OpenAI" as the provider and "gpt-3.5-turbo" as the model
+     - **Messages**: Add a system message with the content: "You are a helpful assistant for {{companyName}}. You should be friendly and informative."
+     - Save the variation
+   - Update the default target rule to use the newly created variation
+   - Attach one or more judges to your config
+
 ## Configuration
 
 Before running the example, make sure to set the following environment variables:
 
 1. Copy the example environment file:
    ```bash
-   cp env.example .env
+   cp .env.example .env
    ```
 
 2. Edit `.env` and set the following environment variables:
@@ -41,8 +56,9 @@ The main script (`index.js`) demonstrates how to:
 1. Initialize the LaunchDarkly SDK
 1. Set up a user context
 1. Initialize the LaunchDarkly AI client
-1. Create a judge for evaluation
-1. Evaluate AI responses using the `evaluate()` method
+1. Create a chat for an AI Config with attached judges
+1. Create a judge for direct evaluation
+1. Evaluate AI text using the `evaluate()` method
 1. Handle evaluation results and errors
 
 To run the example (in the judge-evaluation directory):
@@ -50,18 +66,6 @@ To run the example (in the judge-evaluation directory):
 ```bash
 yarn start
 ```
-
-## AI Config Setup
-
-Make sure you have an AI Config configured in LaunchDarkly with `mode: "judge"`:
-
-**relevance-judge**: AI Config for relevance evaluation
-
-The judge config should include:
-- `messages`: Array of messages with evaluation prompts
-- `model`: Model configuration (e.g., GPT-4)
-- `provider`: Provider configuration (e.g., OpenAI)
-- `evaluationMetricKeys`: Array of strings representing the metric keys to report scores to LaunchDarkly.
 
 ## Note
 
