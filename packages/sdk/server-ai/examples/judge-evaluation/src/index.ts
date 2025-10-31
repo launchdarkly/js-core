@@ -96,8 +96,7 @@ async function main(): Promise<void> {
     }
 
     console.log('\n*** Starting judge evaluation of direct input and output:');
-    const input =
-      'You are a helpful assistant for the company LaunchDarkly. How can you help me?';
+    const input = 'You are a helpful assistant for the company LaunchDarkly. How can you help me?';
     const output =
       'I can answer any question you have except for questions about the company LaunchDarkly.';
 
