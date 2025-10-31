@@ -23,6 +23,7 @@
   "dependencies": {
     "@launchdarkly/node-server-sdk": "^9.7.1",
     "@launchdarkly/server-sdk-ai": "0.12.3",
+    "@launchdarkly/server-sdk-ai-openai": "^0.1.0",
     "openai": "^4.58.1"
   },
   "devDependencies": {

@@ -44,7 +44,7 @@ async function main() {
     enabled: false,
   });
 
-  if (!aiConfig.enabled) {
+  if (!aiConfig.enabled || !aiConfig.tracker) {
     console.log('*** AI configuration is not enabled');
     process.exit(0);
   }
@@ -59,14 +59,14 @@ async function main() {
       content: 'What can you help me with?',
     };
 
-    const result = await aiConfig.tracker.trackVercelAISDKGenerateTextMetrics(() =>
-      generateText(aiConfig.toVercelAISDK(openai, { nonInterpolatedMessages: [userMessage] })),
+    const result = await aiConfig.tracker!.trackVercelAISDKGenerateTextMetrics(() =>
+      generateText(aiConfig.toVercelAISDK!(openai, { nonInterpolatedMessages: [userMessage] })),
     );
     console.log('Response:', result.text);
 
     process.stdout.write('Streaming Response: ');
-    const streamResult = aiConfig.tracker.trackVercelAISDKStreamTextMetrics(() =>
-      streamText(aiConfig.toVercelAISDK(openai, { nonInterpolatedMessages: [userMessage] })),
+    const streamResult = aiConfig.tracker!.trackVercelAISDKStreamTextMetrics(() =>
+      streamText(aiConfig.toVercelAISDK!(openai, { nonInterpolatedMessages: [userMessage] })),
     );
 
     // eslint-disable-next-line no-restricted-syntax
