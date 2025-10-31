@@ -1,4 +1,5 @@
-import { LDMessage } from '../config/LDAIConfig';
+import { LDMessage } from '../config/types';
+import { JudgeResponse } from '../judge/types';
 import { LDAIMetrics } from '../metrics/LDAIMetrics';
 
 /**
@@ -14,4 +15,10 @@ export interface ChatResponse {
    * Metrics information including success status and token usage.
    */
   metrics: LDAIMetrics;
+
+  /**
+   * Promise that resolves to judge evaluation results.
+   * Only present when judges are configured for evaluation.
+   */
+  evaluations?: Promise<Array<JudgeResponse | undefined>>;
 }

@@ -1,6 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIConfig } from '../config/LDAIConfig';
+import { LDAIConfigKind } from '../config/types';
 import { AIProvider } from './AIProvider';
 
 /**
@@ -32,7 +32,7 @@ export class AIProviderFactory {
    * @param defaultAiProvider Optional default AI provider to use
    */
   static async create(
-    aiConfig: LDAIConfig,
+    aiConfig: LDAIConfigKind,
     logger?: LDLogger,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<AIProvider | undefined> {
@@ -91,7 +91,7 @@ export class AIProviderFactory {
    */
   private static async _tryCreateProvider(
     providerType: SupportedAIProvider,
-    aiConfig: LDAIConfig,
+    aiConfig: LDAIConfigKind,
     logger?: LDLogger,
   ): Promise<AIProvider | undefined> {
     switch (providerType) {
@@ -127,7 +127,7 @@ export class AIProviderFactory {
   private static async _createProvider(
     packageName: string,
     providerClassName: string,
-    aiConfig: LDAIConfig,
+    aiConfig: LDAIConfigKind,
     logger?: LDLogger,
   ): Promise<AIProvider | undefined> {
     try {

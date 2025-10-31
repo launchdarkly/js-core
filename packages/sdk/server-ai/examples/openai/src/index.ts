@@ -53,6 +53,7 @@ async function main(): Promise<void> {
       model: {
         name: 'gpt-4',
       },
+      enabled: false,
     },
     { myVariable: 'My User Defined Variable' },
   );
