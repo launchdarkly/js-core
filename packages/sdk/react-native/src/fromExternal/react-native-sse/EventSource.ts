@@ -5,6 +5,12 @@
  * 2. added onopen, onclose, onerror, onretrying functions.
  * 3. modified dispatch to work with functions added in 2.
  * 4. replaced all for of loops with foreach
+ * 
+ * Additional changes:
+ * 1. separated event handling to use onprogress for data changes
+ *    and onreadystatechange for status changes. This is to address
+ *    an issue with Vega OS where they do not fire a readyStatechange
+ *    event when the response is received.
  */
 import type { EventSourceEvent, EventSourceListener, EventSourceOptions, EventType } from './types';
 
@@ -132,8 +138,34 @@ export default class EventSource<E extends string = never> {
 
       this._xhr.timeout = this._timeout;
 
+      this._xhr.onprogress = () => {
+        if (this._status === this.CLOSED || this._xhr.readyState !== XMLHttpRequest.LOADING) {
+          return;
+        }
+
+        this._logger?.debug(
+          `[EventSource][onprogress] ReadyState: ${
+            XMLReadyStateMap[this._xhr.readyState] || 'Unknown'
+          }(${this._xhr.readyState}), status: ${this._xhr.status}`,
+        );
+
+        if (this._xhr.status >= 200 && this._xhr.status < 400) {
+          this._handleEvent(this._xhr.responseText || '');
+        } else {
+          this._status = this.ERROR;
+
+          this.dispatch('error', {
+            type: 'error',
+            message: this._xhr.responseText,
+            xhrStatus: this._xhr.status,
+            xhrState: this._xhr.readyState,
+          });
+        }
+      };
+
       this._xhr.onreadystatechange = () => {
-        if (this._status === this.CLOSED) {
+        // Do not handle this state if the status is loading as we will delegate this to the onprogress listener.
+        if (this._status === this.CLOSED || this._xhr.readyState === XMLHttpRequest.LOADING) {
           return;
         }
 
