@@ -14,6 +14,7 @@ import {
   LDAIConversationConfigDefault,
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
+  LDJudge,
   LDMessage,
   VercelAISDKConfig,
   VercelAISDKMapOptions,
@@ -31,9 +32,9 @@ import { LDClientMin } from './LDClientMin';
  * Tracking event keys for AI SDK usage metrics.
  */
 const TRACK_CONFIG_SINGLE = '$ld:ai:config:function:single';
-const TRACK_CONFIG_INIT_CHAT = '$ld:ai:config:function:initChat';
+const TRACK_CONFIG_CREATE_CHAT = '$ld:ai:config:function:createChat';
 const TRACK_JUDGE_SINGLE = '$ld:ai:judge:function:single';
-const TRACK_JUDGE_INIT = '$ld:ai:judge:function:initJudge';
+const TRACK_JUDGE_CREATE = '$ld:ai:judge:function:createJudge';
 const TRACK_AGENT_SINGLE = '$ld:ai:agent:function:single';
 const TRACK_AGENT_MULTIPLE = '$ld:ai:agent:function:multiple';
 
@@ -55,7 +56,6 @@ export class LDAIClientImpl implements LDAIClient {
     mode: LDAIConfigMode,
     variables?: Record<string, unknown>,
   ): Promise<LDAIConfigKind> {
-    // Convert default value to LDFlagValue format
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
     const value: LDAIConfigFlagValue = await this._ldClient.variation(key, context, ldFlagValue);
@@ -82,7 +82,6 @@ export class LDAIClientImpl implements LDAIClient {
       context,
     );
 
-    // Convert the flag value to the appropriate config type
     const config = LDAIConfigUtils.fromFlagValue(value, tracker);
 
     // Apply variable interpolation (always needed for ldctx)
@@ -96,7 +95,6 @@ export class LDAIClientImpl implements LDAIClient {
   ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
     const allVariables = { ...variables, ldctx: context };
 
-    // Apply variable interpolation to messages if they exist
     if ('messages' in config && config.messages) {
       return {
         ...config,
@@ -107,7 +105,6 @@ export class LDAIClientImpl implements LDAIClient {
       };
     }
 
-    // Apply variable interpolation to instructions if they exist
     if ('instructions' in config && config.instructions) {
       return {
         ...config,
@@ -131,7 +128,36 @@ export class LDAIClientImpl implements LDAIClient {
     };
   }
 
-  async config(
+  private async _initializeJudges(
+    judgeConfigs: LDJudge[],
+    context: LDContext,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<Record<string, Judge>> {
+    const judges: Record<string, Judge> = {};
+
+    const judgePromises = judgeConfigs.map(async (judgeConfig) => {
+      const judge = await this.createJudge(
+        judgeConfig.key,
+        context,
+        { enabled: false },
+        variables,
+        defaultAiProvider,
+      );
+      return judge ? { key: judgeConfig.key, judge } : null;
+    });
+
+    const results = await Promise.all(judgePromises);
+    results.forEach((result) => {
+      if (result) {
+        judges[result.key] = result.judge;
+      }
+    });
+
+    return judges;
+  }
+
+  async completionConfig(
     key: string,
     context: LDContext,
     defaultValue: LDAIConversationConfigDefault,
@@ -143,7 +169,19 @@ export class LDAIClientImpl implements LDAIClient {
     return this._addVercelAISDKSupport(config as LDAIConversationConfig);
   }
 
-  async judge(
+  /**
+   * @deprecated Use `completionConfig` instead. This method will be removed in a future version.
+   */
+  async config(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIConversationConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIConversationConfig> {
+    return this.completionConfig(key, context, defaultValue, variables);
+  }
+
+  async judgeConfig(
     key: string,
     context: LDContext,
     defaultValue: LDAIJudgeConfigDefault,
@@ -155,24 +193,34 @@ export class LDAIClientImpl implements LDAIClient {
     return config as LDAIJudgeConfig;
   }
 
-  async agent(
+  async agentConfig(
     key: string,
     context: LDContext,
     defaultValue: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
-    // Track agent usage
     this._ldClient.track(TRACK_AGENT_SINGLE, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'agent', variables);
     return config as LDAIAgentConfig;
   }
 
-  async agents<const T extends readonly LDAIAgentRequestConfig[]>(
+  /**
+   * @deprecated Use `agentConfig` instead. This method will be removed in a future version.
+   */
+  async agent(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIAgentConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIAgentConfig> {
+    return this.agentConfig(key, context, defaultValue, variables);
+  }
+
+  async agentConfigs<const T extends readonly LDAIAgentRequestConfig[]>(
     agentConfigs: T,
     context: LDContext,
   ): Promise<Record<T[number]['key'], LDAIAgentConfig>> {
-    // Track multiple agents usage
     this._ldClient.track(TRACK_AGENT_MULTIPLE, context, agentConfigs.length, agentConfigs.length);
 
     const agents = {} as Record<T[number]['key'], LDAIAgentConfig>;
@@ -193,6 +241,97 @@ export class LDAIClientImpl implements LDAIClient {
     return agents;
   }
 
+  /**
+   * @deprecated Use `agentConfigs` instead. This method will be removed in a future version.
+   */
+  async agents<const T extends readonly LDAIAgentRequestConfig[]>(
+    agentConfigs: T,
+    context: LDContext,
+  ): Promise<Record<T[number]['key'], LDAIAgentConfig>> {
+    return this.agentConfigs(agentConfigs, context);
+  }
+
+  async createChat(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIConversationConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<TrackedChat | undefined> {
+    this._ldClient.track(TRACK_CONFIG_CREATE_CHAT, context, key, 1);
+
+    const config = await this.completionConfig(key, context, defaultValue, variables);
+
+    if (!config.enabled || !config.tracker) {
+      this._logger?.info(`Chat configuration is disabled: ${key}`);
+      return undefined;
+    }
+
+    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
+    if (!provider) {
+      return undefined;
+    }
+
+    const judges = await this._initializeJudges(
+      config.judgeConfiguration?.judges ?? [],
+      context,
+      variables,
+      defaultAiProvider,
+    );
+
+    return new TrackedChat(config, config.tracker, provider, judges, this._logger);
+  }
+
+  async createJudge(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIJudgeConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<Judge | undefined> {
+    this._ldClient.track(TRACK_JUDGE_CREATE, context, key, 1);
+
+    try {
+      if (variables?.message_history !== undefined) {
+        this._logger?.warn(
+          "The variable 'message_history' is reserved by the judge and will be ignored.",
+        );
+      }
+      if (variables?.response_to_evaluate !== undefined) {
+        this._logger?.warn(
+          "The variable 'response_to_evaluate' is reserved by the judge and will be ignored.",
+        );
+      }
+
+      // Overwrite reserved variables to ensure they remain as placeholders for judge evaluation
+      const extendedVariables = {
+        ...variables,
+        message_history: '{{message_history}}',
+        response_to_evaluate: '{{response_to_evaluate}}',
+      };
+
+      const judgeConfig = await this.judgeConfig(key, context, defaultValue, extendedVariables);
+
+      if (!judgeConfig.enabled || !judgeConfig.tracker) {
+        this._logger?.info(`Judge configuration is disabled: ${key}`);
+        return undefined;
+      }
+
+      const provider = await AIProviderFactory.create(judgeConfig, this._logger, defaultAiProvider);
+      if (!provider) {
+        return undefined;
+      }
+
+      return new Judge(judgeConfig, judgeConfig.tracker, provider, this._logger);
+    } catch (error) {
+      this._logger?.error(`Failed to initialize judge ${key}:`, error);
+      return undefined;
+    }
+  }
+
+  /**
+   * @deprecated Use `createChat` instead. This method will be removed in a future version.
+   */
   async initChat(
     key: string,
     context: LDContext,
@@ -200,94 +339,6 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
-    // Track chat initialization
-    this._ldClient.track(TRACK_CONFIG_INIT_CHAT, context, key, 1);
-
-    const config = await this.config(key, context, defaultValue, variables);
-
-    // Return undefined if the configuration is disabled
-    if (!config.enabled || !config.tracker) {
-      this._logger?.info(`Chat configuration is disabled: ${key}`);
-      return undefined;
-    }
-
-    // Create the AIProvider instance
-    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
-    if (!provider) {
-      return undefined;
-    }
-
-    // Initialize judges if they are configured
-    const judges: Record<string, Judge> = {};
-    if (config.judgeConfiguration?.judges) {
-      for (const judgeConfig of config.judgeConfiguration.judges) {
-        const judge = await this.initJudge(
-          judgeConfig.key,
-          context,
-          { enabled: false },
-          variables,
-          defaultAiProvider,
-        );
-        if (judge) {
-          judges[judgeConfig.key] = judge;
-        }
-      }
-    }
-
-    // Create the TrackedChat instance with the provider, judges, and logger
-    return new TrackedChat(config, config.tracker, provider, judges, this._logger);
-  }
-
-  async initJudge(
-    key: string,
-    context: LDContext,
-    defaultValue: LDAIJudgeConfigDefault,
-    variables?: Record<string, unknown>,
-    defaultAiProvider?: SupportedAIProvider,
-  ): Promise<Judge | undefined> {
-    // Track judge initialization
-    this._ldClient.track(TRACK_JUDGE_INIT, context, key, 1);
-
-    try {
-      // Logging warnings if reserved keys are present
-      if (variables?.message_history !== undefined) {
-        this._logger?.warn(
-          "The variable 'message_history' is reserved by the judge and will be ignored."
-        );
-      }
-      if (variables?.response_to_evaluate !== undefined) {
-        this._logger?.warn(
-          "The variable 'response_to_evaluate' is reserved by the judge and will be ignored."
-        );
-      }
-
-      // Add overwrite standard judge variables to incoming variables
-      const extendedVariables = {
-        ...variables,
-        message_history: '{{message_history}}',
-        response_to_evaluate: '{{response_to_evaluate}}',
-      };
-
-      // Retrieve the judge AI Config using the new judge method
-      const judgeConfig = await this.judge(key, context, defaultValue, extendedVariables);
-
-      // Return undefined if the configuration is disabled
-      if (!judgeConfig.enabled || !judgeConfig.tracker) {
-        this._logger?.info(`Judge configuration is disabled: ${key}`);
-        return undefined;
-      }
-
-      // Create the AIProvider instance
-      const provider = await AIProviderFactory.create(judgeConfig, this._logger, defaultAiProvider);
-      if (!provider) {
-        return undefined;
-      }
-
-      // Create and return the Judge instance
-      return new Judge(judgeConfig, judgeConfig.tracker, provider, this._logger);
-    } catch (error) {
-      this._logger?.error(`Failed to initialize judge ${key}:`, error);
-      return undefined;
-    }
+    return this.createChat(key, context, defaultValue, variables, defaultAiProvider);
   }
 }

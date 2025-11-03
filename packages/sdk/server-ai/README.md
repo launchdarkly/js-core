@@ -97,7 +97,7 @@ if (aiConfig.enabled) {
 
 ```typescript
 // Use the same defaultConfig from the retrieval section above
-const chat = await aiClient.initChat(
+const chat = await aiClient.createChat(
   'customer-support-chat',
   context,
   defaultConfig,

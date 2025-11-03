@@ -394,8 +394,8 @@ it('handles empty agent configs array', async () => {
   );
 });
 
-// New judge-related tests
-describe('judge method', () => {
+// New judgeConfig-related tests
+describe('judgeConfig method', () => {
   it('retrieves judge configuration successfully', async () => {
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-judge';
@@ -421,7 +421,7 @@ describe('judge method', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     evaluateSpy.mockResolvedValue(mockJudgeConfig);
 
-    const result = await client.judge(key, testContext, defaultValue);
+    const result = await client.judgeConfig(key, testContext, defaultValue);
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
       '$ld:ai:judge:function:single',
@@ -458,14 +458,14 @@ describe('judge method', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     evaluateSpy.mockResolvedValue(mockJudgeConfig);
 
-    const result = await client.judge(key, testContext, defaultValue, variables);
+    const result = await client.judgeConfig(key, testContext, defaultValue, variables);
 
     expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', variables);
     expect(result).toBe(mockJudgeConfig);
   });
 });
 
-describe('initJudge method', () => {
+describe('createJudge method', () => {
   let mockProvider: jest.Mocked<any>;
   let mockJudge: jest.Mocked<Judge>;
 
@@ -507,19 +507,22 @@ describe('initJudge method', () => {
       toVercelAISDK: jest.fn(),
     };
 
-    // Mock the judge method
-    const judgeSpy = jest.spyOn(client, 'judge');
-    judgeSpy.mockResolvedValue(mockJudgeConfig);
+    // Mock the judgeConfig method
+    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    judgeConfigSpy.mockResolvedValue(mockJudgeConfig);
 
-    const result = await client.initJudge(key, testContext, defaultValue);
+    const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
-      '$ld:ai:judge:function:initJudge',
+      '$ld:ai:judge:function:createJudge',
       testContext,
       key,
       1,
     );
-    expect(judgeSpy).toHaveBeenCalledWith(key, testContext, defaultValue, undefined);
+    expect(judgeConfigSpy).toHaveBeenCalledWith(key, testContext, defaultValue, {
+      message_history: '{{message_history}}',
+      response_to_evaluate: '{{response_to_evaluate}}',
+    });
     expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
     expect(Judge).toHaveBeenCalledWith(
       mockJudgeConfig,
@@ -551,10 +554,10 @@ describe('initJudge method', () => {
       toVercelAISDK: jest.fn(),
     };
 
-    const judgeSpy = jest.spyOn(client, 'judge');
-    judgeSpy.mockResolvedValue(mockJudgeConfig);
+    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    judgeConfigSpy.mockResolvedValue(mockJudgeConfig);
 
-    const result = await client.initJudge(key, testContext, defaultValue);
+    const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(result).toBeUndefined();
     expect(AIProviderFactory.create).not.toHaveBeenCalled();
@@ -582,12 +585,12 @@ describe('initJudge method', () => {
       toVercelAISDK: jest.fn(),
     };
 
-    const judgeSpy = jest.spyOn(client, 'judge');
-    judgeSpy.mockResolvedValue(mockJudgeConfig);
+    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    judgeConfigSpy.mockResolvedValue(mockJudgeConfig);
 
     (AIProviderFactory.create as jest.Mock).mockResolvedValue(undefined);
 
-    const result = await client.initJudge(key, testContext, defaultValue);
+    const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(result).toBeUndefined();
     expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
@@ -606,10 +609,10 @@ describe('initJudge method', () => {
     };
 
     const error = new Error('Judge configuration error');
-    const judgeSpy = jest.spyOn(client, 'judge');
-    judgeSpy.mockRejectedValue(error);
+    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    judgeConfigSpy.mockRejectedValue(error);
 
-    const result = await client.initJudge(key, testContext, defaultValue);
+    const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(result).toBeUndefined();
   });

@@ -91,11 +91,7 @@ export class TrackedChat {
         return undefined;
       }
 
-      const evalResult = await judge.evaluateMessages(
-        messages,
-        response,
-        judgeConfig.samplingRate,
-      );
+      const evalResult = await judge.evaluateMessages(messages, response, judgeConfig.samplingRate);
 
       // Track scores if evaluation was successful
       if (evalResult && evalResult.success) {
