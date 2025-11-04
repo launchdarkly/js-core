@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.1.3...server-sdk-ai-langchain-v0.2.0) (2025-11-04)
+
+
+### Features
+
+* Renamed createAIMetrics to getAIMetricsFromResponse ([#977](https://github.com/launchdarkly/js-core/issues/977)) ([05b4667](https://github.com/launchdarkly/js-core/commit/05b4667fe6385672f89c84d49302ce40f99e28d5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.12.3 to ^0.13.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.12.2 to ^0.13.0
+
 ## [0.1.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.1.2...server-sdk-ai-langchain-v0.1.3) (2025-10-24)
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.3...server-sdk-ai-v0.13.0) (2025-11-04)
+
+
+### Features
+
+* Add support for trackStreamMetricsOf method ([#971](https://github.com/launchdarkly/js-core/issues/971)) ([e18979e](https://github.com/launchdarkly/js-core/commit/e18979e27f4542552762a30a390749541daa3749))
+
+
+### Bug Fixes
+
+* Deprecated toVercelAISDK, trackVercelAISDKStreamTextMetrics, use `@launchdarkly/server-sdk-ai-vercel` package ([e18979e](https://github.com/launchdarkly/js-core/commit/e18979e27f4542552762a30a390749541daa3749))
+
 ## [0.12.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.2...server-sdk-ai-v0.12.3) (2025-10-24)
 
 
