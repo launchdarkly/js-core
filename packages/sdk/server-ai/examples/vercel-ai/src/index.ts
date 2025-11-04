@@ -63,9 +63,10 @@ async function main() {
       nonInterpolatedMessages: [userMessage],
     });
 
-    // Track metrics using trackMetricsOf with VercelProvider.createAIMetrics
-    const result = await aiConfig.tracker.trackMetricsOf(VercelProvider.createAIMetrics, () =>
-      generateText(vercelConfig),
+    // Call the model and track metrics for the ai config
+    const result = await aiConfig.tracker.trackMetricsOf(
+      VercelProvider.getAIMetricsFromResponse,
+      () => generateText(vercelConfig),
     );
 
     console.log('Response:', result.text);
@@ -87,11 +88,10 @@ async function main() {
       nonInterpolatedMessages: [userMessage],
     });
 
-    // Track streaming metrics using trackStreamMetricsOf with provider's extractor
     // Stream is returned immediately (synchronously), metrics tracked in background
     const streamResult = aiConfig.tracker.trackStreamMetricsOf(
       () => streamText(vercelConfig),
-      VercelProvider.createStreamMetrics,
+      VercelProvider.getAIMetricsFromStream,
     );
 
     // Consume the stream immediately - no await needed before this!
