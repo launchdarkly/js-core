@@ -91,7 +91,7 @@ async function main() {
     // Stream is returned immediately (synchronously), metrics tracked in background
     const streamResult = aiConfig.tracker.trackStreamMetricsOf(
       () => streamText(vercelConfig),
-      VercelProvider.createStreamMetricsExtractor(),
+      VercelProvider.createStreamMetrics,
     );
 
     // Consume the stream immediately - no await needed before this!
