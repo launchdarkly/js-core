@@ -151,10 +151,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       // Wait for metrics to be available
       const metrics = await metricsExtractor(stream);
 
-      // Track final duration
-      const duration = Date.now() - startTime;
-      this.trackDuration(duration);
-
       // Track success/error based on metrics
       if (metrics.success) {
         this.trackSuccess();
@@ -168,8 +164,10 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       }
     } catch (error) {
       // If metrics extraction fails, track error
-      // but don't throw - stream consumption should not be affected
       this.trackError();
+    } finally {
+      // Track duration regardless of success/error
+      this.trackDuration(Date.now() - startTime);
     }
   }
 
