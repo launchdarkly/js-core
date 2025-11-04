@@ -73,7 +73,7 @@ describe('LangChainProvider', () => {
     });
   });
 
-  describe('createAIMetrics', () => {
+  describe('getAIMetricsFromResponse', () => {
     it('creates metrics with success=true and token usage', () => {
       const mockResponse = new AIMessage('Test response');
       mockResponse.response_metadata = {
@@ -84,7 +84,7 @@ describe('LangChainProvider', () => {
         },
       };
 
-      const result = LangChainProvider.createAIMetrics(mockResponse);
+      const result = LangChainProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,
@@ -99,7 +99,7 @@ describe('LangChainProvider', () => {
     it('creates metrics with success=true and no usage when metadata is missing', () => {
       const mockResponse = new AIMessage('Test response');
 
-      const result = LangChainProvider.createAIMetrics(mockResponse);
+      const result = LangChainProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,

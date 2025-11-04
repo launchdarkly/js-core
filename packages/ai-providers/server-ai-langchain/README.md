@@ -94,7 +94,7 @@ const allMessages = [...LangChainProvider.convertMessagesToLangChain(configMessa
 
 // Track the model call with LaunchDarkly tracking
 const response = await aiConfig.tracker.trackMetricsOf(
-  (result) => LangChainProvider.createAIMetrics(result),
+  LangChainProvider.getAIMetricsFromResponse,
   () => llm.invoke(allMessages)
 );
 
