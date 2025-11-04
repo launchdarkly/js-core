@@ -134,7 +134,7 @@ const llm = await LangChainProvider.createLangChainModel(aiConfig);
 
 // Use with tracking
 const response = await aiConfig.tracker.trackMetricsOf(
-  (result) => LangChainProvider.createAIMetrics(result),
+  LangChainProvider.getAIMetricsFromResponse,
   () => llm.invoke(messages)
 );
 
