@@ -11,6 +11,9 @@ import type {
 } from '@launchdarkly/server-sdk-ai';
 
 import type {
+  ModelUsageTokens,
+  StreamResponse,
+  TextResponse,
   VercelAIModelParameters,
   VercelAISDKConfig,
   VercelAISDKMapOptions,
@@ -65,21 +68,18 @@ export class VercelProvider extends AIProvider {
    * Invoke the Vercel AI model with an array of messages.
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
-    // Call Vercel AI generateText
     const result = await generateText({
       model: this._model,
       messages,
       ...this._parameters,
     });
 
-    // Create the assistant message
     const assistantMessage: LDMessage = {
       role: 'assistant',
       content: result.text,
     };
 
-    // Extract metrics including token usage and success status
-    const metrics = VercelProvider.createAIMetrics(result);
+    const metrics = VercelProvider.getAIMetricsFromResponse(result);
 
     return {
       message: assistantMessage,
@@ -115,17 +115,13 @@ export class VercelProvider extends AIProvider {
 
   /**
    * Map Vercel AI SDK usage data to LaunchDarkly token usage.
-   * Supports both v4 and v5 field names for backward compatibility.
    *
-   * @param usageData Usage data from Vercel AI SDK (may be from usage or totalUsage)
-   * @returns LDTokenUsage or undefined if no usage data provided
+   * @param usageData Usage data from Vercel AI SDK
+   * @returns LDTokenUsage
    */
-  static mapUsageDataToLDTokenUsage(usageData: any): LDTokenUsage | undefined {
-    if (!usageData) {
-      return undefined;
-    }
-
-    const { totalTokens, inputTokens, promptTokens, outputTokens, completionTokens } = usageData;
+  static mapUsageDataToLDTokenUsage(usageData: ModelUsageTokens): LDTokenUsage {
+    // Support v4 field names (promptTokens, completionTokens) for backward compatibility
+    const { totalTokens, inputTokens, outputTokens, promptTokens, completionTokens } = usageData;
     return {
       total: totalTokens ?? 0,
       input: inputTokens ?? promptTokens ?? 0,
@@ -134,23 +130,31 @@ export class VercelProvider extends AIProvider {
   }
 
   /**
-   * Create AI metrics information from a Vercel AI response.
+   * Get AI metrics from a Vercel AI SDK text response
    * This method extracts token usage information and success status from Vercel AI responses
    * and returns a LaunchDarkly AIMetrics object.
    * Supports both v4 and v5 field names for backward compatibility.
+   *
+   * @param response The response from generateText() or similar non-streaming operations
+   * @returns LDAIMetrics with success status and token usage
+   *
+   * @example
+   * const response = await aiConfig.tracker.trackMetricsOf(
+   *   VercelProvider.getAIMetricsFromResponse,
+   *   () => generateText(vercelConfig)
+   * );
    */
-  static createAIMetrics(vercelResponse: any): LDAIMetrics {
-    const finishReason = vercelResponse?.finishReason ?? 'unknown';
-    let usageData: any;
+  static getAIMetricsFromResponse(response: TextResponse): LDAIMetrics {
+    const finishReason = response?.finishReason ?? 'unknown';
 
     // favor totalUsage over usage for cumulative usage across all steps
-    if (vercelResponse?.totalUsage) {
-      usageData = vercelResponse?.totalUsage;
-    } else if (vercelResponse?.usage) {
-      usageData = vercelResponse?.usage;
+    let usage: LDTokenUsage | undefined;
+    if (response?.totalUsage) {
+      usage = VercelProvider.mapUsageDataToLDTokenUsage(response.totalUsage);
+    } else if (response?.usage) {
+      usage = VercelProvider.mapUsageDataToLDTokenUsage(response.usage);
     }
 
-    const usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
     const success = finishReason !== 'error';
 
     return {
@@ -160,8 +164,21 @@ export class VercelProvider extends AIProvider {
   }
 
   /**
-   * Create AI metrics from a Vercel AI SDK streaming result.
-   * Use this with tracker.trackStreamMetricsOf() for streaming operations like streamText.
+   * Create AI metrics information from a Vercel AI response.
+   * This method extracts token usage information and success status from Vercel AI responses
+   * and returns a LaunchDarkly AIMetrics object.
+   * Supports both v4 and v5 field names for backward compatibility.
+   *
+   * @deprecated Use `getAIMetricsFromResponse()` instead.
+   * @param vercelResponse The response from generateText() or similar non-streaming operations
+   * @returns LDAIMetrics with success status and token usage
+   */
+  static createAIMetrics(vercelResponse: TextResponse): LDAIMetrics {
+    return VercelProvider.getAIMetricsFromResponse(vercelResponse);
+  }
+
+  /**
+   * Get AI metrics from a Vercel AI SDK streaming result.
    *
    * This method waits for the stream to complete, then extracts metrics using totalUsage
    * (preferred for cumulative usage across all steps) or usage if totalUsage is unavailable.
@@ -172,25 +189,22 @@ export class VercelProvider extends AIProvider {
    * @example
    * const stream = aiConfig.tracker.trackStreamMetricsOf(
    *   () => streamText(vercelConfig),
-   *   VercelProvider.createStreamMetrics
+   *   VercelProvider.getAIMetricsFromStream
    * );
-   *
-   * for await (const chunk of stream.textStream) {
-   *   process.stdout.write(chunk);
-   * }
    */
-  static async createStreamMetrics(stream: any): Promise<LDAIMetrics> {
+  static async getAIMetricsFromStream(stream: StreamResponse): Promise<LDAIMetrics> {
     const finishReason = (await stream.finishReason?.catch(() => 'error')) ?? 'unknown';
 
     // favor totalUsage over usage for cumulative usage across all steps
-    let usageData: any;
+    let usage: LDTokenUsage | undefined;
     if (stream.totalUsage) {
-      usageData = await stream.totalUsage;
+      const usageData = await stream.totalUsage;
+      usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
     } else if (stream.usage) {
-      usageData = await stream.usage;
+      const usageData = await stream.usage;
+      usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
     }
 
-    const usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
     const success = finishReason !== 'error';
 
     return {
@@ -223,15 +237,12 @@ export class VercelProvider extends AIProvider {
 
     const params: VercelAIModelParameters = {};
 
-    // Map token limits
     if (parameters.max_tokens !== undefined) {
       params.maxTokens = parameters.max_tokens as number;
     }
     if (parameters.max_completion_tokens !== undefined) {
       params.maxOutputTokens = parameters.max_completion_tokens as number;
     }
-
-    // Map remaining parameters
     if (parameters.temperature !== undefined) {
       params.temperature = parameters.temperature as number;
     }
