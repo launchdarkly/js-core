@@ -119,6 +119,58 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     return result;
   }
 
+  trackStreamMetricsOf<TStream>(
+    streamCreator: () => TStream,
+    metricsExtractor: (stream: TStream) => Promise<LDAIMetrics>,
+  ): TStream {
+    const startTime = Date.now();
+
+    try {
+      // Create the stream synchronously
+      const stream = streamCreator();
+
+      // Start background metrics tracking (fire and forget)
+      this._trackStreamMetricsInBackground(stream, metricsExtractor, startTime);
+
+      // Return stream immediately for consumption
+      return stream;
+    } catch (error) {
+      // Track error if stream creation fails
+      this.trackDuration(Date.now() - startTime);
+      this.trackError();
+      throw error;
+    }
+  }
+
+  private async _trackStreamMetricsInBackground<TStream>(
+    stream: TStream,
+    metricsExtractor: (stream: TStream) => Promise<LDAIMetrics>,
+    startTime: number,
+  ): Promise<void> {
+    try {
+      // Wait for metrics to be available
+      const metrics = await metricsExtractor(stream);
+
+      // Track success/error based on metrics
+      if (metrics.success) {
+        this.trackSuccess();
+      } else {
+        this.trackError();
+      }
+
+      // Track token usage if available
+      if (metrics.usage) {
+        this.trackTokens(metrics.usage);
+      }
+    } catch (error) {
+      // If metrics extraction fails, track error
+      this.trackError();
+    } finally {
+      // Track duration regardless of success/error
+      this.trackDuration(Date.now() - startTime);
+    }
+  }
+
   async trackOpenAIMetrics<
     TRes extends {
       usage?: {
