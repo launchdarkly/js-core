@@ -51,7 +51,7 @@ export class LangChainProvider extends AIProvider {
     const response: AIMessage = await this._llm.invoke(langchainMessages);
 
     // Generate metrics early (assumes success by default)
-    const metrics = LangChainProvider.createAIMetrics(response);
+    const metrics = LangChainProvider.getAIMetricsFromResponse(response);
 
     // Extract text content from the response
     let content: string = '';
@@ -106,25 +106,27 @@ export class LangChainProvider extends AIProvider {
   }
 
   /**
-   * Create AI metrics information from a LangChain provider response.
+   * Get AI metrics from a LangChain provider response.
    * This method extracts token usage information and success status from LangChain responses
    * and returns a LaunchDarkly AIMetrics object.
    *
-   * @param langChainResponse The response from the LangChain model
+   * @param response The response from the LangChain model
+   * @returns LDAIMetrics with success status and token usage
+   *
    * @example
    * ```typescript
    * // Use with tracker.trackMetricsOf for automatic tracking
    * const response = await tracker.trackMetricsOf(
-   *   (result: AIMessage) => LangChainProvider.createAIMetrics(result),
+   *   LangChainProvider.getAIMetricsFromResponse,
    *   () => llm.invoke(messages)
    * );
    * ```
    */
-  static createAIMetrics(langChainResponse: AIMessage): LDAIMetrics {
+  static getAIMetricsFromResponse(response: AIMessage): LDAIMetrics {
     // Extract token usage if available
     let usage: LDTokenUsage | undefined;
-    if (langChainResponse?.response_metadata?.tokenUsage) {
-      const { tokenUsage } = langChainResponse.response_metadata;
+    if (response?.response_metadata?.tokenUsage) {
+      const { tokenUsage } = response.response_metadata;
       usage = {
         total: tokenUsage.totalTokens || 0,
         input: tokenUsage.promptTokens || 0,
@@ -137,6 +139,19 @@ export class LangChainProvider extends AIProvider {
       success: true,
       usage,
     };
+  }
+
+  /**
+   * Create AI metrics information from a LangChain provider response.
+   * This method extracts token usage information and success status from LangChain responses
+   * and returns a LaunchDarkly AIMetrics object.
+   *
+   * @deprecated Use `getAIMetricsFromResponse()` instead.
+   * @param langChainResponse The response from the LangChain model
+   * @returns LDAIMetrics with success status and token usage
+   */
+  static createAIMetrics(langChainResponse: AIMessage): LDAIMetrics {
+    return LangChainProvider.getAIMetricsFromResponse(langChainResponse);
   }
 
   /**
