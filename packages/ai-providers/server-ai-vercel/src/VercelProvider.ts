@@ -114,56 +114,88 @@ export class VercelProvider extends AIProvider {
   }
 
   /**
+   * Map Vercel AI SDK usage data to LaunchDarkly token usage.
+   * Supports both v4 and v5 field names for backward compatibility.
+   *
+   * @param usageData Usage data from Vercel AI SDK (may be from usage or totalUsage)
+   * @returns LDTokenUsage or undefined if no usage data provided
+   */
+  static mapUsageDataToLDTokenUsage(usageData: any): LDTokenUsage | undefined {
+    if (!usageData) {
+      return undefined;
+    }
+
+    const { totalTokens, inputTokens, promptTokens, outputTokens, completionTokens } = usageData;
+    return {
+      total: totalTokens ?? 0,
+      input: inputTokens ?? promptTokens ?? 0,
+      output: outputTokens ?? completionTokens ?? 0,
+    };
+  }
+
+  /**
    * Create AI metrics information from a Vercel AI response.
    * This method extracts token usage information and success status from Vercel AI responses
    * and returns a LaunchDarkly AIMetrics object.
    * Supports both v4 and v5 field names for backward compatibility.
    */
   static createAIMetrics(vercelResponse: any): LDAIMetrics {
-    // Extract token usage if available
-    let usage: LDTokenUsage | undefined;
-    if (vercelResponse?.usage) {
-      const { totalTokens, inputTokens, promptTokens, outputTokens, completionTokens } =
-        vercelResponse.usage;
-      usage = {
-        total: totalTokens ?? 0,
-        input: inputTokens ?? promptTokens ?? 0,
-        output: outputTokens ?? completionTokens ?? 0,
-      };
+    const finishReason = vercelResponse?.finishReason ?? 'unknown';
+    let usageData: any;
+
+    // favor totalUsage over usage for cumulative usage across all steps
+    if (vercelResponse?.totalUsage) {
+      usageData = vercelResponse?.totalUsage;
+    } else if (vercelResponse?.usage) {
+      usageData = vercelResponse?.usage;
     }
 
-    // Vercel AI responses that complete successfully are considered successful
+    const usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
+    const success = finishReason !== 'error';
+
     return {
-      success: true,
+      success,
       usage,
     };
   }
 
   /**
-   * Create a metrics extractor for Vercel AI SDK streaming results.
+   * Create AI metrics from a Vercel AI SDK streaming result.
    * Use this with tracker.trackStreamMetricsOf() for streaming operations like streamText.
    *
-   * The extractor waits for the stream's response promise to resolve, then extracts
-   * metrics from the completed response.
+   * This method waits for the stream to complete, then extracts metrics using totalUsage
+   * (preferred for cumulative usage across all steps) or usage if totalUsage is unavailable.
    *
-   * @returns A metrics extractor function for streaming results
+   * @param stream The stream result from streamText()
+   * @returns A Promise that resolves to LDAIMetrics
    *
    * @example
    * const stream = aiConfig.tracker.trackStreamMetricsOf(
    *   () => streamText(vercelConfig),
-   *   VercelProvider.createStreamMetricsExtractor()
+   *   VercelProvider.createStreamMetrics
    * );
    *
    * for await (const chunk of stream.textStream) {
    *   process.stdout.write(chunk);
    * }
    */
-  static createStreamMetricsExtractor() {
-    return async (stream: any): Promise<LDAIMetrics> => {
-      // Wait for stream to complete
-      const result = await stream.response;
-      // Extract metrics from completed response
-      return VercelProvider.createAIMetrics(result);
+  static async createStreamMetrics(stream: any): Promise<LDAIMetrics> {
+    const finishReason = (await stream.finishReason?.catch(() => 'error')) ?? 'unknown';
+
+    // favor totalUsage over usage for cumulative usage across all steps
+    let usageData: any;
+    if (stream.totalUsage) {
+      usageData = await stream.totalUsage;
+    } else if (stream.usage) {
+      usageData = await stream.usage;
+    }
+
+    const usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
+    const success = finishReason !== 'error';
+
+    return {
+      success,
+      usage,
     };
   }
 
