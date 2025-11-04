@@ -67,6 +67,9 @@ export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {
    *
    * WARNING: this method can throw an exception if a Vercel AI SDK model cannot be determined.
    *
+   * @deprecated Use `VercelProvider.toVercelAISDK()` from the `@launchdarkly/server-sdk-ai-vercel` package instead.
+   * This method will be removed in a future version.
+   *
    * @param provider A Vercel AI SDK Provider or a map of provider names to Vercel AI SDK Providers.
    * @param options Optional mapping options.
    * @returns A configuration directly usable in Vercel AI SDK generateText() and streamText()

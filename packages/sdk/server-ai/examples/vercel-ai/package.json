@@ -21,9 +21,10 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "dependencies": {
-    "@ai-sdk/openai": "2.0.30",
-    "@launchdarkly/node-server-sdk": "9.7.1",
-    "@launchdarkly/server-sdk-ai": "0.12.3",
+    "@ai-sdk/openai": "^2.0.30",
+    "@launchdarkly/node-server-sdk": "^9.7.1",
+    "@launchdarkly/server-sdk-ai": "^0.12.3",
+    "@launchdarkly/server-sdk-ai-vercel": "^0.1.2",
     "ai": "5.0.0",
     "zod": "^3.23.8"
   },

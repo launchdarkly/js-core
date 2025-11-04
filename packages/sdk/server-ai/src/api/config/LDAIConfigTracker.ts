@@ -123,6 +123,32 @@ export interface LDAIConfigTracker {
   ): Promise<TRes>;
 
   /**
+   * Track metrics for a streaming AI operation.
+   *
+   * This function will track the duration of the operation, extract metrics using the provided
+   * metrics extractor function, and track success or error status accordingly.
+   *
+   * Unlike trackMetricsOf, this method is designed for streaming operations where:
+   * - The stream is created and returned immediately (synchronously)
+   * - Metrics are extracted asynchronously in the background once the stream completes
+   * - Duration is tracked from stream creation to metrics extraction completion
+   *
+   * The stream is returned immediately so the caller can begin consuming it without waiting.
+   * Metrics extraction happens in the background and does not block stream consumption.
+   *
+   * If the stream creator throws, then this method will also throw and record an error.
+   * If metrics extraction fails, the error is logged but does not affect stream consumption.
+   *
+   * @param streamCreator Function that creates and returns the stream (synchronous)
+   * @param metricsExtractor Function that asynchronously extracts metrics from the stream
+   * @returns The stream result (returned immediately, not a Promise)
+   */
+  trackStreamMetricsOf<TStream>(
+    streamCreator: () => TStream,
+    metricsExtractor: (stream: TStream) => Promise<LDAIMetrics>,
+  ): TStream;
+
+  /**
    * Track an OpenAI operation.
    *
    * This function will track the duration of the operation, the token usage, and the success or error status.
@@ -202,6 +228,9 @@ export interface LDAIConfigTracker {
    * If the provided function throws, then this method will also throw.
    * In the case the provided function throws, this function will record the duration and an error.
    * A failed operation will not have any token usage data.
+   *
+   * @deprecated Use `trackStreamMetricsOf()` with `VercelProvider.createStreamMetricsExtractor()` from the
+   * `@launchdarkly/server-sdk-ai-vercel` package instead. This method will be removed in a future version.
    *
    * @param func Function which executes the operation.
    * @returns The result of the operation.
