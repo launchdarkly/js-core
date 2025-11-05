@@ -46,7 +46,7 @@ async function main(): Promise<void> {
     };
 
     const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, {
-      company_name: 'LaunchDarkly',
+      companyName: 'LaunchDarkly',
     });
 
     if (!chat) {
@@ -68,13 +68,7 @@ async function main(): Promise<void> {
 
     // Example of using the judge functionality with direct input and output
     // Get AI judge configuration from LaunchDarkly
-    const judge = await aiClient.createJudge(
-      judgeKey,
-      context,
-      { enabled: false },
-      undefined,
-      'langchain',
-    );
+    const judge = await aiClient.createJudge(judgeKey, context, { enabled: false });
 
     if (!judge) {
       console.log('*** AI judge configuration is not enabled');
