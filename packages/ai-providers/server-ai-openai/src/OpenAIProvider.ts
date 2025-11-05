@@ -56,34 +56,48 @@ export class OpenAIProvider extends AIProvider {
    * Invoke the OpenAI model with an array of messages.
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
-    // Call OpenAI chat completions API
-    const response = await this._client.chat.completions.create({
-      model: this._modelName,
-      messages,
-      ...this._parameters,
-    });
+    try {
+      // Call OpenAI chat completions API
+      const response = await this._client.chat.completions.create({
+        model: this._modelName,
+        messages,
+        ...this._parameters,
+      });
 
-    // Generate metrics early (assumes success by default)
-    const metrics = OpenAIProvider.createAIMetrics(response);
+      // Generate metrics early (assumes success by default)
+      const metrics = OpenAIProvider.createAIMetrics(response);
 
-    // Safely extract the first choice content using optional chaining
-    const content = response?.choices?.[0]?.message?.content || '';
+      // Safely extract the first choice content using optional chaining
+      const content = response?.choices?.[0]?.message?.content || '';
 
-    if (!content) {
-      this.logger?.warn('OpenAI response has no content available');
-      metrics.success = false;
+      if (!content) {
+        this.logger?.warn('OpenAI response has no content available');
+        metrics.success = false;
+      }
+
+      // Create the assistant message
+      const assistantMessage: LDMessage = {
+        role: 'assistant',
+        content,
+      };
+
+      return {
+        message: assistantMessage,
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('OpenAI model invocation failed:', error);
+
+      return {
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+        },
+      };
     }
-
-    // Create the assistant message
-    const assistantMessage: LDMessage = {
-      role: 'assistant',
-      content,
-    };
-
-    return {
-      message: assistantMessage,
-      metrics,
-    };
   }
 
   /**
@@ -93,46 +107,57 @@ export class OpenAIProvider extends AIProvider {
     messages: LDMessage[],
     responseStructure: Record<string, unknown>,
   ): Promise<StructuredResponse> {
-    // Call OpenAI chat completions API with structured output
-    const response = await this._client.chat.completions.create({
-      model: this._modelName,
-      messages,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'structured_output',
-          schema: responseStructure,
-          strict: true,
-        },
-      },
-      ...this._parameters,
-    });
-
-    // Generate metrics early (assumes success by default)
-    const metrics = OpenAIProvider.createAIMetrics(response);
-
-    // Safely extract the first choice content using optional chaining
-    const content = response?.choices?.[0]?.message?.content || '';
-
-    if (!content) {
-      this.logger?.warn('OpenAI structured response has no content available');
-      metrics.success = false;
-    }
-
-    // Parse the structured JSON response
-    let data: Record<string, unknown> = {};
     try {
-      data = JSON.parse(content);
-    } catch (error) {
-      this.logger?.warn('Failed to parse structured response as JSON:', error);
-      metrics.success = false;
-    }
+      // Call OpenAI chat completions API with structured output
+      const response = await this._client.chat.completions.create({
+        model: this._modelName,
+        messages,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'structured_output',
+            schema: responseStructure,
+            strict: true,
+          },
+        },
+        ...this._parameters,
+      });
 
-    return {
-      data,
-      rawResponse: content,
-      metrics,
-    };
+      // Generate metrics early (assumes success by default)
+      const metrics = OpenAIProvider.createAIMetrics(response);
+
+      // Safely extract the first choice content using optional chaining
+      const content = response?.choices?.[0]?.message?.content || '';
+
+      if (!content) {
+        this.logger?.warn('OpenAI structured response has no content available');
+        metrics.success = false;
+        return {
+          data: {},
+          rawResponse: '',
+          metrics,
+        };
+      }
+
+      // Parse the structured JSON response
+      const data = JSON.parse(content) as Record<string, unknown>;
+
+      return {
+        data,
+        rawResponse: content,
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('OpenAI structured model invocation failed:', error);
+
+      return {
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
+        },
+      };
+    }
   }
 
   /**
