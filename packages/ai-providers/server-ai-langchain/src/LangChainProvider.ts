@@ -10,6 +10,7 @@ import type {
   LDLogger,
   LDMessage,
   LDTokenUsage,
+  StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
 /**
@@ -44,39 +45,102 @@ export class LangChainProvider extends AIProvider {
    * Invoke the LangChain model with an array of messages.
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
-    // Convert LDMessage[] to LangChain messages
-    const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages);
+    try {
+      // Convert LDMessage[] to LangChain messages
+      const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages);
 
-    // Get the LangChain response
-    const response: AIMessage = await this._llm.invoke(langchainMessages);
+      // Get the LangChain response
+      const response: AIMessage = await this._llm.invoke(langchainMessages);
 
-    // Generate metrics early (assumes success by default)
-    const metrics = LangChainProvider.getAIMetricsFromResponse(response);
+      // Generate metrics early (assumes success by default)
+      const metrics = LangChainProvider.getAIMetricsFromResponse(response);
 
-    // Extract text content from the response
-    let content: string = '';
-    if (typeof response.content === 'string') {
-      content = response.content;
-    } else {
-      // Log warning for non-string content (likely multimodal)
-      this.logger?.warn(
-        `Multimodal response not supported, expecting a string. Content type: ${typeof response.content}, Content:`,
-        JSON.stringify(response.content, null, 2),
-      );
-      // Update metrics to reflect content loss
-      metrics.success = false;
+      // Extract text content from the response
+      let content: string = '';
+      if (typeof response.content === 'string') {
+        content = response.content;
+      } else {
+        // Log warning for non-string content (likely multimodal)
+        this.logger?.warn(
+          `Multimodal response not supported, expecting a string. Content type: ${typeof response.content}, Content:`,
+          JSON.stringify(response.content, null, 2),
+        );
+        // Update metrics to reflect content loss
+        metrics.success = false;
+      }
+
+      // Create the assistant message
+      const assistantMessage: LDMessage = {
+        role: 'assistant',
+        content,
+      };
+
+      return {
+        message: assistantMessage,
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('LangChain model invocation failed:', error);
+
+      return {
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+        },
+      };
     }
+  }
 
-    // Create the assistant message
-    const assistantMessage: LDMessage = {
-      role: 'assistant',
-      content,
-    };
+  /**
+   * Invoke the LangChain model with structured output support.
+   */
+  async invokeStructuredModel(
+    messages: LDMessage[],
+    responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse> {
+    try {
+      // Convert LDMessage[] to LangChain messages
+      const langchainMessages = LangChainProvider.convertMessagesToLangChain(messages);
 
-    return {
-      message: assistantMessage,
-      metrics,
-    };
+      // Get the LangChain response
+      const response = await this._llm
+        .withStructuredOutput(responseStructure)
+        .invoke(langchainMessages);
+
+      // Using structured output doesn't support metrics
+      const metrics = {
+        success: true,
+        usage: {
+          total: 0,
+          input: 0,
+          output: 0,
+        },
+      };
+
+      return {
+        data: response,
+        rawResponse: JSON.stringify(response),
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('LangChain structured model invocation failed:', error);
+
+      return {
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
+          usage: {
+            total: 0,
+            input: 0,
+            output: 0,
+          },
+        },
+      };
+    }
   }
 
   /**
@@ -191,8 +255,8 @@ export class LangChainProvider extends AIProvider {
 
     // Use LangChain's universal initChatModel to support multiple providers
     return initChatModel(modelName, {
-      modelProvider: LangChainProvider.mapProvider(provider),
       ...parameters,
+      modelProvider: LangChainProvider.mapProvider(provider),
     });
   }
 }
