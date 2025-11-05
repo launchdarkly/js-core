@@ -5,8 +5,8 @@ import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
   LDAIAgentRequestConfig,
-  LDAIConversationConfig,
-  LDAIConversationConfigDefault,
+  LDAICompletionConfig,
+  LDAICompletionConfigDefault,
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
 } from './config';
@@ -73,9 +73,9 @@ export interface LDAIClient {
   completionConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConversationConfig>;
+  ): Promise<LDAICompletionConfig>;
 
   /**
    * @deprecated Use `completionConfig` instead. This method will be removed in a future version.
@@ -83,9 +83,9 @@ export interface LDAIClient {
   config(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConversationConfig>;
+  ): Promise<LDAICompletionConfig>;
 
   /**
    * Retrieves and processes a single AI Config agent based on the provided key, LaunchDarkly context,
@@ -268,7 +268,7 @@ export interface LDAIClient {
   createChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined>;
@@ -279,7 +279,7 @@ export interface LDAIClient {
   initChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined>;

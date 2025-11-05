@@ -1,13 +1,13 @@
 import { TrackedChat } from '../src/api/chat/TrackedChat';
 import { ChatResponse } from '../src/api/chat/types';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
-import { LDAIConversationConfig, LDMessage } from '../src/api/config/types';
+import { LDAICompletionConfig, LDMessage } from '../src/api/config/types';
 import { AIProvider } from '../src/api/providers/AIProvider';
 
 describe('TrackedChat', () => {
   let mockProvider: jest.Mocked<AIProvider>;
   let mockTracker: jest.Mocked<LDAIConfigTracker>;
-  let aiConfig: LDAIConversationConfig;
+  let aiConfig: LDAICompletionConfig;
 
   beforeEach(() => {
     // Mock the AIProvider
@@ -136,7 +136,7 @@ describe('TrackedChat', () => {
     });
 
     it('returns empty array when no messages exist and includeConfigMessages is false', () => {
-      const configWithoutMessages: LDAIConversationConfig = {
+      const configWithoutMessages: LDAICompletionConfig = {
         ...aiConfig,
         messages: [],
       };
@@ -167,7 +167,7 @@ describe('TrackedChat', () => {
     });
 
     it('handles undefined config messages gracefully', () => {
-      const configWithoutMessages: LDAIConversationConfig = {
+      const configWithoutMessages: LDAICompletionConfig = {
         ...aiConfig,
         messages: undefined,
       };

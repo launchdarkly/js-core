@@ -7,11 +7,11 @@ import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
   LDAIAgentRequestConfig,
+  LDAICompletionConfig,
+  LDAICompletionConfigDefault,
   LDAIConfigDefaultKind,
   LDAIConfigKind,
   LDAIConfigMode,
-  LDAIConversationConfig,
-  LDAIConversationConfigDefault,
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
   LDJudge,
@@ -89,10 +89,10 @@ export class LDAIClientImpl implements LDAIClient {
   }
 
   private _applyInterpolation(
-    config: LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig,
+    config: LDAIConfigKind,
     context: LDContext,
     variables?: Record<string, unknown>,
-  ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
+  ): LDAIConfigKind {
     const allVariables = { ...variables, ldctx: context };
 
     if ('messages' in config && config.messages) {
@@ -115,7 +115,7 @@ export class LDAIClientImpl implements LDAIClient {
     return config;
   }
 
-  private _addVercelAISDKSupport(config: LDAIConversationConfig): LDAIConversationConfig {
+  private _addVercelAISDKSupport(config: LDAICompletionConfig): LDAICompletionConfig {
     const { messages } = config;
     const mapper = new LDAIConfigMapper(config.model, config.provider, messages);
 
@@ -160,13 +160,13 @@ export class LDAIClientImpl implements LDAIClient {
   async completionConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConversationConfig> {
+  ): Promise<LDAICompletionConfig> {
     this._ldClient.track(TRACK_CONFIG_SINGLE, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
-    return this._addVercelAISDKSupport(config as LDAIConversationConfig);
+    return this._addVercelAISDKSupport(config as LDAICompletionConfig);
   }
 
   /**
@@ -175,9 +175,9 @@ export class LDAIClientImpl implements LDAIClient {
   async config(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConversationConfig> {
+  ): Promise<LDAICompletionConfig> {
     return this.completionConfig(key, context, defaultValue, variables);
   }
 
@@ -254,7 +254,7 @@ export class LDAIClientImpl implements LDAIClient {
   async createChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
@@ -335,7 +335,7 @@ export class LDAIClientImpl implements LDAIClient {
   async initChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAIConversationConfigDefault,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {

@@ -138,7 +138,7 @@ export interface LDAIAgentConfigDefault extends LDAIConfigDefault {
 /**
  * Default Completion AI Config (default mode).
  */
-export interface LDAIConversationConfigDefault extends LDAIConfigDefault {
+export interface LDAICompletionConfigDefault extends LDAIConfigDefault {
   /**
    * Optional prompt data for completion configurations.
    */
@@ -187,7 +187,7 @@ export interface LDAIAgentConfig extends LDAIConfig {
 /**
  * Completion AI Config (default mode).
  */
-export interface LDAIConversationConfig extends LDAIConfig {
+export interface LDAICompletionConfig extends LDAIConfig {
   /**
    * Optional prompt data for completion configurations.
    */
@@ -216,13 +216,13 @@ export interface LDMessage {
 /**
  * Union type for all AI Config variants.
  */
-export type LDAIConfigKind = LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig;
+export type LDAIConfigKind = LDAICompletionConfig | LDAIAgentConfig | LDAIJudgeConfig;
 
 /**
  * Union type for all default AI Config variants.
  */
 export type LDAIConfigDefaultKind =
-  | LDAIConversationConfigDefault
+  | LDAICompletionConfigDefault
   | LDAIAgentConfigDefault
   | LDAIJudgeConfigDefault;
 

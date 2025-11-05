@@ -1,9 +1,10 @@
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 import {
   LDAIAgentConfig,
+  LDAICompletionConfig,
   LDAIConfigDefaultKind,
+  LDAIConfigKind,
   LDAIConfigMode,
-  LDAIConversationConfig,
   LDAIJudgeConfig,
   LDJudgeConfiguration,
   LDMessage,
@@ -81,10 +82,7 @@ export class LDAIConfigUtils {
    * @param tracker The tracker to add to the config
    * @returns The appropriate AI configuration type
    */
-  static fromFlagValue(
-    flagValue: LDAIConfigFlagValue,
-    tracker: LDAIConfigTracker,
-  ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
+  static fromFlagValue(flagValue: LDAIConfigFlagValue, tracker: LDAIConfigTracker): LDAIConfigKind {
     // Determine the actual mode from flag value
     // eslint-disable-next-line no-underscore-dangle
     const flagValueMode = flagValue._ldMeta?.mode;
@@ -107,9 +105,7 @@ export class LDAIConfigUtils {
    * @param mode The mode for the disabled config
    * @returns A disabled config of the appropriate type
    */
-  static createDisabledConfig(
-    mode: LDAIConfigMode,
-  ): LDAIConversationConfig | LDAIAgentConfig | LDAIJudgeConfig {
+  static createDisabledConfig(mode: LDAIConfigMode): LDAIConfigKind {
     switch (mode) {
       case 'agent':
         return {
@@ -128,7 +124,7 @@ export class LDAIConfigUtils {
         return {
           enabled: false,
           tracker: undefined,
-        } as LDAIConversationConfig;
+        } as LDAICompletionConfig;
     }
   }
 
@@ -157,7 +153,7 @@ export class LDAIConfigUtils {
   static toCompletionConfig(
     flagValue: LDAIConfigFlagValue,
     tracker: LDAIConfigTracker,
-  ): LDAIConversationConfig {
+  ): LDAICompletionConfig {
     return {
       ...this._toBaseConfig(flagValue),
       tracker,

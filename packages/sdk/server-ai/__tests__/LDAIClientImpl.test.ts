@@ -2,7 +2,7 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import {
   LDAIAgentConfigDefault,
-  LDAIConversationConfigDefault,
+  LDAICompletionConfigDefault,
   LDAIJudgeConfigDefault,
 } from '../src/api/config/types';
 import { Judge } from '../src/api/judge/Judge';
@@ -29,7 +29,7 @@ const testContext: LDContext = { kind: 'user', key: 'test-user' };
 it('returns config with interpolated messages', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDAIConversationConfigDefault = {
+  const defaultValue: LDAICompletionConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
     enabled: true,
@@ -88,7 +88,7 @@ it('returns config with interpolated messages', async () => {
 it('includes context in variables for messages interpolation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDAIConversationConfigDefault = {
+  const defaultValue: LDAICompletionConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
   };
@@ -109,7 +109,7 @@ it('includes context in variables for messages interpolation', async () => {
 it('handles missing metadata in variation', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'test-flag';
-  const defaultValue: LDAIConversationConfigDefault = {
+  const defaultValue: LDAICompletionConfigDefault = {
     model: { name: 'test', parameters: { name: 'test-model' } },
     messages: [],
   };
@@ -134,7 +134,7 @@ it('handles missing metadata in variation', async () => {
 it('passes the default value to the underlying client', async () => {
   const client = new LDAIClientImpl(mockLdClient);
   const key = 'non-existent-flag';
-  const defaultValue: LDAIConversationConfigDefault = {
+  const defaultValue: LDAICompletionConfigDefault = {
     model: { name: 'default-model', parameters: { name: 'default' } },
     provider: { name: 'default-provider' },
     messages: [{ role: 'system', content: 'Default messages' }],

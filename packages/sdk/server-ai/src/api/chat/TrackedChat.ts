@@ -1,7 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
-import { LDAIConversationConfig, LDMessage } from '../config/types';
+import { LDAICompletionConfig, LDMessage } from '../config/types';
 import { Judge } from '../judge/Judge';
 import { JudgeResponse } from '../judge/types';
 import { AIProvider } from '../providers/AIProvider';
@@ -19,7 +19,7 @@ export class TrackedChat {
   private readonly _logger?: LDLogger;
 
   constructor(
-    protected readonly aiConfig: LDAIConversationConfig,
+    protected readonly aiConfig: LDAICompletionConfig,
     protected readonly tracker: LDAIConfigTracker,
     protected readonly provider: AIProvider,
     judges?: Record<string, Judge>,
@@ -111,7 +111,7 @@ export class TrackedChat {
   /**
    * Get the underlying AI configuration used to initialize this TrackedChat.
    */
-  getConfig(): LDAIConversationConfig {
+  getConfig(): LDAICompletionConfig {
     return this.aiConfig;
   }
 
