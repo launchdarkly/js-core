@@ -255,8 +255,8 @@ export class LangChainProvider extends AIProvider {
 
     // Use LangChain's universal initChatModel to support multiple providers
     return initChatModel(modelName, {
-      modelProvider: LangChainProvider.mapProvider(provider),
       ...parameters,
+      modelProvider: LangChainProvider.mapProvider(provider),
     });
   }
 }
