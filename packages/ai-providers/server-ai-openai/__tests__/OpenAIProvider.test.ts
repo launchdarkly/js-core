@@ -25,7 +25,7 @@ describe('OpenAIProvider', () => {
     provider = new OpenAIProvider(mockOpenAI, 'gpt-3.5-turbo', {});
   });
 
-  describe('createAIMetrics', () => {
+  describe('getAIMetricsFromResponse', () => {
     it('creates metrics with success=true and token usage', () => {
       const mockResponse = {
         usage: {
@@ -35,7 +35,7 @@ describe('OpenAIProvider', () => {
         },
       };
 
-      const result = OpenAIProvider.createAIMetrics(mockResponse);
+      const result = OpenAIProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,
@@ -50,7 +50,7 @@ describe('OpenAIProvider', () => {
     it('creates metrics with success=true and no usage when usage is missing', () => {
       const mockResponse = {};
 
-      const result = OpenAIProvider.createAIMetrics(mockResponse);
+      const result = OpenAIProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,
@@ -66,7 +66,7 @@ describe('OpenAIProvider', () => {
         },
       };
 
-      const result = OpenAIProvider.createAIMetrics(mockResponse);
+      const result = OpenAIProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,

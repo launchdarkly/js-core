@@ -65,7 +65,7 @@ export class OpenAIProvider extends AIProvider {
       });
 
       // Generate metrics early (assumes success by default)
-      const metrics = OpenAIProvider.createAIMetrics(response);
+      const metrics = OpenAIProvider.getAIMetricsFromResponse(response);
 
       // Safely extract the first choice content using optional chaining
       const content = response?.choices?.[0]?.message?.content || '';
@@ -172,15 +172,24 @@ export class OpenAIProvider extends AIProvider {
   // =============================================================================
 
   /**
-   * Create AI metrics information from an OpenAI response.
+   * Get AI metrics from an OpenAI response.
    * This method extracts token usage information and success status from OpenAI responses
    * and returns a LaunchDarkly AIMetrics object.
+   *
+   * @param response The response from OpenAI chat completions API
+   * @returns LDAIMetrics with success status and token usage
+   *
+   * @example
+   * const response = await aiConfig.tracker.trackMetricsOf(
+   *   OpenAIProvider.getAIMetricsFromResponse,
+   *   () => client.chat.completions.create(config)
+   * );
    */
-  static createAIMetrics(openaiResponse: any): LDAIMetrics {
+  static getAIMetricsFromResponse(response: any): LDAIMetrics {
     // Extract token usage if available
     let usage: LDTokenUsage | undefined;
-    if (openaiResponse?.usage) {
-      const { prompt_tokens, completion_tokens, total_tokens } = openaiResponse.usage;
+    if (response?.usage) {
+      const { prompt_tokens, completion_tokens, total_tokens } = response.usage;
       usage = {
         total: total_tokens || 0,
         input: prompt_tokens || 0,
@@ -193,5 +202,18 @@ export class OpenAIProvider extends AIProvider {
       success: true,
       usage,
     };
+  }
+
+  /**
+   * Create AI metrics information from an OpenAI response.
+   * This method extracts token usage information and success status from OpenAI responses
+   * and returns a LaunchDarkly AIMetrics object.
+   *
+   * @deprecated Use `getAIMetricsFromResponse()` instead.
+   * @param openaiResponse The response from OpenAI chat completions API
+   * @returns LDAIMetrics with success status and token usage
+   */
+  static createAIMetrics(openaiResponse: any): LDAIMetrics {
+    return OpenAIProvider.getAIMetricsFromResponse(openaiResponse);
   }
 }

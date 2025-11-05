@@ -78,7 +78,7 @@ const allMessages = [...configMessages, userMessage];
 
 // Track the model call with LaunchDarkly tracking
 const response = await aiConfig.tracker.trackMetricsOf(
-  (result) => OpenAIProvider.createAIMetrics(result),
+  OpenAIProvider.getAIMetricsFromResponse,
   () => client.chat.completions.create({
     model: 'gpt-4',
     messages: allMessages,

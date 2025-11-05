@@ -27,6 +27,10 @@ export class LDAIConfigMapper {
     return undefined;
   }
 
+  /**
+   * @deprecated Use `VercelProvider.toVercelAISDK()` from the `@launchdarkly/server-sdk-ai-vercel` package instead.
+   * This method will be removed in a future version.
+   */
   toVercelAISDK<TMod>(
     provider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
     options?: VercelAISDKMapOptions | undefined,
