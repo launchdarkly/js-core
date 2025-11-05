@@ -166,7 +166,7 @@ describe('LangChainProvider', () => {
       expect(result.metrics.success).toBe(false);
       expect(result.message.content).toBe('');
       expect(result.message.role).toBe('assistant');
-      expect(mockLogger.error).toHaveBeenCalledWith('LangChain model invocation failed:', error);
+      expect(mockLogger.warn).toHaveBeenCalledWith('LangChain model invocation failed:', error);
     });
   });
 
@@ -194,7 +194,7 @@ describe('LangChainProvider', () => {
       expect(result.metrics.success).toBe(true);
       expect(result.data).toEqual(mockResponse);
       expect(result.rawResponse).toBe(JSON.stringify(mockResponse));
-      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('returns success=false when structured model invocation throws an error', async () => {
@@ -210,7 +210,7 @@ describe('LangChainProvider', () => {
       expect(result.data).toEqual({});
       expect(result.rawResponse).toBe('');
       expect(result.metrics.usage).toEqual({ total: 0, input: 0, output: 0 });
-      expect(mockLogger.error).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         'LangChain structured model invocation failed:',
         error,
       );
