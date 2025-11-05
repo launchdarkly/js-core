@@ -61,9 +61,13 @@ async function main() {
       myVariable: 'My User Defined Variable',
     },
   );
-  const { tracker } = aiConfig;
 
-  const completion = tracker.trackBedrockConverseMetrics(
+  if (!aiConfig.enabled || !aiConfig.tracker) {
+    console.log('*** AI configuration is not enabled');
+    process.exit(0);
+  }
+
+  const completion = aiConfig.tracker.trackBedrockConverseMetrics(
     await awsClient.send(
       new ConverseCommand({
         modelId: aiConfig.model?.name ?? 'no-model',

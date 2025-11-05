@@ -19,7 +19,7 @@ describe('VercelProvider', () => {
     jest.clearAllMocks();
   });
 
-  describe('createAIMetrics', () => {
+  describe('getAIMetricsFromResponse', () => {
     it('creates metrics with success=true and token usage', () => {
       const mockResponse = {
         usage: {
@@ -29,7 +29,7 @@ describe('VercelProvider', () => {
         },
       };
 
-      const result = VercelProvider.createAIMetrics(mockResponse);
+      const result = VercelProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,
@@ -44,7 +44,7 @@ describe('VercelProvider', () => {
     it('creates metrics with success=true and no usage when usage is missing', () => {
       const mockResponse = {};
 
-      const result = VercelProvider.createAIMetrics(mockResponse);
+      const result = VercelProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,
@@ -60,7 +60,7 @@ describe('VercelProvider', () => {
         },
       };
 
-      const result = VercelProvider.createAIMetrics(mockResponse);
+      const result = VercelProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,
@@ -81,7 +81,7 @@ describe('VercelProvider', () => {
         },
       };
 
-      const result = VercelProvider.createAIMetrics(mockResponse);
+      const result = VercelProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,
@@ -106,7 +106,7 @@ describe('VercelProvider', () => {
         },
       };
 
-      const result = VercelProvider.createAIMetrics(mockResponse);
+      const result = VercelProvider.getAIMetricsFromResponse(mockResponse);
 
       expect(result).toEqual({
         success: true,

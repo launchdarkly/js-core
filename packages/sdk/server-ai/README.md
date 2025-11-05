@@ -97,7 +97,7 @@ if (aiConfig.enabled) {
 
 ```typescript
 // Use the same defaultConfig from the retrieval section above
-const chat = await aiClient.initChat(
+const chat = await aiClient.createChat(
   'customer-support-chat',
   context,
   defaultConfig,
@@ -134,7 +134,7 @@ const llm = await LangChainProvider.createLangChainModel(aiConfig);
 
 // Use with tracking
 const response = await aiConfig.tracker.trackMetricsOf(
-  (result) => LangChainProvider.createAIMetrics(result),
+  LangChainProvider.getAIMetricsFromResponse,
   () => llm.invoke(messages)
 );
 
