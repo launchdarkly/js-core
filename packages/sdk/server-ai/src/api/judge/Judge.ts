@@ -45,7 +45,6 @@ export class Judge {
     samplingRate: number = 1,
   ): Promise<JudgeResponse | undefined> {
     try {
-      // Check if judge configuration has evaluation metric keys
       if (
         !this._aiConfig.evaluationMetricKeys ||
         this._aiConfig.evaluationMetricKeys.length === 0
@@ -57,7 +56,6 @@ export class Judge {
         return undefined;
       }
 
-      // Check if judge configuration has messages before proceeding
       if (!this._aiConfig.messages) {
         this._logger?.warn(
           'Judge configuration must include messages',
@@ -66,16 +64,13 @@ export class Judge {
         return undefined;
       }
 
-      // Apply sampling
       if (Math.random() > samplingRate) {
         this._logger?.debug(`Judge evaluation skipped due to sampling rate: ${samplingRate}`);
         return undefined;
       }
 
-      // Construct evaluation messages by combining judge's config messages with input/output
       const messages = this._constructEvaluationMessages(input, output);
 
-      // Delegate to provider-specific implementation with tracking
       const response = await this._aiConfigTracker.trackMetricsOf(
         (result: StructuredResponse) => result.metrics,
         () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
@@ -83,10 +78,8 @@ export class Judge {
 
       let { success } = response.metrics;
 
-      // Parse the structured response
       const evals = this._parseEvaluationResponse(response.data);
 
-      // Return null if no valid evaluations were found
       if (Object.keys(evals).length !== this._aiConfig.evaluationMetricKeys.length) {
         this._logger?.warn(
           'Judge evaluation did not return all evaluations',
@@ -122,11 +115,9 @@ export class Judge {
     response: ChatResponse,
     samplingRatio: number = 1,
   ): Promise<JudgeResponse | undefined> {
-    // Convert messages to text and extract output from response
     const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\r\n');
     const output = response.message.content;
 
-    // Delegate to standard evaluate method
     return this.evaluate(input, output, samplingRatio);
   }
 
@@ -155,7 +146,6 @@ export class Judge {
    * Constructs evaluation messages by combining judge's config messages with input/output.
    */
   private _constructEvaluationMessages(input: string, output: string): LDMessage[] {
-    // Create a copy of the judge's messages and interpolate input/output variables
     const messages: LDMessage[] = this._aiConfig.messages!.map((msg) => ({
       ...msg,
       content: this._interpolateMessage(msg.content, {
@@ -180,13 +170,12 @@ export class Judge {
   private _parseEvaluationResponse(data: Record<string, unknown>): Record<string, EvalScore> {
     const evaluations = data.evaluations as Record<string, unknown>;
     const results: Record<string, EvalScore> = {};
-    // Validate that the data has the required evaluations structure
+
     if (!data.evaluations || typeof data.evaluations !== 'object') {
       this._logger?.warn('Invalid response: missing or invalid evaluations object');
       return results;
     }
 
-    // Process each expected evaluation metric key
     this._aiConfig.evaluationMetricKeys.forEach((metricKey) => {
       const evaluation = evaluations[metricKey];
 
@@ -200,7 +189,6 @@ export class Judge {
 
       const evalData = evaluation as Record<string, unknown>;
 
-      // Validate score
       if (typeof evalData.score !== 'number' || evalData.score < 0 || evalData.score > 1) {
         this._logger?.warn(
           `Invalid score evaluated for ${metricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
@@ -209,7 +197,6 @@ export class Judge {
         return;
       }
 
-      // Validate reasoning
       if (typeof evalData.reasoning !== 'string') {
         this._logger?.warn(
           `Invalid reasoning evaluated for ${metricKey}: ${evalData.reasoning}. Reasoning must be a string`,
@@ -218,7 +205,6 @@ export class Judge {
         return;
       }
 
-      // Create the EvalScore object
       results[metricKey] = {
         score: evalData.score,
         reasoning: evalData.reasoning,

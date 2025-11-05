@@ -238,6 +238,9 @@ export interface LDAIClient {
    * @param context The standard LDContext used when evaluating flags.
    * @param defaultValue A default value representing a standard AI chat config result.
    * @param variables Dictionary of values for instruction interpolation.
+   * The variables will also be used for judge evaluation. For the judge only, the variables
+   * `message_history` and `response_to_evaluate` are reserved and will be ignored.
+   * @param defaultAiProvider Optional default AI provider to use.
    * @returns A promise that resolves to the TrackedChat instance, or null if the configuration is disabled.
    *
    * @example
@@ -258,10 +261,6 @@ export interface LDAIClient {
    * if (chat) {
    *   const response = await chat.invoke("I need help with my order");
    *   console.log(response.message.content);
-   *
-   *   // Access configuration and tracker if needed
-   *   console.log('Model:', chat.getConfig().model?.name);
-   *   chat.getTracker().trackSuccess();
    * }
    * ```
    */
@@ -290,7 +289,9 @@ export interface LDAIClient {
    * @param key The key identifying the AI judge configuration to use
    * @param context Standard LDContext used when evaluating flags
    * @param defaultValue A default value representing a standard AI config result
-   * @param variables Dictionary of values for instruction interpolation
+   * @param variables Dictionary of values for instruction interpolation.
+   * The variables `message_history` and `response_to_evaluate` are reserved for the judge and will be ignored.
+   * @param defaultAiProvider Optional default AI provider to use.
    * @returns Promise that resolves to a Judge instance or undefined if disabled/unsupported
    *
    * @example

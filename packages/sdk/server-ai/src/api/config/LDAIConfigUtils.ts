@@ -87,7 +87,6 @@ export class LDAIConfigUtils {
     // eslint-disable-next-line no-underscore-dangle
     const flagValueMode = flagValue._ldMeta?.mode;
 
-    // Convert to appropriate config type based on actual mode
     switch (flagValueMode) {
       case 'agent':
         return this.toAgentConfig(flagValue, tracker);

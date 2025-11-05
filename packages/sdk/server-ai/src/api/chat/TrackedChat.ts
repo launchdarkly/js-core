@@ -15,19 +15,15 @@ import { ChatResponse } from './types';
  */
 export class TrackedChat {
   protected messages: LDMessage[];
-  protected judges: Record<string, Judge>;
-  private readonly _logger?: LDLogger;
 
   constructor(
     protected readonly aiConfig: LDAICompletionConfig,
     protected readonly tracker: LDAIConfigTracker,
     protected readonly provider: AIProvider,
-    judges?: Record<string, Judge>,
-    logger?: LDLogger,
+    protected readonly judges: Record<string, Judge> = {},
+    private readonly _logger?: LDLogger,
   ) {
     this.messages = [];
-    this.judges = judges || {};
-    this._logger = logger;
   }
 
   /**
@@ -93,7 +89,6 @@ export class TrackedChat {
 
       const evalResult = await judge.evaluateMessages(messages, response, judgeConfig.samplingRate);
 
-      // Track scores if evaluation was successful
       if (evalResult && evalResult.success) {
         this.tracker.trackEvalScores(evalResult.evals);
       }
@@ -101,8 +96,7 @@ export class TrackedChat {
       return evalResult;
     });
 
-    // Use Promise.allSettled to ensure all evaluations complete
-    // even if some fail
+    // ensure all evaluations complete even if some fail
     const results = await Promise.allSettled(evaluationPromises);
 
     return results.map((result) => (result.status === 'fulfilled' ? result.value : undefined));

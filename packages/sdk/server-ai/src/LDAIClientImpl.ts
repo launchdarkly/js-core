@@ -62,7 +62,7 @@ export class LDAIClientImpl implements LDAIClient {
 
     // Validate mode match
     // eslint-disable-next-line no-underscore-dangle
-    const flagMode = value._ldMeta?.mode;
+    const flagMode = value._ldMeta?.mode ?? 'completion';
     if (flagMode !== mode) {
       this._logger?.warn(
         `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,

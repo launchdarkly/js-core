@@ -1,6 +1,24 @@
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 import { VercelAISDKConfig, VercelAISDKMapOptions, VercelAISDKProvider } from './VercelAISDK';
 
+// ============================================================================
+// Foundation Types
+// ============================================================================
+
+/**
+ * Information about prompts.
+ */
+export interface LDMessage {
+  /**
+   * The role of the prompt.
+   */
+  role: 'user' | 'assistant' | 'system';
+  /**
+   * Content for the prompt.
+   */
+  content: string;
+}
+
 /**
  * Configuration related to the model.
  */
@@ -28,6 +46,10 @@ export interface LDProviderConfig {
   name: string;
 }
 
+// ============================================================================
+// Judge Types
+// ============================================================================
+
 /**
  * Configuration for a single judge attachment.
  */
@@ -44,6 +66,30 @@ export interface LDJudge {
 export interface LDJudgeConfiguration {
   /** Array of judge configurations */
   judges: LDJudge[];
+}
+
+// ============================================================================
+// Base AI Config Types
+// ============================================================================
+
+/**
+ * Base AI Config interface for default implementations with optional enabled property.
+ */
+export interface LDAIConfigDefault {
+  /**
+   * Optional model configuration.
+   */
+  model?: LDModelConfig;
+
+  /**
+   * Optional configuration for the provider.
+   */
+  provider?: LDProviderConfig;
+
+  /**
+   * Whether the configuration is enabled. Defaults to false when not provided.
+   */
+  enabled?: boolean;
 }
 
 /**
@@ -81,44 +127,9 @@ export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {
   ) => VercelAISDKConfig<TMod>;
 }
 
-/**
- * Base AI Config interface for default implementations with optional enabled property.
- */
-export interface LDAIConfigDefault {
-  /**
-   * Optional model configuration.
-   */
-  model?: LDModelConfig;
-
-  /**
-   * Optional configuration for the provider.
-   */
-  provider?: LDProviderConfig;
-
-  /**
-   * Whether the configuration is enabled. Defaults to false when not provided.
-   */
-  enabled?: boolean;
-}
-
-/**
- * Default implementation types for AI Configs with optional enabled property.
- */
-
-/**
- * Default Judge-specific AI Config with required evaluation metric key.
- */
-export interface LDAIJudgeConfigDefault extends LDAIConfigDefault {
-  /**
-   * Optional prompt data for judge configurations.
-   */
-  messages?: LDMessage[];
-  /**
-   * Evaluation metric keys for judge configurations.
-   * The keys of the metrics that this judge can evaluate.
-   */
-  evaluationMetricKeys?: string[];
-}
+// ============================================================================
+// Default AI Config Implementation Types
+// ============================================================================
 
 /**
  * Default Agent-specific AI Config with instructions.
@@ -151,13 +162,9 @@ export interface LDAICompletionConfigDefault extends LDAIConfigDefault {
 }
 
 /**
- * Non-default implementation types for AI Configs with required enabled property and tracker.
+ * Default Judge-specific AI Config with required evaluation metric key.
  */
-
-/**
- * Judge-specific AI Config with required evaluation metric key.
- */
-export interface LDAIJudgeConfig extends LDAIConfig {
+export interface LDAIJudgeConfigDefault extends LDAIConfigDefault {
   /**
    * Optional prompt data for judge configurations.
    */
@@ -166,8 +173,20 @@ export interface LDAIJudgeConfig extends LDAIConfig {
    * Evaluation metric keys for judge configurations.
    * The keys of the metrics that this judge can evaluate.
    */
-  evaluationMetricKeys: string[];
+  evaluationMetricKeys?: string[];
 }
+
+/**
+ * Union type for all default AI Config variants.
+ */
+export type LDAIConfigDefaultKind =
+  | LDAIAgentConfigDefault
+  | LDAICompletionConfigDefault
+  | LDAIJudgeConfigDefault;
+
+// ============================================================================
+// AI Config Implementation Types
+// ============================================================================
 
 /**
  * Agent-specific AI Config with instructions.
@@ -200,31 +219,32 @@ export interface LDAICompletionConfig extends LDAIConfig {
 }
 
 /**
- * Information about prompts.
+ * Judge-specific AI Config with required evaluation metric key.
  */
-export interface LDMessage {
+export interface LDAIJudgeConfig extends LDAIConfig {
   /**
-   * The role of the prompt.
+   * Optional prompt data for judge configurations.
    */
-  role: 'user' | 'assistant' | 'system';
+  messages?: LDMessage[];
   /**
-   * Content for the prompt.
+   * Evaluation metric keys for judge configurations.
+   * The keys of the metrics that this judge can evaluate.
    */
-  content: string;
+  evaluationMetricKeys: string[];
 }
+
+// ============================================================================
+// Union Types
+// ============================================================================
 
 /**
  * Union type for all AI Config variants.
  */
-export type LDAIConfigKind = LDAICompletionConfig | LDAIAgentConfig | LDAIJudgeConfig;
+export type LDAIConfigKind = LDAIAgentConfig | LDAICompletionConfig | LDAIJudgeConfig;
 
-/**
- * Union type for all default AI Config variants.
- */
-export type LDAIConfigDefaultKind =
-  | LDAICompletionConfigDefault
-  | LDAIAgentConfigDefault
-  | LDAIJudgeConfigDefault;
+// ============================================================================
+// Agent-Specific Request Type
+// ============================================================================
 
 /**
  * Configuration for a single agent request.
@@ -246,15 +266,9 @@ export interface LDAIAgentRequestConfig {
   variables?: Record<string, unknown>;
 }
 
-/**
- * AI Config agent interface (extends agent config without tracker and toVercelAISDK).
- */
-export interface LDAIAgent extends Omit<LDAIAgentConfig, 'toVercelAISDK' | 'tracker'> {
-  /**
-   * Instructions for the agent.
-   */
-  instructions?: string;
-}
+// ============================================================================
+// Mode Type
+// ============================================================================
 
 /**
  * Mode type for AI configurations.

@@ -1,7 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
-import { LDAIConfig, LDMessage } from '../config/types';
+import { LDAIConfigKind, LDMessage } from '../config/types';
 import { StructuredResponse } from '../judge/types';
 
 /**
@@ -88,7 +88,7 @@ export abstract class AIProvider {
    * @returns Promise that resolves to a configured provider instance
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<AIProvider> {
+  static async create(aiConfig: LDAIConfigKind, logger?: LDLogger): Promise<AIProvider> {
     throw new Error('Provider implementations must override the static create method');
   }
 }
