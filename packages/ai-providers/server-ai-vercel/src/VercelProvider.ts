@@ -1,5 +1,4 @@
-import { generateObject, generateText, LanguageModel } from 'ai';
-import { z } from 'zod';
+import { generateObject, generateText, jsonSchema, LanguageModel } from 'ai';
 
 import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type {
@@ -47,28 +46,40 @@ export class VercelProvider extends AIProvider {
    * Invoke the Vercel AI model with an array of messages.
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
-    // Call Vercel AI generateText
-    // Type assertion: our MinLanguageModel is compatible with the expected LanguageModel interface
-    // The generateText function will work with any object that has the required properties
-    const result = await generateText({
-      model: this._model,
-      messages,
-      ...this._parameters,
-    });
+    try {
+      // Call Vercel AI generateText
+      const result = await generateText({
+        model: this._model,
+        messages,
+        ...this._parameters,
+      });
 
-    // Create the assistant message
-    const assistantMessage: LDMessage = {
-      role: 'assistant',
-      content: result.text,
-    };
+      // Create the assistant message
+      const assistantMessage: LDMessage = {
+        role: 'assistant',
+        content: result.text,
+      };
 
-    // Extract metrics including token usage and success status
-    const metrics = VercelProvider.createAIMetrics(result);
+      // Extract metrics including token usage and success status
+      const metrics = VercelProvider.createAIMetrics(result);
 
-    return {
-      message: assistantMessage,
-      metrics,
-    };
+      return {
+        message: assistantMessage,
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('Vercel AI model invocation failed:', error);
+
+      return {
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+        },
+      };
+    }
   }
 
   /**
@@ -78,25 +89,32 @@ export class VercelProvider extends AIProvider {
     messages: LDMessage[],
     responseStructure: Record<string, unknown>,
   ): Promise<StructuredResponse> {
-    // Convert responseStructure to Zod schema
-    const schema = VercelProvider.convertToZodSchema(responseStructure);
+    try {
+      const result = await generateObject({
+        model: this._model,
+        messages,
+        schema: jsonSchema(responseStructure),
+        ...this._parameters,
+      });
 
-    // Call Vercel AI generateObject
-    const result = await generateObject({
-      model: this._model,
-      messages,
-      schema,
-      ...this._parameters,
-    });
+      const metrics = VercelProvider.createAIMetrics(result);
 
-    // Extract metrics including token usage and success status
-    const metrics = VercelProvider.createAIMetrics(result);
+      return {
+        data: result.object as Record<string, unknown>,
+        rawResponse: JSON.stringify(result.object),
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('Vercel AI structured model invocation failed:', error);
 
-    return {
-      data: result.object,
-      rawResponse: JSON.stringify(result.object),
-      metrics,
-    };
+      return {
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
+        },
+      };
+    }
   }
 
   /**
@@ -149,72 +167,6 @@ export class VercelProvider extends AIProvider {
       success: true,
       usage,
     };
-  }
-
-  /**
-   * Convert a response structure object to a Zod schema.
-   * This method recursively converts a generic object structure to a Zod schema
-   * that can be used with Vercel AI SDK's generateObject function.
-   *
-   * @param responseStructure The structure object to convert
-   * @returns A Zod schema representing the structure
-   */
-  static convertToZodSchema(responseStructure: Record<string, unknown>): z.ZodSchema {
-    const shape: Record<string, z.ZodSchema> = {};
-
-    Object.entries(responseStructure).forEach(([key, value]) => {
-      // eslint-disable-next-line no-underscore-dangle
-      shape[key] = VercelProvider._convertValueToZodSchema(value);
-    });
-
-    return z.object(shape);
-  }
-
-  /**
-   * Convert a single value to a Zod schema.
-   * This is a helper method for convertToZodSchema that handles different value types.
-   *
-   * @param value The value to convert
-   * @returns A Zod schema for the value
-   */
-  private static _convertValueToZodSchema(value: unknown): z.ZodSchema {
-    if (value === null || value === undefined) {
-      return z.any();
-    }
-
-    if (typeof value === 'string') {
-      return z.string();
-    }
-
-    if (typeof value === 'number') {
-      return z.number();
-    }
-
-    if (typeof value === 'boolean') {
-      return z.boolean();
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        return z.array(z.any());
-      }
-      // Use the first element to determine the array type
-      // eslint-disable-next-line no-underscore-dangle
-      const elementSchema = VercelProvider._convertValueToZodSchema(value[0]);
-      return z.array(elementSchema);
-    }
-
-    if (typeof value === 'object') {
-      const shape: Record<string, z.ZodSchema> = {};
-      Object.entries(value).forEach(([key, val]) => {
-        // eslint-disable-next-line no-underscore-dangle
-        shape[key] = VercelProvider._convertValueToZodSchema(val);
-      });
-      return z.object(shape);
-    }
-
-    // Fallback for any other type
-    return z.any();
   }
 
   /**
