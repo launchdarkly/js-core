@@ -3,6 +3,7 @@ import { OpenAI } from 'openai';
 
 import { init, LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
+import { OpenAIProvider } from '@launchdarkly/server-sdk-ai-openai';
 
 // Environment variables
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
 
   const aiClient = initAi(ldClient);
 
-  const aiConfig = await aiClient.config(
+  const aiConfig = await aiClient.completionConfig(
     aiConfigKey,
     context,
     {
@@ -63,13 +64,15 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  const completion = await aiConfig.tracker.trackOpenAIMetrics(async () =>
-    client.chat.completions.create({
-      messages: aiConfig.messages || [],
-      model: aiConfig.model?.name || 'gpt-4',
-      temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
-      max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
-    }),
+  const completion = await aiConfig.tracker.trackMetricsOf(
+    OpenAIProvider.createAIMetrics,
+    async () =>
+      client.chat.completions.create({
+        messages: aiConfig.messages || [],
+        model: aiConfig.model?.name || 'gpt-4',
+        temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
+        max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
+      }),
   );
 
   console.log('AI Response:', completion.choices[0]?.message.content);

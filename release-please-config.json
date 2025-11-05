@@ -96,6 +96,11 @@
           "type": "json",
           "path": "examples/vercel-ai/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/judge-evaluation/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
         }
       ]
     },

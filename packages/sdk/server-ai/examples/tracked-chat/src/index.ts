@@ -46,7 +46,7 @@ async function main(): Promise<void> {
   // };
 
   // Get AI chat configuration from LaunchDarkly
-  const chat = await aiClient.initChat(aiConfigKey, context, defaultValue, {
+  const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, {
     companyName: 'LaunchDarkly',
   });
 
