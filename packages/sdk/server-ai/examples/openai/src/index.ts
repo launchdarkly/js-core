@@ -58,8 +58,12 @@ async function main(): Promise<void> {
     { myVariable: 'My User Defined Variable' },
   );
 
-  const { tracker } = aiConfig;
-  const completion = await tracker.trackOpenAIMetrics(async () =>
+  if (!aiConfig.enabled || !aiConfig.tracker) {
+    console.log('*** AI configuration is not enabled');
+    process.exit(0);
+  }
+
+  const completion = await aiConfig.tracker.trackOpenAIMetrics(async () =>
     client.chat.completions.create({
       messages: aiConfig.messages || [],
       model: aiConfig.model?.name || 'gpt-4',
