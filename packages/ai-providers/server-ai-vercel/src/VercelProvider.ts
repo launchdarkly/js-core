@@ -72,9 +72,9 @@ export class VercelProvider extends AIProvider {
     try {
       // Call Vercel AI generateText
       const result = await generateText({
+        ...this._parameters,
         model: this._model,
         messages,
-        ...this._parameters,
       });
 
       // Create the assistant message
@@ -114,10 +114,10 @@ export class VercelProvider extends AIProvider {
   ): Promise<StructuredResponse> {
     try {
       const result = await generateObject({
+        ...this._parameters,
         model: this._model,
         messages,
         schema: jsonSchema(responseStructure),
-        ...this._parameters,
       });
 
       const metrics = VercelProvider.createAIMetrics(result);
