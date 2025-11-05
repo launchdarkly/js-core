@@ -108,6 +108,7 @@ export class OpenAIProvider extends AIProvider {
     let response;
     try {
       response = await this._client.chat.completions.create({
+        ...this._parameters,
         model: this._modelName,
         messages,
         response_format: {
@@ -118,7 +119,6 @@ export class OpenAIProvider extends AIProvider {
             strict: true,
           },
         },
-        ...this._parameters,
       });
     } catch (error) {
       this.logger?.warn('OpenAI structured model invocation failed:', error);
