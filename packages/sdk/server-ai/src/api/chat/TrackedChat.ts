@@ -48,10 +48,6 @@ export class TrackedChat {
       () => this.provider.invokeModel(allMessages),
     );
 
-    // Add the assistant response to the conversation history
-    this.messages.push(response.message);
-
-    // Start judge evaluations if configured
     if (
       this.aiConfig.judgeConfiguration?.judges &&
       this.aiConfig.judgeConfiguration.judges.length > 0
@@ -59,6 +55,7 @@ export class TrackedChat {
       response.evaluations = this._evaluateWithJudges(this.messages, response);
     }
 
+    this.messages.push(response.message);
     return response;
   }
 
