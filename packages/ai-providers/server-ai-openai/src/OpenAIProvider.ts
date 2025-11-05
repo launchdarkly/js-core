@@ -58,9 +58,9 @@ export class OpenAIProvider extends AIProvider {
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
     try {
       const response = await this._client.chat.completions.create({
+        ...this._parameters,
         model: this._modelName,
         messages,
-        ...this._parameters,
       });
 
       // Generate metrics early (assumes success by default)
