@@ -1,4 +1,4 @@
-import { generateText, LanguageModel } from 'ai';
+import { generateObject, generateText, jsonSchema, LanguageModel } from 'ai';
 
 import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type {
@@ -8,6 +8,7 @@ import type {
   LDLogger,
   LDMessage,
   LDTokenUsage,
+  StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
 import type {
@@ -68,23 +69,75 @@ export class VercelProvider extends AIProvider {
    * Invoke the Vercel AI model with an array of messages.
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
-    const result = await generateText({
-      model: this._model,
-      messages,
-      ...this._parameters,
-    });
+    try {
+      // Call Vercel AI generateText
+      const result = await generateText({
+        ...this._parameters,
+        model: this._model,
+        messages,
+      });
 
-    const assistantMessage: LDMessage = {
-      role: 'assistant',
-      content: result.text,
-    };
+      // Create the assistant message
+      const assistantMessage: LDMessage = {
+        role: 'assistant',
+        content: result.text,
+      };
 
-    const metrics = VercelProvider.getAIMetricsFromResponse(result);
+      // Extract metrics including token usage and success status
+      const metrics = VercelProvider.getAIMetricsFromResponse(result);
 
-    return {
-      message: assistantMessage,
-      metrics,
-    };
+      return {
+        message: assistantMessage,
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('Vercel AI model invocation failed:', error);
+
+      return {
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+        },
+      };
+    }
+  }
+
+  /**
+   * Invoke the Vercel AI model with structured output support.
+   */
+  async invokeStructuredModel(
+    messages: LDMessage[],
+    responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse> {
+    try {
+      const result = await generateObject({
+        ...this._parameters,
+        model: this._model,
+        messages,
+        schema: jsonSchema(responseStructure),
+      });
+
+      const metrics = VercelProvider.createAIMetrics(result);
+
+      return {
+        data: result.object as Record<string, unknown>,
+        rawResponse: JSON.stringify(result.object),
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('Vercel AI structured model invocation failed:', error);
+
+      return {
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
+        },
+      };
+    }
   }
 
   /**

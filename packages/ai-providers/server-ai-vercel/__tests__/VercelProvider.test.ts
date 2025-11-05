@@ -1,10 +1,12 @@
-import { generateText } from 'ai';
+import { generateObject, generateText, jsonSchema } from 'ai';
 
 import { VercelProvider } from '../src/VercelProvider';
 
 // Mock Vercel AI SDK
 jest.mock('ai', () => ({
   generateText: jest.fn(),
+  generateObject: jest.fn(),
+  jsonSchema: jest.fn((schema) => schema),
 }));
 
 describe('VercelProvider', () => {
@@ -14,6 +16,7 @@ describe('VercelProvider', () => {
   beforeEach(() => {
     mockModel = { name: 'test-model' };
     provider = new VercelProvider(mockModel, {});
+    jest.clearAllMocks();
   });
 
   describe('getAIMetricsFromResponse', () => {
@@ -173,6 +176,145 @@ describe('VercelProvider', () => {
         metrics: {
           success: true,
           usage: undefined,
+        },
+      });
+    });
+
+    it('handles errors and returns failure metrics', async () => {
+      const mockError = new Error('API call failed');
+      (generateText as jest.Mock).mockRejectedValue(mockError);
+
+      const mockLogger = {
+        warn: jest.fn(),
+      };
+      provider = new VercelProvider(mockModel, {}, mockLogger as any);
+
+      const messages = [{ role: 'user' as const, content: 'Hello!' }];
+      const result = await provider.invokeModel(messages);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith('Vercel AI model invocation failed:', mockError);
+      expect(result).toEqual({
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+        },
+      });
+    });
+  });
+
+  describe('invokeStructuredModel', () => {
+    it('invokes Vercel AI generateObject and returns structured response', async () => {
+      const mockResponse = {
+        object: {
+          name: 'John Doe',
+          age: 30,
+          isActive: true,
+        },
+        usage: {
+          promptTokens: 10,
+          completionTokens: 15,
+          totalTokens: 25,
+        },
+      };
+
+      (generateObject as jest.Mock).mockResolvedValue(mockResponse);
+
+      const messages = [{ role: 'user' as const, content: 'Generate user data' }];
+      const responseStructure = {
+        name: 'string',
+        age: 0,
+        isActive: true,
+      };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(generateObject).toHaveBeenCalledWith({
+        model: mockModel,
+        messages: [{ role: 'user', content: 'Generate user data' }],
+        schema: responseStructure,
+      });
+      expect(jsonSchema).toHaveBeenCalledWith(responseStructure);
+
+      expect(result).toEqual({
+        data: {
+          name: 'John Doe',
+          age: 30,
+          isActive: true,
+        },
+        rawResponse: JSON.stringify({
+          name: 'John Doe',
+          age: 30,
+          isActive: true,
+        }),
+        metrics: {
+          success: true,
+          usage: {
+            total: 25,
+            input: 10,
+            output: 15,
+          },
+        },
+      });
+    });
+
+    it('handles structured response without usage data', async () => {
+      const mockResponse = {
+        object: {
+          result: 'success',
+        },
+      };
+
+      (generateObject as jest.Mock).mockResolvedValue(mockResponse);
+
+      const messages = [{ role: 'user' as const, content: 'Generate result' }];
+      const responseStructure = {
+        result: 'string',
+      };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(result).toEqual({
+        data: {
+          result: 'success',
+        },
+        rawResponse: JSON.stringify({
+          result: 'success',
+        }),
+        metrics: {
+          success: true,
+          usage: undefined,
+        },
+      });
+    });
+
+    it('handles errors and returns failure metrics', async () => {
+      const mockError = new Error('API call failed');
+      (generateObject as jest.Mock).mockRejectedValue(mockError);
+
+      const mockLogger = {
+        warn: jest.fn(),
+      };
+      provider = new VercelProvider(mockModel, {}, mockLogger as any);
+
+      const messages = [{ role: 'user' as const, content: 'Generate result' }];
+      const responseStructure = {
+        result: 'string',
+      };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Vercel AI structured model invocation failed:',
+        mockError,
+      );
+      expect(result).toEqual({
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
         },
       });
     });
