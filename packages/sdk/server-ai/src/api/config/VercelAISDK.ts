@@ -1,4 +1,4 @@
-import { type LDMessage } from './LDAIConfig';
+import { type LDMessage } from './types';
 
 /**
  * @deprecated Use `VercelAISDKProvider` from the `@launchdarkly/server-sdk-ai-vercel` package instead.

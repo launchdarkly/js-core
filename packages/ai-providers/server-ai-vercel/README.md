@@ -94,7 +94,7 @@ const allMessages = [...configMessages, userMessage];
 
 // Track the model call with LaunchDarkly tracking
 const response = await aiConfig.tracker.trackMetricsOf(
-  (result) => VercelProvider.createAIMetrics(result),
+  VercelProvider.getAIMetricsFromResponse,
   () => generateText({ model, messages: allMessages })
 );
 
