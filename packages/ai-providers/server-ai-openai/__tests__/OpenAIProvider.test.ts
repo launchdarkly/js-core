@@ -199,6 +199,157 @@ describe('OpenAIProvider', () => {
     });
   });
 
+  describe('invokeStructuredModel', () => {
+    it('invokes OpenAI with structured output and returns parsed response', async () => {
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              content: '{"name": "John", "age": 30, "city": "New York"}',
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 20,
+          completion_tokens: 10,
+          total_tokens: 30,
+        },
+      };
+
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
+
+      const messages = [{ role: 'user' as const, content: 'Tell me about a person' }];
+      const responseStructure = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          age: { type: 'number' },
+          city: { type: 'string' },
+        },
+        required: ['name', 'age', 'city'],
+      };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: 'Tell me about a person' }],
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'structured_output',
+            schema: responseStructure,
+            strict: true,
+          },
+        },
+      });
+
+      expect(result).toEqual({
+        data: {
+          name: 'John',
+          age: 30,
+          city: 'New York',
+        },
+        rawResponse: '{"name": "John", "age": 30, "city": "New York"}',
+        metrics: {
+          success: true,
+          usage: {
+            total: 30,
+            input: 20,
+            output: 10,
+          },
+        },
+      });
+    });
+
+    it('returns unsuccessful response when no content in structured response', async () => {
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              // content is missing
+            },
+          },
+        ],
+      };
+
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
+
+      const messages = [{ role: 'user' as const, content: 'Tell me about a person' }];
+      const responseStructure = { type: 'object' };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(result).toEqual({
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
+          usage: undefined,
+        },
+      });
+    });
+
+    it('handles JSON parsing errors gracefully', async () => {
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              content: 'invalid json content',
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 5,
+          total_tokens: 15,
+        },
+      };
+
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
+
+      const messages = [{ role: 'user' as const, content: 'Tell me about a person' }];
+      const responseStructure = { type: 'object' };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(result).toEqual({
+        data: {},
+        rawResponse: 'invalid json content',
+        metrics: {
+          success: false,
+          usage: {
+            total: 15,
+            input: 10,
+            output: 5,
+          },
+        },
+      });
+    });
+
+    it('handles empty choices array in structured response', async () => {
+      const mockResponse = {
+        choices: [],
+      };
+
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
+
+      const messages = [{ role: 'user' as const, content: 'Tell me about a person' }];
+      const responseStructure = { type: 'object' };
+
+      const result = await provider.invokeStructuredModel(messages, responseStructure);
+
+      expect(result).toEqual({
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
+          usage: undefined,
+        },
+      });
+    });
+  });
+
   describe('getClient', () => {
     it('returns the underlying OpenAI client', () => {
       const client = provider.getClient();

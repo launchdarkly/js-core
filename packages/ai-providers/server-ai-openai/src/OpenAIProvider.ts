@@ -8,6 +8,7 @@ import type {
   LDLogger,
   LDMessage,
   LDTokenUsage,
+  StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
 /**
@@ -55,12 +56,81 @@ export class OpenAIProvider extends AIProvider {
    * Invoke the OpenAI model with an array of messages.
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
-    // Call OpenAI chat completions API
-    const response = await this._client.chat.completions.create({
-      model: this._modelName,
-      messages,
-      ...this._parameters,
-    });
+    try {
+      const response = await this._client.chat.completions.create({
+        ...this._parameters,
+        model: this._modelName,
+        messages,
+      });
+
+      // Generate metrics early (assumes success by default)
+      const metrics = OpenAIProvider.getAIMetricsFromResponse(response);
+
+      // Safely extract the first choice content using optional chaining
+      const content = response?.choices?.[0]?.message?.content || '';
+
+      if (!content) {
+        this.logger?.warn('OpenAI response has no content available');
+        metrics.success = false;
+      }
+
+      const assistantMessage: LDMessage = {
+        role: 'assistant',
+        content,
+      };
+
+      return {
+        message: assistantMessage,
+        metrics,
+      };
+    } catch (error) {
+      this.logger?.warn('OpenAI model invocation failed:', error);
+
+      return {
+        message: {
+          role: 'assistant',
+          content: '',
+        },
+        metrics: {
+          success: false,
+        },
+      };
+    }
+  }
+
+  /**
+   * Invoke the OpenAI model with structured output support.
+   */
+  async invokeStructuredModel(
+    messages: LDMessage[],
+    responseStructure: Record<string, unknown>,
+  ): Promise<StructuredResponse> {
+    let response;
+    try {
+      response = await this._client.chat.completions.create({
+        ...this._parameters,
+        model: this._modelName,
+        messages,
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'structured_output',
+            schema: responseStructure,
+            strict: true,
+          },
+        },
+      });
+    } catch (error) {
+      this.logger?.warn('OpenAI structured model invocation failed:', error);
+
+      return {
+        data: {},
+        rawResponse: '',
+        metrics: {
+          success: false,
+        },
+      };
+    }
 
     // Generate metrics early (assumes success by default)
     const metrics = OpenAIProvider.getAIMetricsFromResponse(response);
@@ -69,20 +139,32 @@ export class OpenAIProvider extends AIProvider {
     const content = response?.choices?.[0]?.message?.content || '';
 
     if (!content) {
-      this.logger?.warn('OpenAI response has no content available');
+      this.logger?.warn('OpenAI structured response has no content available');
       metrics.success = false;
+      return {
+        data: {},
+        rawResponse: '',
+        metrics,
+      };
     }
 
-    // Create the assistant message
-    const assistantMessage: LDMessage = {
-      role: 'assistant',
-      content,
-    };
+    try {
+      const data = JSON.parse(content) as Record<string, unknown>;
 
-    return {
-      message: assistantMessage,
-      metrics,
-    };
+      return {
+        data,
+        rawResponse: content,
+        metrics,
+      };
+    } catch (parseError) {
+      this.logger?.warn('OpenAI structured response contains invalid JSON:', parseError);
+      metrics.success = false;
+      return {
+        data: {},
+        rawResponse: content,
+        metrics,
+      };
+    }
   }
 
   /**
