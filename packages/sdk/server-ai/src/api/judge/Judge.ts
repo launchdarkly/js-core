@@ -208,6 +208,7 @@ export class Judge {
       results[metricKey] = {
         score: evalData.score,
         reasoning: evalData.reasoning,
+        judgeConfigKey: this._aiConfig.key,
       };
     });
 

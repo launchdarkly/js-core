@@ -24,6 +24,8 @@ export interface EvalScore {
   score: number;
   /** Reasoning behind the provided score for this metric */
   reasoning: string;
+  /** The key of the judge configuration that was used to evaluate this metric */
+  judgeConfigKey?: string;
 }
 
 /**

@@ -78,7 +78,12 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackEvalScores(scores: Record<string, EvalScore>) {
     // Track each evaluation score individually
     Object.entries(scores).forEach(([metricKey, evalScore]) => {
-      this._ldClient.track(metricKey, this._context, this.getTrackData(), evalScore.score);
+      this._ldClient.track(
+        metricKey,
+        this._context,
+        { ...this.getTrackData(), judgeConfigKey: evalScore.judgeConfigKey },
+        evalScore.score,
+      );
     });
   }
 
