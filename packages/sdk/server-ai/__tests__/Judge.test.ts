@@ -39,6 +39,7 @@ describe('Judge', () => {
 
     // Create a basic judge config
     judgeConfig = {
+      key: 'test-judge',
       enabled: true,
       messages: [
         { role: 'system', content: 'You are a helpful judge that evaluates AI responses.' },
@@ -106,9 +107,21 @@ describe('Judge', () => {
 
       expect(result).toEqual({
         evals: {
-          relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          accuracy: { score: 0.9, reasoning: 'The response is factually accurate' },
-          helpfulness: { score: 0.7, reasoning: 'The response provides helpful information' },
+          relevance: {
+            score: 0.8,
+            reasoning: 'The response is relevant to the question',
+            judgeConfigKey: 'test-judge',
+          },
+          accuracy: {
+            score: 0.9,
+            reasoning: 'The response is factually accurate',
+            judgeConfigKey: 'test-judge',
+          },
+          helpfulness: {
+            score: 0.7,
+            reasoning: 'The response provides helpful information',
+            judgeConfigKey: 'test-judge',
+          },
         },
         success: true,
       });
@@ -254,8 +267,8 @@ describe('Judge', () => {
       // When one metric is missing, it returns the partial evals it has with success: false
       expect(result).toEqual({
         evals: {
-          relevance: { score: 0.8, reasoning: 'Good' },
-          helpfulness: { score: 0.7, reasoning: 'Helpful' },
+          relevance: { score: 0.8, reasoning: 'Good', judgeConfigKey: 'test-judge' },
+          helpfulness: { score: 0.7, reasoning: 'Helpful', judgeConfigKey: 'test-judge' },
         },
         success: false,
       });
@@ -364,9 +377,21 @@ describe('Judge', () => {
 
       expect(result).toEqual({
         evals: {
-          relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          accuracy: { score: 0.9, reasoning: 'The response is factually accurate' },
-          helpfulness: { score: 0.7, reasoning: 'The response provides helpful information' },
+          relevance: {
+            score: 0.8,
+            reasoning: 'The response is relevant to the question',
+            judgeConfigKey: 'test-judge',
+          },
+          accuracy: {
+            score: 0.9,
+            reasoning: 'The response is factually accurate',
+            judgeConfigKey: 'test-judge',
+          },
+          helpfulness: {
+            score: 0.7,
+            reasoning: 'The response provides helpful information',
+            judgeConfigKey: 'test-judge',
+          },
         },
         success: true,
       });
@@ -454,9 +479,9 @@ describe('Judge', () => {
       const result = parseResponse(responseData);
 
       expect(result).toEqual({
-        relevance: { score: 0.8, reasoning: 'Good' },
-        accuracy: { score: 0.9, reasoning: 'Accurate' },
-        helpfulness: { score: 0.7, reasoning: 'Helpful' },
+        relevance: { score: 0.8, reasoning: 'Good', judgeConfigKey: 'test-judge' },
+        accuracy: { score: 0.9, reasoning: 'Accurate', judgeConfigKey: 'test-judge' },
+        helpfulness: { score: 0.7, reasoning: 'Helpful', judgeConfigKey: 'test-judge' },
       });
     });
 
@@ -489,7 +514,7 @@ describe('Judge', () => {
 
       // Only helpfulness passes validation, relevance and accuracy are skipped
       expect(result).toEqual({
-        helpfulness: { score: 0.7, reasoning: 'Helpful' },
+        helpfulness: { score: 0.7, reasoning: 'Helpful', judgeConfigKey: 'test-judge' },
       });
     });
   });
