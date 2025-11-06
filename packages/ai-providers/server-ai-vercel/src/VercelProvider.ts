@@ -250,12 +250,19 @@ export class VercelProvider extends AIProvider {
 
     // favor totalUsage over usage for cumulative usage across all steps
     let usage: LDTokenUsage | undefined;
+
     if (stream.totalUsage) {
-      const usageData = await stream.totalUsage;
-      usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
-    } else if (stream.usage) {
-      const usageData = await stream.usage;
-      usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
+      const usageData = await stream.totalUsage.catch(() => undefined);
+      if (usageData) {
+        usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
+      }
+    }
+
+    if (!usage && stream.usage) {
+      const usageData = await stream.usage.catch(() => undefined);
+      if (usageData) {
+        usage = VercelProvider.mapUsageDataToLDTokenUsage(usageData);
+      }
     }
 
     const success = finishReason !== 'error';
