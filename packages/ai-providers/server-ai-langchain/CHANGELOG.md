@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.2.0...server-sdk-ai-langchain-v0.3.0) (2025-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* Support invoke with structured output in LangChain provider  ([#970](https://github.com/launchdarkly/js-core/issues/970))
+
+### Features
+
+* Support invoke with structured output in LangChain provider  ([#970](https://github.com/launchdarkly/js-core/issues/970)) ([0427908](https://github.com/launchdarkly/js-core/commit/0427908cdd410d1f7fefd405bf08945b559070f5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.13.0 to ^0.14.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.12.2 to ^0.14.0
+
 ## [0.2.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.1.3...server-sdk-ai-langchain-v0.2.0) (2025-11-04)
 
 

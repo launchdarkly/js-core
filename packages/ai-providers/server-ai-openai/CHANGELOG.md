@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-openai-v0.2.0...server-sdk-ai-openai-v0.3.0) (2025-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* Support invoke with structured output in OpenAI provider ([#980](https://github.com/launchdarkly/js-core/issues/980))
+
+### Features
+
+* Support invoke with structured output in OpenAI provider ([#980](https://github.com/launchdarkly/js-core/issues/980)) ([515dbdf](https://github.com/launchdarkly/js-core/commit/515dbdf996de92e87d9accec461c0ac9b7e599cd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.13.0 to ^0.14.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.12.2 to ^0.14.0
+
 ## [0.2.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-openai-v0.1.2...server-sdk-ai-openai-v0.2.0) (2025-11-04)
 
 
