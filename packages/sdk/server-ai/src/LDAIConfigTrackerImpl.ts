@@ -1,5 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
+import { name as aiSdkName, version as aiSdkVersion } from '../package.json';
 import { LDAIConfigTracker } from './api/config';
 import { LDAIMetricSummary } from './api/config/LDAIConfigTracker';
 import { EvalScore } from './api/judge/types';
@@ -32,6 +33,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     version: number;
     modelName: string;
     providerName: string;
+    aiSdkName: string;
+    aiSdkVersion: string;
   } {
     return {
       variationKey: this._variationKey,
@@ -39,6 +42,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       version: this._version,
       modelName: this._modelName,
       providerName: this._providerName,
+      aiSdkName,
+      aiSdkVersion,
     };
   }
 
