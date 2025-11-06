@@ -38,7 +38,6 @@ describe('TrackedChat', () => {
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
       tracker: mockTracker,
-      toVercelAISDK: jest.fn(),
     };
   });
 
