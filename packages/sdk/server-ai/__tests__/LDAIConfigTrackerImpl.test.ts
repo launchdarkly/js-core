@@ -4,6 +4,9 @@ import { LDFeedbackKind } from '../src/api/metrics';
 import { LDAIConfigTrackerImpl } from '../src/LDAIConfigTrackerImpl';
 import { LDClientMin } from '../src/LDClientMin';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version: aiSdkVersion } = require('../package.json');
+
 const mockTrack = jest.fn();
 const mockVariation = jest.fn();
 const mockLdClient: LDClientMin = {
@@ -17,6 +20,15 @@ const variationKey = 'v1';
 const version = 1;
 const modelName = 'test-model';
 const providerName = 'test-provider';
+
+const getExpectedTrackData = () => ({
+  configKey,
+  variationKey,
+  version,
+  modelName,
+  providerName,
+  aiSdkVersion,
+});
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -37,7 +49,7 @@ it('tracks duration', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:duration:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1000,
   );
 });
@@ -60,7 +72,7 @@ it('tracks duration of async function', async () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:duration:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1000,
   );
 });
@@ -80,7 +92,7 @@ it('tracks time to first token', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:ttf',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1000,
   );
 });
@@ -100,7 +112,7 @@ it('tracks positive feedback', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:feedback:user:positive',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 });
@@ -120,7 +132,7 @@ it('tracks negative feedback', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:feedback:user:negative',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 });
@@ -140,7 +152,7 @@ it('tracks success', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:success',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 });
@@ -172,14 +184,14 @@ it('tracks OpenAI usage', async () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:duration:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1000,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:success',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 
@@ -193,21 +205,21 @@ it('tracks OpenAI usage', async () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     TOTAL_TOKENS,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:input',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     PROMPT_TOKENS,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:output',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     COMPLETION_TOKENS,
   );
 });
@@ -234,14 +246,14 @@ it('tracks error when OpenAI metrics function throws', async () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:duration:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1000,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:error',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 
@@ -283,7 +295,7 @@ it('tracks Bedrock conversation with successful response', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:success',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 
@@ -297,28 +309,28 @@ it('tracks Bedrock conversation with successful response', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:duration:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     500,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     TOTAL_TOKENS,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:input',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     PROMPT_TOKENS,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:output',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     COMPLETION_TOKENS,
   );
 });
@@ -345,7 +357,7 @@ it('tracks Bedrock conversation with error response', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:error',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 
@@ -385,14 +397,14 @@ describe('Vercel AI SDK generateText', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:duration:total',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1000,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:success',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1,
     );
 
@@ -406,21 +418,21 @@ describe('Vercel AI SDK generateText', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:tokens:total',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       TOTAL_TOKENS,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:tokens:input',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       PROMPT_TOKENS,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:tokens:output',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       COMPLETION_TOKENS,
     );
   });
@@ -447,14 +459,14 @@ describe('Vercel AI SDK generateText', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:duration:total',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1000,
     );
 
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:error',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1,
     );
 
@@ -491,21 +503,21 @@ it('tracks tokens', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     TOTAL_TOKENS,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:input',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     PROMPT_TOKENS,
   );
 
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:output',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     COMPLETION_TOKENS,
   );
 });
@@ -537,7 +549,7 @@ it('only tracks non-zero token counts', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:tokens:input',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     50,
   );
 
@@ -623,7 +635,7 @@ it('tracks duration when async function throws', async () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:duration:total',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1000,
   );
 });
@@ -643,7 +655,7 @@ it('tracks error', () => {
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:generation:error',
     testContext,
-    { configKey, variationKey, version, modelName, providerName },
+    getExpectedTrackData(),
     1,
   );
 });
@@ -679,7 +691,7 @@ describe('trackMetricsOf', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:success',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1,
     );
 
@@ -687,19 +699,19 @@ describe('trackMetricsOf', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:tokens:total',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       100,
     );
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:tokens:input',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       50,
     );
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:tokens:output',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       50,
     );
   });
@@ -729,7 +741,7 @@ describe('trackMetricsOf', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:error',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1,
     );
   });
@@ -755,7 +767,7 @@ describe('trackMetricsOf', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:error',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1,
     );
 
@@ -789,7 +801,7 @@ describe('trackMetricsOf', () => {
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:success',
       testContext,
-      { configKey, variationKey, version, modelName, providerName },
+      getExpectedTrackData(),
       1,
     );
 
