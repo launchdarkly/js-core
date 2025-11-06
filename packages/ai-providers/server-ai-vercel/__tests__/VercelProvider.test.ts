@@ -388,4 +388,395 @@ describe('VercelProvider', () => {
       expect(result.getModel()).toBeDefined();
     });
   });
+
+  describe('toVercelAISDK', () => {
+    const mockToVercelModel = { name: 'mockModel' };
+    const mockMessages = [
+      { role: 'user' as const, content: 'test prompt' },
+      { role: 'system' as const, content: 'test instruction' },
+    ];
+    const mockOptions = {
+      nonInterpolatedMessages: [
+        { role: 'assistant' as const, content: 'test assistant instruction' },
+      ],
+    };
+    const mockProvider = jest.fn().mockReturnValue(mockToVercelModel);
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('handles undefined model and messages', () => {
+      const aiConfig = {
+        enabled: true,
+      };
+
+      const result = VercelProvider.toVercelAISDK(aiConfig, mockProvider);
+
+      expect(mockProvider).toHaveBeenCalledWith('');
+      expect(result).toEqual(
+        expect.objectContaining({
+          model: mockToVercelModel,
+          messages: undefined,
+        }),
+      );
+    });
+
+    it('uses additional messages', () => {
+      const aiConfig = {
+        model: { name: 'test-ai-model' },
+        enabled: true,
+      };
+
+      const result = VercelProvider.toVercelAISDK(aiConfig, mockProvider, mockOptions);
+
+      expect(mockProvider).toHaveBeenCalledWith('test-ai-model');
+      expect(result).toEqual(
+        expect.objectContaining({
+          model: mockToVercelModel,
+          messages: mockOptions.nonInterpolatedMessages,
+        }),
+      );
+    });
+
+    it('combines config messages and additional messages', () => {
+      const aiConfig = {
+        model: { name: 'test-ai-model' },
+        messages: mockMessages,
+        enabled: true,
+      };
+
+      const result = VercelProvider.toVercelAISDK(aiConfig, mockProvider, mockOptions);
+
+      expect(mockProvider).toHaveBeenCalledWith('test-ai-model');
+      expect(result).toEqual(
+        expect.objectContaining({
+          model: mockToVercelModel,
+          messages: [...mockMessages, ...(mockOptions.nonInterpolatedMessages ?? [])],
+        }),
+      );
+    });
+
+    it('maps parameters correctly', () => {
+      const aiConfig = {
+        model: {
+          name: 'test-ai-model',
+          parameters: {
+            max_tokens: 100,
+            temperature: 0.7,
+            top_p: 0.9,
+            top_k: 50,
+            presence_penalty: 0.1,
+            frequency_penalty: 0.2,
+            stop: ['stop1', 'stop2'],
+            seed: 42,
+          },
+        },
+        messages: mockMessages,
+        enabled: true,
+      };
+
+      const result = VercelProvider.toVercelAISDK(aiConfig, mockProvider);
+
+      expect(mockProvider).toHaveBeenCalledWith('test-ai-model');
+      expect(result).toEqual({
+        model: mockToVercelModel,
+        messages: mockMessages,
+        maxTokens: 100,
+        temperature: 0.7,
+        topP: 0.9,
+        topK: 50,
+        presencePenalty: 0.1,
+        frequencyPenalty: 0.2,
+        stopSequences: ['stop1', 'stop2'],
+        seed: 42,
+      });
+    });
+
+    it('handles provider map with provider name', () => {
+      const providerMap = {
+        openai: jest.fn().mockReturnValue(mockToVercelModel),
+        anthropic: jest.fn().mockReturnValue({ name: 'other-model' }),
+      };
+
+      const aiConfig = {
+        model: { name: 'test-ai-model' },
+        provider: { name: 'openai' },
+        enabled: true,
+      };
+
+      const result = VercelProvider.toVercelAISDK(aiConfig, providerMap);
+
+      expect(providerMap.openai).toHaveBeenCalledWith('test-ai-model');
+      expect(providerMap.anthropic).not.toHaveBeenCalled();
+      expect(result.model).toBe(mockToVercelModel);
+    });
+
+    it('throws error when model cannot be determined', () => {
+      const aiConfig = {
+        model: { name: 'test-ai-model' },
+        provider: { name: 'unknown' },
+        enabled: true,
+      };
+
+      const providerMap = {
+        openai: jest.fn().mockReturnValue(mockToVercelModel),
+      };
+
+      expect(() => VercelProvider.toVercelAISDK(aiConfig, providerMap)).toThrow(
+        'Vercel AI SDK model cannot be determined from the supplied provider parameter.',
+      );
+    });
+
+    it('throws error when function provider returns undefined', () => {
+      const aiConfig = {
+        model: { name: 'test-ai-model' },
+        enabled: true,
+      };
+
+      const undefinedProvider = jest.fn().mockReturnValue(undefined);
+
+      expect(() => VercelProvider.toVercelAISDK(aiConfig, undefinedProvider)).toThrow(
+        'Vercel AI SDK model cannot be determined from the supplied provider parameter.',
+      );
+    });
+  });
+
+  describe('getAIMetricsFromStream', () => {
+    it('extracts metrics from successful stream with usage', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+        usage: Promise.resolve({
+          totalTokens: 100,
+          promptTokens: 49,
+          completionTokens: 51,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 49,
+          output: 51,
+        },
+      });
+    });
+
+    it('extracts metrics using totalUsage when available', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+        usage: Promise.resolve({
+          totalTokens: 50,
+          promptTokens: 20,
+          completionTokens: 30,
+        }),
+        totalUsage: Promise.resolve({
+          totalTokens: 100,
+          promptTokens: 49,
+          completionTokens: 51,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 49,
+          output: 51,
+        },
+      });
+    });
+
+    it('handles stream without usage data', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: undefined,
+      });
+    });
+
+    it('handles error finishReason', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('error'),
+        usage: Promise.resolve({
+          totalTokens: 100,
+          promptTokens: 49,
+          completionTokens: 51,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: false,
+        usage: {
+          total: 100,
+          input: 49,
+          output: 51,
+        },
+      });
+    });
+
+    it('handles rejected finishReason promise', async () => {
+      const mockStream = {
+        finishReason: Promise.reject(new Error('API error')),
+        usage: Promise.resolve({
+          totalTokens: 100,
+          promptTokens: 49,
+          completionTokens: 51,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: false,
+        usage: {
+          total: 100,
+          input: 49,
+          output: 51,
+        },
+      });
+    });
+
+    it('handles missing finishReason', async () => {
+      const mockStream = {
+        usage: Promise.resolve({
+          totalTokens: 100,
+          promptTokens: 49,
+          completionTokens: 51,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      // When finishReason is missing, it defaults to 'unknown' which is !== 'error', so success is true
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 49,
+          output: 51,
+        },
+      });
+    });
+
+    it('handles missing finishReason and usage', async () => {
+      const mockStream = {};
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      // When finishReason is missing, it defaults to 'unknown' which is !== 'error', so success is true
+      expect(result).toEqual({
+        success: true,
+        usage: undefined,
+      });
+    });
+
+    it('handles rejected usage promise gracefully', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+        usage: Promise.reject(new Error('Usage API error')),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: undefined,
+      });
+    });
+
+    it('handles rejected totalUsage promise and falls back to usage', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+        totalUsage: Promise.reject(new Error('TotalUsage API error')),
+        usage: Promise.resolve({
+          totalTokens: 100,
+          promptTokens: 49,
+          completionTokens: 51,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 49,
+          output: 51,
+        },
+      });
+    });
+
+    it('handles rejected totalUsage and usage promises gracefully', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+        totalUsage: Promise.reject(new Error('TotalUsage API error')),
+        usage: Promise.reject(new Error('Usage API error')),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: undefined,
+      });
+    });
+
+    it('supports v4 field names (promptTokens, completionTokens)', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+        usage: Promise.resolve({
+          totalTokens: 100,
+          promptTokens: 40,
+          completionTokens: 60,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 40,
+          output: 60,
+        },
+      });
+    });
+
+    it('supports v5 field names (inputTokens, outputTokens)', async () => {
+      const mockStream = {
+        finishReason: Promise.resolve('stop'),
+        usage: Promise.resolve({
+          totalTokens: 100,
+          inputTokens: 40,
+          outputTokens: 60,
+        }),
+      };
+
+      const result = await VercelProvider.getAIMetricsFromStream(mockStream);
+
+      expect(result).toEqual({
+        success: true,
+        usage: {
+          total: 100,
+          input: 40,
+          output: 60,
+        },
+      });
+    });
+  });
 });
