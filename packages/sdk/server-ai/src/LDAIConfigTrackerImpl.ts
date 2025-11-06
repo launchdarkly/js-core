@@ -13,6 +13,8 @@ import {
 } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
 
+const { version } = require('../package.json');
+
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   private _trackedMetrics: LDAIMetricSummary = {};
 
@@ -32,6 +34,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     version: number;
     modelName: string;
     providerName: string;
+    aiSdkVersion: string;
   } {
     return {
       variationKey: this._variationKey,
@@ -39,6 +42,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       version: this._version,
       modelName: this._modelName,
       providerName: this._providerName,
+      aiSdkVersion: version,
     };
   }
 

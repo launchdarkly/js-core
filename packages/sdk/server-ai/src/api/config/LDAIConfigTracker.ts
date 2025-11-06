@@ -42,6 +42,9 @@ export interface LDAIConfigTracker {
     variationKey: string;
     configKey: string;
     version: number;
+    modelName: string;
+    providerName: string;
+    aiSdkVersion: string;
   };
   /**
    * Track the duration of generation.

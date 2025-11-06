@@ -16,6 +16,6 @@
     "stripInternal": true,
     "moduleResolution": "node"
   },
-  "include": ["src"],
+  "include": ["src/**/*"],
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
 }
