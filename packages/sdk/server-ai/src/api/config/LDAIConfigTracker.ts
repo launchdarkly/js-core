@@ -44,6 +44,7 @@ export interface LDAIConfigTracker {
     version: number;
     modelName: string;
     providerName: string;
+    aiSdkName: string;
     aiSdkVersion: string;
   };
   /**

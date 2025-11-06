@@ -1,5 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
+import { name as aiSdkName, version as aiSdkVersion } from '../package.json';
 import { LDAIConfigTracker } from './api/config';
 import { LDAIMetricSummary } from './api/config/LDAIConfigTracker';
 import { EvalScore } from './api/judge/types';
@@ -12,8 +13,6 @@ import {
   LDTokenUsage,
 } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
-
-const { version } = require('../package.json');
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   private _trackedMetrics: LDAIMetricSummary = {};
@@ -34,6 +33,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     version: number;
     modelName: string;
     providerName: string;
+    aiSdkName: string;
     aiSdkVersion: string;
   } {
     return {
@@ -42,7 +42,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       version: this._version,
       modelName: this._modelName,
       providerName: this._providerName,
-      aiSdkVersion: version,
+      aiSdkName,
+      aiSdkVersion,
     };
   }
 
