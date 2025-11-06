@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.14.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.13.0...server-sdk-ai-v0.14.0) (2025-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* Removed deprecated Vercel methods ([#983](https://github.com/launchdarkly/js-core/issues/983))
+* Add support for real time judge evals ([#969](https://github.com/launchdarkly/js-core/issues/969))
+* AI Config defaults require the "enabled" attribute
+* Renamed LDAIAgentConfig to LDAIAgentConfigRequest for clarity
+* Renamed LDAIAgent to LDAIAgentConfig *note the previous use of this name
+* Renamed LDAIAgentDefault to LDAIAgentConfigDefault for clarity
+* Renamed LDAIDefaults to LDAICompletionConfigDefault for clarity
+
+### Features
+
+* Add support for real time judge evals ([#969](https://github.com/launchdarkly/js-core/issues/969)) ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Added createJudge method ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Added judgeConfig method to AI SDK to retrieve an AI Judge Config ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Added trackEvalScores method to config tracker ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Chat will evaluate responses with configured judges ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Include AI SDK version in tracking information ([#985](https://github.com/launchdarkly/js-core/issues/985)) ([ef90564](https://github.com/launchdarkly/js-core/commit/ef90564ee1ed9411e77b836d2b5b8037ff671b07))
+* Removed deprecated Vercel methods ([#983](https://github.com/launchdarkly/js-core/issues/983)) ([960a499](https://github.com/launchdarkly/js-core/commit/960a49927e795890e5093b0156ec6d721c3066fd))
+
+
+### Bug Fixes
+
+* AI Config defaults require the "enabled" attribute ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIAgent to LDAIAgentConfig *note the previous use of this name ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIAgentConfig to LDAIAgentConfigRequest for clarity ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIAgentDefault to LDAIAgentConfigDefault for clarity ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIDefaults to LDAICompletionConfigDefault for clarity ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+
 ## [0.13.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.3...server-sdk-ai-v0.13.0) (2025-11-04)
 
 
