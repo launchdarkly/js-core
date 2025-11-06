@@ -16,15 +16,11 @@ import {
   LDAIJudgeConfigDefault,
   LDJudge,
   LDMessage,
-  VercelAISDKConfig,
-  VercelAISDKMapOptions,
-  VercelAISDKProvider,
 } from './api/config';
 import { LDAIConfigFlagValue, LDAIConfigUtils } from './api/config/LDAIConfigUtils';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
 import { AIProviderFactory, SupportedAIProvider } from './api/providers';
-import { LDAIConfigMapper } from './LDAIConfigMapper';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 
@@ -115,19 +111,6 @@ export class LDAIClientImpl implements LDAIClient {
     return config;
   }
 
-  private _addVercelAISDKSupport(config: LDAICompletionConfig): LDAICompletionConfig {
-    const { messages } = config;
-    const mapper = new LDAIConfigMapper(config.model, config.provider, messages);
-
-    return {
-      ...config,
-      toVercelAISDK: <TMod>(
-        sdkProvider: VercelAISDKProvider<TMod> | Record<string, VercelAISDKProvider<TMod>>,
-        options?: VercelAISDKMapOptions | undefined,
-      ): VercelAISDKConfig<TMod> => mapper.toVercelAISDK(sdkProvider, options),
-    };
-  }
-
   private async _initializeJudges(
     judgeConfigs: LDJudge[],
     context: LDContext,
@@ -166,7 +149,7 @@ export class LDAIClientImpl implements LDAIClient {
     this._ldClient.track(TRACK_CONFIG_SINGLE, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
-    return this._addVercelAISDKSupport(config as LDAICompletionConfig);
+    return config as LDAICompletionConfig;
   }
 
   /**

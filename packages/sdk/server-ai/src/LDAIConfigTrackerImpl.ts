@@ -250,52 +250,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
   }
 
-  trackVercelAISDKStreamTextMetrics<
-    TRes extends {
-      finishReason?: Promise<string>;
-      usage?: Promise<{
-        totalTokens?: number;
-        inputTokens?: number;
-        promptTokens?: number;
-        outputTokens?: number;
-        completionTokens?: number;
-      }>;
-    },
-  >(func: () => TRes): TRes {
-    const startTime = Date.now();
-    try {
-      const result = func();
-      result.finishReason
-        ?.then(async (finishReason) => {
-          const endTime = Date.now();
-          this.trackDuration(endTime - startTime);
-          if (finishReason === 'error') {
-            this.trackError();
-          } else {
-            this.trackSuccess();
-            if (result.usage) {
-              try {
-                this.trackTokens(createVercelAISDKTokenUsage(await result.usage));
-              } catch {
-                // Intentionally squashing this error
-              }
-            }
-          }
-        })
-        .catch(() => {
-          const endTime = Date.now();
-          this.trackDuration(endTime - startTime);
-          this.trackError();
-        });
-      return result;
-    } catch (err) {
-      const endTime = Date.now();
-      this.trackDuration(endTime - startTime);
-      this.trackError();
-      throw err;
-    }
-  }
-
   trackTokens(tokens: LDTokenUsage): void {
     this._trackedMetrics.tokens = tokens;
     const trackData = this.getTrackData();

@@ -262,14 +262,10 @@ describe('completionConfig method', () => {
       messages: [],
       tracker: {} as any,
       enabled: true,
-      toVercelAISDK: jest.fn(),
     };
 
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     evaluateSpy.mockResolvedValue(mockConfig);
-
-    const addVercelSpy = jest.spyOn(client as any, '_addVercelAISDKSupport');
-    addVercelSpy.mockReturnValue({ ...mockConfig, toVercelAISDK: jest.fn() });
 
     const result = await client.completionConfig(key, testContext, defaultValue, variables);
 
@@ -286,10 +282,8 @@ describe('completionConfig method', () => {
       'completion',
       variables,
     );
-    expect(addVercelSpy).toHaveBeenCalled();
     expect(result).toBeDefined();
     evaluateSpy.mockRestore();
-    addVercelSpy.mockRestore();
   });
 });
 

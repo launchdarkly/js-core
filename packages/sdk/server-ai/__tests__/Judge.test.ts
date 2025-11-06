@@ -52,7 +52,6 @@ describe('Judge', () => {
       provider: { name: 'openai' },
       tracker: mockTracker,
       evaluationMetricKeys: ['relevance', 'accuracy', 'helpfulness'],
-      toVercelAISDK: jest.fn(),
     };
   });
 
