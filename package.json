@@ -80,7 +80,6 @@
   "resolutions": {
     "jsonc-parser": "3.2.0",
     "parse5": "7.2.1",
-    "@types/node": "24.1.0",
-    "rollup": "4.52.5"
+    "@types/node": "24.1.0"
   }
 }
