@@ -131,10 +131,16 @@ export class AIProviderFactory {
     logger?: LDLogger,
   ): Promise<AIProvider | undefined> {
     try {
-      // Try to dynamically import the provider
-      // This will work if the package is installed
-      // eslint-disable-next-line import/no-extraneous-dependencies, global-require, import/no-dynamic-require
-      const { [providerClassName]: ProviderClass } = require(packageName);
+      // Use dynamic import to load the provider module
+      // This uses ESM resolution which can find packages in the user's node_modules
+      // eslint-disable-next-line import/no-extraneous-dependencies
+      const module = await import(packageName);
+      const ProviderClass = module[providerClassName];
+
+      if (!ProviderClass) {
+        logger?.warn(`Provider class ${providerClassName} not found in package ${packageName}`);
+        return undefined;
+      }
 
       const provider = await ProviderClass.create(aiConfig, logger);
       logger?.debug(
@@ -142,10 +148,18 @@ export class AIProviderFactory {
       );
       return provider;
     } catch (error) {
-      // If the provider is not available or creation fails, return undefined
-      logger?.warn(
-        `Error creating AIProvider for: ${aiConfig.provider?.name} with package ${packageName}: ${error}`,
-      );
+      // Provide helpful error message if module is not found
+      const err = error as Error & { code?: string };
+      if (err.code === 'ERR_MODULE_NOT_FOUND' || err.message?.includes('Cannot find module')) {
+        logger?.warn(
+          `Error creating AIProvider for: ${aiConfig.provider?.name} with package ${packageName}: ${err.message}. ` +
+            `Please install the ${packageName} package with your preferred package manager.`,
+        );
+      } else {
+        logger?.warn(
+          `Error creating AIProvider for: ${aiConfig.provider?.name} with package ${packageName}: ${error}`,
+        );
+      }
       return undefined;
     }
   }
