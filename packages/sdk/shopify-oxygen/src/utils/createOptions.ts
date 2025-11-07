@@ -12,6 +12,11 @@ export const defaultOptions: LDOptions = {
   // sendEvents: false,
   // TODO: make sure this is necessary
   diagnosticOptOut: true,
+
+  // 2 minutes is the maximum allowed time for outbound API requests
+  // so we set this to anything above that since we only want to have 1
+  // poll request per request handler execution.
+  pollInterval: 300,
   // TODO: figure out what needs to be done for relay proxy support?
   // useLdd: true,
   logger: new BasicLogger({ name: 'Shopify Oxygen SDK', level: 'debug' }),
