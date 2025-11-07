@@ -91,6 +91,7 @@ export class Judge {
       return {
         evals,
         success,
+        judgeConfigKey: this._aiConfig.key,
       };
     } catch (error) {
       this._logger?.error('Judge evaluation failed:', error);
@@ -98,6 +99,7 @@ export class Judge {
         evals: {},
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
+        judgeConfigKey: this._aiConfig.key,
       };
     }
   }
@@ -208,7 +210,6 @@ export class Judge {
       results[metricKey] = {
         score: evalData.score,
         reasoning: evalData.reasoning,
-        judgeConfigKey: this._aiConfig.key,
       };
     });
 

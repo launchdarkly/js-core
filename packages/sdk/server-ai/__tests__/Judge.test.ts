@@ -110,20 +110,18 @@ describe('Judge', () => {
           relevance: {
             score: 0.8,
             reasoning: 'The response is relevant to the question',
-            judgeConfigKey: 'test-judge',
           },
           accuracy: {
             score: 0.9,
             reasoning: 'The response is factually accurate',
-            judgeConfigKey: 'test-judge',
           },
           helpfulness: {
             score: 0.7,
             reasoning: 'The response provides helpful information',
-            judgeConfigKey: 'test-judge',
           },
         },
         success: true,
+        judgeConfigKey: 'test-judge',
       });
 
       expect(mockProvider.invokeStructuredModel).toHaveBeenCalledWith(
@@ -267,10 +265,11 @@ describe('Judge', () => {
       // When one metric is missing, it returns the partial evals it has with success: false
       expect(result).toEqual({
         evals: {
-          relevance: { score: 0.8, reasoning: 'Good', judgeConfigKey: 'test-judge' },
-          helpfulness: { score: 0.7, reasoning: 'Helpful', judgeConfigKey: 'test-judge' },
+          relevance: { score: 0.8, reasoning: 'Good' },
+          helpfulness: { score: 0.7, reasoning: 'Helpful' },
         },
         success: false,
+        judgeConfigKey: 'test-judge',
       });
     });
 
@@ -302,6 +301,7 @@ describe('Judge', () => {
       expect(result).toEqual({
         evals: {},
         success: false,
+        judgeConfigKey: 'test-judge',
       });
     });
 
@@ -315,6 +315,7 @@ describe('Judge', () => {
         evals: {},
         success: false,
         error: 'Provider error',
+        judgeConfigKey: 'test-judge',
       });
       expect(mockLogger.error).toHaveBeenCalledWith('Judge evaluation failed:', error);
     });
@@ -328,6 +329,7 @@ describe('Judge', () => {
         evals: {},
         success: false,
         error: 'Unknown error',
+        judgeConfigKey: 'test-judge',
       });
     });
   });
@@ -380,20 +382,18 @@ describe('Judge', () => {
           relevance: {
             score: 0.8,
             reasoning: 'The response is relevant to the question',
-            judgeConfigKey: 'test-judge',
           },
           accuracy: {
             score: 0.9,
             reasoning: 'The response is factually accurate',
-            judgeConfigKey: 'test-judge',
           },
           helpfulness: {
             score: 0.7,
             reasoning: 'The response provides helpful information',
-            judgeConfigKey: 'test-judge',
           },
         },
         success: true,
+        judgeConfigKey: 'test-judge',
       });
 
       expect(mockProvider.invokeStructuredModel).toHaveBeenCalledWith(
@@ -479,9 +479,9 @@ describe('Judge', () => {
       const result = parseResponse(responseData);
 
       expect(result).toEqual({
-        relevance: { score: 0.8, reasoning: 'Good', judgeConfigKey: 'test-judge' },
-        accuracy: { score: 0.9, reasoning: 'Accurate', judgeConfigKey: 'test-judge' },
-        helpfulness: { score: 0.7, reasoning: 'Helpful', judgeConfigKey: 'test-judge' },
+        relevance: { score: 0.8, reasoning: 'Good' },
+        accuracy: { score: 0.9, reasoning: 'Accurate' },
+        helpfulness: { score: 0.7, reasoning: 'Helpful' },
       });
     });
 
@@ -514,7 +514,7 @@ describe('Judge', () => {
 
       // Only helpfulness passes validation, relevance and accuracy are skipped
       expect(result).toEqual({
-        helpfulness: { score: 0.7, reasoning: 'Helpful', judgeConfigKey: 'test-judge' },
+        helpfulness: { score: 0.7, reasoning: 'Helpful' },
       });
     });
   });
