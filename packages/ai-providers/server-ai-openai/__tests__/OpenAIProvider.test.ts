@@ -360,6 +360,7 @@ describe('OpenAIProvider', () => {
   describe('create', () => {
     it('creates OpenAIProvider with correct model and parameters', async () => {
       const mockAiConfig = {
+        key: 'test-config',
         model: {
           name: 'gpt-4',
           parameters: {
