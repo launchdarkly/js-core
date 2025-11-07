@@ -33,6 +33,7 @@ describe('TrackedChat', () => {
 
     // Create a basic AI config
     aiConfig = {
+      key: 'test-config',
       enabled: true,
       messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
       model: { name: 'gpt-4' },

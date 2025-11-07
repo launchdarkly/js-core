@@ -1,4 +1,4 @@
-import { EvalScore } from '../judge/types';
+import { EvalScore, JudgeResponse } from '../judge/types';
 import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from '../metrics';
 
 /**
@@ -93,6 +93,13 @@ export interface LDAIConfigTracker {
    * @param scores Record mapping metric keys to their evaluation scores
    */
   trackEvalScores(scores: Record<string, EvalScore>): void;
+
+  /**
+   * Track a judge response containing evaluation scores and judge configuration key.
+   *
+   * @param response Judge response containing evaluation scores and judge configuration key
+   */
+  trackJudgeResponse(response: JudgeResponse): void;
 
   /**
    * Track the duration of execution of the provided function.
