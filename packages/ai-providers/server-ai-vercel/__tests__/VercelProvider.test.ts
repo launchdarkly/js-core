@@ -540,6 +540,7 @@ describe('VercelProvider', () => {
     it('throws error when function provider returns undefined', () => {
       const aiConfig = {
         key: 'test-config',
+        model: { name: 'test-ai-model' },
         enabled: true,
       };
 
