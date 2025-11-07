@@ -330,6 +330,7 @@ describe('VercelProvider', () => {
   describe('createVercelModel', () => {
     it('creates OpenAI model for openai provider', async () => {
       const mockAiConfig = {
+        key: 'test-config',
         model: { name: 'gpt-4', parameters: {} },
         provider: { name: 'openai' },
         enabled: true,
@@ -348,6 +349,7 @@ describe('VercelProvider', () => {
 
     it('throws error for unsupported provider', async () => {
       const mockAiConfig = {
+        key: 'test-config',
         model: { name: 'test-model', parameters: {} },
         provider: { name: 'unsupported' },
         enabled: true,
@@ -364,6 +366,7 @@ describe('VercelProvider', () => {
   describe('create', () => {
     it('creates VercelProvider with correct model and parameters', async () => {
       const mockAiConfig = {
+        key: 'test-config',
         model: {
           name: 'gpt-4',
           parameters: {
@@ -408,6 +411,7 @@ describe('VercelProvider', () => {
 
     it('handles undefined model and messages', () => {
       const aiConfig = {
+        key: 'test-config',
         enabled: true,
       };
 
@@ -424,6 +428,7 @@ describe('VercelProvider', () => {
 
     it('uses additional messages', () => {
       const aiConfig = {
+        key: 'test-config',
         model: { name: 'test-ai-model' },
         enabled: true,
       };
@@ -441,6 +446,7 @@ describe('VercelProvider', () => {
 
     it('combines config messages and additional messages', () => {
       const aiConfig = {
+        key: 'test-config',
         model: { name: 'test-ai-model' },
         messages: mockMessages,
         enabled: true,
@@ -459,6 +465,7 @@ describe('VercelProvider', () => {
 
     it('maps parameters correctly', () => {
       const aiConfig = {
+        key: 'test-config',
         model: {
           name: 'test-ai-model',
           parameters: {
@@ -500,6 +507,7 @@ describe('VercelProvider', () => {
       };
 
       const aiConfig = {
+        key: 'test-config',
         model: { name: 'test-ai-model' },
         provider: { name: 'openai' },
         enabled: true,
@@ -514,6 +522,7 @@ describe('VercelProvider', () => {
 
     it('throws error when model cannot be determined', () => {
       const aiConfig = {
+        key: 'test-config',
         model: { name: 'test-ai-model' },
         provider: { name: 'unknown' },
         enabled: true,
@@ -530,7 +539,7 @@ describe('VercelProvider', () => {
 
     it('throws error when function provider returns undefined', () => {
       const aiConfig = {
-        model: { name: 'test-ai-model' },
+        key: 'test-config',
         enabled: true,
       };
 
