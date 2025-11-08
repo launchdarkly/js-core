@@ -94,57 +94,64 @@ export class AIProviderFactory {
     aiConfig: LDAIConfigKind,
     logger?: LDLogger,
   ): Promise<AIProvider | undefined> {
+    let getProviderClass: () => Promise<typeof AIProvider | undefined>;
+
     switch (providerType) {
       case 'openai':
-        return this._createProvider(
-          '@launchdarkly/server-sdk-ai-openai',
-          'OpenAIProvider',
-          aiConfig,
-          logger,
-        );
+        // Lambda with hardcoded import - webpack can statically analyze this
+        getProviderClass = async () => {
+          // eslint-disable-next-line import/no-extraneous-dependencies
+          const module = await import('@launchdarkly/server-sdk-ai-openai');
+          return module.OpenAIProvider as unknown as typeof AIProvider;
+        };
+        break;
       case 'langchain':
-        return this._createProvider(
-          '@launchdarkly/server-sdk-ai-langchain',
-          'LangChainProvider',
-          aiConfig,
-          logger,
-        );
+        // Lambda with hardcoded import - webpack can statically analyze this
+        getProviderClass = async () => {
+          // eslint-disable-next-line import/no-extraneous-dependencies
+          const module = await import('@launchdarkly/server-sdk-ai-langchain');
+          return module.LangChainProvider as unknown as typeof AIProvider;
+        };
+        break;
       case 'vercel':
-        return this._createProvider(
-          '@launchdarkly/server-sdk-ai-vercel',
-          'VercelProvider',
-          aiConfig,
-          logger,
-        );
+        // Lambda with hardcoded import - webpack can statically analyze this
+        getProviderClass = async () => {
+          // eslint-disable-next-line import/no-extraneous-dependencies
+          const module = await import('@launchdarkly/server-sdk-ai-vercel');
+          return module.VercelProvider as unknown as typeof AIProvider;
+        };
+        break;
       default:
         return undefined;
     }
+
+    return this._createProvider(getProviderClass, providerType, aiConfig, logger);
   }
 
   /**
    * Create a provider instance dynamically.
+   * @param getProviderClass Lambda function that imports the module and returns the provider class
+   * @param providerType Provider type name for error messages
+   * @param aiConfig The AI configuration
+   * @param logger Optional logger
    */
   private static async _createProvider(
-    packageName: string,
-    providerClassName: string,
+    getProviderClass: () => Promise<typeof AIProvider | undefined>,
+    providerType: SupportedAIProvider,
     aiConfig: LDAIConfigKind,
     logger?: LDLogger,
   ): Promise<AIProvider | undefined> {
     try {
-      // Use dynamic import to load the provider module
-      // This uses ESM resolution which can find packages in the user's node_modules
-      // eslint-disable-next-line import/no-extraneous-dependencies
-      const module = await import(packageName);
-      const ProviderClass = module[providerClassName];
+      const ProviderClass = await getProviderClass();
 
       if (!ProviderClass) {
-        logger?.warn(`Provider class ${providerClassName} not found in package ${packageName}`);
+        logger?.warn(`Provider class not found for provider ${providerType}`);
         return undefined;
       }
 
       const provider = await ProviderClass.create(aiConfig, logger);
       logger?.debug(
-        `Successfully created AIProvider for: ${aiConfig.provider?.name} with package ${packageName}`,
+        `Successfully created AIProvider for: ${aiConfig.provider?.name} with provider ${providerType}`,
       );
       return provider;
     } catch (error) {
@@ -152,12 +159,12 @@ export class AIProviderFactory {
       const err = error as Error & { code?: string };
       if (err.code === 'ERR_MODULE_NOT_FOUND' || err.message?.includes('Cannot find module')) {
         logger?.warn(
-          `Error creating AIProvider for: ${aiConfig.provider?.name} with package ${packageName}: ${err.message}. ` +
-            `Please install the ${packageName} package with your preferred package manager.`,
+          `Error creating AIProvider for: ${aiConfig.provider?.name} with provider ${providerType}: ${err.message}. ` +
+            `Please install the required package with your preferred package manager.`,
         );
       } else {
         logger?.warn(
-          `Error creating AIProvider for: ${aiConfig.provider?.name} with package ${packageName}: ${error}`,
+          `Error creating AIProvider for: ${aiConfig.provider?.name} with provider ${providerType}: ${error}`,
         );
       }
       return undefined;
