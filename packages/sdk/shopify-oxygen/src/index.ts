@@ -7,6 +7,7 @@ import './polyfills/timers';
 import { createCallbacks, createOptions, OxygenLDOptions, validateOptions } from './utils';
 
 export * from '@launchdarkly/js-server-sdk-common';
+export type { OxygenLDOptions };
 
 class LDClient extends LDClientImpl {
   // sdkKey is only used to query featureStore, not to initialize with LD servers
