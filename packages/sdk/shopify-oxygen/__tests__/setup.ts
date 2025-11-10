@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { jest } from '@jest/globals';
 
 import * as allFlagsSegments from './testData.json';
@@ -37,11 +38,9 @@ export const setupTestEnvironment = async () => {
   };
 
   // @ts-ignore - Mock implementation
-  global.fetch = jest.fn<typeof fetch>((url: string | URL | Request, options?: RequestInit) => {
-    const urlString = typeof url === 'string' ? url : url instanceof URL ? url.toString() : (url as Request).url;
-
+  global.fetch = jest.fn<typeof fetch>((url: string) => {
     // Match any URL containing /sdk/latest-all which should be the only URL that we are interested in.
-    if (urlString.includes('/sdk/latest-all') || urlString.endsWith('/sdk/latest-all')) {
+    if (url.includes('/sdk/latest-all') || url.endsWith('/sdk/latest-all')) {
       const jsonFn = jest.fn();
       // @ts-ignore - Mock implementation
       jsonFn.mockResolvedValue(allFlagsSegments);

@@ -1,4 +1,5 @@
 import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common';
+
 import { init, OxygenLDOptions } from '../src/index';
 import { setupTestEnvironment } from './setup';
 
@@ -21,7 +22,6 @@ describe('Shopify Oxygen SDK', () => {
       ldClient.close();
     });
 
-
     it('will initialize successfully with custom options', async () => {
       const ldClient = init(sdkKey, {
         sendEvents: false,
@@ -37,7 +37,7 @@ describe('Shopify Oxygen SDK', () => {
     it('will fail to initialize if there is no SDK key', () => {
       expect(() => init(null as any)).toThrow();
     });
-  })
+  });
 
   describe('polling tests', () => {
     beforeEach(async () => {
@@ -87,7 +87,11 @@ describe('Shopify Oxygen SDK', () => {
           const value = await ldClient.variation(flagKey2, contextWithEmail, false);
           const detail = await ldClient.variationDetail(flagKey2, contextWithEmail, false);
 
-          expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+          expect(detail).toEqual({
+            reason: { kind: 'FALLTHROUGH' },
+            value: true,
+            variationIndex: 0,
+          });
           expect(value).toBeTruthy();
 
           // @ts-ignore
@@ -115,7 +119,11 @@ describe('Shopify Oxygen SDK', () => {
           const value = await ldClient.variation(flagKey1, contextWithEmail, false);
           const detail = await ldClient.variationDetail(flagKey1, contextWithEmail, false);
 
-          expect(detail).toEqual({ reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 });
+          expect(detail).toEqual({
+            reason: { kind: 'FALLTHROUGH' },
+            value: true,
+            variationIndex: 0,
+          });
           expect(value).toBeTruthy();
 
           // @ts-ignore
