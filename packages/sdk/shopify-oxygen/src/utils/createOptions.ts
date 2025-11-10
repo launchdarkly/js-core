@@ -1,5 +1,6 @@
 // eslint-disable-next-line max-classes-per-file
 import { BasicLogger, LDOptions } from '@launchdarkly/js-server-sdk-common';
+
 import { OxygenLDOptions } from './validateOptions';
 
 // Most limitations could be explained in the following references:
@@ -18,7 +19,7 @@ export const defaultOptions: LDOptions & OxygenLDOptions = {
   // poll request per request handler execution.
   pollInterval: 300,
 
-  logger: new BasicLogger({ name: 'Shopify Oxygen SDK', level: 'debug' }),
+  logger: new BasicLogger({ name: 'Shopify Oxygen SDK' }),
   cache: {
     ttlSeconds: 30,
     name: 'launchdarkly-cache',
@@ -28,11 +29,12 @@ export const defaultOptions: LDOptions & OxygenLDOptions = {
 
 export const createOptions = (options: LDOptions & OxygenLDOptions = {}) => {
   const finalOptions = {
-    ...defaultOptions, ...options,
+    ...defaultOptions,
+    ...options,
     cache: {
       ...defaultOptions.cache,
-      ...options.cache
-    }
+      ...options.cache,
+    },
   };
   finalOptions.logger?.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
   return finalOptions;

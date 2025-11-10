@@ -1,6 +1,6 @@
 // It is a dev dependency and the linter doesn't understand.
-// eslint-disable-next-line import/no-extraneous-dependencies
 // @ts-ignore - tsup is a dev dependency installed at runtime
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { defineConfig } from 'tsup';
 
 export default defineConfig({

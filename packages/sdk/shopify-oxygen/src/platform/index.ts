@@ -1,9 +1,9 @@
 import type { Info } from '@launchdarkly/js-server-sdk-common';
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
+import { OxygenCacheOptions } from '../utils/validateOptions';
 import OxygenCrypto from './OxygenCrypto';
 import OxygenRequests from './OxygenRequests';
-import { OxygenCacheOptions } from '../utils/validateOptions';
 
 export default class OxygenPlatform implements platform.Platform {
   info: Info;

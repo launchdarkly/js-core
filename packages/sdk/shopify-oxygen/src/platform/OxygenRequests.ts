@@ -22,27 +22,24 @@ export default class OxygenRequests implements platform.Requests {
     const { enabled, name } = this._cacheOptions;
 
     if (enabled && name) {
-      this._cacheInitPromise = this.initializeCache(name);
+      this._cacheInitPromise = this._initializeCache(name);
     }
   }
 
   // @ts-ignore - Cache API is available in Shopify Oxygen runtime
-  private async initializeCache(cacheName: string): Promise<Cache | null> {
-    try {
-      // Check if Cache API is available
+  private async _initializeCache(cacheName: string): Promise<Cache | null> {
+    // Check if Cache API is available
+    // @ts-ignore - Cache API is available in Shopify Oxygen runtime
+    if (typeof caches !== 'undefined') {
       // @ts-ignore - Cache API is available in Shopify Oxygen runtime
-      if (typeof caches !== 'undefined') {
-        // @ts-ignore - Cache API is available in Shopify Oxygen runtime
-        this._cache = await caches.open(cacheName);
-        return this._cache;
-      }
-    } catch (err) {
-      throw err;
+      this._cache = await caches.open(cacheName);
+      return this._cache;
     }
+
     return null;
   }
 
-  private async addCacheControlHeaders(response: Response): Promise<Response> {
+  private async _addCacheControlHeaders(response: Response): Promise<Response> {
     // Read the body first to ensure the stream is consumed
     const { ttlSeconds } = this._cacheOptions;
     const body = await response.arrayBuffer();
@@ -78,10 +75,10 @@ export default class OxygenRequests implements platform.Requests {
     if (cachedResponse) {
       return cachedResponse as platform.Response;
     }
-    return this.fetchAndCache(url, options, request, cache);
+    return this._fetchAndCache(url, options, request, cache);
   }
 
-  private async fetchAndCache(
+  private async _fetchAndCache(
     url: string,
     options: Options,
     request: Request,
@@ -94,14 +91,14 @@ export default class OxygenRequests implements platform.Requests {
     if (cache && response.ok && (!options.method || options.method === 'GET')) {
       // Clone the response to get two branches: one for caching, one for returning
       const responseClone = response.clone();
-      const responseWithCacheControl = await this.addCacheControlHeaders(responseClone);
-      
+      const responseWithCacheControl = await this._addCacheControlHeaders(responseClone);
+
       // Cache the response (don't await to avoid blocking)
       // The Cache API will consume the response body
       cache.put(request, responseWithCacheControl).catch(() => {
         // Ignore cache errors, we'll try again next time
       });
-      
+
       return response as platform.Response;
     }
 

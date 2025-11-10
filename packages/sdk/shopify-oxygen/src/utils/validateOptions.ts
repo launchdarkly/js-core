@@ -7,11 +7,11 @@ export type OxygenCacheOptions = {
   ttlSeconds?: number;
   name?: string;
   enabled?: boolean;
-}
+};
 
 export type OxygenLDOptions = Pick<LDOptionsCommon, 'logger'> & {
-  cache?:OxygenCacheOptions;
-}
+  cache?: OxygenCacheOptions;
+};
 
 export const validateOptions = (sdkKey: string) => {
   if (!sdkKey) {
