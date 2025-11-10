@@ -1,8 +1,8 @@
 // Polyfill timer functions for Shopify Oxygen runtime
-// These functions are polyfilled to do nothing since the Oxygen runtime
-// may not provide these timer functions
+// NOTE: we only provide these polyfills if they are not already available
+// since the Oxygen runtime provide these functions in the request handler context,
+// but not in the global context.
 
-// Polyfill setInterval - returns a no-op handle
 if (typeof globalThis.setInterval === 'undefined') {
   // @ts-ignore - Polyfill implementation doesn't need full Node.js typing
   globalThis.setInterval = () =>
@@ -10,7 +10,6 @@ if (typeof globalThis.setInterval === 'undefined') {
     ({}) as any;
 }
 
-// Polyfill clearInterval - does nothing
 if (typeof globalThis.clearInterval === 'undefined') {
   // @ts-ignore - Polyfill implementation doesn't need full Node.js typing
   globalThis.clearInterval = () => {
@@ -18,7 +17,6 @@ if (typeof globalThis.clearInterval === 'undefined') {
   };
 }
 
-// Polyfill setTimeout - returns a no-op handle
 if (typeof globalThis.setTimeout === 'undefined') {
   // @ts-ignore - Polyfill implementation doesn't need full Node.js typing
   globalThis.setTimeout = () =>
@@ -26,7 +24,6 @@ if (typeof globalThis.setTimeout === 'undefined') {
     ({}) as any;
 }
 
-// Polyfill clearTimeout - does nothing
 if (typeof globalThis.clearTimeout === 'undefined') {
   // @ts-ignore - Polyfill implementation doesn't need full Node.js typing
   globalThis.clearTimeout = () => {

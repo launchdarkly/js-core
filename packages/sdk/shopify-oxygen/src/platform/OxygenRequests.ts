@@ -7,12 +7,7 @@ import type {
   platform,
 } from '@launchdarkly/js-server-sdk-common';
 
-export type OxygenCacheOptions = {
-  // The time-to-live for the cache in seconds. The default is 10 seconds. A
-  ttlSeconds?: number;
-  cacheName?: string;
-  cacheEnabled?: boolean;
-}
+import { OxygenCacheOptions } from '../utils/validateOptions';
 
 export default class OxygenRequests implements platform.Requests {
   // @ts-ignore - Cache API is available in Shopify Oxygen runtime
@@ -24,11 +19,10 @@ export default class OxygenRequests implements platform.Requests {
   constructor(cacheOptions: OxygenCacheOptions = {}) {
     this._cacheOptions = cacheOptions;
 
-    const { cacheEnabled, cacheName } = this._cacheOptions;
+    const { enabled, name } = this._cacheOptions;
 
-    // @ts-ignore - Cache API is available in Shopify Oxygen runtime
-    if (cacheEnabled && cacheName) {
-      this._cacheInitPromise = this.initializeCache(cacheName);
+    if (enabled && name) {
+      this._cacheInitPromise = this.initializeCache(name);
     }
   }
 
@@ -42,9 +36,8 @@ export default class OxygenRequests implements platform.Requests {
         this._cache = await caches.open(cacheName);
         return this._cache;
       }
-    } catch {
-      // Cache API not available, leave _cache as null
-      // TODO: we should log OR throw an error here
+    } catch (err) {
+      throw err;
     }
     return null;
   }
@@ -105,7 +98,9 @@ export default class OxygenRequests implements platform.Requests {
       
       // Cache the response (don't await to avoid blocking)
       // The Cache API will consume the response body
-      cache.put(request, responseWithCacheControl).catch(() => { /* ignore cache errors */ });
+      cache.put(request, responseWithCacheControl).catch(() => {
+        // Ignore cache errors, we'll try again next time
+      });
       
       return response as platform.Response;
     }
