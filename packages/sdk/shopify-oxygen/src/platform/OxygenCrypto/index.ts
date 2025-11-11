@@ -14,8 +14,6 @@ export default class EdgeCrypto implements Crypto {
   }
 
   randomUUID(): string {
-    const array = new Uint32Array(1);
-    crypto.getRandomValues(array);
-    return array.join();
+    return crypto.randomUUID();
   }
 }

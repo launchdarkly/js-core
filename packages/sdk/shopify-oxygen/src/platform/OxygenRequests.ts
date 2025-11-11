@@ -10,11 +10,9 @@ import type {
 import { OxygenCacheOptions } from '../utils/validateOptions';
 
 export default class OxygenRequests implements platform.Requests {
-  // @ts-ignore - Cache API is available in Shopify Oxygen runtime
   private _cache: Cache | null = null;
   private _cacheOptions: OxygenCacheOptions;
-  // @ts-ignore - Cache API is available in Shopify Oxygen runtime
-  private _cacheInitPromise: Promise<Cache | null>;
+  private _cacheInitPromise: Promise<Cache | null> | null = null;
 
   constructor(cacheOptions: OxygenCacheOptions = {}) {
     this._cacheOptions = cacheOptions;
@@ -26,12 +24,9 @@ export default class OxygenRequests implements platform.Requests {
     }
   }
 
-  // @ts-ignore - Cache API is available in Shopify Oxygen runtime
   private async _initializeCache(cacheName: string): Promise<Cache | null> {
     // Check if Cache API is available
-    // @ts-ignore - Cache API is available in Shopify Oxygen runtime
     if (typeof caches !== 'undefined') {
-      // @ts-ignore - Cache API is available in Shopify Oxygen runtime
       this._cache = await caches.open(cacheName);
       return this._cache;
     }
@@ -57,7 +52,12 @@ export default class OxygenRequests implements platform.Requests {
   async fetch(url: string, options: Options = {}): Promise<platform.Response> {
     // Ensure cache is initialized
     const cache = this._cache || (await this._cacheInitPromise);
-    if (!cache || !(options.method && options.method.toLowerCase() === 'get')) {
+    const finalOptions = {
+      method: 'GET',
+      ...options,
+    };
+
+    if (!cache || finalOptions.method.toLowerCase() !== 'get') {
       // Fall back to direct fetch if one of the following conditions are met:
       // - Cache API not available
       // - Cache is not enabled per initialization options
@@ -65,10 +65,7 @@ export default class OxygenRequests implements platform.Requests {
       return fetch(url, options);
     }
 
-    const request = new Request(url, {
-      method: options.method || 'GET',
-      ...options,
-    });
+    const request = new Request(url, finalOptions);
 
     const cachedResponse = await cache.match(request);
 
@@ -82,7 +79,6 @@ export default class OxygenRequests implements platform.Requests {
     url: string,
     options: Options,
     request: Request,
-    // @ts-ignore - Cache API is available in Shopify Oxygen runtime
     cache: Cache,
   ): Promise<platform.Response> {
     const response = await fetch(url, options);

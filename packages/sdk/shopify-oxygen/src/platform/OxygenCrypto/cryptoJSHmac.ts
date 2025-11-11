@@ -1,5 +1,4 @@
-import { algo as CryptoAlgo } from 'crypto-js';
-
+import CryptoJS from 'crypto-js';
 import { Hmac as LDHmac } from '@launchdarkly/js-server-sdk-common';
 
 import { SupportedHashAlgorithm, SupportedOutputEncoding } from './types';
@@ -12,16 +11,16 @@ export default class CryptoJSHmac implements LDHmac {
 
     switch (algorithm) {
       case 'sha1':
-        algo = CryptoAlgo.SHA1;
+        algo = CryptoJS.algo.SHA1;
         break;
       case 'sha256':
-        algo = CryptoAlgo.SHA256;
+        algo = CryptoJS.algo.SHA256;
         break;
       default:
         throw new Error('unsupported hash algorithm. Only sha1 and sha256 are supported.');
     }
 
-    this._cryptoJSHmac = CryptoAlgo.HMAC.create(algo, key);
+    this._cryptoJSHmac = CryptoJS.algo.HMAC.create(algo, key);
   }
 
   digest(encoding: SupportedOutputEncoding): string {

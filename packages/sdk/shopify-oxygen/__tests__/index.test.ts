@@ -67,8 +67,6 @@ describe('Shopify Oxygen SDK', () => {
         await ldClient.variation(flagKey1, context, false);
         await ldClient.allFlagsState(context);
         await ldClient.variationDetail(flagKey3, context, false);
-
-        // @ts-ignore
         expect(caches.open).toHaveBeenCalledTimes(0);
       });
 
@@ -78,7 +76,6 @@ describe('Shopify Oxygen SDK', () => {
 
           expect(value).toBeTruthy();
 
-          // @ts-ignore
           expect(caches.open).toHaveBeenCalledTimes(0);
         });
 
@@ -94,7 +91,6 @@ describe('Shopify Oxygen SDK', () => {
           });
           expect(value).toBeTruthy();
 
-          // @ts-ignore
           expect(caches.open).toHaveBeenCalledTimes(0);
         });
 
@@ -110,7 +106,6 @@ describe('Shopify Oxygen SDK', () => {
           });
           expect(value).toBeFalsy();
 
-          // @ts-ignore
           expect(caches.open).toHaveBeenCalledTimes(0);
         });
 
@@ -126,7 +121,6 @@ describe('Shopify Oxygen SDK', () => {
           });
           expect(value).toBeTruthy();
 
-          // @ts-ignore
           expect(caches.open).toHaveBeenCalledTimes(0);
         });
 
@@ -146,7 +140,6 @@ describe('Shopify Oxygen SDK', () => {
             testFlag3: true,
           });
 
-          // @ts-ignore
           expect(caches.open).toHaveBeenCalledTimes(0);
         });
       });
@@ -164,7 +157,6 @@ describe('Shopify Oxygen SDK', () => {
           });
           expect(value).toBeFalsy();
 
-          // @ts-ignore
           expect(caches.open).toHaveBeenCalledTimes(0);
         });
       });
@@ -190,7 +182,6 @@ describe('Shopify Oxygen SDK', () => {
         await ldClient.variation(flagKey2, context, false);
 
         // Should only fetch once due to caching
-        // @ts-ignore
         expect(caches.open).toHaveBeenCalledTimes(1);
       });
 
@@ -198,7 +189,6 @@ describe('Shopify Oxygen SDK', () => {
         await ldClient.allFlagsState(context);
         await ldClient.allFlagsState(context);
 
-        // @ts-ignore
         expect(caches.open).toHaveBeenCalledTimes(1);
       });
 
@@ -206,7 +196,6 @@ describe('Shopify Oxygen SDK', () => {
         await ldClient.variation(flagKey1, context, false);
         await ldClient.allFlagsState(context);
 
-        // @ts-ignore
         expect(caches.open).toHaveBeenCalledTimes(1);
       });
     });

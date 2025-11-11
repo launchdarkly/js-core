@@ -19,4 +19,3 @@
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example", "tsup.config.ts"]
 }
-
