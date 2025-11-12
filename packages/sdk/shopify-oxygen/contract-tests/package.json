@@ -1,0 +1,24 @@
+{
+  "name": "@launchdarkly/shopify-oxygen-contract-tests",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node --inspect dist/index.js",
+    "build": "tsup",
+    "dev": "tsc --watch"
+  },
+  "type": "module",
+  "license": "Apache-2.0",
+  "private": true,
+  "dependencies": {
+    "@launchdarkly/js-server-sdk-common": "workspace:^",
+    "@launchdarkly/shopify-oxygen-sdk": "workspace:^",
+    "express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^18.11.9",
+    "tsup": "^8.5.0",
+    "typescript": "^4.9.0"
+  }
+}
