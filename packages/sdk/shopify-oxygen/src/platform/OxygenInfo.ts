@@ -1,7 +1,6 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
-// TODO: maybe not the right name for this package? Currently copied from Akamai... I think
-const name = '@launchdarkly/shopify-oxygen-server-sdk';
+const name = '@launchdarkly/shopify-oxygen-sdk';
 const version = '0.1.0'; // x-release-please-version
 
 class OxygenPlatformInfo implements Info {
