@@ -24,6 +24,7 @@ on:
           - packages/sdk/server-ai
           - packages/telemetry/browser-telemetry
           - packages/sdk/combined-browser
+          - packages/sdk/shopify-oxygen
 name: Publish Documentation
 jobs:
   build-publish:

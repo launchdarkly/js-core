@@ -235,7 +235,7 @@ There are a number of categories of packages in the monorepo:
 5. **Tooling packages** (red): Development and testing tools
    - Jest testing utilities
 
-### Depenencies
+### Dependencies
 
 In general dependencies should be avoided unless they are absolutely necessary. For each dependency several considerations should be made:
 
