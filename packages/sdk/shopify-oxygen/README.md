@@ -1,13 +1,11 @@
 LaunchDarkly Server SDK for Shopify Oxygen Runtimes
 ===========================
 
-<!-- TODO nothing is live yet
 [![NPM][npm-badge]][npm-link]
 [![Actions Status][ci-badge]][ci-link]
 [![Documentation][ghp-badge]][ghp-link]
 [![NPM][npm-dm-badge]][npm-link]
 [![NPM][npm-dt-badge]][npm-link]
--->
 
 # ⛔️⛔️⛔️⛔️
 
@@ -147,13 +145,11 @@ About LaunchDarkly
     * [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/  "LaunchDarkly API Documentation") for our API documentation
     * [launchdarkly.com/blog](https://launchdarkly.com/blog/  "LaunchDarkly Blog Documentation") for the latest product updates
 
-<!-- TODO nothing is live yet
-[ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/react-native.yml/badge.svg
-[ci-link]: https://github.com/launchdarkly/js-core/actions/workflows/react-native.yml
-[npm-badge]: https://img.shields.io/npm/v/@launchdarkly/react-native-client-sdk.svg?style=flat-square
-[npm-link]: https://www.npmjs.com/package/@launchdarkly/react-native-client-sdk
+[npm-badge]: https://img.shields.io/npm/v/@launchdarkly/shopify-oxygen-sdk.svg?style=flat-square
+[npm-link]: https://www.npmjs.com/package/@launchdarkly/shopify-oxygen-sdk
+[npm-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/shopify-oxygen-sdk.svg?style=flat-square
+[npm-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/shopify-oxygen-sdk.svg?style=flat-square
+[ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/shopify-oxygen.yml/badge.svg
+[ci-link]: https://github.com/launchdarkly/js-core/actions/workflows/shopify-oxygen.yml
 [ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/react-native/docs/
-[npm-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/react-native-client-sdk.svg?style=flat-square
-[npm-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/react-native-client-sdk.svg?style=flat-square
--->
+[ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/shopify-oxygen/docs/
