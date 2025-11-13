@@ -1,0 +1,73 @@
+{
+  "name": "@launchdarkly/shopify-oxygen-sdk",
+  "version": "0.1.0",
+  "description": "LaunchDarkly Server-Side SDK for Shopify Oxygen Runtime",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/shopify-oxygen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@3.4.1",
+  "keywords": [
+    "launchdarkly",
+    "shopify",
+    "oxygen",
+    "edge",
+    "worker"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "require": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "tsup",
+    "tsw": "yarn tsc --watch",
+    "start": "rimraf dist && yarn tsw",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
+    "coverage": "yarn test --coverage",
+    "check": "yarn lint && yarn build && yarn test"
+  },
+  "dependencies": {
+    "@launchdarkly/js-server-sdk-common": "2.16.2",
+    "crypto-js": "^4.1.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "@shopify/oxygen-workers-types": "^4.2.0",
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/crypto-js": "^4.1.1",
+    "@types/jest": "^29.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "jest": "^29.5.0",
+    "rimraf": "^5.0.1",
+    "ts-jest": "^29.1.0",
+    "tsup": "^8.3.5",
+    "typescript": "5.1.6"
+  }
+}

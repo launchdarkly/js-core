@@ -19,4 +19,6 @@ export function initAi(ldClient: LDClientMin): LDAIClient {
   return new LDAIClientImpl(ldClient);
 }
 
+export { LDLogger } from '@launchdarkly/js-server-sdk-common';
+
 export * from './api';

@@ -35,8 +35,12 @@ on:
           - packages/tooling/jest
           - packages/sdk/browser
           - packages/sdk/server-ai
+          - packages/ai-providers/server-ai-openai
+          - packages/ai-providers/server-ai-vercel
+          - packages/ai-providers/server-ai-langchain
           - packages/telemetry/browser-telemetry
           - packages/sdk/combined-browser
+          - packages/sdk/shopify-oxygen
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean
@@ -54,10 +58,10 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - name: 'Setup Redis'
         if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-redis' }}

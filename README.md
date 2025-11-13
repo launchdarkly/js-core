@@ -16,6 +16,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/react-native-client-sdk](packages/sdk/react-native/README.md)   | [![NPM][sdk-react-native-npm-badge]][sdk-react-native-npm-link]   | [React-Native][package-sdk-react-native-issues]   | [![Actions Status][sdk-react-native-ci-badge]][sdk-react-native-ci]   |
 | [@launchdarkly/js-client-sdk](packages/sdk/browser/README.md)                  | [![NPM][sdk-browser-npm-badge]][sdk-browser-npm-link]             | [Browser][package-sdk-browser-issues]             | [![Actions Status][sdk-browser-ci-badge]][sdk-browser-ci]             |
 | [@launchdarkly/server-sdk-ai](packages/sdk/server-ai/README.md)                | [![NPM][sdk-server-ai-npm-badge]][sdk-server-ai-npm-link]         | [server-ai][package-sdk-server-ai-issues]         | [![Actions Status][sdk-server-ai-ci-badge]][sdk-server-ai-ci]         |
+| [@launchdarkly/shopify-oxygen-sdk](packages/sdk/shopify-oxygen/README.md)      | [![NPM][sdk-shopify-oxygen-npm-badge]][sdk-shopify-oxygen-npm-link] | [Shopify Oxygen][package-sdk-shopify-oxygen-issues] | [![Actions Status][sdk-shopify-oxygen-ci-badge]][sdk-shopify-oxygen-ci] |
 <!--| [@launchdarkly/browser](packages/sdk/combined-browser/README.md)                  | [![NPM][sdk-combined-browser-npm-badge]][sdk-browser-npm-link]             | [Combined Browser][package-sdk-combined-browser-issues]             | [![Actions Status][sdk-combined-browser-ci-badge]][sdk-combined-browser-ci]             |-->
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
@@ -34,6 +35,12 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- |
 | [@launchdarkly/node-server-sdk-otel](packages/telemetry/node-server-sdk-otel/README.md) | [![NPM][node-otel-npm-badge]][node-otel-npm-link]                 | [Node OTel][node-otel-issues]                 | [![Actions Status][node-otel-ci-badge]][node-otel-ci]                 |
 | [@launchdarkly/browser-telemetry](packages/telemetry/browser-telemetry/README.md)       | [![NPM][browser-telemetry-npm-badge]][browser-telemetry-npm-link] | [Browser Telemetry][browser-telemetry-issues] | [![Actions Status][browser-telemetry-ci-badge]][browser-telemetry-ci] |
+
+| AI Providers                                                                              | npm                                                           | issues                                      | tests                                                               |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| [@launchdarkly/server-sdk-ai-langchain](packages/ai-providers/server-ai-langchain/README.md) | [![NPM][server-ai-langchain-npm-badge]][server-ai-langchain-npm-link] | [server-ai-langchain][package-ai-providers-server-ai-langchain-issues] | [![Actions Status][server-ai-langchain-ci-badge]][server-ai-langchain-ci] |
+| [@launchdarkly/server-sdk-ai-openai](packages/ai-providers/server-ai-openai/README.md) | [![NPM][server-ai-openai-npm-badge]][server-ai-openai-npm-link] | [server-ai-openai][package-ai-providers-server-ai-openai-issues] | [![Actions Status][server-ai-openai-ci-badge]][server-ai-openai-ci] |
+| [@launchdarkly/server-sdk-ai-vercel](packages/ai-providers/server-ai-vercel/README.md) | [![NPM][server-ai-vercel-npm-badge]][server-ai-vercel-npm-link] | [server-ai-vercel][package-ai-providers-server-ai-vercel-issues] | [![Actions Status][server-ai-vercel-ci-badge]][server-ai-vercel-ci] |
 
 ## Organization
 
@@ -220,3 +227,27 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-combined-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/browser.svg?style=flat-square
 [sdk-combined-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/browser.svg?style=flat-square
 [package-sdk-browser-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fcombined-browser%22+
+[//]: # 'ai-providers/server-ai-langchain'
+[server-ai-langchain-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-langchain.yml/badge.svg
+[server-ai-langchain-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-langchain.yml
+[server-ai-langchain-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/server-sdk-ai-langchain.svg?style=flat-square
+[server-ai-langchain-npm-link]: https://www.npmjs.com/package/@launchdarkly/server-sdk-ai-langchain
+[package-ai-providers-server-ai-langchain-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+ai-providers%2Fserver-ai-langchain%22+
+[//]: # 'ai-providers/server-ai-openai'
+[server-ai-openai-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-openai.yml/badge.svg
+[server-ai-openai-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-openai.yml
+[server-ai-openai-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/server-sdk-ai-openai.svg?style=flat-square
+[server-ai-openai-npm-link]: https://www.npmjs.com/package/@launchdarkly/server-sdk-ai-openai
+[package-ai-providers-server-ai-openai-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+ai-providers%2Fserver-ai-openai%22+
+[//]: # 'ai-providers/server-ai-vercel'
+[server-ai-vercel-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-vercel.yml/badge.svg
+[server-ai-vercel-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-vercel.yml
+[server-ai-vercel-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/server-sdk-ai-vercel.svg?style=flat-square
+[server-ai-vercel-npm-link]: https://www.npmjs.com/package/@launchdarkly/server-sdk-ai-vercel
+[package-ai-providers-server-ai-vercel-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+ai-providers%2Fserver-ai-vercel%22+
+[//]: # 'sdk/shopify-oxygen'
+[sdk-shopify-oxygen-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/shopify-oxygen.yml/badge.svg
+[sdk-shopify-oxygen-ci]: https://github.com/launchdarkly/js-core/actions/workflows/shopify-oxygen.yml
+[sdk-shopify-oxygen-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/shopify-oxygen-sdk.svg?style=flat-square
+[sdk-shopify-oxygen-npm-link]: https://www.npmjs.com/package/@launchdarkly/shopify-oxygen-sdk
+[package-sdk-shopify-oxygen-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fshopify-oxygen%22+

@@ -1,0 +1,27 @@
+name: ai-providers/server-ai-vercel
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-vercel-provider:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: 24.x
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/server-sdk-ai-vercel'
+          workspace_path: packages/ai-providers/server-ai-vercel
