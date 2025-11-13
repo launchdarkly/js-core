@@ -1,0 +1,28 @@
+name: sdk/shopify-oxygen
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-shopify-oxygen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # https://shopify.dev/docs/storefronts/headless/hydrogen/getting-started#requirements
+          node-version: lts/*
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/shopify-oxygen-sdk'
+          workspace_path: packages/sdk/shopify-oxygen

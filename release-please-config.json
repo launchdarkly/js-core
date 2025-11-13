@@ -12,6 +12,14 @@
       "bump-minor-pre-major": true,
       "prerelease": true
     },
+    "packages/sdk/shopify-oxygen": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0",
+      "bootstrap-sha": "e70e4846d03f7ca2b6ef267efa90a24810e9364a",
+      "extra-files": [
+        "src/platform/OxygenInfo.ts"
+      ]
+    },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {},
     "packages/shared/sdk-server": {},
