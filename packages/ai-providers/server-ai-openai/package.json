@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-openai",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "LaunchDarkly AI SDK OpenAI Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-openai",
   "repository": {
@@ -28,7 +28,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@launchdarkly/js-server-sdk-common": "2.16.2",
-    "@launchdarkly/server-sdk-ai": "^0.14.0",
+    "@launchdarkly/server-sdk-ai": "^0.14.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.3",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
