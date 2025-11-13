@@ -87,6 +87,9 @@
     },
     {
       "path": "./packages/ai-providers/server-ai-vercel/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/shopify-oxygen/tsconfig.ref.json"
     }
   ]
 }

@@ -39,6 +39,7 @@ describe('Judge', () => {
 
     // Create a basic judge config
     judgeConfig = {
+      key: 'test-judge',
       enabled: true,
       messages: [
         { role: 'system', content: 'You are a helpful judge that evaluates AI responses.' },
@@ -106,11 +107,21 @@ describe('Judge', () => {
 
       expect(result).toEqual({
         evals: {
-          relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          accuracy: { score: 0.9, reasoning: 'The response is factually accurate' },
-          helpfulness: { score: 0.7, reasoning: 'The response provides helpful information' },
+          relevance: {
+            score: 0.8,
+            reasoning: 'The response is relevant to the question',
+          },
+          accuracy: {
+            score: 0.9,
+            reasoning: 'The response is factually accurate',
+          },
+          helpfulness: {
+            score: 0.7,
+            reasoning: 'The response provides helpful information',
+          },
         },
         success: true,
+        judgeConfigKey: 'test-judge',
       });
 
       expect(mockProvider.invokeStructuredModel).toHaveBeenCalledWith(
@@ -258,6 +269,7 @@ describe('Judge', () => {
           helpfulness: { score: 0.7, reasoning: 'Helpful' },
         },
         success: false,
+        judgeConfigKey: 'test-judge',
       });
     });
 
@@ -289,6 +301,7 @@ describe('Judge', () => {
       expect(result).toEqual({
         evals: {},
         success: false,
+        judgeConfigKey: 'test-judge',
       });
     });
 
@@ -302,6 +315,7 @@ describe('Judge', () => {
         evals: {},
         success: false,
         error: 'Provider error',
+        judgeConfigKey: 'test-judge',
       });
       expect(mockLogger.error).toHaveBeenCalledWith('Judge evaluation failed:', error);
     });
@@ -315,6 +329,7 @@ describe('Judge', () => {
         evals: {},
         success: false,
         error: 'Unknown error',
+        judgeConfigKey: 'test-judge',
       });
     });
   });
@@ -364,11 +379,21 @@ describe('Judge', () => {
 
       expect(result).toEqual({
         evals: {
-          relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          accuracy: { score: 0.9, reasoning: 'The response is factually accurate' },
-          helpfulness: { score: 0.7, reasoning: 'The response provides helpful information' },
+          relevance: {
+            score: 0.8,
+            reasoning: 'The response is relevant to the question',
+          },
+          accuracy: {
+            score: 0.9,
+            reasoning: 'The response is factually accurate',
+          },
+          helpfulness: {
+            score: 0.7,
+            reasoning: 'The response provides helpful information',
+          },
         },
         success: true,
+        judgeConfigKey: 'test-judge',
       });
 
       expect(mockProvider.invokeStructuredModel).toHaveBeenCalledWith(

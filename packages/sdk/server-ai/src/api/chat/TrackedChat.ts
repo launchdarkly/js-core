@@ -84,13 +84,17 @@ export class TrackedChat {
         return undefined;
       }
 
-      const evalResult = await judge.evaluateMessages(messages, response, judgeConfig.samplingRate);
+      const judgeResponse = await judge.evaluateMessages(
+        messages,
+        response,
+        judgeConfig.samplingRate,
+      );
 
-      if (evalResult && evalResult.success) {
-        this.tracker.trackEvalScores(evalResult.evals);
+      if (judgeResponse && judgeResponse.success) {
+        this.tracker.trackJudgeResponse(judgeResponse);
       }
 
-      return evalResult;
+      return judgeResponse;
     });
 
     // ensure all evaluations complete even if some fail

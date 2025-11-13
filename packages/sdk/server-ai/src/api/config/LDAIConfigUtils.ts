@@ -82,19 +82,23 @@ export class LDAIConfigUtils {
    * @param tracker The tracker to add to the config
    * @returns The appropriate AI configuration type
    */
-  static fromFlagValue(flagValue: LDAIConfigFlagValue, tracker: LDAIConfigTracker): LDAIConfigKind {
+  static fromFlagValue(
+    key: string,
+    flagValue: LDAIConfigFlagValue,
+    tracker: LDAIConfigTracker,
+  ): LDAIConfigKind {
     // Determine the actual mode from flag value
     // eslint-disable-next-line no-underscore-dangle
     const flagValueMode = flagValue._ldMeta?.mode;
 
     switch (flagValueMode) {
       case 'agent':
-        return this.toAgentConfig(flagValue, tracker);
+        return this.toAgentConfig(key, flagValue, tracker);
       case 'judge':
-        return this.toJudgeConfig(flagValue, tracker);
+        return this.toJudgeConfig(key, flagValue, tracker);
       case 'completion':
       default:
-        return this.toCompletionConfig(flagValue, tracker);
+        return this.toCompletionConfig(key, flagValue, tracker);
     }
   }
 
@@ -104,15 +108,17 @@ export class LDAIConfigUtils {
    * @param mode The mode for the disabled config
    * @returns A disabled config of the appropriate type
    */
-  static createDisabledConfig(mode: LDAIConfigMode): LDAIConfigKind {
+  static createDisabledConfig(key: string, mode: LDAIConfigMode): LDAIConfigKind {
     switch (mode) {
       case 'agent':
         return {
+          key,
           enabled: false,
           tracker: undefined,
         } as LDAIAgentConfig;
       case 'judge':
         return {
+          key,
           enabled: false,
           tracker: undefined,
           evaluationMetricKeys: [],
@@ -121,6 +127,7 @@ export class LDAIConfigUtils {
       default:
         // Default to completion config for completion mode or any unexpected mode
         return {
+          key,
           enabled: false,
           tracker: undefined,
         } as LDAICompletionConfig;
@@ -133,8 +140,9 @@ export class LDAIConfigUtils {
    * @param flagValue The flag value from LaunchDarkly
    * @returns Base configuration object
    */
-  private static _toBaseConfig(flagValue: LDAIConfigFlagValue) {
+  private static _toBaseConfig(key: string, flagValue: LDAIConfigFlagValue) {
     return {
+      key,
       // eslint-disable-next-line no-underscore-dangle
       enabled: flagValue._ldMeta?.enabled ?? false,
       model: flagValue.model,
@@ -150,11 +158,12 @@ export class LDAIConfigUtils {
    * @returns A completion configuration
    */
   static toCompletionConfig(
+    key: string,
     flagValue: LDAIConfigFlagValue,
     tracker: LDAIConfigTracker,
   ): LDAICompletionConfig {
     return {
-      ...this._toBaseConfig(flagValue),
+      ...this._toBaseConfig(key, flagValue),
       tracker,
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
@@ -169,11 +178,12 @@ export class LDAIConfigUtils {
    * @returns An agent configuration
    */
   static toAgentConfig(
+    key: string,
     flagValue: LDAIConfigFlagValue,
     tracker: LDAIConfigTracker,
   ): LDAIAgentConfig {
     return {
-      ...this._toBaseConfig(flagValue),
+      ...this._toBaseConfig(key, flagValue),
       tracker,
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
@@ -188,11 +198,12 @@ export class LDAIConfigUtils {
    * @returns A judge configuration
    */
   static toJudgeConfig(
+    key: string,
     flagValue: LDAIConfigFlagValue,
     tracker: LDAIConfigTracker,
   ): LDAIJudgeConfig {
     return {
-      ...this._toBaseConfig(flagValue),
+      ...this._toBaseConfig(key, flagValue),
       tracker,
       messages: flagValue.messages,
       evaluationMetricKeys: flagValue.evaluationMetricKeys || [],

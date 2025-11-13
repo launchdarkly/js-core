@@ -96,6 +96,10 @@ export interface LDAIConfigDefault {
  */
 export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {
   /**
+   * The key of the AI Config.
+   */
+  key: string;
+  /**
    * Whether the configuration is enabled.
    */
   enabled: boolean;

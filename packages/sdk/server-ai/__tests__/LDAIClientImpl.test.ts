@@ -372,6 +372,7 @@ describe('agents method', () => {
 
     expect(result).toEqual({
       'research-agent': {
+        key: 'research-agent',
         model: {
           name: 'research-model',
           parameters: { temperature: 0.3, maxTokens: 2048 },
@@ -382,6 +383,7 @@ describe('agents method', () => {
         enabled: true,
       },
       'writing-agent': {
+        key: 'writing-agent',
         model: {
           name: 'writing-model',
           parameters: { temperature: 0.7, maxTokens: 1024 },
@@ -482,6 +484,7 @@ describe('createJudge method', () => {
     };
 
     const mockJudgeConfig = {
+      key: 'test-judge',
       enabled: true,
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
@@ -525,6 +528,7 @@ describe('createJudge method', () => {
     };
 
     const mockJudgeConfig = {
+      key: 'test-judge',
       enabled: false,
       evaluationMetricKeys: [],
     };
@@ -548,6 +552,7 @@ describe('createJudge method', () => {
     };
 
     const mockJudgeConfig = {
+      key: 'test-judge',
       enabled: true,
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },

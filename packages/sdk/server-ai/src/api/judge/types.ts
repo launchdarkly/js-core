@@ -30,6 +30,8 @@ export interface EvalScore {
  * Response from a judge evaluation containing scores and reasoning for multiple metrics.
  */
 export interface JudgeResponse {
+  /** The key of the judge configuration that was used to generate this response */
+  judgeConfigKey?: string;
   /** Dictionary where keys are metric names and values contain score and reasoning */
   evals: Record<string, EvalScore>;
   /** Whether the evaluation completed successfully */

@@ -63,7 +63,7 @@ export class LDAIClientImpl implements LDAIClient {
       this._logger?.warn(
         `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
       );
-      return LDAIConfigUtils.createDisabledConfig(mode);
+      return LDAIConfigUtils.createDisabledConfig(key, mode);
     }
 
     const tracker = new LDAIConfigTrackerImpl(
@@ -78,7 +78,7 @@ export class LDAIClientImpl implements LDAIClient {
       context,
     );
 
-    const config = LDAIConfigUtils.fromFlagValue(value, tracker);
+    const config = LDAIConfigUtils.fromFlagValue(key, value, tracker);
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);

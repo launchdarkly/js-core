@@ -41,7 +41,8 @@
     "packages/sdk/server-ai/examples/vercel-ai",
     "packages/telemetry/browser-telemetry",
     "contract-tests",
-    "packages/sdk/combined-browser"
+    "packages/sdk/combined-browser",
+    "packages/sdk/shopify-oxygen"
   ],
   "private": true,
   "scripts": {

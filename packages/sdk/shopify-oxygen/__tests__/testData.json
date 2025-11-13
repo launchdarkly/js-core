@@ -1,0 +1,172 @@
+{
+  "flags": {
+    "testFlag1": {
+      "key": "testFlag1",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "rules": [
+        {
+          "variation": 1,
+          "id": "rule1",
+          "clauses": [
+            {
+              "contextKind": "user",
+              "attribute": "/email",
+              "op": "contains",
+              "values": ["falsemail"],
+              "negate": false
+            }
+          ],
+          "trackEvents": false,
+          "rollout": {
+            "bucketBy": "bucket",
+            "variations": [{ "variation": 1, "weight": 100 }]
+          }
+        }
+      ],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": {
+        "usingMobileKey": true,
+        "usingEnvironmentId": true
+      },
+      "clientSide": true,
+      "salt": "aef830243d6640d0a973be89988e008d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": 2000,
+      "version": 2,
+      "deleted": false
+    },
+    "testFlag2": {
+      "key": "testFlag2",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0,
+        "rollout": {
+          "bucketBy": "bucket",
+          "variations": [{ "variation": 1, "weight": 100 }],
+          "contextKind": "user",
+          "attribute": "/email"
+        }
+      },
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": {
+        "usingMobileKey": true,
+        "usingEnvironmentId": true
+      },
+      "clientSide": true,
+      "salt": "aef830243d6640d0a973be89988e008d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": 2000,
+      "version": 2,
+      "deleted": false
+    },
+    "testFlag3": {
+      "key": "testFlag3",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "rules": [
+        {
+          "variation": 1,
+          "id": "rule1",
+          "clauses": [
+            {
+              "op": "segmentMatch",
+              "values": ["testSegment1"],
+              "negate": false
+            }
+          ],
+          "trackEvents": false
+        }
+      ],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": {
+        "usingMobileKey": true,
+        "usingEnvironmentId": true
+      },
+      "clientSide": true,
+      "salt": "aef830243d6640d0a973be89988e008d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": 2000,
+      "version": 2,
+      "deleted": false
+    }
+  },
+  "segments": {
+    "testSegment1": {
+      "name": "testSegment1",
+      "tags": [],
+      "creationDate": 1676063792158,
+      "key": "testSegment1",
+      "included": [],
+      "excluded": [],
+      "includedContexts": [],
+      "excludedContexts": [],
+      "_links": {
+        "parent": { "href": "/api/v2/segments/default/test", "type": "application/json" },
+        "self": {
+          "href": "/api/v2/segments/default/test/beta-users-1",
+          "type": "application/json"
+        },
+        "site": { "href": "/default/test/segments/beta-users-1", "type": "text/html" }
+      },
+      "rules": [
+        {
+          "id": "rule-country",
+          "clauses": [
+            {
+              "attribute": "country",
+              "op": "in",
+              "values": ["australia"],
+              "negate": false
+            }
+          ]
+        }
+      ],
+      "version": 1,
+      "deleted": false,
+      "_access": { "denied": [], "allowed": [] },
+      "generation": 1
+    },
+    "testSegment2": {
+      "name": "testSegment2",
+      "tags": [],
+      "creationDate": 1676063792158,
+      "key": "testSegment2",
+      "included": [],
+      "excluded": [],
+      "includedContexts": [],
+      "excludedContexts": [],
+      "_links": {
+        "parent": { "href": "/api/v2/segments/default/test", "type": "application/json" },
+        "self": {
+          "href": "/api/v2/segments/default/test/beta-users-1",
+          "type": "application/json"
+        },
+        "site": { "href": "/default/test/segments/beta-users-1", "type": "text/html" }
+      },
+      "rules": [],
+      "version": 1,
+      "deleted": false,
+      "_access": { "denied": [], "allowed": [] },
+      "generation": 1
+    }
+  }
+}
+

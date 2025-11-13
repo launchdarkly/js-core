@@ -3,7 +3,7 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 import { name as aiSdkName, version as aiSdkVersion } from '../package.json';
 import { LDAIConfigTracker } from './api/config';
 import { LDAIMetricSummary } from './api/config/LDAIConfigTracker';
-import { EvalScore } from './api/judge/types';
+import { EvalScore, JudgeResponse } from './api/judge/types';
 import {
   createBedrockTokenUsage,
   createOpenAiUsage,
@@ -76,9 +76,19 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackEvalScores(scores: Record<string, EvalScore>) {
-    // Track each evaluation score individually
     Object.entries(scores).forEach(([metricKey, evalScore]) => {
       this._ldClient.track(metricKey, this._context, this.getTrackData(), evalScore.score);
+    });
+  }
+
+  trackJudgeResponse(response: JudgeResponse) {
+    Object.entries(response.evals).forEach(([metricKey, evalScore]) => {
+      this._ldClient.track(
+        metricKey,
+        this._context,
+        { ...this.getTrackData(), judgeConfigKey: response.judgeConfigKey },
+        evalScore.score,
+      );
     });
   }
 
