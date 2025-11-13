@@ -69,6 +69,9 @@ describe('given a mock filesystem and memory feature store', { /* tests */})
 These then combined to create an understandable test name:
 `given a mock filesystem and memory feature store > it does not load flags prior to start`
 
+---
+For docs on our module publishing process, see [our publishing doc](contributing/publishing.md)
+
 ## Development Guidelines
 
 These are a series of recommendations for developing code in this repository. Not all existing code will comply
