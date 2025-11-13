@@ -10,6 +10,10 @@ import { init } from '@launchdarkly/shopify-oxygen-sdk';
 // general purpose in the future and maybe even come up with some shared ts interface
 // to facilitate future contract testing.
 
+// TODO: currently this class will handle the response sending as well, which may technically
+// sit outside the scope of what it SHOULD be doing. We should refactor this to be more
+// general purpose and allow the caller to handle the response sending.
+
 /**
  * ClientPool is a singleton that manages a pool of LDClient instances. Currently there is
  * no separation between a managed client and this pool. Which means all of the client specs
@@ -56,9 +60,11 @@ export default class ClientPool {
       } catch (err) {
         console.error(`Error running command: ${err}`);
         res.status(500);
+        res.send();
       }
     } else {
       res.status(404);
+      res.send();
     }
   }
 
@@ -68,8 +74,10 @@ export default class ClientPool {
       client.close();
       delete this._clients[id];
       res.status(204);
+      res.send();
     } else {
       res.status(404);
+      res.send();
     }
   }
 
@@ -83,6 +91,7 @@ export default class ClientPool {
       if (!polling) {
         // We do not support non-polling clients yet
         res.status(400);
+        res.send();
         return;
       }
       const client = await init(credential, {
@@ -98,12 +107,15 @@ export default class ClientPool {
       if (!client.initialized()) {
         res.status(500);
         client.close();
+        res.send();
+        return;
       }
-      this._clients[id] = client;
       console.debug(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
+      res.send();
     } catch (err) {
       console.error(`Error creating client: ${err}`);
       res.status(500);
+      res.send();
     }
   }
 }

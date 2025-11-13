@@ -50,19 +50,16 @@ app.delete('/', (req: Request, res: Response) => {
 
 app.post('/', async (req: Request, res: Response) => {
   await clientPool.createClient(req.body, res);
-  res.send();
 });
 
 app.post('/clients/:id', async (req: Request, res: Response) => {
   await clientPool.runCommand(req.params.id, req.body, res);
-  res.send();
 });
 
 app.delete('/clients/:id', async (req: Request, res: Response) => {
   console.debug('DELETE request received /clients/:id');
   console.debug(req.params.id);
   await clientPool.deleteClient(req.params.id, res);
-  res.send();
 });
 
 server = app.listen(port, () => {
