@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.14.0...server-sdk-ai-v0.14.1) (2025-11-13)
+
+
+### Bug Fixes
+
+* Include the AI Judge Config key with tracked metrics ([#986](https://github.com/launchdarkly/js-core/issues/986)) ([213fc79](https://github.com/launchdarkly/js-core/commit/213fc793c752af6517ba7c117219205fb62b9c65))
+
 ## [0.14.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.13.0...server-sdk-ai-v0.14.0) (2025-11-06)
 
 
