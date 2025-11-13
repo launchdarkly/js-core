@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-common
         name: Full release of packages/shared/common
@@ -69,7 +69,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-sdk-client
         name: Full release of packages/shared/sdk-client
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-sdk-server
         name: Full release of packages/shared/sdk-server
@@ -109,7 +109,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-sdk-server-edge
         name: Full release of packages/shared/sdk-server-edge
@@ -129,7 +129,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-akamai-edgeworker-sdk
         name: Full release of packages/shared/akamai-edgeworker-sdk
@@ -149,7 +149,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-cloudflare
         name: Full release of packages/sdk/cloudflare
@@ -169,7 +169,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-fastly
         name: Full release of packages/sdk/fastly
@@ -189,7 +189,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-react-native
         name: Full release of packages/sdk/react-native
@@ -209,7 +209,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-browser
         name: Full release of packages/sdk/browser
@@ -229,7 +229,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-server-node
         name: Full release of packages/sdk/server-node
@@ -249,7 +249,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-vercel
         name: Full release of packages/sdk/vercel
@@ -269,7 +269,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-akamai-base
         name: Full release of packages/sdk/akamai-base
@@ -289,7 +289,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-akamai-edgekv
         name: Full release of packages/sdk/akamai-edgekv
@@ -309,7 +309,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - run: |
           sudo apt-get update
@@ -333,7 +333,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local
@@ -355,7 +355,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-node-server-sdk-otel
         name: Full release of packages/telemetry/node-server-sdk-otel
@@ -375,7 +375,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-tooling-jest
         name: Full release of packages/tooling/jest
@@ -395,7 +395,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-react-universal-sdk
         name: Full release of packages/sdk/react-universal
@@ -415,7 +415,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-react-native
         name: Full release of packages/sdk/server-ai
@@ -435,7 +435,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-browser-telemetry
         name: Full release of packages/telemetry/browser-telemetry
@@ -455,7 +455,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-combined-browser
         name: Full release of packages/sdk/combined-browser
@@ -475,7 +475,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-server-ai-langchain
         name: Full release of packages/ai-providers/server-ai-langchain
@@ -495,7 +495,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-server-ai-openai
         name: Full release of packages/ai-providers/server-ai-openai
@@ -515,7 +515,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: release-server-ai-vercel
         name: Full release of packages/ai-providers/server-ai-vercel
