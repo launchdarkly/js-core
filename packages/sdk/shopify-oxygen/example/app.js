@@ -42,7 +42,7 @@ const main = async () => {
 
   miniOxygen.ready.then(() => {
     console.log('Oxygen worker is started...');
-    console.log('Dispatching fetch every 5 seconds. Press "q" or Ctrl+C to quit...');
+    console.log('Press "q" or Ctrl+C to quit...');
     
     // Dispatch fetch every 5 seconds
     const interval = setInterval(() => {
