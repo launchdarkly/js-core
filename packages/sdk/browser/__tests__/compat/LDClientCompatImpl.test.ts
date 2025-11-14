@@ -70,7 +70,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that is i
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 });
@@ -83,7 +83,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     mockBrowserClient.identify.mockImplementation(
       () =>
         new Promise((r) => {
-          setTimeout(r, 100);
+          setTimeout(() => r({ status: 'completed' }), 100);
         }),
     );
     client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });
@@ -99,7 +99,10 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
 
     const result = await client.identify(context);
 
-    expect(mockBrowserClient.identify).toHaveBeenCalledWith(context, { hash: undefined });
+    expect(mockBrowserClient.identify).toHaveBeenCalledWith(context, {
+      hash: undefined,
+      sheddable: false,
+    });
     expect(result).toEqual(mockFlags);
   });
 
@@ -168,7 +171,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 
@@ -180,7 +183,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 
@@ -191,7 +194,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     await expect(client.waitUntilReady()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 
@@ -429,6 +432,7 @@ it('forwards bootstrap and hash to BrowserClient identify call', async () => {
     bootstrap: bootstrapData,
     hash: 'someHash',
     noTimeout: true,
+    sheddable: false,
   });
 });
 
@@ -453,7 +457,7 @@ describe('given a LDClientCompatImpl client with mocked browser client which fai
 
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 
@@ -466,7 +470,7 @@ describe('given a LDClientCompatImpl client with mocked browser client which fai
 
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 
@@ -477,7 +481,7 @@ describe('given a LDClientCompatImpl client with mocked browser client which fai
 
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 
@@ -489,7 +493,7 @@ describe('given a LDClientCompatImpl client with mocked browser client which fai
 
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
       { kind: 'user', key: 'user-key' },
-      { bootstrap: undefined, hash: undefined, noTimeout: true },
+      { bootstrap: undefined, hash: undefined, noTimeout: true, sheddable: false },
     );
   });
 

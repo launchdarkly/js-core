@@ -54,7 +54,20 @@ export default class LDClientCompatImpl implements LDClient {
     hash?: string,
   ): Promise<void> {
     try {
-      await this._client.identify(context, { noTimeout: true, bootstrap, hash });
+      const result = await this._client.identify(context, {
+        noTimeout: true,
+        bootstrap,
+        hash,
+        sheddable: false,
+      });
+
+      if (result.status === 'error') {
+        throw result.error;
+      } else if (result.status === 'timeout') {
+        throw new LDTimeoutError('Identify timed out');
+      }
+      // status === 'completed' ('shed' cannot happen with sheddable: false)
+
       this._initState = 'success';
       this._initResolve?.();
       this._emitter.emit('initialized');
@@ -138,7 +151,16 @@ export default class LDClientCompatImpl implements LDClient {
     onDone?: (err: Error | null, flags: LDFlagSet | null) => void,
   ): Promise<LDFlagSet> | undefined {
     return wrapPromiseCallback(
-      this._client.identify(context, { hash }).then(() => this.allFlags()),
+      this._client.identify(context, { hash, sheddable: false }).then((result) => {
+        // Check if identification was successful
+        if (result.status === 'error') {
+          throw result.error;
+        } else if (result.status === 'timeout') {
+          throw new LDTimeoutError('Identify timed out');
+        }
+        // status === 'completed' ('shed' cannot happen with sheddable: false)
+        return this.allFlags();
+      }),
       onDone,
     ) as Promise<LDFlagSet> | undefined;
     // The typing here is a little funny. The wrapPromiseCallback can technically return

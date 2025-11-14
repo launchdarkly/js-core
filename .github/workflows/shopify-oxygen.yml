@@ -26,3 +26,15 @@ jobs:
         with:
           workspace_name: '@launchdarkly/shopify-oxygen-sdk'
           workspace_path: packages/sdk/shopify-oxygen
+      - name: Install contract test service dependencies
+        run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests install --no-immutable
+      - name: Build the test service
+        run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests build
+      - name: Launch the test service in the background
+        run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests start &> /dev/null &
+      - uses: launchdarkly/gh-actions/actions/contract-tests@21174f3a7f3aa3e3121227ec91842e8a1ebeec6e
+        with:
+          test_service_port: 8000
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Based on run-test-harness.sh from the sdk package
+          extra_params: '--url http://localhost:8000 --skip "streaming.*" --skip "evaluation.*" --skip "event.*" --skip "service.*" --stop-service-at-end'
