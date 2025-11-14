@@ -5,11 +5,13 @@ import {
   Configuration,
   Encoding,
   FlagManager,
+  Hook,
   internal,
   LDClientImpl,
   LDContext,
   LDEmitter,
   LDEmitterEventName,
+  LDFlagValue,
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
@@ -23,11 +25,13 @@ import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import { LDClient } from './LDClient';
+import { LDPlugin } from './LDPlugin';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
 
-export class BrowserClient extends LDClientImpl implements LDClient {
+class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
+  private readonly _plugins?: LDPlugin[];
 
   constructor(
     clientSideId: string,
@@ -132,6 +136,8 @@ export class BrowserClient extends LDClientImpl implements LDClient {
 
     this.setEventSendingEnabled(true, false);
 
+    this._plugins = validatedBrowserOptions.plugins;
+
     if (validatedBrowserOptions.fetchGoals) {
       this._goalManager = new GoalManager(
         clientSideId,
@@ -180,11 +186,14 @@ export class BrowserClient extends LDClientImpl implements LDClient {
         registerStateDetection(() => this.flush());
       }
     }
+  }
+
+  registerPlugins(client: LDClient): void {
     internal.safeRegisterPlugins(
-      logger,
+      this.logger,
       this.environmentMetadata,
-      this,
-      validatedBrowserOptions.plugins,
+      client,
+      this._plugins || [],
     );
   }
 
@@ -230,4 +239,53 @@ export class BrowserClient extends LDClientImpl implements LDClient {
     super.off(eventName, listener);
     this._updateAutomaticStreamingState();
   }
+}
+
+export function makeClient(
+  clientSideId: string,
+  autoEnvAttributes: AutoEnvAttributes,
+  options: BrowserOptions = {},
+  overridePlatform?: Platform,
+): LDClient {
+  const impl = new BrowserClientImpl(clientSideId, autoEnvAttributes, options, overridePlatform);
+
+  // Return a PIMPL style implementation. This decouples the interface from the interface of the implementation.
+  // In the future we should consider updating the common SDK code to not use inheritance and instead compose
+  // the leaf-implementation.
+  // The purpose for this in the short-term is to have a signature for identify that is different than the class implementation.
+  // Using an object with PIMPL here also allows us to completely hide the underlying implementation, where with a class
+  // it is trivial to access what should be protected (or even private) fields.
+  const client: LDClient = {
+    variation: (key: string, defaultValue?: LDFlagValue) => impl.variation(key, defaultValue),
+    variationDetail: (key: string, defaultValue?: LDFlagValue) =>
+      impl.variationDetail(key, defaultValue),
+    boolVariation: (key: string, defaultValue: boolean) => impl.boolVariation(key, defaultValue),
+    boolVariationDetail: (key: string, defaultValue: boolean) =>
+      impl.boolVariationDetail(key, defaultValue),
+    numberVariation: (key: string, defaultValue: number) => impl.numberVariation(key, defaultValue),
+    numberVariationDetail: (key: string, defaultValue: number) =>
+      impl.numberVariationDetail(key, defaultValue),
+    stringVariation: (key: string, defaultValue: string) => impl.stringVariation(key, defaultValue),
+    stringVariationDetail: (key: string, defaultValue: string) =>
+      impl.stringVariationDetail(key, defaultValue),
+    jsonVariation: (key: string, defaultValue: unknown) => impl.jsonVariation(key, defaultValue),
+    jsonVariationDetail: (key: string, defaultValue: unknown) =>
+      impl.jsonVariationDetail(key, defaultValue),
+    track: (key: string, data?: any, metricValue?: number) => impl.track(key, data, metricValue),
+    on: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.on(key, callback),
+    off: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.off(key, callback),
+    flush: () => impl.flush(),
+    setStreaming: (streaming?: boolean) => impl.setStreaming(streaming),
+    identify: (pristineContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
+      impl.identifyResult(pristineContext, identifyOptions),
+    getContext: () => impl.getContext(),
+    close: () => impl.close(),
+    allFlags: () => impl.allFlags(),
+    addHook: (hook: Hook) => impl.addHook(hook),
+    logger: impl.logger,
+  };
+
+  impl.registerPlugins(client);
+
+  return client;
 }

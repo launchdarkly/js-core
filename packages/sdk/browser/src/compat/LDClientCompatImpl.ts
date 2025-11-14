@@ -12,14 +12,15 @@ import {
   LDTimeoutError,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserClient } from '../BrowserClient';
+import { makeClient } from '../BrowserClient';
+import { LDClient as BrowserLDClient } from '../LDClient';
 import { LDClient } from './LDClientCompat';
 import { LDOptions } from './LDCompatOptions';
 import LDEmitterCompat, { CompatEventName } from './LDEmitterCompat';
 import { wrapPromiseCallback } from './wrapPromiseCallback';
 
 export default class LDClientCompatImpl implements LDClient {
-  private _client: BrowserClient;
+  private _client: BrowserLDClient;
   public readonly logger: LDLogger;
 
   private _initResolve?: () => void;
@@ -41,7 +42,7 @@ export default class LDClientCompatImpl implements LDClient {
     const cleanedOptions = { ...options };
     delete cleanedOptions.bootstrap;
     delete cleanedOptions.hash;
-    this._client = new BrowserClient(envKey, AutoEnvAttributes.Disabled, options);
+    this._client = makeClient(envKey, AutoEnvAttributes.Disabled, options);
     this._emitter = new LDEmitterCompat(this._client);
     this.logger = this._client.logger;
     this._initIdentify(context, bootstrap, hash);

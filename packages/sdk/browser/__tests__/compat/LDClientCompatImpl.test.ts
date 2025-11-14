@@ -2,12 +2,14 @@ import { jest } from '@jest/globals';
 
 import { LDContext, LDFlagSet } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserClient } from '../../src/BrowserClient';
+// Import after mocking
+import { makeClient } from '../../src/BrowserClient';
 import LDClientCompatImpl from '../../src/compat/LDClientCompatImpl';
 import { LDOptions } from '../../src/compat/LDCompatOptions';
+import { LDClient } from '../../src/LDClient';
 
 // @ts-ignore
-const mockBrowserClient: jest.MockedObject<BrowserClient> = {
+const mockBrowserClient: jest.MockedObject<LDClient> = {
   identify: jest.fn(),
   allFlags: jest.fn(),
   close: jest.fn(),
@@ -15,7 +17,6 @@ const mockBrowserClient: jest.MockedObject<BrowserClient> = {
   setStreaming: jest.fn(),
   on: jest.fn(),
   off: jest.fn(),
-  sdkKey: 'test-sdk-key',
   variation: jest.fn(),
   variationDetail: jest.fn(),
   boolVariation: jest.fn(),
@@ -39,17 +40,18 @@ const mockBrowserClient: jest.MockedObject<BrowserClient> = {
 
 jest.mock('../../src/BrowserClient', () => ({
   __esModule: true,
-  BrowserClient: jest.fn(() => mockBrowserClient),
+  makeClient: jest.fn(),
 }));
 
+const mockMakeClient = makeClient as jest.MockedFunction<typeof makeClient>;
+
 afterEach(() => {
-  jest.resetAllMocks();
+  jest.clearAllMocks();
 });
 
 beforeEach(() => {
-  // TypesScript doesn't understand that the BrowserClient is a mock.
-  // @ts-ignore
-  BrowserClient.mockImplementation(() => mockBrowserClient);
+  // Restore the mock implementation after clearing
+  mockMakeClient.mockReturnValue(mockBrowserClient);
 });
 
 describe('given a LDClientCompatImpl client with mocked browser client that is immediately ready', () => {
@@ -57,13 +59,13 @@ describe('given a LDClientCompatImpl client with mocked browser client that is i
 
   beforeEach(() => {
     jest.useFakeTimers();
-    mockBrowserClient.identify.mockImplementation(() => Promise.resolve());
+    mockBrowserClient.identify.mockImplementation(() => Promise.resolve({ status: 'completed' }));
     client = new LDClientCompatImpl('env-key', { kind: 'user', key: 'user-key' });
   });
 
   it('should resolve waitForInitialization when the client is already initialized', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
@@ -92,7 +94,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     const context: LDContext = { kind: 'user', key: 'new-user' };
     const mockFlags: LDFlagSet = { flag1: true, flag2: false };
 
-    mockBrowserClient.identify.mockResolvedValue();
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
     mockBrowserClient.allFlags.mockReturnValue(mockFlags);
 
     const result = await client.identify(context);
@@ -107,7 +109,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
     const mockFlags: LDFlagSet = { flag1: true, flag2: false };
 
     mockBrowserClient.allFlags.mockReturnValue(mockFlags);
-    mockBrowserClient.identify.mockImplementation(() => Promise.resolve());
+    mockBrowserClient.identify.mockImplementation(() => Promise.resolve({ status: 'completed' }));
     // Starting advancing the timers for the nest call. The wrapped promises
     // do not resolve sychronously.
     jest.advanceTimersToNextTimerAsync();
@@ -161,7 +163,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
 
   it('should resolve waitForInitialization when the client is initialized', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
@@ -172,7 +174,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
 
   it('should resolve second waitForInitialization immediately', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
     await expect(client.waitForInitialization()).resolves.toBeUndefined();
@@ -184,7 +186,7 @@ describe('given a LDClientCompatImpl client with mocked browser client that init
 
   it('should resolve waitUntilReady immediately if the client is already initialized', async () => {
     jest.advanceTimersToNextTimer();
-    mockBrowserClient.identify.mockResolvedValue(undefined);
+    mockBrowserClient.identify.mockResolvedValue({ status: 'completed' });
 
     await expect(client.waitUntilReady()).resolves.toBeUndefined();
     expect(mockBrowserClient.identify).toHaveBeenCalledWith(
