@@ -9,7 +9,7 @@ const flagKey = 'sample-feature';
 const context = {
   kind: 'user',
   key: 'example-user-key',
-  name: 'Sandy'
+  name: 'Sandy',
 };
 
 const sdkOptions = {
@@ -23,5 +23,5 @@ export default {
     const flagValue = await ldClient.variation(flagKey, context, false);
 
     return new Response(JSON.stringify({ flagKey, flagValue }), { status: 200 });
-  }
+  },
 };
