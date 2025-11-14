@@ -98,7 +98,7 @@ jobs:
 
       - name: Open browser app in headless Chromium
         run: |
-          node packages/sdk/browser/contract-tests/open-browser.mjs http://localhost:5173 > /tmp/playwright.log 2>&1 &
+          node packages/sdk/browser/contract-tests/entity/open-browser.mjs http://localhost:5173 > /tmp/playwright.log 2>&1 &
           echo $! > /tmp/playwright.pid
           sleep 5  # Give the browser time to initialize and connect via WebSocket
 
