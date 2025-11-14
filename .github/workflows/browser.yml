@@ -42,3 +42,94 @@ jobs:
           package_name: '@launchdarkly/js-client-sdk'
           pr_number: ${{ github.event.number }}
           size_limit: 25000
+
+      # Contract Tests
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Install contract test dependencies
+        run: |
+          yarn workspace browser-contract-test-adapter install --no-immutable
+          yarn workspace browser-contract-test-service install --no-immutable
+
+      - name: Build contract test adapter
+        run: yarn workspace browser-contract-test-adapter run build
+
+      - name: Build contract test entity (browser app)
+        run: yarn workspace browser-contract-test-service run build
+
+      - name: Start contract test adapter in background
+        run: |
+          yarn workspace browser-contract-test-adapter run start > /tmp/adapter.log 2>&1 &
+          echo $! > /tmp/adapter.pid
+
+      - name: Serve browser app with http-server
+        run: |
+          npx http-server packages/sdk/browser/contract-tests/entity/dist -p 5173 --cors > /tmp/http-server.log 2>&1 &
+          echo $! > /tmp/http-server.pid
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for adapter on port 8001..."
+          for i in {1..30}; do
+            if nc -z localhost 8001; then
+              echo "Adapter WebSocket ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for adapter"
+              cat /tmp/adapter.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+          echo "Waiting for HTTP server on port 5173..."
+          for i in {1..30}; do
+            if curl -s http://localhost:5173 > /dev/null; then
+              echo "HTTP server ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for HTTP server"
+              cat /tmp/http-server.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Open browser app in headless Chromium
+        run: |
+          node packages/sdk/browser/contract-tests/open-browser.mjs http://localhost:5173 > /tmp/playwright.log 2>&1 &
+          echo $! > /tmp/playwright.pid
+          sleep 5  # Give the browser time to initialize and connect via WebSocket
+
+      - name: Run contract tests
+        run: |
+          mkdir -p /tmp/sdk-test-harness
+          git clone https://github.com/launchdarkly/sdk-test-harness.git /tmp/sdk-test-harness
+          cd /tmp/sdk-test-harness
+          go build -o test-harness .
+          ./test-harness -url http://localhost:8000 -debug -stop-service-at-end --skip-from=$GITHUB_WORKSPACE/packages/sdk/browser/contract-tests/suppressions.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print logs on failure
+        if: failure()
+        run: |
+          echo "=== Adapter Log ==="
+          cat /tmp/adapter.log || echo "No adapter log"
+          echo "=== HTTP Server Log ==="
+          cat /tmp/http-server.log || echo "No http-server log"
+          echo "=== Playwright Log ==="
+          cat /tmp/playwright.log || echo "No playwright log"
+
+      - name: Cleanup contract test services
+        if: always()
+        run: |
+          [ -f /tmp/playwright.pid ] && kill $(cat /tmp/playwright.pid) || true
+          [ -f /tmp/http-server.pid ] && kill $(cat /tmp/http-server.pid) || true
+          [ -f /tmp/adapter.pid ] && kill $(cat /tmp/adapter.pid) || true
+          pkill -f "playwright" || true
+          pkill -f "http-server" || true
+          pkill -f "browser-contract-test-adapter" || true
