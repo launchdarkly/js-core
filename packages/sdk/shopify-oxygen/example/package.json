@@ -1,0 +1,17 @@
+{
+  "name": "shopify-oxygen-sdk-example",
+  "packageManager": "yarn@3.4.1",
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "start": "yarn clean && yarn build && yarn node app.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "@launchdarkly/shopify-oxygen-sdk": "latest",
+    "@shopify/mini-oxygen": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}
