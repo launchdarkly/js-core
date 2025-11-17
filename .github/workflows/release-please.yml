@@ -47,7 +47,7 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-common-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -67,7 +67,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -87,7 +87,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -107,7 +107,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -127,7 +127,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -147,7 +147,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -167,7 +167,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-fastly-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -187,7 +187,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -207,7 +207,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -227,7 +227,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -247,7 +247,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -267,7 +267,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -287,7 +287,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -307,7 +307,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -331,7 +331,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -353,7 +353,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -373,7 +373,7 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -393,7 +393,7 @@ jobs:
       contents: write
     if: false #${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-universal-release == 'true' }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -413,7 +413,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -433,7 +433,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-telemetry-released == 'true' }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -453,7 +453,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-combined-browser-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -473,7 +473,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-langchain-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -493,7 +493,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-openai-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -513,7 +513,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-vercel-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
@@ -533,7 +533,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-shopify-oxygen-released == 'true'}}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
           node-version: 24.x
