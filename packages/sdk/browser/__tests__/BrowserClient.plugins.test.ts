@@ -6,7 +6,7 @@ import {
   LDLogger,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserClient } from '../src/BrowserClient';
+import { makeClient } from '../src/BrowserClient';
 import { LDPlugin } from '../src/LDPlugin';
 import { BrowserOptions } from '../src/options';
 import { makeBasicPlatform } from './BrowserClient.mocks';
@@ -41,7 +41,7 @@ it('registers plugins and executes hooks during initialization', async () => {
 
   const platform = makeBasicPlatform();
 
-  const client = new BrowserClient(
+  const client = makeClient(
     'client-side-id',
     AutoEnvAttributes.Disabled,
     {
@@ -132,7 +132,7 @@ it('registers multiple plugins and executes all hooks', async () => {
 
   const platform = makeBasicPlatform();
 
-  const client = new BrowserClient(
+  const client = makeClient(
     'client-side-id',
     AutoEnvAttributes.Disabled,
     {
@@ -198,8 +198,7 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
 
   const platform = makeBasicPlatform(options);
 
-  // eslint-disable-next-line no-new
-  new BrowserClient(
+  makeClient(
     'client-side-id',
     AutoEnvAttributes.Disabled,
     {
@@ -280,8 +279,7 @@ it('passes correct environmentMetadata without optional fields', async () => {
 
   const platform = makeBasicPlatform();
 
-  // eslint-disable-next-line no-new
-  new BrowserClient(
+  makeClient(
     'client-side-id',
     AutoEnvAttributes.Disabled,
     {
