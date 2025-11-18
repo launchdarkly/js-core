@@ -23,7 +23,7 @@ export default {
     const flagValue = await ldClient.variation(flagKey, context, false);
 
     // Flush events and close the client
-    ldClient.flush();
+    await ldClient.flush();
     ldClient.close();
 
     return new Response(JSON.stringify({ flagKey, flagValue }), { status: 200 });
