@@ -11,6 +11,8 @@ inputs:
 runs:
   using: composite
   steps:
+    - uses: ./actions/setup-release-node
+
     - name: 'Set WORKSPACE_NAME variable'
       shell: bash
       run: |
@@ -20,22 +22,12 @@ runs:
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
         workspace_path: ${{ inputs.workspace_path }}
-    - uses: ./actions/release-secrets
-      name: 'Get NPM token'
-      with:
-        aws_assume_role: ${{ inputs.aws_assume_role }}
-        ssm_parameter_pairs: '/production/common/releasing/npm/token = NODE_AUTH_TOKEN'
-    - name: Setup .yarnrc.yml
-      shell: bash
-      run: |
-        yarn config set npmScopes.launchdarkly.npmRegistryServer "https://registry.npmjs.org"
-        yarn config set npmScopes.launchdarkly.npmAlwaysAuth true
-        yarn config set npmScopes.launchdarkly.npmAuthToken $NODE_AUTH_TOKEN
     - uses: ./actions/publish-jsr
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
         workspace_path: ${{ inputs.workspace_path }}
         dry_run: false
+    # Publishing credentials for NPM come from OIDC.
     - uses: ./actions/publish
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
