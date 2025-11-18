@@ -43,6 +43,7 @@ import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { createPluginEnvironmentMetadata } from './createPluginEnvironmentMetadata';
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import { createStreamListeners } from './data_sources/createStreamListeners';
+import FileDataInitializerFDv2 from './data_sources/fileDataInitilizerFDv2';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
 import PollingProcessor from './data_sources/PollingProcessor';
@@ -325,12 +326,20 @@ function constructFDv2(
     const initializers: subsystem.LDDataSourceFactory[] = [];
 
     // use one shot initializer for performance and cost if we can do a combination of polling and streaming
-    if (isStandardOptions(dataSystem.dataSource)) {
+    if (dataSystem.dataSource?.initializerOptions?.type === 'polling') {
       initializers.push(
         () =>
           new OneShotInitializerFDv2(
             new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
             config.logger,
+          ),
+      );
+    } else if (dataSystem.dataSource?.initializerOptions?.type === 'file') {
+      initializers.push(
+        () =>
+          new FileDataInitializerFDv2(
+            config,
+            platform,
           ),
       );
     }

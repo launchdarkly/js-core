@@ -221,8 +221,10 @@ export class PayloadProcessor {
   private _processPayloadTransferred = (data: PayloadTransferred) => {
     // if the following properties haven't been provided by now, we should reset
     if (
-      !this._tempId || // server intent hasn't been received yet.
-      !data.state ||
+      // server intent hasn't been received yet.
+      !this._tempId ||
+      // selector can be an empty string if we are using a file data initilizer
+      (data.state === null || data.state === undefined) ||
       !data.version
     ) {
       this._resetAll(); // a reset is best defensive action since payload transferred terminates a payload

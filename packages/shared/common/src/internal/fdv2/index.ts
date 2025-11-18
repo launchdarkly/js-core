@@ -6,6 +6,7 @@ import {
   Update,
 } from './payloadProcessor';
 import { PayloadStreamReader } from './payloadStreamReader';
+import FDv2ChangeSetBuilder from './FDv2ChangeSetBuilder';
 
 export {
   FDv2EventsCollection,
@@ -14,4 +15,5 @@ export {
   PayloadProcessor,
   PayloadStreamReader,
   Update,
+  FDv2ChangeSetBuilder,
 };

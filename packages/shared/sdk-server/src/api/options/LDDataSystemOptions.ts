@@ -76,13 +76,32 @@ export type DataSourceOptions =
   | PollingDataSourceOptions;
 
 /**
+ * Initializer option to read data from a file.
+ *
+ * NOTE: right now we only support data sources that are in FDv1 format.
+ */
+export interface FileDataInitializerOptions {
+  type: 'file';
+  paths: Array<string>;
+  yamlParser?: (data: string) => any;
+};
+
+/**
+ * Initializer option to initilize the SDK from doing a one time full payload transfer.
+ * This will be the default initializer used by the standard data source type.
+ */
+export interface PollingDataInitializerOptions {
+  type: 'polling';
+};
+
+/**
  * This standard data source is the recommended datasource for most customers. It will use
  * a combination of streaming and polling to initialize the SDK, provide real time updates,
  * and can switch between streaming and polling automatically to provide redundancy.
  */
 export interface StandardDataSourceOptions {
   dataSourceOptionsType: 'standard';
-
+  initializerOptions?: FileDataInitializerOptions | PollingDataInitializerOptions;
   /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
    *
@@ -106,7 +125,7 @@ export interface StandardDataSourceOptions {
  */
 export interface StreamingDataSourceOptions {
   dataSourceOptionsType: 'streamingOnly';
-
+  initializerOptions?: FileDataInitializerOptions | PollingDataInitializerOptions;
   /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
    *
@@ -124,7 +143,7 @@ export interface StreamingDataSourceOptions {
  */
 export interface PollingDataSourceOptions {
   dataSourceOptionsType: 'pollingOnly';
-
+  initializerOptions?: FileDataInitializerOptions | PollingDataInitializerOptions;
   /**
    * The time between polling requests, in seconds. Default if omitted.
    */
