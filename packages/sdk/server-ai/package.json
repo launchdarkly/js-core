@@ -9,9 +9,16 @@
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "type": "commonjs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js",
+      "default": "./dist/src/index.js"
+    }
+  },
   "scripts": {
-    "build": "npx tsc",
+    "build": "npx tsc && ../../../scripts/replace-version.sh .",
     "lint": "npx eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "lint:fix": "yarn run lint --fix",

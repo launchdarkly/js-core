@@ -9,7 +9,14 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "type": "commonjs",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "npx tsc",
     "lint": "npx eslint . --ext .ts",
@@ -27,6 +34,7 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@langchain/community": "^0.3.0",
     "@langchain/core": "^0.3.0",
     "@launchdarkly/server-sdk-ai": "^0.14.1",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
@@ -47,6 +55,7 @@
     "typescript": "5.1.6"
   },
   "peerDependencies": {
+    "@langchain/community": "^0.2.0 || ^0.3.0",
     "@langchain/core": "^0.2.0 || ^0.3.0",
     "@launchdarkly/server-sdk-ai": "^0.14.0",
     "langchain": "^0.2.0 || ^0.3.0"

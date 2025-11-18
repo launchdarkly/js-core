@@ -3,13 +3,13 @@
     // Uses "." so it can load package.json.
     "rootDir": ".",
     "outDir": "dist",
-    "target": "es2017",
-    "lib": ["es6"],
-    "module": "commonjs",
+    "target": "es2020",
+    "lib": ["es2020"],
+    "module": "ES2020",
     "strict": true,
     "noImplicitOverride": true,
-    // Needed for CommonJS modules.
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true, // enables importers to jump to source
