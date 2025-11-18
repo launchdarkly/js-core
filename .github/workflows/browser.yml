@@ -44,11 +44,11 @@ jobs:
           size_limit: 25000
 
       # Contract Tests
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
       - name: Install contract test dependencies
         run: yarn workspaces focus browser-contract-test-adapter browser-contract-test-service
+
+      - name: Install Playwright browsers
+        run: yarn workspace browser-contract-test-service install-playwright-browsers
 
       - name: Build contract test adapter
         run: yarn workspace browser-contract-test-adapter run build

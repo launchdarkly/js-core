@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Contract test service implementation for @launchdarkly/js-client-sdk",
   "scripts": {
+    "install-playwright-browsers": "playwright install --with-deps chromium",
     "start": "tsc --noEmit && vite --open=true",
     "build": "tsc --noEmit && vite build",
     "lint": "eslint ./src",
