@@ -121,11 +121,11 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
         return {
           segments: {
             ...acc.segments,
-            ...parsed.segments,
+            ...(parsed.segments ?? {}),
           },
           flags: {
             ...acc.flags,
-            ...parsed.flags,
+            ...(parsed.flags ?? {}),
           },
         };
       },
