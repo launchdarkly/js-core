@@ -84,7 +84,7 @@ export interface FileDataInitializerOptions {
   type: 'file';
   paths: Array<string>;
   yamlParser?: (data: string) => any;
-};
+}
 
 /**
  * Initializer option to initilize the SDK from doing a one time full payload transfer.
@@ -92,7 +92,7 @@ export interface FileDataInitializerOptions {
  */
 export interface PollingDataInitializerOptions {
   type: 'polling';
-};
+}
 
 /**
  * This standard data source is the recommended datasource for most customers. It will use

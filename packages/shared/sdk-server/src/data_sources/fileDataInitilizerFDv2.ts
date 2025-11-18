@@ -8,11 +8,11 @@ import {
   subsystem as subsystemCommon,
 } from '@launchdarkly/js-sdk-common';
 
+import { FileDataInitializerOptions } from '../api';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
-import { processFlag, processSegment } from '../store/serialization';
 import Configuration from '../options/Configuration';
-import { FileDataInitializerOptions } from '../api';
+import { processFlag, processSegment } from '../store/serialization';
 import FileLoader from './FileLoader';
 
 /**
@@ -26,11 +26,8 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
   private _fileLoader?: FileLoader;
 
   // TODO: do a options check here
-  constructor(
-    config: Configuration,
-    platform: Platform
-  ) {
-    const options = config.dataSystem?.dataSource?.initializerOptions as FileDataInitializerOptions
+  constructor(config: Configuration, platform: Platform) {
+    const options = config.dataSystem?.dataSource?.initializerOptions as FileDataInitializerOptions;
     this._validateInputs(options, platform);
 
     this._paths = options.paths;
@@ -56,7 +53,8 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
     statusCallback(subsystemCommon.DataSourceState.Initializing);
     const initMetadata = internal.initMetadataFromHeaders(undefined);
 
-    const payloadProcessor = new internal.PayloadProcessor({
+    const payloadProcessor = new internal.PayloadProcessor(
+      {
         flag: (flag: Flag) => {
           processFlag(flag);
           return flag;
@@ -102,56 +100,59 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
           );
         }
       },
-    )
+    );
 
-    this._fileLoader.loadAndWatch()
+    this._fileLoader.loadAndWatch();
   }
 
-  _processFileData(results: { path: string; data: string }[]) {
-    const combined: any = results.reduce((acc, curr) => {
-      let parsed: any;
-      if (curr.path.endsWith('.yml') || curr.path.endsWith('.yaml')) {
-        if (this._yamlParser) {
-          parsed = this._yamlParser(curr.data);
+  private _processFileData(results: { path: string; data: string }[]) {
+    const combined: any = results.reduce(
+      (acc, curr) => {
+        let parsed: any;
+        if (curr.path.endsWith('.yml') || curr.path.endsWith('.yaml')) {
+          if (this._yamlParser) {
+            parsed = this._yamlParser(curr.data);
+          } else {
+            throw new Error(`Attempted to parse yaml file (${curr.path}) without parser.`);
+          }
         } else {
-          throw new Error(`Attempted to parse yaml file (${curr.path}) without parser.`);
+          parsed = JSON.parse(curr.data);
         }
-      } else {
-        parsed = JSON.parse(curr.data);
-      }
-      return {
-        segments: {
-          ...acc.segments,
-          ...parsed.segments,
-        },
-        flags: {
-          ...acc.flags,
-          ...parsed.flags,
-        }
-      }
-    }, {
-      segments: {},
-      flags: {},
+        return {
+          segments: {
+            ...acc.segments,
+            ...parsed.segments,
+          },
+          flags: {
+            ...acc.flags,
+            ...parsed.flags,
+          },
+        };
+      },
+      {
+        segments: {},
+        flags: {},
+      },
+    );
+
+    const changeSetBuilder = new internal.FDv2ChangeSetBuilder();
+    changeSetBuilder.start('xfer-full');
+
+    Object.keys(combined).forEach((kind: string) => {
+      Object.entries<any>(combined[kind]).forEach(([k, v]) => {
+        changeSetBuilder.putObject({
+          // strong assumption here that we only have segments and flags.
+          kind: kind === 'segments' ? 'segment' : 'flag',
+          key: k,
+          version: v.version || 1,
+          object: v,
+        });
+      });
     });
 
-    const changeSetBuilder = new internal.FDv2ChangeSetBuilder()
-    changeSetBuilder.start('xfer-full')
-
-    Object.keys(combined).forEach((kind : string) => {
-      Object.entries<any>(combined[kind]).forEach(([k, v]) => {
-          changeSetBuilder.putObject({
-            // strong assumption here that we only have segments and flags.
-            kind: kind === 'segments' ? 'segment' : 'flag',
-            key: k,
-            version: v.version || 1,
-            object: v
-          })
-        })
-      });
-
     return {
-      events: changeSetBuilder.finish()
-    }
+      events: changeSetBuilder.finish(),
+    };
   }
 
   stop() {

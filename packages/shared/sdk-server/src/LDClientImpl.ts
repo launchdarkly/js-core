@@ -43,8 +43,8 @@ import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { createPluginEnvironmentMetadata } from './createPluginEnvironmentMetadata';
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import { createStreamListeners } from './data_sources/createStreamListeners';
-import FileDataInitializerFDv2 from './data_sources/fileDataInitilizerFDv2';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
+import FileDataInitializerFDv2 from './data_sources/fileDataInitilizerFDv2';
 import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
 import PollingProcessor from './data_sources/PollingProcessor';
 import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
@@ -335,13 +335,7 @@ function constructFDv2(
           ),
       );
     } else if (dataSystem.dataSource?.initializerOptions?.type === 'file') {
-      initializers.push(
-        () =>
-          new FileDataInitializerFDv2(
-            config,
-            platform,
-          ),
-      );
+      initializers.push(() => new FileDataInitializerFDv2(config, platform));
     }
 
     const synchronizers: subsystem.LDDataSourceFactory[] = [];

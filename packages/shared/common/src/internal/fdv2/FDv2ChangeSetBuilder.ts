@@ -1,4 +1,4 @@
-import { PutObject, DeleteObject, Event } from './proto';
+import { DeleteObject, Event, PutObject } from './proto';
 
 // eventually this will be the same as the IntentCode type, but for now we'll use a simpler type
 type supportedIntentCodes = 'xfer-full';
@@ -13,15 +13,15 @@ type supportedIntentCodes = 'xfer-full';
  * compatibility guarantees or semantic versioning. It is not suitable for production usage.
  */
 export default class FDv2ChangeSetBuilder {
-  private intent?: supportedIntentCodes;
-  private events: Event[] = [];
+  private _intent?: supportedIntentCodes;
+  private _events: Event[] = [];
 
   /**
    * Begins a new change set with a given intent.
    */
   start(intent: supportedIntentCodes): this {
-    this.intent = intent;
-    this.events = [];
+    this._intent = intent;
+    this._events = [];
 
     return this;
   }
@@ -33,7 +33,7 @@ export default class FDv2ChangeSetBuilder {
    * resetting some values in the future.
    */
   finish(): Array<Event> {
-    if (this.intent === undefined) {
+    if (this._intent === undefined) {
       throw new Error('changeset: cannot complete without a server-intent');
     }
 
@@ -45,16 +45,17 @@ export default class FDv2ChangeSetBuilder {
       {
         event: 'server-intent',
         data: {
-          payloads: [{
+          payloads: [
+            {
               id: 'dummy-id',
               target: 1,
-              intentCode: this.intent,
+              intentCode: this._intent!,
               reason: 'payload-missing',
             },
-          ]
-        }
+          ],
+        },
       },
-      ...this.events,
+      ...this._events,
       {
         event: 'payload-transferred',
         data: {
@@ -63,7 +64,7 @@ export default class FDv2ChangeSetBuilder {
           state: '',
           version: 1,
           id: 'dummy-id',
-        }
+        },
       },
     ];
 
@@ -74,23 +75,23 @@ export default class FDv2ChangeSetBuilder {
    * Adds a new object to the changeset.
    */
   putObject(obj: PutObject): this {
-    this.events.push({
+    this._events.push({
       event: 'put-object',
       data: obj,
     });
 
-    return this
+    return this;
   }
 
   /**
    * Adds a deletion to the changeset.
    */
   deleteObject(obj: DeleteObject): this {
-    this.events.push({
+    this._events.push({
       event: 'delete-object',
-      data: obj
+      data: obj,
     });
 
-    return this
+    return this;
   }
 }

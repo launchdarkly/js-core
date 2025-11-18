@@ -1,10 +1,23 @@
-export type EventType = 'server-intent' | 'put-object' | 'delete-object' | 'payload-transferred' | 'goodbye' | 'error'| 'heart-beat';
+export type EventType =
+  | 'server-intent'
+  | 'put-object'
+  | 'delete-object'
+  | 'payload-transferred'
+  | 'goodbye'
+  | 'error'
+  | 'heart-beat';
 export type IntentCode = 'xfer-full' | 'xfer-changes' | 'none';
 export type ObjectKind = 'flag' | 'segment';
 
 export interface Event {
   event: EventType;
-  data: ServerIntentData | PutObject | DeleteObject | PayloadTransferred | GoodbyeObject | ErrorObject;
+  data:
+    | ServerIntentData
+    | PutObject
+    | DeleteObject
+    | PayloadTransferred
+    | GoodbyeObject
+    | ErrorObject;
 }
 
 export interface ServerIntentData {
