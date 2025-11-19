@@ -253,7 +253,12 @@ function validateDataSystemOptions(options: Options): {
     }
     // Preserve initializer options if it was provided, since it's not validated by validateTypesAndNames.
     // Currently, setting this option is most commonly used as an override of default initializer options.
-    if (options.dataSource && 'initializerOptions' in options.dataSource) {
+    // Check that the value is not undefined to avoid overwriting defaults when explicitly set to undefined.
+    if (
+      options.dataSource &&
+      'initializerOptions' in options.dataSource &&
+      options.dataSource.initializerOptions !== undefined
+    ) {
       validatedDataSourceOptions.initializerOptions = options.dataSource.initializerOptions;
     }
 

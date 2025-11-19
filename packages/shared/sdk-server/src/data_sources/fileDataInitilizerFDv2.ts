@@ -25,7 +25,6 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
   private _yamlParser?: (data: string) => any;
   private _fileLoader?: FileLoader;
 
-  // TODO: do a options check here
   constructor(config: Configuration, platform: Platform) {
     const options = config.dataSystem?.dataSource?.initializerOptions as FileDataInitializerOptions;
     this._validateInputs(options, platform);
@@ -78,16 +77,14 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
       this._paths,
       false, // autoupdate is always false for initializer
       (results: { path: string; data: string }[]) => {
-        // Whenever changes are detected we re-process all of the data.
-        // The FileLoader will have handled debouncing for us.
         try {
           const parsedData = this._processFileData(results);
-
-          statusCallback(subsystemCommon.DataSourceState.Valid);
 
           payloadProcessor.addPayloadListener((payload) => {
             dataCallback(payload.basis, { initMetadata, payload });
           });
+
+          statusCallback(subsystemCommon.DataSourceState.Valid);
 
           payloadProcessor.processEvents(parsedData.events);
 
@@ -102,7 +99,16 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
       },
     );
 
-    this._fileLoader.loadAndWatch();
+    this._fileLoader.loadAndWatch().catch((err) => {
+      this._logger?.error('Error loading files', err);
+      statusCallback(
+        subsystemCommon.DataSourceState.Closed,
+        new LDPollingError(
+          DataSourceErrorKind.NetworkError,
+          `Failed to load files: ${err instanceof Error ? err.message : String(err)}`,
+        ),
+      );
+    });
   }
 
   private _processFileData(results: { path: string; data: string }[]) {
