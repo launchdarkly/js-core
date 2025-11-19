@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["es6"],
+    "module": "ES6",
+    "moduleResolution": "node",
+    "noImplicitOverride": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "stripInternal": true,
+    "target": "ES2017",
+  },
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
+}

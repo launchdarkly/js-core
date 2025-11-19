@@ -4,7 +4,7 @@ import {
   LDSingleKindContext,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { BrowserClient } from '../src/BrowserClient';
+import { makeClient } from '../src/BrowserClient';
 import { makeBasicPlatform } from './BrowserClient.mocks';
 import { goodBootstrapDataWithReasons } from './testBootstrapData';
 
@@ -27,7 +27,7 @@ describe('given a mock platform for a BrowserClient', () => {
   });
 
   it('includes urls in custom events', async () => {
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -56,7 +56,7 @@ describe('given a mock platform for a BrowserClient', () => {
   });
 
   it('can filter URLs in custom events', async () => {
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -90,7 +90,7 @@ describe('given a mock platform for a BrowserClient', () => {
   });
 
   it('can filter URLs in click events', async () => {
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -133,7 +133,7 @@ describe('given a mock platform for a BrowserClient', () => {
   });
 
   it('can filter URLs in pageview events', async () => {
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -163,7 +163,7 @@ describe('given a mock platform for a BrowserClient', () => {
   });
 
   it('can use bootstrap data', async () => {
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -189,17 +189,17 @@ describe('given a mock platform for a BrowserClient', () => {
     });
   });
 
-  it('can shed intermediate identifyResult calls', async () => {
-    const client = new BrowserClient(
+  it('can shed intermediate identify calls', async () => {
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       platform,
     );
 
-    const promise1 = client.identifyResult({ key: 'user-key-1', kind: 'user' });
-    const promise2 = client.identifyResult({ key: 'user-key-2', kind: 'user' });
-    const promise3 = client.identifyResult({ key: 'user-key-3', kind: 'user' });
+    const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
+    const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
+    const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
 
     const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
 
@@ -212,7 +212,7 @@ describe('given a mock platform for a BrowserClient', () => {
 
   it('calls beforeIdentify in order', async () => {
     const order: string[] = [];
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -250,7 +250,7 @@ describe('given a mock platform for a BrowserClient', () => {
 
   it('completes identify calls in order', async () => {
     const order: string[] = [];
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -292,7 +292,7 @@ describe('given a mock platform for a BrowserClient', () => {
 
   it('completes awaited identify calls in order without shedding', async () => {
     const order: string[] = [];
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       {
@@ -323,9 +323,9 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
-    const result1 = await client.identifyResult({ key: 'user-key-1', kind: 'user' });
-    const result2 = await client.identifyResult({ key: 'user-key-2', kind: 'user' });
-    const result3 = await client.identifyResult({ key: 'user-key-3', kind: 'user' });
+    const result1 = await client.identify({ key: 'user-key-1', kind: 'user' });
+    const result2 = await client.identify({ key: 'user-key-2', kind: 'user' });
+    const result3 = await client.identify({ key: 'user-key-3', kind: 'user' });
 
     expect(result1.status).toEqual('completed');
     expect(result2.status).toEqual('completed');
@@ -335,8 +335,8 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(order).toEqual(['user-key-1', 'user-key-2', 'user-key-3']);
   });
 
-  it('can shed intermediate identify calls', async () => {
-    const client = new BrowserClient(
+  it('can shed intermediate identify calls without waiting for results', async () => {
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
@@ -354,25 +354,16 @@ describe('given a mock platform for a BrowserClient', () => {
   });
 
   it('it does not shed non-shedable identify calls', async () => {
-    const client = new BrowserClient(
+    const client = makeClient(
       'client-side-id',
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       platform,
     );
 
-    const promise1 = client.identifyResult(
-      { key: 'user-key-1', kind: 'user' },
-      { sheddable: false },
-    );
-    const promise2 = client.identifyResult(
-      { key: 'user-key-2', kind: 'user' },
-      { sheddable: false },
-    );
-    const promise3 = client.identifyResult(
-      { key: 'user-key-3', kind: 'user' },
-      { sheddable: false },
-    );
+    const promise1 = client.identify({ key: 'user-key-1', kind: 'user' }, { sheddable: false });
+    const promise2 = client.identify({ key: 'user-key-2', kind: 'user' }, { sheddable: false });
+    const promise3 = client.identify({ key: 'user-key-3', kind: 'user' }, { sheddable: false });
 
     const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
 

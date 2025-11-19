@@ -1,0 +1,17 @@
+# Sets up Node.js and npm for release workflows.
+# This ensures all release jobs use the same Node.js and npm versions.
+name: Setup Node.js for Release
+description: Installs Node.js and updates npm to the latest version
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+      with:
+        node-version: 24.x
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Update npm
+      shell: bash
+      # Must be greater than 11.5.1 for OIDC.
+      run: npm install -g npm@11.6.2

@@ -48,40 +48,6 @@ export type LDClient = Omit<
    * finished, calls to {@link variation} will still return flag values for the previous context. You can
    * await the Promise to determine when the new flag values are available.
    *
-   * This function will shed intermediate identify operations by default. For example, if you call identify 3 times in
-   * a row, without waiting for the previous one to complete, the middle call to identify may be discarded. To disable
-   * this set `sheddable` to `false` in the `identifyOptions` parameter.
-   *
-   * @param context
-   *    The LDContext object.
-   * @param identifyOptions
-   *    Optional configuration. Please see {@link LDIdentifyOptions}.
-   * @returns
-   *    A Promise which resolves when the flag values for the specified
-   * context are available. It rejects when:
-   *
-   * 1. The context is unspecified or has no key.
-   *
-   * 2. The identify timeout is exceeded. In client SDKs this defaults to 5s.
-   * You can customize this timeout with {@link LDIdentifyOptions | identifyOptions}.
-   *
-   * 3. A network error is encountered during initialization.
-   *
-   * @ignore Implementation Note: Browser implementation has different options.
-   */
-  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
-
-  /**
-   * Identifies a context to LaunchDarkly and returns a promise which resolves to an object containing the result of
-   * the identify operation.
-   *
-   * Unlike the server-side SDKs, the client-side JavaScript SDKs maintain a current context state,
-   * which is set when you call `identify()`.
-   *
-   * Changing the current context also causes all feature flag values to be reloaded. Until that has
-   * finished, calls to {@link variation} will still return flag values for the previous context. You can
-   * await the Promise to determine when the new flag values are available.
-   *
    * If used with the `sheddable` option set to true, then the identify operation will be sheddable. This means that if
    * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
    * operations may be discarded.
@@ -96,7 +62,7 @@ export type LDClient = Omit<
    *
    * @ignore Implementation Note: Browser implementation has different options.
    */
-  identifyResult(
+  identify(
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;

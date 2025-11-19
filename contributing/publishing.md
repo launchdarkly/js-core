@@ -8,6 +8,20 @@ phases: initial package publishing phase and stable release phase.
 > still read through the [initial publishing](#initial-package-publishing)
 > and follow the relevant steps to initialize the CI implementation.
 
+## Publishing Workflows
+
+This repository uses the [`release-please.yml`](../.github/workflows/release-please.yml) workflow for all publishing operations:
+
+- **Automated Publishing**: When changes are pushed to `main`, release-please automatically creates release PRs based on conventional commits. When these PRs are merged, packages are automatically published to npm.
+
+- **Manual Publishing**: The workflow can be triggered manually via the GitHub Actions UI to publish a specific package. This is useful for:
+  - Pre-release versions
+  - Hotfixes or backports
+  - Correcting publishing errors
+  - Publishing to JSR (JavaScript Registry)
+
+  Manual triggers support prerelease flags and dry-run mode.
+
 ## Initial Package Publishing
 
 When publishing a package for the first time, developers must complete several steps not part of a typical package release. This phase is
@@ -48,7 +62,7 @@ Add the following to `.release-please-manifest.json`
 Add `PATH_TO_YOUR_PACKAGE` to the `on.workflow_dispatch.inputs.workspace_path.options`
 array in the following files:
 - [`manual-publish-docs.yml`](../.github/workflows/manual-publish-docs.yml)
-- [`manual-publish.yml`](../.github/workflows/manual-publish.yml)
+- [`release-please.yml`](../.github/workflows/release-please.yml) (manual publishing section)
 
 ## 4. Create a CI non-release workflow for just the project
 
