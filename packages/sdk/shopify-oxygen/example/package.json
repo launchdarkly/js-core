@@ -4,12 +4,14 @@
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist",
-    "start": "yarn clean && yarn build && yarn node app.js"
+    "start": "yarn clean && yarn build && ts-node app.ts"
   },
   "type": "module",
   "dependencies": {
     "@launchdarkly/shopify-oxygen-sdk": "latest",
-    "@shopify/mini-oxygen": "^4.0.0"
+    "@shopify/mini-oxygen": "^4.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "tsup": "^8.5.1"
