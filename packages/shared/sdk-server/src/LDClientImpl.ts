@@ -44,7 +44,6 @@ import { createPluginEnvironmentMetadata } from './createPluginEnvironmentMetada
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
-import FileDataInitializerFDv2 from './data_sources/fileDataInitilizerFDv2';
 import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
 import PollingProcessor from './data_sources/PollingProcessor';
 import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
@@ -324,10 +323,9 @@ function constructFDv2(
   if (!(config.offline || config.dataSystem!.useLdd)) {
     // make the FDv2 composite datasource with initializers/synchronizers
     const initializers: subsystem.LDDataSourceFactory[] = [];
-    const initializerOptions = dataSystem.dataSource?.initializerOptions ?? {};
 
-    if (initializerOptions.polling?.enabled) {
-      console.log('adding one shot initializer');
+    // use one shot initializer for performance and cost if we can do a combination of polling and streaming
+    if (isStandardOptions(dataSystem.dataSource)) {
       initializers.push(
         () =>
           new OneShotInitializerFDv2(
@@ -335,13 +333,6 @@ function constructFDv2(
             config.logger,
           ),
       );
-    }
-
-    // If a file intializer is configured, then we will add it as a fallback to the
-    // polling initializer.
-    if (initializerOptions.file?.enabled) {
-      console.log('adding file data initializer');
-      initializers.push(() => new FileDataInitializerFDv2(config, platform));
     }
 
     const synchronizers: subsystem.LDDataSourceFactory[] = [];

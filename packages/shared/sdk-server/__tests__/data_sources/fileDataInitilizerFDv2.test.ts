@@ -7,8 +7,8 @@ import {
   WatchHandle,
 } from '@launchdarkly/js-sdk-common';
 
+import { FileSystemDataSourceConfiguration } from '../../src/api';
 import FileDataInitializerFDv2 from '../../src/data_sources/fileDataInitilizerFDv2';
-import Configuration from '../../src/options/Configuration';
 import { createBasicPlatform } from '../createBasicPlatform';
 import TestLogger, { LogLevel } from '../Logger';
 
@@ -78,7 +78,6 @@ describe('FileDataInitializerFDv2', () => {
   let mockFilesystem: MockFilesystem;
   let logger: TestLogger;
   let platform: Platform;
-  let config: Configuration;
   let mockDataCallback: jest.Mock;
   let mockStatusCallback: jest.Mock;
 
@@ -100,24 +99,14 @@ describe('FileDataInitializerFDv2', () => {
   });
 
   it('throws error when paths are not provided', () => {
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: [],
-            },
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: [],
+    };
 
     expect(() => {
       /* eslint-disable-next-line no-new */
-      new FileDataInitializerFDv2(config, platform);
+      new FileDataInitializerFDv2(options, platform, logger);
     }).toThrow('FileDataInitializerFDv2: paths are required');
   });
 
@@ -127,46 +116,26 @@ describe('FileDataInitializerFDv2', () => {
       fileSystem: undefined,
     };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['test.json'],
-            },
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['test.json'],
+    };
 
     expect(() => {
       /* eslint-disable-next-line no-new */
-      new FileDataInitializerFDv2(config, platformWithoutFileSystem);
+      new FileDataInitializerFDv2(options, platformWithoutFileSystem, logger);
     }).toThrow('FileDataInitializerFDv2: file system is required');
   });
 
   it('loads and processes JSON file with flags and segments', async () => {
     mockFilesystem.fileData['test.json'] = { timestamp: 0, data: allPropertiesJson };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['test.json'],
-            },
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['test.json'],
+    };
 
-    const initializer = new FileDataInitializerFDv2(config, platform);
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
     initializer.start(mockDataCallback, mockStatusCallback);
 
     await jest.runAllTimersAsync();
@@ -179,22 +148,12 @@ describe('FileDataInitializerFDv2', () => {
     mockFilesystem.fileData['flags.json'] = { timestamp: 0, data: flagOnlyJson };
     mockFilesystem.fileData['segments.json'] = { timestamp: 0, data: segmentOnlyJson };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['flags.json', 'segments.json'],
-            },
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['flags.json', 'segments.json'],
+    };
 
-    const initializer = new FileDataInitializerFDv2(config, platform);
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
     initializer.start(mockDataCallback, mockStatusCallback);
 
     await jest.runAllTimersAsync();
@@ -218,23 +177,13 @@ describe('FileDataInitializerFDv2', () => {
 
     mockFilesystem.fileData['test.yaml'] = { timestamp: 0, data: yamlData };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['test.yaml'],
-              yamlParser: mockYamlParser,
-            },
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['test.yaml'],
+      yamlParser: mockYamlParser,
+    };
 
-    const initializer = new FileDataInitializerFDv2(config, platform);
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
     initializer.start(mockDataCallback, mockStatusCallback);
 
     await jest.runAllTimersAsync();
@@ -248,22 +197,12 @@ describe('FileDataInitializerFDv2', () => {
     const yamlData = 'flags:\n  flag1:\n    key: flag1';
     mockFilesystem.fileData['test.yaml'] = { timestamp: 0, data: yamlData };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['test.yaml'],
-            }
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['test.yaml'],
+    };
 
-    const initializer = new FileDataInitializerFDv2(config, platform);
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
     initializer.start(mockDataCallback, mockStatusCallback);
 
     await jest.runAllTimersAsync();
@@ -278,22 +217,12 @@ describe('FileDataInitializerFDv2', () => {
   it('handles invalid JSON gracefully', async () => {
     mockFilesystem.fileData['test.json'] = { timestamp: 0, data: 'invalid json {{{{' };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['test.json'],
-            },
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['test.json'],
+    };
 
-    const initializer = new FileDataInitializerFDv2(config, platform);
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
     initializer.start(mockDataCallback, mockStatusCallback);
 
     await jest.runAllTimersAsync();
@@ -342,22 +271,12 @@ describe('FileDataInitializerFDv2', () => {
     mockFilesystem.fileData['flags.json'] = { timestamp: 0, data: flagFile };
     mockFilesystem.fileData['segments.json'] = { timestamp: 0, data: segmentFile };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['flags.json', 'segments.json'],
-            }
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['flags.json', 'segments.json'],
+    };
 
-    const initializer = new FileDataInitializerFDv2(config, platform);
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
     initializer.start(mockDataCallback, mockStatusCallback);
 
     await jest.runAllTimersAsync();
@@ -429,22 +348,12 @@ describe('FileDataInitializerFDv2', () => {
     mockFilesystem.fileData['file1.json'] = { timestamp: 0, data: file1 };
     mockFilesystem.fileData['file2.json'] = { timestamp: 0, data: file2 };
 
-    config = new Configuration({
-      dataSystem: {
-        dataSource: {
-          dataSourceOptionsType: 'standard',
-          initializerOptions: {
-            file: {
-              enabled: true,
-              paths: ['file1.json', 'file2.json'],
-            },
-          },
-        },
-      },
-      logger,
-    });
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['file1.json', 'file2.json'],
+    };
 
-    const initializer = new FileDataInitializerFDv2(config, platform);
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
     initializer.start(mockDataCallback, mockStatusCallback);
 
     await jest.runAllTimersAsync();

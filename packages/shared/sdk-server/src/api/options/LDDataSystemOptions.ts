@@ -36,7 +36,7 @@ export interface LDDataSystemOptions {
   /**
    * Configuration options for the Data Source that the SDK uses to get flags and other
    * data from the LaunchDarkly servers. Choose one of {@link StandardDataSourceOptions},
-   * {@link StreamingDataSourceOptions}, or {@link PollingDataSourceOptions}; setting the
+   * {@link StreamingDataSourceOptions}, {@link PollingDataSourceOptions}, or {@link CustomDataSourceOptions}; setting the
    * type and the optional fields you want to customize.
    *
    * If not specified, this defaults to using the {@link StandardDataSourceOptions} which
@@ -75,22 +75,13 @@ export type DataSourceOptions =
   | StreamingDataSourceOptions
   | PollingDataSourceOptions;
 
+export type DataSourceConfiguration =
+  | FileSystemDataSourceConfiguration
+  | StreamingDataSourceConfiguration
+  | PollingDataSourceConfiguration;
 
-interface initializerOptionsBase {
-  /**
-   * whether the initializer is enabled. This value defaults to false.
-   *
-   * @default false
-   */
-  enabled: boolean;
-}
-
-/**
- * Initializer option to read data from a file.
- *
- * NOTE: right now we only support data sources that are in FDv1 format.
- */
-export interface FileDataInitializerOptions extends initializerOptionsBase {
+export interface FileSystemDataSourceConfiguration {
+  type: 'file';
   /**
    * The paths to the files to read data from.
    */
@@ -101,71 +92,9 @@ export interface FileDataInitializerOptions extends initializerOptionsBase {
   yamlParser?: (data: string) => any;
 }
 
-/**
- * Initializer option to initilize the SDK from doing a one time full payload transfer.
- * This will be the default initializer used by the standard data source type.
- */
-export interface PollingDataInitializerOptions extends initializerOptionsBase {
-    /**
-   * whether the initializer is enabled. This value defaults to true.
-   *
-   * @default true
-   */
-    enabled: boolean;
-}
+export interface StreamingDataSourceConfiguration {
+  type: 'streaming';
 
-export interface InitializerOptions {
-  file?: FileDataInitializerOptions;
-  polling?: PollingDataInitializerOptions;
-}
-
-interface dataSourceOptionsBase {
-  /**
-   * This is the preconfigured data source type that the SDK will use.
-   *
-   * standard: a combination of streaming and polling
-   * streamingOnly: only streaming
-   * pollingOnly: only polling
-   *
-   * @default 'standard'
-   */
-  dataSourceOptionsType: 'standard' | 'streamingOnly' | 'pollingOnly';
-  /**
-   * Initializer options for the data source.
-   */
-  initializerOptions?: InitializerOptions;
-}
-
-/**
- * This standard data source is the recommended datasource for most customers. It will use
- * a combination of streaming and polling to initialize the SDK, provide real time updates,
- * and can switch between streaming and polling automatically to provide redundancy.
- */
-export interface StandardDataSourceOptions extends dataSourceOptionsBase {
-  dataSourceOptionsType: 'standard';
-  /**
-   * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
-   *
-   * The streaming service uses a backoff algorithm (with jitter) every time the connection needs
-   * to be reestablished. The delay for the first reconnection will start near this value, and then
-   * increase exponentially for any subsequent connection failures.
-   *
-   * The default value is 1.
-   */
-  streamInitialReconnectDelay?: number;
-
-  /**
-   * The time between polling requests, in seconds. Default if omitted.
-   */
-  pollInterval?: number;
-}
-
-/**
- * This data source will make best effort to maintain a streaming connection to LaunchDarkly services
- * to provide real time data updates.
- */
-export interface StreamingDataSourceOptions extends dataSourceOptionsBase {
-  dataSourceOptionsType: 'streamingOnly';
   /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
    *
@@ -178,15 +107,73 @@ export interface StreamingDataSourceOptions extends dataSourceOptionsBase {
   streamInitialReconnectDelay?: number;
 }
 
-/**
- * This data source will periodically make a request to LaunchDarkly services to retrieve updated data.
- */
-export interface PollingDataSourceOptions extends dataSourceOptionsBase {
-  dataSourceOptionsType: 'pollingOnly';
+export interface PollingDataSourceConfiguration {
+  type: 'polling';
   /**
    * The time between polling requests, in seconds. Default if omitted.
    */
   pollInterval?: number;
+}
+
+/**
+ * This standard data source is the recommended datasource for most customers. It will use
+ * a combination of streaming and polling to initialize the SDK, provide real time updates,
+ * and can switch between streaming and polling automatically to provide redundancy.
+ */
+export interface StandardDataSourceOptions
+  extends Omit<StreamingDataSourceConfiguration, 'type'>,
+    Omit<PollingDataSourceConfiguration, 'type'> {
+  dataSourceOptionsType: 'standard';
+}
+
+/**
+ * This data source will make best effort to maintain a streaming connection to LaunchDarkly services
+ * to provide real time data updates.
+ */
+export interface StreamingDataSourceOptions extends Omit<StreamingDataSourceConfiguration, 'type'> {
+  dataSourceOptionsType: 'streamingOnly';
+}
+
+/**
+ * This data source will periodically make a request to LaunchDarkly services to retrieve updated data.
+ */
+export interface PollingDataSourceOptions extends Omit<PollingDataSourceConfiguration, 'type'> {
+  dataSourceOptionsType: 'pollingOnly';
+}
+
+/**
+ * Initializer configuration options
+ */
+export type InitializerDataSource =
+  | FileSystemDataSourceConfiguration
+  | PollingDataSourceConfiguration;
+
+/**
+ * Synchronizer configuration options
+ */
+export type SynchronizerDataSource =
+  | PollingDataSourceConfiguration
+  | StreamingDataSourceConfiguration;
+
+/**
+ * This data source will allow developers to define their own composite data source
+ */
+export interface CustomDataSourceOptions {
+  dataSourceOptionsType: 'custom';
+
+  /**
+   * Ordered list of {@link InitializerDataSource} that will run in order. The first
+   * initializer that successfully returns a valid payload will transition the sdk
+   * out of intialization stage into the synchronization stage.
+   */
+  initializers: Array<InitializerDataSource>;
+
+  /**
+   * Order list of {@link SynchronizerDataSource} in priority order. Datasources will
+   * failover to the next datasource in this array until there are no datasources left
+   * to run.
+   */
+  synchronizers: Array<SynchronizerDataSource>;
 }
 
 export function isStandardOptions(u: any): u is StandardDataSourceOptions {

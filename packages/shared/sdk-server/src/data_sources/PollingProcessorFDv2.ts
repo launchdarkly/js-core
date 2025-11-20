@@ -36,10 +36,7 @@ function processFDv1FlagsAndSegments(
 ) {
   const adaptor = new internal.FDv1PayloadAdaptor(payloadProcessor);
 
-  adaptor.start('xfer-full')
-    .useSelector('FDv1Fallback')
-    .pushFdv1Payload(data)
-    .finish();
+  adaptor.start('xfer-full').useSelector('FDv1Fallback').pushFdv1Payload(data).finish();
 }
 
 /**

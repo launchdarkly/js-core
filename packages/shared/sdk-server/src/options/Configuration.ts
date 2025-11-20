@@ -82,11 +82,6 @@ const DEFAULT_STREAM_RECONNECT_DELAY = 1;
 
 const defaultStandardDataSourceOptions: StandardDataSourceOptions = {
   dataSourceOptionsType: 'standard',
-  initializerOptions: {
-    polling: {
-      enabled: true,
-    }
-  },
   streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
   pollInterval: DEFAULT_POLL_INTERVAL,
 };
@@ -253,17 +248,6 @@ function validateDataSystemOptions(options: Options): {
         ),
       ];
     }
-    // Preserve initializer options if it was provided, since it's not validated by validateTypesAndNames.
-    // Currently, setting this option is most commonly used as an override of default initializer options.
-    // Check that the value is not undefined to avoid overwriting defaults when explicitly set to undefined.
-    if (
-      options.dataSource &&
-      'initializerOptions' in options.dataSource &&
-      options.dataSource.initializerOptions !== undefined
-    ) {
-      validatedDataSourceOptions.initializerOptions = options.dataSource.initializerOptions;
-    }
-
     validatedOptions.dataSource = validatedDataSourceOptions;
     allErrors.push(...errors);
   } else {

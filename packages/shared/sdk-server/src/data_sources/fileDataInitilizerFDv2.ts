@@ -8,10 +8,9 @@ import {
   subsystem as subsystemCommon,
 } from '@launchdarkly/js-sdk-common';
 
-import { FileDataInitializerOptions } from '../api';
+import { FileSystemDataSourceConfiguration } from '../api';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
-import Configuration from '../options/Configuration';
 import { processFlag, processSegment } from '../store/serialization';
 import FileLoader from './FileLoader';
 
@@ -25,17 +24,16 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
   private _yamlParser?: (data: string) => any;
   private _fileLoader?: FileLoader;
 
-  constructor(config: Configuration, platform: Platform) {
-    const options = config.dataSystem?.dataSource?.initializerOptions?.file as FileDataInitializerOptions;
+  constructor(options: FileSystemDataSourceConfiguration, platform: Platform, logger: LDLogger) {
     this._validateInputs(options, platform);
 
     this._paths = options.paths;
-    this._logger = config.logger;
+    this._logger = logger;
     this._filesystem = platform.fileSystem!;
     this._yamlParser = options.yamlParser;
   }
 
-  private _validateInputs(options: FileDataInitializerOptions, platform: Platform) {
+  private _validateInputs(options: FileSystemDataSourceConfiguration, platform: Platform) {
     if (!options.paths || options.paths.length === 0) {
       throw new Error('FileDataInitializerFDv2: paths are required');
     }
@@ -89,9 +87,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
 
           statusCallback(subsystemCommon.DataSourceState.Valid);
 
-          adaptor.start('xfer-full')
-            .pushFdv1Payload(parsedData)
-            .finish();
+          adaptor.start('xfer-full').pushFdv1Payload(parsedData).finish();
 
           statusCallback(subsystemCommon.DataSourceState.Closed);
         } catch (err) {
