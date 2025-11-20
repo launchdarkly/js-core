@@ -80,7 +80,10 @@
     "packages/store/node-server-sdk-redis": {},
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        "src/platform/BrowserInfo.ts"
+      ]
     },
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
