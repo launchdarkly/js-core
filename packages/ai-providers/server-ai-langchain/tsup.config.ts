@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
-    index: 'src/LangChainProvider.ts',
+    index: 'src/index.ts',
   },
   format: ['esm', 'cjs'],
   splitting: false,

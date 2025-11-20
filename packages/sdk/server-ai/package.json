@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai",
-  "version": "0.14.3",
+  "version": "0.14.1",
   "description": "LaunchDarkly AI SDK for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-ai",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
-  "types": "./dist/index.d.cts",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "exports": {
     ".": {

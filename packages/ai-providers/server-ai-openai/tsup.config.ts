@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: {
-    index: 'src/OpenAIProvider.ts',
+    index: 'src/index.ts',
   },
   format: ['esm', 'cjs'],
   splitting: false,
