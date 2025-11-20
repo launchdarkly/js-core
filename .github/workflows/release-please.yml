@@ -1,12 +1,81 @@
+# This workflow handles both automated and manual package publishing:
+#
+# AUTOMATED PUBLISHING (on push to main):
+#   - Triggered automatically when changes are pushed to the main branch
+#   - Uses release-please to create releases based on conventional commits
+#   - Publishes packages to npm automatically when release PRs are merged
+#   - All release-* jobs run in dependency order based on package dependencies
+#
+# MANUAL PUBLISHING (via workflow_dispatch):
+#   - Can be triggered manually from the Actions tab
+#   - Allows publishing a specific package to npm or jsr
+#   - Supports prerelease and dry-run modes
+#   - Runs the manual-publish job which builds, tests, and publishes the selected package
+#   - Primarily used for pre-release jobs, or to correct publishing errors during the automated process
+#
+# The workflow uses conditional logic to ensure only the appropriate jobs run:
+#   - release-please job: only runs on push events
+#   - release-* jobs: only run on push events when their package has a new release
+#   - manual-publish job: only runs on workflow_dispatch events
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      package_registry:
+        description: 'Publish to'
+        required: true
+        default: 'npm'
+        type: choice
+        options:
+          - npm
+          - jsr
+      workspace_path:
+        description: 'The workspace to publish'
+        required: true
+        default: 'packages/shared/common'
+        type: choice
+        options:
+          - packages/shared/common
+          - packages/shared/sdk-client
+          - packages/shared/sdk-server
+          - packages/shared/sdk-server-edge
+          - packages/shared/akamai-edgeworker-sdk
+          - packages/sdk/cloudflare
+          - packages/sdk/fastly
+          - packages/sdk/react-native
+          - packages/sdk/server-node
+          - packages/sdk/react-universal
+          - packages/sdk/vercel
+          - packages/sdk/akamai-base
+          - packages/sdk/akamai-edgekv
+          - packages/store/node-server-sdk-redis
+          - packages/store/node-server-sdk-dynamodb
+          - packages/telemetry/node-server-sdk-otel
+          - packages/tooling/jest
+          - packages/sdk/browser
+          - packages/sdk/server-ai
+          - packages/ai-providers/server-ai-openai
+          - packages/ai-providers/server-ai-vercel
+          - packages/ai-providers/server-ai-langchain
+          - packages/telemetry/browser-telemetry
+          - packages/sdk/combined-browser
+          - packages/sdk/shopify-oxygen
+      prerelease:
+        description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
+        type: boolean
+        required: true
+      dry_run:
+        description: 'Is this a dry run. If so no package will be published.'
+        type: boolean
+        required: true
 name: release-please
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     outputs:
       package-common-released: ${{ steps.release.outputs['packages/shared/common--release_created'] }}
       package-sdk-client-released: ${{ steps.release.outputs['packages/shared/sdk-client--release_created'] }}
@@ -48,10 +117,6 @@ jobs:
     if: ${{ needs.release-please.outputs.package-common-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-common
         name: Full release of packages/shared/common
         uses: ./actions/full-release
@@ -68,10 +133,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-sdk-client
         name: Full release of packages/shared/sdk-client
         uses: ./actions/full-release
@@ -88,10 +149,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-sdk-server
         name: Full release of packages/shared/sdk-server
         uses: ./actions/full-release
@@ -108,10 +165,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-sdk-server-edge
         name: Full release of packages/shared/sdk-server-edge
         uses: ./actions/full-release
@@ -128,10 +181,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-akamai-edgeworker-sdk
         name: Full release of packages/shared/akamai-edgeworker-sdk
         uses: ./actions/full-release
@@ -148,10 +197,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-cloudflare
         name: Full release of packages/sdk/cloudflare
         uses: ./actions/full-release
@@ -168,10 +213,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-fastly-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-fastly
         name: Full release of packages/sdk/fastly
         uses: ./actions/full-release
@@ -188,10 +229,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-react-native
         name: Full release of packages/sdk/react-native
         uses: ./actions/full-release
@@ -208,10 +245,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-browser
         name: Full release of packages/sdk/browser
         uses: ./actions/full-release
@@ -228,10 +261,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-server-node
         name: Full release of packages/sdk/server-node
         uses: ./actions/full-release
@@ -248,10 +277,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-vercel
         name: Full release of packages/sdk/vercel
         uses: ./actions/full-release
@@ -268,10 +293,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-akamai-base
         name: Full release of packages/sdk/akamai-base
         uses: ./actions/full-release
@@ -288,10 +309,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-akamai-edgekv
         name: Full release of packages/sdk/akamai-edgekv
         uses: ./actions/full-release
@@ -308,10 +325,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - run: |
           sudo apt-get update
           sudo apt-get install redis-server
@@ -332,10 +345,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local
       - id: release-node-server-sdk-dynamodb
@@ -354,10 +363,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-node-server-sdk-otel
         name: Full release of packages/telemetry/node-server-sdk-otel
         uses: ./actions/full-release
@@ -374,10 +379,6 @@ jobs:
     if: ${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-tooling-jest
         name: Full release of packages/tooling/jest
         uses: ./actions/full-release
@@ -394,10 +395,6 @@ jobs:
     if: false #${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-universal-release == 'true' }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-react-universal-sdk
         name: Full release of packages/sdk/react-universal
         uses: ./actions/full-release
@@ -414,10 +411,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-react-native
         name: Full release of packages/sdk/server-ai
         uses: ./actions/full-release
@@ -434,10 +427,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-telemetry-released == 'true' }}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-browser-telemetry
         name: Full release of packages/telemetry/browser-telemetry
         uses: ./actions/full-release
@@ -454,10 +443,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-combined-browser-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-combined-browser
         name: Full release of packages/sdk/combined-browser
         uses: ./actions/full-release
@@ -474,10 +459,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-langchain-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-server-ai-langchain
         name: Full release of packages/ai-providers/server-ai-langchain
         uses: ./actions/full-release
@@ -494,10 +475,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-openai-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-server-ai-openai
         name: Full release of packages/ai-providers/server-ai-openai
         uses: ./actions/full-release
@@ -514,10 +491,6 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-vercel-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-server-ai-vercel
         name: Full release of packages/ai-providers/server-ai-vercel
         uses: ./actions/full-release
@@ -534,13 +507,60 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-shopify-oxygen-released == 'true'}}
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
-        with:
-          node-version: 24.x
-          registry-url: 'https://registry.npmjs.org'
       - id: release-shopify-oxygen
         name: Full release of packages/sdk/shopify-oxygen
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/shopify-oxygen
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  manual-publish:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: ./actions/setup-release-node
+
+      - name: 'Setup Redis'
+        if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-redis' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install redis-server
+          sudo service redis-server start
+
+      - name: 'Setup DynamoDB'
+        if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-dynamodb' }}
+        run: |
+          sudo docker run -d -p 8000:8000 amazon/dynamodb-local
+
+      - name: 'Set WORKSPACE_NAME variable'
+        run: |
+          WORKSPACE_NAME=$(./scripts/package-name.sh ${{ inputs.workspace_path }})
+          echo "WORKSPACE_NAME=$WORKSPACE_NAME" >> $GITHUB_ENV
+      - id: build-and-test
+        name: Build and Test
+        uses: ./actions/ci
+        with:
+          workspace_name: ${{ env.WORKSPACE_NAME }}
+          workspace_path: ${{ inputs.workspace_path }}
+      - id: publish-jsr
+        name: Publish Package to jsr
+        if: ${{ inputs.package_registry == 'jsr' }}
+        uses: ./actions/publish-jsr
+        with:
+          workspace_name: ${{ env.WORKSPACE_NAME }}
+          workspace_path: ${{ inputs.workspace_path }}
+          dry_run: ${{ inputs.dry_run }}
+      # Publishing credentials for NPM come from OIDC.
+      - id: publish-npm
+        name: Publish Package to npm
+        if: ${{ inputs.package_registry == 'npm' }}
+        uses: ./actions/publish
+        with:
+          workspace_name: ${{ env.WORKSPACE_NAME }}
+          workspace_path: ${{ inputs.workspace_path }}
+          prerelease: ${{ inputs.prerelease }}
+          dry_run: ${{ inputs.dry_run }}
