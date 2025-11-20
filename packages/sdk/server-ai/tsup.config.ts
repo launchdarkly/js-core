@@ -11,5 +11,4 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   dts: true,
-  external: [/^@launchdarkly\//], // Don't bundle any @launchdarkly packages
 });
