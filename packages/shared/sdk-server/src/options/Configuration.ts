@@ -83,7 +83,9 @@ const DEFAULT_STREAM_RECONNECT_DELAY = 1;
 const defaultStandardDataSourceOptions: StandardDataSourceOptions = {
   dataSourceOptionsType: 'standard',
   initializerOptions: {
-    type: 'polling',
+    polling: {
+      enabled: true,
+    }
   },
   streamInitialReconnectDelay: DEFAULT_STREAM_RECONNECT_DELAY,
   pollInterval: DEFAULT_POLL_INTERVAL,

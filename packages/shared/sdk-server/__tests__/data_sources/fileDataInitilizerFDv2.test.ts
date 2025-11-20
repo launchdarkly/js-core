@@ -105,8 +105,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: [],
+            file: {
+              enabled: true,
+              paths: [],
+            },
           },
         },
       },
@@ -130,8 +132,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['test.json'],
+            file: {
+              enabled: true,
+              paths: ['test.json'],
+            },
           },
         },
       },
@@ -152,8 +156,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['test.json'],
+            file: {
+              enabled: true,
+              paths: ['test.json'],
+            },
           },
         },
       },
@@ -178,8 +184,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['flags.json', 'segments.json'],
+            file: {
+              enabled: true,
+              paths: ['flags.json', 'segments.json'],
+            },
           },
         },
       },
@@ -215,9 +223,11 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['test.yaml'],
-            yamlParser: mockYamlParser,
+            file: {
+              enabled: true,
+              paths: ['test.yaml'],
+              yamlParser: mockYamlParser,
+            },
           },
         },
       },
@@ -243,8 +253,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['test.yaml'],
+            file: {
+              enabled: true,
+              paths: ['test.yaml'],
+            }
           },
         },
       },
@@ -271,8 +283,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['test.json'],
+            file: {
+              enabled: true,
+              paths: ['test.json'],
+            },
           },
         },
       },
@@ -333,8 +347,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['flags.json', 'segments.json'],
+            file: {
+              enabled: true,
+              paths: ['flags.json', 'segments.json'],
+            }
           },
         },
       },
@@ -351,7 +367,7 @@ describe('FileDataInitializerFDv2', () => {
 
     // Verify the combined data structure
     const dataCall = mockDataCallback.mock.calls[0];
-    expect(dataCall[0]).toBe(true); // basis
+    expect(dataCall[0]).toBe(false);
     expect(dataCall[1]).toHaveProperty('initMetadata');
     expect(dataCall[1]).toHaveProperty('payload');
 
@@ -418,8 +434,10 @@ describe('FileDataInitializerFDv2', () => {
         dataSource: {
           dataSourceOptionsType: 'standard',
           initializerOptions: {
-            type: 'file',
-            paths: ['file1.json', 'file2.json'],
+            file: {
+              enabled: true,
+              paths: ['file1.json', 'file2.json'],
+            },
           },
         },
       },

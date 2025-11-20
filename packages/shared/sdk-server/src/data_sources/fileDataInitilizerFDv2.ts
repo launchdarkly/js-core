@@ -26,7 +26,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
   private _fileLoader?: FileLoader;
 
   constructor(config: Configuration, platform: Platform) {
-    const options = config.dataSystem?.dataSource?.initializerOptions as FileDataInitializerOptions;
+    const options = config.dataSystem?.dataSource?.initializerOptions?.file as FileDataInitializerOptions;
     this._validateInputs(options, platform);
 
     this._paths = options.paths;
@@ -72,6 +72,8 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
       this._logger,
     );
 
+    const adaptor = new internal.FDv1PayloadAdaptor(payloadProcessor);
+
     this._fileLoader = new FileLoader(
       this._filesystem,
       this._paths,
@@ -81,12 +83,15 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
           const parsedData = this._processFileData(results);
 
           payloadProcessor.addPayloadListener((payload) => {
-            dataCallback(payload.basis, { initMetadata, payload });
+            // NOTE: file data initializer will never have a valid basis, so we always pass false
+            dataCallback(false, { initMetadata, payload });
           });
 
           statusCallback(subsystemCommon.DataSourceState.Valid);
 
-          payloadProcessor.processEvents(parsedData.events);
+          adaptor.start('xfer-full')
+            .pushFdv1Payload(parsedData)
+            .finish();
 
           statusCallback(subsystemCommon.DataSourceState.Closed);
         } catch (err) {
@@ -141,24 +146,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
       },
     );
 
-    const changeSetBuilder = new internal.FDv2ChangeSetBuilder();
-    changeSetBuilder.start('xfer-full');
-
-    Object.keys(combined).forEach((kind: string) => {
-      Object.entries<any>(combined[kind]).forEach(([k, v]) => {
-        changeSetBuilder.putObject({
-          // strong assumption here that we only have segments and flags.
-          kind: kind === 'segments' ? 'segment' : 'flag',
-          key: k,
-          version: v.version || 1,
-          object: v,
-        });
-      });
-    });
-
-    return {
-      events: changeSetBuilder.finish(),
-    };
+    return combined;
   }
 
   stop() {

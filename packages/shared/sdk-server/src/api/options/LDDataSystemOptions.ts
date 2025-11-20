@@ -75,14 +75,29 @@ export type DataSourceOptions =
   | StreamingDataSourceOptions
   | PollingDataSourceOptions;
 
+
+interface initializerOptionsBase {
+  /**
+   * whether the initializer is enabled. This value defaults to false.
+   *
+   * @default false
+   */
+  enabled: boolean;
+}
+
 /**
  * Initializer option to read data from a file.
  *
  * NOTE: right now we only support data sources that are in FDv1 format.
  */
-export interface FileDataInitializerOptions {
-  type: 'file';
+export interface FileDataInitializerOptions extends initializerOptionsBase {
+  /**
+   * The paths to the files to read data from.
+   */
   paths: Array<string>;
+  /**
+   * A function to parse the data from the file.
+   */
   yamlParser?: (data: string) => any;
 }
 
@@ -90,8 +105,35 @@ export interface FileDataInitializerOptions {
  * Initializer option to initilize the SDK from doing a one time full payload transfer.
  * This will be the default initializer used by the standard data source type.
  */
-export interface PollingDataInitializerOptions {
-  type: 'polling';
+export interface PollingDataInitializerOptions extends initializerOptionsBase {
+    /**
+   * whether the initializer is enabled. This value defaults to true.
+   *
+   * @default true
+   */
+    enabled: boolean;
+}
+
+export interface InitializerOptions {
+  file?: FileDataInitializerOptions;
+  polling?: PollingDataInitializerOptions;
+}
+
+interface dataSourceOptionsBase {
+  /**
+   * This is the preconfigured data source type that the SDK will use.
+   *
+   * standard: a combination of streaming and polling
+   * streamingOnly: only streaming
+   * pollingOnly: only polling
+   *
+   * @default 'standard'
+   */
+  dataSourceOptionsType: 'standard' | 'streamingOnly' | 'pollingOnly';
+  /**
+   * Initializer options for the data source.
+   */
+  initializerOptions?: InitializerOptions;
 }
 
 /**
@@ -99,9 +141,8 @@ export interface PollingDataInitializerOptions {
  * a combination of streaming and polling to initialize the SDK, provide real time updates,
  * and can switch between streaming and polling automatically to provide redundancy.
  */
-export interface StandardDataSourceOptions {
+export interface StandardDataSourceOptions extends dataSourceOptionsBase {
   dataSourceOptionsType: 'standard';
-  initializerOptions?: FileDataInitializerOptions | PollingDataInitializerOptions;
   /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
    *
@@ -123,9 +164,8 @@ export interface StandardDataSourceOptions {
  * This data source will make best effort to maintain a streaming connection to LaunchDarkly services
  * to provide real time data updates.
  */
-export interface StreamingDataSourceOptions {
+export interface StreamingDataSourceOptions extends dataSourceOptionsBase {
   dataSourceOptionsType: 'streamingOnly';
-  initializerOptions?: FileDataInitializerOptions | PollingDataInitializerOptions;
   /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
    *
@@ -141,9 +181,8 @@ export interface StreamingDataSourceOptions {
 /**
  * This data source will periodically make a request to LaunchDarkly services to retrieve updated data.
  */
-export interface PollingDataSourceOptions {
+export interface PollingDataSourceOptions extends dataSourceOptionsBase {
   dataSourceOptionsType: 'pollingOnly';
-  initializerOptions?: FileDataInitializerOptions | PollingDataInitializerOptions;
   /**
    * The time between polling requests, in seconds. Default if omitted.
    */

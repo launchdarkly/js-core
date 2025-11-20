@@ -1,4 +1,4 @@
-import FDv2ChangeSetBuilder from './FDv2ChangeSetBuilder';
+import FDv1PayloadAdaptor from './FDv1PayloadAdaptor';
 import {
   FDv2EventsCollection,
   Payload,
@@ -15,5 +15,5 @@ export {
   PayloadProcessor,
   PayloadStreamReader,
   Update,
-  FDv2ChangeSetBuilder,
+  FDv1PayloadAdaptor,
 };

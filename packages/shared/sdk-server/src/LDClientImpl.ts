@@ -324,9 +324,10 @@ function constructFDv2(
   if (!(config.offline || config.dataSystem!.useLdd)) {
     // make the FDv2 composite datasource with initializers/synchronizers
     const initializers: subsystem.LDDataSourceFactory[] = [];
+    const initializerOptions = dataSystem.dataSource?.initializerOptions ?? {};
 
-    // use one shot initializer for performance and cost if we can do a combination of polling and streaming
-    if (dataSystem.dataSource?.initializerOptions?.type === 'polling') {
+    if (initializerOptions.polling?.enabled) {
+      console.log('adding one shot initializer');
       initializers.push(
         () =>
           new OneShotInitializerFDv2(
@@ -334,7 +335,12 @@ function constructFDv2(
             config.logger,
           ),
       );
-    } else if (dataSystem.dataSource?.initializerOptions?.type === 'file') {
+    }
+
+    // If a file intializer is configured, then we will add it as a fallback to the
+    // polling initializer.
+    if (initializerOptions.file?.enabled) {
+      console.log('adding file data initializer');
       initializers.push(() => new FileDataInitializerFDv2(config, platform));
     }
 
