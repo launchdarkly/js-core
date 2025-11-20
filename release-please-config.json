@@ -85,6 +85,7 @@
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
       "extra-files": [
+        "src/sdkInfo.ts",
         {
           "type": "json",
           "path": "examples/bedrock/package.json",

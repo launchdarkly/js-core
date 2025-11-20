@@ -24,7 +24,7 @@
     }
   },
   "scripts": {
-    "build": "tsup && ../../../scripts/replace-version.sh .",
+    "build": "tsup",
     "lint": "npx eslint . --ext .ts",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "lint:fix": "yarn run lint --fix",

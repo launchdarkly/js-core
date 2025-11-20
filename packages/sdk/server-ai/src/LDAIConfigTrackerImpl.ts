@@ -12,9 +12,7 @@ import {
   LDTokenUsage,
 } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
-
-const aiSdkName = '@launchdarkly/server-sdk-ai';
-const aiSdkVersion = '__LD_VERSION__';
+import { aiSdkName, aiSdkVersion } from './sdkInfo';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   private _trackedMetrics: LDAIMetricSummary = {};
