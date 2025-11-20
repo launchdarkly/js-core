@@ -10,7 +10,7 @@ class MockPayloadProcessor extends PayloadProcessor {
     super({}, undefined, undefined);
   }
 
-  processEvents(events: Event[]) {
+  override processEvents(events: Event[]) {
     this.processedEvents = [...this.processedEvents, ...events];
     // Don't call super.processEvents to avoid side effects in tests
   }
@@ -71,7 +71,9 @@ it('includes payload-transferred as the last event with empty state', () => {
   adaptor.start('xfer-full');
   adaptor.finish();
 
-  const payloadTransferredEvent = processor.processedEvents[processor.processedEvents.length - 1] as Event;
+  const payloadTransferredEvent = processor.processedEvents[
+    processor.processedEvents.length - 1
+  ] as Event;
   expect(payloadTransferredEvent.event).toBe('payload-transferred');
   expect(payloadTransferredEvent.data).toBeDefined();
 

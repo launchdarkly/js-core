@@ -34,6 +34,7 @@ import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import {
+  isCustomOptions,
   isPollingOnlyOptions,
   isStandardOptions,
   isStreamingOnlyOptions,
@@ -44,6 +45,7 @@ import { createPluginEnvironmentMetadata } from './createPluginEnvironmentMetada
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
+import FileDataInitializerFDv2 from './data_sources/fileDataInitilizerFDv2';
 import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
 import PollingProcessor from './data_sources/PollingProcessor';
 import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
@@ -65,7 +67,10 @@ import FlagsStateBuilder from './FlagsStateBuilder';
 import HookRunner from './hooks/HookRunner';
 import MigrationOpEventToInputEvent from './MigrationOpEventConversion';
 import MigrationOpTracker from './MigrationOpTracker';
-import Configuration, { DEFAULT_POLL_INTERVAL } from './options/Configuration';
+import Configuration, {
+  DEFAULT_POLL_INTERVAL,
+  DEFAULT_STREAM_RECONNECT_DELAY,
+} from './options/Configuration';
 import { ServerInternalOptions } from './options/ServerInternalOptions';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
@@ -323,59 +328,129 @@ function constructFDv2(
   if (!(config.offline || config.dataSystem!.useLdd)) {
     // make the FDv2 composite datasource with initializers/synchronizers
     const initializers: subsystem.LDDataSourceFactory[] = [];
-
-    // use one shot initializer for performance and cost if we can do a combination of polling and streaming
-    if (isStandardOptions(dataSystem.dataSource)) {
-      initializers.push(
-        () =>
-          new OneShotInitializerFDv2(
-            new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
-            config.logger,
-          ),
-      );
-    }
-
     const synchronizers: subsystem.LDDataSourceFactory[] = [];
-    // if streaming is configured, add streaming synchronizer
-    if (isStandardOptions(dataSystem.dataSource) || isStreamingOnlyOptions(dataSystem.dataSource)) {
-      const reconnectDelay = dataSystem.dataSource.streamInitialReconnectDelay;
-      synchronizers.push(
-        () =>
-          new StreamingProcessorFDv2(
-            clientContext,
-            '/sdk/stream',
-            [],
-            baseHeaders,
-            diagnosticsManager,
-            reconnectDelay,
-          ),
-      );
-    }
+    const fdv1FallbackSynchronizers: subsystem.LDDataSourceFactory[] = [];
 
-    let pollingInterval = DEFAULT_POLL_INTERVAL;
-    // if polling is configured, add polling synchronizer
-    if (isStandardOptions(dataSystem.dataSource) || isPollingOnlyOptions(dataSystem.dataSource)) {
-      pollingInterval = dataSystem.dataSource.pollInterval ?? DEFAULT_POLL_INTERVAL;
-      synchronizers.push(
+    if (isCustomOptions(dataSystem.dataSource)) {
+      const { initializers: initializerConfigs = [], synchronizers: synchronizerConfigs = [] } =
+        dataSystem.dataSource;
+
+      initializerConfigs.forEach((initializerConfig) => {
+        switch (initializerConfig.type) {
+          case 'file': {
+            initializers.push(
+              () => new FileDataInitializerFDv2(initializerConfig, platform, config.logger),
+            );
+            break;
+          }
+          case 'polling': {
+            const { pollInterval = DEFAULT_POLL_INTERVAL } = initializerConfig;
+            initializers.push(
+              () =>
+                new PollingProcessorFDv2(
+                  new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+                  pollInterval,
+                  config.logger,
+                ),
+            );
+            break;
+          }
+          default: {
+            throw new Error('Unsupported initializer type');
+          }
+        }
+      });
+      synchronizerConfigs.forEach((synchronizerConfig) => {
+        switch (synchronizerConfig.type) {
+          case 'streaming': {
+            const { streamInitialReconnectDelay = DEFAULT_STREAM_RECONNECT_DELAY } =
+              synchronizerConfig;
+            synchronizers.push(
+              () =>
+                new StreamingProcessorFDv2(
+                  clientContext,
+                  '/sdk/stream',
+                  [],
+                  baseHeaders,
+                  diagnosticsManager,
+                  streamInitialReconnectDelay,
+                ),
+            );
+            break;
+          }
+          case 'polling': {
+            const { pollInterval = DEFAULT_POLL_INTERVAL } = synchronizerConfig;
+            synchronizers.push(
+              () =>
+                new PollingProcessorFDv2(
+                  new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+                  pollInterval,
+                  config.logger,
+                ),
+            );
+            break;
+          }
+          default: {
+            throw new Error('Unsupported synchronizer type');
+          }
+        }
+      });
+    } else {
+      // use one shot initializer for performance and cost if we can do a combination of polling and streaming
+      if (isStandardOptions(dataSystem.dataSource)) {
+        initializers.push(
+          () =>
+            new OneShotInitializerFDv2(
+              new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+              config.logger,
+            ),
+        );
+      }
+
+      // if streaming is configured, add streaming synchronizer
+      if (
+        isStandardOptions(dataSystem.dataSource) ||
+        isStreamingOnlyOptions(dataSystem.dataSource)
+      ) {
+        const reconnectDelay = dataSystem.dataSource.streamInitialReconnectDelay;
+        synchronizers.push(
+          () =>
+            new StreamingProcessorFDv2(
+              clientContext,
+              '/sdk/stream',
+              [],
+              baseHeaders,
+              diagnosticsManager,
+              reconnectDelay,
+            ),
+        );
+      }
+
+      let pollingInterval = DEFAULT_POLL_INTERVAL;
+      // if polling is configured, add polling synchronizer
+      if (isStandardOptions(dataSystem.dataSource) || isPollingOnlyOptions(dataSystem.dataSource)) {
+        pollingInterval = dataSystem.dataSource.pollInterval ?? DEFAULT_POLL_INTERVAL;
+        synchronizers.push(
+          () =>
+            new PollingProcessorFDv2(
+              new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', logger),
+              pollingInterval,
+              logger,
+            ),
+        );
+      }
+
+      // This is short term handling and will be removed once FDv2 adoption is sufficient.
+      fdv1FallbackSynchronizers.push(
         () =>
           new PollingProcessorFDv2(
-            new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', logger),
+            new Requestor(config, platform.requests, baseHeaders, '/sdk/latest-all', config.logger),
             pollingInterval,
-            logger,
+            config.logger,
+            true,
           ),
       );
     }
-
-    // This is short term handling and will be removed once FDv2 adoption is sufficient.
-    const fdv1FallbackSynchronizers = [
-      () =>
-        new PollingProcessorFDv2(
-          new Requestor(config, platform.requests, baseHeaders, '/sdk/latest-all', config.logger),
-          pollingInterval,
-          config.logger,
-          true,
-        ),
-    ];
 
     dataSource = new CompositeDataSource(
       initializers,

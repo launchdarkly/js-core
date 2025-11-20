@@ -24,7 +24,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
   private _yamlParser?: (data: string) => any;
   private _fileLoader?: FileLoader;
 
-  constructor(options: FileSystemDataSourceConfiguration, platform: Platform, logger: LDLogger) {
+  constructor(options: FileSystemDataSourceConfiguration, platform: Platform, logger?: LDLogger) {
     this._validateInputs(options, platform);
 
     this._paths = options.paths;

@@ -73,7 +73,8 @@ export interface LDDataSystemOptions {
 export type DataSourceOptions =
   | StandardDataSourceOptions
   | StreamingDataSourceOptions
-  | PollingDataSourceOptions;
+  | PollingDataSourceOptions
+  | CustomDataSourceOptions;
 
 export type DataSourceConfiguration =
   | FileSystemDataSourceConfiguration
@@ -186,4 +187,8 @@ export function isStreamingOnlyOptions(u: any): u is StreamingDataSourceOptions 
 
 export function isPollingOnlyOptions(u: any): u is PollingDataSourceOptions {
   return u.dataSourceOptionsType === 'pollingOnly';
+}
+
+export function isCustomOptions(u: any): u is CustomDataSourceOptions {
+  return u.dataSourceOptionsType === 'custom';
 }

@@ -1,5 +1,5 @@
 import { PayloadProcessor } from './payloadProcessor';
-import { DeleteObject, Event, PutObject, EventType } from './proto';
+import { DeleteObject, Event, PutObject } from './proto';
 
 // eventually this will be the same as the IntentCode type, but for now we'll use a simpler type
 type supportedIntentCodes = 'xfer-full';
@@ -27,7 +27,7 @@ export default class FDv1PayloadAdaptor {
   private _intent: supportedIntentCodes = 'xfer-full';
 
   constructor(processor: PayloadProcessor) {
-    this._processor = processor
+    this._processor = processor;
   }
 
   /**
@@ -38,7 +38,7 @@ export default class FDv1PayloadAdaptor {
       throw new Error('intent: only xfer-full is supported');
     }
 
-    this._events = []
+    this._events = [];
     this._intent = intent;
 
     return this;
@@ -72,12 +72,14 @@ export default class FDv1PayloadAdaptor {
     const serverIntentEvent: Event = {
       event: 'server-intent',
       data: {
-        payloads: [{
-          id: PAYLOAD_ID,
-          target: 1,
-          intentCode: this._intent,
-          reason: 'payload-missing'
-        }],
+        payloads: [
+          {
+            id: PAYLOAD_ID,
+            target: 1,
+            intentCode: this._intent,
+            reason: 'payload-missing',
+          },
+        ],
       },
     };
 
@@ -92,42 +94,38 @@ export default class FDv1PayloadAdaptor {
       },
     };
 
-    this._processor.processEvents([
-      serverIntentEvent,
-      ...this._events,
-      finishEvent,
-    ]);
-    this._events = []
+    this._processor.processEvents([serverIntentEvent, ...this._events, finishEvent]);
+    this._events = [];
 
     return this;
   }
 
   /**
-   * 
+   *
    * @param data - FDv1 payload from a fdv1 poll
    */
   pushFdv1Payload(data: fdv1Payload): this {
     Object.entries(data?.flags || []).forEach(([key, flag]) => {
       this.putObject({
-          // strong assumption here that we only have segments and flags.
-          kind: 'flag',
-          key: key,
-          version: flag.version || 1,
-          object: flag,
-        });
+        // strong assumption here that we only have segments and flags.
+        kind: 'flag',
+        key,
+        version: flag.version || 1,
+        object: flag,
+      });
     });
 
     Object.entries(data?.segments || []).forEach(([key, segment]) => {
       this.putObject({
-          // strong assumption here that we only have segments and flags.
-          kind: 'segment',
-          key: key,
-          version: segment.version || 1,
-          object: segment,
-        });
+        // strong assumption here that we only have segments and flags.
+        kind: 'segment',
+        key,
+        version: segment.version || 1,
+        object: segment,
+      });
     });
 
-    return this
+    return this;
   }
 
   /**
