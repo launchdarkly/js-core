@@ -31,6 +31,7 @@
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "jest",
     "coverage": "yarn test --coverage",
