@@ -8,7 +8,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@launchdarkly/shopify-oxygen-sdk": "latest",
+    "@launchdarkly/shopify-oxygen-sdk": "*",
     "@shopify/mini-oxygen": "^4.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
