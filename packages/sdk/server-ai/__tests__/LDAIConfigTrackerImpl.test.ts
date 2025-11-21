@@ -1,9 +1,9 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { name as aiSdkName, version as aiSdkVersion } from '../package.json';
 import { LDFeedbackKind } from '../src/api/metrics';
 import { LDAIConfigTrackerImpl } from '../src/LDAIConfigTrackerImpl';
 import { LDClientMin } from '../src/LDClientMin';
+import { aiSdkName, aiSdkVersion } from '../src/sdkInfo';
 
 const mockTrack = jest.fn();
 const mockVariation = jest.fn();
