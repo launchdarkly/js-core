@@ -3,7 +3,8 @@ import * as os from 'os';
 
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
-import * as packageJson from '../../package.json';
+const sdkName = '@launchdarkly/node-server-sdk';
+const sdkVersion = '9.10.2'; // x-release-please-version
 
 function processPlatformName(name: string): string {
   switch (name) {
@@ -36,8 +37,8 @@ export default class NodeInfo implements platform.Info {
 
   sdkData(): platform.SdkData {
     return {
-      name: packageJson.name,
-      version: packageJson.version,
+      name: sdkName,
+      version: sdkVersion,
       userAgentBase: 'NodeJSClient',
       wrapperName: this._config.wrapperName,
       wrapperVersion: this._config.wrapperVersion,

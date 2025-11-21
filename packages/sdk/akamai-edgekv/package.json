@@ -35,7 +35,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c rollup.config.js && ../../../scripts/replace-version.sh .",
+    "build": "rollup -c rollup.config.js",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",

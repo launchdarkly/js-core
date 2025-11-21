@@ -25,7 +25,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "../../../scripts/build-package.sh && ../../../scripts/replace-version.sh .",
+    "build": "../../../scripts/build-package.sh",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
