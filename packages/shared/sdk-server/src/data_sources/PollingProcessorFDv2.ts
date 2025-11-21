@@ -34,58 +34,9 @@ function processFDv1FlagsAndSegments(
   payloadProcessor: internal.PayloadProcessor,
   data: FlagsAndSegments,
 ) {
-  payloadProcessor.processEvents([
-    {
-      event: `server-intent`,
-      data: {
-        payloads: [
-          {
-            id: `FDv1Fallback`,
-            target: 1,
-            intentCode: `xfer-full`,
-          },
-        ],
-      },
-    },
-  ]);
+  const adaptor = internal.FDv1PayloadAdaptor(payloadProcessor);
 
-  Object.entries(data?.flags || []).forEach(([key, flag]) => {
-    payloadProcessor.processEvents([
-      {
-        event: `put-object`,
-        data: {
-          kind: 'flag',
-          key,
-          version: flag.version,
-          object: flag,
-        },
-      },
-    ]);
-  });
-
-  Object.entries(data?.segments || []).forEach(([key, segment]) => {
-    payloadProcessor.processEvents([
-      {
-        event: `put-object`,
-        data: {
-          kind: 'segment',
-          key,
-          version: segment.version,
-          object: segment,
-        },
-      },
-    ]);
-  });
-
-  payloadProcessor.processEvents([
-    {
-      event: `payload-transferred`,
-      data: {
-        state: `FDv1Fallback`,
-        version: 1,
-      },
-    },
-  ]);
+  adaptor.useSelector('FDv1Fallback').processFullTransfer(data);
 }
 
 /**

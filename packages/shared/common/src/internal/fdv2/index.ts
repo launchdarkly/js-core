@@ -1,3 +1,4 @@
+import { fdv1PayloadAdaptor as FDv1PayloadAdaptor } from './FDv1PayloadAdaptor';
 import {
   FDv2EventsCollection,
   Payload,
@@ -14,4 +15,5 @@ export {
   PayloadProcessor,
   PayloadStreamReader,
   Update,
+  FDv1PayloadAdaptor,
 };

@@ -16,6 +16,7 @@ import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '.
 import { Hook } from '../api/integrations';
 import {
   DataSourceOptions,
+  isCustomOptions,
   isPollingOnlyOptions,
   isStandardOptions,
   isStreamingOnlyOptions,
@@ -78,7 +79,7 @@ const validations: Record<string, TypeValidator> = {
 };
 
 export const DEFAULT_POLL_INTERVAL = 30;
-const DEFAULT_STREAM_RECONNECT_DELAY = 1;
+export const DEFAULT_STREAM_RECONNECT_DELAY = 1;
 
 const defaultStandardDataSourceOptions: StandardDataSourceOptions = {
   dataSourceOptionsType: 'standard',
@@ -237,6 +238,9 @@ function validateDataSystemOptions(options: Options): {
         options.dataSource,
         defaultPollingDataSourceOptions,
       ));
+    } else if (isCustomOptions(options.dataSource)) {
+      validatedDataSourceOptions = options.dataSource;
+      errors = [];
     } else {
       // provided datasource options don't fit any expected form, drop them and use defaults
       validatedDataSourceOptions = defaultStandardDataSourceOptions;
