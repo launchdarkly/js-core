@@ -1,14 +1,24 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIAgent, LDAIAgentConfig, LDAIAgentDefaults } from './agents';
-import { LDAIConfig, LDAIDefaults } from './config/LDAIConfig';
+import { TrackedChat } from './chat';
+import {
+  LDAIAgentConfig,
+  LDAIAgentConfigDefault,
+  LDAIAgentRequestConfig,
+  LDAICompletionConfig,
+  LDAICompletionConfigDefault,
+  LDAIJudgeConfig,
+  LDAIJudgeConfigDefault,
+} from './config';
+import { Judge } from './judge/Judge';
+import { SupportedAIProvider } from './providers';
 
 /**
  * Interface for performing AI operations using LaunchDarkly.
  */
 export interface LDAIClient {
   /**
-   * Retrieves and processes an AI Config based on the provided key, LaunchDarkly context,
+   * Retrieves and processes a completion AI Config based on the provided key, LaunchDarkly context,
    * and variables. This includes the model configuration and the customized messages.
    *
    * @param key The key of the AI Config.
@@ -32,9 +42,11 @@ export interface LDAIClient {
    * const variables = {username: 'john'};
    * const defaultValue = {
    *  enabled: false,
+   *  model: { name: 'gpt-4' },
+   *  provider: { name: 'openai' },
    * };
    *
-   * const result = config(key, context, defaultValue, variables);
+   * const result = completionConfig(key, context, defaultValue, variables);
    * // Output:
    * {
    *   enabled: true,
@@ -58,12 +70,22 @@ export interface LDAIClient {
    * }
    * ```
    */
+  completionConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAICompletionConfig>;
+
+  /**
+   * @deprecated Use `completionConfig` instead. This method will be removed in a future version.
+   */
   config(
     key: string,
     context: LDContext,
-    defaultValue: LDAIDefaults,
+    defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIConfig>;
+  ): Promise<LDAICompletionConfig>;
 
   /**
    * Retrieves and processes a single AI Config agent based on the provided key, LaunchDarkly context,
@@ -87,21 +109,67 @@ export interface LDAIClient {
    * const key = "research_agent";
    * const context = {...};
    * const variables = { topic: 'climate change' };
-   * const agent = await client.agent(key, context, {
+   * const agentConfig = await client.agentConfig(key, context, {
    *   enabled: true,
+   *   model: { name: 'gpt-4' },
+   *   provider: { name: 'openai' },
    *   instructions: 'You are a research assistant.',
    * }, variables);
    *
-   * const researchResult = agent.instructions; // Interpolated instructions
-   * agent.tracker.trackSuccess();
+   * const researchResult = agentConfig.instructions; // Interpolated instructions
+   * agentConfig.tracker.trackSuccess();
    * ```
+   */
+  agentConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIAgentConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIAgentConfig>;
+
+  /**
+   * @deprecated Use `agentConfig` instead. This method will be removed in a future version.
    */
   agent(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentDefaults,
+    defaultValue: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
-  ): Promise<LDAIAgent>;
+  ): Promise<LDAIAgentConfig>;
+
+  /**
+   * Retrieves and processes a Judge AI Config based on the provided key, LaunchDarkly context,
+   * and variables. This includes the model configuration and the customized messages for evaluation.
+   *
+   * @param key The key of the Judge AI Config.
+   * @param context The LaunchDarkly context object that contains relevant information about the
+   * current environment, user, or session. This context may influence how the configuration is
+   * processed or personalized.
+   * @param defaultValue A fallback value containing model configuration and messages. This will
+   * be used if the configuration is not available from LaunchDarkly.
+   * @param variables Optional variables for template interpolation in messages and instructions.
+   * @returns A promise that resolves to a tracked judge configuration.
+   *
+   * @example
+   * ```typescript
+   * const judgeConf = await client.judgeConfig(key, context, {
+   *   enabled: true,
+   *   model: { name: 'gpt-4' },
+   *   provider: { name: 'openai' },
+   *   evaluationMetricKeys: ['$ld:ai:judge:relevance'],
+   *   messages: [{ role: 'system', content: 'You are a relevance judge.' }]
+   * }, variables);
+   *
+   * const config = judgeConf.config; // Interpolated configuration
+   * judgeConf.tracker.trackSuccess();
+   * ```
+   */
+  judgeConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIJudgeConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIJudgeConfig>;
 
   /**
    * Retrieves and processes multiple AI Config agents based on the provided agent configurations
@@ -120,27 +188,138 @@ export interface LDAIClient {
    *
    * @example
    * ```
-   * const agentConfigs = [
+   * const agentConfigsList = [
    *   {
    *     key: 'research_agent',
-   *     defaultValue: { enabled: true, instructions: 'You are a research assistant.' },
+   *     defaultValue: {
+   *       enabled: true,
+   *       model: { name: 'gpt-4' },
+   *       provider: { name: 'openai' },
+   *       instructions: 'You are a research assistant.'
+   *     },
    *     variables: { topic: 'climate change' }
    *   },
    *   {
    *     key: 'writing_agent',
-   *     defaultValue: { enabled: true, instructions: 'You are a writing assistant.' },
+   *     defaultValue: {
+   *       enabled: true,
+   *       model: { name: 'gpt-4' },
+   *       provider: { name: 'openai' },
+   *       instructions: 'You are a writing assistant.'
+   *     },
    *     variables: { style: 'academic' }
    *   }
    * ] as const;
    * const context = {...};
    *
-   * const agents = await client.agents(agentConfigs, context);
-   * const researchResult = agents["research_agent"].instructions; // Interpolated instructions
-   * agents["research_agent"].tracker.trackSuccess();
+   * const configs = await client.agentConfigs(agentConfigsList, context);
+   * const researchResult = configs["research_agent"].instructions; // Interpolated instructions
+   * configs["research_agent"].tracker.trackSuccess();
    * ```
    */
-  agents<const T extends readonly LDAIAgentConfig[]>(
+  agentConfigs<const T extends readonly LDAIAgentRequestConfig[]>(
     agentConfigs: T,
     context: LDContext,
-  ): Promise<Record<T[number]['key'], LDAIAgent>>;
+  ): Promise<Record<T[number]['key'], LDAIAgentConfig>>;
+
+  /**
+   * @deprecated Use `agentConfigs` instead. This method will be removed in a future version.
+   */
+  agents<const T extends readonly LDAIAgentRequestConfig[]>(
+    agentConfigs: T,
+    context: LDContext,
+  ): Promise<Record<T[number]['key'], LDAIAgentConfig>>;
+
+  /**
+   * Returns a TrackedChat instance for chat interactions.
+   * This method serves as the primary entry point for creating TrackedChat instances from configuration.
+   *
+   * @param key The key identifying the AI chat configuration to use.
+   * @param context The standard LDContext used when evaluating flags.
+   * @param defaultValue A default value representing a standard AI chat config result.
+   * @param variables Dictionary of values for instruction interpolation.
+   * The variables will also be used for judge evaluation. For the judge only, the variables
+   * `message_history` and `response_to_evaluate` are reserved and will be ignored.
+   * @param defaultAiProvider Optional default AI provider to use.
+   * @returns A promise that resolves to the TrackedChat instance, or null if the configuration is disabled.
+   *
+   * @example
+   * ```
+   * const key = "customer_support_chat";
+   * const context = {...};
+   * const defaultValue = {
+   *   enabled: false,
+   *   model: { name: "gpt-4" },
+   *   provider: { name: "openai" },
+   *   messages: [
+   *     { role: "system", content: "You are a helpful customer support agent." }
+   *   ]
+   * };
+   * const variables = { customerName: 'John' };
+   *
+   * const chat = await client.createChat(key, context, defaultValue, variables);
+   * if (chat) {
+   *   const response = await chat.invoke("I need help with my order");
+   *   console.log(response.message.content);
+   * }
+   * ```
+   */
+  createChat(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<TrackedChat | undefined>;
+
+  /**
+   * @deprecated Use `createChat` instead. This method will be removed in a future version.
+   */
+  initChat(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<TrackedChat | undefined>;
+
+  /**
+   * Creates and returns a new Judge instance for AI evaluation.
+   *
+   * @param key The key identifying the AI judge configuration to use
+   * @param context Standard LDContext used when evaluating flags
+   * @param defaultValue A default value representing a standard AI config result
+   * @param variables Dictionary of values for instruction interpolation.
+   * The variables `message_history` and `response_to_evaluate` are reserved for the judge and will be ignored.
+   * @param defaultAiProvider Optional default AI provider to use.
+   * @returns Promise that resolves to a Judge instance or undefined if disabled/unsupported
+   *
+   * @example
+   * ```
+   * const judge = await client.createJudge(
+   *   "relevance-judge",
+   *   context,
+   *   {
+   *     enabled: true,
+   *     model: { name: "gpt-4" },
+   *     provider: { name: "openai" },
+   *     evaluationMetricKeys: ['$ld:ai:judge:relevance'],
+   *     messages: [{ role: 'system', content: 'You are a relevance judge.' }]
+   *   },
+   *   { metric: "relevance" }
+   * );
+   *
+   * if (judge) {
+   *   const result = await judge.evaluate("User question", "AI response");
+   *   console.log('Relevance score:', result.evals.relevance?.score);
+   * }
+   * ```
+   */
+  createJudge(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIJudgeConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<Judge | undefined>;
 }

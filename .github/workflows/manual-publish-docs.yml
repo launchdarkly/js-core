@@ -24,15 +24,16 @@ on:
           - packages/sdk/server-ai
           - packages/telemetry/browser-telemetry
           - packages/sdk/combined-browser
+          - packages/sdk/shopify-oxygen
 name: Publish Documentation
 jobs:
   build-publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
 
       - name: 'Setup Redis'

@@ -1,0 +1,96 @@
+{
+  "name": "@launchdarkly/server-sdk-ai-vercel",
+  "version": "0.3.1",
+  "description": "LaunchDarkly AI SDK Vercel Provider for Server-Side JavaScript",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-vercel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup-node",
+    "lint": "npx eslint . --ext .ts",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
+    "lint:fix": "yarn run lint --fix",
+    "check": "yarn prettier && yarn lint && yarn build && yarn test",
+    "test": "jest"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "launchdarkly",
+    "ai",
+    "llm",
+    "vercel"
+  ],
+  "author": "LaunchDarkly",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/cohere": "^2.0.0",
+    "@ai-sdk/google": "^2.0.0",
+    "@ai-sdk/mistral": "^2.0.0",
+    "@ai-sdk/openai": "^2.0.0",
+    "@launchdarkly/server-sdk-ai": "^0.14.1",
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/jest": "^29.5.3",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "ai": "^5.0.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.6.1",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.1",
+    "tsup": "^8.5.1",
+    "typescript": "5.1.6"
+  },
+  "peerDependencies": {
+    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/cohere": "^2.0.0",
+    "@ai-sdk/google": "^2.0.0",
+    "@ai-sdk/mistral": "^2.0.0",
+    "@ai-sdk/openai": "^2.0.0",
+    "@launchdarkly/server-sdk-ai": "^0.14.0",
+    "ai": "^4.0.0 || ^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@ai-sdk/anthropic": {
+      "optional": true
+    },
+    "@ai-sdk/cohere": {
+      "optional": true
+    },
+    "@ai-sdk/google": {
+      "optional": true
+    },
+    "@ai-sdk/mistral": {
+      "optional": true
+    },
+    "@ai-sdk/openai": {
+      "optional": true
+    }
+  }
+}

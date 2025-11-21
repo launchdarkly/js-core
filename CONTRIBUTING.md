@@ -69,6 +69,9 @@ describe('given a mock filesystem and memory feature store', { /* tests */})
 These then combined to create an understandable test name:
 `given a mock filesystem and memory feature store > it does not load flags prior to start`
 
+---
+For docs on our module publishing process, see [our publishing doc](contributing/publishing.md)
+
 ## Development Guidelines
 
 These are a series of recommendations for developing code in this repository. Not all existing code will comply
@@ -235,7 +238,7 @@ There are a number of categories of packages in the monorepo:
 5. **Tooling packages** (red): Development and testing tools
    - Jest testing utilities
 
-### Depenencies
+### Dependencies
 
 In general dependencies should be avoided unless they are absolutely necessary. For each dependency several considerations should be made:
 

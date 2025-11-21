@@ -1,5 +1,25 @@
 {
   "packages": {
+    "packages/ai-providers/server-ai-langchain": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
+    "packages/ai-providers/server-ai-vercel": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
+    "packages/ai-providers/server-ai-openai": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
+    "packages/sdk/shopify-oxygen": {
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0",
+      "bootstrap-sha": "e70e4846d03f7ca2b6ef267efa90a24810e9364a",
+      "extra-files": [
+        "src/platform/OxygenInfo.ts"
+      ]
+    },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {},
     "packages/shared/sdk-server": {},
@@ -31,8 +51,16 @@
         "__tests__/createPlatformInfo.test.ts"
       ]
     },
-    "packages/sdk/react-native": {},
-    "packages/sdk/server-node": {},
+    "packages/sdk/react-native": {
+      "extra-files": [
+        "src/platform/PlatformInfo.ts"
+      ]
+    },
+    "packages/sdk/server-node": {
+      "extra-files": [
+        "src/platform/NodeInfo.ts"
+      ]
+    },
     "packages/sdk/vercel": {
       "extra-files": ["src/createPlatformInfo.ts"]
     },
@@ -60,11 +88,15 @@
     "packages/store/node-server-sdk-redis": {},
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        "src/platform/BrowserInfo.ts"
+      ]
     },
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
       "extra-files": [
+        "src/sdkInfo.ts",
         {
           "type": "json",
           "path": "examples/bedrock/package.json",
@@ -74,18 +106,31 @@
           "type": "json",
           "path": "examples/openai/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/vercel-ai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/judge-evaluation/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
         }
       ]
     },
     "packages/tooling/jest": {
-      "bump-minor-pre-major": true,
-      "release-as": "0.1.0"
+      "bump-minor-pre-major": true
     },
     "packages/telemetry/browser-telemetry": {}
   },
   "packages/sdk/combined-browser": {
-    "bump-minor-pre-major": true,
-    "release-as": "0.0.1"
+    "bump-minor-pre-major": true
   },
   "plugins": [
     {

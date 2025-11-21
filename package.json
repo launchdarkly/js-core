@@ -1,6 +1,9 @@
 {
   "name": "@launchdarkly/js-core",
   "workspaces": [
+    "packages/ai-providers/server-ai-langchain",
+    "packages/ai-providers/server-ai-openai",
+    "packages/ai-providers/server-ai-vercel",
     "packages/shared/common",
     "packages/shared/sdk-client",
     "packages/shared/sdk-server",
@@ -32,10 +35,15 @@
     "packages/sdk/browser/contract-tests/adapter",
     "packages/sdk/server-ai",
     "packages/sdk/server-ai/examples/bedrock",
+    "packages/sdk/server-ai/examples/judge-evaluation",
     "packages/sdk/server-ai/examples/openai",
+    "packages/sdk/server-ai/examples/tracked-chat",
+    "packages/sdk/server-ai/examples/vercel-ai",
     "packages/telemetry/browser-telemetry",
     "contract-tests",
-    "packages/sdk/combined-browser"
+    "packages/sdk/combined-browser",
+    "packages/sdk/shopify-oxygen",
+    "packages/sdk/shopify-oxygen/contract-tests"
   ],
   "private": true,
   "scripts": {

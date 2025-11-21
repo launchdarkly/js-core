@@ -11,13 +11,13 @@ on:
       - '**.md'
 
 jobs:
-  build-test-node-server-otel:
+  build-test-server-sdk-ai:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
         with:
-          node-version: 22.x
+          node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: shared
         name: Shared CI Steps
@@ -35,3 +35,8 @@ jobs:
           yarn workspaces focus @launchdarkly/hello-openai
           yarn workspace @launchdarkly/hello-openai lint
           yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-openai' run build
+      - name: Build Vercel AI example
+        run: |
+          yarn workspaces focus @launchdarkly/hello-vercel-ai
+          yarn workspace @launchdarkly/hello-vercel-ai lint
+          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-vercel-ai' run build

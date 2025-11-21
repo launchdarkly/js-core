@@ -2,14 +2,17 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from './api/config';
 import { LDAIMetricSummary } from './api/config/LDAIConfigTracker';
+import { EvalScore, JudgeResponse } from './api/judge/types';
 import {
   createBedrockTokenUsage,
   createOpenAiUsage,
   createVercelAISDKTokenUsage,
+  LDAIMetrics,
   LDFeedbackKind,
   LDTokenUsage,
 } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
+import { aiSdkName, aiSdkVersion } from './sdkInfo';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   private _trackedMetrics: LDAIMetricSummary = {};
@@ -24,12 +27,14 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     private _context: LDContext,
   ) {}
 
-  private _getTrackData(): {
+  getTrackData(): {
     variationKey: string;
     configKey: string;
     version: number;
     modelName: string;
     providerName: string;
+    aiSdkName: string;
+    aiSdkVersion: string;
   } {
     return {
       variationKey: this._variationKey,
@@ -37,12 +42,14 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       version: this._version,
       modelName: this._modelName,
       providerName: this._providerName,
+      aiSdkName,
+      aiSdkVersion,
     };
   }
 
   trackDuration(duration: number): void {
     this._trackedMetrics.durationMs = duration;
-    this._ldClient.track('$ld:ai:duration:total', this._context, this._getTrackData(), duration);
+    this._ldClient.track('$ld:ai:duration:total', this._context, this.getTrackData(), duration);
   }
 
   async trackDurationOf<TRes>(func: () => Promise<TRes>): Promise<TRes> {
@@ -63,28 +70,128 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     this._ldClient.track(
       '$ld:ai:tokens:ttf',
       this._context,
-      this._getTrackData(),
+      this.getTrackData(),
       timeToFirstTokenMs,
     );
+  }
+
+  trackEvalScores(scores: Record<string, EvalScore>) {
+    Object.entries(scores).forEach(([metricKey, evalScore]) => {
+      this._ldClient.track(metricKey, this._context, this.getTrackData(), evalScore.score);
+    });
+  }
+
+  trackJudgeResponse(response: JudgeResponse) {
+    Object.entries(response.evals).forEach(([metricKey, evalScore]) => {
+      this._ldClient.track(
+        metricKey,
+        this._context,
+        { ...this.getTrackData(), judgeConfigKey: response.judgeConfigKey },
+        evalScore.score,
+      );
+    });
   }
 
   trackFeedback(feedback: { kind: LDFeedbackKind }): void {
     this._trackedMetrics.feedback = feedback;
     if (feedback.kind === LDFeedbackKind.Positive) {
-      this._ldClient.track('$ld:ai:feedback:user:positive', this._context, this._getTrackData(), 1);
+      this._ldClient.track('$ld:ai:feedback:user:positive', this._context, this.getTrackData(), 1);
     } else if (feedback.kind === LDFeedbackKind.Negative) {
-      this._ldClient.track('$ld:ai:feedback:user:negative', this._context, this._getTrackData(), 1);
+      this._ldClient.track('$ld:ai:feedback:user:negative', this._context, this.getTrackData(), 1);
     }
   }
 
   trackSuccess(): void {
     this._trackedMetrics.success = true;
-    this._ldClient.track('$ld:ai:generation:success', this._context, this._getTrackData(), 1);
+    this._ldClient.track('$ld:ai:generation:success', this._context, this.getTrackData(), 1);
   }
 
   trackError(): void {
     this._trackedMetrics.success = false;
-    this._ldClient.track('$ld:ai:generation:error', this._context, this._getTrackData(), 1);
+    this._ldClient.track('$ld:ai:generation:error', this._context, this.getTrackData(), 1);
+  }
+
+  async trackMetricsOf<TRes>(
+    metricsExtractor: (result: TRes) => LDAIMetrics,
+    func: () => Promise<TRes>,
+  ): Promise<TRes> {
+    let result: TRes;
+
+    try {
+      result = await this.trackDurationOf(func);
+    } catch (err) {
+      this.trackError();
+      throw err;
+    }
+
+    // Extract metrics after successful AI call
+    const metrics = metricsExtractor(result);
+
+    // Track success/error based on metrics
+    if (metrics.success) {
+      this.trackSuccess();
+    } else {
+      this.trackError();
+    }
+
+    // Track token usage if available
+    if (metrics.usage) {
+      this.trackTokens(metrics.usage);
+    }
+
+    return result;
+  }
+
+  trackStreamMetricsOf<TStream>(
+    streamCreator: () => TStream,
+    metricsExtractor: (stream: TStream) => Promise<LDAIMetrics>,
+  ): TStream {
+    const startTime = Date.now();
+
+    try {
+      // Create the stream synchronously
+      const stream = streamCreator();
+
+      // Start background metrics tracking (fire and forget)
+      this._trackStreamMetricsInBackground(stream, metricsExtractor, startTime);
+
+      // Return stream immediately for consumption
+      return stream;
+    } catch (error) {
+      // Track error if stream creation fails
+      this.trackDuration(Date.now() - startTime);
+      this.trackError();
+      throw error;
+    }
+  }
+
+  private async _trackStreamMetricsInBackground<TStream>(
+    stream: TStream,
+    metricsExtractor: (stream: TStream) => Promise<LDAIMetrics>,
+    startTime: number,
+  ): Promise<void> {
+    try {
+      // Wait for metrics to be available
+      const metrics = await metricsExtractor(stream);
+
+      // Track success/error based on metrics
+      if (metrics.success) {
+        this.trackSuccess();
+      } else {
+        this.trackError();
+      }
+
+      // Track token usage if available
+      if (metrics.usage) {
+        this.trackTokens(metrics.usage);
+      }
+    } catch (error) {
+      // If metrics extraction fails, track error
+      this.trackError();
+    } finally {
+      // Track duration regardless of success/error
+      this.trackDuration(Date.now() - startTime);
+    }
   }
 
   async trackOpenAIMetrics<
@@ -138,7 +245,9 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     TRes extends {
       usage?: {
         totalTokens?: number;
+        inputTokens?: number;
         promptTokens?: number;
+        outputTokens?: number;
         completionTokens?: number;
       };
     },
@@ -156,53 +265,9 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
   }
 
-  trackVercelAISDKStreamTextMetrics<
-    TRes extends {
-      finishReason?: Promise<string>;
-      usage?: Promise<{
-        totalTokens?: number;
-        promptTokens?: number;
-        completionTokens?: number;
-      }>;
-    },
-  >(func: () => TRes): TRes {
-    const startTime = Date.now();
-    try {
-      const result = func();
-      result.finishReason
-        ?.then(async (finishReason) => {
-          const endTime = Date.now();
-          this.trackDuration(endTime - startTime);
-          if (finishReason === 'error') {
-            this.trackError();
-          } else {
-            this.trackSuccess();
-            if (result.usage) {
-              try {
-                this.trackTokens(createVercelAISDKTokenUsage(await result.usage));
-              } catch {
-                // Intentionally squashing this error
-              }
-            }
-          }
-        })
-        .catch(() => {
-          const endTime = Date.now();
-          this.trackDuration(endTime - startTime);
-          this.trackError();
-        });
-      return result;
-    } catch (err) {
-      const endTime = Date.now();
-      this.trackDuration(endTime - startTime);
-      this.trackError();
-      throw err;
-    }
-  }
-
   trackTokens(tokens: LDTokenUsage): void {
     this._trackedMetrics.tokens = tokens;
-    const trackData = this._getTrackData();
+    const trackData = this.getTrackData();
     if (tokens.total > 0) {
       this._ldClient.track('$ld:ai:tokens:total', this._context, trackData, tokens.total);
     }

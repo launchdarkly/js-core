@@ -1,5 +1,94 @@
 # Changelog
 
+## [0.14.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.14.0...server-sdk-ai-v0.14.1) (2025-11-13)
+
+
+### Bug Fixes
+
+* Include the AI Judge Config key with tracked metrics ([#986](https://github.com/launchdarkly/js-core/issues/986)) ([213fc79](https://github.com/launchdarkly/js-core/commit/213fc793c752af6517ba7c117219205fb62b9c65))
+
+## [0.14.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.13.0...server-sdk-ai-v0.14.0) (2025-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* Removed deprecated Vercel methods ([#983](https://github.com/launchdarkly/js-core/issues/983))
+* Add support for real time judge evals ([#969](https://github.com/launchdarkly/js-core/issues/969))
+* AI Config defaults require the "enabled" attribute
+* Renamed LDAIAgentConfig to LDAIAgentConfigRequest for clarity
+* Renamed LDAIAgent to LDAIAgentConfig *note the previous use of this name
+* Renamed LDAIAgentDefault to LDAIAgentConfigDefault for clarity
+* Renamed LDAIDefaults to LDAICompletionConfigDefault for clarity
+
+### Features
+
+* Add support for real time judge evals ([#969](https://github.com/launchdarkly/js-core/issues/969)) ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Added createJudge method ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Added judgeConfig method to AI SDK to retrieve an AI Judge Config ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Added trackEvalScores method to config tracker ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Chat will evaluate responses with configured judges ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Include AI SDK version in tracking information ([#985](https://github.com/launchdarkly/js-core/issues/985)) ([ef90564](https://github.com/launchdarkly/js-core/commit/ef90564ee1ed9411e77b836d2b5b8037ff671b07))
+* Removed deprecated Vercel methods ([#983](https://github.com/launchdarkly/js-core/issues/983)) ([960a499](https://github.com/launchdarkly/js-core/commit/960a49927e795890e5093b0156ec6d721c3066fd))
+
+
+### Bug Fixes
+
+* AI Config defaults require the "enabled" attribute ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIAgent to LDAIAgentConfig *note the previous use of this name ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIAgentConfig to LDAIAgentConfigRequest for clarity ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIAgentDefault to LDAIAgentConfigDefault for clarity ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+* Renamed LDAIDefaults to LDAICompletionConfigDefault for clarity ([6ecd9ab](https://github.com/launchdarkly/js-core/commit/6ecd9ab4d97f6445adfd377709f14d7f3b420363))
+
+## [0.13.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.3...server-sdk-ai-v0.13.0) (2025-11-04)
+
+
+### Features
+
+* Add support for trackStreamMetricsOf method ([#971](https://github.com/launchdarkly/js-core/issues/971)) ([e18979e](https://github.com/launchdarkly/js-core/commit/e18979e27f4542552762a30a390749541daa3749))
+
+
+### Bug Fixes
+
+* Deprecated toVercelAISDK, trackVercelAISDKStreamTextMetrics, use `@launchdarkly/server-sdk-ai-vercel` package ([e18979e](https://github.com/launchdarkly/js-core/commit/e18979e27f4542552762a30a390749541daa3749))
+
+## [0.12.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.2...server-sdk-ai-v0.12.3) (2025-10-24)
+
+
+### Bug Fixes
+
+* Fix default configs always being disabled ([#965](https://github.com/launchdarkly/js-core/issues/965)) ([30e2305](https://github.com/launchdarkly/js-core/commit/30e23056e58a2ca5c5b33ad76db12731f19d01c3))
+
+## [0.12.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.1...server-sdk-ai-v0.12.2) (2025-10-16)
+
+
+### Bug Fixes
+
+* Reduce dependencies and use peer dependencies when needed ([#963](https://github.com/launchdarkly/js-core/issues/963)) ([7f3da30](https://github.com/launchdarkly/js-core/commit/7f3da3071ac175451a0c39bfb9717170e516997f))
+
+## [0.12.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.12.0...server-sdk-ai-v0.12.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* Improve documentation for AI SDK and AIProvider ([#958](https://github.com/launchdarkly/js-core/issues/958)) ([17d595a](https://github.com/launchdarkly/js-core/commit/17d595aff301998030cfb62724b8eb37fea9adbf))
+
+## [0.12.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.4...server-sdk-ai-v0.12.0) (2025-10-13)
+
+
+### Features
+
+* Add support for TrackedChats in the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for OpenAI AIProvider to the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for LangChain AIProvider to the AI SDK ([#939](https://github.com/launchdarkly/js-core/issues/939)) ([a7ad0ea](https://github.com/launchdarkly/js-core/commit/a7ad0ead1408fdd80b333baa085c462f47ea5ac1))
+* Add support for Vercel AIProvider to the AI SDK ([#946](https://github.com/launchdarkly/js-core/issues/946)) ([8553f24](https://github.com/launchdarkly/js-core/commit/8553f2482a3437975b63992f622b4396cc4ac7e7))
+
+## [0.11.4](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.3...server-sdk-ai-v0.11.4) (2025-09-15)
+
+
+### Bug Fixes
+
+* Support Vercel v5 AI SDK token usage ([#926](https://github.com/launchdarkly/js-core/issues/926)) ([0d059a4](https://github.com/launchdarkly/js-core/commit/0d059a43050eaaaba84262d5e16cf875ccb409ea))
+
 ## [0.11.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.11.2...server-sdk-ai-v0.11.3) (2025-08-29)
 
 

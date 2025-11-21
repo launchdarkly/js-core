@@ -6,6 +6,10 @@
  *
  * @packageDocumentation
  */
+// IMPORTANT: Namespace import required for CJS compatibility. js-server-sdk-common is CommonJS-only;
+// Node.js ESM can't reliably import named exports from CJS. DO NOT change to named imports.
+import * as common from '@launchdarkly/js-server-sdk-common';
+
 import { LDAIClient } from './api/LDAIClient';
 import { LDAIClientImpl } from './LDAIClientImpl';
 import { LDClientMin } from './LDClientMin';
@@ -18,5 +22,7 @@ import { LDClientMin } from './LDClientMin';
 export function initAi(ldClient: LDClientMin): LDAIClient {
   return new LDAIClientImpl(ldClient);
 }
+
+export type LDLogger = common.LDLogger;
 
 export * from './api';

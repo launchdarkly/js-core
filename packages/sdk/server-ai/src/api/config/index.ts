@@ -1,3 +1,3 @@
-export * from './LDAIConfig';
-export * from './VercelAISDK';
+export * from './types';
+// LDAIConfigUtils is intentionally not exported - it's an internal utility class
 export { LDAIConfigTracker } from './LDAIConfigTracker';

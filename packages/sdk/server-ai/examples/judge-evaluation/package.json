@@ -1,0 +1,37 @@
+{
+  "name": "@launchdarkly/server-sdk-ai-judge",
+  "version": "1.0.0",
+  "description": "Example demonstrating LaunchDarkly AI SDK judge functionality for evaluating AI responses",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "lint": "npx eslint . --ext .ts",
+    "start": "yarn build && node ./dist/index.js"
+  },
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "^9.0.0",
+    "@launchdarkly/server-sdk-ai": "^0.14.1",
+    "@launchdarkly/server-sdk-ai-langchain": "^0.3.0",
+    "@launchdarkly/server-sdk-ai-openai": "^0.3.0",
+    "@launchdarkly/server-sdk-ai-vercel": "^0.3.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@tsconfig/node20": "20.1.4",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.0.0",
+    "rimraf": "^5.0.5",
+    "typedoc": "0.25.0",
+    "typescript": "^5.5.3"
+  }
+}

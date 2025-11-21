@@ -79,5 +79,17 @@
     {
       "path": "./packages/sdk/combined-browser/tsconfig.ref.json"
     },
+    {
+      "path": "./packages/ai-providers/server-ai-langchain/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/ai-providers/server-ai-openai/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/ai-providers/server-ai-vercel/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/shopify-oxygen/tsconfig.ref.json"
+    }
   ]
 }
