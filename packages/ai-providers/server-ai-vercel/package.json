@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-vercel",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "LaunchDarkly AI SDK Vercel Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-vercel",
   "repository": {
@@ -48,7 +48,7 @@
     "@ai-sdk/google": "^2.0.0",
     "@ai-sdk/mistral": "^2.0.0",
     "@ai-sdk/openai": "^2.0.0",
-    "@launchdarkly/server-sdk-ai": "^0.14.1",
+    "@launchdarkly/server-sdk-ai": "^0.15.0",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.3",
     "@typescript-eslint/eslint-plugin": "^6.20.0",

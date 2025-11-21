@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.15.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.14.1...server-sdk-ai-v0.15.0) (2025-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Change to ES Modules to improve support of dynamic loading ([#1011](https://github.com/launchdarkly/js-core/issues/1011))
+
+### Bug Fixes
+
+* Change to ES Modules to improve support of dynamic loading ([#1011](https://github.com/launchdarkly/js-core/issues/1011)) ([11de076](https://github.com/launchdarkly/js-core/commit/11de076f270f730b0f05134ce9f57d573f7c0067))
+
 ## [0.14.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.14.0...server-sdk-ai-v0.14.1) (2025-11-13)
 
 
