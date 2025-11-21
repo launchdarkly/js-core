@@ -43,9 +43,13 @@ export class AIProviderFactory {
     // Try each provider in order
     // eslint-disable-next-line no-restricted-syntax
     for (const providerType of providersToTry) {
+      logger?.debug(
+        `Attempting to create AIProvider for: ${aiConfig.provider?.name} with provider type: ${providerType}`,
+      );
       // eslint-disable-next-line no-await-in-loop
       const provider = await this._tryCreateProvider(providerType, aiConfig, logger);
       if (provider) {
+        logger?.debug(`Successfully created AIProvider for: ${aiConfig.provider?.name}`);
         return provider;
       }
     }
@@ -94,57 +98,34 @@ export class AIProviderFactory {
     aiConfig: LDAIConfigKind,
     logger?: LDLogger,
   ): Promise<AIProvider | undefined> {
-    switch (providerType) {
-      case 'openai':
-        return this._createProvider(
-          '@launchdarkly/server-sdk-ai-openai',
-          'OpenAIProvider',
-          aiConfig,
-          logger,
-        );
-      case 'langchain':
-        return this._createProvider(
-          '@launchdarkly/server-sdk-ai-langchain',
-          'LangChainProvider',
-          aiConfig,
-          logger,
-        );
-      case 'vercel':
-        return this._createProvider(
-          '@launchdarkly/server-sdk-ai-vercel',
-          'VercelProvider',
-          aiConfig,
-          logger,
-        );
-      default:
-        return undefined;
-    }
-  }
-
-  /**
-   * Create a provider instance dynamically.
-   */
-  private static async _createProvider(
-    packageName: string,
-    providerClassName: string,
-    aiConfig: LDAIConfigKind,
-    logger?: LDLogger,
-  ): Promise<AIProvider | undefined> {
     try {
-      // Try to dynamically import the provider
-      // This will work if the package is installed
-      // eslint-disable-next-line import/no-extraneous-dependencies, global-require, import/no-dynamic-require
-      const { [providerClassName]: ProviderClass } = require(packageName);
+      let module;
 
-      const provider = await ProviderClass.create(aiConfig, logger);
-      logger?.debug(
-        `Successfully created AIProvider for: ${aiConfig.provider?.name} with package ${packageName}`,
-      );
-      return provider;
-    } catch (error) {
-      // If the provider is not available or creation fails, return undefined
+      switch (providerType) {
+        case 'openai': {
+          // eslint-disable-next-line import/no-extraneous-dependencies
+          module = await import('@launchdarkly/server-sdk-ai-openai' as any);
+          const provider = (await module.OpenAIProvider.create(aiConfig, logger)) as AIProvider;
+          return provider;
+        }
+        case 'langchain': {
+          // eslint-disable-next-line import/no-extraneous-dependencies
+          module = await import('@launchdarkly/server-sdk-ai-langchain' as any);
+          const provider = (await module.LangChainProvider.create(aiConfig, logger)) as AIProvider;
+          return provider;
+        }
+        case 'vercel': {
+          // eslint-disable-next-line import/no-extraneous-dependencies
+          module = await import('@launchdarkly/server-sdk-ai-vercel' as any);
+          const provider = (await module.VercelProvider.create(aiConfig, logger)) as AIProvider;
+          return provider;
+        }
+        default:
+          return undefined;
+      }
+    } catch (error: any) {
       logger?.warn(
-        `Error creating AIProvider for: ${aiConfig.provider?.name} with package ${packageName}: ${error}`,
+        `Unable to create AIProvider. Check that you have installed the correct package. ${error.message}`,
       );
       return undefined;
     }

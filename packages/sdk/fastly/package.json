@@ -35,7 +35,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && ../../../scripts/replace-version.sh .",
+    "build": "tsup",
     "clean": "rimraf dist",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",

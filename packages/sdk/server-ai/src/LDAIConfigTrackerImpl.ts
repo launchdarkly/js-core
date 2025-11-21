@@ -1,6 +1,5 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { name as aiSdkName, version as aiSdkVersion } from '../package.json';
 import { LDAIConfigTracker } from './api/config';
 import { LDAIMetricSummary } from './api/config/LDAIConfigTracker';
 import { EvalScore, JudgeResponse } from './api/judge/types';
@@ -13,6 +12,7 @@ import {
   LDTokenUsage,
 } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
+import { aiSdkName, aiSdkVersion } from './sdkInfo';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   private _trackedMetrics: LDAIMetricSummary = {};

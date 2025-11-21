@@ -1,7 +1,9 @@
 import type { Info, LDLogger, PlatformData, SdkData } from '@launchdarkly/js-client-sdk-common';
 
-import { name, version } from '../../package.json';
 import { ldApplication, ldDevice } from './autoEnv';
+
+const sdkName = '@launchdarkly/react-native-client-sdk';
+const sdkVersion = '10.12.0'; // x-release-please-version
 
 export default class PlatformInfo implements Info {
   constructor(
@@ -22,8 +24,8 @@ export default class PlatformInfo implements Info {
 
   sdkData(): SdkData {
     const data: SdkData = {
-      name,
-      version,
+      name: sdkName,
+      version: sdkVersion,
       userAgentBase: 'ReactNativeClient',
     };
 

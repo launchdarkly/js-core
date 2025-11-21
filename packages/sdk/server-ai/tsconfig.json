@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
-    // Uses "." so it can load package.json.
     "rootDir": ".",
     "outDir": "dist",
-    "target": "es2017",
-    "lib": ["es6"],
-    "module": "commonjs",
+    "target": "es2020",
+    "lib": ["es2020"],
+    "module": "ESNext",
     "strict": true,
     "noImplicitOverride": true,
-    // Needed for CommonJS modules.
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true, // enables importers to jump to source
+    "declarationMap": true,
     "resolveJsonModule": true,
     "stripInternal": true,
-    "moduleResolution": "node"
+    "moduleResolution": "bundler"
   },
+  "include": ["src"],
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "examples"]
 }

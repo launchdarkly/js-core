@@ -51,8 +51,16 @@
         "__tests__/createPlatformInfo.test.ts"
       ]
     },
-    "packages/sdk/react-native": {},
-    "packages/sdk/server-node": {},
+    "packages/sdk/react-native": {
+      "extra-files": [
+        "src/platform/PlatformInfo.ts"
+      ]
+    },
+    "packages/sdk/server-node": {
+      "extra-files": [
+        "src/platform/NodeInfo.ts"
+      ]
+    },
     "packages/sdk/vercel": {
       "extra-files": ["src/createPlatformInfo.ts"]
     },
@@ -80,11 +88,15 @@
     "packages/store/node-server-sdk-redis": {},
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        "src/platform/BrowserInfo.ts"
+      ]
     },
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
       "extra-files": [
+        "src/sdkInfo.ts",
         {
           "type": "json",
           "path": "examples/bedrock/package.json",

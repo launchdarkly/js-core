@@ -1,4 +1,4 @@
-import * as Mustache from 'mustache';
+import Mustache from 'mustache';
 
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
