@@ -344,12 +344,10 @@ function constructFDv2(
             break;
           }
           case 'polling': {
-            const { pollInterval = DEFAULT_POLL_INTERVAL } = initializerConfig;
             initializers.push(
               () =>
-                new PollingProcessorFDv2(
+                new OneShotInitializerFDv2(
                   new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
-                  pollInterval,
                   config.logger,
                 ),
             );

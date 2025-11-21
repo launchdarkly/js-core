@@ -1,8 +1,5 @@
 import { PayloadProcessor } from './payloadProcessor';
-import { DeleteObject, Event, PutObject } from './proto';
-
-// eventually this will be the same as the IntentCode type, but for now we'll use a simpler type
-type supportedIntentCodes = 'xfer-full';
+import { Event } from './proto';
 
 interface fdv1Payload {
   flags: { [name: string]: any };
@@ -12,143 +9,101 @@ interface fdv1Payload {
 const PAYLOAD_ID = 'FDv1Fallback';
 
 /**
- * FDv1PayloadAdaptor is a helper for constructing a change set for FDv2.
- * The main use case for this adaptor is to help construct a change set from
- * a FDv1 payload.
- *
- * @experimental
- * This type is not stable, and not subject to any backwards
- * compatibility guarantees or semantic versioning. It is not suitable for production usage.
+ * The FDv1PayloadAdaptor is a helper class that converts FDv1 payloads into events that the PayloadProcessor can understand.
  */
-export default class FDv1PayloadAdaptor {
-  private _events: Event[] = [];
-  private _processor: PayloadProcessor;
-  private _selector: string = '';
-  private _intent: supportedIntentCodes = 'xfer-full';
-
-  constructor(processor: PayloadProcessor) {
-    this._processor = processor;
-  }
-
+export interface FDv1PayloadAdaptor {
   /**
-   * Begins a new change set with a given intent.
+   * The PayloadProcessor that will be used to process the events.
    */
-  start(intent: supportedIntentCodes): this {
-    if (intent !== 'xfer-full') {
-      throw new Error('intent: only xfer-full is supported');
-    }
-
-    this._events = [];
-    this._intent = intent;
-
-    return this;
-  }
+  readonly _processor: PayloadProcessor;
 
   /**
-   * Customizes the selector to use for the change set.
+   * The selector that will be used to identify the payload.
+   */
+  _selector: string;
+
+  /**
+   * The method that will be used to set a selector for the payload that is
+   * being processed.
    *
-   * NOTE: you probably only need this method for a synchronizer
-   * fallback scenario.
+   * @remarks
+   * This method probably shouldn't be used in most instances as FDv1 payloads
+   * do not have the concept of a selector.
    *
-   * @param selector - the selector to use for the change set
-   * @returns {this} - the adaptor instance
+   * @param selector - The selector to set for the payload.
+   * @returns this FDv1PayloadAdaptor instance
    */
-  useSelector(selector: string): this {
-    this._selector = selector;
-    return this;
-  }
+  useSelector: (selector: string) => FDv1PayloadAdaptor;
 
   /**
-   * Returns the completed changeset.
-   * NOTE: currently, this adaptor is not designed to continuously build changesets, rather
-   * it is designed to construct a single changeset at a time. We can easily expand this by
-   * resetting some values in the future.
+   * The method that will be used to process a full transfer changeset.
+   *
+   * @param data - The data to process.
    */
-  finish(): this {
-    // NOTE: currently the only use case for this adaptor is to
-    // construct a change set for a file data intializer which only supports
-    // FDv1 format. As such, we need to use dummy values to satisfy the FDv2
-    // protocol.
-    const serverIntentEvent: Event = {
-      event: 'server-intent',
-      data: {
-        payloads: [
-          {
-            id: PAYLOAD_ID,
-            target: 1,
-            intentCode: this._intent,
-            reason: 'payload-missing',
+  processFullTransfer: (data: fdv1Payload) => void;
+}
+
+export function fdv1PayloadAdaptor(processor: PayloadProcessor): FDv1PayloadAdaptor {
+  return {
+    _processor: processor,
+    _selector: '',
+    useSelector(selector: string): FDv1PayloadAdaptor {
+      this._selector = selector;
+      return this;
+    },
+    processFullTransfer(data) {
+      const events: Array<Event> = [
+        {
+          event: 'server-intent',
+          data: {
+            payloads: [
+              {
+                id: PAYLOAD_ID,
+                target: 1,
+                intentCode: 'xfer-full',
+                reason: 'payload-missing',
+              },
+            ],
           },
-        ],
-      },
-    };
+        },
+      ];
 
-    const finishEvent: Event = {
-      event: 'payload-transferred',
-      data: {
-        // IMPORTANT: the selector MUST be empty or "live" data synchronizers
-        // will not work as it would try to resume from a bogus state.
-        state: this._selector,
-        version: 1,
-        id: PAYLOAD_ID,
-      },
-    };
-
-    this._processor.processEvents([serverIntentEvent, ...this._events, finishEvent]);
-    this._events = [];
-
-    return this;
-  }
-
-  /**
-   *
-   * @param data - FDv1 payload from a fdv1 poll
-   */
-  pushFdv1Payload(data: fdv1Payload): this {
-    Object.entries(data?.flags || []).forEach(([key, flag]) => {
-      this.putObject({
-        // strong assumption here that we only have segments and flags.
-        kind: 'flag',
-        key,
-        version: flag.version || 1,
-        object: flag,
+      Object.entries(data?.flags || []).forEach(([key, flag]) => {
+        events.push({
+          event: 'put-object',
+          data: {
+            kind: 'flag',
+            key,
+            version: flag.version || 1,
+            object: flag,
+          },
+        });
       });
-    });
 
-    Object.entries(data?.segments || []).forEach(([key, segment]) => {
-      this.putObject({
-        // strong assumption here that we only have segments and flags.
-        kind: 'segment',
-        key,
-        version: segment.version || 1,
-        object: segment,
+      Object.entries(data?.segments || []).forEach(([key, segment]) => {
+        events.push({
+          event: 'put-object',
+          data: {
+            kind: 'segment',
+            key,
+            version: segment.version || 1,
+            object: segment,
+          },
+        });
       });
-    });
 
-    return this;
-  }
+      events.push({
+        event: 'payload-transferred',
+        data: {
+          // IMPORTANT: the selector MUST be empty or "live" data synchronizers
+          // will not work as it would try to resume from a bogus state.
+          state: this._selector,
+          version: 1,
+          id: PAYLOAD_ID,
+        },
+      });
 
-  /**
-   * Adds a new object to the changeset.
-   */
-  putObject(obj: PutObject): this {
-    this._events.push({
-      event: 'put-object',
-      data: obj,
-    });
-
-    return this;
-  }
-
-  /**
-   * Adds a deletion to the changeset.
-   */
-  deleteObject(obj: DeleteObject): this {
-    this._events.push({
-      event: 'delete-object',
-      data: obj,
-    });
-
-    return this;
-  }
+      this._processor.processEvents(events);
+    },
+  };
 }

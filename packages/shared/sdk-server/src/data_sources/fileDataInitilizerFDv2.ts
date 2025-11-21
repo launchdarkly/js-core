@@ -70,7 +70,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
       this._logger,
     );
 
-    const adaptor = new internal.FDv1PayloadAdaptor(payloadProcessor);
+    const adaptor = internal.FDv1PayloadAdaptor(payloadProcessor);
 
     this._fileLoader = new FileLoader(
       this._filesystem,
@@ -87,7 +87,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
 
           statusCallback(subsystemCommon.DataSourceState.Valid);
 
-          adaptor.start('xfer-full').pushFdv1Payload(parsedData).finish();
+          adaptor.processFullTransfer(parsedData);
 
           statusCallback(subsystemCommon.DataSourceState.Closed);
         } catch (err) {
