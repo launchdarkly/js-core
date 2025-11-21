@@ -8,8 +8,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.10.2 to 9.10.3
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.10.3
 
 ## [1.3.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.3.1...node-server-sdk-otel-v1.3.2) (2025-08-29)
 
@@ -19,8 +17,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.10.1 to 9.10.2
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.10.2
 
 ## [1.3.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.3.0...node-server-sdk-otel-v1.3.1) (2025-07-23)
 
@@ -30,8 +26,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.10.0 to 9.10.1
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.10.1
 
 ## [1.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.2.2...node-server-sdk-otel-v1.3.0) (2025-06-17)
 
@@ -46,8 +40,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.9.2 to 9.10.0
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.10.0
 
 ## [1.2.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.2.1...node-server-sdk-otel-v1.2.2) (2025-05-21)
 
@@ -57,8 +49,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.9.1 to 9.9.2
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.9.2
 
 ## [1.2.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.2.0...node-server-sdk-otel-v1.2.1) (2025-04-29)
 
@@ -68,8 +58,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.9.0 to 9.9.1
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.9.1
 
 ## [1.2.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.8...node-server-sdk-otel-v1.2.0) (2025-04-16)
 
@@ -84,8 +72,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.8.0 to 9.9.0
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.9.0
 
 ## [1.1.8](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.7...node-server-sdk-otel-v1.1.8) (2025-04-08)
 
@@ -95,8 +81,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.7 to 9.8.0
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.8.0
 
 ## [1.1.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.6...node-server-sdk-otel-v1.1.7) (2025-03-26)
 
@@ -106,8 +90,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.6 to 9.7.7
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.7
 
 ## [1.1.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.5...node-server-sdk-otel-v1.1.6) (2025-03-21)
 
@@ -117,8 +99,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.5 to 9.7.6
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.6
 
 ## [1.1.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.4...node-server-sdk-otel-v1.1.5) (2025-03-17)
 
@@ -128,8 +108,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.4 to 9.7.5
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.5
 
 ## [1.1.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.3...node-server-sdk-otel-v1.1.4) (2025-02-18)
 
@@ -139,8 +117,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.3 to 9.7.4
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.4
 
 ## [1.1.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.2...node-server-sdk-otel-v1.1.3) (2025-01-22)
 
@@ -150,8 +126,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.2 to 9.7.3
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.3
 
 ## [1.1.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.1...node-server-sdk-otel-v1.1.2) (2024-11-14)
 
@@ -161,8 +135,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.1 to 9.7.2
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.2
 
 ## [1.1.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.1.0...node-server-sdk-otel-v1.1.1) (2024-11-04)
 
@@ -172,8 +144,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.7.0 to 9.7.1
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.1
 
 ## [1.1.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.15...node-server-sdk-otel-v1.1.0) (2024-10-17)
 
@@ -188,8 +158,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.6.1 to 9.7.0
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.7.0
 
 ## [1.0.15](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.14...node-server-sdk-otel-v1.0.15) (2024-10-09)
 
@@ -210,8 +178,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.5.4 to 9.6.0
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.6.0
 
 ## [1.0.13](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.12...node-server-sdk-otel-v1.0.13) (2024-09-05)
 
@@ -221,8 +187,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.5.3 to 9.5.4
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.4
 
 ## [1.0.12](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.11...node-server-sdk-otel-v1.0.12) (2024-09-03)
 
@@ -232,8 +196,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.5.2 to 9.5.3
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.3
 
 ## [1.0.11](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.10...node-server-sdk-otel-v1.0.11) (2024-08-28)
 
@@ -243,8 +205,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.5.1 to 9.5.2
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.2
 
 ## [1.0.10](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.9...node-server-sdk-otel-v1.0.10) (2024-08-12)
 
@@ -254,8 +214,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.5.0 to 9.5.1
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.1
 
 ## [1.0.9](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.8...node-server-sdk-otel-v1.0.9) (2024-07-31)
 
@@ -265,8 +223,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.4.7 to 9.5.0
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.5.0
 
 ## [1.0.8](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.7...node-server-sdk-otel-v1.0.8) (2024-07-01)
 
@@ -276,8 +232,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.4.6 to 9.4.7
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.4.7
 
 ## [1.0.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.6...node-server-sdk-otel-v1.0.7) (2024-06-14)
 
@@ -287,8 +241,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.4.5 to 9.4.6
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.4.6
 
 ## [1.0.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.5...node-server-sdk-otel-v1.0.6) (2024-06-04)
 
@@ -298,8 +250,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.4.4 to 9.4.5
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.4.5
 
 ## [1.0.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.4...node-server-sdk-otel-v1.0.5) (2024-05-31)
 
@@ -309,8 +259,6 @@
 * The following workspace dependencies were updated
   * devDependencies
     * @launchdarkly/node-server-sdk bumped from 9.4.3 to 9.4.4
-  * peerDependencies
-    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.4.4
 
 ## [1.0.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.0.3...node-server-sdk-otel-v1.0.4) (2024-05-22)
 

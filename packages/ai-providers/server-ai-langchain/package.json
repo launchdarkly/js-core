@@ -67,7 +67,7 @@
   "peerDependencies": {
     "@langchain/community": "^0.2.0 || ^0.3.0",
     "@langchain/core": "^0.2.0 || ^0.3.0",
-    "@launchdarkly/server-sdk-ai": "^0.14.0",
+    "@launchdarkly/server-sdk-ai": "^0.15.0",
     "langchain": "^0.2.0 || ^0.3.0"
   }
 }
