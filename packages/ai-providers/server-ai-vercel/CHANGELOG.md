@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.3.1...server-sdk-ai-vercel-v0.4.0) (2025-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Change to ES Modules to improve support of dynamic loading ([#1011](https://github.com/launchdarkly/js-core/issues/1011))
+
+### Bug Fixes
+
+* Change to ES Modules to improve support of dynamic loading ([#1011](https://github.com/launchdarkly/js-core/issues/1011)) ([11de076](https://github.com/launchdarkly/js-core/commit/11de076f270f730b0f05134ce9f57d573f7c0067))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.14.1 to ^0.15.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.14.0 to ^0.15.0
+
 ## [0.3.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.3.0...server-sdk-ai-vercel-v0.3.1) (2025-11-13)
 
 

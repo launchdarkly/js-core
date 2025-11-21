@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.12.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.12.0...react-native-client-sdk-v10.12.1) (2025-11-21)
+
+
+### Bug Fixes
+
+* Use release-please to update SDK versions ([#1013](https://github.com/launchdarkly/js-core/issues/1013)) ([d1d11f1](https://github.com/launchdarkly/js-core/commit/d1d11f1feb29fc5ccbf14506aa374162d452be42))
+
 ## [10.12.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.11.0...react-native-client-sdk-v10.12.0) (2025-11-03)
 
 

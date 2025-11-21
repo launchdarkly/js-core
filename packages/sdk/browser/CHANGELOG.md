@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.8.1...js-client-sdk-v0.9.0) (2025-11-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Only support identify with result. ([#1000](https://github.com/launchdarkly/js-core/issues/1000))
+
+### Features
+
+* Only support identify with result. ([#1000](https://github.com/launchdarkly/js-core/issues/1000)) ([7163adf](https://github.com/launchdarkly/js-core/commit/7163adf06b5084d47b61658e5b30fab002d7fc80))
+
 ## [0.8.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.8.0...js-client-sdk-v0.8.1) (2025-07-23)
 
 
