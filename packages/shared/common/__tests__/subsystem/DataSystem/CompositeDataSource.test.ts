@@ -1004,3 +1004,161 @@ it('consumes cancellation tokens correctly', async () => {
   // eslint-disable-next-line no-underscore-dangle
   expect(underTest._cancelTokens.length).toEqual(0);
 });
+
+it('handles multiple initializers with fallback when first initializer fails and second succeeds', async () => {
+  const mockInitializer1Error = {
+    name: 'Error',
+    message: 'First initializer failed',
+  };
+  const mockInitializer1: DataSource = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Closed, mockInitializer1Error);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockInitializer2Data = { key: 'init2' };
+  const mockInitializer2: DataSource = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          _dataCallback(true, mockInitializer2Data);
+          _statusCallback(DataSourceState.Closed);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockSynchronizer1Data = { key: 'sync1' };
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          _dataCallback(false, mockSynchronizer1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [makeDataSourceFactory(mockInitializer1), makeDataSourceFactory(mockInitializer2)],
+    [makeDataSourceFactory(mockSynchronizer1)],
+    [],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  let dataCallback;
+  const statusCallback = jest.fn();
+  await new Promise<void>((resolve) => {
+    dataCallback = jest.fn((_: boolean, data: any) => {
+      if (data === mockSynchronizer1Data) {
+        resolve();
+      }
+    });
+
+    underTest.start(dataCallback, statusCallback);
+  });
+
+  expect(mockInitializer1.start).toHaveBeenCalledTimes(1);
+  expect(mockInitializer2.start).toHaveBeenCalledTimes(1);
+  expect(mockSynchronizer1.start).toHaveBeenCalledTimes(1);
+  expect(statusCallback).toHaveBeenCalledTimes(5);
+  expect(statusCallback).toHaveBeenNthCalledWith(1, DataSourceState.Initializing, undefined);
+  expect(statusCallback).toHaveBeenNthCalledWith(
+    2,
+    DataSourceState.Interrupted,
+    mockInitializer1Error,
+  );
+  expect(statusCallback).toHaveBeenNthCalledWith(3, DataSourceState.Valid, undefined);
+  expect(statusCallback).toHaveBeenNthCalledWith(4, DataSourceState.Interrupted, undefined);
+  expect(statusCallback).toHaveBeenNthCalledWith(5, DataSourceState.Valid, undefined);
+});
+
+it('does not run second initializer when first initializer succeeds', async () => {
+  const mockInitializer1Data = { key: 'init1' };
+  const mockInitializer1: DataSource = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          _dataCallback(true, mockInitializer1Data);
+          _statusCallback(DataSourceState.Closed);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockInitializer2: DataSource = {
+    start: jest.fn(),
+    stop: jest.fn(),
+  };
+
+  const mockSynchronizer1Data = { key: 'sync1' };
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          _dataCallback(false, mockSynchronizer1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [makeDataSourceFactory(mockInitializer1), makeDataSourceFactory(mockInitializer2)],
+    [makeDataSourceFactory(mockSynchronizer1)],
+    [],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  let dataCallback;
+  const statusCallback = jest.fn();
+  await new Promise<void>((resolve) => {
+    dataCallback = jest.fn((_: boolean, data: any) => {
+      if (data === mockSynchronizer1Data) {
+        resolve();
+      }
+    });
+
+    underTest.start(dataCallback, statusCallback);
+  });
+
+  expect(mockInitializer1.start).toHaveBeenCalledTimes(1);
+  expect(mockInitializer2.start).toHaveBeenCalledTimes(0);
+  expect(mockSynchronizer1.start).toHaveBeenCalledTimes(1);
+});
