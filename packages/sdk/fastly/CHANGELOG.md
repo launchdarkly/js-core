@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.1...fastly-server-sdk-v0.2.2) (2025-11-21)
+
+
+### Bug Fixes
+
+* Use release-please to update SDK versions ([#1013](https://github.com/launchdarkly/js-core/issues/1013)) ([d1d11f1](https://github.com/launchdarkly/js-core/commit/d1d11f1feb29fc5ccbf14506aa374162d452be42))
+
 ## [0.2.1](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.0...fastly-server-sdk-v0.2.1) (2025-08-29)
 
 

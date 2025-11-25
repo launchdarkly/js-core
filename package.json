@@ -43,7 +43,8 @@
     "contract-tests",
     "packages/sdk/combined-browser",
     "packages/sdk/shopify-oxygen",
-    "packages/sdk/shopify-oxygen/contract-tests"
+    "packages/sdk/shopify-oxygen/contract-tests",
+    "packages/sdk/shopify-oxygen/example"
   ],
   "private": true,
   "scripts": {

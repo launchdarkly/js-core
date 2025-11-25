@@ -1,101 +1,5 @@
 # Changelog
 
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 0.3.0 to 0.3.1
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.0.2 to 1.0.3
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.0.3 to 1.0.4
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.0.4 to 1.0.5
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.0.5 to 1.0.6
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.0.6 to 1.0.7
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.0.8 to 1.1.0
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.1.0 to 1.2.0
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.2.0 to 1.2.1
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.2.1 to 1.2.2
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 1.2.2 to 1.2.3
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 2.0.0 to 2.0.1
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 2.0.1 to 2.0.2
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 2.1.0 to 2.1.1
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 2.1.1 to 2.1.2
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/js-server-sdk-common bumped from 2.2.1 to 2.2.2
-
 ## [2.6.9](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.8...js-server-sdk-common-edge-v2.6.9) (2025-08-29)
 
 
@@ -394,6 +298,15 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.2.2 to 2.2.3
 
+## [2.2.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.2.1...js-server-sdk-common-edge-v2.2.2) (2024-03-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.2.1 to 2.2.2
+
 ## [2.2.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.2.0...js-server-sdk-common-edge-v2.2.1) (2024-03-15)
 
 
@@ -428,6 +341,24 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.1.2 to 2.1.3
 
+## [2.1.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.1.1...js-server-sdk-common-edge-v2.1.2) (2023-12-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.1.1 to 2.1.2
+
+## [2.1.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.1.0...js-server-sdk-common-edge-v2.1.1) (2023-12-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.1.0 to 2.1.1
+
 ## [2.1.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.0.2...js-server-sdk-common-edge-v2.1.0) (2023-11-14)
 
 
@@ -441,6 +372,24 @@
 * The following workspace dependencies were updated
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 2.0.2 to 2.1.0
+
+## [2.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.0.1...js-server-sdk-common-edge-v2.0.2) (2023-11-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.0.1 to 2.0.2
+
+## [2.0.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.0.0...js-server-sdk-common-edge-v2.0.1) (2023-10-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.0.0 to 2.0.1
 
 ## [2.0.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.13...js-server-sdk-common-edge-v2.0.0) (2023-10-16)
 
@@ -460,6 +409,51 @@
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 1.2.3 to 2.0.0
 
+## [1.0.13](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.12...js-server-sdk-common-edge-v1.0.13) (2023-09-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.2 to 1.2.3
+
+## [1.0.12](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.11...js-server-sdk-common-edge-v1.0.12) (2023-08-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.1 to 1.2.2
+
+## [1.0.11](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.10...js-server-sdk-common-edge-v1.0.11) (2023-08-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.2.0 to 1.2.1
+
+## [1.0.10](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.9...js-server-sdk-common-edge-v1.0.10) (2023-08-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.1.0 to 1.2.0
+
+## [1.0.9](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.8...js-server-sdk-common-edge-v1.0.9) (2023-08-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.8 to 1.1.0
+
 ## [1.0.8](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.7...js-server-sdk-common-edge-v1.0.8) (2023-08-10)
 
 
@@ -473,6 +467,51 @@
 * The following workspace dependencies were updated
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 1.0.7 to 1.0.8
+
+## [1.0.7](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.6...js-server-sdk-common-edge-v1.0.7) (2023-08-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.6 to 1.0.7
+
+## [1.0.6](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.5...js-server-sdk-common-edge-v1.0.6) (2023-07-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.5 to 1.0.6
+
+## [1.0.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.4...js-server-sdk-common-edge-v1.0.5) (2023-06-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.4 to 1.0.5
+
+## [1.0.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.3...js-server-sdk-common-edge-v1.0.4) (2023-06-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.3 to 1.0.4
+
+## [1.0.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.2...js-server-sdk-common-edge-v1.0.3) (2023-06-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 1.0.2 to 1.0.3
 
 ## [1.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v1.0.1...js-server-sdk-common-edge-v1.0.2) (2023-04-28)
 
@@ -518,7 +557,16 @@
 
 * remove useless defaults ([#94](https://github.com/launchdarkly/js-core/issues/94)) ([a9f533a](https://github.com/launchdarkly/js-core/commit/a9f533a4bdeb73338fd04fb5be2efd64c2d82c75))
 
-## 0.0.1 (2023-04-19)
+## [0.0.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v0.0.1...js-server-sdk-common-edge-v0.0.2) (2023-04-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 0.3.0 to 0.3.1
+
+## [0.0.1](https://github.com/launchdarkly/js-core/releases/tag/js-server-sdk-common-edge-v0.0.1) (2023-04-19)
 
 
 ### Features
@@ -532,7 +580,3 @@
 * The following workspace dependencies were updated
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from 0.2.0 to 0.3.0
-
-## Changelog
-
-All notable changes to `@launchdarkly/js-server-sdk-common-edge` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
