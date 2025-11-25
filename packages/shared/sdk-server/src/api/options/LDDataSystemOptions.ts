@@ -157,7 +157,30 @@ export type SynchronizerDataSource =
   | StreamingDataSourceConfiguration;
 
 /**
- * This data source will allow developers to define their own composite data source
+ * @experimental
+ * This data source will allow developers to define their own composite data source.
+ * This is a free-form option and is not subject to any backwards compatibility guarantees or semantic
+ * versioning.
+ *
+ * The following example is roughly equivilent to using the {@link StandardDataSourceOptions} with the default values.
+ * @example
+ * ```typescript
+ * dataSource: {
+ *  dataSourceOptionsType: 'custom',
+ *  initializers: [
+ *     {
+ *      type: 'polling'
+ *    },
+ *  ],
+ *  synchronizers: [
+ *    {
+ *      type: 'streaming',
+ *    },
+ *    {
+ *      type: 'polling',
+ *    }
+ *  ],
+ * }
  */
 export interface CustomDataSourceOptions {
   dataSourceOptionsType: 'custom';
