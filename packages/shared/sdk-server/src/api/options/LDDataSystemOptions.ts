@@ -122,7 +122,8 @@ export interface PollingDataSourceConfiguration {
  * and can switch between streaming and polling automatically to provide redundancy.
  */
 export interface StandardDataSourceOptions
-  extends Omit<StreamingDataSourceConfiguration, 'type'>,
+  extends
+    Omit<StreamingDataSourceConfiguration, 'type'>,
     Omit<PollingDataSourceConfiguration, 'type'> {
   dataSourceOptionsType: 'standard';
 }
