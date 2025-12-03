@@ -2,6 +2,7 @@ import {
   AutoEnvAttributes,
   base64UrlEncode,
   BasicLogger,
+  cancelableTimedPromise,
   Configuration,
   Encoding,
   FlagManager,
@@ -15,6 +16,7 @@ import {
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
+  LDTimeoutError,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -32,6 +34,9 @@ import BrowserPlatform from './platform/BrowserPlatform';
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
+  private _initializedPromise?: Promise<void>;
+  private _initResolve?: () => void;
+  private _isInitialized: boolean = false;
 
   constructor(
     clientSideId: string,
@@ -212,8 +217,58 @@ class BrowserClientImpl extends LDClientImpl {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
+    if (res.status === 'completed') {
+      this._isInitialized = true;
+      this._initResolve?.();
+    }
     this._goalManager?.startTracking();
     return res;
+  }
+
+  waitForInitialization(timeout: number = 5): Promise<void> {
+    // An initialization promise is only created if someone is going to use that promise.
+    // If we always created an initialization promise, and there was no call waitForInitialization
+    // by the time the promise was rejected, then that would result in an unhandled promise
+    // rejection.
+
+    // It waitForInitialization was previously called, then we can use that promise even if it has
+    // been resolved or rejected.
+    if (this._initializedPromise) {
+      return this._promiseWithTimeout(this._initializedPromise, timeout);
+    }
+
+    if (this._isInitialized) {
+      return Promise.resolve();
+    }
+
+    if (!this._initializedPromise) {
+      this._initializedPromise = new Promise((resolve) => {
+        this._initResolve = resolve;
+      });
+    }
+
+    return this._promiseWithTimeout(this._initializedPromise, timeout);
+  }
+
+  /**
+   * Apply a timeout promise to a base promise. This is for use with waitForInitialization.
+   *
+   * @param basePromise The promise to race against a timeout.
+   * @param timeout The timeout in seconds.
+   * @param logger A logger to log when the timeout expires.
+   * @returns
+   */
+  private _promiseWithTimeout(basePromise: Promise<void>, timeout: number): Promise<void> {
+    const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
+    return Promise.race([
+      basePromise.then(() => cancelableTimeout.cancel()),
+      cancelableTimeout.promise,
+    ]).catch((reason) => {
+      if (reason instanceof LDTimeoutError) {
+        this.logger?.error(reason.message);
+      }
+      throw reason;
+    });
   }
 
   setStreaming(streaming?: boolean): void {
@@ -282,6 +337,7 @@ export function makeClient(
     close: () => impl.close(),
     allFlags: () => impl.allFlags(),
     addHook: (hook: Hook) => impl.addHook(hook),
+    waitForInitialization: (timeout: number) => impl.waitForInitialization(timeout),
     logger: impl.logger,
   };
 
