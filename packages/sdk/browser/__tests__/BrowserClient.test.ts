@@ -373,4 +373,57 @@ describe('given a mock platform for a BrowserClient', () => {
     // With events and goals disabled the only fetch calls should be for polling requests.
     expect(platform.requests.fetch.mock.calls.length).toBe(3);
   });
+
+  it('blocks until the client is ready when waitForInitialization is called', async () => {
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    const waitPromise = client.waitForInitialization(10);
+    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+
+    await Promise.all([waitPromise, identifyPromise]);
+
+    await expect(waitPromise).resolves.toBeUndefined();
+    await expect(identifyPromise).resolves.toEqual({ status: 'completed' });
+  });
+
+  it('rejects when initialization does not complete before the timeout', async () => {
+    jest.useRealTimers();
+
+    // Create a platform with a delayed fetch response
+    const delayedPlatform = makeBasicPlatform();
+    let resolveFetch: (value: any) => void;
+    const delayedFetchPromise = new Promise((resolve) => {
+      resolveFetch = resolve;
+    });
+
+    // Mock fetch to return a promise that won't resolve until we explicitly resolve it
+    delayedPlatform.requests.fetch = jest.fn((_url: string, _options: any) =>
+      delayedFetchPromise.then(() => ({})),
+    ) as any;
+
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      delayedPlatform,
+    );
+
+    // Start identify which will trigger a fetch that won't complete
+    client.identify({ key: 'user-key', kind: 'user' });
+
+    // Call waitForInitialization with a short timeout (0.1 seconds)
+    const waitPromise = client.waitForInitialization(0.1);
+
+    // Verify that waitForInitialization rejects with a timeout error
+    await expect(waitPromise).rejects.toThrow();
+
+    // Clean up: resolve the fetch to avoid hanging promises and restore fake timers
+    resolveFetch!({});
+    jest.useFakeTimers();
+  });
 });
