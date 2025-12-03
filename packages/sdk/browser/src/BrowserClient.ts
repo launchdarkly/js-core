@@ -18,6 +18,7 @@ import {
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { readFlagsFromBootstrap } from './bootstrap';
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
@@ -32,6 +33,7 @@ import BrowserPlatform from './platform/BrowserPlatform';
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
+  private _bootstrapAttempted = false;
 
   constructor(
     clientSideId: string,
@@ -197,6 +199,12 @@ class BrowserClientImpl extends LDClientImpl {
     );
   }
 
+  /**
+   * @ignore
+   * NOTE: this identify is not doing anything as the `makeClient` function maps the
+   * identify function to identifyResults. We will need to consolidate this function
+   * in the js-client-sdk-common package.
+   */
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     return super.identify(context, identifyOptions);
   }
@@ -211,6 +219,21 @@ class BrowserClientImpl extends LDClientImpl {
     if (identifyOptions?.sheddable === undefined) {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
+
+    if (!this._bootstrapAttempted && identifyOptionsWithUpdatedDefaults.bootstrap) {
+      try {
+        const bootstrapData = readFlagsFromBootstrap(
+          this.logger,
+          identifyOptionsWithUpdatedDefaults.bootstrap,
+        );
+        this.setBootstrap(context, bootstrapData);
+      } catch (e) {
+        this.logger.error('failed to bootstrap data');
+      } finally {
+        this._bootstrapAttempted = true;
+      }
+    }
+
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
     this._goalManager?.startTracking();
     return res;
