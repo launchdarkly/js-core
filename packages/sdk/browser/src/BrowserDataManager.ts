@@ -6,12 +6,15 @@ import {
   DataSourcePaths,
   DataSourceState,
   FlagManager,
+  httpErrorMessage,
   internal,
   LDEmitter,
   LDHeaders,
   LDIdentifyOptions,
   makeRequestor,
   Platform,
+  shouldRetry,
+  sleep,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { readFlagsFromBootstrap } from './bootstrap';
@@ -97,34 +100,84 @@ export default class BrowserDataManager extends BaseDataManager {
         this._debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
       }
 
-      await this._finishIdentifyFromPoll(context, identifyResolve, identifyReject);
+      await this._finishIdentifyFromPoll(
+        context,
+        identifyResolve,
+        identifyReject,
+        browserIdentifyOptions?.initialPollingRetries,
+      );
     }
     this._updateStreamingState();
+  }
+
+  /**
+   * A helper function for the initial poll request. This is mainly here to facilitate
+   * the retry logic.
+   *
+   * @param context - LDContext to request payload for.
+   * @param maxRetries - Maximum number of retries to attempt. Defaults to 3.
+   * @returns Payload as a string.
+   */
+  private async _requestPayload(context: Context, maxRetries: number = 3): Promise<string> {
+    const plainContextString = JSON.stringify(Context.toLDContext(context));
+    const pollingRequestor = makeRequestor(
+      plainContextString,
+      this.config.serviceEndpoints,
+      this.getPollingPaths(),
+      this.platform.requests,
+      this.platform.encoding!,
+      this.baseHeaders,
+      [],
+      this.config.withReasons,
+      this.config.useReport,
+      this._secureModeHash,
+    );
+
+    let lastError: any;
+    let validMaxRetries = maxRetries ?? 3;
+
+    if (validMaxRetries < 1) {
+      this.logger.warn(
+        `initialPollingRetries is set to ${maxRetries}, which is less than 1. This is not supported and will be ignored. Defaulting to 3 retries.`,
+      );
+      validMaxRetries = 3;
+    }
+
+    for (let attempt = 0; attempt <= validMaxRetries; attempt += 1) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        return await pollingRequestor.requestPayload();
+      } catch (e: any) {
+        if (!shouldRetry(e)) {
+          throw e;
+        }
+        lastError = e;
+        this._debugLog(httpErrorMessage(e, 'initial poll request', 'will retry'));
+        // NOTE: current we are hardcoding the retry interval to 1 second.
+        // We can make this configurable in the future.
+        // TODO: Reviewer any thoughts on this? Probably the easiest thing is to make this configurable
+        // however, we can also look into using the backoff logic to calculate the delay?
+        if (attempt < validMaxRetries) {
+          // eslint-disable-next-line no-await-in-loop
+          await sleep(1000);
+        }
+      }
+    }
+
+    throw lastError;
   }
 
   private async _finishIdentifyFromPoll(
     context: Context,
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
+    initialPollingRetries: number = 3,
   ) {
     try {
       this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
 
-      const plainContextString = JSON.stringify(Context.toLDContext(context));
-      const pollingRequestor = makeRequestor(
-        plainContextString,
-        this.config.serviceEndpoints,
-        this.getPollingPaths(),
-        this.platform.requests,
-        this.platform.encoding!,
-        this.baseHeaders,
-        [],
-        this.config.withReasons,
-        this.config.useReport,
-        this._secureModeHash,
-      );
+      const payload = await this._requestPayload(context, initialPollingRetries);
 
-      const payload = await pollingRequestor.requestPayload();
       try {
         const listeners = this.createStreamListeners(context, identifyResolve);
         const putListener = listeners.get('put');
