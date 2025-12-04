@@ -136,9 +136,9 @@ export default class BrowserDataManager extends BaseDataManager {
     let lastError: any;
     let validMaxRetries = maxRetries ?? 3;
 
-    if (validMaxRetries < 0) {
+    if (Number.isNaN(validMaxRetries) || validMaxRetries < 0) {
       this.logger.warn(
-        `initialPollingRetries is set to ${maxRetries}, which is less than 0. This is not supported and will be ignored. Defaulting to 3 retries.`,
+        `initialPollingRetries is set to an invalid value: ${maxRetries}. Defaulting to 3 retries.`,
       );
       validMaxRetries = 3;
     }
@@ -152,12 +152,12 @@ export default class BrowserDataManager extends BaseDataManager {
           throw e;
         }
         lastError = e;
-        this._debugLog(httpErrorMessage(e, 'initial poll request', 'will retry'));
         // NOTE: current we are hardcoding the retry interval to 1 second.
         // We can make this configurable in the future.
         // TODO: Reviewer any thoughts on this? Probably the easiest thing is to make this configurable
         // however, we can also look into using the backoff logic to calculate the delay?
         if (attempt < validMaxRetries) {
+          this._debugLog(httpErrorMessage(e, 'initial poll request', 'will retry'));
           // eslint-disable-next-line no-await-in-loop
           await sleep(1000);
         }
