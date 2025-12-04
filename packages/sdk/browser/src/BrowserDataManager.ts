@@ -136,9 +136,9 @@ export default class BrowserDataManager extends BaseDataManager {
     let lastError: any;
     let validMaxRetries = maxRetries ?? 3;
 
-    if (validMaxRetries < 1) {
+    if (validMaxRetries < 0) {
       this.logger.warn(
-        `initialPollingRetries is set to ${maxRetries}, which is less than 1. This is not supported and will be ignored. Defaulting to 3 retries.`,
+        `initialPollingRetries is set to ${maxRetries}, which is less than 0. This is not supported and will be ignored. Defaulting to 3 retries.`,
       );
       validMaxRetries = 3;
     }
