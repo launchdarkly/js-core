@@ -345,6 +345,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         if (res.status === 'shed') {
           return { status: 'shed' } as LDIdentifyShed;
         }
+        this.emitter.emit('initialized');
         return { status: 'completed' } as LDIdentifySuccess;
       });
 
