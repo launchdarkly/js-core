@@ -1,0 +1,26 @@
+{
+  "name": "@launchdarkly/browser-example",
+  "version": "0.0.0",
+  "private": true,
+  "description": "LaunchDarkly example for JavaScript Browser SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/example",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@3.4.1",
+  "type": "module",
+  "scripts": {
+    "start": "open index.html",
+    "clean": "rm -rf dist dist-static",
+    "build": "npm run clean && tsdown"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "workspace:^"
+  },
+  "devDependencies": {
+    "tsdown": "^0.17.0-beta.4",
+    "typescript": "^5.9.3"
+  }
+}
