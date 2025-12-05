@@ -5,6 +5,12 @@
       "enabled": false,
       "matchDatasources": ["npm"],
       "matchPackageNames": ["*"]
+    },
+    {
+      "description": "Disable digest pinning for a specific action",
+      "matchPackageNames": ["reactivecircus/android-emulator-runner"],
+      "matchDepTypes": ["action"],
+      "pinDigests": false
     }
   ],
   "vulnerabilityAlerts": {
