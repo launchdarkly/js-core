@@ -26,7 +26,7 @@ export type { LDPlugin } from './LDPlugin';
  * Usage:
  * ```
  * import { initialize } from 'launchdarkly-js-client-sdk';
- * const client = initialize(clientSideId, context, options);
+ * const client = initialize(clientSideId, options);
  * ```
  *
  * @param clientSideId
