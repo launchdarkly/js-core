@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.20.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.19.0...js-sdk-common-v2.20.0) (2025-12-05)
+
+
+### Features
+
+* add FDv2 FileDataSource initializer ([#1010](https://github.com/launchdarkly/js-core/issues/1010)) ([99931f0](https://github.com/launchdarkly/js-core/commit/99931f0706c0202390e3b68e3701ba0fb8aba124))
+
 ## [2.19.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.18.0...js-sdk-common-v2.19.0) (2025-07-23)
 
 
