@@ -43,6 +43,7 @@ import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
+import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
 import InspectorManager from './inspection/InspectorManager';
@@ -358,6 +359,19 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       }, identifyTimeout * 1000);
     });
     return Promise.race([callSitePromise, timeoutPromise]);
+  }
+
+  /**
+   * Exposes the bootstrap functionality to the derived classes. This function is mainly used to help set
+   * flag values for bootstrapped clients before the initialization is complete.
+   *
+   * @param pristineContext The LDContext object to be identified.
+   * @param newFlags The new flags to set.
+   */
+  protected setBootstrap(pristineContext: LDContext, newFlags: { [key: string]: ItemDescriptor }) {
+    this._uncheckedContext = pristineContext;
+    this._checkedContext = Context.fromLDContext(this._uncheckedContext);
+    this._flagManager.setBootstrap(this._checkedContext, newFlags);
   }
 
   on(eventName: EventName, listener: Function): void {
