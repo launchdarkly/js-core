@@ -70,7 +70,7 @@ export const createPayloadListener =
       converted,
       () => {
         if (payload.state !== '') {
-          // NOTE: this is a hack right now. The only condition that we will consider a valid basis
+          // NOTE: this is a workaround for now. The only condition that we will consider a valid basis
           // is when there is a valid selector. Currently, the only data source that does not have a
           // valid selector is the file data initializer, which will have a blank selector.
           basisReceived();
