@@ -28,4 +28,11 @@ export interface BrowserIdentifyOptions extends Omit<LDIdentifyOptions, 'waitFor
    * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/features/bootstrapping#javascript).
    */
   bootstrap?: unknown;
+
+  /**
+   * The number of retries to attempt for the initial polling request.
+   *
+   * Defaults to 3.
+   */
+  initialPollingRetries?: number;
 }

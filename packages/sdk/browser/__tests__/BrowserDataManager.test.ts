@@ -527,4 +527,83 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       '[BrowserDataManager] Identify called after data manager was closed.',
     );
   });
+
+  it('retries initial polling until it succeeds', async () => {
+    jest.useFakeTimers();
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    flagManager.loadCached.mockResolvedValue(false);
+
+    // Mock fetch to fail twice with 500 error, then succeed
+    let callCount = 0;
+    const mockedFetch = jest.fn().mockImplementation(() => {
+      callCount += 1;
+      if (callCount <= 2) {
+        return mockResponse('', 500);
+      }
+      return mockResponse('{"flagA": true}', 200);
+    });
+
+    platform.requests.fetch = mockedFetch as typeof platform.requests.fetch;
+
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    const identifyOptions: BrowserIdentifyOptions = { initialPollingRetries: 3 };
+    const identifyPromise = dataManager.identify(
+      identifyResolve,
+      identifyReject,
+      context,
+      identifyOptions,
+    );
+
+    // Fast-forward through the retry delays (2 retries * 1000ms each)
+    await jest.advanceTimersByTimeAsync(2000);
+
+    await identifyPromise;
+
+    expect(mockedFetch).toHaveBeenCalledTimes(3);
+    expect(identifyResolve).toHaveBeenCalled();
+    expect(identifyReject).not.toHaveBeenCalled();
+    expect(flagManager.init).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ flagA: { flag: true, version: undefined } }),
+    );
+
+    jest.useRealTimers();
+  });
+
+  it('throws an error when initial polling reaches max retry limit', async () => {
+    jest.useFakeTimers();
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    flagManager.loadCached.mockResolvedValue(false);
+
+    // Mock fetch to always fail with 500 error
+    const mockedFetch = jest.fn().mockImplementation(() => mockResponse('', 500));
+
+    platform.requests.fetch = mockedFetch as typeof platform.requests.fetch;
+
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    const identifyOptions: BrowserIdentifyOptions = { initialPollingRetries: 2 };
+    const identifyPromise = dataManager.identify(
+      identifyResolve,
+      identifyReject,
+      context,
+      identifyOptions,
+    );
+
+    // Fast-forward through the retry delays (2 retries * 1000ms each)
+    await jest.advanceTimersByTimeAsync(2000);
+
+    await identifyPromise;
+
+    // Should attempt initial request + 2 retries = 3 total attempts
+    expect(mockedFetch).toHaveBeenCalledTimes(3);
+    expect(identifyResolve).not.toHaveBeenCalled();
+    expect(identifyReject).toHaveBeenCalled();
+    expect(identifyReject).toHaveBeenCalledWith(expect.objectContaining({ status: 500 }));
+
+    jest.useRealTimers();
+  });
 });
