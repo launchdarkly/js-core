@@ -16,7 +16,6 @@ import {
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
-  LDTimeoutError,
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -26,7 +25,14 @@ import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOp
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
-import { LDClient } from './LDClient';
+import {
+  LDClient,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationTimeout,
+} from './LDClient';
 import { LDPlugin } from './LDPlugin';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
@@ -34,8 +40,8 @@ import BrowserPlatform from './platform/BrowserPlatform';
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
-  private _initializedPromise?: Promise<void>;
-  private _initResolve?: () => void;
+  private _initializedPromise?: Promise<LDWaitForInitializationResult>;
+  private _initResolve?: (result: LDWaitForInitializationResult) => void;
   private _isInitialized: boolean = false;
 
   constructor(
@@ -219,13 +225,17 @@ class BrowserClientImpl extends LDClientImpl {
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
     if (res.status === 'completed') {
       this._isInitialized = true;
-      this._initResolve?.();
+      this._initResolve?.({ status: 'complete' });
     }
     this._goalManager?.startTracking();
     return res;
   }
 
-  waitForInitialization(timeout: number = 5): Promise<void> {
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult> {
+    const timeout = options?.timeout ?? 5;
+
     // An initialization promise is only created if someone is going to use that promise.
     // If we always created an initialization promise, and there was no call waitForInitialization
     // by the time the promise was rejected, then that would result in an unhandled promise
@@ -238,7 +248,9 @@ class BrowserClientImpl extends LDClientImpl {
     }
 
     if (this._isInitialized) {
-      return Promise.resolve();
+      return Promise.resolve({
+        status: 'complete',
+      });
     }
 
     if (!this._initializedPromise) {
@@ -258,16 +270,25 @@ class BrowserClientImpl extends LDClientImpl {
    * @param logger A logger to log when the timeout expires.
    * @returns
    */
-  private _promiseWithTimeout(basePromise: Promise<void>, timeout: number): Promise<void> {
+  private _promiseWithTimeout(
+    basePromise: Promise<LDWaitForInitializationResult>,
+    timeout: number,
+  ): Promise<LDWaitForInitializationResult> {
     const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
     return Promise.race([
-      basePromise.then(() => cancelableTimeout.cancel()),
-      cancelableTimeout.promise,
+      basePromise.then((res: LDWaitForInitializationResult) => {
+        cancelableTimeout.cancel();
+        return res;
+      }),
+      cancelableTimeout.promise
+        // If the promise resolves without error, then the initialization completed successfully.
+        // NOTE: this should never return as the resolution would only be triggered by the basePromise
+        // being resolved.
+        .then(() => ({ status: 'complete' }) as LDWaitForInitializationComplete)
+        .catch(() => ({ status: 'timeout' }) as LDWaitForInitializationTimeout),
     ]).catch((reason) => {
-      if (reason instanceof LDTimeoutError) {
-        this.logger?.error(reason.message);
-      }
-      throw reason;
+      this.logger?.error(reason.message);
+      return { status: 'failed', error: reason as Error } as LDWaitForInitializationFailed;
     });
   }
 
@@ -337,7 +358,8 @@ export function makeClient(
     close: () => impl.close(),
     allFlags: () => impl.allFlags(),
     addHook: (hook: Hook) => impl.addHook(hook),
-    waitForInitialization: (timeout: number) => impl.waitForInitialization(timeout),
+    waitForInitialization: (waitOptions?: LDWaitForInitializationOptions) =>
+      impl.waitForInitialization(waitOptions),
     logger: impl.logger,
   };
 

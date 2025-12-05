@@ -7,6 +7,63 @@ import {
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 
 /**
+ * @ignore
+ * Currently these options and the waitForInitialization method signiture will mirror the one
+ * that is defined in the server common. We will be consolidating this mehod so that it will
+ * be common to all sdks in the future.
+ */
+/**
+ * Options for the waitForInitialization method.
+ */
+export interface LDWaitForInitializationOptions {
+  /**
+   * The timeout duration in seconds to wait for initialization before resolving the promise.
+   * If exceeded, the promise will resolve to a {@link LDWaitForInitializationTimeout} object.
+   *
+   * If no options are specified on the `waitForInitialization`, the default timeout of 5 seconds will be used.
+   *
+   * Using a high timeout, or no timeout, is not recommended because it could result in a long
+   * delay when conditions prevent successful initialization.
+   *
+   * A value of 0 will cause the promise to resolve without waiting. In that scenario it would be
+   * more effective to not call `waitForInitialization`.
+   *
+   * @default 5 seconds
+   */
+  timeout: number;
+}
+
+/**
+ * The waitForInitialization operation failed.
+ */
+export interface LDWaitForInitializationFailed {
+  status: 'failed';
+  error: Error;
+}
+
+/**
+ * The waitForInitialization operation timed out.
+ */
+export interface LDWaitForInitializationTimeout {
+  status: 'timeout';
+}
+
+/**
+ * The waitForInitialization operation completed successfully.
+ */
+export interface LDWaitForInitializationComplete {
+  status: 'complete';
+}
+
+/**
+ * The result of the waitForInitialization operation.
+ */
+export type LDWaitForInitializationResult =
+  | LDWaitForInitializationFailed
+  | LDWaitForInitializationTimeout
+  | LDWaitForInitializationComplete;
+
+/**
  *
  * The LaunchDarkly SDK client object.
  *
@@ -70,38 +127,35 @@ export type LDClient = Omit<
   /**
    * Returns a Promise that tracks the client's initialization state.
    *
-   * The Promise will be resolved if the client successfully initializes, or rejected if client
-   * initialization takes longer than the set timeout.
+   * The Promise will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   * status of the waitForInitialization operation.
    *
+   * @example
+   * This example shows use of async/await syntax for specifying handlers:
    * ```
-   *     // using async/await
-   *     try {
-   *         await client.waitForInitialization(5);
-   *         doSomethingWithSuccessfullyInitializedClient();
-   *     } catch (err) {
-   *         doSomethingForFailedStartup(err);
+   *     const result = await client.waitForInitialization({ timeout: 5 });
+   *
+   *     if (result.status === 'complete') {
+   *       doSomethingWithSuccessfullyInitializedClient();
+   *     } else if (result.status === 'failed') {
+   *       doSomethingForFailedStartup(result.error);
+   *     } else if (result.status === 'timeout') {
+   *       doSomethingForTimedOutStartup();
    *     }
    * ```
    *
-   * It is important that you handle the rejection case; otherwise it will become an unhandled Promise
-   * rejection, which is a serious error on some platforms. The Promise is not created unless you
-   * request it, so if you never call `waitForInitialization()` then you do not have to worry about
-   * unhandled rejections.
-   *
-   * Note that you can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
+   * @remarks
+   * You can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
    * indicates success, and `"error"` indicates an error.
    *
-   * @param timeout
-   *  The amount of time, in seconds, to wait for initialization before rejecting the promise.
-   *  Using a large timeout is not recommended. If you use a large timeout and await it, then
-   *  any network delays will cause your application to wait a long time before
-   *  continuing execution.
-   *
-   *  @default 5 seconds
+   * @param options
+   *  Optional configuration. Please see {@link LDWaitForInitializationOptions}.
    *
    * @returns
-   *   A Promise that will be resolved if the client initializes successfully, or rejected if it
-   *   fails or the specified timeout elapses.
+   *   A Promise that will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   *   status of the waitForInitialization operation.
    */
-  waitForInitialization(timeout?: number): Promise<void>;
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult>;
 };

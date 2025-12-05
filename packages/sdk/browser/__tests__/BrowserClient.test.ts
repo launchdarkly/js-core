@@ -382,12 +382,12 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
-    const waitPromise = client.waitForInitialization(10);
+    const waitPromise = client.waitForInitialization({ timeout: 10 });
     const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
 
     await Promise.all([waitPromise, identifyPromise]);
 
-    await expect(waitPromise).resolves.toBeUndefined();
+    await expect(waitPromise).resolves.toEqual({ status: 'complete' });
     await expect(identifyPromise).resolves.toEqual({ status: 'completed' });
   });
 
@@ -417,10 +417,10 @@ describe('given a mock platform for a BrowserClient', () => {
     client.identify({ key: 'user-key', kind: 'user' });
 
     // Call waitForInitialization with a short timeout (0.1 seconds)
-    const waitPromise = client.waitForInitialization(0.1);
+    const waitPromise = client.waitForInitialization({ timeout: 0.1 });
 
     // Verify that waitForInitialization rejects with a timeout error
-    await expect(waitPromise).rejects.toThrow();
+    await expect(waitPromise).resolves.toEqual({ status: 'timeout' });
 
     // Clean up: resolve the fetch to avoid hanging promises and restore fake timers
     resolveFetch!({});

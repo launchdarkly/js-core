@@ -14,7 +14,7 @@ import { LDClient as LDCLientBrowser } from '../LDClient';
  */
 export interface LDClient extends Omit<
   LDCLientBrowser,
-  'close' | 'flush' | 'identify' | 'identifyResult'
+  'close' | 'flush' | 'identify' | 'identifyResult' | 'waitForInitialization'
 > {
   /**
    * Identifies a context to LaunchDarkly.
