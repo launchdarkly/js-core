@@ -7,10 +7,12 @@
       "matchPackageNames": ["*"]
     },
     {
-      "description": "Disable digest pinning for a specific action",
+      "description": "Disable all updates for the android emulator runner action",
       "matchPackageNames": ["reactivecircus/android-emulator-runner"],
       "matchDepTypes": ["action"],
-      "pinDigests": false
+      "matchDatasources": ["github-tags"],
+      "matchManagers": ["github-actions"],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {
