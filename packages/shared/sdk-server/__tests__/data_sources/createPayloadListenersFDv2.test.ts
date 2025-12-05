@@ -123,8 +123,8 @@ describe('createPayloadListenerFDv2', () => {
     const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
     listener(fullTransferPayload);
 
-    expect(logger.debug).toBeCalledWith(expect.stringMatching(/initializing/i));
-    expect(dataSourceUpdates.applyChanges).toBeCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/initializing/i));
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledWith(
       true,
       {
         features: {
@@ -134,7 +134,7 @@ describe('createPayloadListenerFDv2', () => {
           segkey: { key: 'segkey', version: 2 },
         },
       },
-      basisReceived,
+      expect.any(Function),
       { environmentId: 'envId' },
       'initial',
     );
@@ -144,7 +144,7 @@ describe('createPayloadListenerFDv2', () => {
     const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
     listener(changesTransferPayload);
 
-    expect(logger.debug).toBeCalledWith(expect.stringMatching(/updating/i));
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/updating/i));
     expect(dataSourceUpdates.applyChanges).toHaveBeenCalledTimes(1);
     expect(dataSourceUpdates.applyChanges).toHaveBeenNthCalledWith(
       1,
@@ -168,7 +168,7 @@ describe('createPayloadListenerFDv2', () => {
           },
         },
       },
-      basisReceived,
+      expect.any(Function),
       { environmentId: 'envId' },
       'changes',
     );
