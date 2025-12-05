@@ -5,6 +5,14 @@
       "enabled": false,
       "matchDatasources": ["npm"],
       "matchPackageNames": ["*"]
+    },
+    {
+      "description": "Disable all updates for the android emulator runner action",
+      "matchPackageNames": ["reactivecircus/android-emulator-runner"],
+      "matchDepTypes": ["action"],
+      "matchDatasources": ["github-tags"],
+      "matchManagers": ["github-actions"],
+      "enabled": false
     }
   ],
   "vulnerabilityAlerts": {
