@@ -68,7 +68,7 @@ async function main() {
     // Call the model and track metrics for the ai config
     const result = await aiConfig.tracker.trackMetricsOf(
       VercelProvider.getAIMetricsFromResponse,
-      () => generateText(vercelConfig),
+      () => generateText({ ...vercelConfig, messages: vercelConfig.messages ?? [] }),
     );
 
     console.log('Response:', result.text);
@@ -92,7 +92,7 @@ async function main() {
 
     // Stream is returned immediately (synchronously), metrics tracked in background
     const streamResult = aiConfig.tracker.trackStreamMetricsOf(
-      () => streamText(vercelConfig),
+      () => streamText({ ...vercelConfig, messages: vercelConfig.messages ?? [] }),
       VercelProvider.getAIMetricsFromStream,
     );
 
