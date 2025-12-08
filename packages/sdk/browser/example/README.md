@@ -13,22 +13,30 @@ We've built a simple browser application that demonstrates how this LaunchDarkly
 Below, you'll find the build procedure. For more comprehensive instructions, you can visit your [Quickstart page](https://app.launchdarkly.com/quickstart#/) or
 the [{name of SDK} reference guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
 
+## Prerequisites
+
+Nodejs 20.6.0 or later
+
 ## Build instructions
 
-Modify [app.ts](./src/app.ts) with the following changes:
-
-1. Set the value of the {`clientSideID`} variable in {file name} to your client-side ID:
-    ```typescript
-    const clientSideID = "my-client-side-id";
+1. Make a copy of the `.env.template` and name it `.env`
     ```
-   
-2. If there is an existing boolean feature flag in your LaunchDarkly project that
-   you want to evaluate, set `flagKey` to the flag key:
-    ```typescript
-    const flagKey = "my-flag-key";
+    cp .env.template .env
     ```
 
-3. If you haven't already, install and build the project:
+2. Set the variables in `.env` to your specific LD values
+    ```
+    # Set LD_CLIENT_SIDE_ID to your LaunchDarkly client-side ID
+    LD_CLIENT_SIDE_ID=
+
+    # Set LD_FLAG_KEY to the feature flag key you want to evaluate
+    LD_FLAG_KEY=
+    ```
+    > [!NOTE]
+    > Setting these values is equivilent to modifying the `clientSideID` and `flagKey`
+    > in [app.ts](./src/app.ts).
+
+3. Install and build the project:
     ```bash
     yarn && yarn build
     ```
