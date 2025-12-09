@@ -548,13 +548,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
-    const identifyOptions: BrowserIdentifyOptions = { initialPollingRetries: 3 };
-    const identifyPromise = dataManager.identify(
-      identifyResolve,
-      identifyReject,
-      context,
-      identifyOptions,
-    );
+    const identifyPromise = dataManager.identify(identifyResolve, identifyReject, context);
 
     // Fast-forward through the retry delays (2 retries * 1000ms each)
     await jest.advanceTimersByTimeAsync(2000);
@@ -585,21 +579,15 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();
 
-    const identifyOptions: BrowserIdentifyOptions = { initialPollingRetries: 2 };
-    const identifyPromise = dataManager.identify(
-      identifyResolve,
-      identifyReject,
-      context,
-      identifyOptions,
-    );
+    const identifyPromise = dataManager.identify(identifyResolve, identifyReject, context);
 
-    // Fast-forward through the retry delays (2 retries * 1000ms each)
-    await jest.advanceTimersByTimeAsync(2000);
+    // Fast-forward through the retry delays (4 retries * 1000ms each)
+    await jest.advanceTimersByTimeAsync(4000);
 
     await identifyPromise;
 
-    // Should attempt initial request + 2 retries = 3 total attempts
-    expect(mockedFetch).toHaveBeenCalledTimes(3);
+    // Should attempt initial request + 3 retries = 4 total attempts
+    expect(mockedFetch).toHaveBeenCalledTimes(4);
     expect(identifyResolve).not.toHaveBeenCalled();
     expect(identifyReject).toHaveBeenCalled();
     expect(identifyReject).toHaveBeenCalledWith(expect.objectContaining({ status: 500 }));

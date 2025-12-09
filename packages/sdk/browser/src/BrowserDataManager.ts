@@ -100,12 +100,7 @@ export default class BrowserDataManager extends BaseDataManager {
         this._debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
       }
 
-      await this._finishIdentifyFromPoll(
-        context,
-        identifyResolve,
-        identifyReject,
-        browserIdentifyOptions?.initialPollingRetries,
-      );
+      await this._finishIdentifyFromPoll(context, identifyResolve, identifyReject);
     }
     this._updateStreamingState();
   }
@@ -115,10 +110,9 @@ export default class BrowserDataManager extends BaseDataManager {
    * the retry logic.
    *
    * @param context - LDContext to request payload for.
-   * @param maxRetries - Maximum number of retries to attempt. Defaults to 3.
    * @returns Payload as a string.
    */
-  private async _requestPayload(context: Context, maxRetries: number = 3): Promise<string> {
+  private async _requestPayload(context: Context): Promise<string> {
     const plainContextString = JSON.stringify(Context.toLDContext(context));
     const pollingRequestor = makeRequestor(
       plainContextString,
@@ -133,17 +127,13 @@ export default class BrowserDataManager extends BaseDataManager {
       this._secureModeHash,
     );
 
+    // NOTE: We are currently hardcoding in 3 retries for the initial
+    // poll. We can make this configurable in the future.
+    const maxRetries = 3;
+
     let lastError: any;
-    let validMaxRetries = maxRetries ?? 3;
 
-    if (Number.isNaN(validMaxRetries) || validMaxRetries < 0) {
-      this.logger.warn(
-        `initialPollingRetries is set to an invalid value: ${maxRetries}. Defaulting to 3 retries.`,
-      );
-      validMaxRetries = 3;
-    }
-
-    for (let attempt = 0; attempt <= validMaxRetries; attempt += 1) {
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
       try {
         // eslint-disable-next-line no-await-in-loop
         return await pollingRequestor.requestPayload();
@@ -154,9 +144,7 @@ export default class BrowserDataManager extends BaseDataManager {
         lastError = e;
         // NOTE: current we are hardcoding the retry interval to 1 second.
         // We can make this configurable in the future.
-        // TODO: Reviewer any thoughts on this? Probably the easiest thing is to make this configurable
-        // however, we can also look into using the backoff logic to calculate the delay?
-        if (attempt < validMaxRetries) {
+        if (attempt < maxRetries) {
           this._debugLog(httpErrorMessage(e, 'initial poll request', 'will retry'));
           // eslint-disable-next-line no-await-in-loop
           await sleep(1000);
@@ -171,12 +159,11 @@ export default class BrowserDataManager extends BaseDataManager {
     context: Context,
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
-    initialPollingRetries: number = 3,
   ) {
     try {
       this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
 
-      const payload = await this._requestPayload(context, initialPollingRetries);
+      const payload = await this._requestPayload(context);
 
       try {
         const listeners = this.createStreamListeners(context, identifyResolve);
