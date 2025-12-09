@@ -15,44 +15,47 @@ const context = {
 };
 
 const div = document.createElement('div');
+const statusBox = document.createElement('div');
+
+document.body.appendChild(statusBox);
 document.body.appendChild(div);
-div.appendChild(document.createTextNode('Initializing...'));
+
+div.appendChild(document.createTextNode('No flag evaluations yet'));
+statusBox.appendChild(document.createTextNode('Initializing...'));
 
 const main = async () => {
-  try {
-    const ldclient = initialize(clientSideID);
-    const render = () => {
-      const flagValue = ldclient.variation(flagKey, false);
-      const label = `The ${flagKey} feature flag evaluates to ${flagValue}.`;
-      document.body.style.background = flagValue ? '#00844B' : '#373841';
-      div.replaceChild(document.createTextNode(label), div.firstChild as Node);
-    };
+  const ldclient = initialize(clientSideID);
+  const render = () => {
+    const flagValue = ldclient.variation(flagKey, false);
+    const label = `The ${flagKey} feature flag evaluates to ${flagValue}.`;
+    document.body.style.background = flagValue ? '#00844B' : '#373841';
+    div.replaceChild(document.createTextNode(label), div.firstChild as Node);
+  };
 
-    ldclient.on('error', () => {
-      div.replaceChild(
-        document.createTextNode('Error caught in client SDK'),
-        div.firstChild as Node,
-      );
-    });
-
-    // Listen for flag changes
-    ldclient.on('change', () => {
-      render();
-    });
-
-    const { status } = await ldclient.identify(context);
-    if (status === 'completed') {
-      render();
-    } else if (status === 'error') {
-      div.replaceChild(document.createTextNode('Error identifying client'), div.firstChild as Node);
-    }
-  } catch (error) {
-    div.replaceChild(
-      document.createTextNode(`Error initializing LaunchDarkly client: ${error}`),
-      div.firstChild as Node,
+  ldclient.on('error', () => {
+    statusBox.replaceChild(
+      document.createTextNode('Error caught in client SDK'),
+      statusBox.firstChild as Node,
     );
-    document.body.style.background = '#373841';
+  });
+
+  // Listen for flag changes
+  ldclient.on('change', () => {
+    render();
+  });
+
+  const { status } = await ldclient.identify(context);
+
+  if (status === 'completed') {
+    statusBox.replaceChild(document.createTextNode('Initialized'), statusBox.firstChild as Node);
+  } else if (status === 'error') {
+    statusBox.replaceChild(
+      document.createTextNode('Error identifying client'),
+      statusBox.firstChild as Node,
+    );
   }
+
+  render();
 };
 
 main();
