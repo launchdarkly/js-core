@@ -226,7 +226,10 @@ class BrowserClientImpl extends LDClientImpl {
     if (res.status === 'completed') {
       this._isInitialized = true;
       this._initResolve?.({ status: 'complete' });
+    } else if (res.status === 'error') {
+      this._initResolve?.({ status: 'failed', error: res.error });
     }
+
     this._goalManager?.startTracking();
     return res;
   }
