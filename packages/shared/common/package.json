@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-sdk-common",
-  "version": "2.19.0",
+  "version": "2.20.0",
   "type": "module",
   "main": "./dist/esm/index.mjs",
   "types": "./dist/esm/index.d.ts",
