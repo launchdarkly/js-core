@@ -391,7 +391,7 @@ describe('given a mock platform for a BrowserClient', () => {
     await expect(identifyPromise).resolves.toEqual({ status: 'completed' });
   });
 
-  it('rejects when initialization does not complete before the timeout', async () => {
+  it('resolves waitForInitialization with timeout status when initialization does not complete before the timeout', async () => {
     jest.useRealTimers();
 
     // Create a platform with a delayed fetch response
@@ -425,5 +425,40 @@ describe('given a mock platform for a BrowserClient', () => {
     // Clean up: resolve the fetch to avoid hanging promises and restore fake timers
     resolveFetch!({});
     jest.useFakeTimers();
+  });
+
+  it('resolves waitForInitialization with failed status immediately when identify fails', async () => {
+    const errorPlatform = makeBasicPlatform();
+    const identifyError = new Error('Network error');
+
+    // Mock fetch to reject with an error
+    errorPlatform.requests.fetch = jest.fn((_url: string, _options: any) =>
+      Promise.reject(identifyError),
+    ) as any;
+
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      errorPlatform,
+    );
+
+    // Call waitForInitialization first - this creates the promise
+    const waitPromise = client.waitForInitialization({ timeout: 10 });
+
+    // Start identify which will fail
+    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+
+    // Wait for identify to fail
+    await expect(identifyPromise).resolves.toEqual({
+      status: 'error',
+      error: identifyError,
+    });
+
+    // Verify that waitForInitialization returns immediately with failed status
+    await expect(waitPromise).resolves.toEqual({
+      status: 'failed',
+      error: identifyError,
+    });
   });
 });
