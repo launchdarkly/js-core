@@ -42,7 +42,7 @@ class BrowserClientImpl extends LDClientImpl {
   private readonly _plugins?: LDPlugin[];
   private _initializedPromise?: Promise<LDWaitForInitializationResult>;
   private _initResolve?: (result: LDWaitForInitializationResult) => void;
-  private _isInitialized: boolean = false;
+  private _initializeResult?: LDWaitForInitializationResult;
 
   constructor(
     clientSideId: string,
@@ -224,10 +224,11 @@ class BrowserClientImpl extends LDClientImpl {
     }
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
     if (res.status === 'completed') {
-      this._isInitialized = true;
-      this._initResolve?.({ status: 'complete' });
+      this._initializeResult = { status: 'complete' };
+      this._initResolve?.(this._initializeResult);
     } else if (res.status === 'error') {
-      this._initResolve?.({ status: 'failed', error: res.error });
+      this._initializeResult = { status: 'failed', error: res.error };
+      this._initResolve?.(this._initializeResult);
     }
 
     this._goalManager?.startTracking();
@@ -250,10 +251,9 @@ class BrowserClientImpl extends LDClientImpl {
       return this._promiseWithTimeout(this._initializedPromise, timeout);
     }
 
-    if (this._isInitialized) {
-      return Promise.resolve({
-        status: 'complete',
-      });
+    // If initialization has already completed (successfully or failed), return the result immediately
+    if (this._initializeResult) {
+      return Promise.resolve(this._initializeResult);
     }
 
     if (!this._initializedPromise) {

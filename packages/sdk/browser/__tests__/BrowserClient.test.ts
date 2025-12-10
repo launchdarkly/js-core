@@ -463,4 +463,42 @@ describe('given a mock platform for a BrowserClient', () => {
       error: identifyError,
     });
   });
+
+  it('resolves waitForInitialization with failed status when identify fails before waitForInitialization is called', async () => {
+    const errorPlatform = makeBasicPlatform();
+    const identifyError = new Error('Network error');
+
+    // Mock fetch to reject with an error
+    errorPlatform.requests.fetch = jest.fn((_url: string, _options: any) =>
+      Promise.reject(identifyError),
+    ) as any;
+
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      errorPlatform,
+    );
+
+    // Start identify which will fail BEFORE waitForInitialization is called
+    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+
+    await jest.advanceTimersByTimeAsync(4000); // trigger all poll retries
+
+    // Wait for identify to fail
+    await expect(identifyPromise).resolves.toEqual({
+      status: 'error',
+      error: identifyError,
+    });
+
+    // Now call waitForInitialization AFTER identify has already failed
+    // It should return the failed status immediately, not timeout
+    const waitPromise = client.waitForInitialization({ timeout: 10 });
+
+    // Verify that waitForInitialization returns immediately with failed status
+    await expect(waitPromise).resolves.toEqual({
+      status: 'failed',
+      error: identifyError,
+    });
+  });
 });
