@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.9.1...js-client-sdk-v0.10.0) (2025-12-09)
+
+
+### Features
+
+* add initial polling retries to BrowserDataManager ([#1030](https://github.com/launchdarkly/js-core/issues/1030)) ([cd91013](https://github.com/launchdarkly/js-core/commit/cd910130cabb210b13f1dbb7e48cc179347bb05a))
+
 ## [0.9.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.9.0...js-client-sdk-v0.9.1) (2025-12-05)
 
 
