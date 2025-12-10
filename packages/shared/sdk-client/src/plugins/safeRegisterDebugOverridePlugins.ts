@@ -1,6 +1,7 @@
-import { internal, LDLogger } from "@launchdarkly/js-sdk-common";
-import { LDPlugin } from "../api";
-import { LDDebugOverride } from "../flag-manager/FlagManager";
+import { internal, LDLogger } from '@launchdarkly/js-sdk-common';
+
+import { LDPlugin } from '../api';
+import { LDDebugOverride } from '../flag-manager/FlagManager';
 
 /**
  * Safe register debug override plugins.
@@ -12,13 +13,13 @@ import { LDDebugOverride } from "../flag-manager/FlagManager";
 export function safeRegisterDebugOverridePlugins<TClient, THook>(
   logger: LDLogger,
   debugOverride: LDDebugOverride,
-  plugins: LDPlugin<TClient, THook>[]
+  plugins: LDPlugin<TClient, THook>[],
 ): void {
-  plugins.forEach(plugin => {
+  plugins.forEach((plugin) => {
     try {
       plugin.registerDebug?.(debugOverride);
     } catch (error) {
       logger.error(`Exception thrown registering plugin ${internal.safeGetName(logger, plugin)}.`);
     }
   });
-};
+}

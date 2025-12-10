@@ -76,7 +76,7 @@ export interface FlagManager {
    *
    * @experimental This function is experimental and intended for use by LaunchDarkly tools at this time.
    */
-  getDebugOverride?(): LDDebugOverride
+  getDebugOverride?(): LDDebugOverride;
 }
 
 /**
@@ -182,14 +182,16 @@ export default class DefaultFlagManager implements FlagManager {
     if (this._overrides) {
       return {
         ...this._flagStore.getAll(),
-        ...Object.entries(this._overrides).reduce((acc: {[key: string]: ItemDescriptor}, [key, value]) => {
-          acc[key] = this._convertValueToOverrideDescripter(value);
-          return acc
-        }, {})
-      }
-    } else {
-      return this._flagStore.getAll();
+        ...Object.entries(this._overrides).reduce(
+          (acc: { [key: string]: ItemDescriptor }, [key, value]) => {
+            acc[key] = this._convertValueToOverrideDescripter(value);
+            return acc;
+          },
+          {},
+        ),
+      };
     }
+    return this._flagStore.getAll();
   }
 
   presetFlags(newFlags: { [key: string]: ItemDescriptor }): void {
@@ -225,10 +227,10 @@ export default class DefaultFlagManager implements FlagManager {
   private _convertValueToOverrideDescripter(value: LDFlagValue): ItemDescriptor {
     return {
       flag: {
-        value: value,
-        version: 0
+        value,
+        version: 0,
       },
-      version: 0
+      version: 0,
     };
   }
 
