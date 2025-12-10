@@ -18,7 +18,7 @@ import {
   LDPluginEnvironmentMetadata,
   LDTimeoutError,
   Platform,
-  safeRegisterDebugOverridePlugins
+  safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { getHref } from './BrowserApi';
@@ -202,9 +202,9 @@ class BrowserClientImpl extends LDClientImpl {
       this._plugins || [],
     );
 
-    const override = this.getDebugOverrides()
+    const override = this.getDebugOverrides();
     if (override) {
-      safeRegisterDebugOverridePlugins(this.logger, override, this._plugins || [])
+      safeRegisterDebugOverridePlugins(this.logger, override, this._plugins || []);
     }
   }
 
