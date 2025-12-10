@@ -6,7 +6,7 @@ type FlagChangeKey = `change:${string}`;
  * Type for name of emitted events. 'change' is used for all flag changes. 'change:flag-name-here' is used
  * for specific flag changes.
  */
-export type EventName = 'change' | FlagChangeKey | 'dataSourceStatus' | 'error';
+export type EventName = 'change' | FlagChangeKey | 'dataSourceStatus' | 'error' | 'initialized';
 
 /**
  * Implementation Note: There should not be any default listeners for change events in a client

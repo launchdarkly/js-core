@@ -41,7 +41,7 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
+import DefaultFlagManager, { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
 import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
@@ -127,7 +127,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     this._flagManager.on((context, flagKeys, type) => {
       this._handleInspectionChanged(flagKeys, type);
-      const ldContext = Context.toLDContext(context);
+      const ldContext = context ? Context.toLDContext(context) : null;
       this.emitter.emit('change', ldContext, flagKeys);
       flagKeys.forEach((it) => {
         this.emitter.emit(`change:${it}`, ldContext);
@@ -345,6 +345,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         if (res.status === 'shed') {
           return { status: 'shed' } as LDIdentifyShed;
         }
+        this.emitter.emit('initialized');
         return { status: 'completed' } as LDIdentifySuccess;
       });
 
@@ -579,6 +580,14 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
   protected sendEvent(event: internal.InputEvent): void {
     this._eventProcessor?.sendEvent(event);
+  }
+
+  protected getDebugOverrides(): LDDebugOverride | null {
+    if (this._flagManager.getDebugOverride) {
+      return this._flagManager.getDebugOverride();
+    }
+
+    return null;
   }
 
   private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {

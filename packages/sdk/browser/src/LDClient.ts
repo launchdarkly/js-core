@@ -66,4 +66,42 @@ export type LDClient = Omit<
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
+
+  /**
+   * Returns a Promise that tracks the client's initialization state.
+   *
+   * The Promise will be resolved if the client successfully initializes, or rejected if client
+   * initialization takes longer than the set timeout.
+   *
+   * ```
+   *     // using async/await
+   *     try {
+   *         await client.waitForInitialization(5);
+   *         doSomethingWithSuccessfullyInitializedClient();
+   *     } catch (err) {
+   *         doSomethingForFailedStartup(err);
+   *     }
+   * ```
+   *
+   * It is important that you handle the rejection case; otherwise it will become an unhandled Promise
+   * rejection, which is a serious error on some platforms. The Promise is not created unless you
+   * request it, so if you never call `waitForInitialization()` then you do not have to worry about
+   * unhandled rejections.
+   *
+   * Note that you can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
+   * indicates success, and `"error"` indicates an error.
+   *
+   * @param timeout
+   *  The amount of time, in seconds, to wait for initialization before rejecting the promise.
+   *  Using a large timeout is not recommended. If you use a large timeout and await it, then
+   *  any network delays will cause your application to wait a long time before
+   *  continuing execution.
+   *
+   *  @default 5 seconds
+   *
+   * @returns
+   *   A Promise that will be resolved if the client initializes successfully, or rejected if it
+   *   fails or the specified timeout elapses.
+   */
+  waitForInitialization(timeout?: number): Promise<void>;
 };
