@@ -36,10 +36,12 @@ export type {
   LDIdentifyTimeout,
   LDIdentifyShed,
   LDClientIdentifyResult,
+  LDPlugin,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
-export type { FlagManager } from './flag-manager/FlagManager';
+export type { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
+export {safeRegisterDebugOverridePlugins} from './plugins/safeRegisterDebugOverridePlugins';
 export type { Configuration } from './configuration/Configuration';
 
 export type { LDEmitter };
