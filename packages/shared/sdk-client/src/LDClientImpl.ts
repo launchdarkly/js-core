@@ -41,7 +41,7 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import DefaultFlagManager, { LDDebugOverride, FlagManager } from './flag-manager/FlagManager';
+import DefaultFlagManager, { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
 import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
@@ -584,10 +584,10 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
   protected getDebugOverrides(): LDDebugOverride | null {
     if (this._flagManager.getDebugOverride) {
-      return this._flagManager.getDebugOverride()
+      return this._flagManager.getDebugOverride();
     }
 
-    return null
+    return null;
   }
 
   private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {
