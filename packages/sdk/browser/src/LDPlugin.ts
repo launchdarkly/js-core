@@ -1,4 +1,4 @@
-import { Hook, LDPlugin as LDPluginBase } from '@launchdarkly/js-client-sdk-common';
+import { Hook, LDPluginBase } from '@launchdarkly/js-client-sdk-common';
 
 import { LDClient } from './LDClient';
 

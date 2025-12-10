@@ -36,7 +36,7 @@ export type {
   LDIdentifyTimeout,
   LDIdentifyShed,
   LDClientIdentifyResult,
-  LDPlugin,
+  LDPluginBase,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
