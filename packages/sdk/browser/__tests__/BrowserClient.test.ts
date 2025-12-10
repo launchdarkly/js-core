@@ -449,6 +449,8 @@ describe('given a mock platform for a BrowserClient', () => {
     // Start identify which will fail
     const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
 
+    await jest.advanceTimersByTimeAsync(4000); // trigger all poll retries
+
     // Wait for identify to fail
     await expect(identifyPromise).resolves.toEqual({
       status: 'error',
