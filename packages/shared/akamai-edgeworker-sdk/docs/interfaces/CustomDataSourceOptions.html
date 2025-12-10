@@ -14,17 +14,23 @@
 <ul class="tsd-breadcrumb">
 <li><a href="../modules.html">@launchdarkly/akamai-edgeworker-sdk-common</a></li>
 <li><a href="CustomDataSourceOptions.html">CustomDataSourceOptions</a></li></ul>
-<h1>Interface CustomDataSourceOptions</h1></div>
+<h1>Interface CustomDataSourceOptions<code class="tsd-tag ts-flagExperimental">Experimental</code> </h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>This data source will allow developers to define their own composite data source</p>
+<div class="tsd-comment tsd-typography"><p>This data source will allow developers to define their own composite data source.
+This is a free-form option and is not subject to any backwards compatibility guarantees or semantic
+versioning.</p>
+<p>The following example is roughly equivilent to using the <a href="StandardDataSourceOptions.html" class="tsd-kind-interface">StandardDataSourceOptions</a> with the default values.</p>
 </div>
-<div class="tsd-comment tsd-typography"></div></section>
+<div class="tsd-comment tsd-typography">
+<h4>Example</h4><pre><code class="language-typescript"><span class="hl-10">dataSource</span><span class="hl-0">: {</span><br/><span class="hl-0"> </span><span class="hl-10">dataSourceOptionsType</span><span class="hl-0">: </span><span class="hl-6">&#39;custom&#39;</span><span class="hl-0">,</span><br/><span class="hl-0"> </span><span class="hl-10">initializers</span><span class="hl-0">: [</span><br/><span class="hl-0">    {</span><br/><span class="hl-0">     </span><span class="hl-5">type:</span><span class="hl-0"> </span><span class="hl-6">&#39;polling&#39;</span><br/><span class="hl-0">   },</span><br/><span class="hl-0"> ],</span><br/><span class="hl-0"> </span><span class="hl-10">synchronizers</span><span class="hl-0">: [</span><br/><span class="hl-0">   {</span><br/><span class="hl-0">     </span><span class="hl-5">type:</span><span class="hl-0"> </span><span class="hl-6">&#39;streaming&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">   },</span><br/><span class="hl-0">   {</span><br/><span class="hl-0">     </span><span class="hl-5">type:</span><span class="hl-0"> </span><span class="hl-6">&#39;polling&#39;</span><span class="hl-0">,</span><br/><span class="hl-0">   }</span><br/><span class="hl-0"> ],</span><br/><span class="hl-0">}</span>
+</code><button>Copy</button></pre>
+</div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
 <li><span class="target">CustomDataSourceOptions</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:133</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:156</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -42,7 +48,7 @@
 <h3 class="tsd-anchor-link"><span>data<wbr/>Source<wbr/>Options<wbr/>Type</span><a href="#dataSourceOptionsType" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">data<wbr/>Source<wbr/>Options<wbr/>Type</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;custom&quot;</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:134</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:157</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="initializers" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>initializers</span><a href="#initializers" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">initializers</span><span class="tsd-signature-symbol">:</span> <a href="../types/InitializerDataSource.html" class="tsd-signature-type tsd-kind-type-alias">InitializerDataSource</a><span class="tsd-signature-symbol">[]</span></div>
@@ -52,7 +58,7 @@ out of intialization stage into the synchronization stage.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:140</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:163</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="synchronizers" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>synchronizers</span><a href="#synchronizers" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">synchronizers</span><span class="tsd-signature-symbol">:</span> <a href="../types/SynchronizerDataSource.html" class="tsd-signature-type tsd-kind-type-alias">SynchronizerDataSource</a><span class="tsd-signature-symbol">[]</span></div>
@@ -62,7 +68,7 @@ to run.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:146</li></ul></aside></section></section></div>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:169</li></ul></aside></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
