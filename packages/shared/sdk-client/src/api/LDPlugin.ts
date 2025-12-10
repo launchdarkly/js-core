@@ -1,8 +1,8 @@
-import { LDPluginBase } from '@launchdarkly/js-sdk-common';
+import { LDPluginBase as LDPluginBaseCommon } from '@launchdarkly/js-sdk-common';
 
 import { LDDebugOverride } from '../flag-manager/FlagManager';
 
-export interface LDPlugin<TClient, THook> extends LDPluginBase<TClient, THook> {
+export interface LDPluginBase<TClient, THook> extends LDPluginBaseCommon<TClient, THook> {
   /**
    * An optional function called if the plugin wants to register debug capabilities.
    * This method allows plugins to receive a debug override interface for

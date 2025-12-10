@@ -258,14 +258,11 @@ export default class DefaultFlagManager implements FlagManager {
   }
 
   clearAllOverrides() {
-    if (!this._overrides) {
-      return {}; // No overrides to clear, return empty object for consistency
+    if (this._overrides) {
+      const clearedOverrides = { ...this._overrides };
+      this._overrides = undefined; // Reset to undefined
+      this._flagUpdater.handleFlagChanges(null, Object.keys(clearedOverrides), 'override');
     }
-
-    const clearedOverrides = { ...this._overrides };
-    this._overrides = undefined; // Reset to undefined
-    this._flagUpdater.handleFlagChanges(null, Object.keys(clearedOverrides), 'override');
-    return clearedOverrides;
   }
 
   getAllOverrides() {
