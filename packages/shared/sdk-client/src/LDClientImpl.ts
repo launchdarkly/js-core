@@ -32,6 +32,10 @@ import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { createAsyncTaskQueue } from './async/AsyncTaskQueue';
 import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
+import {
+  ActiveContextTracker,
+  createActiveContextTracker,
+} from './context/createActiveContextTracker';
 import { ensureKey } from './context/ensureKey';
 import { DataManager, DataManagerFactory } from './DataManager';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
@@ -43,13 +47,12 @@ import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
 import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
+import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
 import InspectorManager from './inspection/InspectorManager';
 import LDEmitter, { EventName } from './LDEmitter';
 import { createPluginEnvironmentMetadata } from './plugins/createPluginEnvironmentMetadata';
-import { ActiveContextTracker, createActiveContextTracker } from './context/createActiveContextTracker';
-import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 
 const { ClientMessages, ErrorKinds } = internal;
 
@@ -61,7 +64,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private _eventProcessor?: internal.EventProcessor;
   readonly logger: LDLogger;
 
-  private _activeContextTracker: ActiveContextTracker = createActiveContextTracker()
+  private _activeContextTracker: ActiveContextTracker = createActiveContextTracker();
 
   private readonly _highTimeoutThreshold: number = 15;
 
@@ -202,7 +205,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
-    return this._activeContextTracker.hasContext() ? clone<LDContext>(this._activeContextTracker.getPristineContext()) : undefined;
+    return this._activeContextTracker.hasContext()
+      ? clone<LDContext>(this._activeContextTracker.getPristineContext())
+      : undefined;
   }
 
   protected getInternalContext(): Context | undefined {
@@ -302,7 +307,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               this.emitter.emit('error', context, error);
               return Promise.reject(error);
             }
-            this._activeContextTracker.set(context, checkedContext)
+            this._activeContextTracker.set(context, checkedContext);
 
             this._eventProcessor?.sendEvent(
               this._eventFactoryDefault.identifyEvent(checkedContext),
@@ -376,7 +381,12 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     this._eventProcessor?.sendEvent(
       this._config.trackEventModifier(
-        this._eventFactoryDefault.customEvent(key, this._activeContextTracker.getContext()!, data, metricValue),
+        this._eventFactoryDefault.customEvent(
+          key,
+          this._activeContextTracker.getContext()!,
+          data,
+          metricValue,
+        ),
       ),
     );
 
@@ -401,9 +411,11 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     // NOTE: we will be changing this behavior soon once we have a tracker on the
     // client initialization state.
-    const hasContext = this._activeContextTracker.hasContext()
+    const hasContext = this._activeContextTracker.hasContext();
     if (!hasContext) {
-      this.logger?.warn('Flag evaluation called before client is fully initialized, data from this evaulation could be stale.')
+      this.logger?.warn(
+        'Flag evaluation called before client is fully initialized, data from this evaulation could be stale.',
+      );
     }
 
     const evalContext = this._activeContextTracker.getContext()!;
@@ -416,9 +428,11 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       );
 
       this.emitter.emit('error', this._activeContextTracker.getPristineContext(), error);
-      hasContext && this._eventProcessor?.sendEvent(
-        this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
-      );
+      if (hasContext) {
+        this._eventProcessor?.sendEvent(
+          this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
+        );
+      }
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
     }
 
@@ -427,16 +441,18 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
       if (!matched) {
-        hasContext && this._eventProcessor?.sendEvent(
-          eventFactory.evalEventClient(
-            flagKey,
-            defaultValue, // track default value on type errors
-            defaultValue,
-            foundItem.flag,
-            evalContext,
-            reason,
-          ),
-        );
+        if (hasContext) {
+          this._eventProcessor?.sendEvent(
+            eventFactory.evalEventClient(
+              flagKey,
+              defaultValue, // track default value on type errors
+              defaultValue,
+              foundItem.flag,
+              evalContext,
+              reason,
+            ),
+          );
+        }
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
@@ -454,16 +470,18 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     prerequisites?.forEach((prereqKey) => {
       this._variationInternal(prereqKey, undefined, this._eventFactoryDefault);
     });
-    hasContext && this._eventProcessor?.sendEvent(
-      eventFactory.evalEventClient(
-        flagKey,
-        value,
-        defaultValue,
-        foundItem.flag,
-        evalContext,
-        reason,
-      ),
-    );
+    if (hasContext) {
+      this._eventProcessor?.sendEvent(
+        eventFactory.evalEventClient(
+          flagKey,
+          value,
+          defaultValue,
+          foundItem.flag,
+          evalContext,
+          reason,
+        ),
+      );
+    }
     return successDetail;
   }
 
@@ -477,8 +495,11 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     return value;
   }
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
-    return this._hookRunner.withEvaluation(flagKey, this._activeContextTracker.getPristineContext(), defaultValue, () =>
-      this._variationInternal(flagKey, defaultValue, this._eventFactoryWithReasons),
+    return this._hookRunner.withEvaluation(
+      flagKey,
+      this._activeContextTracker.getPristineContext(),
+      defaultValue,
+      () => this._variationInternal(flagKey, defaultValue, this._eventFactoryWithReasons),
     );
   }
 
@@ -488,8 +509,11 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     eventFactory: EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): LDEvaluationDetailTyped<T> {
-    return this._hookRunner.withEvaluation(key, this._activeContextTracker.getPristineContext(), defaultValue, () =>
-      this._variationInternal(key, defaultValue, eventFactory, typeChecker),
+    return this._hookRunner.withEvaluation(
+      key,
+      this._activeContextTracker.getPristineContext(),
+      defaultValue,
+      () => this._variationInternal(key, defaultValue, eventFactory, typeChecker),
     );
   }
 

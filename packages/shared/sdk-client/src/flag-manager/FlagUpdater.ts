@@ -42,7 +42,7 @@ export default class FlagUpdater {
   }
 
   init(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
-    this._activeContext = context
+    this._activeContext = context;
     const oldFlags = this._flagStore.getAll();
     this._flagStore.init(newFlags);
     const changed = calculateChangedKeys(oldFlags, newFlags);

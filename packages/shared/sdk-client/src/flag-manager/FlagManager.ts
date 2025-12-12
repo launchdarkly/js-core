@@ -40,7 +40,6 @@ export interface FlagManager {
    */
   loadCached(context: Context): Promise<boolean>;
 
-
   /**
    * Updates in-memory storage with the specified flags without a context
    * or persistent storage. Flags set in this way are considered emphemeral and
