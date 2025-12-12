@@ -189,6 +189,43 @@ describe('given a mock platform for a BrowserClient', () => {
     });
   });
 
+  it('can evaluate flags with bootstrap data before identify completes', async () => {
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+      },
+      platform,
+    );
+
+    const identifyPromise = client.identify(
+      { kind: 'user', key: 'bob' },
+      {
+        bootstrap: goodBootstrapDataWithReasons,
+      },
+    );
+
+    const flagValue = client.jsonVariationDetail('json', undefined);
+    expect(flagValue).toEqual({
+      reason: {
+        kind: 'OFF',
+      },
+      value: ['a', 'b', 'c', 'd'],
+      variationIndex: 1,
+    });
+
+    expect(client.getContext()).toBeUndefined();
+
+    // Wait for identify to complete
+    await identifyPromise;
+
+    // Verify that active context is now set
+    expect(client.getContext()).toEqual({ kind: 'user', key: 'bob' });
+  });
+
   it('can shed intermediate identify calls', async () => {
     const client = makeClient(
       'client-side-id',
