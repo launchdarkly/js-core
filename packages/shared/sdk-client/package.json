@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk-common",
-  "version": "1.15.2",
+  "version": "1.16.0",
   "type": "module",
   "main": "./dist/esm/index.mjs",
   "types": "./dist/esm/index.d.ts",
