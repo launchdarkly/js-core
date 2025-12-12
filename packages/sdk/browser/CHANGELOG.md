@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.11.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.10.0...js-client-sdk-v0.11.0) (2025-12-12)
+
+
+### Features
+
+* implement `waitForInitialization` for browser sdk 4.x ([#1028](https://github.com/launchdarkly/js-core/issues/1028)) ([156532a](https://github.com/launchdarkly/js-core/commit/156532aea3ec39635dab21dbab125c81fc31a3f5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.15.2 to 1.16.0
+
 ## [0.10.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.9.1...js-client-sdk-v0.10.0) (2025-12-09)
 
 
