@@ -373,4 +373,132 @@ describe('given a mock platform for a BrowserClient', () => {
     // With events and goals disabled the only fetch calls should be for polling requests.
     expect(platform.requests.fetch.mock.calls.length).toBe(3);
   });
+
+  it('blocks until the client is ready when waitForInitialization is called', async () => {
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    const waitPromise = client.waitForInitialization({ timeout: 10 });
+    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+
+    await Promise.all([waitPromise, identifyPromise]);
+
+    await expect(waitPromise).resolves.toEqual({ status: 'complete' });
+    await expect(identifyPromise).resolves.toEqual({ status: 'completed' });
+  });
+
+  it('resolves waitForInitialization with timeout status when initialization does not complete before the timeout', async () => {
+    jest.useRealTimers();
+
+    // Create a platform with a delayed fetch response
+    const delayedPlatform = makeBasicPlatform();
+    let resolveFetch: (value: any) => void;
+    const delayedFetchPromise = new Promise((resolve) => {
+      resolveFetch = resolve;
+    });
+
+    // Mock fetch to return a promise that won't resolve until we explicitly resolve it
+    delayedPlatform.requests.fetch = jest.fn((_url: string, _options: any) =>
+      delayedFetchPromise.then(() => ({})),
+    ) as any;
+
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      delayedPlatform,
+    );
+
+    // Start identify which will trigger a fetch that won't complete
+    client.identify({ key: 'user-key', kind: 'user' });
+
+    // Call waitForInitialization with a short timeout (0.1 seconds)
+    const waitPromise = client.waitForInitialization({ timeout: 0.1 });
+
+    // Verify that waitForInitialization rejects with a timeout error
+    await expect(waitPromise).resolves.toEqual({ status: 'timeout' });
+
+    // Clean up: resolve the fetch to avoid hanging promises and restore fake timers
+    resolveFetch!({});
+    jest.useFakeTimers();
+  });
+
+  it('resolves waitForInitialization with failed status immediately when identify fails', async () => {
+    const errorPlatform = makeBasicPlatform();
+    const identifyError = new Error('Network error');
+
+    // Mock fetch to reject with an error
+    errorPlatform.requests.fetch = jest.fn((_url: string, _options: any) =>
+      Promise.reject(identifyError),
+    ) as any;
+
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      errorPlatform,
+    );
+
+    // Call waitForInitialization first - this creates the promise
+    const waitPromise = client.waitForInitialization({ timeout: 10 });
+
+    // Start identify which will fail
+    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+
+    await jest.advanceTimersByTimeAsync(4000); // trigger all poll retries
+
+    // Wait for identify to fail
+    await expect(identifyPromise).resolves.toEqual({
+      status: 'error',
+      error: identifyError,
+    });
+
+    // Verify that waitForInitialization returns immediately with failed status
+    await expect(waitPromise).resolves.toEqual({
+      status: 'failed',
+      error: identifyError,
+    });
+  });
+
+  it('resolves waitForInitialization with failed status when identify fails before waitForInitialization is called', async () => {
+    const errorPlatform = makeBasicPlatform();
+    const identifyError = new Error('Network error');
+
+    // Mock fetch to reject with an error
+    errorPlatform.requests.fetch = jest.fn((_url: string, _options: any) =>
+      Promise.reject(identifyError),
+    ) as any;
+
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      errorPlatform,
+    );
+
+    // Start identify which will fail BEFORE waitForInitialization is called
+    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+
+    await jest.advanceTimersByTimeAsync(4000); // trigger all poll retries
+
+    // Wait for identify to fail
+    await expect(identifyPromise).resolves.toEqual({
+      status: 'error',
+      error: identifyError,
+    });
+
+    // Now call waitForInitialization AFTER identify has already failed
+    // It should return the failed status immediately, not timeout
+    const waitPromise = client.waitForInitialization({ timeout: 10 });
+
+    // Verify that waitForInitialization returns immediately with failed status
+    await expect(waitPromise).resolves.toEqual({
+      status: 'failed',
+      error: identifyError,
+    });
+  });
 });

@@ -7,6 +7,63 @@ import {
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 
 /**
+ * @ignore
+ * Currently these options and the waitForInitialization method signiture will mirror the one
+ * that is defined in the server common. We will be consolidating this mehod so that it will
+ * be common to all sdks in the future.
+ */
+/**
+ * Options for the waitForInitialization method.
+ */
+export interface LDWaitForInitializationOptions {
+  /**
+   * The timeout duration in seconds to wait for initialization before resolving the promise.
+   * If exceeded, the promise will resolve to a {@link LDWaitForInitializationTimeout} object.
+   *
+   * If no options are specified on the `waitForInitialization`, the default timeout of 5 seconds will be used.
+   *
+   * Using a high timeout, or no timeout, is not recommended because it could result in a long
+   * delay when conditions prevent successful initialization.
+   *
+   * A value of 0 will cause the promise to resolve without waiting. In that scenario it would be
+   * more effective to not call `waitForInitialization`.
+   *
+   * @default 5 seconds
+   */
+  timeout: number;
+}
+
+/**
+ * The waitForInitialization operation failed.
+ */
+export interface LDWaitForInitializationFailed {
+  status: 'failed';
+  error: Error;
+}
+
+/**
+ * The waitForInitialization operation timed out.
+ */
+export interface LDWaitForInitializationTimeout {
+  status: 'timeout';
+}
+
+/**
+ * The waitForInitialization operation completed successfully.
+ */
+export interface LDWaitForInitializationComplete {
+  status: 'complete';
+}
+
+/**
+ * The result of the waitForInitialization operation.
+ */
+export type LDWaitForInitializationResult =
+  | LDWaitForInitializationFailed
+  | LDWaitForInitializationTimeout
+  | LDWaitForInitializationComplete;
+
+/**
  *
  * The LaunchDarkly SDK client object.
  *
@@ -66,4 +123,39 @@ export type LDClient = Omit<
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
+
+  /**
+   * Returns a Promise that tracks the client's initialization state.
+   *
+   * The Promise will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   * status of the waitForInitialization operation.
+   *
+   * @example
+   * This example shows use of async/await syntax for specifying handlers:
+   * ```
+   *     const result = await client.waitForInitialization({ timeout: 5 });
+   *
+   *     if (result.status === 'complete') {
+   *       doSomethingWithSuccessfullyInitializedClient();
+   *     } else if (result.status === 'failed') {
+   *       doSomethingForFailedStartup(result.error);
+   *     } else if (result.status === 'timeout') {
+   *       doSomethingForTimedOutStartup();
+   *     }
+   * ```
+   *
+   * @remarks
+   * You can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
+   * indicates success, and `"error"` indicates an error.
+   *
+   * @param options
+   *  Optional configuration. Please see {@link LDWaitForInitializationOptions}.
+   *
+   * @returns
+   *   A Promise that will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   *   status of the waitForInitialization operation.
+   */
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult>;
 };
