@@ -240,20 +240,15 @@ class BrowserClientImpl extends LDClientImpl {
   ): Promise<LDWaitForInitializationResult> {
     const timeout = options?.timeout ?? 5;
 
-    // An initialization promise is only created if someone is going to use that promise.
-    // If we always created an initialization promise, and there was no call waitForInitialization
-    // by the time the promise was rejected, then that would result in an unhandled promise
-    // rejection.
-
-    // It waitForInitialization was previously called, then we can use that promise even if it has
-    // been resolved or rejected.
-    if (this._initializedPromise) {
-      return this._promiseWithTimeout(this._initializedPromise, timeout);
-    }
-
-    // If initialization has already completed (successfully or failed), return the result immediately
+    // If initialization has already completed (successfully or failed), return the result immediately.
     if (this._initializeResult) {
       return Promise.resolve(this._initializeResult);
+    }
+
+    // It waitForInitialization was previously called, then return the promise with a timeout.
+    // This condition should only be triggered if waitForInitialization was called multiple times.
+    if (this._initializedPromise) {
+      return this._promiseWithTimeout(this._initializedPromise, timeout);
     }
 
     if (!this._initializedPromise) {
