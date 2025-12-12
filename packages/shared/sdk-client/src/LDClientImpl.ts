@@ -48,6 +48,8 @@ import { getInspectorHook } from './inspection/getInspectorHook';
 import InspectorManager from './inspection/InspectorManager';
 import LDEmitter, { EventName } from './LDEmitter';
 import { createPluginEnvironmentMetadata } from './plugins/createPluginEnvironmentMetadata';
+import { ActiveContextTracker, createActiveContextTracker } from './context/createActiveContextTracker';
+import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 
 const { ClientMessages, ErrorKinds } = internal;
 
@@ -55,11 +57,11 @@ const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
 export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private readonly _config: Configuration;
-  private _uncheckedContext?: LDContext;
-  private _checkedContext?: Context;
   private readonly _diagnosticsManager?: internal.DiagnosticsManager;
   private _eventProcessor?: internal.EventProcessor;
   readonly logger: LDLogger;
+
+  private _activeContextTracker: ActiveContextTracker = createActiveContextTracker()
 
   private readonly _highTimeoutThreshold: number = 15;
 
@@ -200,27 +202,20 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
-    return this._uncheckedContext ? clone<LDContext>(this._uncheckedContext) : undefined;
+    return this._activeContextTracker.hasContext() ? clone<LDContext>(this._activeContextTracker.getPristineContext()) : undefined;
   }
 
   protected getInternalContext(): Context | undefined {
-    return this._checkedContext;
+    return this._activeContextTracker.getContext();
   }
 
-  private _createIdentifyPromise(): {
-    identifyPromise: Promise<void>;
-    identifyResolve: () => void;
-    identifyReject: (err: Error) => void;
-  } {
-    let res: any;
-    let rej: any;
-
-    const basePromise = new Promise<void>((resolve, reject) => {
-      res = resolve;
-      rej = reject;
-    });
-
-    return { identifyPromise: basePromise, identifyResolve: res, identifyReject: rej };
+  /**
+   * Preset flags are used to set the flags before the client is initialized. This is useful for
+   * when client has precached flags that are ready to evaluate without full initialization.
+   * @param newFlags - The flags to preset.
+   */
+  protected presetFlags(newFlags: { [key: string]: ItemDescriptor }) {
+    this._flagManager.presetFlags(newFlags);
   }
 
   /**
@@ -307,15 +302,14 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               this.emitter.emit('error', context, error);
               return Promise.reject(error);
             }
-            this._uncheckedContext = context;
-            this._checkedContext = checkedContext;
+            this._activeContextTracker.set(context, checkedContext)
 
             this._eventProcessor?.sendEvent(
-              this._eventFactoryDefault.identifyEvent(this._checkedContext),
+              this._eventFactoryDefault.identifyEvent(checkedContext),
             );
             const { identifyPromise, identifyResolve, identifyReject } =
-              this._createIdentifyPromise();
-            this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
+              this._activeContextTracker.newIdentificationPromise();
+            this.logger.debug(`Identifying ${JSON.stringify(checkedContext)}`);
 
             await this.dataManager.identify(
               identifyResolve,
@@ -370,7 +364,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   }
 
   track(key: string, data?: any, metricValue?: number): void {
-    if (!this._checkedContext || !this._checkedContext.valid) {
+    if (!this._activeContextTracker.hasValidContext()) {
       this.logger.warn(ClientMessages.MissingContextKeyNoEvent);
       return;
     }
@@ -382,14 +376,14 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     this._eventProcessor?.sendEvent(
       this._config.trackEventModifier(
-        this._eventFactoryDefault.customEvent(key, this._checkedContext!, data, metricValue),
+        this._eventFactoryDefault.customEvent(key, this._activeContextTracker.getContext()!, data, metricValue),
       ),
     );
 
     this._hookRunner.afterTrack({
       key,
       // The context is pre-checked above, so we know it can be unwrapped.
-      context: this._uncheckedContext!,
+      context: this._activeContextTracker.getPristineContext()!,
       data,
       metricValue,
     });
@@ -401,12 +395,18 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
   ): LDEvaluationDetail {
-    if (!this._uncheckedContext) {
-      this.logger.debug(ClientMessages.MissingContextKeyNoEvent);
-      return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
+    // We are letting evaulations happen without a context. The main case for this
+    // is when cached data is loaded, but the client is not fully initialized. In this
+    // case, we will write out a warning for each evaluation attempt.
+
+    // NOTE: we will be changing this behavior soon once we have a tracker on the
+    // client initialization state.
+    const hasContext = this._activeContextTracker.hasContext()
+    if (!hasContext) {
+      this.logger?.warn('Flag evaluation called before client is fully initialized, data from this evaulation could be stale.')
     }
 
-    const evalContext = Context.fromLDContext(this._uncheckedContext);
+    const evalContext = this._activeContextTracker.getContext()!;
     const foundItem = this._flagManager.get(flagKey);
 
     if (foundItem === undefined || foundItem.flag.deleted) {
@@ -414,8 +414,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       const error = new LDClientError(
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
-      this.emitter.emit('error', this._uncheckedContext, error);
-      this._eventProcessor?.sendEvent(
+
+      this.emitter.emit('error', this._activeContextTracker.getPristineContext(), error);
+      hasContext && this._eventProcessor?.sendEvent(
         this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
       );
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
@@ -426,7 +427,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
       if (!matched) {
-        this._eventProcessor?.sendEvent(
+        hasContext && this._eventProcessor?.sendEvent(
           eventFactory.evalEventClient(
             flagKey,
             defaultValue, // track default value on type errors
@@ -439,7 +440,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.emitter.emit('error', this._uncheckedContext, error);
+        this.emitter.emit('error', this._activeContextTracker.getPristineContext(), error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -453,7 +454,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     prerequisites?.forEach((prereqKey) => {
       this._variationInternal(prereqKey, undefined, this._eventFactoryDefault);
     });
-    this._eventProcessor?.sendEvent(
+    hasContext && this._eventProcessor?.sendEvent(
       eventFactory.evalEventClient(
         flagKey,
         value,
@@ -469,14 +470,14 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
     const { value } = this._hookRunner.withEvaluation(
       flagKey,
-      this._uncheckedContext,
+      this._activeContextTracker.getPristineContext(),
       defaultValue,
       () => this._variationInternal(flagKey, defaultValue, this._eventFactoryDefault),
     );
     return value;
   }
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
-    return this._hookRunner.withEvaluation(flagKey, this._uncheckedContext, defaultValue, () =>
+    return this._hookRunner.withEvaluation(flagKey, this._activeContextTracker.getPristineContext(), defaultValue, () =>
       this._variationInternal(flagKey, defaultValue, this._eventFactoryWithReasons),
     );
   }
@@ -487,7 +488,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     eventFactory: EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): LDEvaluationDetailTyped<T> {
-    return this._hookRunner.withEvaluation(key, this._uncheckedContext, defaultValue, () =>
+    return this._hookRunner.withEvaluation(key, this._activeContextTracker.getPristineContext(), defaultValue, () =>
       this._variationInternal(key, defaultValue, eventFactory, typeChecker),
     );
   }

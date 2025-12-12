@@ -40,6 +40,16 @@ export interface FlagManager {
    */
   loadCached(context: Context): Promise<boolean>;
 
+
+  /**
+   * Updates in-memory storage with the specified flags without a context
+   * or persistent storage. Flags set in this way are considered emphemeral and
+   * should be replaced as soon as initialization is done.
+   *
+   * @param newFlags - cached flags
+   */
+  presetFlags(newFlags: { [key: string]: ItemDescriptor }): void;
+
   /**
    * Update in-memory storage with the specified flags, but do not persistent them to cache
    * storage.
@@ -112,6 +122,10 @@ export default class DefaultFlagManager implements FlagManager {
 
   getAll(): { [key: string]: ItemDescriptor } {
     return this._flagStore.getAll();
+  }
+
+  presetFlags(newFlags: { [key: string]: ItemDescriptor }): void {
+    this._flagStore.init(newFlags);
   }
 
   setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void {

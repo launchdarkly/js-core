@@ -10,7 +10,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { getOrGenerateKey } from '../storage/getOrGenerateKey';
-import { namespaceForAnonymousGeneratedContextKey } from '../storage/namespaceUtils';
+import { namespaceForGeneratedContextKey } from '../storage/namespaceUtils';
 
 const { isLegacyUser, isMultiKind, isSingleKind } = internal;
 
@@ -31,7 +31,7 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
   const { anonymous, key } = c;
 
   if (anonymous && !key) {
-    const storageKey = await namespaceForAnonymousGeneratedContextKey(kind);
+    const storageKey = await namespaceForGeneratedContextKey(kind);
     // This mutates a cloned copy of the original context from ensureyKey so this is safe.
     // eslint-disable-next-line no-param-reassign
     c.key = await getOrGenerateKey(storageKey, platform);
