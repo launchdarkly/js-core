@@ -21,6 +21,15 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * devDependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [2.7.12](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.11...cloudflare-server-sdk-v2.7.12) (2025-12-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.10 to 2.6.11
+
 ## [2.7.11](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.10...cloudflare-server-sdk-v2.7.11) (2025-12-05)
 
 
