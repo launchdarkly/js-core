@@ -228,16 +228,18 @@ class BrowserClientImpl extends LDClientImpl {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
 
-    if (!this._identifyAttempted && identifyOptionsWithUpdatedDefaults.bootstrap) {
+    if (!this._identifyAttempted) {
       this._identifyAttempted = true;
-      const bootstrapData = readFlagsFromBootstrap(
-        this.logger,
-        identifyOptionsWithUpdatedDefaults.bootstrap,
-      );
-      try {
-        this.presetFlags(bootstrapData);
-      } catch {
-        this.logger.error('Failed to bootstrap data');
+      if (identifyOptionsWithUpdatedDefaults.bootstrap) {
+        try {
+          const bootstrapData = readFlagsFromBootstrap(
+            this.logger,
+            identifyOptionsWithUpdatedDefaults.bootstrap,
+          );
+          this.presetFlags(bootstrapData);
+        } catch (error) {
+          this.logger.error('Failed to bootstrap data', error);
+        }
       }
     }
 
