@@ -16,7 +16,6 @@ import {
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
-  LDTimeoutError,
   Platform,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';

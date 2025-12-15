@@ -20,11 +20,6 @@ export type FlagChangeType = 'init' | 'patch' | 'override';
  * will call a variation method for flag values which you require.
  */
 export type FlagsChangeCallback = (
-  // REVIEWER: This is probably not desired, but I think there are some updates
-  // such as overrides that do not really have a context? Unless I am misunderstanding
-  // what context is exactly. Being able to support a null context may also help
-  // with distinguishing between being in the emphemeral state between the start of
-  // initialization and the end of identification and having an invalid context?
   context: Context,
   flagKeys: Array<string>,
   type: FlagChangeType,
@@ -46,14 +41,20 @@ export default class FlagUpdater {
     this._logger = logger;
   }
 
-  handleFlagChanges(context: Context, keys: string[], type: FlagChangeType): void {
-    this._changeCallbacks.forEach((callback) => {
-      try {
-        callback(context, keys, type);
-      } catch (err) {
-        /* intentionally empty */
-      }
-    });
+  handleFlagChanges(keys: string[], type: FlagChangeType): void {
+    if (this._activeContext) {
+      this._changeCallbacks.forEach((callback) => {
+        try {
+          callback(this._activeContext!, keys, type);
+        } catch (err) {
+          /* intentionally empty */
+        }
+      });
+    } else {
+      this._logger.warn(
+        'Received a change event wihtout an active context. Changes will not be propagated.',
+      );
+    }
   }
 
   init(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
@@ -62,7 +63,7 @@ export default class FlagUpdater {
     this._flagStore.init(newFlags);
     const changed = calculateChangedKeys(oldFlags, newFlags);
     if (changed.length > 0) {
-      this.handleFlagChanges(context, changed, 'init');
+      this.handleFlagChanges(changed, 'init');
     }
   }
 
@@ -87,7 +88,7 @@ export default class FlagUpdater {
     }
 
     this._flagStore.insertOrUpdate(key, item);
-    this.handleFlagChanges(this._activeContext!, [key], 'patch');
+    this.handleFlagChanges([key], 'patch');
     return true;
   }
 

@@ -65,10 +65,6 @@ export interface FlagManager {
    */
   off(callback: FlagsChangeCallback): void;
 
-  // REVIEWER: My reasoning here is to have the flagmanager implementation determine
-  // whether or not we can support debug plugins so I put the override methods here.
-  // Would like some thoughts on this as it is a deviation from previous implementation.
-
   /**
    * Obtain debug override functions that allows plugins
    * to manipulate the outcome of the flags managed by
@@ -239,7 +235,7 @@ export default class DefaultFlagManager implements FlagManager {
       this._overrides = {};
     }
     this._overrides[key] = value;
-    this._flagUpdater.handleFlagChanges(null, [key], 'override');
+    this._flagUpdater.handleFlagChanges([key], 'override');
   }
 
   removeOverride(flagKey: string) {
@@ -254,14 +250,14 @@ export default class DefaultFlagManager implements FlagManager {
       this._overrides = undefined;
     }
 
-    this._flagUpdater.handleFlagChanges(null, [flagKey], 'override');
+    this._flagUpdater.handleFlagChanges([flagKey], 'override');
   }
 
   clearAllOverrides() {
     if (this._overrides) {
       const clearedOverrides = { ...this._overrides };
       this._overrides = undefined; // Reset to undefined
-      this._flagUpdater.handleFlagChanges(null, Object.keys(clearedOverrides), 'override');
+      this._flagUpdater.handleFlagChanges(Object.keys(clearedOverrides), 'override');
     }
   }
 
@@ -277,6 +273,11 @@ export default class DefaultFlagManager implements FlagManager {
   }
 
   getDebugOverride(): LDDebugOverride {
-    return this as LDDebugOverride;
+    return {
+      setOverride: this.setOverride.bind(this),
+      removeOverride: this.removeOverride.bind(this),
+      clearAllOverrides: this.clearAllOverrides.bind(this),
+      getAllOverrides: this.getAllOverrides.bind(this),
+    };
   }
 }

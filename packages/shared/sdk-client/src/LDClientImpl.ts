@@ -132,7 +132,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     this._flagManager.on((context, flagKeys, type) => {
       this._handleInspectionChanged(flagKeys, type);
-      const ldContext = context ? Context.toLDContext(context) : null;
+      const ldContext = Context.toLDContext(context);
       this.emitter.emit('change', ldContext, flagKeys);
       flagKeys.forEach((it) => {
         this.emitter.emit(`change:${it}`, ldContext);
@@ -607,12 +607,8 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     this._eventProcessor?.sendEvent(event);
   }
 
-  protected getDebugOverrides(): LDDebugOverride | null {
-    if (this._flagManager.getDebugOverride) {
-      return this._flagManager.getDebugOverride();
-    }
-
-    return null;
+  protected getDebugOverrides(): LDDebugOverride | undefined {
+    return this._flagManager.getDebugOverride?.();
   }
 
   private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {

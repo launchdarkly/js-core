@@ -118,7 +118,14 @@ describe('FlagManager override tests', () => {
     expect(flagManager.get('test-flag')?.flag.value).toBe('override-value');
   });
 
-  it('setOverride triggers flag change callback', () => {
+  it('setOverride triggers flag change callback', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    const flags = {
+      'test-flag': makeMockItemDescriptor(1, 'store-value'),
+    };
+
+    await flagManager.init(context, flags);
+
     const mockCallback: FlagsChangeCallback = jest.fn();
     flagManager.on(mockCallback);
 
@@ -126,7 +133,7 @@ describe('FlagManager override tests', () => {
     debugOverride?.setOverride('test-flag', 'override-value');
 
     expect(mockCallback).toHaveBeenCalledTimes(1);
-    expect(mockCallback).toHaveBeenCalledWith(null, ['test-flag'], 'override');
+    expect(mockCallback).toHaveBeenCalledWith(context, ['test-flag'], 'override');
   });
 
   it('removeOverride does nothing when override does not exist', () => {
@@ -151,7 +158,14 @@ describe('FlagManager override tests', () => {
     expect(flagManager.get('test-flag')?.flag.value).toBe('store-value');
   });
 
-  it('removeOverride triggers flag change callback', () => {
+  it('removeOverride triggers flag change callback', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    const flags = {
+      'test-flag': makeMockItemDescriptor(1, 'store-value'),
+    };
+
+    await flagManager.init(context, flags);
+
     const mockCallback: FlagsChangeCallback = jest.fn();
     flagManager.on(mockCallback);
 
@@ -160,8 +174,8 @@ describe('FlagManager override tests', () => {
     debugOverride?.removeOverride('test-flag');
 
     expect(mockCallback).toHaveBeenCalledTimes(2);
-    expect(mockCallback).toHaveBeenNthCalledWith(1, null, ['test-flag'], 'override');
-    expect(mockCallback).toHaveBeenNthCalledWith(2, null, ['test-flag'], 'override');
+    expect(mockCallback).toHaveBeenNthCalledWith(1, context, ['test-flag'], 'override');
+    expect(mockCallback).toHaveBeenNthCalledWith(2, context, ['test-flag'], 'override');
   });
 
   it('clearAllOverrides removes all overrides', () => {
@@ -176,18 +190,25 @@ describe('FlagManager override tests', () => {
     expect(Object.keys(flagManager.getAllOverrides())).toHaveLength(0);
   });
 
-  it('clearAllOverrides triggers flag change callback for all flags', () => {
+  it('clearAllOverrides triggers flag change callback for all flags', async () => {
     const mockCallback: FlagsChangeCallback = jest.fn();
     flagManager.on(mockCallback);
 
     const debugOverride = flagManager.getDebugOverride();
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    const flags = {
+      'test-flag': makeMockItemDescriptor(1, 'store-value'),
+    };
+
+    await flagManager.init(context, flags);
+
     debugOverride?.setOverride('flag1', 'value1');
     debugOverride?.setOverride('flag2', 'value2');
     (mockCallback as jest.Mock).mockClear();
 
     debugOverride?.clearAllOverrides();
     expect(mockCallback).toHaveBeenCalledTimes(1);
-    expect(mockCallback).toHaveBeenCalledWith(null, ['flag1', 'flag2'], 'override');
+    expect(mockCallback).toHaveBeenCalledWith(context, ['flag1', 'flag2'], 'override');
   });
 
   it('getAllOverrides returns all overrides as ItemDescriptors', () => {
