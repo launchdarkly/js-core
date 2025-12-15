@@ -206,7 +206,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
     return this._activeContextTracker.hasContext()
-      ? clone<LDContext>(this._activeContextTracker.getPristineContext())
+      ? clone<LDContext>(this._activeContextTracker.getUnwrappedContext())
       : undefined;
   }
 
@@ -393,7 +393,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     this._hookRunner.afterTrack({
       key,
       // The context is pre-checked above, so we know it can be unwrapped.
-      context: this._activeContextTracker.getPristineContext()!,
+      context: this._activeContextTracker.getUnwrappedContext()!,
       data,
       metricValue,
     });
@@ -427,7 +427,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
       );
 
-      this.emitter.emit('error', this._activeContextTracker.getPristineContext(), error);
+      this.emitter.emit('error', this._activeContextTracker.getUnwrappedContext(), error);
       if (hasContext) {
         this._eventProcessor?.sendEvent(
           this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
@@ -456,7 +456,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.emitter.emit('error', this._activeContextTracker.getPristineContext(), error);
+        this.emitter.emit('error', this._activeContextTracker.getUnwrappedContext(), error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -488,7 +488,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
     const { value } = this._hookRunner.withEvaluation(
       flagKey,
-      this._activeContextTracker.getPristineContext(),
+      this._activeContextTracker.getUnwrappedContext(),
       defaultValue,
       () => this._variationInternal(flagKey, defaultValue, this._eventFactoryDefault),
     );
@@ -497,7 +497,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
     return this._hookRunner.withEvaluation(
       flagKey,
-      this._activeContextTracker.getPristineContext(),
+      this._activeContextTracker.getUnwrappedContext(),
       defaultValue,
       () => this._variationInternal(flagKey, defaultValue, this._eventFactoryWithReasons),
     );
@@ -511,7 +511,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   ): LDEvaluationDetailTyped<T> {
     return this._hookRunner.withEvaluation(
       key,
-      this._activeContextTracker.getPristineContext(),
+      this._activeContextTracker.getUnwrappedContext(),
       defaultValue,
       () => this._variationInternal(key, defaultValue, eventFactory, typeChecker),
     );

@@ -5,17 +5,14 @@ import { Context, LDContext } from '@launchdarkly/js-sdk-common';
  * used by the client.
  */
 export interface ActiveContextTracker {
-  _pristineContext?: LDContext;
-  _context?: Context;
-
   /**
-   * Set the active context and pristine context. This will only be called when the passed in context
+   * Set the active context and unwrapped context. This will only be called when the passed in context
    * is checked and valid.
    *
-   * @param pristineContext - The pristine context, which is the context as it was passed in to the SDK.
+   * @param unwrappedContext - The unwrapped context, which is the context as it was passed in to the SDK.
    * @param context - The active context, which is the context as it was checked and validated.
    */
-  set(pristineContext: LDContext, context: Context): void;
+  set(unwrappedContext: LDContext, context: Context): void;
 
   /**
    * Get the active context.
@@ -25,16 +22,14 @@ export interface ActiveContextTracker {
   getContext(): Context | undefined;
 
   /**
-   * Get the pristine context.
+   * Get the unwrapped context.
    *
-   * @returns The pristine context or undefined if it has not been set.
+   * @returns The unwrapped context or undefined if it has not been set.
    */
-  getPristineContext(): LDContext | undefined;
+  getUnwrappedContext(): LDContext | undefined;
 
   /**
    * Create a new identification promise. To allow other parts of the SDK to track the identification process.
-   *
-   * TODO(self): this is a very generic method so maybe it doesn't belong here?
    */
   newIdentificationPromise(): {
     identifyPromise: Promise<void>;
@@ -58,18 +53,19 @@ export interface ActiveContextTracker {
 }
 
 export function createActiveContextTracker(): ActiveContextTracker {
+  let unwrappedContext: LDContext | undefined;
+  let context: Context | undefined;
+
   return {
-    _pristineContext: undefined,
-    _context: undefined,
-    set(pristineContext: LDContext, context: Context) {
-      this._pristineContext = pristineContext;
-      this._context = context;
+    set(_unwrappedContext: LDContext, _context: Context) {
+      unwrappedContext = _unwrappedContext;
+      context = _context;
     },
     getContext() {
-      return this._context;
+      return context;
     },
-    getPristineContext() {
-      return this._pristineContext;
+    getUnwrappedContext() {
+      return unwrappedContext;
     },
     newIdentificationPromise() {
       let res: () => void;
@@ -83,10 +79,10 @@ export function createActiveContextTracker(): ActiveContextTracker {
       return { identifyPromise: basePromise, identifyResolve: res!, identifyReject: rej! };
     },
     hasContext() {
-      return this._context !== undefined;
+      return context !== undefined;
     },
     hasValidContext() {
-      return this.hasContext() && this._context!.valid;
+      return this.hasContext() && context!.valid;
     },
   };
 }
