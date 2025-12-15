@@ -19,6 +19,7 @@ import {
   Platform,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { readFlagsFromBootstrap } from './bootstrap';
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
@@ -43,6 +44,10 @@ class BrowserClientImpl extends LDClientImpl {
   private _initializedPromise?: Promise<LDWaitForInitializationResult>;
   private _initResolve?: (result: LDWaitForInitializationResult) => void;
   private _initializeResult?: LDWaitForInitializationResult;
+
+  // NOTE: keeps track of when we tried an initial identification. We should consolidate this
+  // with the waitForInitialization logic in the future.
+  private _identifyAttempted: boolean = false;
 
   constructor(
     clientSideId: string,
@@ -222,6 +227,22 @@ class BrowserClientImpl extends LDClientImpl {
     if (identifyOptions?.sheddable === undefined) {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
+
+    if (!this._identifyAttempted) {
+      this._identifyAttempted = true;
+      if (identifyOptionsWithUpdatedDefaults.bootstrap) {
+        try {
+          const bootstrapData = readFlagsFromBootstrap(
+            this.logger,
+            identifyOptionsWithUpdatedDefaults.bootstrap,
+          );
+          this.presetFlags(bootstrapData);
+        } catch (error) {
+          this.logger.error('Failed to bootstrap data', error);
+        }
+      }
+    }
+
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
     if (res.status === 'completed') {
       this._initializeResult = { status: 'complete' };

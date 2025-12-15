@@ -33,7 +33,7 @@ export type FlagsChangeCallback = (
 export default class FlagUpdater {
   private _flagStore: FlagStore;
   private _logger: LDLogger;
-  private _activeContextKey: string | undefined;
+  private _activeContext: Context | undefined;
   private _changeCallbacks = new Array<FlagsChangeCallback>();
 
   constructor(flagStore: FlagStore, logger: LDLogger) {
@@ -42,7 +42,7 @@ export default class FlagUpdater {
   }
 
   init(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
-    this._activeContextKey = context.canonicalKey;
+    this._activeContext = context;
     const oldFlags = this._flagStore.getAll();
     this._flagStore.init(newFlags);
     const changed = calculateChangedKeys(oldFlags, newFlags);
@@ -58,7 +58,7 @@ export default class FlagUpdater {
   }
 
   initCached(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
-    if (this._activeContextKey === context.canonicalKey) {
+    if (this._activeContext?.canonicalKey === context.canonicalKey) {
       return;
     }
 
@@ -66,7 +66,7 @@ export default class FlagUpdater {
   }
 
   upsert(context: Context, key: string, item: ItemDescriptor): boolean {
-    if (this._activeContextKey !== context.canonicalKey) {
+    if (this._activeContext?.canonicalKey !== context.canonicalKey) {
       this._logger.warn('Received an update for an inactive context.');
       return false;
     }
@@ -80,7 +80,7 @@ export default class FlagUpdater {
     this._flagStore.insertOrUpdate(key, item);
     this._changeCallbacks.forEach((callback) => {
       try {
-        callback(context, [key], 'patch');
+        callback(this._activeContext!, [key], 'patch');
       } catch (err) {
         /* intentionally empty */
       }
