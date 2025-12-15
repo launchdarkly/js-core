@@ -2,7 +2,7 @@
 import { Context, Crypto, Hasher, LDLogger, Platform, Storage } from '@launchdarkly/js-sdk-common';
 
 import FlagPersistence from '../../src/flag-manager/FlagPersistence';
-import { DefaultFlagStore } from '../../src/flag-manager/FlagStore';
+import { createDefaultFlagStore } from '../../src/flag-manager/FlagStore';
 import FlagUpdater from '../../src/flag-manager/FlagUpdater';
 import {
   namespaceForContextData,
@@ -14,7 +14,7 @@ const TEST_NAMESPACE = 'TestNamespace';
 
 describe('FlagPersistence tests', () => {
   test('loadCached returns false when no cache', async () => {
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const fpUnderTest = new FlagPersistence(
       makeMockPlatform(makeMemoryStorage(), makeMockCrypto()),
@@ -31,7 +31,7 @@ describe('FlagPersistence tests', () => {
   });
 
   test('loadCached returns false when corrupt cache', async () => {
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const fpUnderTest = new FlagPersistence(
       makeMockPlatform(
@@ -59,7 +59,7 @@ describe('FlagPersistence tests', () => {
   });
 
   test('loadCached updates FlagUpdater with cached flags', async () => {
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const flagUpdater = new FlagUpdater(flagStore, mockLogger);
     const flagUpdaterSpy = jest.spyOn(flagUpdater, 'initCached');
@@ -87,7 +87,7 @@ describe('FlagPersistence tests', () => {
   });
 
   test('loadCached migrates pre 10.3.1 cached flags', async () => {
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const memoryStorage = makeMemoryStorage();
     const mockLogger = makeMockLogger();
     const flagUpdater = new FlagUpdater(flagStore, mockLogger);
@@ -118,7 +118,7 @@ describe('FlagPersistence tests', () => {
   test('init successfully persists flags', async () => {
     const memoryStorage = makeMemoryStorage();
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const flagUpdater = new FlagUpdater(flagStore, mockLogger);
 
@@ -154,7 +154,7 @@ describe('FlagPersistence tests', () => {
   test('init prunes cached contexts above max', async () => {
     const memoryStorage = makeMemoryStorage();
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const flagUpdater = new FlagUpdater(flagStore, mockLogger);
 
@@ -201,7 +201,7 @@ describe('FlagPersistence tests', () => {
   test('init kicks timestamp', async () => {
     const memoryStorage = makeMemoryStorage();
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const flagUpdater = new FlagUpdater(flagStore, mockLogger);
 
@@ -234,7 +234,7 @@ describe('FlagPersistence tests', () => {
   test('upsert updates persistence', async () => {
     const memoryStorage = makeMemoryStorage();
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const flagUpdater = new FlagUpdater(flagStore, mockLogger);
 
@@ -274,7 +274,7 @@ describe('FlagPersistence tests', () => {
   test('upsert ignores inactive context', async () => {
     const memoryStorage = makeMemoryStorage();
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
-    const flagStore = new DefaultFlagStore();
+    const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const flagUpdater = new FlagUpdater(flagStore, mockLogger);
 
