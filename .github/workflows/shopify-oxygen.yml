@@ -32,7 +32,7 @@ jobs:
         run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests build
       - name: Launch the test service in the background
         run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests start &> /dev/null &
-      - uses: launchdarkly/gh-actions/actions/contract-tests@429c1efe4577f945d33065d86999b6d74f52405b
+      - uses: launchdarkly/gh-actions/actions/contract-tests@68e9b2f165f60934308f18e4b75623c30b905c38
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
