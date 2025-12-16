@@ -207,7 +207,11 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     options.configuration.clientSide?.initialUser ||
     options.configuration.clientSide?.initialContext ||
     makeDefaultInitialContext();
-  const client = initialize(options.configuration.credential || 'unknown-env-id', initialContext, sdkConfig);
+  const client = initialize(
+    options.configuration.credential || 'unknown-env-id',
+    initialContext,
+    sdkConfig,
+  );
   let failed = false;
   try {
     await Promise.race([
