@@ -175,16 +175,4 @@ export type LDClient = Omit<
    * @param options Optional configuration. Please see {@link LDStartOptions}.
    */
   start(options?: LDStartOptions): Promise<LDWaitForInitializationResult>;
-
-  /**
-   * Sets the initial context for the client.
-   *
-   * The initial context is the context that was used to initialize the client. It is used to identify the client to LaunchDarkly.
-   *
-   * This method should only be called once, and should be called before the client is used. It is used to set the initial context for the client.
-   *
-   * @param context
-   *   The LDContext object.
-   */
-  setInitialContext(context: LDContext): void;
 };

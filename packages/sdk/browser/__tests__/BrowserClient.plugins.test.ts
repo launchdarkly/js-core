@@ -41,8 +41,10 @@ it('registers plugins and executes hooks during initialization', async () => {
 
   const platform = makeBasicPlatform();
 
+  const context: LDContext = { key: 'user-key', kind: 'user' };
   const client = makeClient(
     'client-side-id',
+    context,
     AutoEnvAttributes.Disabled,
     {
       streaming: false,
@@ -55,10 +57,7 @@ it('registers plugins and executes hooks during initialization', async () => {
 
   // Verify the plugin was registered
   expect(mockPlugin.register).toHaveBeenCalled();
-
-  // Now test that hooks work by calling identify and variation
-  const context: LDContext = { key: 'user-key', kind: 'user' };
-  await client.identify(context);
+  await client.start();
 
   expect(mockHook.beforeIdentify).toHaveBeenCalledWith({ context, timeout: undefined }, {});
 
@@ -134,6 +133,7 @@ it('registers multiple plugins and executes all hooks', async () => {
 
   const client = makeClient(
     'client-side-id',
+    { key: 'user-key', kind: 'user' },
     AutoEnvAttributes.Disabled,
     {
       streaming: false,
@@ -149,7 +149,7 @@ it('registers multiple plugins and executes all hooks', async () => {
   expect(mockPlugin2.register).toHaveBeenCalled();
 
   // Test that both hooks work
-  await client.identify({ key: 'user-key', kind: 'user' });
+  await client.start();
   client.variation('flag-key', false);
   client.track('event-key', { data: true }, 42);
 
@@ -200,6 +200,7 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
 
   makeClient(
     'client-side-id',
+    { kind: 'user', key: '', anonymous: true },
     AutoEnvAttributes.Disabled,
     {
       streaming: false,
@@ -281,6 +282,7 @@ it('passes correct environmentMetadata without optional fields', async () => {
 
   makeClient(
     'client-side-id',
+    { kind: 'user', key: '', anonymous: true },
     AutoEnvAttributes.Disabled,
     {
       streaming: false,

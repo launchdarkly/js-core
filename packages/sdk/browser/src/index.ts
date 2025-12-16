@@ -43,8 +43,7 @@ export function initialize(
   options?: LDOptions,
 ): LDClient {
   // AutoEnvAttributes are not supported yet in the browser SDK.
-  const client = makeClient(clientSideId, AutoEnvAttributes.Disabled, options);
-  client.setInitialContext(pristineContext);
+  const client = makeClient(clientSideId, pristineContext, AutoEnvAttributes.Disabled, options);
 
   return client;
 }

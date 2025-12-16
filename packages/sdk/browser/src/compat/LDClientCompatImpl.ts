@@ -42,7 +42,7 @@ export default class LDClientCompatImpl implements LDClient {
     const cleanedOptions = { ...options };
     delete cleanedOptions.bootstrap;
     delete cleanedOptions.hash;
-    this._client = makeClient(envKey, AutoEnvAttributes.Disabled, options);
+    this._client = makeClient(envKey, context, AutoEnvAttributes.Disabled, options);
     this._emitter = new LDEmitterCompat(this._client);
     this.logger = this._client.logger;
     this._initIdentify(context, bootstrap, hash);

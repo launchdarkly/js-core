@@ -376,11 +376,13 @@ class BrowserClientImpl extends LDClientImpl {
 
 export function makeClient(
   clientSideId: string,
+  initialContext: LDContext,
   autoEnvAttributes: AutoEnvAttributes,
   options: BrowserOptions = {},
   overridePlatform?: Platform,
 ): LDClient {
   const impl = new BrowserClientImpl(clientSideId, autoEnvAttributes, options, overridePlatform);
+  impl.setInitialContext(initialContext);
 
   // Return a PIMPL style implementation. This decouples the interface from the interface of the implementation.
   // In the future we should consider updating the common SDK code to not use inheritance and instead compose
@@ -418,7 +420,6 @@ export function makeClient(
     waitForInitialization: (waitOptions?: LDWaitForInitializationOptions) =>
       impl.waitForInitialization(waitOptions),
     logger: impl.logger,
-    setInitialContext: (context: LDContext) => impl.setInitialContext(context),
     start: (startOptions?: LDStartOptions) => impl.start(startOptions),
   };
 

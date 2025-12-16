@@ -29,6 +29,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('includes urls in custom events', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -37,7 +38,7 @@ describe('given a mock platform for a BrowserClient', () => {
       },
       platform,
     );
-    await client.identify({ key: 'user-key', kind: 'user' });
+    await client.start();
     await client.flush();
     client.track('user-key', undefined, 1);
     await client.flush();
@@ -58,6 +59,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('can filter URLs in custom events', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -68,7 +70,7 @@ describe('given a mock platform for a BrowserClient', () => {
       },
       platform,
     );
-    await client.identify({ key: 'user-key', kind: 'user' });
+    await client.start();
     await client.flush();
     client.track('user-key', undefined, 1);
     await client.flush();
@@ -92,6 +94,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('can filter URLs in click events', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -102,7 +105,7 @@ describe('given a mock platform for a BrowserClient', () => {
       },
       platform,
     );
-    await client.identify({ key: 'user-key', kind: 'user' });
+    await client.start();
     await client.flush();
 
     // Simulate a click event
@@ -135,6 +138,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('can filter URLs in pageview events', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -146,7 +150,7 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
-    await client.identify({ key: 'user-key', kind: 'user' });
+    await client.start();
     await client.flush();
 
     const events = JSON.parse(platform.requests.fetch.mock.calls[2][1].body);
@@ -165,6 +169,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('can use bootstrap data', async () => {
     const client = makeClient(
       'client-side-id',
+      { kind: 'user', key: 'bob' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -173,8 +178,6 @@ describe('given a mock platform for a BrowserClient', () => {
       },
       platform,
     );
-
-    client.setInitialContext({ kind: 'user', key: 'bob' });
 
     await client.start({
       identifyOptions: {
@@ -194,6 +197,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('can evaluate flags with bootstrap data before identify completes', async () => {
     const client = makeClient(
       'client-side-id',
+      { kind: 'user', key: 'bob' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -202,8 +206,6 @@ describe('given a mock platform for a BrowserClient', () => {
       },
       platform,
     );
-
-    client.setInitialContext({ kind: 'user', key: 'bob' });
 
     const identifyPromise = client.start({
       identifyOptions: {
@@ -232,18 +234,26 @@ describe('given a mock platform for a BrowserClient', () => {
   it('can shed intermediate identify calls', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key-0', kind: 'user' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       platform,
     );
 
+    const promise0 = client.start();
     const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
     const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
     const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
 
-    const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
+    const [result0, result1, result2, result3] = await Promise.all([
+      promise0,
+      promise1,
+      promise2,
+      promise3,
+    ]);
 
-    expect(result1).toEqual({ status: 'completed' });
+    expect(result0).toEqual({ status: 'complete' });
+    expect(result1).toEqual({ status: 'shed' });
     expect(result2).toEqual({ status: 'shed' });
     expect(result3).toEqual({ status: 'completed' });
     // With events and goals disabled the only fetch calls should be for polling requests.
@@ -254,6 +264,7 @@ describe('given a mock platform for a BrowserClient', () => {
     const order: string[] = [];
     const client = makeClient(
       'client-side-id',
+      { kind: 'user', key: 'user-key-0' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -292,6 +303,7 @@ describe('given a mock platform for a BrowserClient', () => {
     const order: string[] = [];
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key-1', kind: 'user' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -321,7 +333,7 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
-    const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
+    const promise1 = client.start();
     const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
     const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
 
@@ -334,6 +346,7 @@ describe('given a mock platform for a BrowserClient', () => {
     const order: string[] = [];
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key-0', kind: 'user' },
       AutoEnvAttributes.Disabled,
       {
         streaming: false,
@@ -378,6 +391,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('can shed intermediate identify calls without waiting for results', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key-0', kind: 'user' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       platform,
@@ -396,6 +410,7 @@ describe('given a mock platform for a BrowserClient', () => {
   it('it does not shed non-shedable identify calls', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key-0', kind: 'user' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       platform,
@@ -417,18 +432,19 @@ describe('given a mock platform for a BrowserClient', () => {
   it('blocks until the client is ready when waitForInitialization is called', async () => {
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       platform,
     );
 
     const waitPromise = client.waitForInitialization({ timeout: 10 });
-    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+    const startPromise = client.start();
 
-    await Promise.all([waitPromise, identifyPromise]);
+    await Promise.all([waitPromise, startPromise]);
 
     await expect(waitPromise).resolves.toEqual({ status: 'complete' });
-    await expect(identifyPromise).resolves.toEqual({ status: 'completed' });
+    await expect(startPromise).resolves.toEqual({ status: 'complete' });
   });
 
   it('resolves waitForInitialization with timeout status when initialization does not complete before the timeout', async () => {
@@ -448,13 +464,13 @@ describe('given a mock platform for a BrowserClient', () => {
 
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       delayedPlatform,
     );
 
-    // Start identify which will trigger a fetch that won't complete
-    client.identify({ key: 'user-key', kind: 'user' });
+    client.start();
 
     // Call waitForInitialization with a short timeout (0.1 seconds)
     const waitPromise = client.waitForInitialization({ timeout: 0.1 });
@@ -478,6 +494,7 @@ describe('given a mock platform for a BrowserClient', () => {
 
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       errorPlatform,
@@ -487,13 +504,13 @@ describe('given a mock platform for a BrowserClient', () => {
     const waitPromise = client.waitForInitialization({ timeout: 10 });
 
     // Start identify which will fail
-    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+    const identifyPromise = client.start();
 
     await jest.advanceTimersByTimeAsync(4000); // trigger all poll retries
 
     // Wait for identify to fail
     await expect(identifyPromise).resolves.toEqual({
-      status: 'error',
+      status: 'failed',
       error: identifyError,
     });
 
@@ -515,19 +532,20 @@ describe('given a mock platform for a BrowserClient', () => {
 
     const client = makeClient(
       'client-side-id',
+      { key: 'user-key', kind: 'user' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       errorPlatform,
     );
 
     // Start identify which will fail BEFORE waitForInitialization is called
-    const identifyPromise = client.identify({ key: 'user-key', kind: 'user' });
+    const identifyPromise = client.start();
 
     await jest.advanceTimersByTimeAsync(4000); // trigger all poll retries
 
     // Wait for identify to fail
     await expect(identifyPromise).resolves.toEqual({
-      status: 'error',
+      status: 'failed',
       error: identifyError,
     });
 
@@ -545,12 +563,11 @@ describe('given a mock platform for a BrowserClient', () => {
   it('returns the same promise when start is called multiple times', async () => {
     const client = makeClient(
       'client-side-id',
+      { kind: 'user', key: 'user-key' },
       AutoEnvAttributes.Disabled,
       { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
       platform,
     );
-
-    client.setInitialContext({ kind: 'user', key: 'user-key' });
 
     // Call start multiple times before it completes
     const promise1 = client.start();
