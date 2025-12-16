@@ -10,7 +10,7 @@
  *
  * @packageDocumentation
  */
-import { AutoEnvAttributes } from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes, LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import { makeClient } from './BrowserClient';
 import { LDClient } from './LDClient';
@@ -26,7 +26,8 @@ export type { LDPlugin } from './LDPlugin';
  * Usage:
  * ```
  * import { initialize } from 'launchdarkly-js-client-sdk';
- * const client = initialize(clientSideId, options);
+ * const client = initialize(clientSideId, context, options);
+ *
  * ```
  *
  * @param clientSideId
@@ -36,7 +37,14 @@ export type { LDPlugin } from './LDPlugin';
  * @return
  *   The new client instance.
  */
-export function initialize(clientSideId: string, options?: LDOptions): LDClient {
+export function initialize(
+  clientSideId: string,
+  pristineContext: LDContext,
+  options?: LDOptions,
+): LDClient {
   // AutoEnvAttributes are not supported yet in the browser SDK.
-  return makeClient(clientSideId, AutoEnvAttributes.Disabled, options);
+  const client = makeClient(clientSideId, AutoEnvAttributes.Disabled, options);
+  client.setInitialContext(pristineContext);
+
+  return client;
 }

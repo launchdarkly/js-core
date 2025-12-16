@@ -173,12 +173,14 @@ describe('given a mock platform for a BrowserClient', () => {
       },
       platform,
     );
-    await client.identify(
-      { kind: 'user', key: 'bob' },
-      {
+
+    client.setInitialContext({ kind: 'user', key: 'bob' });
+
+    await client.start({
+      identifyOptions: {
         bootstrap: goodBootstrapDataWithReasons,
       },
-    );
+    });
 
     expect(client.jsonVariationDetail('json', undefined)).toEqual({
       reason: {
@@ -201,12 +203,13 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
-    const identifyPromise = client.identify(
-      { kind: 'user', key: 'bob' },
-      {
+    client.setInitialContext({ kind: 'user', key: 'bob' });
+
+    const identifyPromise = client.start({
+      identifyOptions: {
         bootstrap: goodBootstrapDataWithReasons,
       },
-    );
+    });
 
     const flagValue = client.jsonVariationDetail('json', undefined);
     expect(flagValue).toEqual({

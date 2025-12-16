@@ -49,6 +49,10 @@ export type { LDClient, LDOptions };
  * @return
  *   The new client instance.
  */
-export function initialize(envKey: string, context: LDContext, options?: LDOptions): LDClient {
+export function initialize(
+  envKey: string,
+  context: LDContext,
+  options?: LDOptions,
+): Omit<LDClient, 'start' | 'setInitialContext'> {
   return new LDClientCompatImpl(envKey, context, options);
 }

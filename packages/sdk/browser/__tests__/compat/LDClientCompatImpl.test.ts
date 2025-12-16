@@ -36,6 +36,7 @@ const mockBrowserClient: jest.MockedObject<LDClient> = {
     error: jest.fn(),
   },
   getContext: jest.fn(),
+  start: jest.fn(),
 };
 
 jest.mock('../../src/BrowserClient', () => ({

@@ -29,6 +29,7 @@ import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import {
   LDClient,
+  LDStartOptions,
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationOptions,
@@ -42,13 +43,14 @@ import BrowserPlatform from './platform/BrowserPlatform';
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
-  private _initializedPromise?: Promise<LDWaitForInitializationResult>;
+  private _waitForInitializedPromise?: Promise<LDWaitForInitializationResult>;
   private _initResolve?: (result: LDWaitForInitializationResult) => void;
   private _initializeResult?: LDWaitForInitializationResult;
 
-  // NOTE: keeps track of when we tried an initial identification. We should consolidate this
-  // with the waitForInitialization logic in the future.
-  private _identifyAttempted: boolean = false;
+  private _initialContext?: LDContext;
+
+  // NOTE: This also keeps track of when we tried to initialize the client.
+  private _initializePromise?: Promise<LDWaitForInitializationResult>;
 
   constructor(
     clientSideId: string,
@@ -219,6 +221,47 @@ class BrowserClientImpl extends LDClientImpl {
     }
   }
 
+  setInitialContext(context: LDContext): void {
+    this._initialContext = context;
+  }
+
+  async start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
+    if (this._initializeResult) {
+      return this._initializeResult;
+    }
+    if (this._initializePromise) {
+      return this._initializePromise;
+    }
+    if (!this._initialContext) {
+      this.logger.error('Initial context not set');
+      return { status: 'failed', error: new Error('Initial context not set') };
+    }
+
+    const identifyOptions = options?.identifyOptions ?? {};
+
+    if (identifyOptions?.bootstrap) {
+      try {
+        const bootstrapData = readFlagsFromBootstrap(this.logger, identifyOptions.bootstrap);
+        this.presetFlags(bootstrapData);
+      } catch (error) {
+        this.logger.error('Failed to bootstrap data', error);
+      }
+    }
+
+    this._initializePromise = new Promise<LDWaitForInitializationResult>((resolve) => {
+      this.identifyResult(this._initialContext!, identifyOptions).then((result) => {
+        if (result.status === 'timeout') {
+          resolve({ status: 'timeout' });
+        } else if (result.status === 'error') {
+          resolve({ status: 'failed', error: result.error });
+        }
+        resolve({ status: 'complete' });
+      });
+    });
+
+    return this._promiseWithTimeout(this._initializePromise, options?.timeout ?? 5);
+  }
+
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     return super.identify(context, identifyOptions);
   }
@@ -232,21 +275,6 @@ class BrowserClientImpl extends LDClientImpl {
     };
     if (identifyOptions?.sheddable === undefined) {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
-    }
-
-    if (!this._identifyAttempted) {
-      this._identifyAttempted = true;
-      if (identifyOptionsWithUpdatedDefaults.bootstrap) {
-        try {
-          const bootstrapData = readFlagsFromBootstrap(
-            this.logger,
-            identifyOptionsWithUpdatedDefaults.bootstrap,
-          );
-          this.presetFlags(bootstrapData);
-        } catch (error) {
-          this.logger.error('Failed to bootstrap data', error);
-        }
-      }
     }
 
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
@@ -274,17 +302,17 @@ class BrowserClientImpl extends LDClientImpl {
 
     // It waitForInitialization was previously called, then return the promise with a timeout.
     // This condition should only be triggered if waitForInitialization was called multiple times.
-    if (this._initializedPromise) {
-      return this._promiseWithTimeout(this._initializedPromise, timeout);
+    if (this._waitForInitializedPromise) {
+      return this._promiseWithTimeout(this._waitForInitializedPromise, timeout);
     }
 
-    if (!this._initializedPromise) {
-      this._initializedPromise = new Promise((resolve) => {
+    if (!this._waitForInitializedPromise) {
+      this._waitForInitializedPromise = new Promise((resolve) => {
         this._initResolve = resolve;
       });
     }
 
-    return this._promiseWithTimeout(this._initializedPromise, timeout);
+    return this._promiseWithTimeout(this._waitForInitializedPromise, timeout);
   }
 
   /**
@@ -386,6 +414,8 @@ export function makeClient(
     waitForInitialization: (waitOptions?: LDWaitForInitializationOptions) =>
       impl.waitForInitialization(waitOptions),
     logger: impl.logger,
+    setInitialContext: (context: LDContext) => impl.setInitialContext(context),
+    start: (startOptions?: LDStartOptions) => impl.start(startOptions),
   };
 
   impl.registerPlugins(client);
