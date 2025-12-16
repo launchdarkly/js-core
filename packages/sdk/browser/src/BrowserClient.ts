@@ -225,16 +225,16 @@ class BrowserClientImpl extends LDClientImpl {
     this._initialContext = context;
   }
 
-  async start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
+  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
     if (this._initializeResult) {
-      return this._initializeResult;
+      return Promise.resolve(this._initializeResult);
     }
     if (this._initializePromise) {
       return this._initializePromise;
     }
     if (!this._initialContext) {
       this.logger.error('Initial context not set');
-      return { status: 'failed', error: new Error('Initial context not set') };
+      return Promise.resolve({ status: 'failed', error: new Error('Initial context not set') });
     }
 
     const identifyOptions = options?.identifyOptions ?? {};
@@ -248,7 +248,7 @@ class BrowserClientImpl extends LDClientImpl {
       }
     }
 
-    this._initializePromise = new Promise<LDWaitForInitializationResult>((resolve) => {
+    const identifyPromise = new Promise<LDWaitForInitializationResult>((resolve) => {
       this.identifyResult(this._initialContext!, identifyOptions).then((result) => {
         if (result.status === 'timeout') {
           resolve({ status: 'timeout' });
@@ -259,7 +259,8 @@ class BrowserClientImpl extends LDClientImpl {
       });
     });
 
-    return this._promiseWithTimeout(this._initializePromise, options?.timeout ?? 5);
+    this._initializePromise = this._promiseWithTimeout(identifyPromise, options?.timeout ?? 5);
+    return this._initializePromise;
   }
 
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {

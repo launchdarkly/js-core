@@ -541,4 +541,35 @@ describe('given a mock platform for a BrowserClient', () => {
       error: identifyError,
     });
   });
+
+  it('returns the same promise when start is called multiple times', async () => {
+    const client = makeClient(
+      'client-side-id',
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    client.setInitialContext({ kind: 'user', key: 'user-key' });
+
+    // Call start multiple times before it completes
+    const promise1 = client.start();
+    const promise2 = client.start();
+    const promise3 = client.start();
+
+    // Verify all promises are the same reference
+    // The implementation should cache the promise and return the same one
+    expect(promise1).toBe(promise2);
+    expect(promise2).toBe(promise3);
+    expect(promise1).toBe(promise3);
+
+    // Verify all promises resolve to the same value
+    const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
+    expect(result1).toEqual(result2);
+    expect(result2).toEqual(result3);
+    expect(result1.status).toBe('complete');
+
+    // Verify that only one identify call was made (one for polling)
+    expect(platform.requests.fetch.mock.calls.length).toBe(1);
+  });
 });
