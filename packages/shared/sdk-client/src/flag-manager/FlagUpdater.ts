@@ -4,7 +4,7 @@ import calculateChangedKeys from './calculateChangedKeys';
 import FlagStore from './FlagStore';
 import { ItemDescriptor } from './ItemDescriptor';
 
-export type FlagChangeType = 'init' | 'patch';
+export type FlagChangeType = 'init' | 'patch' | 'override';
 
 /**
  * This callback indicates that the details associated with one or more flags
@@ -41,19 +41,29 @@ export default class FlagUpdater {
     this._logger = logger;
   }
 
+  handleFlagChanges(keys: string[], type: FlagChangeType): void {
+    if (this._activeContext) {
+      this._changeCallbacks.forEach((callback) => {
+        try {
+          callback(this._activeContext!, keys, type);
+        } catch (err) {
+          /* intentionally empty */
+        }
+      });
+    } else {
+      this._logger.warn(
+        'Received a change event without an active context. Changes will not be propagated.',
+      );
+    }
+  }
+
   init(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
     this._activeContext = context;
     const oldFlags = this._flagStore.getAll();
     this._flagStore.init(newFlags);
     const changed = calculateChangedKeys(oldFlags, newFlags);
     if (changed.length > 0) {
-      this._changeCallbacks.forEach((callback) => {
-        try {
-          callback(context, changed, 'init');
-        } catch (err) {
-          /* intentionally empty */
-        }
-      });
+      this.handleFlagChanges(changed, 'init');
     }
   }
 
@@ -78,13 +88,7 @@ export default class FlagUpdater {
     }
 
     this._flagStore.insertOrUpdate(key, item);
-    this._changeCallbacks.forEach((callback) => {
-      try {
-        callback(this._activeContext!, [key], 'patch');
-      } catch (err) {
-        /* intentionally empty */
-      }
-    });
+    this.handleFlagChanges([key], 'patch');
     return true;
   }
 

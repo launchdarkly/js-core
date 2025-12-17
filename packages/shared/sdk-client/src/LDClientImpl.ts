@@ -45,7 +45,7 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
+import DefaultFlagManager, { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import HookRunner from './HookRunner';
@@ -605,6 +605,10 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
   protected sendEvent(event: internal.InputEvent): void {
     this._eventProcessor?.sendEvent(event);
+  }
+
+  protected getDebugOverrides(): LDDebugOverride | undefined {
+    return this._flagManager.getDebugOverride?.();
   }
 
   private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {

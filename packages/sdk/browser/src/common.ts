@@ -43,6 +43,7 @@ export type {
   LDIdentifyError,
   LDIdentifyTimeout,
   LDIdentifyShed,
+  LDDebugOverride,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**

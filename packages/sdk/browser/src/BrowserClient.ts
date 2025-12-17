@@ -17,6 +17,7 @@ import {
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   Platform,
+  safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { readFlagsFromBootstrap } from './bootstrap';
@@ -211,6 +212,11 @@ class BrowserClientImpl extends LDClientImpl {
       client,
       this._plugins || [],
     );
+
+    const override = this.getDebugOverrides();
+    if (override) {
+      safeRegisterDebugOverridePlugins(this.logger, override, this._plugins || []);
+    }
   }
 
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {

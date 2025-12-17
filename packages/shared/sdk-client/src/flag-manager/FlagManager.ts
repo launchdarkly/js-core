@@ -1,4 +1,4 @@
-import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
+import { Context, LDFlagValue, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { namespaceForEnvironment } from '../storage/namespaceUtils';
 import FlagPersistence from './FlagPersistence';
@@ -64,12 +64,63 @@ export interface FlagManager {
    * Unregister a flag change callback.
    */
   off(callback: FlagsChangeCallback): void;
+
+  /**
+   * Obtain debug override functions that allows plugins
+   * to manipulate the outcome of the flags managed by
+   * this manager
+   *
+   * @experimental This function is experimental and intended for use by LaunchDarkly tools at this time.
+   */
+  getDebugOverride?(): LDDebugOverride;
+}
+
+/**
+ * Debug interface for plugins that need to override flag values during development.
+ * This interface provides methods to temporarily override flag values that take
+ * precedence over the actual flag values from LaunchDarkly. These overrides are
+ * useful for testing, development, and debugging scenarios.
+ *
+ * @experimental This interface is experimental and intended for use by LaunchDarkly tools at this time.
+ * The API may change in future versions.
+ */
+export interface LDDebugOverride {
+  /**
+   * Set an override value for a flag that takes precedence over the real flag value.
+   *
+   * @param flagKey The flag key.
+   * @param value The override value.
+   */
+  setOverride(flagKey: string, value: LDFlagValue): void;
+
+  /**
+   * Remove an override value for a flag, reverting to the real flag value.
+   *
+   * @param flagKey The flag key.
+   */
+  removeOverride(flagKey: string): void;
+
+  /**
+   * Clear all override values, reverting all flags to their real values.
+   */
+  clearAllOverrides(): void;
+
+  /**
+   * Get all currently active flag overrides.
+   *
+   * @returns
+   *   An object containing all active overrides as key-value pairs,
+   *   where keys are flag keys and values are the overridden flag values.
+   *   Returns an empty object if no overrides are active.
+   */
+  getAllOverrides(): { [key: string]: ItemDescriptor };
 }
 
 export default class DefaultFlagManager implements FlagManager {
   private _flagStore = new DefaultFlagStore();
   private _flagUpdater: FlagUpdater;
   private _flagPersistencePromise: Promise<FlagPersistence>;
+  private _overrides?: { [key: string]: LDFlagValue };
 
   /**
    * @param platform implementation of various platform provided functionality
@@ -116,10 +167,26 @@ export default class DefaultFlagManager implements FlagManager {
   }
 
   get(key: string): ItemDescriptor | undefined {
+    if (this._overrides && Object.prototype.hasOwnProperty.call(this._overrides, key)) {
+      return this._convertValueToOverrideDescripter(this._overrides[key]);
+    }
+
     return this._flagStore.get(key);
   }
 
   getAll(): { [key: string]: ItemDescriptor } {
+    if (this._overrides) {
+      return {
+        ...this._flagStore.getAll(),
+        ...Object.entries(this._overrides).reduce(
+          (acc: { [key: string]: ItemDescriptor }, [key, value]) => {
+            acc[key] = this._convertValueToOverrideDescripter(value);
+            return acc;
+          },
+          {},
+        ),
+      };
+    }
     return this._flagStore.getAll();
   }
 
@@ -151,5 +218,66 @@ export default class DefaultFlagManager implements FlagManager {
 
   off(callback: FlagsChangeCallback): void {
     this._flagUpdater.off(callback);
+  }
+
+  private _convertValueToOverrideDescripter(value: LDFlagValue): ItemDescriptor {
+    return {
+      flag: {
+        value,
+        version: 0,
+      },
+      version: 0,
+    };
+  }
+
+  setOverride(key: string, value: LDFlagValue) {
+    if (!this._overrides) {
+      this._overrides = {};
+    }
+    this._overrides[key] = value;
+    this._flagUpdater.handleFlagChanges([key], 'override');
+  }
+
+  removeOverride(flagKey: string) {
+    if (!this._overrides || !Object.prototype.hasOwnProperty.call(this._overrides, flagKey)) {
+      return; // No override to remove
+    }
+
+    delete this._overrides[flagKey];
+
+    // If no more overrides, reset to undefined for performance
+    if (Object.keys(this._overrides).length === 0) {
+      this._overrides = undefined;
+    }
+
+    this._flagUpdater.handleFlagChanges([flagKey], 'override');
+  }
+
+  clearAllOverrides() {
+    if (this._overrides) {
+      const clearedOverrides = { ...this._overrides };
+      this._overrides = undefined; // Reset to undefined
+      this._flagUpdater.handleFlagChanges(Object.keys(clearedOverrides), 'override');
+    }
+  }
+
+  getAllOverrides() {
+    if (!this._overrides) {
+      return {};
+    }
+    const result = {} as { [key: string]: ItemDescriptor };
+    Object.entries(this._overrides).forEach(([key, value]) => {
+      result[key] = this._convertValueToOverrideDescripter(value);
+    });
+    return result;
+  }
+
+  getDebugOverride(): LDDebugOverride {
+    return {
+      setOverride: this.setOverride.bind(this),
+      removeOverride: this.removeOverride.bind(this),
+      clearAllOverrides: this.clearAllOverrides.bind(this),
+      getAllOverrides: this.getAllOverrides.bind(this),
+    };
   }
 }
