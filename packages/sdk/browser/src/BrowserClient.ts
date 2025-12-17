@@ -237,6 +237,13 @@ class BrowserClientImpl extends LDClientImpl {
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
+    if (!this._startPromise) {
+      this.logger.error(
+        'Client must be started before it can identify a context, did you forget to call start()?',
+      );
+      return { status: 'error', error: new Error('Identify called before start') };
+    }
+
     const identifyOptionsWithUpdatedDefaults = {
       ...identifyOptions,
     };
@@ -288,9 +295,9 @@ class BrowserClientImpl extends LDClientImpl {
       });
     }
 
-    this.identifyResult(this._initialContext!, identifyOptions);
-
     this._startPromise = this._promiseWithTimeout(this._initializedPromise, options?.timeout ?? 5);
+
+    this.identifyResult(this._initialContext!, identifyOptions);
     return this._startPromise;
   }
 

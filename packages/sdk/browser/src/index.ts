@@ -21,21 +21,32 @@ export type { LDClient, LDOptions };
 export type { LDPlugin } from './LDPlugin';
 
 /**
- * Creates an instance of the LaunchDarkly client.
+ * Creates an instance of the LaunchDarkly client. Note that the client will not be ready to
+ * use until {@link LDClient.start} is called.
  *
  * Usage:
  * ```
  * import { initialize } from 'launchdarkly-js-client-sdk';
  * const client = initialize(clientSideId, context, options);
  *
+ * // Attach event listeners and add any additional logic here
+ *
+ * // Then start the client
+ * client.start();
  * ```
+ * @remarks
+ * The client will not automatically start until {@link LDClient.start} is called in order to
+ * synchronize the registering of event listeners and other initialization logic that should be
+ * done before the client initiates its connection to LaunchDarkly.
  *
  * @param clientSideId
  *   The client-side ID, also known as the environment ID.
+ * @param pristineContext
+ *   The initial context used to identify the user. @see {@link LDContext}
  * @param options
- *   Optional configuration settings.
- * @return
- *   The new client instance.
+ *   Optional configuration settings. @see {@link LDOptions}
+ * @returns
+ *   The new client instance. @see {@link LDClient}
  */
 export function initialize(
   clientSideId: string,

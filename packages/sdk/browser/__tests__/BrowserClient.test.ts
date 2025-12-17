@@ -291,12 +291,14 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
+    await client.start();
+
     const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
     const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
     const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
 
     await Promise.all([promise1, promise2, promise3]);
-    expect(order).toEqual(['user-key-1', 'user-key-2', 'user-key-3']);
+    expect(order).toEqual(['user-key-0', 'user-key-1', 'user-key-2', 'user-key-3']);
   });
 
   it('completes identify calls in order', async () => {
@@ -376,6 +378,8 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
+    await client.start();
+
     const result1 = await client.identify({ key: 'user-key-1', kind: 'user' });
     const result2 = await client.identify({ key: 'user-key-2', kind: 'user' });
     const result3 = await client.identify({ key: 'user-key-3', kind: 'user' });
@@ -385,7 +389,7 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(result3.status).toEqual('completed');
 
     // user-key-2 is shed, so it is not included in the order
-    expect(order).toEqual(['user-key-1', 'user-key-2', 'user-key-3']);
+    expect(order).toEqual(['user-key-0', 'user-key-1', 'user-key-2', 'user-key-3']);
   });
 
   it('can shed intermediate identify calls without waiting for results', async () => {
@@ -397,6 +401,8 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
+    await client.start();
+
     const promise1 = client.identify({ key: 'user-key-1', kind: 'user' });
     const promise2 = client.identify({ key: 'user-key-2', kind: 'user' });
     const promise3 = client.identify({ key: 'user-key-3', kind: 'user' });
@@ -404,7 +410,7 @@ describe('given a mock platform for a BrowserClient', () => {
     await Promise.all([promise1, promise2, promise3]);
 
     // With events and goals disabled the only fetch calls should be for polling requests.
-    expect(platform.requests.fetch.mock.calls.length).toBe(2);
+    expect(platform.requests.fetch.mock.calls.length).toBe(3);
   });
 
   it('it does not shed non-shedable identify calls', async () => {
@@ -416,6 +422,8 @@ describe('given a mock platform for a BrowserClient', () => {
       platform,
     );
 
+    await client.start();
+
     const promise1 = client.identify({ key: 'user-key-1', kind: 'user' }, { sheddable: false });
     const promise2 = client.identify({ key: 'user-key-2', kind: 'user' }, { sheddable: false });
     const promise3 = client.identify({ key: 'user-key-3', kind: 'user' }, { sheddable: false });
@@ -426,7 +434,7 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(result2).toEqual({ status: 'completed' });
     expect(result3).toEqual({ status: 'completed' });
     // With events and goals disabled the only fetch calls should be for polling requests.
-    expect(platform.requests.fetch.mock.calls.length).toBe(3);
+    expect(platform.requests.fetch.mock.calls.length).toBe(4);
   });
 
   it('blocks until the client is ready when waitForInitialization is called', async () => {
@@ -588,5 +596,33 @@ describe('given a mock platform for a BrowserClient', () => {
 
     // Verify that only one identify call was made (one for polling)
     expect(platform.requests.fetch.mock.calls.length).toBe(1);
+  });
+
+  it('cannot call identify before start', async () => {
+    const client = makeClient(
+      'client-side-id',
+      { kind: 'user', key: 'user-key' },
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    // Call identify before start
+    const result = await client.identify({ kind: 'user', key: 'new-user-key' });
+
+    // Verify that identify returns an error status
+    expect(result.status).toBe('error');
+    if (result.status === 'error') {
+      expect(result.error).toBeInstanceOf(Error);
+      expect(result.error.message).toBe('Identify called before start');
+    }
+
+    // Verify that the logger was called with the error message
+    expect(logger.error).toHaveBeenCalledWith(
+      'Client must be started before it can identify a context, did you forget to call start()?',
+    );
+
+    // Verify that no fetch calls were made
+    expect(platform.requests.fetch.mock.calls.length).toBe(0);
   });
 });
