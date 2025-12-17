@@ -52,7 +52,7 @@ export default class FlagUpdater {
       });
     } else {
       this._logger.warn(
-        'Received a change event wihtout an active context. Changes will not be propagated.',
+        'Received a change event without an active context. Changes will not be propagated.',
       );
     }
   }
