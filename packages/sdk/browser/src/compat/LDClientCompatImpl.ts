@@ -45,20 +45,27 @@ export default class LDClientCompatImpl implements LDClient {
     this._client = makeClient(envKey, context, AutoEnvAttributes.Disabled, options);
     this._emitter = new LDEmitterCompat(this._client);
     this.logger = this._client.logger;
-    this._initIdentify(bootstrap, hash);
+
+    // start the client, then immediately kick off an identify operation
+    // in order to preserve the behavior of the previous SDK.
+    this._client.start();
+    this._initIdentify(context, bootstrap, hash);
   }
 
-  private async _initIdentify(bootstrap?: LDFlagSet, hash?: string): Promise<void> {
+  private async _initIdentify(
+    context: LDContext,
+    bootstrap?: LDFlagSet,
+    hash?: string,
+  ): Promise<void> {
     try {
-      const result = await this._client.start({
-        identifyOptions: {
-          noTimeout: true,
-          bootstrap,
-          hash,
-        },
+      const result = await this._client.identify(context, {
+        noTimeout: true,
+        bootstrap,
+        hash,
+        sheddable: false,
       });
 
-      if (result.status === 'failed') {
+      if (result.status === 'error') {
         throw result.error;
       } else if (result.status === 'timeout') {
         throw new LDTimeoutError('Identify timed out');
