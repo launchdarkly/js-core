@@ -3,7 +3,7 @@
  *
  * This SDK is intended for use in browser environments.
  *
- * In typical usage, you will call {@link initialize} once at startup time to obtain an instance of
+ * In typical usage, you will call {@link createClient} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
  *
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
@@ -26,8 +26,8 @@ export type { LDPlugin } from './LDPlugin';
  *
  * Usage:
  * ```
- * import { initialize } from 'launchdarkly-js-client-sdk';
- * const client = initialize(clientSideId, context, options);
+ * import { createClient } from 'launchdarkly-js-client-sdk';
+ * const client = createClient(clientSideId, context, options);
  *
  * // Attach event listeners and add any additional logic here
  *
@@ -48,7 +48,7 @@ export type { LDPlugin } from './LDPlugin';
  * @returns
  *   The new client instance. @see {@link LDClient}
  */
-export function initialize(
+export function createClient(
   clientSideId: string,
   pristineContext: LDContext,
   options?: LDOptions,

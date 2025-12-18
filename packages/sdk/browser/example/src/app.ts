@@ -1,4 +1,4 @@
-import { initialize } from '@launchdarkly/js-client-sdk';
+import { createClient } from '@launchdarkly/js-client-sdk';
 
 // Set clientSideID to your LaunchDarkly client-side ID
 const clientSideID = 'LD_CLIENT_SIDE_ID';
@@ -24,7 +24,7 @@ div.appendChild(document.createTextNode('No flag evaluations yet'));
 statusBox.appendChild(document.createTextNode('Initializing...'));
 
 const main = async () => {
-  const ldclient = initialize(clientSideID, context);
+  const ldclient = createClient(clientSideID, context);
   const render = () => {
     const flagValue = ldclient.variation(flagKey, false);
     const label = `The ${flagKey} feature flag evaluates to ${flagValue}.`;
