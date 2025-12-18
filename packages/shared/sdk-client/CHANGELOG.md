@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.16.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.15.2...js-client-sdk-common-v1.16.0) (2025-12-18)
+
+
+### Features
+
+* adding support for debug override plugins ([#1033](https://github.com/launchdarkly/js-core/issues/1033)) ([17f5e7d](https://github.com/launchdarkly/js-core/commit/17f5e7d7d11d502d54a6ccf88aea6bec3e4b775c))
+* allow clients to evaluate bootstrapped flags when not ready ([#1036](https://github.com/launchdarkly/js-core/issues/1036)) ([9b4542a](https://github.com/launchdarkly/js-core/commit/9b4542a722e5d19e123e860faef113d134dad47c))
+* implement `waitForInitialization` for browser sdk 4.x ([#1028](https://github.com/launchdarkly/js-core/issues/1028)) ([156532a](https://github.com/launchdarkly/js-core/commit/156532aea3ec39635dab21dbab125c81fc31a3f5))
+
 ## [1.15.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.15.1...js-client-sdk-common-v1.15.2) (2025-12-05)
 
 
