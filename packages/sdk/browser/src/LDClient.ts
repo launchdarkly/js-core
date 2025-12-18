@@ -30,7 +30,7 @@ export interface LDWaitForInitializationOptions {
    *
    * @default 5 seconds
    */
-  timeout: number;
+  timeout?: number;
 }
 
 /**
@@ -62,6 +62,21 @@ export type LDWaitForInitializationResult =
   | LDWaitForInitializationFailed
   | LDWaitForInitializationTimeout
   | LDWaitForInitializationComplete;
+
+export interface LDStartOptions extends LDWaitForInitializationOptions {
+  /**
+   * Optional bootstrap data to use for the identify operation. If {@link LDIdentifyOptions.bootstrap} is provided, it will be ignored.
+   */
+  bootstrap?: unknown;
+
+  /**
+   * Optional identify options to use for the identify operation. See {@link LDIdentifyOptions} for more information.
+   *
+   * @remarks
+   * Since the first identify option should never be sheddable, we omit the sheddable option from the interface to avoid confusion.
+   */
+  identifyOptions?: Omit<LDIdentifyOptions, 'sheddable'>;
+}
 
 /**
  *
@@ -158,4 +173,14 @@ export type LDClient = Omit<
   waitForInitialization(
     options?: LDWaitForInitializationOptions,
   ): Promise<LDWaitForInitializationResult>;
+
+  /**
+   * Starts the client and returns a promise that resolves to the initialization result.
+   *
+   * The promise will resolve to a {@link LDWaitForInitializationResult} object containing the
+   * status of the waitForInitialization operation.
+   *
+   * @param options Optional configuration. Please see {@link LDStartOptions}.
+   */
+  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult>;
 };

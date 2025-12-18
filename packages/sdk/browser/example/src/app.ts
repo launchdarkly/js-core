@@ -1,4 +1,4 @@
-import { initialize } from '@launchdarkly/js-client-sdk';
+import { createClient } from '@launchdarkly/js-client-sdk';
 
 // Set clientSideID to your LaunchDarkly client-side ID
 const clientSideID = 'LD_CLIENT_SIDE_ID';
@@ -24,7 +24,7 @@ div.appendChild(document.createTextNode('No flag evaluations yet'));
 statusBox.appendChild(document.createTextNode('Initializing...'));
 
 const main = async () => {
-  const ldclient = initialize(clientSideID);
+  const ldclient = createClient(clientSideID, context);
   const render = () => {
     const flagValue = ldclient.variation(flagKey, false);
     const label = `The ${flagKey} feature flag evaluates to ${flagValue}.`;
@@ -44,13 +44,28 @@ const main = async () => {
     render();
   });
 
-  const { status } = await ldclient.identify(context);
+  ldclient.start();
 
-  if (status === 'completed') {
-    statusBox.replaceChild(document.createTextNode('Initialized'), statusBox.firstChild as Node);
-  } else if (status === 'error') {
+  const { status } = await ldclient.waitForInitialization();
+
+  if (status === 'complete') {
+    statusBox.replaceChild(
+      document.createTextNode(`Initialized with context: ${JSON.stringify(ldclient.getContext())}`),
+      statusBox.firstChild as Node,
+    );
+  } else if (status === 'failed') {
     statusBox.replaceChild(
       document.createTextNode('Error identifying client'),
+      statusBox.firstChild as Node,
+    );
+  } else if (status === 'timeout') {
+    statusBox.replaceChild(
+      document.createTextNode('Timeout identifying client'),
+      statusBox.firstChild as Node,
+    );
+  } else {
+    statusBox.replaceChild(
+      document.createTextNode('Unknown error identifying client'),
       statusBox.firstChild as Node,
     );
   }

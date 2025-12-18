@@ -29,6 +29,7 @@ import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
 import {
   LDClient,
+  LDStartOptions,
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationOptions,
@@ -42,13 +43,18 @@ import BrowserPlatform from './platform/BrowserPlatform';
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
+
+  // The initialized promise is used to track the initialization state of the client.
+  // This is separate from the start promise because the start promise could time out before
+  // the initialization is complete.
   private _initializedPromise?: Promise<LDWaitForInitializationResult>;
   private _initResolve?: (result: LDWaitForInitializationResult) => void;
   private _initializeResult?: LDWaitForInitializationResult;
 
-  // NOTE: keeps track of when we tried an initial identification. We should consolidate this
-  // with the waitForInitialization logic in the future.
-  private _identifyAttempted: boolean = false;
+  private _initialContext?: LDContext;
+
+  // NOTE: This also keeps track of when we tried to initialize the client.
+  private _startPromise?: Promise<LDWaitForInitializationResult>;
 
   constructor(
     clientSideId: string,
@@ -219,6 +225,10 @@ class BrowserClientImpl extends LDClientImpl {
     }
   }
 
+  setInitialContext(context: LDContext): void {
+    this._initialContext = context;
+  }
+
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     return super.identify(context, identifyOptions);
   }
@@ -227,26 +237,18 @@ class BrowserClientImpl extends LDClientImpl {
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
+    if (!this._startPromise) {
+      this.logger.error(
+        'Client must be started before it can identify a context, did you forget to call start()?',
+      );
+      return { status: 'error', error: new Error('Identify called before start') };
+    }
+
     const identifyOptionsWithUpdatedDefaults = {
       ...identifyOptions,
     };
     if (identifyOptions?.sheddable === undefined) {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
-    }
-
-    if (!this._identifyAttempted) {
-      this._identifyAttempted = true;
-      if (identifyOptionsWithUpdatedDefaults.bootstrap) {
-        try {
-          const bootstrapData = readFlagsFromBootstrap(
-            this.logger,
-            identifyOptionsWithUpdatedDefaults.bootstrap,
-          );
-          this.presetFlags(bootstrapData);
-        } catch (error) {
-          this.logger.error('Failed to bootstrap data', error);
-        }
-      }
     }
 
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
@@ -260,6 +262,54 @@ class BrowserClientImpl extends LDClientImpl {
 
     this._goalManager?.startTracking();
     return res;
+  }
+
+  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
+    if (this._initializeResult) {
+      return Promise.resolve(this._initializeResult);
+    }
+    if (this._startPromise) {
+      return this._startPromise;
+    }
+    if (!this._initialContext) {
+      this.logger.error('Initial context not set');
+      return Promise.resolve({ status: 'failed', error: new Error('Initial context not set') });
+    }
+
+    // When we get to this point, we assume this is the first time that start is being
+    // attempted. This line should only be called once during the lifetime of the client.
+    const identifyOptions = {
+      ...(options?.identifyOptions ?? {}),
+
+      // Initial identify operations are not sheddable.
+      sheddable: false,
+    };
+
+    // If the bootstrap data is provided in the start options, and the identify options do not have bootstrap data,
+    // then use the bootstrap data from the start options.
+    if (options?.bootstrap && !identifyOptions.bootstrap) {
+      identifyOptions.bootstrap = options.bootstrap;
+    }
+
+    if (identifyOptions?.bootstrap) {
+      try {
+        const bootstrapData = readFlagsFromBootstrap(this.logger, identifyOptions.bootstrap);
+        this.presetFlags(bootstrapData);
+      } catch (error) {
+        this.logger.error('Failed to bootstrap data', error);
+      }
+    }
+
+    if (!this._initializedPromise) {
+      this._initializedPromise = new Promise((resolve) => {
+        this._initResolve = resolve;
+      });
+    }
+
+    this._startPromise = this._promiseWithTimeout(this._initializedPromise, options?.timeout ?? 5);
+
+    this.identifyResult(this._initialContext!, identifyOptions);
+    return this._startPromise;
   }
 
   waitForInitialization(
@@ -344,11 +394,13 @@ class BrowserClientImpl extends LDClientImpl {
 
 export function makeClient(
   clientSideId: string,
+  initialContext: LDContext,
   autoEnvAttributes: AutoEnvAttributes,
   options: BrowserOptions = {},
   overridePlatform?: Platform,
 ): LDClient {
   const impl = new BrowserClientImpl(clientSideId, autoEnvAttributes, options, overridePlatform);
+  impl.setInitialContext(initialContext);
 
   // Return a PIMPL style implementation. This decouples the interface from the interface of the implementation.
   // In the future we should consider updating the common SDK code to not use inheritance and instead compose
@@ -386,6 +438,7 @@ export function makeClient(
     waitForInitialization: (waitOptions?: LDWaitForInitializationOptions) =>
       impl.waitForInitialization(waitOptions),
     logger: impl.logger,
+    start: (startOptions?: LDStartOptions) => impl.start(startOptions),
   };
 
   impl.registerPlugins(client);

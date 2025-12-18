@@ -16,7 +16,7 @@ export type { LDClient, LDOptions };
 
 /**
  * Creates an instance of the LaunchDarkly client. This version of initialization is for
- * improved backwards compatibility. In general the `initialize` function from the root packge
+ * improved backwards compatibility. In general the `createClient` function from the root packge
  * should be used instead of the one in the `/compat` module.
  *
  * The client will begin attempting to connect to LaunchDarkly as soon as it is created. To
@@ -49,6 +49,10 @@ export type { LDClient, LDOptions };
  * @return
  *   The new client instance.
  */
-export function initialize(envKey: string, context: LDContext, options?: LDOptions): LDClient {
+export function initialize(
+  envKey: string,
+  context: LDContext,
+  options?: LDOptions,
+): Omit<LDClient, 'start' | 'setInitialContext'> {
   return new LDClientCompatImpl(envKey, context, options);
 }
