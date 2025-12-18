@@ -65,6 +65,11 @@ export type LDWaitForInitializationResult =
 
 export interface LDStartOptions extends LDWaitForInitializationOptions {
   /**
+   * Optional bootstrap data to use for the identify operation. If {@link LDIdentifyOptions.bootstrap} is provided, it will be ignored.
+   */
+  bootstrap?: unknown;
+
+  /**
    * Optional identify options to use for the identify operation. {@link LDIdentifyOptions}
    */
   identifyOptions?: LDIdentifyOptions;

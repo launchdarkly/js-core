@@ -280,6 +280,12 @@ class BrowserClientImpl extends LDClientImpl {
     // attempted. This line should only be called once during the lifetime of the client.
     const identifyOptions = options?.identifyOptions ?? {};
 
+    // If the bootstrap data is provided in the start options, and the identify options do not have bootstrap data,
+    // then use the bootstrap data from the start options.
+    if (options?.bootstrap && !identifyOptions.bootstrap) {
+      identifyOptions.bootstrap = options.bootstrap;
+    }
+
     if (identifyOptions?.bootstrap) {
       try {
         const bootstrapData = readFlagsFromBootstrap(this.logger, identifyOptions.bootstrap);
