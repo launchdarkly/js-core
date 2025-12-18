@@ -278,7 +278,12 @@ class BrowserClientImpl extends LDClientImpl {
 
     // When we get to this point, we assume this is the first time that start is being
     // attempted. This line should only be called once during the lifetime of the client.
-    const identifyOptions = options?.identifyOptions ?? {};
+    const identifyOptions = {
+      ...(options?.identifyOptions ?? {}),
+
+      // Initial identify operations are not sheddable.
+      sheddable: false,
+    };
 
     // If the bootstrap data is provided in the start options, and the identify options do not have bootstrap data,
     // then use the bootstrap data from the start options.

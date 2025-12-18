@@ -70,9 +70,12 @@ export interface LDStartOptions extends LDWaitForInitializationOptions {
   bootstrap?: unknown;
 
   /**
-   * Optional identify options to use for the identify operation. {@link LDIdentifyOptions}
+   * Optional identify options to use for the identify operation. See {@link LDIdentifyOptions} for more information.
+   *
+   * @remarks
+   * Since the first identify option should never be sheddable, we omit the sheddable option from the interface to avoid confusion.
    */
-  identifyOptions?: LDIdentifyOptions;
+  identifyOptions?: Omit<LDIdentifyOptions, 'sheddable'>;
 }
 
 /**
