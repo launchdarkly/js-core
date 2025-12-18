@@ -3,14 +3,19 @@
  *
  * This SDK is intended for use in browser environments. It includes the observability and session replay plugins.
  *
- * In typical usage, you will call {@link initialize} once at startup time to obtain an instance of
+ * In typical usage, you will call {@link createClient} once at startup time to obtain an instance of
  * {@link LDClient}, which provides access to all of the SDK's functionality.
  *
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
  *
  * @packageDocumentation
  */
-import { initialize as initializeJsClient, LDClient, LDOptions } from '@launchdarkly/js-client-sdk';
+import {
+  createClient as createClientJs,
+  LDClient,
+  LDContext,
+  LDOptions,
+} from '@launchdarkly/js-client-sdk';
 import Observability, { ObserveOptions } from '@launchdarkly/observability';
 import SessionReplay, { RecordOptions } from '@launchdarkly/session-replay';
 
@@ -42,18 +47,29 @@ export interface LDBrowserOptions extends LDOptions {
  *
  * Usage:
  * ```
- * import { initialize } from '@launchdarkly/browser';
- * const client = initialize(clientSideId, context, options);
+ * import { createClient } from '@launchdarkly/browser';
+ * const client = createClient(clientSideId, context, options);
+ *
+ * // Attach event listeners and add any additional initialization logic here
+ *
+ * // Then start the client
+ * client.start();
  * ```
  *
  * @param clientSideId
  *   The client-side ID, also known as the environment ID.
+ * @param context
+ *   The initial context used to identify the user. @see {@link LDContext}
  * @param options
  *   Optional configuration settings.
  * @return
  *   The new client instance.
  */
-export function initialize(clientSideId: string, options?: LDBrowserOptions): LDClient {
+export function createClient(
+  clientSideId: string,
+  context: LDContext,
+  options?: LDBrowserOptions,
+): LDClient {
   const optionsWithPlugins = {
     ...options,
     plugins: [
@@ -62,5 +78,5 @@ export function initialize(clientSideId: string, options?: LDBrowserOptions): LD
       new SessionReplay(options?.tmpProjectId ?? '1', options?.sessionReplay),
     ],
   };
-  return initializeJsClient(clientSideId, optionsWithPlugins);
+  return createClientJs(clientSideId, context, optionsWithPlugins);
 }
