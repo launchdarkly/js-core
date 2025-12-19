@@ -1,12 +1,13 @@
 import { derived, type Readable, readonly, writable, type Writable } from 'svelte/store';
 
-import type { LDFlagSet } from '@launchdarkly/js-client-sdk';
 import {
-  initialize,
+  createClient as createClientSdk,
   type LDClient,
   type LDContext,
+  type LDFlagSet,
   type LDFlagValue,
-} from '@launchdarkly/js-client-sdk/compat';
+  type LDOptions,
+} from '@launchdarkly/js-client-sdk';
 
 export type { LDContext, LDFlagValue };
 
@@ -62,7 +63,7 @@ function toFlagsProxy(client: LDClient, flags: LDFlags): LDFlags {
  * Creates a LaunchDarkly instance.
  * @returns {Object} The LaunchDarkly instance object.
  */
-function createLD() {
+function init() {
   let coreLdClient: LDClient | undefined;
   const loading = writable(true);
   const flagsWritable = writable<LDFlags>({});
@@ -73,20 +74,22 @@ function createLD() {
    * @param {LDContext} context - The user context.
    * @returns {Object} An object with the initialization status store.
    */
-  function LDInitialize(clientId: LDClientID, context: LDContext) {
-    coreLdClient = initialize(clientId, context);
-    coreLdClient!.on('ready', () => {
+  function initialize(clientId: LDClientID, context: LDContext, options?: LDOptions) {
+    coreLdClient = createClientSdk(clientId, context, options);
+    coreLdClient.on('initialized', () => {
       loading.set(false);
       const rawFlags = coreLdClient!.allFlags();
       const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
       flagsWritable.set(allFlags);
     });
 
-    coreLdClient!.on('change', () => {
+    coreLdClient.on('change', () => {
       const rawFlags = coreLdClient!.allFlags();
       const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
       flagsWritable.set(allFlags);
     });
+
+    coreLdClient.start();
 
     return {
       initializing: loading,
@@ -125,7 +128,7 @@ function createLD() {
   return {
     identify,
     flags: readonly(flagsWritable),
-    initialize: LDInitialize,
+    initialize,
     initializing: readonly(loading),
     watch,
     useFlag,
@@ -133,4 +136,4 @@ function createLD() {
 }
 
 /** The LaunchDarkly instance */
-export const LD = createLD();
+export const LD = init();
