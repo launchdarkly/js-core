@@ -4,7 +4,7 @@ import { namespaceForContextData, namespaceForContextIndex } from '../storage/na
 import { Flags } from '../types';
 import ContextIndex from './ContextIndex';
 import FlagStore from './FlagStore';
-import FlagUpdater from './FlagUpdater';
+import { FlagUpdater } from './FlagUpdater';
 import { ItemDescriptor } from './ItemDescriptor';
 
 /**

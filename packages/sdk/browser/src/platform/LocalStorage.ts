@@ -6,6 +6,13 @@ export function isLocalStorageSupported() {
   return typeof localStorage !== 'undefined';
 }
 
+export function getAllStorageKeys() {
+  if (!isLocalStorageSupported()) {
+    return [];
+  }
+  return Object.keys(localStorage);
+}
+
 /**
  * Implementation of Storage using localStorage for the browser.
  *

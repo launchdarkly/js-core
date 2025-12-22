@@ -1,10 +1,10 @@
-import { DefaultFlagStore } from '../../src/flag-manager/FlagStore';
+import FlagStore, { createDefaultFlagStore } from '../../src/flag-manager/FlagStore';
 
 describe('given an empty flag store', () => {
-  let store: DefaultFlagStore;
+  let store: FlagStore;
 
   beforeEach(() => {
-    store = new DefaultFlagStore();
+    store = createDefaultFlagStore();
   });
 
   it.each(['unknown', 'toString', 'length'])(
