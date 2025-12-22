@@ -165,7 +165,8 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
     }
 
-    if (options.cleanOldPersistentData && internalOptions?.getLegacyStorageKeys) {
+    if (options.cleanOldPersistentData && internalOptions?.getLegacyStorageKeys && this.platform.storage) {
+      // NOTE: we are letting this fail silently because it's not critical and we don't want to block the client from initializing.
       this.logger.debug('Cleaning old persistent data.');
       Promise.all(
         internalOptions.getLegacyStorageKeys().map((key) => this.platform.storage?.clear(key)),
