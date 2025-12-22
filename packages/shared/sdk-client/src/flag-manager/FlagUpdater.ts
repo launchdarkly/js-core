@@ -76,10 +76,10 @@ export interface FlagUpdater {
 }
 
 export default function createFlagUpdater(_flagStore: FlagStore, _logger: LDLogger): FlagUpdater {
-  let flagStore: FlagStore = _flagStore;
-  let logger: LDLogger = _logger;
+  const flagStore: FlagStore = _flagStore;
+  const logger: LDLogger = _logger;
   let activeContext: Context | undefined;
-  let changeCallbacks = new Array<FlagsChangeCallback>();
+  const changeCallbacks = new Array<FlagsChangeCallback>();
 
   return {
     handleFlagChanges(keys: string[], type: FlagChangeType): void {
@@ -107,41 +107,40 @@ export default function createFlagUpdater(_flagStore: FlagStore, _logger: LDLogg
         this.handleFlagChanges(changed, 'init');
       }
     },
-  
     initCached(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
       if (activeContext?.canonicalKey === context.canonicalKey) {
         return;
       }
-  
+
       this.init(context, newFlags);
     },
-  
+
     upsert(context: Context, key: string, item: ItemDescriptor): boolean {
       if (activeContext?.canonicalKey !== context.canonicalKey) {
         logger.warn('Received an update for an inactive context.');
         return false;
       }
-  
+
       const currentValue = flagStore.get(key);
       if (currentValue !== undefined && currentValue.version >= item.version) {
         // this is an out of order update that can be ignored
         return false;
       }
-  
+
       flagStore.insertOrUpdate(key, item);
       this.handleFlagChanges([key], 'patch');
       return true;
     },
-  
+
     on(callback: FlagsChangeCallback): void {
       changeCallbacks.push(callback);
     },
-  
+
     off(callback: FlagsChangeCallback): void {
       const index = changeCallbacks.indexOf(callback);
       if (index > -1) {
         changeCallbacks.splice(index, 1);
       }
-    }
-  }
+    },
+  };
 }

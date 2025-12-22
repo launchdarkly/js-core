@@ -1,7 +1,7 @@
 import { Context, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { createDefaultFlagStore } from '../../src/flag-manager/FlagStore';
-import FlagUpdater, { FlagsChangeCallback } from '../../src/flag-manager/FlagUpdater';
+import createFlagUpdater, { FlagsChangeCallback } from '../../src/flag-manager/FlagUpdater';
 import { Flag } from '../../src/types';
 
 function makeMockFlag(): Flag {
@@ -38,7 +38,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
     expect(mockStoreSpy).toHaveBeenLastCalledWith(flags);
@@ -56,7 +56,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.on(mockCallback);
     updaterUnderTest.init(context, flags);
     expect(mockCallback).toHaveBeenCalledTimes(1);
@@ -75,7 +75,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(activeContext, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
     updaterUnderTest.initCached(sameContext, flags);
@@ -95,7 +95,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(activeContext, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
 
@@ -118,7 +118,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
 
@@ -142,7 +142,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     expect(mockStoreSpyInit).toHaveBeenCalledTimes(1);
 
@@ -167,7 +167,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
 
     // register the callbacks
@@ -195,7 +195,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
 
     // register the callback
@@ -228,7 +228,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     updaterUnderTest.off(mockCallback);
     updaterUnderTest.on(mockCallback);

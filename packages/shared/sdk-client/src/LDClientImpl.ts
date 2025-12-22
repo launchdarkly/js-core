@@ -164,6 +164,19 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (this._inspectorManager.hasInspectors()) {
       this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
     }
+
+    if (options.cleanOldPersistentData && internalOptions?.getLegacyStorageKeys) {
+      this.logger.debug('Cleaning old persistent data.');
+      Promise.all(
+        internalOptions.getLegacyStorageKeys().map((key) => this.platform.storage?.clear(key)),
+      )
+        .catch((error) => {
+          this.logger.error(`Error cleaning old persistent data: ${error}`);
+        })
+        .finally(() => {
+          this.logger.debug('Cleaned old persistent data.');
+        });
+    }
   }
 
   allFlags(): LDFlagSet {

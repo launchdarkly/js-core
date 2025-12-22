@@ -3,7 +3,7 @@ import { Context, Crypto, Hasher, LDLogger, Platform, Storage } from '@launchdar
 
 import FlagPersistence from '../../src/flag-manager/FlagPersistence';
 import { createDefaultFlagStore } from '../../src/flag-manager/FlagStore';
-import FlagUpdater from '../../src/flag-manager/FlagUpdater';
+import createFlagUpdater from '../../src/flag-manager/FlagUpdater';
 import {
   namespaceForContextData,
   namespaceForContextIndex,
@@ -21,7 +21,7 @@ describe('FlagPersistence tests', () => {
       TEST_NAMESPACE,
       5,
       flagStore,
-      new FlagUpdater(flagStore, mockLogger),
+      createFlagUpdater(flagStore, mockLogger),
       mockLogger,
     );
 
@@ -41,7 +41,7 @@ describe('FlagPersistence tests', () => {
       TEST_NAMESPACE,
       5,
       flagStore,
-      new FlagUpdater(flagStore, mockLogger),
+      createFlagUpdater(flagStore, mockLogger),
       mockLogger,
     );
 
@@ -61,7 +61,7 @@ describe('FlagPersistence tests', () => {
   test('loadCached updates FlagUpdater with cached flags', async () => {
     const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
-    const flagUpdater = new FlagUpdater(flagStore, mockLogger);
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
     const flagUpdaterSpy = jest.spyOn(flagUpdater, 'initCached');
     const fpUnderTest = new FlagPersistence(
       makeMockPlatform(makeMemoryStorage(), makeMockCrypto()),
@@ -90,7 +90,7 @@ describe('FlagPersistence tests', () => {
     const flagStore = createDefaultFlagStore();
     const memoryStorage = makeMemoryStorage();
     const mockLogger = makeMockLogger();
-    const flagUpdater = new FlagUpdater(flagStore, mockLogger);
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
     const fpUnderTest = new FlagPersistence(
       makeMockPlatform(memoryStorage, makeMockCrypto()),
       TEST_NAMESPACE,
@@ -120,7 +120,7 @@ describe('FlagPersistence tests', () => {
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
     const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
-    const flagUpdater = new FlagUpdater(flagStore, mockLogger);
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
 
     const fpUnderTest = new FlagPersistence(
       mockPlatform,
@@ -156,7 +156,7 @@ describe('FlagPersistence tests', () => {
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
     const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
-    const flagUpdater = new FlagUpdater(flagStore, mockLogger);
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
 
     const fpUnderTest = new FlagPersistence(
       mockPlatform,
@@ -203,7 +203,7 @@ describe('FlagPersistence tests', () => {
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
     const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
-    const flagUpdater = new FlagUpdater(flagStore, mockLogger);
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
 
     const fpUnderTest = new FlagPersistence(
       mockPlatform,
@@ -236,7 +236,7 @@ describe('FlagPersistence tests', () => {
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
     const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
-    const flagUpdater = new FlagUpdater(flagStore, mockLogger);
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
 
     const fpUnderTest = new FlagPersistence(
       mockPlatform,
@@ -276,7 +276,7 @@ describe('FlagPersistence tests', () => {
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
     const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
-    const flagUpdater = new FlagUpdater(flagStore, mockLogger);
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
 
     const fpUnderTest = new FlagPersistence(
       mockPlatform,
