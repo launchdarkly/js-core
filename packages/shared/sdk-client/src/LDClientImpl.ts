@@ -646,6 +646,10 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         };
       }
     });
+
+    // NOTE: we are not tracking "override" changes because, at the time of writing,
+    // these changes are only used for debugging purposes and are not persisted. This
+    // may change in the future.
     if (type === 'init') {
       this._inspectorManager.onFlagsChanged(details);
     } else if (type === 'patch') {
