@@ -138,10 +138,9 @@ class BrowserClientImpl extends LDClientImpl {
           diagnosticsManager,
         ),
       {
-        getLegacyStorageKeys: () => {
-          // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
-          return getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`));
-        },
+        // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
+        getLegacyStorageKeys: () =>
+          getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`)),
         analyticsEventPath: `/events/bulk/${clientSideId}`,
         diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
         includeAuthorizationHeader: false,

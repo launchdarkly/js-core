@@ -662,9 +662,7 @@ describe('sdk-client storage', () => {
     };
 
     // Set up storage with legacy keys, current keys, and other keys
-    mockPlatform.storage.get.mockImplementation((storageKey: string) => {
-      return storage[storageKey];
-    });
+    mockPlatform.storage.get.mockImplementation((storageKey: string) => storage[storageKey]);
 
     const legacyKeys = ['legacyKey1', 'legacyKey2'];
     const internalOptions = {
@@ -685,6 +683,8 @@ describe('sdk-client storage', () => {
       makeTestDataManagerFactory(testSdkKey, mockPlatform),
       internalOptions,
     );
+
+    await jest.runAllTimersAsync();
 
     expect(mockPlatform.storage.clear).toHaveBeenCalledWith('legacyKey1');
     expect(mockPlatform.storage.clear).toHaveBeenCalledWith('legacyKey2');
