@@ -5,7 +5,7 @@
  * 2. added onopen, onclose, onerror, onretrying functions.
  * 3. modified dispatch to work with functions added in 2.
  * 4. replaced all for of loops with foreach
- * 
+ *
  * Additional changes:
  * 1. separated event handling to use onprogress for data changes
  *    and onreadystatechange for status changes. This is to address
