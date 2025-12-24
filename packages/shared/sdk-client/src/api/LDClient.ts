@@ -1,6 +1,7 @@
 import { LDContext, LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { Hook } from './integrations/Hooks';
+import type { LDContextPartial } from './LDContext';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
 import { LDIdentifyResult } from './LDIdentifyResult';
@@ -116,7 +117,7 @@ export interface LDClient {
    *
    * 3. A network error is encountered during initialization.
    */
-  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
+  identify(context: LDContextPartial, identifyOptions?: LDIdentifyOptions): Promise<void>;
 
   /**
    * Determines the json variation of a feature flag.
@@ -405,7 +406,7 @@ export interface LDClientIdentifyResult {
    *    The promise returned from this method will not be rejected.
    */
   identifyResult(
-    context: LDContext,
+    context: LDContextPartial,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
 }

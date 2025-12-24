@@ -11,3 +11,4 @@ export * from './LDInspection';
 export * from './LDIdentifyResult';
 export * from './LDPlugin';
 export * from './LDWaitForInitialization';
+export * from './LDContext';
