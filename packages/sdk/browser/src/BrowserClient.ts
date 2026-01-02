@@ -15,10 +15,10 @@ import {
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
-  Platform,
-  safeRegisterDebugOverridePlugins,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
+  Platform,
+  safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { readFlagsFromBootstrap } from './bootstrap';
@@ -28,9 +28,7 @@ import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOp
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
-
 import { LDClient, LDStartOptions } from './LDClient';
-
 import { LDPlugin } from './LDPlugin';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
@@ -246,8 +244,8 @@ class BrowserClientImpl extends LDClientImpl {
   }
 
   start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
-    if (this._initializeResult) {
-      return Promise.resolve(this._initializeResult);
+    if (this.initializeResult) {
+      return Promise.resolve(this.initializeResult);
     }
     if (this._startPromise) {
       return this._startPromise;
@@ -281,21 +279,17 @@ class BrowserClientImpl extends LDClientImpl {
       }
     }
 
-    if (!this._initializedPromise) {
-      this._initializedPromise = new Promise((resolve) => {
-        this._initResolve = resolve;
+    if (!this.initializedPromise) {
+      this.initializedPromise = new Promise((resolve) => {
+        this.initResolve = resolve;
       });
     }
 
-    this._startPromise = this._promiseWithTimeout(
-      this._initializedPromise!,
-      options?.timeout ?? 5,
-    );
+    this._startPromise = this.promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
 
     this.identifyResult(this._initialContext!, identifyOptions);
     return this._startPromise;
   }
-
 
   setStreaming(streaming?: boolean): void {
     // With FDv2 we may want to consider if we support connection mode directly.

@@ -8,7 +8,6 @@ import {
 
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 
-
 export interface LDStartOptions extends LDWaitForInitializationOptions {
   /**
    * Optional bootstrap data to use for the identify operation. If {@link LDIdentifyOptions.bootstrap} is provided, it will be ignored.

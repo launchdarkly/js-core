@@ -55,4 +55,3 @@ export interface LDWaitForInitializationOptions {
    */
   timeout?: number;
 }
-

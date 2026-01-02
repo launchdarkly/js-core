@@ -5,8 +5,8 @@ import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetai
 import { LDIdentifyOptions } from './LDIdentifyOptions';
 import { LDIdentifyResult } from './LDIdentifyResult';
 import {
+  LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
-  LDWaitForInitializationOptions
 } from './LDWaitForInitialization';
 
 /**
