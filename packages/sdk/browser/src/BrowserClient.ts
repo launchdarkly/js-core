@@ -219,7 +219,10 @@ class BrowserClientImpl extends LDClientImpl {
     this._initialContext = context;
   }
 
-  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<LDIdentifyResult> {
+  override async identify(
+    context: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult> {
     if (!this._startPromise) {
       this.logger.error(
         'Client must be started before it can identify a context, did you forget to call start()?',
@@ -236,7 +239,10 @@ class BrowserClientImpl extends LDClientImpl {
 
     identifyOptionsWithUpdatedDefaults.returnResults = true;
 
-    const res = await super.identify(context, identifyOptionsWithUpdatedDefaults) as LDIdentifyResult;
+    const res = (await super.identify(
+      context,
+      identifyOptionsWithUpdatedDefaults,
+    )) as LDIdentifyResult;
 
     this._goalManager?.startTracking();
     return res;

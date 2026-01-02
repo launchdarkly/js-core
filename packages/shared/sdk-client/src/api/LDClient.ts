@@ -116,7 +116,10 @@ export interface LDClient {
    *
    * 3. A network error is encountered during initialization.
    */
-  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void | LDIdentifyResult>;
+  identify(
+    context: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<void | LDIdentifyResult>;
 
   /**
    * Determines the json variation of a feature flag.

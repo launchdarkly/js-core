@@ -280,12 +280,15 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
    *
    * 3. A network error is encountered during initialization.
    */
-  async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void | LDIdentifyResult> {
+  // eslint-disable-next-line consistent-return
+  async identify(
+    pristineContext: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<void | LDIdentifyResult> {
     if (identifyOptions?.returnResults) {
       return this.identifyResult(pristineContext, identifyOptions);
     }
 
-    this.logger.warn('The identify method will return a promise with the result of the identification operation in the future. To avoid this warning, set the `returnResults` option to true.');
     // In order to manage customization in the derived classes it is important that `identify` MUST be implemented in
     // terms of `identifyResult`. So that the logic of the identification process can be extended in one place.
     const result = await this.identifyResult(pristineContext, identifyOptions);

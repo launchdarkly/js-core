@@ -51,7 +51,7 @@ export interface LDIdentifyOptions {
    *
    * Note that in this mode, the identify promise will not reject on error, but rather, will resolve to an object
    * containing the error.
-   * 
+   *
    * @remarks
    * This option should be set to true when possible. The reason for the current default is to maintain current behavior.
    * Eventually, we will make this the default behavior as part of a major version release.
