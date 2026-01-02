@@ -1,5 +1,6 @@
 import {
   AutoEnvAttributes,
+  cancelableTimedPromise,
   clone,
   Context,
   defaultHeaders,
@@ -25,6 +26,11 @@ import {
   LDIdentifyShed,
   LDIdentifySuccess,
   LDIdentifyTimeout,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationTimeout,
   type LDOptions,
 } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
@@ -80,6 +86,13 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
   private _identifyQueue = createAsyncTaskQueue<void>();
+
+  // The initialized promise is used to track the initialization state of the client.
+  // This is separate from identify operations because initialization may complete
+  // through the first identify call.
+  protected _initializedPromise?: Promise<LDWaitForInitializationResult>;
+  protected _initResolve?: (result: LDWaitForInitializationResult) => void;
+  protected _initializeResult?: LDWaitForInitializationResult;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -339,13 +352,19 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       )
       .then((res) => {
         if (res.status === 'error') {
-          return { status: 'error', error: res.error } as LDIdentifyError;
+          const errorResult = { status: 'error', error: res.error } as LDIdentifyError;
+          // Track initialization state for waitForInitialization
+          this._setInitializationResult({ status: 'failed', error: res.error });
+          return errorResult;
         }
         if (res.status === 'shed') {
           return { status: 'shed' } as LDIdentifyShed;
         }
+        const successResult = { status: 'completed' } as LDIdentifySuccess;
         this.emitter.emit('initialized');
-        return { status: 'completed' } as LDIdentifySuccess;
+        // Track initialization state for waitForInitialization
+        this._setInitializationResult({ status: 'complete' });
+        return successResult;
       });
 
     if (noTimeout) {
@@ -358,6 +377,78 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       }, identifyTimeout * 1000);
     });
     return Promise.race([callSitePromise, timeoutPromise]);
+  }
+
+  /**
+   * Sets the initialization result and resolves any pending waitForInitialization promises.
+   * @param result The initialization result.
+   */
+  protected _setInitializationResult(result: LDWaitForInitializationResult): void {
+    this._initializeResult = result;
+    if (this._initResolve) {
+      this._initResolve(result);
+      this._initResolve = undefined;
+    }
+  }
+
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult> {
+    const timeout = options?.timeout ?? 5;
+
+    // If initialization has already completed (successfully or failed), return the result immediately.
+    if (this._initializeResult) {
+      return Promise.resolve(this._initializeResult);
+    }
+
+    // If waitForInitialization was previously called, then return the promise with a timeout.
+    // This condition should only be triggered if waitForInitialization was called multiple times.
+    if (this._initializedPromise) {
+      return this._promiseWithTimeout(this._initializedPromise, timeout);
+    }
+
+    // Create a new promise for tracking initialization
+    if (!this._initializedPromise) {
+      this._initializedPromise = new Promise((resolve) => {
+        this._initResolve = resolve;
+      });
+    }
+
+    return this._promiseWithTimeout(this._initializedPromise, timeout);
+  }
+
+  /**
+   * Apply a timeout promise to a base promise. This is for use with waitForInitialization.
+   *
+   * @param basePromise The promise to race against a timeout.
+   * @param timeout The timeout in seconds.
+   * @returns A promise that resolves to the initialization result or timeout.
+   *
+   * @privateRemarks
+   * This method is protected because it is used by the browser SDK's `start` method.
+   * Eventually, the start method will be moved to this common implementation and this method will
+   * be made private.
+   */
+  protected _promiseWithTimeout(
+    basePromise: Promise<LDWaitForInitializationResult>,
+    timeout: number,
+  ): Promise<LDWaitForInitializationResult> {
+    const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
+    return Promise.race([
+      basePromise.then((res: LDWaitForInitializationResult) => {
+        cancelableTimeout.cancel();
+        return res;
+      }),
+      cancelableTimeout.promise
+        // If the promise resolves without error, then the initialization completed successfully.
+        // NOTE: this should never return as the resolution would only be triggered by the basePromise
+        // being resolved.
+        .then(() => ({ status: 'complete' }) as LDWaitForInitializationComplete)
+        .catch(() => ({ status: 'timeout' }) as LDWaitForInitializationTimeout),
+    ]).catch((reason) => {
+      this.logger?.error(reason.message);
+      return { status: 'failed', error: reason as Error } as LDWaitForInitializationFailed;
+    });
   }
 
   on(eventName: EventName, listener: Function): void {
