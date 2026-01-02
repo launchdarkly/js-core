@@ -25,6 +25,7 @@ jest.mock('@launchdarkly/react-native-client-sdk', () => ({
   useJsonVariationDetail: jest.fn(),
   useTypedVariation: jest.fn(),
   useTypedVariationDetail: jest.fn(),
+  waitForInitialization: jest.fn(),
 }));
 
 export const ldClientMock: jest.Mocked<LDClient> = {
@@ -55,6 +56,7 @@ export const ldClientMock: jest.Mocked<LDClient> = {
   variation: jest.fn(),
   variationDetail: jest.fn(),
   addHook: jest.fn(),
+  waitForInitialization: jest.fn(),
 };
 
 export const mockLDProvider = LDProvider as jest.Mock;
