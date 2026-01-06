@@ -2,7 +2,6 @@ import {
   AutoEnvAttributes,
   base64UrlEncode,
   BasicLogger,
-  cancelableTimedPromise,
   Configuration,
   Encoding,
   FlagManager,
@@ -16,6 +15,8 @@ import {
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
   Platform,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
@@ -27,15 +28,7 @@ import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOp
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
-import {
-  LDClient,
-  LDStartOptions,
-  LDWaitForInitializationComplete,
-  LDWaitForInitializationFailed,
-  LDWaitForInitializationOptions,
-  LDWaitForInitializationResult,
-  LDWaitForInitializationTimeout,
-} from './LDClient';
+import { LDClient, LDStartOptions } from './LDClient';
 import { LDPlugin } from './LDPlugin';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
@@ -44,13 +37,6 @@ import { getAllStorageKeys } from './platform/LocalStorage';
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
-
-  // The initialized promise is used to track the initialization state of the client.
-  // This is separate from the start promise because the start promise could time out before
-  // the initialization is complete.
-  private _initializedPromise?: Promise<LDWaitForInitializationResult>;
-  private _initResolve?: (result: LDWaitForInitializationResult) => void;
-  private _initializeResult?: LDWaitForInitializationResult;
 
   private _initialContext?: LDContext;
 
@@ -256,21 +242,14 @@ class BrowserClientImpl extends LDClientImpl {
     }
 
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
-    if (res.status === 'completed') {
-      this._initializeResult = { status: 'complete' };
-      this._initResolve?.(this._initializeResult);
-    } else if (res.status === 'error') {
-      this._initializeResult = { status: 'failed', error: res.error };
-      this._initResolve?.(this._initializeResult);
-    }
 
     this._goalManager?.startTracking();
     return res;
   }
 
   start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
-    if (this._initializeResult) {
-      return Promise.resolve(this._initializeResult);
+    if (this.initializeResult) {
+      return Promise.resolve(this.initializeResult);
     }
     if (this._startPromise) {
       return this._startPromise;
@@ -304,71 +283,16 @@ class BrowserClientImpl extends LDClientImpl {
       }
     }
 
-    if (!this._initializedPromise) {
-      this._initializedPromise = new Promise((resolve) => {
-        this._initResolve = resolve;
+    if (!this.initializedPromise) {
+      this.initializedPromise = new Promise((resolve) => {
+        this.initResolve = resolve;
       });
     }
 
-    this._startPromise = this._promiseWithTimeout(this._initializedPromise, options?.timeout ?? 5);
+    this._startPromise = this.promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
 
     this.identifyResult(this._initialContext!, identifyOptions);
     return this._startPromise;
-  }
-
-  waitForInitialization(
-    options?: LDWaitForInitializationOptions,
-  ): Promise<LDWaitForInitializationResult> {
-    const timeout = options?.timeout ?? 5;
-
-    // If initialization has already completed (successfully or failed), return the result immediately.
-    if (this._initializeResult) {
-      return Promise.resolve(this._initializeResult);
-    }
-
-    // It waitForInitialization was previously called, then return the promise with a timeout.
-    // This condition should only be triggered if waitForInitialization was called multiple times.
-    if (this._initializedPromise) {
-      return this._promiseWithTimeout(this._initializedPromise, timeout);
-    }
-
-    if (!this._initializedPromise) {
-      this._initializedPromise = new Promise((resolve) => {
-        this._initResolve = resolve;
-      });
-    }
-
-    return this._promiseWithTimeout(this._initializedPromise, timeout);
-  }
-
-  /**
-   * Apply a timeout promise to a base promise. This is for use with waitForInitialization.
-   *
-   * @param basePromise The promise to race against a timeout.
-   * @param timeout The timeout in seconds.
-   * @param logger A logger to log when the timeout expires.
-   * @returns
-   */
-  private _promiseWithTimeout(
-    basePromise: Promise<LDWaitForInitializationResult>,
-    timeout: number,
-  ): Promise<LDWaitForInitializationResult> {
-    const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
-    return Promise.race([
-      basePromise.then((res: LDWaitForInitializationResult) => {
-        cancelableTimeout.cancel();
-        return res;
-      }),
-      cancelableTimeout.promise
-        // If the promise resolves without error, then the initialization completed successfully.
-        // NOTE: this should never return as the resolution would only be triggered by the basePromise
-        // being resolved.
-        .then(() => ({ status: 'complete' }) as LDWaitForInitializationComplete)
-        .catch(() => ({ status: 'timeout' }) as LDWaitForInitializationTimeout),
-    ]).catch((reason) => {
-      this.logger?.error(reason.message);
-      return { status: 'failed', error: reason as Error } as LDWaitForInitializationFailed;
-    });
   }
 
   setStreaming(streaming?: boolean): void {

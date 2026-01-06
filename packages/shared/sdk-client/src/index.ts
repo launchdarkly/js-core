@@ -37,6 +37,11 @@ export type {
   LDIdentifyShed,
   LDClientIdentifyResult,
   LDPluginBase,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationTimeout,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
