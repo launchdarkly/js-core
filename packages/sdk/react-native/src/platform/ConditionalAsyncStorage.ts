@@ -22,7 +22,9 @@ export default function getAsyncStorage(logger: LDLogger): any {
     return require('@react-native-async-storage/async-storage').default;
   } catch (e) {
     // Use a mock if async-storage is unavailable
-    logger.warn('AsyncStorage is not available, using a mock implementation.');
+    logger.warn(
+      'AsyncStorage is not available, generated keys and context caches will not be persisted. Please see https://launchdarkly.github.io/js-core/packages/sdk/react-native/docs/interfaces/LDOptions.html#storage for more information.',
+    );
     return {
       getItem: (_key: string) => Promise.resolve(null),
       setItem: (_key: string, _value: string) => Promise.resolve(),
