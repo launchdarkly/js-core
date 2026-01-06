@@ -65,8 +65,8 @@ function toFlagsProxy(client: LDClient, flags: LDFlags): LDFlags {
  */
 function init() {
   let coreLdClient: LDClient | undefined;
-  const loading = writable(true);
   const flagsWritable = writable<LDFlags>({});
+  const initializeResult = writable<string>('pending');
 
   /**
    * Initializes the LaunchDarkly client.
@@ -76,12 +76,6 @@ function init() {
    */
   function initialize(clientId: LDClientID, context: LDContext, options?: LDOptions) {
     coreLdClient = createClientSdk(clientId, context, options);
-    coreLdClient.on('initialized', () => {
-      loading.set(false);
-      const rawFlags = coreLdClient!.allFlags();
-      const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
-      flagsWritable.set(allFlags);
-    });
 
     coreLdClient.on('change', () => {
       const rawFlags = coreLdClient!.allFlags();
@@ -89,11 +83,18 @@ function init() {
       flagsWritable.set(allFlags);
     });
 
-    coreLdClient.start();
-
-    return {
-      initializing: loading,
-    };
+    // TODO: currently all options are defaulted which means that the client initailization will timeout in 5 seconds.
+    // we will need to address this before this SDK is marked as stable.
+    void coreLdClient.start();
+    void coreLdClient.waitForInitialization()
+      .then((result) => {
+        initializeResult.set(result.status);
+      })
+      .catch(() => {
+        // NOTE: this should never happen as we don't throw errors from initialization.
+        options?.logger?.error('Failed to initialize LaunchDarkly client');
+        initializeResult.set('failed');
+      });
   }
 
   /**
@@ -129,7 +130,7 @@ function init() {
     identify,
     flags: readonly(flagsWritable),
     initialize,
-    initializing: readonly(loading),
+    initalizationState: readonly(initializeResult),
     watch,
     useFlag,
   };
