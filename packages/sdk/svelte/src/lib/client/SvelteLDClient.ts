@@ -6,6 +6,7 @@ import {
   type LDContext,
   type LDFlagSet,
   type LDFlagValue,
+  type LDIdentifyResult,
   type LDOptions,
 } from '@launchdarkly/js-client-sdk';
 
@@ -68,13 +69,19 @@ function init() {
   const flagsWritable = writable<LDFlags>({});
   const initializeResult = writable<string>('pending');
 
+  // NOTE: we will returns an empty promise for now as the promise states and handling is being wrappered
+  // we can evaluate this decision in the future before this SDK is marked as stable.
   /**
    * Initializes the LaunchDarkly client.
    * @param {LDClientID} clientId - The client ID.
    * @param {LDContext} context - The user context.
    * @returns {Object} An object with the initialization status store.
    */
-  function initialize(clientId: LDClientID, context: LDContext, options?: LDOptions) {
+  function initialize(
+    clientId: LDClientID,
+    context: LDContext,
+    options?: LDOptions,
+  ): Promise<void> {
     coreLdClient = createClientSdk(clientId, context, options);
 
     coreLdClient.on('change', () => {
@@ -85,9 +92,15 @@ function init() {
 
     // TODO: currently all options are defaulted which means that the client initailization will timeout in 5 seconds.
     // we will need to address this before this SDK is marked as stable.
-    void coreLdClient.start();
-    void coreLdClient.waitForInitialization()
+    coreLdClient.start();
+
+    return coreLdClient
+      .waitForInitialization()
       .then((result) => {
+        const rawFlags = coreLdClient!.allFlags();
+        const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
+        flagsWritable.set(allFlags);
+
         initializeResult.set(result.status);
       })
       .catch(() => {
@@ -102,7 +115,7 @@ function init() {
    * @param {LDContext} context - The user context.
    * @returns {Promise} A promise that resolves when the user is identified.
    */
-  async function identify(context: LDContext) {
+  async function identify(context: LDContext): Promise<LDIdentifyResult> {
     isClientInitialized(coreLdClient);
     return coreLdClient.identify(context);
   }

@@ -14,8 +14,8 @@
 
 {#if $$slots.initializing && $initalizationState === 'pending'}
 	<slot name="initializing">Loading flags (default loading slot value)...</slot>
-{:else if $initalizationState === 'complete'}
-	<slot />
+{:else if $initalizationState === 'failed' || $initalizationState === 'timeout'}
+  <slot name="failed">Failed to initialize LaunchDarkly client ({$initalizationState})</slot>
 {:else}
-	<slot name="failed">Failed to initialize LaunchDarkly client ({$initalizationState})</slot>
+	<slot />
 {/if}
