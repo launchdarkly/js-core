@@ -1,4 +1,4 @@
-/* eslint-disable import/no-mutable-exports,global-require */
+/* eslint-disable global-require */
 
 /**
  * The LaunchDarkly React-Native SDK uses
@@ -15,17 +15,20 @@
  * https://github.com/react-native-community/cli/issues/1347
  *
  */
-let ConditionalAsyncStorage: any;
+import type { LDLogger } from '@launchdarkly/js-client-sdk-common';
 
-try {
-  ConditionalAsyncStorage = require('@react-native-async-storage/async-storage').default;
-} catch (e) {
-  // Use a mock if async-storage is unavailable
-  ConditionalAsyncStorage = {
-    getItem: (_key: string) => Promise.resolve(null),
-    setItem: (_key: string, _value: string) => Promise.resolve(),
-    removeItem: (_key: string) => Promise.resolve(),
-  };
+export default function getAsyncStorage(logger: LDLogger): any {
+  try {
+    return require('@react-native-async-storage/async-storage').default;
+  } catch (e) {
+    // Use a mock if async-storage is unavailable
+    logger.warn(
+      'AsyncStorage is not available, generated keys and context caches will not be persisted. Please see https://launchdarkly.github.io/js-core/packages/sdk/react-native/docs/interfaces/LDOptions.html#storage for more information.',
+    );
+    return {
+      getItem: (_key: string) => Promise.resolve(null),
+      setItem: (_key: string, _value: string) => Promise.resolve(),
+      removeItem: (_key: string) => Promise.resolve(),
+    };
+  }
 }
-
-export default ConditionalAsyncStorage;
