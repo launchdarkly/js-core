@@ -6,11 +6,21 @@ export function isLocalStorageSupported() {
   return typeof localStorage !== 'undefined';
 }
 
-export function getAllStorageKeys() {
+export function getAllStorageKeys(): string[] {
   if (!isLocalStorageSupported()) {
     return [];
   }
-  return Object.keys(localStorage);
+
+  const keys: string[] = [];
+
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key) {
+      keys.push(key);
+    }
+  }
+
+  return keys;
 }
 
 /**
