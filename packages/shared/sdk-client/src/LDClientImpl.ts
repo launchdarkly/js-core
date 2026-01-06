@@ -354,16 +354,15 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         if (res.status === 'error') {
           const errorResult = { status: 'error', error: res.error } as LDIdentifyError;
           // Track initialization state for waitForInitialization
-          this.setInitializationResult({ status: 'failed', error: res.error });
+          this.maybeSetInitializationResult({ status: 'failed', error: res.error });
           return errorResult;
         }
         if (res.status === 'shed') {
           return { status: 'shed' } as LDIdentifyShed;
         }
         const successResult = { status: 'completed' } as LDIdentifySuccess;
-        this.emitter.emit('initialized');
         // Track initialization state for waitForInitialization
-        this.setInitializationResult({ status: 'complete' });
+        this.maybeSetInitializationResult({ status: 'complete' });
         return successResult;
       });
 
@@ -381,13 +380,21 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
   /**
    * Sets the initialization result and resolves any pending waitForInitialization promises.
+   * This method is idempotent and will only be set by the initialization flow. Subsequent calls
+   * should not do anything.
    * @param result The initialization result.
    */
-  protected setInitializationResult(result: LDWaitForInitializationResult): void {
-    this.initializeResult = result;
-    if (this.initResolve) {
-      this.initResolve(result);
-      this.initResolve = undefined;
+  protected maybeSetInitializationResult(result: LDWaitForInitializationResult): void {
+    if (this.initializeResult === undefined) {
+      this.initializeResult = result;
+      this.emitter.emit('ready');
+      if (result.status === 'complete') {
+        this.emitter.emit('initialized');
+      }
+      if (this.initResolve) {
+        this.initResolve(result);
+        this.initResolve = undefined;
+      }
     }
   }
 
