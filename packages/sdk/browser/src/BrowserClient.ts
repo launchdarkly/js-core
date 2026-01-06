@@ -39,6 +39,7 @@ import {
 import { LDPlugin } from './LDPlugin';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
+import { getAllStorageKeys } from './platform/LocalStorage';
 
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
@@ -137,6 +138,9 @@ class BrowserClientImpl extends LDClientImpl {
           diagnosticsManager,
         ),
       {
+        // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
+        getLegacyStorageKeys: () =>
+          getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`)),
         analyticsEventPath: `/events/bulk/${clientSideId}`,
         diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
         includeAuthorizationHeader: false,

@@ -2,8 +2,8 @@ import { Context, LDFlagValue, LDLogger, Platform } from '@launchdarkly/js-sdk-c
 
 import { namespaceForEnvironment } from '../storage/namespaceUtils';
 import FlagPersistence from './FlagPersistence';
-import { DefaultFlagStore } from './FlagStore';
-import FlagUpdater, { FlagsChangeCallback } from './FlagUpdater';
+import { createDefaultFlagStore } from './FlagStore';
+import createFlagUpdater, { FlagsChangeCallback, FlagUpdater } from './FlagUpdater';
 import { ItemDescriptor } from './ItemDescriptor';
 
 /**
@@ -117,7 +117,7 @@ export interface LDDebugOverride {
 }
 
 export default class DefaultFlagManager implements FlagManager {
-  private _flagStore = new DefaultFlagStore();
+  private _flagStore = createDefaultFlagStore();
   private _flagUpdater: FlagUpdater;
   private _flagPersistencePromise: Promise<FlagPersistence>;
   private _overrides?: { [key: string]: LDFlagValue };
@@ -136,7 +136,7 @@ export default class DefaultFlagManager implements FlagManager {
     logger: LDLogger,
     timeStamper: () => number = () => Date.now(),
   ) {
-    this._flagUpdater = new FlagUpdater(this._flagStore, logger);
+    this._flagUpdater = createFlagUpdater(this._flagStore, logger);
     this._flagPersistencePromise = this._initPersistence(
       platform,
       sdkKey,

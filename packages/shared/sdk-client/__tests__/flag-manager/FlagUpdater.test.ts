@@ -1,7 +1,7 @@
 import { Context, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { DefaultFlagStore } from '../../src/flag-manager/FlagStore';
-import FlagUpdater, { FlagsChangeCallback } from '../../src/flag-manager/FlagUpdater';
+import { createDefaultFlagStore } from '../../src/flag-manager/FlagStore';
+import createFlagUpdater, { FlagsChangeCallback } from '../../src/flag-manager/FlagUpdater';
 import { Flag } from '../../src/types';
 
 function makeMockFlag(): Flag {
@@ -27,7 +27,7 @@ function makeMockLogger(): LDLogger {
 
 describe('FlagUpdater tests', () => {
   test('init calls init on underlying flag store', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockStoreSpy = jest.spyOn(mockStore, 'init');
     const mockLogger = makeMockLogger();
 
@@ -38,14 +38,14 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
     expect(mockStoreSpy).toHaveBeenLastCalledWith(flags);
   });
 
   test('triggers callbacks on init', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const mockCallback: FlagsChangeCallback = jest.fn();
 
@@ -56,14 +56,14 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.on(mockCallback);
     updaterUnderTest.init(context, flags);
     expect(mockCallback).toHaveBeenCalledTimes(1);
   });
 
   test('init cached ignores context same as active context', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockStoreSpy = jest.spyOn(mockStore, 'init');
     const mockLogger = makeMockLogger();
 
@@ -75,7 +75,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(activeContext, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
     updaterUnderTest.initCached(sameContext, flags);
@@ -83,7 +83,7 @@ describe('FlagUpdater tests', () => {
   });
 
   test('upsert ignores inactive context', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockStoreSpy = jest.spyOn(mockStore, 'init');
     const mockLogger = makeMockLogger();
 
@@ -95,7 +95,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(activeContext, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
 
@@ -107,7 +107,7 @@ describe('FlagUpdater tests', () => {
   });
 
   test('upsert rejects data with old versions', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockStoreSpy = jest.spyOn(mockStore, 'init');
     const mockLogger = makeMockLogger();
 
@@ -118,7 +118,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     expect(mockStoreSpy).toHaveBeenCalledTimes(1);
 
@@ -130,7 +130,7 @@ describe('FlagUpdater tests', () => {
   });
 
   test('upsert updates underlying store', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockStoreSpyInit = jest.spyOn(mockStore, 'init');
     const mockStoreSpyInsertOrUpdate = jest.spyOn(mockStore, 'insertOrUpdate');
     const mockLogger = makeMockLogger();
@@ -142,7 +142,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     expect(mockStoreSpyInit).toHaveBeenCalledTimes(1);
 
@@ -155,7 +155,7 @@ describe('FlagUpdater tests', () => {
   });
 
   test('upsert triggers callbacks', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const mockCallbackA: FlagsChangeCallback = jest.fn();
     const mockCallbackB: FlagsChangeCallback = jest.fn();
@@ -167,7 +167,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
 
     // register the callbacks
@@ -184,7 +184,7 @@ describe('FlagUpdater tests', () => {
   });
 
   test('off removes callback', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const mockCallback: FlagsChangeCallback = jest.fn();
 
@@ -195,7 +195,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
 
     // register the callback
@@ -217,7 +217,7 @@ describe('FlagUpdater tests', () => {
   });
 
   test('off can be called many times safely', async () => {
-    const mockStore = new DefaultFlagStore();
+    const mockStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const mockCallback: FlagsChangeCallback = jest.fn();
 
@@ -228,7 +228,7 @@ describe('FlagUpdater tests', () => {
         flag: makeMockFlag(),
       },
     };
-    const updaterUnderTest = new FlagUpdater(mockStore, mockLogger);
+    const updaterUnderTest = createFlagUpdater(mockStore, mockLogger);
     updaterUnderTest.init(context, flags);
     updaterUnderTest.off(mockCallback);
     updaterUnderTest.on(mockCallback);

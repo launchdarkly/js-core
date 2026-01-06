@@ -651,4 +651,46 @@ describe('sdk-client storage', () => {
     expect(flagsInStorage['does-not-exist']).toMatchObject({ ...deleteResponse, deleted: true });
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['does-not-exist']);
   });
+
+  it('cleans old persistent data while leaving current keys untouched', async () => {
+    const storage: Record<string, any> = {
+      legacyKey1: 'legacy-key-1',
+      legacyKey2: 'legacy-key-2',
+      currentKey1: flagStorageKey,
+      currentKey2: indexStorageKey,
+      otherKey: 'some-other-key',
+    };
+
+    // Set up storage with legacy keys, current keys, and other keys
+    mockPlatform.storage.get.mockImplementation((storageKey: string) => storage[storageKey]);
+
+    const legacyKeys = ['legacyKey1', 'legacyKey2'];
+    const internalOptions = {
+      getLegacyStorageKeys: () => legacyKeys,
+      getImplementationHooks: () => [],
+      credentialType: 'clientSideId' as const,
+    };
+
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Disabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+        cleanOldPersistentData: true,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+      internalOptions,
+    );
+
+    await jest.runAllTimersAsync();
+
+    expect(mockPlatform.storage.clear).toHaveBeenCalledWith('legacyKey1');
+    expect(mockPlatform.storage.clear).toHaveBeenCalledWith('legacyKey2');
+    expect(mockPlatform.storage.clear).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.clear).not.toHaveBeenCalledWith('currentKey1');
+    expect(mockPlatform.storage.clear).not.toHaveBeenCalledWith('currentKey2');
+    expect(mockPlatform.storage.clear).not.toHaveBeenCalledWith('otherKey');
+  });
 });
