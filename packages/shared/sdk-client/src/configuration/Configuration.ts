@@ -22,6 +22,7 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   trackEventModifier?: (event: internal.InputCustomEvent) => internal.InputCustomEvent;
   getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
   credentialType: 'clientSideId' | 'mobileKey';
+  getLegacyStorageKeys?: () => string[];
 }
 
 export interface Configuration {

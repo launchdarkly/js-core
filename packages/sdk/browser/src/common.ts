@@ -44,6 +44,11 @@ export type {
   LDIdentifyTimeout,
   LDIdentifyShed,
   LDDebugOverride,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationTimeout,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**

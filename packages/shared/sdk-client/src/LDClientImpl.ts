@@ -1,5 +1,6 @@
 import {
   AutoEnvAttributes,
+  cancelableTimedPromise,
   clone,
   Context,
   defaultHeaders,
@@ -26,6 +27,11 @@ import {
   LDIdentifySuccess,
   LDIdentifyTimeout,
   type LDOptions,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationTimeout,
 } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
@@ -80,6 +86,13 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
   private _identifyQueue = createAsyncTaskQueue<void>();
+
+  // The initialized promise is used to track the initialization state of the client.
+  // This is separate from identify operations because initialization may complete
+  // through the first identify call.
+  protected initializedPromise?: Promise<LDWaitForInitializationResult>;
+  protected initResolve?: (result: LDWaitForInitializationResult) => void;
+  protected initializeResult?: LDWaitForInitializationResult;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -163,6 +176,28 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     this._inspectorManager = new InspectorManager(this._config.inspectors, this.logger);
     if (this._inspectorManager.hasInspectors()) {
       this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
+    }
+
+    if (
+      options.cleanOldPersistentData &&
+      internalOptions?.getLegacyStorageKeys &&
+      this.platform.storage
+    ) {
+      // NOTE: we are letting this fail silently because it's not critical and we don't want to block the client from initializing.
+      try {
+        this.logger.debug('Cleaning old persistent data.');
+        Promise.all(
+          internalOptions.getLegacyStorageKeys().map((key) => this.platform.storage?.clear(key)),
+        )
+          .catch((error) => {
+            this.logger.error(`Error cleaning old persistent data: ${error}`);
+          })
+          .finally(() => {
+            this.logger.debug('Cleaned old persistent data.');
+          });
+      } catch (error) {
+        this.logger.error(`Error cleaning old persistent data: ${error}`);
+      }
     }
   }
 
@@ -339,13 +374,18 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       )
       .then((res) => {
         if (res.status === 'error') {
-          return { status: 'error', error: res.error } as LDIdentifyError;
+          const errorResult = { status: 'error', error: res.error } as LDIdentifyError;
+          // Track initialization state for waitForInitialization
+          this.maybeSetInitializationResult({ status: 'failed', error: res.error });
+          return errorResult;
         }
         if (res.status === 'shed') {
           return { status: 'shed' } as LDIdentifyShed;
         }
-        this.emitter.emit('initialized');
-        return { status: 'completed' } as LDIdentifySuccess;
+        const successResult = { status: 'completed' } as LDIdentifySuccess;
+        // Track initialization state for waitForInitialization
+        this.maybeSetInitializationResult({ status: 'complete' });
+        return successResult;
       });
 
     if (noTimeout) {
@@ -358,6 +398,86 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       }, identifyTimeout * 1000);
     });
     return Promise.race([callSitePromise, timeoutPromise]);
+  }
+
+  /**
+   * Sets the initialization result and resolves any pending waitForInitialization promises.
+   * This method is idempotent and will only be set by the initialization flow. Subsequent calls
+   * should not do anything.
+   * @param result The initialization result.
+   */
+  protected maybeSetInitializationResult(result: LDWaitForInitializationResult): void {
+    if (this.initializeResult === undefined) {
+      this.initializeResult = result;
+      this.emitter.emit('ready');
+      if (result.status === 'complete') {
+        this.emitter.emit('initialized');
+      }
+      if (this.initResolve) {
+        this.initResolve(result);
+        this.initResolve = undefined;
+      }
+    }
+  }
+
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult> {
+    const timeout = options?.timeout ?? 5;
+
+    // If initialization has already completed (successfully or failed), return the result immediately.
+    if (this.initializeResult) {
+      return Promise.resolve(this.initializeResult);
+    }
+
+    // If waitForInitialization was previously called, then return the promise with a timeout.
+    // This condition should only be triggered if waitForInitialization was called multiple times.
+    if (this.initializedPromise) {
+      return this.promiseWithTimeout(this.initializedPromise, timeout);
+    }
+
+    // Create a new promise for tracking initialization
+    if (!this.initializedPromise) {
+      this.initializedPromise = new Promise((resolve) => {
+        this.initResolve = resolve;
+      });
+    }
+
+    return this.promiseWithTimeout(this.initializedPromise, timeout);
+  }
+
+  /**
+   * Apply a timeout promise to a base promise. This is for use with waitForInitialization.
+   *
+   * @param basePromise The promise to race against a timeout.
+   * @param timeout The timeout in seconds.
+   * @returns A promise that resolves to the initialization result or timeout.
+   *
+   * @privateRemarks
+   * This method is protected because it is used by the browser SDK's `start` method.
+   * Eventually, the start method will be moved to this common implementation and this method will
+   * be made private.
+   */
+  protected promiseWithTimeout(
+    basePromise: Promise<LDWaitForInitializationResult>,
+    timeout: number,
+  ): Promise<LDWaitForInitializationResult> {
+    const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
+    return Promise.race([
+      basePromise.then((res: LDWaitForInitializationResult) => {
+        cancelableTimeout.cancel();
+        return res;
+      }),
+      cancelableTimeout.promise
+        // If the promise resolves without error, then the initialization completed successfully.
+        // NOTE: this should never return as the resolution would only be triggered by the basePromise
+        // being resolved.
+        .then(() => ({ status: 'complete' }) as LDWaitForInitializationComplete)
+        .catch(() => ({ status: 'timeout' }) as LDWaitForInitializationTimeout),
+    ]).catch((reason) => {
+      this.logger?.error(reason.message);
+      return { status: 'failed', error: reason as Error } as LDWaitForInitializationFailed;
+    });
   }
 
   on(eventName: EventName, listener: Function): void {
@@ -632,6 +752,10 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         };
       }
     });
+
+    // NOTE: we are not tracking "override" changes because, at the time of writing,
+    // these changes are only used for debugging purposes and are not persisted. This
+    // may change in the future.
     if (type === 'init') {
       this._inspectorManager.onFlagsChanged(details);
     } else if (type === 'patch') {
