@@ -8,7 +8,7 @@ import {
   Hook,
   internal,
   LDClientImpl,
-  LDContext,
+  LDContextWithAnonymous,
   LDEmitter,
   LDEmitterEventName,
   LDFlagValue,
@@ -38,7 +38,7 @@ class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
 
-  private _initialContext?: LDContext;
+  private _initialContext?: LDContextWithAnonymous;
 
   // NOTE: This also keeps track of when we tried to initialize the client.
   private _startPromise?: Promise<LDWaitForInitializationResult>;
@@ -215,16 +215,19 @@ class BrowserClientImpl extends LDClientImpl {
     }
   }
 
-  setInitialContext(context: LDContext): void {
+  setInitialContext(context: LDContextWithAnonymous): void {
     this._initialContext = context;
   }
 
-  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
+  override async identify(
+    context: LDContextWithAnonymous,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<void> {
     return super.identify(context, identifyOptions);
   }
 
   override async identifyResult(
-    context: LDContext,
+    context: LDContextWithAnonymous,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
     if (!this._startPromise) {
@@ -322,7 +325,7 @@ class BrowserClientImpl extends LDClientImpl {
 
 export function makeClient(
   clientSideId: string,
-  initialContext: LDContext,
+  initialContext: LDContextWithAnonymous,
   autoEnvAttributes: AutoEnvAttributes,
   options: BrowserOptions = {},
   overridePlatform?: Platform,
@@ -357,7 +360,7 @@ export function makeClient(
     off: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.off(key, callback),
     flush: () => impl.flush(),
     setStreaming: (streaming?: boolean) => impl.setStreaming(streaming),
-    identify: (pristineContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
+    identify: (pristineContext: LDContextWithAnonymous, identifyOptions?: LDIdentifyOptions) =>
       impl.identifyResult(pristineContext, identifyOptions),
     getContext: () => impl.getContext(),
     close: () => impl.close(),

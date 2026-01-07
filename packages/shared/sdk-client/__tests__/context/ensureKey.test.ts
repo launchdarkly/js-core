@@ -6,6 +6,7 @@ import type {
   LDUser,
 } from '@launchdarkly/js-sdk-common';
 
+import { LDContextWithAnonymous } from '../../src/api/LDContext';
 import { ensureKey } from '../../src/context/ensureKey';
 import { createBasicPlatform } from '../createBasicPlatform';
 
@@ -57,15 +58,15 @@ describe('ensureKey', () => {
   });
 
   test('ensureKey should create key for single anonymous context', async () => {
-    const context: LDContext = { kind: 'org', anonymous: true, key: '' };
+    const context: LDContextWithAnonymous = { kind: 'org', anonymous: true };
     const c = await ensureKey(context, mockPlatform);
     expect(c.key).toEqual('random1');
   });
 
   test('ensureKey should create key for an anonymous context in multi', async () => {
-    const context: LDContext = {
+    const context: LDContextWithAnonymous = {
       kind: 'multi',
-      user: { anonymous: true, key: '' },
+      user: { anonymous: true },
       org: { key: 'orgKey' },
     };
 
@@ -76,10 +77,10 @@ describe('ensureKey', () => {
   });
 
   test('ensureKey should create key for all anonymous contexts in multi', async () => {
-    const context: LDContext = {
+    const context: LDContextWithAnonymous = {
       kind: 'multi',
-      user: { anonymous: true, key: '' },
-      org: { anonymous: true, key: '' },
+      user: { anonymous: true },
+      org: { anonymous: true },
     };
 
     const c = (await ensureKey(context, mockPlatform)) as LDMultiKindContext;

@@ -21,7 +21,7 @@ import {
   Hook,
   LDClient,
   LDClientIdentifyResult,
-  LDContextPartial,
+  LDContextWithAnonymous,
   LDIdentifyError,
   LDIdentifyResult,
   LDIdentifyShed,
@@ -282,7 +282,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
    * 3. A network error is encountered during initialization.
    */
   async identify(
-    pristineContext: LDContextPartial,
+    pristineContext: LDContextWithAnonymous,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<void> {
     // In order to manage customization in the derived classes it is important that `identify` MUST be implemented in
@@ -301,7 +301,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   }
 
   async identifyResult(
-    pristineContext: LDContextPartial,
+    pristineContext: LDContextWithAnonymous,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
     const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
