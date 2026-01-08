@@ -77,7 +77,7 @@ describe('sdk-client object', () => {
     const p = ldc.identify(context);
     ldc.variation('does-not-exist', 'not-found');
 
-    await expect(p).resolves.toBeUndefined();
+    await expect(p).resolves.toEqual({ status: 'completed' });
     expect(errorListener).toHaveBeenCalledTimes(1);
     const error = errorListener.mock.calls[0][1];
     expect(error.message).toMatch(/unknown feature/i);

@@ -219,11 +219,7 @@ class BrowserClientImpl extends LDClientImpl {
     this._initialContext = context;
   }
 
-  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    return super.identify(context, identifyOptions);
-  }
-
-  override async identifyResult(
+  override async identify(
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
@@ -241,7 +237,7 @@ class BrowserClientImpl extends LDClientImpl {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
 
-    const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
+    const res = await super.identify(context, identifyOptionsWithUpdatedDefaults);
 
     this._goalManager?.startTracking();
     return res;
@@ -291,7 +287,7 @@ class BrowserClientImpl extends LDClientImpl {
 
     this._startPromise = this.promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
 
-    this.identifyResult(this._initialContext!, identifyOptions);
+    this.identify(this._initialContext!, identifyOptions);
     return this._startPromise;
   }
 
@@ -358,7 +354,7 @@ export function makeClient(
     flush: () => impl.flush(),
     setStreaming: (streaming?: boolean) => impl.setStreaming(streaming),
     identify: (pristineContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
-      impl.identifyResult(pristineContext, identifyOptions),
+      impl.identify(pristineContext, identifyOptions),
     getContext: () => impl.getContext(),
     close: () => impl.close(),
     allFlags: () => impl.allFlags(),
