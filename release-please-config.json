@@ -129,7 +129,8 @@
     },
     "packages/telemetry/browser-telemetry": {},
     "packages/sdk/combined-browser": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "release-as": "0.1.0"
     }
   },
   "plugins": [
