@@ -69,21 +69,21 @@ describe('sdk-client object', () => {
     expect(devTestFlag).toBe(true);
   });
 
-  test('variation flag not found', async () => {
+  test('variation flag not found should give a warning message', async () => {
     await ldc.identify({ kind: 'user', key: 'test-user' });
     const errorListener = jest.fn().mockName('errorListener');
     ldc.on('error', errorListener);
 
     const p = ldc.identify(context);
-    ldc.variation('does-not-exist', 'not-found');
+    const flagValue = ldc.variation('does-not-exist', 'not-found');
 
     await expect(p).resolves.toBeUndefined();
-    expect(errorListener).toHaveBeenCalledTimes(1);
-    const error = errorListener.mock.calls[0][1];
-    expect(error.message).toMatch(/unknown feature/i);
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown feature'));
+    expect(flagValue).toBe('not-found');
   });
 
-  test('variationDetail flag not found', async () => {
+  test('variationDetail flag not found should return an error detail', async () => {
     await ldc.identify(context);
     const flag = ldc.variationDetail('does-not-exist', 'not-found');
 
