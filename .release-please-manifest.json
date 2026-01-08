@@ -6,7 +6,7 @@
   "packages/sdk/akamai-edgekv": "1.4.15",
   "packages/sdk/browser": "0.12.0",
   "packages/sdk/cloudflare": "2.7.12",
-  "packages/sdk/combined-browser": "0.0.0",
+  "packages/sdk/combined-browser": "0.1.0",
   "packages/sdk/fastly": "0.2.4",
   "packages/sdk/react-native": "10.12.4",
   "packages/sdk/server-ai": "0.15.2",
