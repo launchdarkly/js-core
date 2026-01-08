@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.0...js-client-sdk-common-v1.17.1) (2026-01-08)
+
+
+### Bug Fixes
+
+* browser logging for non-existing flags ([#1054](https://github.com/launchdarkly/js-core/issues/1054)) ([f87b418](https://github.com/launchdarkly/js-core/commit/f87b418ff63866199667be2d7a49e1dc22156b44))
+
 ## [1.17.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.16.0...js-client-sdk-common-v1.17.0) (2026-01-06)
 
 
