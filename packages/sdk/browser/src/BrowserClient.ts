@@ -237,10 +237,7 @@ class BrowserClientImpl extends LDClientImpl {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
 
-    const res = await super.identify(
-      context,
-      identifyOptionsWithUpdatedDefaults,
-    )
+    const res = await super.identify(context, identifyOptionsWithUpdatedDefaults);
 
     this._goalManager?.startTracking();
     return res;

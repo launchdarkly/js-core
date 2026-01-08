@@ -379,7 +379,14 @@ export default class LDClientImpl implements LDClient {
         resolve({ status: 'timeout', timeout: identifyTimeout } as LDIdentifyTimeout);
       }, identifyTimeout * 1000);
     });
-    return Promise.race([callSitePromise, timeoutPromise]);
+
+    return Promise.race([callSitePromise, timeoutPromise]).then((result: LDIdentifyResult) => {
+      if (result.status === 'timeout') {
+        this.logger?.error(`identify timed out after ${identifyTimeout} seconds.`);
+      }
+
+      return result;
+    });
   }
 
   /**
