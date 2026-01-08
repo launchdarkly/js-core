@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.12.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.11.0...js-client-sdk-v0.12.0) (2026-01-06)
+
+
+### Features
+
+* add legacy storage key cleanup functionality ([#1043](https://github.com/launchdarkly/js-core/issues/1043)) ([fe4725e](https://github.com/launchdarkly/js-core/commit/fe4725e24917fe795cee448383b4fe8fa8b4b56f))
+* add waitForInitialization to RN SDK ([#1048](https://github.com/launchdarkly/js-core/issues/1048)) ([13ce456](https://github.com/launchdarkly/js-core/commit/13ce456d9e3a5bcf043734f757415d4856034257))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.16.0 to 1.17.0
+
 ## [0.11.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.10.0...js-client-sdk-v0.11.0) (2025-12-18)
 
 
