@@ -12,7 +12,6 @@ import {
   LDHeaders,
   LDLogger,
   LDPluginEnvironmentMetadata,
-  LDTimeoutError,
   Platform,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -20,7 +19,6 @@ import {
 import {
   Hook,
   LDClient,
-  LDClientIdentifyResult,
   LDIdentifyError,
   LDIdentifyResult,
   LDIdentifyShed,
@@ -64,7 +62,7 @@ const { ClientMessages, ErrorKinds } = internal;
 
 const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
-export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
+export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
   private readonly _diagnosticsManager?: internal.DiagnosticsManager;
   private _eventProcessor?: internal.EventProcessor;
@@ -280,31 +278,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
    *
    * 3. A network error is encountered during initialization.
    */
-  // eslint-disable-next-line consistent-return
   async identify(
-    pristineContext: LDContext,
-    identifyOptions?: LDIdentifyOptions,
-  ): Promise<void | LDIdentifyResult> {
-    if (identifyOptions?.returnResults) {
-      return this.identifyResult(pristineContext, identifyOptions);
-    }
-
-    // In order to manage customization in the derived classes it is important that `identify` MUST be implemented in
-    // terms of `identifyResult`. So that the logic of the identification process can be extended in one place.
-    const result = await this.identifyResult(pristineContext, identifyOptions);
-    if (result.status === 'error') {
-      throw result.error;
-    } else if (result.status === 'timeout') {
-      const timeoutError = new LDTimeoutError(
-        `identify timed out after ${result.timeout} seconds.`,
-      );
-      this.logger.error(timeoutError.message);
-      throw timeoutError;
-    }
-    // If completed or shed, then we are done.
-  }
-
-  async identifyResult(
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {

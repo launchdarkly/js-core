@@ -44,19 +44,4 @@ export interface LDIdentifyOptions {
    * Defaults to false.
    */
   sheddable?: boolean;
-
-  /**
-   * When true, the identify operation will return the results of the identify operation. This is useful if you want to
-   * handle the results of the identify operation yourself.
-   *
-   * Note that in this mode, the identify promise will not reject on error, but rather, will resolve to an object
-   * containing the error.
-   *
-   * @remarks
-   * This option should be set to true when possible. The reason for the current default is to maintain current behavior.
-   * Eventually, we will make this the default behavior as part of a major version release.
-   *
-   * Defaults to false.
-   */
-  returnResults?: boolean;
 }

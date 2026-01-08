@@ -65,14 +65,17 @@ describe('sdk-client identify timeout', () => {
 
   test('rejects with default timeout of 5s', async () => {
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT * 1000).then();
-    await expect(ldc.identify(carContext)).rejects.toThrow(/identify timed out/);
+    await expect(ldc.identify(carContext)).resolves.toEqual({ status: 'timeout', timeout: 5 });
     expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/identify timed out/));
   });
 
   test('rejects with custom timeout', async () => {
     const timeout = 15;
     jest.advanceTimersByTimeAsync(timeout * 1000).then();
-    await expect(ldc.identify(carContext, { timeout })).rejects.toThrow(/identify timed out/);
+    await expect(ldc.identify(carContext, { timeout })).resolves.toEqual({
+      status: 'timeout',
+      timeout: 15,
+    });
   });
 
   test('resolves with default timeout', async () => {
@@ -81,7 +84,7 @@ describe('sdk-client identify timeout', () => {
 
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT * 1000).then();
 
-    await expect(ldc.identify(carContext)).resolves.toBeUndefined();
+    await expect(ldc.identify(carContext)).resolves.toEqual({ status: 'completed' });
 
     expect(ldc.getContext()).toEqual(expect.objectContaining(toMulti(carContext)));
     expect(ldc.allFlags()).toEqual({
@@ -106,7 +109,7 @@ describe('sdk-client identify timeout', () => {
 
     jest.advanceTimersByTimeAsync(timeout).then();
 
-    await expect(ldc.identify(carContext, { timeout })).resolves.toBeUndefined();
+    await expect(ldc.identify(carContext, { timeout })).resolves.toEqual({ status: 'completed' });
 
     expect(ldc.getContext()).toEqual(expect.objectContaining(toMulti(carContext)));
     expect(ldc.allFlags()).toEqual({
@@ -208,7 +211,7 @@ describe('sdk-client waitForInitialization', () => {
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     const waitPromise = ldc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = ldc.identifyResult(carContext);
+    const identifyPromise = ldc.identify(carContext);
 
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT).then();
 
@@ -222,7 +225,7 @@ describe('sdk-client waitForInitialization', () => {
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     const waitPromise = ldc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = ldc.identifyResult(carContext);
+    const identifyPromise = ldc.identify(carContext);
 
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT).then();
 
@@ -240,7 +243,7 @@ describe('sdk-client waitForInitialization', () => {
     simulatedEvents = [];
 
     const waitPromise = ldc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = ldc.identifyResult(carContext);
+    const identifyPromise = ldc.identify(carContext);
 
     jest.advanceTimersByTimeAsync(10 * 1000 + 1).then();
 
@@ -274,7 +277,7 @@ describe('sdk-client waitForInitialization', () => {
     );
 
     const waitPromise = errorLdc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = errorLdc.identifyResult(carContext);
+    const identifyPromise = errorLdc.identify(carContext);
 
     // Advance timers to allow error handler to be set up and error to propagate
     await jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT);
