@@ -4,6 +4,7 @@ import {
   cancelableTimedPromise,
   Hook,
   LDContext,
+  LDContextStrict,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDFlagSet,
@@ -184,7 +185,7 @@ export default class LDClientCompatImpl implements LDClient {
     );
   }
 
-  getContext(): LDContext | undefined {
+  getContext(): LDContextStrict | undefined {
     return this._client.getContext();
   }
 

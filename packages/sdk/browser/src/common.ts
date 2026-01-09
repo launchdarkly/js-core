@@ -21,6 +21,7 @@ export type {
   LDContext,
   LDContextCommon,
   LDContextMeta,
+  LDContextStrict,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDEvaluationReason,

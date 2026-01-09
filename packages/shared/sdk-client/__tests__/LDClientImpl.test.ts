@@ -1,5 +1,6 @@
-import { AutoEnvAttributes, clone, Hasher, LDContext, LDLogger } from '@launchdarkly/js-sdk-common';
+import { AutoEnvAttributes, clone, Hasher, LDLogger } from '@launchdarkly/js-sdk-common';
 
+import { LDContext } from '../src/api/LDContext';
 import { DataSourceState } from '../src/datasource/DataSourceStatus';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
@@ -235,7 +236,7 @@ describe('sdk-client object', () => {
     defaultPutResponse['dev-test-flag'].value = false;
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
-    const carContext: LDContext = { kind: 'car', anonymous: true, key: '' };
+    const carContext: LDContext = { kind: 'car', anonymous: true };
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
 
@@ -253,9 +254,46 @@ describe('sdk-client object', () => {
     });
   });
 
-  test('identify error invalid context', async () => {
-    const carContext: LDContext = { kind: 'car', key: '' };
+  test('identify multi kind context with anonymous', async () => {
+    defaultPutResponse['dev-test-flag'].value = false;
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
+    const carContext: LDContext = {
+      kind: 'multi',
+      user: { anonymous: true },
+      org: { anonymous: true },
+    };
+
+    mockPlatform.crypto.randomUUID.mockReturnValue('random1');
+
+    await ldc.identify(carContext);
+    const c = ldc.getContext();
+    const all = ldc.allFlags();
+
+    expect(c).toEqual({
+      kind: 'multi',
+      user: { anonymous: true, key: 'random1' },
+      org: { anonymous: true, key: 'random1' },
+      ...autoEnv,
+    });
+    expect(all).toMatchObject({
+      'dev-test-flag': false,
+    });
+  });
+
+  test('identify error invalid context', async () => {
+    const carContext = { kind: 'car' };
+
+    // @ts-expect-error - invalid context
+    await expect(ldc.identify(carContext)).rejects.toThrow(/no key/);
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(ldc.getContext()).toBeUndefined();
+  });
+
+  test('identify error invalid multi kindcontext', async () => {
+    const carContext = { kind: 'multi', user: { name: 'test' } };
+
+    // @ts-ignore - invalid context
     await expect(ldc.identify(carContext)).rejects.toThrow(/no key/);
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(ldc.getContext()).toBeUndefined();
