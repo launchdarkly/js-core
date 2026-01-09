@@ -543,11 +543,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     if (foundItem === undefined || foundItem.flag.deleted) {
       const defVal = defaultValue ?? null;
-      const error = new LDClientError(
-        `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
-      );
 
-      this.emitter.emit('error', this._activeContextTracker.getUnwrappedContext(), error);
+      this.logger?.warn(`Unknown feature flag "${flagKey}"; returning default value ${defVal}.`);
+
       if (hasContext) {
         this._eventProcessor?.sendEvent(
           this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
