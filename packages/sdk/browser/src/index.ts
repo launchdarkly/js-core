@@ -10,7 +10,7 @@
  *
  * @packageDocumentation
  */
-import { AutoEnvAttributes, LDContextWithAnonymous } from '@launchdarkly/js-client-sdk-common';
+import { AutoEnvAttributes, LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import { makeClient } from './BrowserClient';
 import { LDClient } from './LDClient';
@@ -50,7 +50,7 @@ export type { LDPlugin } from './LDPlugin';
  */
 export function createClient(
   clientSideId: string,
-  pristineContext: LDContextWithAnonymous,
+  pristineContext: LDContext,
   options?: LDOptions,
 ): LDClient {
   // AutoEnvAttributes are not supported yet in the browser SDK.

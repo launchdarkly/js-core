@@ -1,6 +1,6 @@
 import {
   LDClient as CommonClient,
-  LDContextWithAnonymous,
+  LDContext,
   LDIdentifyResult,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
@@ -80,7 +80,7 @@ export type LDClient = Omit<
    * @ignore Implementation Note: Browser implementation has different options.
    */
   identify(
-    pristineContext: LDContextWithAnonymous,
+    pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
 

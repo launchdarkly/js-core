@@ -42,7 +42,8 @@ export type {
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationTimeout,
-  LDContextWithAnonymous,
+  LDContext,
+  LDContextStrict,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';

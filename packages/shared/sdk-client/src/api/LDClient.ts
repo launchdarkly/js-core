@@ -1,7 +1,7 @@
-import { LDContext, LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { Hook } from './integrations/Hooks';
-import type { LDContextWithAnonymous } from './LDContext';
+import type { LDContext, LDContextStrict } from './LDContext';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
 import { LDIdentifyResult } from './LDIdentifyResult';
@@ -86,7 +86,7 @@ export interface LDClient {
    * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
    * been called, this will be undefined.
    */
-  getContext(): LDContext | undefined;
+  getContext(): LDContextStrict | undefined;
 
   /**
    * Identifies a context to LaunchDarkly.
@@ -117,7 +117,7 @@ export interface LDClient {
    *
    * 3. A network error is encountered during initialization.
    */
-  identify(context: LDContextWithAnonymous, identifyOptions?: LDIdentifyOptions): Promise<void>;
+  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
 
   /**
    * Determines the json variation of a feature flag.
@@ -406,7 +406,7 @@ export interface LDClientIdentifyResult {
    *    The promise returned from this method will not be rejected.
    */
   identifyResult(
-    context: LDContextWithAnonymous,
+    context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
 }

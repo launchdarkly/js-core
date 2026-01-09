@@ -1,12 +1,11 @@
 import type {
   Crypto,
-  LDContext,
   LDContextCommon,
   LDMultiKindContext,
   LDUser,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDContextWithAnonymous } from '../../src/api/LDContext';
+import { LDContext } from '../../src/api/LDContext';
 import { ensureKey } from '../../src/context/ensureKey';
 import { createBasicPlatform } from '../createBasicPlatform';
 
@@ -58,13 +57,13 @@ describe('ensureKey', () => {
   });
 
   test('ensureKey should create key for single anonymous context', async () => {
-    const context: LDContextWithAnonymous = { kind: 'org', anonymous: true };
+    const context: LDContext = { kind: 'org', anonymous: true };
     const c = await ensureKey(context, mockPlatform);
     expect(c.key).toEqual('random1');
   });
 
   test('ensureKey should create key for an anonymous context in multi', async () => {
-    const context: LDContextWithAnonymous = {
+    const context: LDContext = {
       kind: 'multi',
       user: { anonymous: true },
       org: { key: 'orgKey' },
@@ -77,7 +76,7 @@ describe('ensureKey', () => {
   });
 
   test('ensureKey should create key for all anonymous contexts in multi', async () => {
-    const context: LDContextWithAnonymous = {
+    const context: LDContext = {
       kind: 'multi',
       user: { anonymous: true },
       org: { anonymous: true },
