@@ -1,12 +1,14 @@
 import { derived, type Readable, readonly, writable, type Writable } from 'svelte/store';
 
-import type { LDFlagSet } from '@launchdarkly/js-client-sdk';
 import {
-  initialize,
-  type LDClient,
+  createClient,
+  type LDClient as LDClientBase,
   type LDContext,
+  type LDFlagSet,
   type LDFlagValue,
-} from '@launchdarkly/js-client-sdk/compat';
+  type LDIdentifyResult,
+  type LDOptions,
+} from '@launchdarkly/js-client-sdk';
 
 export type { LDContext, LDFlagValue };
 
@@ -17,11 +19,57 @@ export type LDClientID = string;
 export type LDFlags = LDFlagSet;
 
 /**
+ * The LaunchDarkly client interface for Svelte which is a restrictive proxy of the {@link LDClientBase}.
+ */
+export interface LDClient {
+  /**
+   * Initializes the LaunchDarkly client.
+   * @param {LDClientID} clientId - The LD client-side ID.
+   * @param {LDContext} context - The user context.
+   * @param {LDOptions} options - The options.
+   * @returns {Promise} A promise that resolves when the client is initialized.
+   */
+  initialize(clientId: LDClientID, context: LDContext, options?: LDOptions): Promise<void>;
+
+  /**
+   * Identifies the user context.
+   * @param {LDContext} context - The user context.
+   * @returns {Promise} A promise that resolves when the user is identified.
+   */
+  identify(context: LDContext): Promise<LDIdentifyResult>;
+
+  /**
+   * The flags store.
+   */
+  flags: Readable<LDFlags>;
+
+  /**
+   * The initialization state store.
+   */
+  initalizationState: Readable<string>;
+
+  /**
+   * Watches a flag for changes.
+   * @param {string} flagKey - The key of the flag to watch.
+   * @returns {Readable<LDFlagValue>} A readable store of the flag value.
+   */
+  watch(flagKey: string): Readable<LDFlagValue>;
+
+  /**
+   * Gets the current value of a flag.
+   * @param {string} flagKey - The key of the flag to get.
+   * @param {TFlag} defaultValue - The default value of the flag.
+   * @returns {TFlag} The current value of the flag.
+   */
+  useFlag<TFlag extends LDFlagValue>(flagKey: string, defaultValue: TFlag): TFlag;
+}
+
+/**
  * Checks if the LaunchDarkly client is initialized.
  * @param {LDClient | undefined} client - The LaunchDarkly client.
  * @throws {Error} If the client is not initialized.
  */
-function isClientInitialized(client: LDClient | undefined): asserts client is LDClient {
+function isClientInitialized(client: LDClientBase | undefined): asserts client is LDClientBase {
   if (!client) {
     throw new Error('LaunchDarkly client not initialized');
   }
@@ -37,7 +85,7 @@ function isClientInitialized(client: LDClient | undefined): asserts client is LD
  * @param flags - The initial flags object to be proxied.
  * @returns A proxy object that intercepts access to flag values and returns the appropriate variation.
  */
-function toFlagsProxy(client: LDClient, flags: LDFlags): LDFlags {
+function toFlagsProxy(client: LDClientBase, flags: LDFlags): LDFlags {
   return new Proxy(flags, {
     get(target, prop, receiver) {
       const currentValue = Reflect.get(target, prop, receiver);
@@ -62,35 +110,50 @@ function toFlagsProxy(client: LDClient, flags: LDFlags): LDFlags {
  * Creates a LaunchDarkly instance.
  * @returns {Object} The LaunchDarkly instance object.
  */
-function createLD() {
-  let coreLdClient: LDClient | undefined;
-  const loading = writable(true);
+function init(): LDClient {
+  let coreLdClient: LDClientBase | undefined;
   const flagsWritable = writable<LDFlags>({});
+  const initializeResult = writable<string>('pending');
 
+  // NOTE: we will returns an empty promise for now as the promise states and handling is being wrappered
+  // we can evaluate this decision in the future before this SDK is marked as stable.
   /**
    * Initializes the LaunchDarkly client.
    * @param {LDClientID} clientId - The client ID.
    * @param {LDContext} context - The user context.
    * @returns {Object} An object with the initialization status store.
    */
-  function LDInitialize(clientId: LDClientID, context: LDContext) {
-    coreLdClient = initialize(clientId, context);
-    coreLdClient!.on('ready', () => {
-      loading.set(false);
+  function initialize(
+    clientId: LDClientID,
+    context: LDContext,
+    options?: LDOptions,
+  ): Promise<void> {
+    coreLdClient = createClient(clientId, context, options);
+
+    coreLdClient.on('change', () => {
       const rawFlags = coreLdClient!.allFlags();
       const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
       flagsWritable.set(allFlags);
     });
 
-    coreLdClient!.on('change', () => {
-      const rawFlags = coreLdClient!.allFlags();
-      const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
-      flagsWritable.set(allFlags);
-    });
+    // TODO: currently all options are defaulted which means that the client initailization will timeout in 5 seconds.
+    // we will need to address this before this SDK is marked as stable.
+    coreLdClient.start();
 
-    return {
-      initializing: loading,
-    };
+    return coreLdClient
+      .waitForInitialization()
+      .then((result) => {
+        const rawFlags = coreLdClient!.allFlags();
+        const allFlags = toFlagsProxy(coreLdClient!, rawFlags);
+        flagsWritable.set(allFlags);
+
+        initializeResult.set(result.status);
+      })
+      .catch(() => {
+        // NOTE: this should never happen as we don't throw errors from initialization.
+        options?.logger?.error('Failed to initialize LaunchDarkly client');
+        initializeResult.set('failed');
+      });
   }
 
   /**
@@ -98,7 +161,7 @@ function createLD() {
    * @param {LDContext} context - The user context.
    * @returns {Promise} A promise that resolves when the user is identified.
    */
-  async function identify(context: LDContext) {
+  async function identify(context: LDContext): Promise<LDIdentifyResult> {
     isClientInitialized(coreLdClient);
     return coreLdClient.identify(context);
   }
@@ -125,12 +188,12 @@ function createLD() {
   return {
     identify,
     flags: readonly(flagsWritable),
-    initialize: LDInitialize,
-    initializing: readonly(loading),
+    initialize,
+    initalizationState: readonly(initializeResult),
     watch,
     useFlag,
   };
 }
 
 /** The LaunchDarkly instance */
-export const LD = createLD();
+export const LD = init();
