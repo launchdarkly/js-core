@@ -67,10 +67,10 @@ const defaultConfig = {
 
 ## Retrieving AI Configurations
 
-The `config` method retrieves AI configurations from LaunchDarkly with support for dynamic variables and fallback values:
+The `completionConfig` method retrieves AI configurations from LaunchDarkly with support for dynamic variables and fallback values:
 
 ```typescript
-const aiConfig = await aiClient.config(
+const aiConfig = await aiClient.completionConfig(
   aiConfigKey,
   context,
   defaultConfig,
@@ -127,7 +127,7 @@ For more control, you can use the configuration directly with AI providers. We r
 ```typescript
 import { LangChainProvider } from '@launchdarkly/server-sdk-ai-langchain';
 
-const aiConfig = await aiClient.config(aiConfigKey, context, defaultValue);
+const aiConfig = await aiClient.completionConfig(aiConfigKey, context, defaultValue);
 
 // Create LangChain model from configuration
 const llm = await LangChainProvider.createLangChainModel(aiConfig);
@@ -146,7 +146,7 @@ console.log('AI Response:', response.content);
 ```typescript
 import { LDAIMetrics } from '@launchdarkly/server-sdk-ai';
 
-const aiConfig = await aiClient.config(aiConfigKey, context, defaultValue);
+const aiConfig = await aiClient.completionConfig(aiConfigKey, context, defaultValue);
 
 // Define custom metrics mapping for your provider
 const mapCustomProviderMetrics = (response: any): LDAIMetrics => ({
