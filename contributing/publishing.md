@@ -29,6 +29,25 @@ designed to:
   1. Establish the CI implementation for the new package
   2. Generate pre-release builds for testing
 
+### Step 0. Create a placeholder npm package
+> This repo uses [OIDC authentication](https://docs.npmjs.com/trusted-publishers)
+> to establish trust between npmjs and github. As such we need to first create
+> the npm package on npmjs in order to establish the trust.
+> See [this discussion](https://github.com/orgs/community/discussions/127011)
+
+1. Set the `package.json` version to `0.0.0`
+2. Login to npm `npm login`
+3. Publish the placeholder `npm publish --tag snapshot`
+   > NOTE: we set a manual tag here so that this package version
+   > does not map to `latest`
+4. Logout of npm `npm logout`
+
+After completing these steps, you should follow
+[this doc](https://docs.npmjs.com/trusted-publishers#configuring-trusted-publishing)
+to configure trusted publishing on the new NPM package.
+
+After everything is set up, you can then mark the package public.
+
 ### Step 1. Extend `release-please-config.json`
 
 When doing the initial release, you will need to add a new record to
