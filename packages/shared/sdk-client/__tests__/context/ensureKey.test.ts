@@ -62,6 +62,12 @@ describe('ensureKey', () => {
     expect(c.key).toEqual('random1');
   });
 
+  test('ensureKey should create key for single anonymous context with empty key string', async () => {
+    const context: LDContext = { kind: 'org', anonymous: true, key: '' };
+    const c = await ensureKey(context, mockPlatform);
+    expect(c.key).toEqual('random1');
+  });
+
   test('ensureKey should create key for an anonymous context in multi', async () => {
     const context: LDContext = {
       kind: 'multi',
@@ -79,7 +85,7 @@ describe('ensureKey', () => {
     const context: LDContext = {
       kind: 'multi',
       user: { anonymous: true },
-      org: { anonymous: true },
+      org: { anonymous: true, key: '' },
     };
 
     const c = (await ensureKey(context, mockPlatform)) as LDMultiKindContext;
