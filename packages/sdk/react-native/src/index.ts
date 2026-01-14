@@ -13,4 +13,8 @@ export * from '@launchdarkly/js-client-sdk-common';
 export * from './hooks';
 export * from './provider';
 export * from './LDPlugin';
+
+// Override the common type with a client specific one.
+// TODO: we will remove this once we major version this SDK.
+export type { LDEvaluationDetailTyped } from './hooks/variation/LDEvaluationDetail';
 export { ReactNativeLDClient, RNOptions as LDOptions, RNStorage };

@@ -1,4 +1,4 @@
-import { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk-common';
+import { LDEvaluationDetailTyped } from './LDEvaluationDetail';
 
 import useLDClient from '../useLDClient';
 
@@ -77,6 +77,6 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
     case 'object':
       return ldClient.jsonVariationDetail(key, defaultValue) as LDEvaluationDetailTyped<T>;
     default:
-      return ldClient.variationDetail(key, defaultValue);
+      return ldClient.variationDetail(key, defaultValue) as LDEvaluationDetailTyped<T>;
   }
 };
