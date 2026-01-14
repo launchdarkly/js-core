@@ -13,11 +13,11 @@
 import { AutoEnvAttributes, LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import { makeClient } from './BrowserClient';
-import { LDClient } from './LDClient';
+import { LDClient, LDStartOptions } from './LDClient';
 import { BrowserOptions as LDOptions } from './options';
 
 export * from './common';
-export type { LDClient, LDOptions };
+export type { LDClient, LDOptions, LDStartOptions };
 export type { LDPlugin } from './LDPlugin';
 
 /**
