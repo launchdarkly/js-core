@@ -200,7 +200,7 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
 
   makeClient(
     'client-side-id',
-    { kind: 'user', key: '', anonymous: true },
+    { kind: 'user', anonymous: true },
     AutoEnvAttributes.Disabled,
     {
       streaming: false,
@@ -282,7 +282,7 @@ it('passes correct environmentMetadata without optional fields', async () => {
 
   makeClient(
     'client-side-id',
-    { kind: 'user', key: '', anonymous: true },
+    { kind: 'user', anonymous: true },
     AutoEnvAttributes.Disabled,
     {
       streaming: false,

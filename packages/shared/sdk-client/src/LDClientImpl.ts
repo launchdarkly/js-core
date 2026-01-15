@@ -6,7 +6,6 @@ import {
   defaultHeaders,
   internal,
   LDClientError,
-  LDContext,
   LDFlagSet,
   LDFlagValue,
   LDHeaders,
@@ -21,6 +20,8 @@ import {
   Hook,
   LDClient,
   LDClientIdentifyResult,
+  LDContext,
+  LDContextStrict,
   LDIdentifyError,
   LDIdentifyResult,
   LDIdentifyShed,
@@ -139,7 +140,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       this._diagnosticsManager,
     );
     this.emitter = new LDEmitter();
-    this.emitter.on('error', (c: LDContext, err: any) => {
+    this.emitter.on('error', (c: LDContextStrict, err: any) => {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
     });
 
@@ -234,14 +235,14 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     return { result: true };
   }
 
-  getContext(): LDContext | undefined {
+  getContext(): LDContextStrict | undefined {
     // The LDContext returned here may have been modified by the SDK (for example: adding auto env attributes).
     // We are returning an LDContext here to maintain a consistent representation of context to the consuming
     // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
     return this._activeContextTracker.hasContext()
-      ? clone<LDContext>(this._activeContextTracker.getUnwrappedContext())
+      ? clone<LDContextStrict>(this._activeContextTracker.getUnwrappedContext())
       : undefined;
   }
 
