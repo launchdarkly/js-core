@@ -21,7 +21,7 @@ export function createSuccessEvaluationDetail(
   const res: LDEvaluationDetail = {
     value,
     variationIndex: variationIndex ?? null,
-    reason: reason ?? null,
+    reason,
   };
   return res;
 }

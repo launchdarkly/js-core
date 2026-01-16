@@ -18,7 +18,7 @@ export type LDEvaluationDetail = Omit<CommonDetail, 'reason'> & {
   /**
    * An optional object describing the main factor that influenced the flag evaluation value.
    */
-  reason?: LDEvaluationReason | null;
+  reason?: LDEvaluationReason;
 };
 
 /**
@@ -31,5 +31,5 @@ export type LDEvaluationDetailTyped<TFlag> = Omit<CommonDetailTyped<TFlag>, 'rea
   /**
    * An optional object describing the main factor that influenced the flag evaluation value.
    */
-  reason?: LDEvaluationReason | null;
+  reason?: LDEvaluationReason;
 };
