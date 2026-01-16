@@ -30,16 +30,6 @@
         "types": "./dist/index.d.ts",
         "import": "./dist/index.js"
       }
-    },
-    "./compat": {
-      "require": {
-        "types": "./dist/compat.d.cts",
-        "require": "./dist/compat.cjs"
-      },
-      "import": {
-        "types": "./dist/compat.d.ts",
-        "import": "./dist/compat.js"
-      }
     }
   },
   "files": [
