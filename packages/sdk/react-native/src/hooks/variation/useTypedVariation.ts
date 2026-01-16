@@ -1,6 +1,5 @@
-import { LDEvaluationDetailTyped } from './LDEvaluationDetail';
-
 import useLDClient from '../useLDClient';
+import { LDEvaluationDetailTyped } from './LDEvaluationDetail';
 
 /**
  * Determines the strongly typed variation of a feature flag.
