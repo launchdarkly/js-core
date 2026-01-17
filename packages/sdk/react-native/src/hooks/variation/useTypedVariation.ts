@@ -57,25 +57,46 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
   const ldClient = useLDClient();
 
   switch (typeof defaultValue) {
-    case 'boolean':
-      return ldClient.boolVariationDetail(
-        key,
-        defaultValue as boolean,
-      ) as LDEvaluationDetailTyped<T>;
-    case 'number':
-      return ldClient.numberVariationDetail(
-        key,
-        defaultValue as number,
-      ) as LDEvaluationDetailTyped<T>;
-    case 'string':
-      return ldClient.stringVariationDetail(
-        key,
-        defaultValue as string,
-      ) as LDEvaluationDetailTyped<T>;
+    case 'boolean': {
+      const detail = ldClient.boolVariationDetail(key, defaultValue as boolean);
+
+      return {
+        ...detail,
+        reason: detail.reason ?? null,
+      } as LDEvaluationDetailTyped<T>;
+    }
+    case 'number': {
+      const detail = ldClient.numberVariationDetail(key, defaultValue as number);
+
+      return {
+        ...detail,
+        reason: detail.reason ?? null,
+      } as LDEvaluationDetailTyped<T>;
+    }
+    case 'string': {
+      const detail = ldClient.stringVariationDetail(key, defaultValue as string);
+
+      return {
+        ...detail,
+        reason: detail.reason ?? null,
+      } as LDEvaluationDetailTyped<T>;
+    }
     case 'undefined':
-    case 'object':
-      return ldClient.jsonVariationDetail(key, defaultValue) as LDEvaluationDetailTyped<T>;
-    default:
-      return ldClient.variationDetail(key, defaultValue) as LDEvaluationDetailTyped<T>;
+    case 'object': {
+      const detail = ldClient.jsonVariationDetail(key, defaultValue);
+
+      return {
+        ...detail,
+        reason: detail.reason ?? null,
+      } as LDEvaluationDetailTyped<T>;
+    }
+    default: {
+      const detail = ldClient.variationDetail(key, defaultValue);
+
+      return {
+        ...detail,
+        reason: detail.reason ?? null,
+      } as LDEvaluationDetailTyped<T>;
+    }
   }
 };
