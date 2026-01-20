@@ -1,0 +1,88 @@
+{
+  "name": "@launchdarkly/electron-client-sdk",
+  "version": "0.0.1",
+  "description": "Electron LaunchDarkly SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/electron",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@3.4.1",
+  "keywords": [
+    "launchdarkly",
+    "electron"
+  ],
+  "type": "commonjs",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./bridge": {
+      "types": "./dist/src/bridge/index.d.ts",
+      "default": "./dist/src/bridge/index.js"
+    },
+    "./renderer": {
+      "types": "./dist/src/renderer/index.d.ts",
+      "default": "./dist/src/renderer/index.js"
+    },
+    "./renderer-compat": {
+      "types": "./dist/src/renderer-compat/index.d.ts",
+      "default": "./dist/src/renderer-compat/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "bridge": [
+        "./dist/src/bridge/index.d.ts"
+      ],
+      "renderer": [
+        "./dist/src/renderer/index.d.ts"
+      ],
+      "renderer-compat": [
+        "./dist/src/renderer-compat/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "tsc --build --clean",
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "yarn lint --fix",
+    "test": "jest"
+  },
+  "peerDependencies": {
+    "electron": "*"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk-common": "1.14.1",
+    "https-proxy-agent": "^7.0.6",
+    "launchdarkly-eventsource": "2.2.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/jest": "^29.4.0",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "electron": "^34.5.6",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.5.0",
+    "launchdarkly-js-test-helpers": "^2.2.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.0.5",
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
+  }
+}

@@ -12,6 +12,7 @@
     "packages/sdk/server-node",
     "packages/sdk/cloudflare",
     "packages/sdk/cloudflare/example",
+    "packages/sdk/electron",
     "packages/sdk/fastly",
     "packages/sdk/fastly/example",
     "packages/sdk/react-native",
@@ -84,6 +85,7 @@
   "resolutions": {
     "jsonc-parser": "3.2.0",
     "parse5": "7.2.1",
-    "@types/node": "24.1.0"
+    "@types/node": "24.1.0",
+    "got": "14.4.7"
   }
 }
