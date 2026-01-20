@@ -1,10 +1,13 @@
 import { makeClient } from './ElectronClient';
+
 import type { ElectronOptions, LDProxyOptions, LDTLSOptions } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDContext } from './LDCommon';
 import type { LDPlugin } from './LDPlugin';
 
 export * from './LDCommon';
+
+export * from './ElectronIPC';
 
 export type {
   ElectronOptions as LDOptions,
