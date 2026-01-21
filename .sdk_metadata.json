@@ -9,7 +9,11 @@
       "releases": {
         "tag-prefix": "akamai-server-base-sdk-"
       },
-      "userAgents": ["AkamaiEdgeSDK"]
+      "userAgents": ["AkamaiEdgeSDK"],
+      "features": {
+        "contexts": { "introduced": "1.0" },
+        "migrations": { "introduced": "1.0.9" }
+      }
     },
     "akamai-edgekv": {
       "name": "Akamai SDK for EdgeKV",
@@ -19,7 +23,11 @@
       "releases": {
         "tag-prefix": "akamai-server-edgekv-sdk-"
       },
-      "userAgents": ["AkamaiEdgeSDK"]
+      "userAgents": ["AkamaiEdgeSDK"],
+      "features": {
+        "contexts": { "introduced": "1.0" },
+        "migrations": { "introduced": "1.0.9" }
+      }
     },
     "cloudflare": {
       "name": "Cloudflare SDK",
@@ -29,7 +37,15 @@
       "releases": {
         "tag-prefix": "cloudflare-server-sdk-"
       },
-      "userAgents": ["CloudflareEdgeSDK"]
+      "userAgents": ["CloudflareEdgeSDK"],
+      "features": {
+        "allFlags": { "introduced": "1.0" },
+        "contexts": { "introduced": "2.0" },
+        "experimentation": { "introduced": "2.3.0" },
+        "migrations": { "introduced": "2.2.2" },
+        "secureMode": { "introduced": "2.0" },
+        "track": { "introduced": "2.3" }
+      }
     },
     "fastly": {
       "name": "Fastly SDK",
@@ -39,7 +55,14 @@
       "releases": {
         "tag-prefix": "fastly-server-sdk-"
       },
-      "userAgents": ["FastlyEdgeSDK"]
+      "userAgents": ["FastlyEdgeSDK"],
+      "features": {
+        "allFlags": { "introduced": "0.1" },
+        "contexts": { "introduced": "0.1" },
+        "experimentation": { "introduced": "0.1" },
+        "secureMode": { "introduced": "0.1" },
+        "track": { "introduced": "0.1" }
+      }
     },
     "react-native": {
       "name": "React Native SDK",
@@ -50,7 +73,24 @@
         "tag-prefix": "react-native-client-sdk-"
       },
       "userAgents": ["ReactNativeClient"],
-      "wrapperNames": ["react-native-client"]
+      "wrapperNames": ["react-native-client"],
+      "features": {
+        "allFlags": { "introduced": "5.0.1" },
+        "appMetadata": { "introduced": "7.0" },
+        "autoEnvAttrs": { "introduced": "8.0" },
+        "bigSegments": { "introduced": "1.0" },
+        "contexts": { "introduced": "7.0" },
+        "experimentation": { "introduced": "5.0" },
+        "flagChanges": { "introduced": "1.0" },
+        "hooks": { "introduced": "10.0" },
+        "multiEnv": { "introduced": "4.2.0" },
+        "offlineMode": { "introduced": "1.0" },
+        "pluginSupport": { "introduced": "10.10" },
+        "privateAttrs": { "introduced": "4.0" },
+        "relayProxyProxy": { "introduced": "1.0" },
+        "track": { "introduced": "1.0" },
+        "variationDetail": { "introduced": "4.1.2" }
+      }
     },
     "node-server": {
       "name": "Node.js Server SDK",
@@ -60,7 +100,33 @@
       "releases": {
         "tag-prefix": "node-server-sdk-"
       },
-      "userAgents": ["NodeJSClient"]
+      "userAgents": ["NodeJSClient"],
+      "features": {
+        "allFlags": { "introduced": "3.0" },
+        "appMetadata": { "introduced": "6.4" },
+        "bigSegments": { "introduced": "6.2" },
+        "contexts": { "introduced": "7.0" },
+        "eventCompression": { "introduced": "9.8" },
+        "experimentation": { "introduced": "6.1" },
+        "fdv2": { "introduced": "9.10" },
+        "fileDataSource": { "introduced": "1.0" },
+        "flagChanges": { "introduced": "1.0" },
+        "hooks": { "introduced": "9.3" },
+        "inlineContextCustomEvents": { "introduced": "9.7.7" },
+        "migrations": { "introduced": "9.0" },
+        "offlineMode": { "introduced": "1.0" },
+        "otel": { "introduced": "9.3" },
+        "pluginSupport": { "introduced": "9.10" },
+        "privateAttrs": { "introduced": "3.3" },
+        "relayProxyDaemon": { "introduced": "1.0" },
+        "relayProxyProxy": { "introduced": "1.0" },
+        "secureMode": { "introduced": "3.0" },
+        "storingDataRedis": { "introduced": "2.0" },
+        "testDataSource": { "introduced": "6.3" },
+        "track": { "introduced": "1.0" },
+        "variationDetail": { "introduced": "5.4" },
+        "webProxy": { "introduced": "1.0" }
+      }
     },
     "vercel": {
       "name": "Vercel Edge SDK",
@@ -70,7 +136,14 @@
       "releases": {
         "tag-prefix": "vercel-server-sdk-"
       },
-      "userAgents": ["VercelEdgeSDK"]
+      "userAgents": ["VercelEdgeSDK"],
+      "features": {
+        "allFlags": { "introduced": "1.0" },
+        "contexts": { "introduced": "1.0" },
+        "experimentation": { "introduced": "1.2.0" },
+        "secureMode": { "introduced": "1.0" },
+        "track": { "introduced": "1.2" }
+      }
     }
   }
 }
