@@ -55,14 +55,7 @@
       "releases": {
         "tag-prefix": "fastly-server-sdk-"
       },
-      "userAgents": ["FastlyEdgeSDK"],
-      "features": {
-        "allFlags": { "introduced": "0.1" },
-        "contexts": { "introduced": "0.1" },
-        "experimentation": { "introduced": "0.1" },
-        "secureMode": { "introduced": "0.1" },
-        "track": { "introduced": "0.1" }
-      }
+      "userAgents": ["FastlyEdgeSDK"]
     },
     "react-native": {
       "name": "React Native SDK",
