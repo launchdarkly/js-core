@@ -2,11 +2,13 @@ import {
   LDEvaluationDetail as CommonDetail,
   LDEvaluationDetailTyped as CommonDetailTyped,
   LDEvaluationReason,
-} from '@launchdarkly/js-sdk-common';
+} from '@launchdarkly/js-client-sdk-common';
 
 // Implementation note: In client-side SDKs the reason is optional. The common type, which is also
 // used by server SDKs, has a required reason. This file contains a client specific
 // LDEvaluationDetail which has an optional reason.
+
+// TODO: On major version change "reason" to be optional instead of nullable.
 
 /**
  * An object that combines the result of a feature flag evaluation with information about
@@ -18,7 +20,7 @@ export type LDEvaluationDetail = Omit<CommonDetail, 'reason'> & {
   /**
    * An optional object describing the main factor that influenced the flag evaluation value.
    */
-  reason?: LDEvaluationReason;
+  reason: LDEvaluationReason | null;
 };
 
 /**
@@ -31,5 +33,5 @@ export type LDEvaluationDetailTyped<TFlag> = Omit<CommonDetailTyped<TFlag>, 'rea
   /**
    * An optional object describing the main factor that influenced the flag evaluation value.
    */
-  reason?: LDEvaluationReason;
+  reason: LDEvaluationReason | null;
 };
