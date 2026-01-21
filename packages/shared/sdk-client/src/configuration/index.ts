@@ -1,4 +1,4 @@
-import ConfigurationImpl, {
+import {
   Configuration,
   createConfiguration,
   DEFAULT_POLLING,
@@ -8,7 +8,6 @@ import ConfigurationImpl, {
 
 export {
   Configuration,
-  ConfigurationImpl,
   createConfiguration,
   LDClientInternalOptions,
   DEFAULT_POLLING,
