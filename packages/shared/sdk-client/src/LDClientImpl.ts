@@ -744,9 +744,6 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       } else {
         details[flagKey] = {
           value: undefined,
-          // For backwards compatibility purposes reason and variationIndex are null instead of
-          // being undefined.
-          reason: null,
           variationIndex: null,
         };
       }

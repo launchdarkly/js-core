@@ -136,7 +136,6 @@ it('calls flag-detail-changed inspector for individial flag changes on patch', a
 
   await eventQueue.take();
   expect(flagDetailChangedInspector.method).toHaveBeenCalledWith('dev-test-flag', {
-    reason: null,
     value: false,
     variationIndex: 0,
   });
@@ -190,7 +189,6 @@ it('calls flag-detail-changed inspector when a flag is deleted', async () => {
 
   await eventQueue.take();
   expect(flagDetailChangedInspector.method).toHaveBeenCalledWith('dev-test-flag', {
-    reason: null,
     value: undefined,
     variationIndex: null,
   });
@@ -233,14 +231,14 @@ it('calls flag-details-changed inspectors when all flag values change', async ()
 
   await client.identify({ key: 'user-key' }, { waitForNetworkResults: true });
   expect(flagDetailsChangedInspector.method).toHaveBeenCalledWith({
-    'dev-test-flag': { reason: null, value: true, variationIndex: 0 },
-    'easter-i-tunes-special': { reason: null, value: false, variationIndex: 1 },
-    'easter-specials': { reason: null, value: 'no specials', variationIndex: 3 },
-    fdsafdsafdsafdsa: { reason: null, value: true, variationIndex: 0 },
-    'log-level': { reason: null, value: 'warn', variationIndex: 3 },
-    'moonshot-demo': { reason: null, value: true, variationIndex: 0 },
-    test1: { reason: null, value: 's1', variationIndex: 0 },
-    'this-is-a-test': { reason: null, value: true, variationIndex: 0 },
+    'dev-test-flag': { value: true, variationIndex: 0 },
+    'easter-i-tunes-special': { value: false, variationIndex: 1 },
+    'easter-specials': { value: 'no specials', variationIndex: 3 },
+    fdsafdsafdsafdsa: { value: true, variationIndex: 0 },
+    'log-level': { value: 'warn', variationIndex: 3 },
+    'moonshot-demo': { value: true, variationIndex: 0 },
+    test1: { value: 's1', variationIndex: 0 },
+    'this-is-a-test': { value: true, variationIndex: 0 },
     'has-prereq-depth-1': { reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 },
     'is-prereq': { reason: { kind: 'FALLTHROUGH' }, value: true, variationIndex: 0 },
   });

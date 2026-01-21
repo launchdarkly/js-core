@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.12.6](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.12.5...react-native-client-sdk-v10.12.6) (2026-01-21)
+
+
+### Bug Fixes
+
+* evaluation detail type should be optional ([#1064](https://github.com/launchdarkly/js-core/issues/1064)) ([e81c333](https://github.com/launchdarkly/js-core/commit/e81c333034f2e8206dfaf70d6fdb6001747b777f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.17.1 to 1.17.2
+
 ## [10.12.5](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.12.4...react-native-client-sdk-v10.12.5) (2026-01-08)
 
 

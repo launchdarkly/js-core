@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.17.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.1...js-client-sdk-common-v1.17.2) (2026-01-21)
+
+
+### Bug Fixes
+
+* evaluation detail type should be optional ([#1064](https://github.com/launchdarkly/js-core/issues/1064)) ([e81c333](https://github.com/launchdarkly/js-core/commit/e81c333034f2e8206dfaf70d6fdb6001747b777f))
+* update LDClient to not require context key for client side identify methods ([#1045](https://github.com/launchdarkly/js-core/issues/1045)) ([0cf7660](https://github.com/launchdarkly/js-core/commit/0cf76600af7fb5b3ef42d4e2b4cb73a27443a5e3))
+
 ## [1.17.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.0...js-client-sdk-common-v1.17.1) (2026-01-08)
 
 
