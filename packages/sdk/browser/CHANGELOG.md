@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.13.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.12.1...js-client-sdk-v0.13.0) (2026-01-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove 3.x compatability layer ([#1063](https://github.com/launchdarkly/js-core/issues/1063))
+
+### Features
+
+* remove 3.x compatability layer ([#1063](https://github.com/launchdarkly/js-core/issues/1063)) ([a471805](https://github.com/launchdarkly/js-core/commit/a471805924784fd80ce7a60c7c4df1d967cfb117))
+
+
+### Bug Fixes
+
+* update LDClient to not require context key for client side identify methods ([#1045](https://github.com/launchdarkly/js-core/issues/1045)) ([0cf7660](https://github.com/launchdarkly/js-core/commit/0cf76600af7fb5b3ef42d4e2b4cb73a27443a5e3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.17.1 to 1.17.2
+
 ## [0.12.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.12.0...js-client-sdk-v0.12.1) (2026-01-08)
 
 
