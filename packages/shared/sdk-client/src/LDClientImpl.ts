@@ -37,7 +37,7 @@ import {
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { createAsyncTaskQueue } from './async/AsyncTaskQueue';
-import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
+import { Configuration, createConfiguration, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
 import {
   ActiveContextTracker,
@@ -114,7 +114,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       throw new Error('Platform must implement Encoding because btoa is required.');
     }
 
-    this._config = new ConfigurationImpl(options, internalOptions);
+    this._config = createConfiguration(options, internalOptions);
     this.logger = this._config.logger;
 
     this._baseHeaders = defaultHeaders(

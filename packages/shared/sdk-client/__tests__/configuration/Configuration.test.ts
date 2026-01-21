@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { createSafeLogger } from '@launchdarkly/js-sdk-common';
 
-import ConfigurationImpl from '../../src/configuration/Configuration';
+import { createConfiguration } from '../../src/configuration/Configuration';
 
 describe('Configuration', () => {
   beforeEach(() => {
@@ -10,17 +10,15 @@ describe('Configuration', () => {
   });
 
   it('has valid default values', () => {
-    const config = new ConfigurationImpl();
+    const config = createConfiguration();
 
     expect(config).toMatchObject({
       allAttributesPrivate: false,
-      baseUri: 'https://clientsdk.launchdarkly.com',
       capacity: 100,
       debug: false,
       diagnosticOptOut: false,
       diagnosticRecordingInterval: 900,
       withReasons: false,
-      eventsUri: 'https://events.launchdarkly.com',
       flushInterval: 30,
       logger: expect.anything(),
       maxCachedContexts: 5,
@@ -28,28 +26,32 @@ describe('Configuration', () => {
       sendEvents: true,
       sendLDHeaders: true,
       streamInitialReconnectDelay: 1,
-      streamUri: 'https://clientstream.launchdarkly.com',
       useReport: false,
     });
+    // Verify service endpoints have correct default values
+    expect(config.serviceEndpoints.polling).toBe('https://clientsdk.launchdarkly.com');
+    expect(config.serviceEndpoints.streaming).toBe('https://clientstream.launchdarkly.com');
+    expect(config.serviceEndpoints.events).toBe('https://events.launchdarkly.com');
     expect(console.error).not.toHaveBeenCalled();
   });
 
   it('allows specifying valid wrapperName', () => {
-    const config = new ConfigurationImpl({ wrapperName: 'test' });
+    const config = createConfiguration({ wrapperName: 'test' });
     expect(config).toMatchObject({ wrapperName: 'test' });
   });
 
   it('warns and ignored invalid keys', () => {
     // @ts-ignore
-    const config = new ConfigurationImpl({ baseballUri: 1 });
+    const config = createConfiguration({ baseballUri: 1 });
 
+    // @ts-ignore
     expect(config.baseballUri).toBeUndefined();
     expect(console.error).toHaveBeenCalledWith(expect.stringContaining('unknown config option'));
   });
 
   it('converts boolean types', () => {
     // @ts-ignore
-    const config = new ConfigurationImpl({ sendEvents: 0 });
+    const config = createConfiguration({ sendEvents: 0 });
 
     expect(config.sendEvents).toBeFalsy();
     expect(console.error).toHaveBeenCalledWith(
@@ -59,7 +61,7 @@ describe('Configuration', () => {
 
   it('ignores wrong type for number and logs appropriately', () => {
     // @ts-ignore
-    const config = new ConfigurationImpl({ capacity: true });
+    const config = createConfiguration({ capacity: true });
 
     expect(config.capacity).toEqual(100);
     expect(console.error).toHaveBeenCalledWith(
@@ -68,7 +70,7 @@ describe('Configuration', () => {
   });
 
   it('enforces minimum flushInterval', () => {
-    const config = new ConfigurationImpl({ flushInterval: 1 });
+    const config = createConfiguration({ flushInterval: 1 });
 
     expect(config.flushInterval).toEqual(2);
     expect(console.error).toHaveBeenNthCalledWith(
@@ -78,14 +80,14 @@ describe('Configuration', () => {
   });
 
   it('allows setting a valid maxCachedContexts', () => {
-    const config = new ConfigurationImpl({ maxCachedContexts: 3 });
+    const config = createConfiguration({ maxCachedContexts: 3 });
 
     expect(config.maxCachedContexts).toBeDefined();
     expect(console.error).not.toHaveBeenCalled();
   });
 
   it('enforces minimum maxCachedContext', () => {
-    const config = new ConfigurationImpl({ maxCachedContexts: -1 });
+    const config = createConfiguration({ maxCachedContexts: -1 });
 
     expect(config.maxCachedContexts).toBeDefined();
     expect(console.error).toHaveBeenNthCalledWith(
@@ -101,16 +103,16 @@ describe('Configuration', () => {
     ['kebab-case-works'],
     ['snake_case_works'],
   ])('allow setting valid payload filter keys', (filter) => {
-    const config = new ConfigurationImpl({ payloadFilterKey: filter });
-    expect(config.payloadFilterKey).toEqual(filter);
+    const config = createConfiguration({ payloadFilterKey: filter });
+    expect(config.serviceEndpoints.payloadFilterKey).toEqual(filter);
     expect(console.error).toHaveBeenCalledTimes(0);
   });
 
   it.each([['invalid-@-filter'], ['_invalid-filter'], ['-invalid-filter']])(
     'ignores invalid filters and logs a warning',
     (filter) => {
-      const config = new ConfigurationImpl({ payloadFilterKey: filter });
-      expect(config.payloadFilterKey).toBeUndefined();
+      const config = createConfiguration({ payloadFilterKey: filter });
+      expect(config.serviceEndpoints.payloadFilterKey).toBeUndefined();
       expect(console.error).toHaveBeenNthCalledWith(
         1,
         expect.stringMatching(/should be of type string matching/i),
@@ -134,7 +136,7 @@ it('makes a safe logger', () => {
       throw new Error('bad');
     },
   };
-  const config = new ConfigurationImpl({
+  const config = createConfiguration({
     logger: badLogger,
   });
 
@@ -160,6 +162,6 @@ it('does not wrap already safe loggers', () => {
       throw new Error('bad');
     },
   });
-  const config = new ConfigurationImpl({ logger });
+  const config = createConfiguration({ logger });
   expect(config.logger).toBe(logger);
 });
