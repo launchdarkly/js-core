@@ -47,16 +47,6 @@
         "track": { "introduced": "2.3" }
       }
     },
-    "fastly": {
-      "name": "Fastly SDK",
-      "type": "edge",
-      "path": "packages/sdk/fastly",
-      "languages": ["JavaScript", "TypeScript"],
-      "releases": {
-        "tag-prefix": "fastly-server-sdk-"
-      },
-      "userAgents": ["FastlyEdgeSDK"]
-    },
     "react-native": {
       "name": "React Native SDK",
       "type": "client-side",
