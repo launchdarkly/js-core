@@ -12,10 +12,16 @@ import {
 
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration } from './configuration/Configuration';
-import DataSourceEventHandler from './datasource/DataSourceEventHandler';
+import {
+  createDataSourceEventHandler,
+  DataSourceEventHandler,
+} from './datasource/DataSourceEventHandler';
 import { DataSourceState } from './datasource/DataSourceStatus';
-import DataSourceStatusManager from './datasource/DataSourceStatusManager';
-import Requestor from './datasource/Requestor';
+import {
+  createDataSourceStatusManager,
+  DataSourceStatusManager,
+} from './datasource/DataSourceStatusManager';
+import { Requestor } from './datasource/Requestor';
 import { FlagManager } from './flag-manager/FlagManager';
 import LDEmitter from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
@@ -88,8 +94,8 @@ export abstract class BaseDataManager implements DataManager {
     protected readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
-    this.dataSourceStatusManager = new DataSourceStatusManager(emitter);
-    this._dataSourceEventHandler = new DataSourceEventHandler(
+    this.dataSourceStatusManager = createDataSourceStatusManager(emitter);
+    this._dataSourceEventHandler = createDataSourceEventHandler(
       flagManager,
       this.dataSourceStatusManager,
       this.config.logger,

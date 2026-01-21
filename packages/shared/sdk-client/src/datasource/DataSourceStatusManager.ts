@@ -7,60 +7,15 @@ import DataSourceStatusErrorInfo from './DataSourceStatusErrorInfo';
 /**
  * Tracks the current data source status and emits updates when the status changes.
  */
-export default class DataSourceStatusManager {
-  private _state: DataSourceState;
-  private _stateSinceMillis: number; // UNIX epoch timestamp in milliseconds
-  private _errorInfo?: DataSourceStatusErrorInfo;
-  private _timeStamper: () => number;
-
-  constructor(
-    private readonly _emitter: LDEmitter,
-    timeStamper: () => number = () => Date.now(),
-  ) {
-    this._state = DataSourceState.Closed;
-    this._stateSinceMillis = timeStamper();
-    this._timeStamper = timeStamper;
-  }
-
-  get status(): DataSourceStatus {
-    return {
-      state: this._state,
-      stateSince: this._stateSinceMillis,
-      lastError: this._errorInfo,
-    };
-  }
+export interface DataSourceStatusManager {
+  readonly status: DataSourceStatus;
 
   /**
-   * Updates the state of the manager.
-   *
-   * @param requestedState to track
-   * @param isError to indicate that the state update is a result of an error occurring.
-   */
-  private _updateState(requestedState: DataSourceState, isError = false) {
-    const newState =
-      requestedState === DataSourceState.Interrupted && this._state === DataSourceState.Initializing // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
-        ? DataSourceState.Initializing
-        : requestedState;
-
-    const changedState = this._state !== newState;
-    if (changedState) {
-      this._state = newState;
-      this._stateSinceMillis = this._timeStamper();
-    }
-
-    if (changedState || isError) {
-      this._emitter.emit('dataSourceStatus', this.status);
-    }
-  }
-
-  /**
-   * Requests the manager move to the provided state.  This request may be ignored
+   * Requests the manager move to the provided state. This request may be ignored
    * if the current state cannot transition to the requested state.
    * @param state that is requested
    */
-  requestStateUpdate(state: DataSourceState) {
-    this._updateState(state);
-  }
+  requestStateUpdate(state: DataSourceState): void;
 
   /**
    * Reports a datasource error to this manager. Since the {@link DataSourceStatus} includes error
@@ -76,20 +31,75 @@ export default class DataSourceStatusManager {
     kind: DataSourceErrorKind,
     message: string,
     statusCode?: number,
-    recoverable: boolean = false,
-  ) {
-    const errorInfo: DataSourceStatusErrorInfo = {
-      kind,
-      message,
-      statusCode,
-      time: this._timeStamper(),
-    };
-    this._errorInfo = errorInfo;
-    this._updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Closed, true);
-  }
+    recoverable?: boolean,
+  ): void;
 
   // TODO: SDK-702 - Implement network availability behaviors
-  // setNetworkUnavailable() {
-  //   this.updateState(DataSourceState.NetworkUnavailable);
-  // }
+  // setNetworkUnavailable(): void;
 }
+
+export function createDataSourceStatusManager(
+  emitter: LDEmitter,
+  timeStamper: () => number = () => Date.now(),
+): DataSourceStatusManager {
+  let state: DataSourceState = DataSourceState.Closed;
+  let stateSinceMillis: number = timeStamper();
+  let errorInfo: DataSourceStatusErrorInfo | undefined;
+
+  function getStatus(): DataSourceStatus {
+    return {
+      state,
+      stateSince: stateSinceMillis,
+      lastError: errorInfo,
+    };
+  }
+
+  function updateState(requestedState: DataSourceState, isError = false) {
+    const newState =
+      requestedState === DataSourceState.Interrupted && state === DataSourceState.Initializing // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
+        ? DataSourceState.Initializing
+        : requestedState;
+
+    const changedState = state !== newState;
+    if (changedState) {
+      state = newState;
+      stateSinceMillis = timeStamper();
+    }
+
+    if (changedState || isError) {
+      emitter.emit('dataSourceStatus', getStatus());
+    }
+  }
+
+  return {
+    get status(): DataSourceStatus {
+      return getStatus();
+    },
+
+    requestStateUpdate(requestedState: DataSourceState) {
+      updateState(requestedState);
+    },
+
+    reportError(
+      kind: DataSourceErrorKind,
+      message: string,
+      statusCode?: number,
+      recoverable: boolean = false,
+    ) {
+      errorInfo = {
+        kind,
+        message,
+        statusCode,
+        time: timeStamper(),
+      };
+      updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Closed, true);
+    },
+
+    // TODO: SDK-702 - Implement network availability behaviors
+    // setNetworkUnavailable() {
+    //   updateState(DataSourceState.NetworkUnavailable);
+    // },
+  };
+}
+
+export default DataSourceStatusManager;

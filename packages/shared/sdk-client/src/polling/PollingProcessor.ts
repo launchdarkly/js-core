@@ -8,7 +8,7 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
-import Requestor, { LDRequestError } from '../datasource/Requestor';
+import { LDRequestError, Requestor } from '../datasource/Requestor';
 import { Flags } from '../types';
 
 export type PollingErrorHandler = (err: LDPollingError) => void;

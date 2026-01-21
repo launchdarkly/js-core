@@ -1,14 +1,26 @@
 import DataSourceStatusErrorInfo from './DataSourceStatusErrorInfo';
 
-export enum DataSourceState {
-  Initializing = 'INITIALIZING',
-  Valid = 'VALID',
-  Interrupted = 'INTERRUPTED',
-  SetOffline = 'SET_OFFLINE',
-  Closed = 'CLOSED',
+// TODO: SDK-702 - Implement network availability behaviors - add 'NETWORK_UNAVAILABLE' when implemented
+export type DataSourceState = 'INITIALIZING' | 'VALID' | 'INTERRUPTED' | 'SET_OFFLINE' | 'CLOSED';
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const DataSourceState: {
+  readonly Initializing: 'INITIALIZING';
+  readonly Valid: 'VALID';
+  readonly Interrupted: 'INTERRUPTED';
+  readonly SetOffline: 'SET_OFFLINE';
+  readonly Closed: 'CLOSED';
   // TODO: SDK-702 - Implement network availability behaviors
-  // NetworkUnavailable,
-}
+  // readonly NetworkUnavailable: 'NETWORK_UNAVAILABLE';
+} = {
+  Initializing: 'INITIALIZING',
+  Valid: 'VALID',
+  Interrupted: 'INTERRUPTED',
+  SetOffline: 'SET_OFFLINE',
+  Closed: 'CLOSED',
+  // TODO: SDK-702 - Implement network availability behaviors
+  // NetworkUnavailable: 'NETWORK_UNAVAILABLE',
+};
 
 export default interface DataSourceStatus {
   /**
