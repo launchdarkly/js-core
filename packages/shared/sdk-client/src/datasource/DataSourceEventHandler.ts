@@ -3,7 +3,6 @@ import { Context, LDLogger, LDPollingError, LDStreamingError } from '@launchdark
 import { FlagManager } from '../flag-manager/FlagManager';
 import { ItemDescriptor } from '../flag-manager/ItemDescriptor';
 import { DeleteFlag, Flags, PatchFlag } from '../types';
-import { DataSourceState } from './DataSourceStatus';
 import { DataSourceStatusManager } from './DataSourceStatusManager';
 
 export interface DataSourceEventHandler {
@@ -32,7 +31,7 @@ export function createDataSourceEventHandler(
         {},
       );
       await flagManager.init(context, descriptors);
-      statusManager.requestStateUpdate(DataSourceState.Valid);
+      statusManager.requestStateUpdate('VALID');
     },
 
     async handlePatch(context: Context, patchFlag: PatchFlag) {

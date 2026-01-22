@@ -42,7 +42,7 @@ export function createDataSourceStatusManager(
   emitter: LDEmitter,
   timeStamper: () => number = () => Date.now(),
 ): DataSourceStatusManager {
-  let state: DataSourceState = DataSourceState.Closed;
+  let state: DataSourceState = 'CLOSED';
   let stateSinceMillis: number = timeStamper();
   let errorInfo: DataSourceStatusErrorInfo | undefined;
 
@@ -56,8 +56,8 @@ export function createDataSourceStatusManager(
 
   function updateState(requestedState: DataSourceState, isError = false) {
     const newState =
-      requestedState === DataSourceState.Interrupted && state === DataSourceState.Initializing // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
-        ? DataSourceState.Initializing
+      requestedState === 'INTERRUPTED' && state === 'INITIALIZING' // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
+        ? 'INITIALIZING'
         : requestedState;
 
     const changedState = state !== newState;
@@ -92,7 +92,7 @@ export function createDataSourceStatusManager(
         statusCode,
         time: timeStamper(),
       };
-      updateState(recoverable ? DataSourceState.Interrupted : DataSourceState.Closed, true);
+      updateState(recoverable ? 'INTERRUPTED' : 'CLOSED', true);
     },
 
     // TODO: SDK-702 - Implement network availability behaviors

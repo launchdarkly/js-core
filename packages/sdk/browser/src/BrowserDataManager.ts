@@ -4,7 +4,6 @@ import {
   Context,
   DataSourceErrorKind,
   DataSourcePaths,
-  DataSourceState,
   FlagManager,
   httpErrorMessage,
   internal,
@@ -161,7 +160,7 @@ export default class BrowserDataManager extends BaseDataManager {
     identifyReject: (err: Error) => void,
   ) {
     try {
-      this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
+      this.dataSourceStatusManager.requestStateUpdate('INITIALIZING');
 
       const payload = await this._requestPayload(context);
 

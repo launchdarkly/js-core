@@ -31,35 +31,6 @@ export interface Requestor {
   requestPayload(): Promise<string>;
 }
 
-export function createRequestor(
-  requests: Requests,
-  uri: string,
-  headers: { [key: string]: string },
-  method: string,
-  body?: string,
-): Requestor {
-  return {
-    async requestPayload(): Promise<string> {
-      let status: number | undefined;
-      try {
-        const res = await requests.fetch(uri, {
-          method,
-          headers,
-          body,
-        });
-        if (isOk(res.status)) {
-          return await res.text();
-        }
-        // Assigning so it can be thrown after the try/catch.
-        status = res.status;
-      } catch (err: any) {
-        throw new LDRequestError(err?.message);
-      }
-      throw new LDRequestError(`Unexpected status code: ${status}`, status);
-    },
-  };
-}
-
 export function makeRequestor(
   plainContextString: string,
   serviceEndpoints: ServiceEndpoints,
@@ -72,7 +43,7 @@ export function makeRequestor(
   useReport?: boolean,
   secureModeHash?: string,
 ): Requestor {
-  let body;
+  let body: string | undefined;
   let method = 'GET';
   const headers: { [key: string]: string } = { ...baseHeaders };
 
@@ -95,7 +66,27 @@ export function makeRequestor(
   }
 
   const uri = getPollingUri(serviceEndpoints, path, parameters);
-  return createRequestor(requests, uri, headers, method, body);
+
+  return {
+    async requestPayload(): Promise<string> {
+      let status: number | undefined;
+      try {
+        const res = await requests.fetch(uri, {
+          method,
+          headers,
+          body,
+        });
+        if (isOk(res.status)) {
+          return await res.text();
+        }
+        // Assigning so it can be thrown after the try/catch.
+        status = res.status;
+      } catch (err: any) {
+        throw new LDRequestError(err?.message);
+      }
+      throw new LDRequestError(`Unexpected status code: ${status}`, status);
+    },
+  };
 }
 
 export default Requestor;

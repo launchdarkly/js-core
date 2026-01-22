@@ -16,7 +16,6 @@ import {
   createDataSourceEventHandler,
   DataSourceEventHandler,
 } from './datasource/DataSourceEventHandler';
-import { DataSourceState } from './datasource/DataSourceStatus';
 import {
   createDataSourceStatusManager,
   DataSourceStatusManager,
@@ -220,16 +219,16 @@ export abstract class BaseDataManager implements DataManager {
     return {
       start: () => {
         // update status before starting processor to ensure potential errors are reported after initializing
-        statusManager.requestStateUpdate(DataSourceState.Initializing);
+        statusManager.requestStateUpdate('INITIALIZING');
         processor.start();
       },
       stop: () => {
         processor.stop();
-        statusManager.requestStateUpdate(DataSourceState.Closed);
+        statusManager.requestStateUpdate('CLOSED');
       },
       close: () => {
         processor.close();
-        statusManager.requestStateUpdate(DataSourceState.Closed);
+        statusManager.requestStateUpdate('CLOSED');
       },
     };
   }
