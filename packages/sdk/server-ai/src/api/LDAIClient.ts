@@ -156,7 +156,7 @@ export interface LDAIClient {
    *   enabled: true,
    *   model: { name: 'gpt-4' },
    *   provider: { name: 'openai' },
-   *   evaluationMetricKeys: ['$ld:ai:judge:relevance'],
+   *   evaluationMetricKey: '$ld:ai:judge:relevance',
    *   messages: [{ role: 'system', content: 'You are a relevance judge.' }]
    * }, variables);
    *
@@ -303,7 +303,7 @@ export interface LDAIClient {
    *     enabled: true,
    *     model: { name: "gpt-4" },
    *     provider: { name: "openai" },
-   *     evaluationMetricKeys: ['$ld:ai:judge:relevance'],
+   *     evaluationMetricKey: '$ld:ai:judge:relevance',
    *     messages: [{ role: 'system', content: 'You are a relevance judge.' }]
    *   },
    *   { metric: "relevance" }

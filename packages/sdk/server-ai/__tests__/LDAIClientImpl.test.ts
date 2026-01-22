@@ -133,7 +133,7 @@ describe('config evaluation', () => {
     evaluateSpy.mockRestore();
   });
 
-  it('evaluates judge config successfully', async () => {
+  it('evaluates judge config successfully with evaluationMetricKeys (legacy)', async () => {
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-judge';
     const defaultValue: LDAIJudgeConfigDefault = {
@@ -159,7 +159,140 @@ describe('config evaluation', () => {
     const result = await client.judgeConfig(key, testContext, defaultValue);
 
     expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
-    expect(result.evaluationMetricKeys).toEqual(['relevance', 'accuracy']);
+    // Should use first value from evaluationMetricKeys
+    expect(result.evaluationMetricKey).toBe('relevance');
+    expect(result.tracker).toBeDefined();
+    expect(result.enabled).toBe(true);
+    evaluateSpy.mockRestore();
+  });
+
+  it('evaluates judge config successfully with evaluationMetricKey', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKey: 'relevance',
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+      _ldMeta: {
+        variationKey: 'v1',
+        enabled: true,
+        mode: 'judge',
+      },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const evaluateSpy = jest.spyOn(client as any, '_evaluate');
+    const result = await client.judgeConfig(key, testContext, defaultValue);
+
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(result.evaluationMetricKey).toBe('relevance');
+    expect(result.tracker).toBeDefined();
+    expect(result.enabled).toBe(true);
+    evaluateSpy.mockRestore();
+  });
+
+  it('prioritizes evaluationMetricKey over evaluationMetricKeys when both are provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKey: 'helpfulness',
+      evaluationMetricKeys: ['relevance', 'accuracy'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+      _ldMeta: {
+        variationKey: 'v1',
+        enabled: true,
+        mode: 'judge',
+      },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const evaluateSpy = jest.spyOn(client as any, '_evaluate');
+    const result = await client.judgeConfig(key, testContext, defaultValue);
+
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(result.evaluationMetricKey).toBe('helpfulness');
+    expect(result.tracker).toBeDefined();
+    expect(result.enabled).toBe(true);
+    evaluateSpy.mockRestore();
+  });
+
+  it('treats empty string evaluationMetricKey as invalid and falls back to evaluationMetricKeys', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKey: '',
+      evaluationMetricKeys: ['relevance', 'accuracy'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+      _ldMeta: {
+        variationKey: 'v1',
+        enabled: true,
+        mode: 'judge',
+      },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const evaluateSpy = jest.spyOn(client as any, '_evaluate');
+    const result = await client.judgeConfig(key, testContext, defaultValue);
+
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    // Empty string should be treated as invalid, so should fall back to first value in evaluationMetricKeys
+    expect(result.evaluationMetricKey).toBe('relevance');
+    expect(result.tracker).toBeDefined();
+    expect(result.enabled).toBe(true);
+    evaluateSpy.mockRestore();
+  });
+
+  it('skips empty and whitespace-only strings in evaluationMetricKeys array', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKeys: ['', '   ', 'relevance', 'accuracy'],
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+      _ldMeta: {
+        variationKey: 'v1',
+        enabled: true,
+        mode: 'judge',
+      },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const evaluateSpy = jest.spyOn(client as any, '_evaluate');
+    const result = await client.judgeConfig(key, testContext, defaultValue);
+
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    // Should skip empty and whitespace strings, use first valid value
+    expect(result.evaluationMetricKey).toBe('relevance');
     expect(result.tracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
