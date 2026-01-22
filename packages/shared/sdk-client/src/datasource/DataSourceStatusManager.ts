@@ -1,7 +1,7 @@
 import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common';
 
 import LDEmitter from '../LDEmitter';
-import DataSourceStatus, { DataSourceState } from './DataSourceStatus';
+import DataSourceStatus, { type DataSourceState } from './DataSourceStatus';
 import DataSourceStatusErrorInfo from './DataSourceStatusErrorInfo';
 
 /**
