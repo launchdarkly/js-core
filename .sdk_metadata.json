@@ -26,7 +26,34 @@
       "userAgents": ["AkamaiEdgeSDK"],
       "features": {
         "contexts": { "introduced": "1.0" },
-        "migrations": { "introduced": "1.0.8" }
+        "migrations": { "introduced": "1.0.9" }
+      }
+    },
+    "browser": {
+      "name": "JavaScript Browser SDK",
+      "type": "client-side",
+      "path": "packages/sdk/browser",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "js-client-sdk-browser-"
+      },
+      "userAgents": ["JSClient"],
+      "features": {
+        "allFlags": { "introduced": "0.1" },
+        "appMetadata": { "introduced": "0.1" },
+        "bigSegments": { "introduced": "0.1" },
+        "bootstrapping": { "introduced": "0.1" },
+        "contexts": { "introduced": "0.1" },
+        "experimentation": { "introduced": "0.1" },
+        "flagChanges": { "introduced": "0.1" },
+        "hooks": { "introduced": "0.3" },
+        "inlineContextCustomEvents": { "introduced": "0.3" },
+        "pluginSupport": { "introduced": "0.4" },
+        "privateAttrs": { "introduced": "0.1" },
+        "relayProxyProxy": { "introduced": "0.1" },
+        "secureMode": { "introduced": "0.1" },
+        "track": { "introduced": "0.1" },
+        "variationDetail": { "introduced": "0.1" }
       }
     },
     "cloudflare": {
@@ -45,6 +72,36 @@
         "migrations": { "introduced": "2.2.2" },
         "secureMode": { "introduced": "2.0" },
         "track": { "introduced": "2.3" }
+      }
+    },
+    "combined-browser": {
+      "name": "Combined JavaScript Browser SDK",
+      "type": "client-side",
+      "path": "packages/sdk/combined-browser",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "js-client-sdk-combined-browser-"
+      },
+      "userAgents": ["JSClient"],
+      "features": {
+        "contexts": { "introduced": "0.1" }
+      }
+    },
+    "fastly": {
+      "name": "Fastly Edge SDK",
+      "type": "edge",
+      "path": "packages/sdk/fastly",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "fastly-server-sdk-"
+      },
+      "userAgents": ["FastlyEdgeSDK"],
+      "features": {
+        "allFlags": { "introduced": "0.1" },
+        "contexts": { "introduced": "0.1" },
+        "experimentation": { "introduced": "0.1" },
+        "secureMode": { "introduced": "0.1" },
+        "track": { "introduced": "0.1" }
       }
     },
     "react-native": {
@@ -109,6 +166,62 @@
         "track": { "introduced": "1.0" },
         "variationDetail": { "introduced": "5.4" },
         "webProxy": { "introduced": "1.0" }
+      }
+    },
+    "react-universal": {
+      "name": "React Universal SDK",
+      "type": "client-side",
+      "path": "packages/sdk/react-universal",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "react-universal-sdk-"
+      },
+      "userAgents": ["ReactUniversalClient"],
+      "features": {
+        "contexts": { "introduced": "0.0.1" }
+      }
+    },
+    "server-ai": {
+      "name": "Node.js Server AI SDK",
+      "type": "ai",
+      "path": "packages/sdk/server-ai",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "server-sdk-ai-"
+      },
+      "userAgents": ["NodeJSAIClient"],
+      "features": {
+        "aiConfig": { "introduced": "0.1" },
+        "aiMetrics": { "introduced": "0.1" },
+        "contexts": { "introduced": "0.1" },
+        "experimentation": { "introduced": "0.1" },
+        "privateAttrs": { "introduced": "0.1" }
+      }
+    },
+    "shopify-oxygen": {
+      "name": "Shopify Oxygen SDK",
+      "type": "edge",
+      "path": "packages/sdk/shopify-oxygen",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "shopify-oxygen-sdk-"
+      },
+      "userAgents": ["ShopifyOxygenSDK"],
+      "features": {
+        "contexts": { "introduced": "0.1" }
+      }
+    },
+    "svelte": {
+      "name": "Svelte SDK",
+      "type": "client-side",
+      "path": "packages/sdk/svelte",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "svelte-client-sdk-"
+      },
+      "userAgents": ["SvelteClient"],
+      "features": {
+        "contexts": { "introduced": "0.1" }
       }
     },
     "vercel": {
