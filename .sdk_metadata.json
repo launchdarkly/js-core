@@ -84,7 +84,21 @@
       },
       "userAgents": ["JSClient"],
       "features": {
-        "contexts": { "introduced": "0.1" }
+        "allFlags": { "introduced": "0.1" },
+        "appMetadata": { "introduced": "0.1" },
+        "bigSegments": { "introduced": "0.1" },
+        "bootstrapping": { "introduced": "0.1" },
+        "contexts": { "introduced": "0.1" },
+        "experimentation": { "introduced": "0.1" },
+        "flagChanges": { "introduced": "0.1" },
+        "hooks": { "introduced": "0.1" },
+        "inlineContextCustomEvents": { "introduced": "0.1" },
+        "pluginSupport": { "introduced": "0.1" },
+        "privateAttrs": { "introduced": "0.1" },
+        "relayProxyProxy": { "introduced": "0.1" },
+        "secureMode": { "introduced": "0.1" },
+        "track": { "introduced": "0.1" },
+        "variationDetail": { "introduced": "0.1" }
       }
     },
     "fastly": {
@@ -208,6 +222,7 @@
       },
       "userAgents": ["ShopifyOxygenSDK"],
       "features": {
+        "allFlags": { "introduced": "0.1" },
         "contexts": { "introduced": "0.1" }
       }
     },
