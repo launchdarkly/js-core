@@ -68,14 +68,6 @@ const DEFAULT_STREAM: string = 'https://clientstream.launchdarkly.com';
 
 export { DEFAULT_POLLING, DEFAULT_STREAM };
 
-function ensureSafeLogger(logger?: LDLogger): LDLogger {
-  if (logger instanceof SafeLogger) {
-    return logger;
-  }
-  // Even if logger is not defined this will produce a valid logger.
-  return createSafeLogger(logger);
-}
-
 interface ConfigurationValues {
   logger: LDLogger;
   baseUri: string;
@@ -113,11 +105,43 @@ interface ConfigurationValues {
   [index: string]: any;
 }
 
-function validateTypesAndNames(
-  pristineOptions: LDOptions,
-  values: ConfigurationValues,
-  _logger: LDLogger,
-): string[] {
+export function createConfiguration(
+  pristineOptions: LDOptions = {},
+  internalOptions: LDClientInternalOptions = {
+    getImplementationHooks: () => [],
+    credentialType: 'mobileKey',
+  },
+): Configuration {
+  // Ensures that the logger is a SafeLogger.
+  // This should account for the case where the logger is not defined.
+  const logger =
+    pristineOptions.logger instanceof SafeLogger
+      ? pristineOptions.logger
+      : createSafeLogger(pristineOptions.logger);
+
+  const values: ConfigurationValues = {
+    logger,
+    baseUri: DEFAULT_POLLING,
+    eventsUri: ServiceEndpoints.DEFAULT_EVENTS,
+    streamUri: DEFAULT_STREAM,
+    maxCachedContexts: 5,
+    capacity: 100,
+    diagnosticRecordingInterval: 900,
+    flushInterval: 30,
+    streamInitialReconnectDelay: 1,
+    allAttributesPrivate: false,
+    debug: false,
+    diagnosticOptOut: false,
+    sendEvents: true,
+    sendLDHeaders: true,
+    useReport: false,
+    withReasons: false,
+    privateAttributes: [],
+    pollInterval: DEFAULT_POLLING_INTERVAL,
+    hooks: [],
+    inspectors: [],
+  };
+
   const errors: string[] = [];
 
   Object.entries(pristineOptions).forEach(([k, v]) => {
@@ -158,42 +182,6 @@ function validateTypesAndNames(
     }
   });
 
-  return errors;
-}
-
-export function createConfiguration(
-  pristineOptions: LDOptions = {},
-  internalOptions: LDClientInternalOptions = {
-    getImplementationHooks: () => [],
-    credentialType: 'mobileKey',
-  },
-): Configuration {
-  const logger = ensureSafeLogger(pristineOptions.logger);
-
-  const values: ConfigurationValues = {
-    logger,
-    baseUri: DEFAULT_POLLING,
-    eventsUri: ServiceEndpoints.DEFAULT_EVENTS,
-    streamUri: DEFAULT_STREAM,
-    maxCachedContexts: 5,
-    capacity: 100,
-    diagnosticRecordingInterval: 900,
-    flushInterval: 30,
-    streamInitialReconnectDelay: 1,
-    allAttributesPrivate: false,
-    debug: false,
-    diagnosticOptOut: false,
-    sendEvents: true,
-    sendLDHeaders: true,
-    useReport: false,
-    withReasons: false,
-    privateAttributes: [],
-    pollInterval: DEFAULT_POLLING_INTERVAL,
-    hooks: [],
-    inspectors: [],
-  };
-
-  const errors = validateTypesAndNames(pristineOptions, values, logger);
   errors.forEach((e: string) => logger.warn(e));
 
   const serviceEndpoints = new ServiceEndpoints(
@@ -206,41 +194,17 @@ export function createConfiguration(
     values.payloadFilterKey,
   );
 
-  const useReport = pristineOptions.useReport ?? false;
   const tags = new ApplicationTags({ application: values.applicationInfo, logger });
   const userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
   const trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
   const { credentialType, getImplementationHooks } = internalOptions;
 
   return {
-    logger,
-    maxCachedContexts: values.maxCachedContexts,
-    capacity: values.capacity,
-    diagnosticRecordingInterval: values.diagnosticRecordingInterval,
-    flushInterval: values.flushInterval,
-    streamInitialReconnectDelay: values.streamInitialReconnectDelay,
-    allAttributesPrivate: values.allAttributesPrivate,
-    debug: values.debug,
-    diagnosticOptOut: values.diagnosticOptOut,
-    sendEvents: values.sendEvents,
-    sendLDHeaders: values.sendLDHeaders,
-    useReport,
-    withReasons: values.withReasons,
-    privateAttributes: values.privateAttributes,
-    tags,
-    applicationInfo: values.applicationInfo,
-    bootstrap: values.bootstrap,
-    requestHeaderTransform: values.requestHeaderTransform,
-    stream: values.stream,
-    hash: values.hash,
-    wrapperName: values.wrapperName,
-    wrapperVersion: values.wrapperVersion,
+    ...values,
     serviceEndpoints,
-    pollInterval: values.pollInterval,
+    tags,
     userAgentHeaderName,
     trackEventModifier,
-    hooks: values.hooks,
-    inspectors: values.inspectors,
     credentialType,
     getImplementationHooks,
   };
