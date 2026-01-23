@@ -12,7 +12,7 @@
       "userAgents": ["AkamaiEdgeSDK"],
       "features": {
         "contexts": { "introduced": "1.0" },
-        "migrations": { "introduced": "2.0" }
+        "migrations": { "introduced": "1.0.9" }
       }
     },
     "akamai-edgekv": {
