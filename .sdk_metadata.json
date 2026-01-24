@@ -35,7 +35,7 @@
       "path": "packages/sdk/browser",
       "languages": ["JavaScript", "TypeScript"],
       "releases": {
-        "tag-prefix": "js-client-sdk-browser-"
+        "tag-prefix": "js-client-sdk-"
       },
       "userAgents": ["JSClient"],
       "features": {
@@ -80,7 +80,7 @@
       "path": "packages/sdk/combined-browser",
       "languages": ["JavaScript", "TypeScript"],
       "releases": {
-        "tag-prefix": "js-client-sdk-combined-browser-"
+        "tag-prefix": "browser-"
       },
       "userAgents": ["JSClient"],
       "features": {
