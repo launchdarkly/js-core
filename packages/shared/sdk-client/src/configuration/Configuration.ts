@@ -196,52 +196,24 @@ export function createConfiguration(
   const errors = validateTypesAndNames(pristineOptions, values, logger);
   errors.forEach((e: string) => logger.warn(e));
 
-  const serviceEndpoints = new ServiceEndpoints(
-    values.streamUri,
-    values.baseUri,
-    values.eventsUri,
-    internalOptions.analyticsEventPath,
-    internalOptions.diagnosticEventPath,
-    internalOptions.includeAuthorizationHeader,
-    values.payloadFilterKey,
-  );
-
-  const useReport = pristineOptions.useReport ?? false;
-  const tags = new ApplicationTags({ application: values.applicationInfo, logger });
-  const userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
-  const trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
-  const { credentialType, getImplementationHooks } = internalOptions;
+  // Remove internal URI properties that shouldn't be on the final Configuration
+  const { baseUri, eventsUri, streamUri, payloadFilterKey, ...configValues } = values;
 
   return {
-    logger,
-    maxCachedContexts: values.maxCachedContexts,
-    capacity: values.capacity,
-    diagnosticRecordingInterval: values.diagnosticRecordingInterval,
-    flushInterval: values.flushInterval,
-    streamInitialReconnectDelay: values.streamInitialReconnectDelay,
-    allAttributesPrivate: values.allAttributesPrivate,
-    debug: values.debug,
-    diagnosticOptOut: values.diagnosticOptOut,
-    sendEvents: values.sendEvents,
-    sendLDHeaders: values.sendLDHeaders,
-    useReport,
-    withReasons: values.withReasons,
-    privateAttributes: values.privateAttributes,
-    tags,
-    applicationInfo: values.applicationInfo,
-    bootstrap: values.bootstrap,
-    requestHeaderTransform: values.requestHeaderTransform,
-    stream: values.stream,
-    hash: values.hash,
-    wrapperName: values.wrapperName,
-    wrapperVersion: values.wrapperVersion,
-    serviceEndpoints,
-    pollInterval: values.pollInterval,
-    userAgentHeaderName,
-    trackEventModifier,
-    hooks: values.hooks,
-    inspectors: values.inspectors,
-    credentialType,
-    getImplementationHooks,
+    ...configValues,
+    tags: new ApplicationTags({ application: values.applicationInfo, logger }),
+    serviceEndpoints: new ServiceEndpoints(
+      streamUri,
+      baseUri,
+      eventsUri,
+      internalOptions.analyticsEventPath,
+      internalOptions.diagnosticEventPath,
+      internalOptions.includeAuthorizationHeader,
+      payloadFilterKey,
+    ),
+    userAgentHeaderName: internalOptions.userAgentHeaderName ?? 'user-agent',
+    trackEventModifier: internalOptions.trackEventModifier ?? ((event) => event),
+    credentialType: internalOptions.credentialType,
+    getImplementationHooks: internalOptions.getImplementationHooks,
   };
 }
