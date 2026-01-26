@@ -49,5 +49,5 @@ You then run the `sdk-test-harness`. More information is available here: https:/
 
 Example with local clone of the test harness:
 ```bash
-go run . --url http://localhost:8123 -skip-from path-to-your-js-core-clone/packages/sdk/browser/contract-tests/suppressions.txt
+go run . --url http://localhost:8000 -skip-from path-to-your-js-core-clone/packages/sdk/browser/contract-tests/suppressions.txt
 ```

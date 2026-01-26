@@ -14,6 +14,7 @@ module.exports = {
     '**/vercel/examples/**',
     '**/react-native/example/**',
     '**/react-universal/example/**',
+    '**/react-universal/contract-tests/**',
     '**/fromExternal/**',
   ],
   rules: {
